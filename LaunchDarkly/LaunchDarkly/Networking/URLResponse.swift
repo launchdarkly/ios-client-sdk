@@ -1,10 +1,3 @@
-//
-//  URLResponse.swift
-//  LaunchDarkly
-//
-//  Copyright © 2019 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 extension URLResponse {

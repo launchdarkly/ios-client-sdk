@@ -1,10 +1,3 @@
-//
-//  DeprecatedCacheModelV5.swift
-//  LaunchDarkly
-//
-//  Copyright © 2019 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 // Cache model in use from 2.14.0 up to 4.0.0

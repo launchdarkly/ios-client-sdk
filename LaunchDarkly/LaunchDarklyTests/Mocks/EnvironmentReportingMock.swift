@@ -1,10 +1,3 @@
-//
-//  EnvironmentReportingMock.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2018 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 extension EnvironmentReportingMock {

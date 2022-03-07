@@ -1,10 +1,3 @@
-//
-//  CacheableUserEnvironments.swift
-//  LaunchDarkly
-//
-//  Copyright © 2019 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 // Data structure used to cache feature flags for a specific user for multiple environments

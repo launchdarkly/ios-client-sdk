@@ -1,10 +1,3 @@
-//
-//  FlagRequestTracker.swift
-//  LaunchDarkly
-//
-//  Copyright © 2018 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 struct FlagRequestTracker {

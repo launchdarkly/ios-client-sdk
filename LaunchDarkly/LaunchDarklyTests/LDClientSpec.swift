@@ -51,9 +51,6 @@ final class LDClientSpec: QuickSpec {
         var changeNotifierMock: FlagChangeNotifyingMock! {
             subject.flagChangeNotifier as? FlagChangeNotifyingMock
         }
-        var errorNotifierMock: ErrorNotifyingMock! {
-            subject.errorNotifier as? ErrorNotifyingMock
-        }
         var environmentReporterMock: EnvironmentReportingMock! {
             subject.environmentReporter as? EnvironmentReportingMock
         }
@@ -65,9 +62,6 @@ final class LDClientSpec: QuickSpec {
         }
         var makeFlagSynchronizerService: DarklyServiceProvider? {
             serviceFactoryMock.makeFlagSynchronizerReceivedParameters?.service
-        }
-        var observedError: Error? {
-            errorNotifierMock.notifyObserversReceivedError
         }
         var onSyncComplete: FlagSyncCompleteClosure? {
             serviceFactoryMock.onFlagSyncComplete
@@ -1066,19 +1060,10 @@ final class LDClientSpec: QuickSpec {
                 receivedObserver?.connectionModeChangedHandler(ConnectionInformation.ConnectionMode.offline)
                 expect(callCount) == 1
             }
-            it("observeError") {
-                testContext.subject.observeError(owner: self) { _ in callCount += 1 }
-                expect(testContext.errorNotifierMock.addErrorObserverCallCount) == 1
-                expect(testContext.errorNotifierMock.addErrorObserverReceivedObserver?.owner) === self
-                testContext.errorNotifierMock.addErrorObserverReceivedObserver?.errorHandler(ErrorMock())
-                expect(callCount) == 1
-            }
             it("stopObserving") {
                 testContext.subject.stopObserving(owner: self)
                 expect(mockNotifier.removeObserverCallCount) == 1
                 expect(mockNotifier.removeObserverReceivedOwner) === self
-                expect(testContext.errorNotifierMock.removeObserversCallCount) == 1
-                expect(testContext.errorNotifierMock.removeObserversReceivedOwner) === self
             }
         }
     }
@@ -1222,17 +1207,16 @@ final class LDClientSpec: QuickSpec {
     }
 
     func onSyncCompleteErrorSpec() {
-        func runTest(_ ctx: String, _ err: SynchronizingError, testError: @escaping ((SynchronizingError) -> Void)) {
+        func runTest(_ ctx: String,
+                     _ err: SynchronizingError,
+                     testError: @escaping ((ConnectionInformation.LastConnectionFailureReason) -> Void)) {
             var testContext: TestContext!
             context(ctx) {
                 beforeEach {
-                    waitUntil { done in
-                        testContext = TestContext(startOnline: true)
-                        testContext.start()
-                        testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-                        testContext.errorNotifierMock.notifyObserversCallback = done
-                        testContext.onSyncComplete?(.error(err))
-                    }
+                    testContext = TestContext(startOnline: true)
+                    testContext.start()
+                    testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
+                    testContext.onSyncComplete?(.error(err))
                 }
                 it("takes the client offline when unauthed") {
                     expect(testContext.subject.isOnline) == !err.isClientUnauthorized
@@ -1243,10 +1227,9 @@ final class LDClientSpec: QuickSpec {
                 it("does not call the flag change notifier") {
                     expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
                 }
-                it("informs the error notifier") {
-                    expect(testContext.errorNotifierMock.notifyObserversCallCount) == 1
-                    expect(testContext.observedError).to(beAnInstanceOf(SynchronizingError.self))
-                    if let err = testContext.observedError as? SynchronizingError { testError(err) }
+                it("Updates the connection information") {
+                    expect(testContext.subject.getConnectionInformation().lastFailedConnection).to(beCloseTo(Date(), within: 5.0))
+                    testError(testContext.subject.getConnectionInformation().lastConnectionFailureReason)
                 }
             }
         }
@@ -1256,9 +1239,9 @@ final class LDClientSpec: QuickSpec {
                                           httpVersion: DarklyServiceMock.Constants.httpVersion,
                                           headerFields: nil)
         runTest("there was an internal server error", .response(serverError)) { error in
-            if case .response(let urlResponse as HTTPURLResponse) = error {
-                expect(urlResponse).to(beIdenticalTo(serverError))
-            } else { fail("Incorrect error given to error notifier") }
+            if case .httpError(let errCode) = error {
+                expect(errCode) == 500
+            } else { fail("Incorrect error in connection information") }
         }
 
         let unauthedError = HTTPURLResponse(url: DarklyServiceMock.Constants.mockBaseUrl,
@@ -1266,25 +1249,15 @@ final class LDClientSpec: QuickSpec {
                                             httpVersion: DarklyServiceMock.Constants.httpVersion,
                                             headerFields: nil)
         runTest("there was a client unauthorized error", .response(unauthedError)) { error in
-            if case .response(let urlResponse as HTTPURLResponse) = error {
-                expect(urlResponse).to(beIdenticalTo(unauthedError))
-            } else { fail("Incorrect error given to error notifier") }
+            if case .unauthorized = error {
+            } else { fail("Incorrect error in connection information") }
         }
         runTest("there was a request error", .request(DarklyServiceMock.Constants.error)) { error in
-            if case .request(let nsError as NSError) = error {
-                expect(nsError).to(beIdenticalTo(DarklyServiceMock.Constants.error))
-            } else { fail("Incorrect error given to error notifier") }
+            if case .unknownError = error {
+            } else { fail("Incorrect error in connection information") }
         }
-        runTest("there was a data error", .data(DarklyServiceMock.Constants.errorData)) { error in
-            if case .data(let data) = error {
-                expect(data) == DarklyServiceMock.Constants.errorData
-            } else { fail("Incorrect error given to error notifier") }
-        }
-        runTest("there was a non-NSError error", .streamError(DummyError())) { error in
-            if case .streamError(let dummy) = error {
-                expect(dummy is DummyError).to(beTrue())
-            } else { fail("Incorrect error given to error notifier") }
-        }
+        runTest("there was a data error", .data(DarklyServiceMock.Constants.errorData)) { _ in }
+        runTest("there was a non-NSError error", .streamError(DummyError())) { _ in }
     }
 
     private func runModeSpec() {

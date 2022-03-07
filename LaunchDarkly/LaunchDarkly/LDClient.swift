@@ -482,14 +482,6 @@ public class LDClient {
     public func stopObserving(owner: LDObserverOwner) {
         Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
         flagChangeNotifier.removeObserver(owner: owner)
-        errorNotifier.removeObservers(for: owner)
-    }
-
-    private(set) var errorNotifier: ErrorNotifying
-
-    public func observeError(owner: LDObserverOwner, handler: @escaping LDErrorHandler) {
-        Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
-        errorNotifier.addErrorObserver(ErrorObserver(owner: owner, errorHandler: handler))
     }
 
     private func onFlagSyncComplete(result: FlagSyncResult) {
@@ -526,9 +518,6 @@ public class LDClient {
             internalSetOnline(false)
         }
         connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
-        DispatchQueue.main.async {
-            self.errorNotifier.notifyObservers(of: synchronizingError)
-        }
     }
 
     private func updateCacheAndReportChanges(user: LDUser,
@@ -766,7 +755,6 @@ public class LDClient {
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)
         diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service)
         eventReporter = self.serviceFactory.makeEventReporter(service: service)
-        errorNotifier = self.serviceFactory.makeErrorNotifier()
         connectionInformation = self.serviceFactory.makeConnectionInformation()
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
