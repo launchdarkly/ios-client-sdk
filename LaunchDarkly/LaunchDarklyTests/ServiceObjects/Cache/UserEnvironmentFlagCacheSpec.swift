@@ -26,7 +26,7 @@ final class UserEnvironmentFlagCacheSpec: QuickSpec {
         }
         var oldestUser: String {
             userEnvironmentsCollection.compactMapValues { $0.lastUpdated }
-                .max { $1.value.isEarlierThan($0.value) }!
+                .max { $1.value < $0.value }!
                 .key
         }
         var setUserEnvironments: [UserKey: CacheableUserEnvironmentFlags]? {

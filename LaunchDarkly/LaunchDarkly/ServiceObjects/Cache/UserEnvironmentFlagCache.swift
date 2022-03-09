@@ -83,8 +83,8 @@ final class UserEnvironmentFlagCache: FeatureFlagCaching {
             return cacheableUserEnvironmentsCollection
         }
         // sort collection into key-value pairs in descending order...youngest to oldest
-        var userEnvironmentsCollection = cacheableUserEnvironmentsCollection.sorted { pair1, pair2 -> Bool in
-            pair2.value.lastUpdated.isEarlierThan(pair1.value.lastUpdated)
+        var userEnvironmentsCollection = cacheableUserEnvironmentsCollection.sorted {
+            $1.value.lastUpdated < $0.value.lastUpdated
         }
         while userEnvironmentsCollection.count > maxCachedUsers && maxCachedUsers >= 0 {
             userEnvironmentsCollection.removeLast()

@@ -319,7 +319,7 @@ final class EventSpec: QuickSpec {
                 it("creates a dictionary with matching non-user elements") {
                     expect(eventDictionary.eventKind) == .feature
                     expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
@@ -344,7 +344,7 @@ final class EventSpec: QuickSpec {
                 it("creates a dictionary with matching non-user elements") {
                     expect(eventDictionary.eventKind) == .feature
                     expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
@@ -366,7 +366,7 @@ final class EventSpec: QuickSpec {
                 it("creates a dictionary with the version") {
                     expect(eventDictionary.eventKind) == .feature
                     expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                     expect(eventDictionary.eventUserKey) == user.key
@@ -385,7 +385,7 @@ final class EventSpec: QuickSpec {
                 it("creates a dictionary without the version") {
                     expect(eventDictionary.eventKind) == .feature
                     expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                     expect(eventDictionary.eventUserKey) == user.key
@@ -404,7 +404,7 @@ final class EventSpec: QuickSpec {
                 it("creates a dictionary with matching non-user elements") {
                     expect(eventDictionary.eventKind) == .feature
                     expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: NSNull())).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: NSNull())).to(beTrue())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
@@ -441,7 +441,7 @@ final class EventSpec: QuickSpec {
 
                     expect(eventDictionary.eventKind) == .identify
                     expect(eventDictionary.eventKey) == user.key
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.1, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.1))
                     expect(eventDictionary.eventValue).to(beNil())
                     expect(eventDictionary.eventDefaultValue).to(beNil())
                     expect(eventDictionary.eventVariation).to(beNil())
@@ -513,7 +513,7 @@ final class EventSpec: QuickSpec {
                     it("creates a dictionary with matching custom data") {
                         expect(eventDictionary.eventKind) == .custom
                         expect(eventDictionary.eventKey) == Constants.eventKey
-                        expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                        expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                         expect(AnyComparer.isEqual(eventDictionary.eventData, to: eventData)).to(beTrue())
                         expect(eventDictionary.eventValue).to(beNil())
                         expect(eventDictionary.eventDefaultValue).to(beNil())
@@ -538,7 +538,7 @@ final class EventSpec: QuickSpec {
                 it("creates a dictionary with matching custom data") {
                     expect(eventDictionary.eventKind) == .custom
                     expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                     expect(eventDictionary.eventData).to(beNil())
                     expect(eventDictionary.eventValue).to(beNil())
                     expect(eventDictionary.eventDefaultValue).to(beNil())
@@ -562,7 +562,7 @@ final class EventSpec: QuickSpec {
                 it("creates a dictionary with matching non-user elements") {
                     expect(eventDictionary.eventKind) == .custom
                     expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                     expect(AnyComparer.isEqual(eventDictionary.eventData, to: CustomEvent.dictionaryData)).to(beTrue())
                     expect(eventDictionary.eventValue).to(beNil())
                     expect(eventDictionary.eventDefaultValue).to(beNil())
@@ -588,7 +588,7 @@ final class EventSpec: QuickSpec {
                 it("creates a dictionary with matching non-user elements") {
                     expect(eventDictionary.eventKind) == .custom
                     expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                     expect(AnyComparer.isEqual(eventDictionary.eventData, to: CustomEvent.dictionaryData)).to(beTrue())
                     expect(eventDictionary.eventValue).to(beNil())
                     expect(eventDictionary.eventDefaultValue).to(beNil())
@@ -638,7 +638,7 @@ final class EventSpec: QuickSpec {
 
                         expect(eventDictionary.eventKind) == .debug
                         expect(eventDictionary.eventKey) == Constants.eventKey
-                        expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                        expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                         expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                         expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                         expect(eventDictionary.eventVariation) == featureFlag.variation
@@ -663,7 +663,7 @@ final class EventSpec: QuickSpec {
                 it("creates a dictionary with the version") {
                     expect(eventDictionary.eventKind) == .debug
                     expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
@@ -682,7 +682,7 @@ final class EventSpec: QuickSpec {
                 it("creates a dictionary without the version") {
                     expect(eventDictionary.eventKind) == .debug
                     expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
@@ -701,7 +701,7 @@ final class EventSpec: QuickSpec {
                 it("creates a dictionary with matching non-user elements") {
                     expect(eventDictionary.eventKind) == .debug
                     expect(eventDictionary.eventKey) == Constants.eventKey
-                    expect(eventDictionary.eventCreationDate?.isWithin(0.001, of: event.creationDate!)).to(beTrue())
+                    expect(eventDictionary.eventCreationDate).to(beCloseTo(event.creationDate!, within: 0.001))
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: NSNull())).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: NSNull())).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventUserDictionary, to: user.dictionaryValue(includePrivateAttributes: false, config: config))).to(beTrue())
@@ -727,8 +727,8 @@ final class EventSpec: QuickSpec {
             }
             it("creates a summary dictionary with matching elements") {
                 expect(eventDictionary.eventKind) == .summary
-                expect(eventDictionary.eventStartDate?.isWithin(0.001, of: event.flagRequestTracker?.startDate)).to(beTrue())
-                expect(eventDictionary.eventEndDate?.isWithin(0.001, of: event.endDate)).to(beTrue())
+                expect(eventDictionary.eventStartDate).to(beCloseTo(event.flagRequestTracker!.startDate, within: 0.001))
+                expect(eventDictionary.eventEndDate).to(beCloseTo(event.endDate!, within: 0.001))
                 guard let features = eventDictionary.eventFeatures
                 else {
                     fail("expected eventDictionary features to not be nil, got nil")
@@ -824,7 +824,7 @@ final class EventSpec: QuickSpec {
                     eventDictionary = event.dictionaryValue(config: config)
                 }
                 it("returns the event kind when the dictionary contains the event endDate") {
-                    expect(eventDictionary.eventEndDate?.isWithin(0.001, of: event.endDate)).to(beTrue())
+                    expect(eventDictionary.eventEndDate).to(beCloseTo(event.endDate!, within: 0.001))
                 }
                 it("returns nil when the dictionary does not contain the event kind") {
                     eventDictionary.removeValue(forKey: Event.CodingKeys.endDate.rawValue)
@@ -976,8 +976,9 @@ extension Dictionary where Key == String, Value == Any {
             else { return false }
         if kind == .summary {
             guard kind == other.eventKind,
-                let eventEndDate = eventEndDate, eventEndDate.isWithin(0.001, of: other.eventEndDate)
-                else { return false }
+                  let eventEndDate = eventEndDate, let otherEndDate = other.eventEndDate,
+                  fabs(eventEndDate.timeIntervalSince(otherEndDate)) <= 0.001
+            else { return false }
             return true
         }
         guard let key = eventKey, let creationDateMillis = eventCreationDateMillis,

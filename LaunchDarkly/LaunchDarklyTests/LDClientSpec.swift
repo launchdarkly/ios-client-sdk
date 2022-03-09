@@ -1121,7 +1121,7 @@ final class LDClientSpec: QuickSpec {
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
         }
         it("informs the flag change notifier of the changed flags") {
@@ -1160,7 +1160,7 @@ final class LDClientSpec: QuickSpec {
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
         }
         it("informs the flag change notifier of the changed flag") {
@@ -1196,7 +1196,7 @@ final class LDClientSpec: QuickSpec {
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated.isWithin(Constants.updateThreshold, of: updateDate)) == true
+            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
             expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
         }
         it("informs the flag change notifier of the changed flag") {

@@ -10,14 +10,4 @@ extension Date {
         else { return nil }
         self = Date(timeIntervalSince1970: Double(millisSince1970) / 1_000)
     }
-
-    func isWithin(_ timeInterval: TimeInterval, of otherDate: Date?) -> Bool {
-        guard let otherDate = otherDate
-        else { return false }
-        return fabs(self.timeIntervalSince(otherDate)) <= timeInterval
-    }
-
-    func isEarlierThan(_ otherDate: Date) -> Bool {
-        self.timeIntervalSince(otherDate) < 0.0
-    }
 }

@@ -84,7 +84,7 @@ extension FlagRequestTracker {
 
 extension FlagRequestTracker: Equatable {
     public static func == (lhs: FlagRequestTracker, rhs: FlagRequestTracker) -> Bool {
-        if !lhs.startDate.isWithin(0.001, of: rhs.startDate) {
+        if fabs(lhs.startDate.timeIntervalSince(rhs.startDate)) > 0.001 {
             return false
         }
         return lhs.flagCounters == rhs.flagCounters

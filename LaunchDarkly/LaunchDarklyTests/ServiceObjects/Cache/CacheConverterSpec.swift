@@ -69,8 +69,8 @@ final class CacheConverterSpec: QuickSpec {
                 // The CacheConverter should always remove all expired data
                 DeprecatedCacheModel.allCases.forEach { model in
                     expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
-                    expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate?
-                            .isWithin(0.5, of: testContext.expiredCacheThreshold)) == true
+                    expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate)
+                        .to(beCloseTo(testContext.expiredCacheThreshold, within: 0.5))
                 }
             }
             for deprecatedData in cacheCases {

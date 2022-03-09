@@ -26,8 +26,8 @@ class DeprecatedCacheModelSpec {
         var userEnvironmentsCollection: [UserKey: CacheableUserEnvironmentFlags]
         var mobileKeys: [MobileKey]
         var sortedLastUpdatedDates: [(userKey: UserKey, lastUpdated: Date)] {
-            userEnvironmentsCollection.map { ($0, $1.lastUpdated) }.sorted { tuple1, tuple2 in
-                tuple1.lastUpdated.isEarlierThan(tuple2.lastUpdated)
+            userEnvironmentsCollection.map { ($0, $1.lastUpdated) }.sorted {
+                $0.lastUpdated < $1.lastUpdated
             }
         }
         var userKeys: [UserKey] { users.map { $0.key } }
@@ -46,8 +46,8 @@ class DeprecatedCacheModelSpec {
         }
 
         func expiredUserKeys(for expirationDate: Date) -> [UserKey] {
-            sortedLastUpdatedDates.compactMap { tuple in
-                tuple.lastUpdated.isEarlierThan(expirationDate) ? tuple.userKey : nil
+            sortedLastUpdatedDates.compactMap {
+                $0.lastUpdated < expirationDate ? $0.userKey : nil
             }
         }
     }

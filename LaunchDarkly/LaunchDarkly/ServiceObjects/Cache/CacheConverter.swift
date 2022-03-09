@@ -55,8 +55,6 @@ final class CacheConverter: CacheConverting {
 
 extension Date {
     func isExpired(expirationDate: Date) -> Bool {
-        let stringEquivalentDate = self.stringEquivalentDate
-        let stringEquivalentExpirationDate = expirationDate.stringEquivalentDate
-        return stringEquivalentDate.isEarlierThan(stringEquivalentExpirationDate)
+        self.stringEquivalentDate < expirationDate.stringEquivalentDate
     }
 }

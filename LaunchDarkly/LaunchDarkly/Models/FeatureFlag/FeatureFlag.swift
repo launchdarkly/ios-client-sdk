@@ -70,10 +70,7 @@ struct FeatureFlag {
     }
 
     func shouldCreateDebugEvents(lastEventReportResponseTime: Date?) -> Bool {
-        guard let debugEventsUntilDate = debugEventsUntilDate
-        else { return false }
-        let comparisonDate = lastEventReportResponseTime ?? Date()
-        return comparisonDate.isEarlierThan(debugEventsUntilDate) || comparisonDate == debugEventsUntilDate
+        (lastEventReportResponseTime ?? Date()) <= (debugEventsUntilDate ?? Date.distantPast)
     }
 }
 
