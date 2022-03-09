@@ -831,75 +831,6 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventEndDate).to(beNil())
                 }
             }
-
-            describe("matches") {
-                var eventDictionary: [String: Any]!
-                var otherDictionary: [String: Any]!
-                beforeEach {
-                    eventDictionary = Event.stub(.custom, with: user).dictionaryValue(config: config)
-                    otherDictionary = eventDictionary
-                }
-                it("returns true when keys and creationDateMillis are equal") {
-                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == true
-                }
-                it("returns false when keys differ") {
-                    otherDictionary[Event.CodingKeys.key.rawValue] = otherDictionary.eventKey! + "dummy"
-                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
-                }
-                it("returns false when creationDateMillis differ") {
-                    otherDictionary[Event.CodingKeys.creationDate.rawValue] = otherDictionary.eventCreationDateMillis! + 1
-                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
-                }
-                it("returns false when dictionary key is nil") {
-                    eventDictionary.removeValue(forKey: Event.CodingKeys.key.rawValue)
-                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
-                }
-                it("returns false when other dictionary key is nil") {
-                    otherDictionary.removeValue(forKey: Event.CodingKeys.key.rawValue)
-                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
-                }
-                it("returns false when dictionary creationDateMillis is nil") {
-                    eventDictionary.removeValue(forKey: Event.CodingKeys.creationDate.rawValue)
-                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
-                }
-                it("returns false when other dictionary creationDateMillis is nil") {
-                    otherDictionary.removeValue(forKey: Event.CodingKeys.creationDate.rawValue)
-                    expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
-                }
-                context("for summary event dictionaries") {
-                    var event: Event!
-                    beforeEach {
-                        event = Event.stub(.summary, with: user)
-                        eventDictionary = event.dictionaryValue(config: config)
-                    }
-                    it("when the kinds and endDates match returns true") {
-                        otherDictionary = event.dictionaryValue(config: config)
-                        expect(eventDictionary.matches(eventDictionary: otherDictionary)) == true
-                    }
-                    it("when the kinds do not match returns false") {
-                        otherDictionary = event.dictionaryValue(config: config)
-                        otherDictionary[Event.CodingKeys.kind.rawValue] = Event.Kind.feature.rawValue
-                        expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
-                    }
-                    context("when the endDates do not match") {
-                        it("and endDates differ returns false") {
-                            otherDictionary = event.dictionaryValue(config: config)
-                            otherDictionary[Event.CodingKeys.endDate.rawValue] = event.endDate!.addingTimeInterval(0.002).millisSince1970
-                            expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
-                        }
-                        it("and endDate is nil returns false") {
-                            eventDictionary.removeValue(forKey: Event.CodingKeys.endDate.rawValue)
-                            otherDictionary = event.dictionaryValue(config: config)
-                            expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
-                        }
-                        it("and other endDate is nil returns false") {
-                            otherDictionary = event.dictionaryValue(config: config)
-                            otherDictionary.removeValue(forKey: Event.CodingKeys.endDate.rawValue)
-                            expect(eventDictionary.matches(eventDictionary: otherDictionary)) == false
-                        }
-                    }
-                }
-            }
         }
     }
 }
@@ -969,33 +900,6 @@ extension Dictionary where Key == String, Value == Any {
     }
     var eventPreviousContextKind: String? {
         self[Event.CodingKeys.previousContextKind.rawValue] as? String
-    }
-
-    func matches(eventDictionary other: [String: Any]) -> Bool {
-        guard let kind = eventKind
-            else { return false }
-        if kind == .summary {
-            guard kind == other.eventKind,
-                  let eventEndDate = eventEndDate, let otherEndDate = other.eventEndDate,
-                  fabs(eventEndDate.timeIntervalSince(otherEndDate)) <= 0.001
-            else { return false }
-            return true
-        }
-        guard let key = eventKey, let creationDateMillis = eventCreationDateMillis,
-            let otherKey = other.eventKey, let otherCreationDateMillis = other.eventCreationDateMillis
-            else { return false }
-        return key == otherKey && creationDateMillis == otherCreationDateMillis
-    }
-}
-
-extension Array where Element == [String: Any] {
-    func eventDictionary(for event: Event) -> [String: Any]? {
-        let selectedDictionaries = self.filter { eventDictionary -> Bool in
-            event.key == eventDictionary.eventKey
-        }
-        guard selectedDictionaries.count == 1
-        else { return nil }
-        return selectedDictionaries.first
     }
 }
 
