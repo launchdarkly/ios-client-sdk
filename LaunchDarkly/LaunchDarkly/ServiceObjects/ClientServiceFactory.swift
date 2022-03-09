@@ -1,10 +1,3 @@
-//
-//  ClientServiceFactory.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import LDSwiftEventSource
 
@@ -26,7 +19,6 @@ protocol ClientServiceCreating {
     func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func makeEnvironmentReporter() -> EnvironmentReporting
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling
-    func makeErrorNotifier() -> ErrorNotifying
     func makeConnectionInformation() -> ConnectionInformation
     func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching
     func makeDiagnosticReporter(service: DarklyServiceProvider) -> DiagnosticReporting
@@ -106,10 +98,6 @@ final class ClientServiceFactory: ClientServiceCreating {
 
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling {
         Throttler(environmentReporter: environmentReporter)
-    }
-
-    func makeErrorNotifier() -> ErrorNotifying {
-        ErrorNotifier()
     }
     
     func makeConnectionInformation() -> ConnectionInformation {

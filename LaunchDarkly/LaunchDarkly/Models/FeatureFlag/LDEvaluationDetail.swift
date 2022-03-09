@@ -1,10 +1,3 @@
-//
-//  LDEvaluationDetail.swift
-//  LaunchDarkly_iOS
-//
-//  Copyright © 2019 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 /**

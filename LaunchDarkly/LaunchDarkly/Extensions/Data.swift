@@ -1,10 +1,3 @@
-//
-//  Data.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 extension Data {

@@ -1,10 +1,3 @@
-//
-//  ClientServiceMockFactory.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import LDSwiftEventSource
 @testable import LaunchDarkly
@@ -128,10 +121,6 @@ final class ClientServiceMockFactory: ClientServiceCreating {
             throttlingMock.runThrottledReceivedRunClosure?()
         }
         return throttlingMock
-    }
-
-    func makeErrorNotifier() -> ErrorNotifying {
-        ErrorNotifyingMock()
     }
     
     func makeConnectionInformation() -> ConnectionInformation {

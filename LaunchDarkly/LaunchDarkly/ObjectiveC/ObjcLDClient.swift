@@ -1,10 +1,3 @@
-//
-//  LDClientWrapper.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 /**
@@ -683,31 +676,6 @@ public final class ObjcLDClient: NSObject {
      */
     @objc(stopObservingForOwner:) public func stopObserving(owner: LDObserverOwner) {
         ldClient.stopObserving(owner: owner)
-    }
-
-    /**
-     Sets a handler executed when an error occurs while processing flag or event responses.
-
-     The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.
-
-     The SDK executes handlers on the main thread.
-
-     SeeAlso: `stopObserving(owner:)`
-
-     ### Usage
-     ````
-     __weak typeof(self) weakSelf = self;
-     [[LDClient sharedInstance] observeErrorWithOwner:self handler:^(NSError * _Nonnull error){
-         __strong typeof(weakSelf) strongSelf = weakSelf;
-         [self doSomethingWithError:error];
-     }];
-     ````
-
-     - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
-     - parameter handler: The LDErrorHandler the SDK will execute when a network request results in an error.
-     */
-    @objc public func observeError(owner: LDObserverOwner, handler: @escaping LDErrorHandler) {
-        ldClient.observeError(owner: owner, handler: handler)
     }
 
     /**

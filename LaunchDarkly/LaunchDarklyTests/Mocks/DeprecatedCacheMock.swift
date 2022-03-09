@@ -1,9 +1,3 @@
-//
-//  DeprecatedCacheMock.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2020 Catamorphic Co. All rights reserved.
-//
 import Foundation
 @testable import LaunchDarkly
 

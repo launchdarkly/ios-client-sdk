@@ -1,10 +1,3 @@
-//
-//  LDFlagValueConvertible.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 /// Protocol used by the SDK to limit feature flag types to those representable on LaunchDarkly servers. Client app developers should not need to use this protocol. The protocol is public because `LDClient.variation(forKey:defaultValue:)` and `LDClient.variationDetail(forKey:defaultValue:)` return a type that conforms to this protocol. See `LDFlagValue` for types that LaunchDarkly feature flags can take.

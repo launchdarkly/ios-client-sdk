@@ -210,37 +210,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
     }
 }
 
-// MARK: - ErrorNotifyingMock
-final class ErrorNotifyingMock: ErrorNotifying {
-
-    var addErrorObserverCallCount = 0
-    var addErrorObserverCallback: (() -> Void)?
-    var addErrorObserverReceivedObserver: ErrorObserver?
-    func addErrorObserver(_ observer: ErrorObserver) {
-        addErrorObserverCallCount += 1
-        addErrorObserverReceivedObserver = observer
-        addErrorObserverCallback?()
-    }
-
-    var removeObserversCallCount = 0
-    var removeObserversCallback: (() -> Void)?
-    var removeObserversReceivedOwner: LDObserverOwner?
-    func removeObservers(for owner: LDObserverOwner) {
-        removeObserversCallCount += 1
-        removeObserversReceivedOwner = owner
-        removeObserversCallback?()
-    }
-
-    var notifyObserversCallCount = 0
-    var notifyObserversCallback: (() -> Void)?
-    var notifyObserversReceivedError: Error?
-    func notifyObservers(of error: Error) {
-        notifyObserversCallCount += 1
-        notifyObserversReceivedError = error
-        notifyObserversCallback?()
-    }
-}
-
 // MARK: - EventReportingMock
 final class EventReportingMock: EventReporting {
 

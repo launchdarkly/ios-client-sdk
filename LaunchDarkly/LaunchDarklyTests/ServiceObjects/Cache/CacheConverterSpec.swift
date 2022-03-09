@@ -1,10 +1,3 @@
-//
-//  CacheConverterSpec.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2019 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import Quick
 import Nimble

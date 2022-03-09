@@ -1,10 +1,3 @@
-//
-//  LDCommon.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 /// The feature flag key is a String. This typealias helps define where the SDK expects the string to be a feature flag key.

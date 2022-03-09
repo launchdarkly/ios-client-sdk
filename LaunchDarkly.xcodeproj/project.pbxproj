@@ -108,7 +108,6 @@
 		832D68AC224B3321005F052A /* CacheConverterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832D68AB224B3321005F052A /* CacheConverterSpec.swift */; };
 		832EA061203D03B700A93C0E /* AnyComparerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832EA060203D03B700A93C0E /* AnyComparerSpec.swift */; };
 		8335299E1FC37727001166F8 /* FlagMaintainingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */; };
-		833631CB221B5DFA00BA53EE /* ErrorNotifierSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 833631CA221B5DFA00BA53EE /* ErrorNotifierSpec.swift */; };
 		83383A5120460DD30024D975 /* SynchronizingErrorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */; };
 		83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */; };
 		83411A5F1FABDA8700E5CF39 /* mocks.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */; };
@@ -157,15 +156,6 @@
 		837EF3742059C237009D628A /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837EF3732059C237009D628A /* Log.swift */; };
 		838838411F5EFADF0023D11B /* LDFlagValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838401F5EFADF0023D11B /* LDFlagValue.swift */; };
 		838838451F5EFBAF0023D11B /* LDFlagValueConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838838441F5EFBAF0023D11B /* LDFlagValueConvertible.swift */; };
-		83883DD5220B68A000EEAB95 /* ErrorObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83883DD4220B68A000EEAB95 /* ErrorObserver.swift */; };
-		83883DD6220B68A000EEAB95 /* ErrorObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83883DD4220B68A000EEAB95 /* ErrorObserver.swift */; };
-		83883DD7220B68A000EEAB95 /* ErrorObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83883DD4220B68A000EEAB95 /* ErrorObserver.swift */; };
-		83883DD8220B68A000EEAB95 /* ErrorObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83883DD4220B68A000EEAB95 /* ErrorObserver.swift */; };
-		83883DDA220B6A9A00EEAB95 /* ErrorNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83883DD9220B6A9A00EEAB95 /* ErrorNotifier.swift */; };
-		83883DDB220B6A9A00EEAB95 /* ErrorNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83883DD9220B6A9A00EEAB95 /* ErrorNotifier.swift */; };
-		83883DDC220B6A9A00EEAB95 /* ErrorNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83883DD9220B6A9A00EEAB95 /* ErrorNotifier.swift */; };
-		83883DDD220B6A9A00EEAB95 /* ErrorNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83883DD9220B6A9A00EEAB95 /* ErrorNotifier.swift */; };
-		83883DDF220B6D4B00EEAB95 /* ErrorObserverSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83883DDE220B6D4B00EEAB95 /* ErrorObserverSpec.swift */; };
 		838AB53F1F72A7D5006F03F5 /* FlagSynchronizerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B761F72A4B400ED65E8 /* FlagSynchronizerSpec.swift */; };
 		838F96741FB9F024009CFC45 /* LDClientSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838F96731FB9F024009CFC45 /* LDClientSpec.swift */; };
 		838F96781FBA504A009CFC45 /* ClientServiceFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838F96771FBA504A009CFC45 /* ClientServiceFactory.swift */; };
@@ -379,7 +369,6 @@
 		832D68AB224B3321005F052A /* CacheConverterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheConverterSpec.swift; sourceTree = "<group>"; };
 		832EA060203D03B700A93C0E /* AnyComparerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyComparerSpec.swift; sourceTree = "<group>"; };
 		8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagMaintainingMock.swift; sourceTree = "<group>"; };
-		833631CA221B5DFA00BA53EE /* ErrorNotifierSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorNotifierSpec.swift; sourceTree = "<group>"; };
 		83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynchronizingErrorSpec.swift; sourceTree = "<group>"; };
 		83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyServiceSpec.swift; sourceTree = "<group>"; };
 		83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = mocks.generated.swift; path = LaunchDarkly/GeneratedCode/mocks.generated.swift; sourceTree = SOURCE_ROOT; };
@@ -412,9 +401,6 @@
 		837EF3732059C237009D628A /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		838838401F5EFADF0023D11B /* LDFlagValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDFlagValue.swift; sourceTree = "<group>"; };
 		838838441F5EFBAF0023D11B /* LDFlagValueConvertible.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDFlagValueConvertible.swift; sourceTree = "<group>"; };
-		83883DD4220B68A000EEAB95 /* ErrorObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorObserver.swift; sourceTree = "<group>"; };
-		83883DD9220B6A9A00EEAB95 /* ErrorNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorNotifier.swift; sourceTree = "<group>"; };
-		83883DDE220B6D4B00EEAB95 /* ErrorObserverSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorObserverSpec.swift; sourceTree = "<group>"; };
 		838F96731FB9F024009CFC45 /* LDClientSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientSpec.swift; sourceTree = "<group>"; };
 		838F96771FBA504A009CFC45 /* ClientServiceFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientServiceFactory.swift; sourceTree = "<group>"; };
 		838F96791FBA551A009CFC45 /* ClientServiceMockFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClientServiceMockFactory.swift; sourceTree = "<group>"; };
@@ -541,7 +527,6 @@
 			children = (
 				B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */,
 				837E38C821E804ED0008A50C /* EnvironmentReporterSpec.swift */,
-				833631CA221B5DFA00BA53EE /* ErrorNotifierSpec.swift */,
 				83CFE7CD1F7AD81D0010544E /* EventReporterSpec.swift */,
 				83B8C2441FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift */,
 				83DDBEFF1FA2589900E428B6 /* FlagStoreSpec.swift */,
@@ -682,7 +667,6 @@
 				8354AC5F224150C300CDE602 /* Cache */,
 				C408884823033B7500420721 /* ConnectionInformation.swift */,
 				B4C9D42D2489B5FF004A9B03 /* DiagnosticEvent.swift */,
-				83883DD4220B68A000EEAB95 /* ErrorObserver.swift */,
 				8354EFDE1F26380700C05156 /* Event.swift */,
 				83EBCB9D20D9A0A1003A7142 /* FeatureFlag */,
 				8354EFDD1F26380700C05156 /* LDConfig.swift */,
@@ -825,7 +809,6 @@
 				83EBCBA620D9A23E003A7142 /* User */,
 				83EBCBA720D9A251003A7142 /* FeatureFlag */,
 				83EF67921F9945E800403126 /* EventSpec.swift */,
-				83883DDE220B6D4B00EEAB95 /* ErrorObserverSpec.swift */,
 				8354AC672241586D00CDE602 /* Cache */,
 				B4F689132497B2FC004D3CE0 /* DiagnosticEventSpec.swift */,
 			);
@@ -840,7 +823,6 @@
 				83B1D7C82073F354006D1B1C /* CwlSysctl.swift */,
 				B4C9D4372489E20A004A9B03 /* DiagnosticReporter.swift */,
 				831425B0206B030100F2EF36 /* EnvironmentReporter.swift */,
-				83883DD9220B6A9A00EEAB95 /* ErrorNotifier.swift */,
 				83FEF8DE1F2667E4001CF12C /* EventReporter.swift */,
 				8358F25F1F476AD800ECE1AF /* FlagChangeNotifier.swift */,
 				831D8B731F72994600ED65E8 /* FlagStore.swift */,
@@ -1134,7 +1116,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
+			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\nif which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
 		};
 		830C2AC2207416A5001D645D /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1147,7 +1129,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
+			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\nif which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
 		};
 		833FD9F821C01333001F80EB /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1164,7 +1146,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
+			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\nif which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
 		};
 		83411A561FABCA2200E5CF39 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1177,7 +1159,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run krzysztofzablocki/Sourcery\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
+			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\nif which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run krzysztofzablocki/Sourcery\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
 		};
 		835E1CFE1F61AC0600184DB4 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1190,7 +1172,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
+			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\nif which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1203,12 +1185,10 @@
 				8311886A2113AE5D00D77CB5 /* ObjcLDUser.swift in Sources */,
 				8370DF6F225E40B800F84810 /* DeprecatedCache.swift in Sources */,
 				831188502113ADEF00D77CB5 /* EnvironmentReporter.swift in Sources */,
-				83883DDD220B6A9A00EEAB95 /* ErrorNotifier.swift in Sources */,
 				831188682113AE5600D77CB5 /* ObjcLDClient.swift in Sources */,
 				831188572113AE0B00D77CB5 /* FlagChangeNotifier.swift in Sources */,
 				8311884D2113ADE200D77CB5 /* FlagsUnchangedObserver.swift in Sources */,
 				8311885F2113AE2D00D77CB5 /* HTTPURLRequest.swift in Sources */,
-				83883DD8220B68A000EEAB95 /* ErrorObserver.swift in Sources */,
 				B4C9D4362489C8FD004A9B03 /* DiagnosticCache.swift in Sources */,
 				831188452113ADC500D77CB5 /* LDClient.swift in Sources */,
 				831188522113ADF700D77CB5 /* KeyedValueCache.swift in Sources */,
@@ -1291,10 +1271,8 @@
 				831EF35620655E730001C643 /* FlagChangeNotifier.swift in Sources */,
 				831EF35720655E730001C643 /* EventReporter.swift in Sources */,
 				831EF35820655E730001C643 /* FlagStore.swift in Sources */,
-				83883DD7220B68A000EEAB95 /* ErrorObserver.swift in Sources */,
 				831EF35920655E730001C643 /* Log.swift in Sources */,
 				831EF35A20655E730001C643 /* HTTPHeaders.swift in Sources */,
-				83883DDC220B6A9A00EEAB95 /* ErrorNotifier.swift in Sources */,
 				831EF35B20655E730001C643 /* DarklyService.swift in Sources */,
 				831EF35C20655E730001C643 /* HTTPURLResponse.swift in Sources */,
 				8354AC6B22418C0600CDE602 /* CacheableUserEnvironmentFlags.swift in Sources */,
@@ -1330,10 +1308,8 @@
 				835E1D3F1F63450A00184DB4 /* ObjcLDClient.swift in Sources */,
 				8370DF6C225E40B800F84810 /* DeprecatedCache.swift in Sources */,
 				83EBCBB320DABE1B003A7142 /* FlagRequestTracker.swift in Sources */,
-				83883DDA220B6A9A00EEAB95 /* ErrorNotifier.swift in Sources */,
 				837EF3742059C237009D628A /* Log.swift in Sources */,
 				83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */,
-				83883DD5220B68A000EEAB95 /* ErrorObserver.swift in Sources */,
 				830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */,
 				B4C9D4332489C8FD004A9B03 /* DiagnosticCache.swift in Sources */,
 				8354EFE51F263DAC00C05156 /* FeatureFlag.swift in Sources */,
@@ -1390,7 +1366,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				83CFE7CE1F7AD81D0010544E /* EventReporterSpec.swift in Sources */,
-				833631CB221B5DFA00BA53EE /* ErrorNotifierSpec.swift in Sources */,
 				8392FFA32033565700320914 /* HTTPURLResponse.swift in Sources */,
 				83411A5F1FABDA8700E5CF39 /* mocks.generated.swift in Sources */,
 				83D5597E1FDA01F9002D10C8 /* KeyedValueCacheSpec.swift in Sources */,
@@ -1430,7 +1405,6 @@
 				830DB3AC22380A3E00D65D25 /* HTTPHeadersSpec.swift in Sources */,
 				831425AF206ABB5300F2EF36 /* EnvironmentReportingMock.swift in Sources */,
 				838AB53F1F72A7D5006F03F5 /* FlagSynchronizerSpec.swift in Sources */,
-				83883DDF220B6D4B00EEAB95 /* ErrorObserverSpec.swift in Sources */,
 				837406D421F760640087B22B /* LDTimerSpec.swift in Sources */,
 				832307A61F7D8D720029815A /* URLRequestSpec.swift in Sources */,
 				832307A81F7DA61B0029815A /* LDEventSourceMock.swift in Sources */,
@@ -1446,12 +1420,10 @@
 				83D9EC762062DEAB004D7FA6 /* LDConfig.swift in Sources */,
 				8370DF6D225E40B800F84810 /* DeprecatedCache.swift in Sources */,
 				83EBCBB420DABE1B003A7142 /* FlagRequestTracker.swift in Sources */,
-				83883DDB220B6A9A00EEAB95 /* ErrorNotifier.swift in Sources */,
 				83D9EC772062DEAB004D7FA6 /* LDClient.swift in Sources */,
 				83D9EC782062DEAB004D7FA6 /* LDUser.swift in Sources */,
 				83D9EC792062DEAB004D7FA6 /* LDFlagValue.swift in Sources */,
 				83D9EC7A2062DEAB004D7FA6 /* LDFlagValueConvertible.swift in Sources */,
-				83883DD6220B68A000EEAB95 /* ErrorObserver.swift in Sources */,
 				B4C9D4342489C8FD004A9B03 /* DiagnosticCache.swift in Sources */,
 				83D9EC7C2062DEAB004D7FA6 /* FeatureFlag.swift in Sources */,
 				8372668D20D4439600BD1088 /* DateFormatter.swift in Sources */,

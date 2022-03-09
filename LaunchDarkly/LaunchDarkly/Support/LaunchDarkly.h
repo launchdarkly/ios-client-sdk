@@ -1,10 +1,3 @@
-//
-//  LaunchDarkly.h
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 #import <Foundation/Foundation.h>
 
 //! Project version number for Darkly.

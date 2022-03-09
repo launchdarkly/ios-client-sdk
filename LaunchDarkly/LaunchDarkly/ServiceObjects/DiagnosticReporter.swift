@@ -1,10 +1,3 @@
-//
-//  DiagnosticEventProcessor.swift
-//  LaunchDarkly
-//
-//  Copyright © 2020 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 // sourcery: autoMockable
