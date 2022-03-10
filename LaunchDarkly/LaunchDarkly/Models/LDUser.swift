@@ -102,32 +102,6 @@ public struct LDUser {
     }
 
     /**
-     Initializer that takes a [String: Any] and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. Attempts to set `device` and `operatingSystem` from corresponding values embedded in `custom`.
-     - parameter userDictionary: Dictionary with LDUser attribute keys and values.
-     */
-    public init(userDictionary: [String: Any]) {
-        key = userDictionary[CodingKeys.key.rawValue] as? String ?? LDUser.defaultKey(environmentReporter: EnvironmentReporter())
-        secondary = userDictionary[CodingKeys.secondary.rawValue] as? String
-        isAnonymous = userDictionary[CodingKeys.isAnonymous.rawValue] as? Bool ?? false
-
-        name = userDictionary[CodingKeys.name.rawValue] as? String
-        firstName = userDictionary[CodingKeys.firstName.rawValue] as? String
-        lastName = userDictionary[CodingKeys.lastName.rawValue] as? String
-        country = userDictionary[CodingKeys.country.rawValue] as? String
-        ipAddress = userDictionary[CodingKeys.ipAddress.rawValue] as? String
-        email = userDictionary[CodingKeys.email.rawValue] as? String
-        avatar = userDictionary[CodingKeys.avatar.rawValue] as? String
-        if let privateAttrs = (userDictionary[CodingKeys.privateAttributes.rawValue] as? [String]) {
-            privateAttributes = privateAttrs.map { UserAttribute.forName($0) }
-        } else {
-            privateAttributes = []
-        }
-        custom = userDictionary[CodingKeys.custom.rawValue] as? [String: Any] ?? [:]
-
-        Log.debug(typeName(and: #function) + "user: \(self)")
-    }
-
-    /**
      Internal initializer that accepts an environment reporter, used for testing
     */
     init(environmentReporter: EnvironmentReporting) {

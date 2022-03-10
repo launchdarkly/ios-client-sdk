@@ -139,15 +139,6 @@ public final class ObjcLDUser: NSObject {
         self.user = user
     }
 
-    /**
-     Initializer that takes a NSDictionary and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. The initializer attempts to set `device` and `operatingSystem` from corresponding values embedded in `custom`. The initializer attempts to set feature flags from values set in `config`.
-
-     - parameter userDictionary: NSDictionary with LDUser attribute keys and values.
-     */
-    @objc public init(userDictionary: [String: Any]) {
-        self.user = LDUser(userDictionary: userDictionary)
-    }
-
     /// Compares users by comparing their user keys only, to allow the client app to collect user information over time
     @objc public func isEqual(object: Any) -> Bool {
         guard let otherUser = object as? ObjcLDUser
