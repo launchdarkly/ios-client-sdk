@@ -596,13 +596,12 @@ public class LDClient {
         eventReporter.flush(completion: nil)
     }
 
-    private func onEventSyncComplete(result: EventSyncResult) {
-        Log.debug(typeName(and: #function) + "result: \(result)")
-        switch result {
-        case .success:
-            break   // EventReporter handles removing events from the event store, so there's nothing to do here. It's here in case we want to do something in the future.
-        case .error(let synchronizingError):
+    private func onEventSyncComplete(result: SynchronizingError?) {
+        if let synchronizingError = result {
+            Log.debug(typeName(and: #function) + "result: \(synchronizingError)")
             process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
+        } else {
+            Log.debug(typeName(and: #function) + "result: success")
         }
     }
     
