@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		29A4C47527DA6266005B8D34 /* UserAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A4C47427DA6266005B8D34 /* UserAttribute.swift */; };
+		29A4C47627DA6266005B8D34 /* UserAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A4C47427DA6266005B8D34 /* UserAttribute.swift */; };
+		29A4C47727DA6266005B8D34 /* UserAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A4C47427DA6266005B8D34 /* UserAttribute.swift */; };
+		29A4C47827DA6266005B8D34 /* UserAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A4C47427DA6266005B8D34 /* UserAttribute.swift */; };
 		830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
 		830DB3AC22380A3E00D65D25 /* HTTPHeadersSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3AB22380A3E00D65D25 /* HTTPHeadersSpec.swift */; };
 		830DB3AE2239B54900D65D25 /* URLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3AD2239B54900D65D25 /* URLResponse.swift */; };
@@ -346,6 +350,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		29A4C47427DA6266005B8D34 /* UserAttribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAttribute.swift; sourceTree = "<group>"; };
 		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
 		830DB3AB22380A3E00D65D25 /* HTTPHeadersSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeadersSpec.swift; sourceTree = "<group>"; };
 		830DB3AD2239B54900D65D25 /* URLResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLResponse.swift; sourceTree = "<group>"; };
@@ -671,6 +676,7 @@
 				83EBCB9D20D9A0A1003A7142 /* FeatureFlag */,
 				8354EFDD1F26380700C05156 /* LDConfig.swift */,
 				83A2D6231F51CD7A00EA3BD4 /* LDUser.swift */,
+				29A4C47427DA6266005B8D34 /* UserAttribute.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1216,6 +1222,7 @@
 				8311885A2113AE1500D77CB5 /* Log.swift in Sources */,
 				8311884B2113ADDA00D77CB5 /* LDChangedFlag.swift in Sources */,
 				8311885E2113AE2900D77CB5 /* HTTPURLResponse.swift in Sources */,
+				29A4C47827DA6266005B8D34 /* UserAttribute.swift in Sources */,
 				8347BB0F21F147E100E56BCD /* LDTimer.swift in Sources */,
 				B4C9D43B2489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
 				C443A40523145FBF00145710 /* ConnectionInformation.swift in Sources */,
@@ -1275,6 +1282,7 @@
 				831EF35A20655E730001C643 /* HTTPHeaders.swift in Sources */,
 				831EF35B20655E730001C643 /* DarklyService.swift in Sources */,
 				831EF35C20655E730001C643 /* HTTPURLResponse.swift in Sources */,
+				29A4C47727DA6266005B8D34 /* UserAttribute.swift in Sources */,
 				8354AC6B22418C0600CDE602 /* CacheableUserEnvironmentFlags.swift in Sources */,
 				C443A40723145FEE00145710 /* ConnectionInformationStore.swift in Sources */,
 				831EF35D20655E730001C643 /* HTTPURLRequest.swift in Sources */,
@@ -1339,6 +1347,7 @@
 				831D2AAF2061AAA000B4AC3C /* Thread.swift in Sources */,
 				83B9A082204F6022000C3F17 /* FlagsUnchangedObserver.swift in Sources */,
 				8354EFE01F26380700C05156 /* LDClient.swift in Sources */,
+				29A4C47527DA6266005B8D34 /* UserAttribute.swift in Sources */,
 				831425B1206B030100F2EF36 /* EnvironmentReporter.swift in Sources */,
 				C408884723033B3600420721 /* ConnectionInformationStore.swift in Sources */,
 				83B6C4B61F4DE7630055351C /* LDCommon.swift in Sources */,
@@ -1451,6 +1460,7 @@
 				83D9EC8E2062DEAB004D7FA6 /* HTTPURLResponse.swift in Sources */,
 				83D9EC8F2062DEAB004D7FA6 /* HTTPURLRequest.swift in Sources */,
 				83D9EC902062DEAB004D7FA6 /* Dictionary.swift in Sources */,
+				29A4C47627DA6266005B8D34 /* UserAttribute.swift in Sources */,
 				831425B2206B030100F2EF36 /* EnvironmentReporter.swift in Sources */,
 				83D9EC922062DEAB004D7FA6 /* Data.swift in Sources */,
 				8347BB0D21F147E100E56BCD /* LDTimer.swift in Sources */,

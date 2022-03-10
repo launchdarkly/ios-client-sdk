@@ -17,7 +17,7 @@ final class LDConfigSpec: XCTestCase {
         fileprivate static let startOnline = false
 
         fileprivate static let allUserAttributesPrivate = true
-        fileprivate static let privateUserAttributes: [String] = ["dummy"]
+        fileprivate static let privateUserAttributes: [UserAttribute] = [UserAttribute.forName("dummy")]
 
         fileprivate static let useReport = true
 
@@ -49,7 +49,7 @@ final class LDConfigSpec: XCTestCase {
          ("start online", Constants.startOnline, { c, v in c.startOnline = v as! Bool }),
          ("debug mode", Constants.debugMode, { c, v in c.isDebugMode = v as! Bool }),
          ("all user attributes private", Constants.allUserAttributesPrivate, { c, v in c.allUserAttributesPrivate = v as! Bool }),
-         ("private user attributes", Constants.privateUserAttributes, { c, v in c.privateUserAttributes = (v as! [String])}),
+         ("private user attributes", Constants.privateUserAttributes, { c, v in c.privateUserAttributes = (v as! [UserAttribute])}),
          ("use report", Constants.useReport, { c, v in c.useReport = v as! Bool }),
          ("inline user in events", Constants.inlineUserInEvents, { c, v in c.inlineUserInEvents = v as! Bool }),
          ("evaluation reasons", Constants.evaluationReasons, { c, v in c.evaluationReasons = v as! Bool }),
@@ -76,7 +76,7 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.enableBackgroundUpdates, LDConfig.Defaults.enableBackgroundUpdates)
         XCTAssertEqual(config.startOnline, LDConfig.Defaults.startOnline)
         XCTAssertEqual(config.allUserAttributesPrivate, LDConfig.Defaults.allUserAttributesPrivate)
-        XCTAssertEqual(config.privateUserAttributes, nil)
+        XCTAssertEqual(config.privateUserAttributes, LDConfig.Defaults.privateUserAttributes)
         XCTAssertEqual(config.useReport, LDConfig.Defaults.useReport)
         XCTAssertEqual(config.inlineUserInEvents, LDConfig.Defaults.inlineUserInEvents)
         XCTAssertEqual(config.isDebugMode, LDConfig.Defaults.debugMode)
