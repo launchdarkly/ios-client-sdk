@@ -744,7 +744,6 @@ public class LDClient {
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
         flagCache = self.serviceFactory.makeFeatureFlagCache(maxCachedUsers: configuration.maxCachedUsers)
         flagStore = self.serviceFactory.makeFlagStore()
-        LDUserWrapper.configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat()
         cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: configuration.maxCachedUsers)
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
         throttler = self.serviceFactory.makeThrottler(environmentReporter: environmentReporter)

@@ -103,7 +103,7 @@ public final class ObjcLDUser: NSObject {
         set { user.avatar = newValue }
     }
     /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device & operatingSystem (which cannot be made private). See `privateAttributes` for details. (Default: nil)
-    @objc public var custom: [String: Any]? {
+    @objc public var custom: [String: Any] {
         get { user.custom }
         set { user.custom = newValue }
     }
@@ -112,16 +112,7 @@ public final class ObjcLDUser: NSObject {
         get { user.isAnonymous }
         set { user.isAnonymous = newValue }
     }
-    /// Client app defined device for the user. The SDK will determine the device automatically, however the client app can override the value. The SDK will insert the device into the `custom` dictionary. The device cannot be made private. (Default: the system identified device)
-    @objc public var device: String? {
-        get { user.device }
-        set { user.device = newValue }
-    }
-    /// Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the `custom` dictionary. The operatingSystem cannot be made private. (Default: the system identified operating system)
-    @objc public var operatingSystem: String? {
-        get { user.operatingSystem }
-        set { user.operatingSystem = newValue }
-    }
+
     /**
      Client app defined privateAttributes for the user.
 

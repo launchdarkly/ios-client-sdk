@@ -842,13 +842,13 @@ extension Dictionary where Key == String, Value == Any {
     var eventUserKey: String? {
         self[Event.CodingKeys.userKey.rawValue] as? String
     }
-    var eventUser: LDUser? {
+    fileprivate var eventUser: LDUser? {
         if let userDictionary = eventUserDictionary {
             return LDUser(userDictionary: userDictionary)
         }
         return nil
     }
-    var eventUserDictionary: [String: Any]? {
+    fileprivate var eventUserDictionary: [String: Any]? {
         self[Event.CodingKeys.user.rawValue] as? [String: Any]
     }
     var eventValue: Any? {
