@@ -19,7 +19,7 @@ public struct LDUser {
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
      See Also: `LDConfig.allUserAttributesPrivate`, `LDConfig.privateUserAttributes`, and `privateAttributes`.
     */
-    public static var privatizableAttributes: [String] { optionalAttributes + [CodingKeys.custom.rawValue] }
+    public static var privatizableAttributes: [String] { optionalAttributes }
 
     static let optionalAttributes = [CodingKeys.name.rawValue, CodingKeys.firstName.rawValue,
                                      CodingKeys.lastName.rawValue, CodingKeys.country.rawValue,
@@ -51,13 +51,9 @@ public struct LDUser {
     /// Client app defined avatar for the user. (Default: nil)
     public var avatar: String?
     /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device & operatingSystem (which cannot be made private). See `privateAttributes` for details. (Default: nil)
-    public var custom: [String: Any]?
+    public var custom: [String: Any]
     /// Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. isAnonymous cannot be made private. (Default: true)
     public var isAnonymous: Bool
-    /// Client app defined device for the user. The SDK will determine the device automatically, however the client app can override the value. The SDK will insert the device into the `custom` dictionary. The device cannot be made private. (Default: the system identified device)
-    public var device: String?
-    /// Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the `custom` dictionary. The operatingSystem cannot be made private. (Default: the system identified operating system)
-    public var operatingSystem: String?
 
     /**
      Client app defined privateAttributes for the user.
@@ -97,8 +93,6 @@ public struct LDUser {
                 avatar: String? = nil,
                 custom: [String: Any]? = nil,
                 isAnonymous: Bool? = nil,
-                device: String? = nil,
-                operatingSystem: String? = nil,
                 privateAttributes: [String]? = nil,
                 secondary: String? = nil) {
         let environmentReporter = EnvironmentReporter()
@@ -112,10 +106,10 @@ public struct LDUser {
         self.ipAddress = ipAddress
         self.email = email
         self.avatar = avatar
-        self.custom = custom
         self.isAnonymous = isAnonymous ?? (selectedKey == LDUser.defaultKey(environmentReporter: environmentReporter))
-        self.device = device ?? custom?[CodingKeys.device.rawValue] as? String ?? environmentReporter.deviceModel
-        self.operatingSystem = operatingSystem ?? custom?[CodingKeys.operatingSystem.rawValue] as? String ?? environmentReporter.systemVersion
+        self.custom = custom ?? [:]
+        self.custom.merge([CodingKeys.device.rawValue: environmentReporter.deviceModel,
+                           CodingKeys.operatingSystem.rawValue: environmentReporter.systemVersion]) { lhs, _ in lhs }
         self.privateAttributes = privateAttributes
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
@@ -137,10 +131,7 @@ public struct LDUser {
         email = userDictionary[CodingKeys.email.rawValue] as? String
         avatar = userDictionary[CodingKeys.avatar.rawValue] as? String
         privateAttributes = userDictionary[CodingKeys.privateAttributes.rawValue] as? [String]
-
-        custom = userDictionary[CodingKeys.custom.rawValue] as? [String: Any]
-        device = custom?[CodingKeys.device.rawValue] as? String
-        operatingSystem = custom?[CodingKeys.operatingSystem.rawValue] as? String
+        custom = userDictionary[CodingKeys.custom.rawValue] as? [String: Any] ?? [:]
 
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
@@ -149,7 +140,10 @@ public struct LDUser {
      Internal initializer that accepts an environment reporter, used for testing
     */
     init(environmentReporter: EnvironmentReporting) {
-        self.init(key: LDUser.defaultKey(environmentReporter: environmentReporter), isAnonymous: true, device: environmentReporter.deviceModel, operatingSystem: environmentReporter.systemVersion)
+        self.init(key: LDUser.defaultKey(environmentReporter: environmentReporter),
+                  custom: [CodingKeys.device.rawValue: environmentReporter.deviceModel,
+                           CodingKeys.operatingSystem.rawValue: environmentReporter.systemVersion],
+                  isAnonymous: true)
     }
 
     // swiftlint:disable:next cyclomatic_complexity
@@ -166,53 +160,52 @@ public struct LDUser {
         case CodingKeys.email.rawValue: return email
         case CodingKeys.avatar.rawValue: return avatar
         case CodingKeys.custom.rawValue: return custom
-        case CodingKeys.device.rawValue: return device
-        case CodingKeys.operatingSystem.rawValue: return operatingSystem
+        case CodingKeys.device.rawValue: return custom[CodingKeys.device.rawValue]
+        case CodingKeys.operatingSystem.rawValue: return custom[CodingKeys.operatingSystem.rawValue]
         case CodingKeys.privateAttributes.rawValue: return privateAttributes
         default: return nil
         }
     }
     /// Returns the custom dictionary without the SDK set device and operatingSystem attributes
     var customWithoutSdkSetAttributes: [String: Any] {
-        custom?.filter { key, _ in !LDUser.sdkSetAttributes.contains(key) } ?? [:]
+        custom.filter { key, _ in !LDUser.sdkSetAttributes.contains(key) }
     }
 
     /// Dictionary with LDUser attribute keys and values, with options to include feature flags and private attributes. LDConfig object used to help resolving what attributes should be private.
     /// - parameter includePrivateAttributes: Controls whether the resulting dictionary includes private attributes
     /// - parameter config: Provides supporting information for defining private attributes
     func dictionaryValue(includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
-        var dictionary = [String: Any]()
-        var redactedAttributes = [String]()
-        let combinedPrivateAttributes = config.allUserAttributesPrivate ? LDUser.privatizableAttributes
-            : (privateAttributes ?? []) + (config.privateUserAttributes ?? [])
+        let allPrivate = !includePrivate && config.allUserAttributesPrivate
+        let privateAttributeNames = includePrivate ? [] : (privateAttributes ?? []) + (config.privateUserAttributes ?? [])
+
+        var dictionary: [String: Any] = [:]
+        var redactedAttributes: [String] = []
 
         dictionary[CodingKeys.key.rawValue] = key
         dictionary[CodingKeys.isAnonymous.rawValue] = isAnonymous
 
         LDUser.optionalAttributes.forEach { attribute in
-            let value = self.value(for: attribute)
-            if !includePrivate && combinedPrivateAttributes.contains(attribute) && value != nil {
-                redactedAttributes.append(attribute)
-            } else {
-                dictionary[attribute] = value
+            if let value = self.value(for: attribute) {
+                if allPrivate || privateAttributeNames.contains(attribute) {
+                    redactedAttributes.append(attribute)
+                } else {
+                    dictionary[attribute] = value
+                }
             }
         }
 
-        var customDictionary = [String: Any]()
-        customWithoutSdkSetAttributes.forEach { attrName, attrVal in
-            if !includePrivate && combinedPrivateAttributes.contains(where: [CodingKeys.custom.rawValue, attrName].contains ) {
+        var customDictionary: [String: Any] = [:]
+        custom.forEach { attrName, attrVal in
+            if allPrivate || privateAttributeNames.contains(attrName) {
                 redactedAttributes.append(attrName)
             } else {
                 customDictionary[attrName] = attrVal
             }
         }
-        customDictionary[CodingKeys.device.rawValue] = device
-        customDictionary[CodingKeys.operatingSystem.rawValue] = operatingSystem
         dictionary[CodingKeys.custom.rawValue] = customDictionary.isEmpty ? nil : customDictionary
 
-        if !includePrivate && !redactedAttributes.isEmpty {
-            let redactedAttributeSet: Set<String> = Set(redactedAttributes)
-            dictionary[CodingKeys.privateAttributes.rawValue] = redactedAttributeSet.sorted()
+        if !redactedAttributes.isEmpty {
+            dictionary[CodingKeys.privateAttributes.rawValue] = Set(redactedAttributes).sorted()
         }
 
         return dictionary
@@ -252,51 +245,9 @@ extension LDUser: Equatable {
     }
 }
 
-extension LDUserWrapper: NSCoding {
+extension LDUserWrapper {
     struct Keys {
         fileprivate static let featureFlags = "featuresJsonDictionary"
-    }
-
-    func encode(with encoder: NSCoder) {
-        encoder.encode(wrapped.key, forKey: LDUser.CodingKeys.key.rawValue)
-        encoder.encode(wrapped.secondary, forKey: LDUser.CodingKeys.secondary.rawValue)
-        encoder.encode(wrapped.name, forKey: LDUser.CodingKeys.name.rawValue)
-        encoder.encode(wrapped.firstName, forKey: LDUser.CodingKeys.firstName.rawValue)
-        encoder.encode(wrapped.lastName, forKey: LDUser.CodingKeys.lastName.rawValue)
-        encoder.encode(wrapped.country, forKey: LDUser.CodingKeys.country.rawValue)
-        encoder.encode(wrapped.ipAddress, forKey: LDUser.CodingKeys.ipAddress.rawValue)
-        encoder.encode(wrapped.email, forKey: LDUser.CodingKeys.email.rawValue)
-        encoder.encode(wrapped.avatar, forKey: LDUser.CodingKeys.avatar.rawValue)
-        encoder.encode(wrapped.custom, forKey: LDUser.CodingKeys.custom.rawValue)
-        encoder.encode(wrapped.isAnonymous, forKey: LDUser.CodingKeys.isAnonymous.rawValue)
-        encoder.encode(wrapped.device, forKey: LDUser.CodingKeys.device.rawValue)
-        encoder.encode(wrapped.operatingSystem, forKey: LDUser.CodingKeys.operatingSystem.rawValue)
-        encoder.encode(wrapped.privateAttributes, forKey: LDUser.CodingKeys.privateAttributes.rawValue)
-    }
-
-    convenience init?(coder decoder: NSCoder) {
-        var user = LDUser(key: decoder.decodeObject(forKey: LDUser.CodingKeys.key.rawValue) as? String,
-                          name: decoder.decodeObject(forKey: LDUser.CodingKeys.name.rawValue) as? String,
-                          firstName: decoder.decodeObject(forKey: LDUser.CodingKeys.firstName.rawValue) as? String,
-                          lastName: decoder.decodeObject(forKey: LDUser.CodingKeys.lastName.rawValue) as? String,
-                          country: decoder.decodeObject(forKey: LDUser.CodingKeys.country.rawValue) as? String,
-                          ipAddress: decoder.decodeObject(forKey: LDUser.CodingKeys.ipAddress.rawValue) as? String,
-                          email: decoder.decodeObject(forKey: LDUser.CodingKeys.email.rawValue) as? String,
-                          avatar: decoder.decodeObject(forKey: LDUser.CodingKeys.avatar.rawValue) as? String,
-                          custom: decoder.decodeObject(forKey: LDUser.CodingKeys.custom.rawValue) as? [String: Any],
-                          isAnonymous: decoder.decodeBool(forKey: LDUser.CodingKeys.isAnonymous.rawValue),
-                          privateAttributes: decoder.decodeObject(forKey: LDUser.CodingKeys.privateAttributes.rawValue) as? [String],
-                          secondary: decoder.decodeObject(forKey: LDUser.CodingKeys.secondary.rawValue) as? String
-        )
-        user.device = decoder.decodeObject(forKey: LDUser.CodingKeys.device.rawValue) as? String
-        user.operatingSystem = decoder.decodeObject(forKey: LDUser.CodingKeys.operatingSystem.rawValue) as? String
-        self.init(user: user)
-    }
-
-    /// Method to configure NSKeyed(Un)Archivers to convert version 2.3.0 and older user caches to 2.3.1 and later user cache formats. Note that the v3 SDK no longer caches LDUsers, rather only feature flags and the LDUser.key are cached.
-    class func configureKeyedArchiversToHandleVersion2_3_0AndOlderUserCacheFormat() {
-        NSKeyedUnarchiver.setClass(LDUserWrapper.self, forClassName: "LDUserModel")
-        NSKeyedArchiver.setClassName("LDUserModel", for: LDUserWrapper.self)
     }
 }
 
@@ -322,8 +273,6 @@ extension LDUser: TypeIdentifying { }
                 && avatar == otherUser.avatar
                 && AnyComparer.isEqual(custom, to: otherUser.custom)
                 && isAnonymous == otherUser.isAnonymous
-                && device == otherUser.device
-                && operatingSystem == otherUser.operatingSystem
                 && privateAttributes == otherUser.privateAttributes
         }
     }

@@ -45,8 +45,6 @@ extension LDUser {
                           avatar: StubConstants.avatar,
                           custom: StubConstants.custom(includeSystemValues: true),
                           isAnonymous: StubConstants.isAnonymous,
-                          device: environmentReporter?.deviceModel,
-                          operatingSystem: environmentReporter?.systemVersion,
                           secondary: StubConstants.secondary)
         return user
     }
