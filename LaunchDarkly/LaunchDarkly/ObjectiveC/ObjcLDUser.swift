@@ -11,16 +11,6 @@ import Foundation
 public final class ObjcLDUser: NSObject {
     var user: LDUser
 
-    /**
-     LDUser attributes that can be marked private.
-
-     The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
-
-     See Also: `ObjcLDConfig.allUserAttributesPrivate`, `ObjcLDConfig.privateUserAttributes`, and `privateAttributes`.
-     */
-    @objc public class var privatizableAttributes: [String] {
-        LDUser.privatizableAttributes
-    }
     /// LDUser secondary attribute used to make `secondary` private
     @objc public class var attributeSecondary: String {
         LDUser.CodingKeys.secondary.rawValue
@@ -123,9 +113,9 @@ public final class ObjcLDUser: NSObject {
      See Also: `ObjcLDConfig.allUserAttributesPrivate` and `ObjcLDConfig.privateUserAttributes`.
 
      */
-    @objc public var privateAttributes: [String]? {
-        get { user.privateAttributes }
-        set { user.privateAttributes = newValue }
+    @objc public var privateAttributes: [String] {
+        get { user.privateAttributes.map { $0.name } }
+        set { user.privateAttributes = newValue.map { UserAttribute.forName($0) } }
     }
 
     /**

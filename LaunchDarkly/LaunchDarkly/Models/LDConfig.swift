@@ -68,7 +68,7 @@ public struct LDConfig {
         /// The default setting for private user attributes. (false)
         static let allUserAttributesPrivate = false
         /// The default private user attribute list (nil)
-        static let privateUserAttributes: [String]? = nil
+        static let privateUserAttributes: [UserAttribute] = []
 
         /// The default HTTP request method for stream connections and feature flag requests. When true, these requests will use the non-standard verb `REPORT`. When false, these requests will use the standard verb `GET`. (false)
         static let useReport = false
@@ -213,7 +213,7 @@ public struct LDConfig {
 
      See Also: `allUserAttributesPrivate`, `LDUser.privatizableAttributes`, and `LDUser.privateAttributes`.
     */
-    public var privateUserAttributes: [String]? = Defaults.privateUserAttributes
+    public var privateUserAttributes: [UserAttribute] = Defaults.privateUserAttributes
 
     /**
      Directs the SDK to use REPORT for HTTP requests for feature flag data. (Default: `false`)
@@ -368,8 +368,7 @@ extension LDConfig: Equatable {
             && lhs.enableBackgroundUpdates == rhs.enableBackgroundUpdates
             && lhs.startOnline == rhs.startOnline
             && lhs.allUserAttributesPrivate == rhs.allUserAttributesPrivate
-            && (lhs.privateUserAttributes == nil && rhs.privateUserAttributes == nil
-                || (lhs.privateUserAttributes != nil && rhs.privateUserAttributes != nil && lhs.privateUserAttributes! == rhs.privateUserAttributes!))
+            && Set(lhs.privateUserAttributes) == Set(rhs.privateUserAttributes)
             && lhs.useReport == rhs.useReport
             && lhs.inlineUserInEvents == rhs.inlineUserInEvents
             && lhs.isDebugMode == rhs.isDebugMode

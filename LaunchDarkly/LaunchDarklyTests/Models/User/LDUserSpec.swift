@@ -31,7 +31,7 @@ final class LDUserSpec: QuickSpec {
                               avatar: LDUser.StubConstants.avatar,
                               custom: LDUser.StubConstants.custom(includeSystemValues: true),
                               isAnonymous: LDUser.StubConstants.isAnonymous,
-                              privateAttributes: LDUser.privatizableAttributes,
+                              privateAttributes: LDUser.optionalAttributes,
                               secondary: LDUser.StubConstants.secondary)
                 expect(user.key) == LDUser.StubConstants.key
                 expect(user.secondary) == LDUser.StubConstants.secondary
@@ -44,7 +44,7 @@ final class LDUserSpec: QuickSpec {
                 expect(user.email) == LDUser.StubConstants.email
                 expect(user.avatar) == LDUser.StubConstants.avatar
                 expect(user.custom == LDUser.StubConstants.custom(includeSystemValues: true)).to(beTrue())
-                expect(user.privateAttributes) == LDUser.privatizableAttributes
+                expect(user.privateAttributes) == LDUser.optionalAttributes
             }
             context("called without optional elements") {
                 var environmentReporter: EnvironmentReporter!
@@ -66,7 +66,7 @@ final class LDUserSpec: QuickSpec {
                     expect(user.custom.count) == 2
                     expect(user.custom[LDUser.CodingKeys.device.rawValue] as? String) == environmentReporter.deviceModel
                     expect(user.custom[LDUser.CodingKeys.operatingSystem.rawValue] as? String) == environmentReporter.systemVersion
-                    expect(user.privateAttributes).to(beNil())
+                    expect(user.privateAttributes).to(beEmpty())
                     expect(user.secondary).to(beNil())
                 }
             }
@@ -96,7 +96,7 @@ final class LDUserSpec: QuickSpec {
                 beforeEach {
                     originalUser = LDUser.stub()
                     var userDictionary = originalUser.dictionaryValue(includePrivateAttributes: true, config: LDConfig.stub)
-                    userDictionary[LDUser.CodingKeys.privateAttributes.rawValue] = LDUser.privatizableAttributes
+                    userDictionary[LDUser.CodingKeys.privateAttributes.rawValue] = LDUser.optionalAttributes.map { $0.name }
                     user = LDUser(userDictionary: userDictionary)
                 }
                 it("creates a user with optional elements and feature flags") {
@@ -111,7 +111,7 @@ final class LDUserSpec: QuickSpec {
                     expect(user.email) == originalUser.email
                     expect(user.avatar) == originalUser.avatar
                     expect(user.custom == originalUser.custom).to(beTrue())
-                    expect(user.privateAttributes) == LDUser.privatizableAttributes
+                    expect(user.privateAttributes) == LDUser.optionalAttributes
                 }
             }
             context("without optional elements") {
@@ -137,7 +137,7 @@ final class LDUserSpec: QuickSpec {
                     expect(user.custom.count) == 2
                     expect(user.custom[LDUser.CodingKeys.device.rawValue] as? String) == EnvironmentReporter().deviceModel
                     expect(user.custom[LDUser.CodingKeys.operatingSystem.rawValue] as? String) == EnvironmentReporter().systemVersion
-                    expect(user.privateAttributes).to(beNil())
+                    expect(user.privateAttributes).to(beEmpty())
                 }
             }
             context("with empty dictionary") {
@@ -156,7 +156,7 @@ final class LDUserSpec: QuickSpec {
                     expect(user.email).to(beNil())
                     expect(user.avatar).to(beNil())
                     expect(user.custom).to(beEmpty())
-                    expect(user.privateAttributes).to(beNil())
+                    expect(user.privateAttributes).to(beEmpty())
                 }
             }
         }
@@ -186,12 +186,13 @@ final class LDUserSpec: QuickSpec {
                 expect(user.custom[LDUser.CodingKeys.device.rawValue] as? String) == environmentReporter.deviceModel
                 expect(user.custom[LDUser.CodingKeys.operatingSystem.rawValue] as? String) == environmentReporter.systemVersion
 
-                expect(user.privateAttributes).to(beNil())
+                expect(user.privateAttributes).to(beEmpty())
             }
         }
     }
 
     private func dictionaryValueSpec() {
+        let optionalNames = LDUser.optionalAttributes.map { $0.name }
         let allCustomPrivitizable = Array(LDUser.StubConstants.custom(includeSystemValues: true).keys)
 
         describe("dictionaryValue") {
@@ -234,14 +235,14 @@ final class LDUserSpec: QuickSpec {
                 }
                 context("privatizing all individually in config") {
                     beforeEach {
-                        config.privateUserAttributes = LDUser.privatizableAttributes + ["customAttr"]
+                        config.privateUserAttributes = LDUser.optionalAttributes + [UserAttribute.forName("customAttr")]
                         userDictionary = user.dictionaryValue(includePrivateAttributes: false, config: config)
                     }
                     testCase()
                 }
                 context("privatizing all individually on user") {
                     beforeEach {
-                        user.privateAttributes = LDUser.privatizableAttributes + ["customAttr"]
+                        user.privateAttributes = LDUser.optionalAttributes + [UserAttribute.forName("customAttr")]
                         userDictionary = user.dictionaryValue(includePrivateAttributes: false, config: config)
                     }
                     testCase()
@@ -250,8 +251,8 @@ final class LDUserSpec: QuickSpec {
 
             it("includePrivateAttributes always includes attributes") {
                 config.allUserAttributesPrivate = true
-                config.privateUserAttributes = LDUser.privatizableAttributes + allCustomPrivitizable
-                user.privateAttributes = LDUser.privatizableAttributes + allCustomPrivitizable
+                config.privateUserAttributes = LDUser.optionalAttributes + allCustomPrivitizable.map { UserAttribute.forName($0) }
+                user.privateAttributes = LDUser.optionalAttributes + allCustomPrivitizable.map { UserAttribute.forName($0) }
                 let userDictionary = user.dictionaryValue(includePrivateAttributes: true, config: config)
 
                 expect(userDictionary.count) == 11
@@ -283,8 +284,8 @@ final class LDUserSpec: QuickSpec {
             }
 
             [false, true].forEach { isCustomAttr in
-                (isCustomAttr ? Array(LDUser.StubConstants.custom(includeSystemValues: true).keys)
-                              : LDUser.privatizableAttributes).forEach { privateAttr in
+                (isCustomAttr ? LDUser.StubConstants.custom(includeSystemValues: true).keys.map { UserAttribute.forName($0) }
+                              : LDUser.optionalAttributes).forEach { privateAttr in
                     [false, true].forEach { inConfig in
                         it("with \(privateAttr) private in \(inConfig ? "config" : "user")") {
                             if inConfig {
@@ -295,18 +296,18 @@ final class LDUserSpec: QuickSpec {
 
                             userDictionary = user.dictionaryValue(includePrivateAttributes: false, config: config)
 
-                            expect(userDictionary.redactedAttributes) == [privateAttr]
+                            expect(userDictionary.redactedAttributes) == [privateAttr.name]
 
                             let includingDictionary = user.dictionaryValue(includePrivateAttributes: true, config: config)
                             if !isCustomAttr {
                                 let userDictionaryWithoutRedacted = userDictionary.filter { $0.key != "privateAttrs" }
-                                let includingDictionaryWithoutRedacted = includingDictionary.filter { $0.key != privateAttr && $0.key != "privateAttrs" }
+                                let includingDictionaryWithoutRedacted = includingDictionary.filter { $0.key != privateAttr.name && $0.key != "privateAttrs" }
                                 expect(AnyComparer.isEqual(userDictionaryWithoutRedacted, to: includingDictionaryWithoutRedacted)) == true
                             } else {
                                 let userDictionaryWithoutRedacted = userDictionary.filter { $0.key != "custom" && $0.key != "privateAttrs" }
                                 let includingDictionaryWithoutRedacted = includingDictionary.filter { $0.key != "custom" && $0.key != "privateAttrs" }
                                 expect(AnyComparer.isEqual(userDictionaryWithoutRedacted, to: includingDictionaryWithoutRedacted)) == true
-                                let expectedCustom = (includingDictionary["custom"] as! [String: Any]).filter { $0.key != privateAttr }
+                                let expectedCustom = (includingDictionary["custom"] as! [String: Any]).filter { $0.key != privateAttr.name }
                                 expect(AnyComparer.isEqual(userDictionary["custom"], to: expectedCustom)) == true
                             }
                         }
@@ -325,7 +326,7 @@ final class LDUserSpec: QuickSpec {
                     expect(userDictionary[LDUser.CodingKeys.key.rawValue] as? String) == user.key
                     expect(userDictionary[LDUser.CodingKeys.isAnonymous.rawValue] as? Bool) == user.isAnonymous
 
-                    expect(Set(userDictionary.redactedAttributes!)) == Set(LDUser.privatizableAttributes + allCustomPrivitizable)
+                    expect(Set(userDictionary.redactedAttributes!)) == Set(optionalNames + allCustomPrivitizable)
                 }
             }
 
@@ -389,7 +390,7 @@ final class LDUserSpec: QuickSpec {
                      ("avatar", true, "dummy", { u, v in u.avatar = v as! String? }),
                      ("custom", false, ["dummy": true], { u, v in u.custom = v as! [String: Any] }),
                      ("isAnonymous", false, true, { u, v in u.isAnonymous = v as! Bool }),
-                     ("privateAttributes", false, ["dummy"], { u, v in u.privateAttributes = v as! [String]? })]
+                     ("privateAttributes", false, [UserAttribute.forName("dummy")], { u, v in u.privateAttributes = v as! [UserAttribute] })]
                 testFields.forEach { name, isOptional, otherVal, setter in
                     context("\(name) differs") {
                         beforeEach {

@@ -105,9 +105,9 @@ public final class ObjcLDConfig: NSObject {
 
      See Also: `allUserAttributesPrivate`, `LDUser.privatizableAttributes` (`ObjcLDUser.privatizableAttributes`), and `LDUser.privateAttributes` (`ObjcLDUser.privateAttributes`).
      */
-    @objc public var privateUserAttributes: [String]? {
-        get { config.privateUserAttributes }
-        set { config.privateUserAttributes = newValue }
+    @objc public var privateUserAttributes: [String] {
+        get { config.privateUserAttributes.map { $0.name } }
+        set { config.privateUserAttributes = newValue.map { UserAttribute.forName($0) } }
     }
 
     /**
