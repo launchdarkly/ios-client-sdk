@@ -63,8 +63,8 @@ final class LDUserSpec: QuickSpec {
                     expect(user.email).to(beNil())
                     expect(user.avatar).to(beNil())
                     expect(user.custom.count) == 2
-                    expect(user.custom[LDUser.CodingKeys.device.rawValue] as? String) == environmentReporter.deviceModel
-                    expect(user.custom[LDUser.CodingKeys.operatingSystem.rawValue] as? String) == environmentReporter.systemVersion
+                    expect(user.custom[LDUser.CodingKeys.device.rawValue]) == .string(environmentReporter.deviceModel)
+                    expect(user.custom[LDUser.CodingKeys.operatingSystem.rawValue]) == .string(environmentReporter.systemVersion)
                     expect(user.privateAttributes).to(beEmpty())
                     expect(user.secondary).to(beNil())
                 }
@@ -108,8 +108,8 @@ final class LDUserSpec: QuickSpec {
                 expect(user.email).to(beNil())
                 expect(user.avatar).to(beNil())
                 expect(user.custom.count) == 2
-                expect(user.custom[LDUser.CodingKeys.device.rawValue] as? String) == environmentReporter.deviceModel
-                expect(user.custom[LDUser.CodingKeys.operatingSystem.rawValue] as? String) == environmentReporter.systemVersion
+                expect(user.custom[LDUser.CodingKeys.device.rawValue]) == .string(environmentReporter.deviceModel)
+                expect(user.custom[LDUser.CodingKeys.operatingSystem.rawValue]) == .string(environmentReporter.systemVersion)
 
                 expect(user.privateAttributes).to(beEmpty())
             }
@@ -201,7 +201,7 @@ final class LDUserSpec: QuickSpec {
 
                 // Custom attributes
                 allCustomPrivitizable.forEach { attr in
-                    expect(AnyComparer.isEqual(customDictionary[attr], to: user.custom[attr])).to(beTrue())
+                    expect(LDValue.fromAny(customDictionary[attr])) == user.custom[attr]
                 }
 
                 // Redacted attributes is empty
@@ -303,19 +303,19 @@ final class LDUserSpec: QuickSpec {
                 }
             }
             context("when users are not equal") {
-                let testFields: [(String, Bool, Any, (inout LDUser, Any?) -> Void)] =
-                    [("key", false, "dummy", { u, v in u.key = v as! String }),
-                     ("secondary", true, "dummy", { u, v in u.secondary = v as! String? }),
-                     ("name", true, "dummy", { u, v in u.name = v as! String? }),
-                     ("firstName", true, "dummy", { u, v in u.firstName = v as! String? }),
-                     ("lastName", true, "dummy", { u, v in u.lastName = v as! String? }),
-                     ("country", true, "dummy", { u, v in u.country = v as! String? }),
-                     ("ipAddress", true, "dummy", { u, v in u.ipAddress = v as! String? }),
-                     ("email address", true, "dummy", { u, v in u.email = v as! String? }),
-                     ("avatar", true, "dummy", { u, v in u.avatar = v as! String? }),
-                     ("custom", false, ["dummy": true], { u, v in u.custom = v as! [String: Any] }),
-                     ("isAnonymous", false, true, { u, v in u.isAnonymous = v as! Bool }),
-                     ("privateAttributes", false, [UserAttribute.forName("dummy")], { u, v in u.privateAttributes = v as! [UserAttribute] })]
+                let testFields: [(String, Bool, LDValue, (inout LDUser, LDValue?) -> Void)] =
+                    [("key", false, "dummy", { u, v in u.key = v!.stringValue() }),
+                     ("secondary", true, "dummy", { u, v in u.secondary = v?.stringValue() }),
+                     ("name", true, "dummy", { u, v in u.name = v?.stringValue() }),
+                     ("firstName", true, "dummy", { u, v in u.firstName = v?.stringValue() }),
+                     ("lastName", true, "dummy", { u, v in u.lastName = v?.stringValue() }),
+                     ("country", true, "dummy", { u, v in u.country = v?.stringValue() }),
+                     ("ipAddress", true, "dummy", { u, v in u.ipAddress = v?.stringValue() }),
+                     ("email address", true, "dummy", { u, v in u.email = v?.stringValue() }),
+                     ("avatar", true, "dummy", { u, v in u.avatar = v?.stringValue() }),
+                     ("custom", false, ["dummy": true], { u, v in u.custom = (v!.toAny() as! [String: Any]).mapValues { LDValue.fromAny($0) } }),
+                     ("isAnonymous", false, true, { u, v in u.isAnonymous = v!.booleanValue() }),
+                     ("privateAttributes", false, "dummy", { u, v in u.privateAttributes = [UserAttribute.forName(v!.stringValue())] })]
                 testFields.forEach { name, isOptional, otherVal, setter in
                     context("\(name) differs") {
                         beforeEach {

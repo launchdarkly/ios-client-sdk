@@ -94,8 +94,8 @@ public final class ObjcLDUser: NSObject {
     }
     /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device & operatingSystem (which cannot be made private). See `privateAttributes` for details. (Default: nil)
     @objc public var custom: [String: Any] {
-        get { user.custom }
-        set { user.custom = newValue }
+        get { user.custom.mapValues { $0.toAny() } }
+        set { user.custom = newValue.mapValues { LDValue.fromAny($0) } }
     }
     /// Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. isAnonymous cannot be made private. (Default: YES)
     @objc public var isAnonymous: Bool {
