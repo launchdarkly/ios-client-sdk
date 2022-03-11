@@ -25,7 +25,7 @@ final class EventReporterSpec: QuickSpec {
         var featureFlagWithReasonAndTrackReason: FeatureFlag!
         var eventStubResponseDate: Date?
         var flagRequestTracker: FlagRequestTracker? { eventReporter.flagRequestTracker }
-        var syncResult: EventSyncResult? = nil
+        var syncResult: SynchronizingError? = nil
         var diagnosticCache: DiagnosticCachingMock
 
         init(eventCount: Int = 0,
@@ -264,12 +264,7 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            guard case let .success(result) = testContext.syncResult
-                            else {
-                                fail("Expected event dictionaries in sync result")
-                                return
-                            }
-                            expect(result == testContext.serviceMock.publishedEventDictionaries!).to(beTrue())
+                            expect(testContext.syncResult).to(beNil())
                         }
                     }
                     context("with events only") {
@@ -297,12 +292,7 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            guard case let .success(result) = testContext.syncResult
-                            else {
-                                fail("Expected event dictionaries in sync result")
-                                return
-                            }
-                            expect(result == testContext.serviceMock.publishedEventDictionaries!).to(beTrue())
+                            expect(testContext.syncResult).to(beNil())
                         }
                     }
                     context("with tracked requests only") {
@@ -329,12 +319,7 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            guard case let .success(result) = testContext.syncResult
-                            else {
-                                fail("Expected event dictionaries in sync result")
-                                return
-                            }
-                            expect(result == testContext.serviceMock.publishedEventDictionaries!).to(beTrue())
+                            expect(testContext.syncResult).to(beNil())
                         }
                     }
                     context("without events or tracked requests") {
@@ -356,12 +341,7 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            guard case let .success(result) = testContext.syncResult
-                            else {
-                                fail("Expected event dictionaries in sync result")
-                                return
-                            }
-                            expect(result == [[String: Any]]()).to(beTrue())
+                            expect(testContext.syncResult).to(beNil())
                         }
                     }
                 }
@@ -391,7 +371,7 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            guard case let .error(.request(error)) = testContext.syncResult
+                            guard case let .request(error) = testContext.syncResult
                             else {
                                 fail("Expected error result for event send")
                                 return
@@ -425,7 +405,7 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
                             let expectedError = testContext.serviceMock.errorEventHTTPURLResponse
-                            guard case let .error(.response(error)) = testContext.syncResult
+                            guard case let .response(error) = testContext.syncResult
                             else {
                                 fail("Expected error result for event send")
                                 return
@@ -460,7 +440,7 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
-                            guard case let .error(.request(error)) = testContext.syncResult
+                            guard case let .request(error) = testContext.syncResult
                             else {
                                 fail("Expected error result for event send")
                                 return
@@ -491,7 +471,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
                     expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                     expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == true
-                    guard case .error(.isOffline) = testContext.syncResult
+                    guard case .isOffline = testContext.syncResult
                     else {
                         fail("Expected error .isOffline result for event send")
                         return
@@ -859,13 +839,5 @@ private extension Date {
 extension Event.Kind {
     static var nonSummaryKinds: [Event.Kind] {
         [feature, debug, identify, custom]
-    }
-}
-
-// Performs set-wise equality, without ordering
-extension Array where Element == [String: Any] {
-    static func == (_ lhs: [[String: Any]], _ rhs: [[String: Any]]) -> Bool {
-        // Same length and the left hand side does not contain any elements not in the right hand side
-        lhs.count == rhs.count && !lhs.contains { lhse in !rhs.contains { AnyComparer.isEqual($0, to: lhse) } }
     }
 }

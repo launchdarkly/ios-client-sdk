@@ -1,11 +1,6 @@
 import Foundation
 
-enum EventSyncResult {
-    case success([[String: Any]])
-    case error(SynchronizingError)
-}
-
-typealias EventSyncCompleteClosure = ((EventSyncResult) -> Void)
+typealias EventSyncCompleteClosure = ((SynchronizingError?) -> Void)
 // sourcery: autoMockable
 protocol EventReporting {
     // sourcery: defaultMockValue = false
@@ -114,7 +109,7 @@ class EventReporter: EventReporting {
         guard isOnline
         else {
             Log.debug(typeName(and: #function) + "aborted. EventReporter is offline")
-            reportSyncComplete(.error(.isOffline))
+            reportSyncComplete(.isOffline)
             completion?()
             return
         }
@@ -126,7 +121,7 @@ class EventReporter: EventReporting {
         guard !eventStore.isEmpty
         else {
             Log.debug(typeName(and: #function) + "aborted. Event store is empty")
-            reportSyncComplete(.success([]))
+            reportSyncComplete(nil)
             completion?()
             return
         }
@@ -164,13 +159,13 @@ class EventReporter: EventReporting {
         if error == nil && (200..<300).contains(response?.statusCode ?? 0) {
             self.lastEventResponseDate = response?.headerDate ?? self.lastEventResponseDate
             Log.debug(self.typeName(and: #function) + "Completed sending \(sentEvents.count) event(s)")
-            self.reportSyncComplete(.success(sentEvents))
+            self.reportSyncComplete(nil)
             return false
         }
 
         if let statusCode = response?.statusCode, (400..<500).contains(statusCode) && ![400, 408, 429].contains(statusCode) {
             Log.debug(typeName(and: #function) + "dropping events due to non-retriable response: \(String(describing: response))")
-            self.reportSyncComplete(.error(.response(response)))
+            self.reportSyncComplete(.response(response))
             return false
         }
 
@@ -179,9 +174,9 @@ class EventReporter: EventReporting {
         if isRetry {
             Log.debug(typeName(and: #function) + "dropping events due to failed retry")
             if let error = error {
-                reportSyncComplete(.error(.request(error)))
+                reportSyncComplete(.request(error))
             } else {
-                reportSyncComplete(.error(.response(response)))
+                reportSyncComplete(.response(response))
             }
             return false
         }
@@ -189,7 +184,7 @@ class EventReporter: EventReporting {
         return true
     }
 
-    private func reportSyncComplete(_ result: EventSyncResult) {
+    private func reportSyncComplete(_ result: SynchronizingError?) {
         // The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         guard let onSyncComplete = onSyncComplete
         else { return }
