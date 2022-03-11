@@ -332,7 +332,7 @@ final class EventSpec: QuickSpec {
                 }
                 it("creates a dictionary with the user key only") {
                     expect(eventDictionary.eventUserKey) == user.key
-                    expect(eventDictionary.eventUser).to(beNil())
+                    expect(eventDictionary.eventUserDictionary).to(beNil())
                 }
             }
             context("inlining user and without reason") {
@@ -370,7 +370,7 @@ final class EventSpec: QuickSpec {
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                     expect(eventDictionary.eventUserKey) == user.key
-                    expect(eventDictionary.eventUser).to(beNil())
+                    expect(eventDictionary.eventUserDictionary).to(beNil())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
                     expect(eventDictionary.eventVersion) == featureFlag.version
                     expect(eventDictionary.eventData).to(beNil())
@@ -389,7 +389,7 @@ final class EventSpec: QuickSpec {
                     expect(AnyComparer.isEqual(eventDictionary.eventValue, to: true)).to(beTrue())
                     expect(AnyComparer.isEqual(eventDictionary.eventDefaultValue, to: false)).to(beTrue())
                     expect(eventDictionary.eventUserKey) == user.key
-                    expect(eventDictionary.eventUser).to(beNil())
+                    expect(eventDictionary.eventUserDictionary).to(beNil())
                     expect(eventDictionary.eventVariation) == featureFlag.variation
                     expect(eventDictionary.eventVersion).to(beNil())
                     expect(eventDictionary.eventData).to(beNil())
@@ -413,7 +413,7 @@ final class EventSpec: QuickSpec {
                 }
                 it("creates a dictionary with the user key only") {
                     expect(eventDictionary.eventUserKey) == user.key
-                    expect(eventDictionary.eventUser).to(beNil())
+                    expect(eventDictionary.eventUserDictionary).to(beNil())
                 }
             }
             it("creates a dictionary with contextKind for anonymous user") {
@@ -519,7 +519,7 @@ final class EventSpec: QuickSpec {
                         expect(eventDictionary.eventDefaultValue).to(beNil())
                         expect(eventDictionary.eventVariation).to(beNil())
                         expect(eventDictionary.eventUserKey) == user.key
-                        expect(eventDictionary.eventUser).to(beNil())
+                        expect(eventDictionary.eventUserDictionary).to(beNil())
                         expect(eventDictionary.eventMetricValue) == metricValue
                     }
                 }
@@ -544,7 +544,7 @@ final class EventSpec: QuickSpec {
                     expect(eventDictionary.eventDefaultValue).to(beNil())
                     expect(eventDictionary.eventVariation).to(beNil())
                     expect(eventDictionary.eventUserKey) == user.key
-                    expect(eventDictionary.eventUser).to(beNil())
+                    expect(eventDictionary.eventUserDictionary).to(beNil())
                 }
             }
             context("without inlining user") {
@@ -570,7 +570,7 @@ final class EventSpec: QuickSpec {
                 }
                 it("creates a dictionary with the user key only") {
                     expect(eventDictionary.eventUserKey) == user.key
-                    expect(eventDictionary.eventUser).to(beNil())
+                    expect(eventDictionary.eventUserDictionary).to(beNil())
                 }
             }
             context("inlining user") {
@@ -746,7 +746,7 @@ final class EventSpec: QuickSpec {
 
                 expect(eventDictionary.eventKey).to(beNil())
                 expect(eventDictionary.eventCreationDate).to(beNil())
-                expect(eventDictionary.eventUser).to(beNil())
+                expect(eventDictionary.eventUserDictionary).to(beNil())
                 expect(eventDictionary.eventUserKey).to(beNil())
                 expect(eventDictionary.eventValue).to(beNil())
                 expect(eventDictionary.eventDefaultValue).to(beNil())
@@ -841,12 +841,6 @@ extension Dictionary where Key == String, Value == Any {
     }
     var eventUserKey: String? {
         self[Event.CodingKeys.userKey.rawValue] as? String
-    }
-    fileprivate var eventUser: LDUser? {
-        if let userDictionary = eventUserDictionary {
-            return LDUser(userDictionary: userDictionary)
-        }
-        return nil
     }
     fileprivate var eventUserDictionary: [String: Any]? {
         self[Event.CodingKeys.user.rawValue] as? [String: Any]

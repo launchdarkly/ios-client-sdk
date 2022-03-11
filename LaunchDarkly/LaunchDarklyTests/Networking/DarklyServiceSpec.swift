@@ -119,12 +119,8 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
-                                if let encodedUserString = urlRequest?.url?.lastPathComponent,
-                                    let decodedUser = LDUser(base64urlEncodedString: encodedUserString) {
-                                    expect(decodedUser.isEqual(to: testContext.user)) == true
-                                } else {
-                                    fail("encoded user string did not create a user")
-                                }
+                                let expectedUser = testContext.user.dictionaryValue(includePrivateAttributes: true, config: testContext.config)
+                                expect(AnyComparer.isEqual(urlRequest?.url?.lastPathComponent.jsonDictionary, to: expectedUser)) == true
                             } else {
                                 fail("request path is missing")
                             }
@@ -176,12 +172,8 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
-                                if let encodedUserString = urlRequest?.url?.lastPathComponent,
-                                    let decodedUser = LDUser(base64urlEncodedString: encodedUserString) {
-                                    expect(decodedUser.isEqual(to: testContext.user)) == true
-                                } else {
-                                    fail("encoded user string did not create a user")
-                                }
+                                let expectedUser = testContext.user.dictionaryValue(includePrivateAttributes: true, config: testContext.config)
+                                expect(AnyComparer.isEqual(urlRequest?.url?.lastPathComponent.jsonDictionary, to: expectedUser)) == true
                             } else {
                                 fail("request path is missing")
                             }
@@ -555,7 +547,8 @@ final class DarklyServiceSpec: QuickSpec {
                     let receivedArguments = testContext.serviceFactoryMock.makeStreamingProviderReceivedArguments
                     expect(receivedArguments!.url.host) == testContext.config.streamUrl.host
                     expect(receivedArguments!.url.pathComponents.contains(DarklyService.StreamRequestPath.meval)).to(beTrue())
-                    expect(LDUser(base64urlEncodedString: receivedArguments!.url.lastPathComponent)?.isEqual(to: testContext.user)) == true
+                    let expectedUser = testContext.user.dictionaryValue(includePrivateAttributes: true, config: testContext.config)
+                    expect(AnyComparer.isEqual(receivedArguments!.url.lastPathComponent.jsonDictionary, to: expectedUser)) == true
                     expect(receivedArguments!.httpHeaders).toNot(beEmpty())
                     expect(receivedArguments!.connectMethod).to(be("GET"))
                     expect(receivedArguments!.connectBody).to(beNil())
@@ -575,7 +568,8 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(receivedArguments!.url.lastPathComponent) == DarklyService.StreamRequestPath.meval
                     expect(receivedArguments!.httpHeaders).toNot(beEmpty())
                     expect(receivedArguments!.connectMethod) == DarklyService.HTTPRequestMethod.report
-                    expect(LDUser(data: receivedArguments!.connectBody)?.isEqual(to: testContext.user)) == true
+                    let expectedUser = testContext.user.dictionaryValue(includePrivateAttributes: true, config: testContext.config)
+                    expect(AnyComparer.isEqual(receivedArguments!.connectBody?.jsonDictionary, to: expectedUser)) == true
                 }
             }
         }
@@ -796,16 +790,9 @@ private extension Data {
     }
 }
 
-extension LDUser {
-    init?(base64urlEncodedString: String) {
-        let base64encodedString = base64urlEncodedString.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
-        self.init(data: Data(base64Encoded: base64encodedString))
-    }
-
-    init?(data: Data?) {
-        guard let data = data,
-            let userDictionary = try? JSONSerialization.jsonDictionary(with: data)
-        else { return nil }
-        self.init(userDictionary: userDictionary)
+private extension String {
+    var jsonDictionary: [String: Any]? {
+        let base64encodedString = self.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        return Data(base64Encoded: base64encodedString)?.jsonDictionary
     }
 }

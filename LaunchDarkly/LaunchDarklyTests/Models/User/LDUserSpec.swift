@@ -13,7 +13,6 @@ final class LDUserSpec: QuickSpec {
 
     private func initSpec() {
         initSubSpec()
-        initFromDictionarySpec()
         initWithEnvironmentReporterSpec()
     }
 
@@ -83,80 +82,6 @@ final class LDUserSpec: QuickSpec {
                         expect(user.key) == LDUser.defaultKey(environmentReporter: environmentReporter)
                         expect(user.isAnonymous) == true
                     }
-                }
-            }
-        }
-    }
-
-    private func initFromDictionarySpec() {
-        describe("init from dictionary") {
-            var user: LDUser!
-            var originalUser: LDUser!
-            context("and optional elements") {
-                beforeEach {
-                    originalUser = LDUser.stub()
-                    var userDictionary = originalUser.dictionaryValue(includePrivateAttributes: true, config: LDConfig.stub)
-                    userDictionary[LDUser.CodingKeys.privateAttributes.rawValue] = LDUser.optionalAttributes.map { $0.name }
-                    user = LDUser(userDictionary: userDictionary)
-                }
-                it("creates a user with optional elements and feature flags") {
-                    expect(user.key) == originalUser.key
-                    expect(user.secondary) == originalUser.secondary
-                    expect(user.name) == originalUser.name
-                    expect(user.firstName) == originalUser.firstName
-                    expect(user.lastName) == originalUser.lastName
-                    expect(user.isAnonymous) == originalUser.isAnonymous
-                    expect(user.country) == originalUser.country
-                    expect(user.ipAddress) == originalUser.ipAddress
-                    expect(user.email) == originalUser.email
-                    expect(user.avatar) == originalUser.avatar
-                    expect(user.custom == originalUser.custom).to(beTrue())
-                    expect(user.privateAttributes) == LDUser.optionalAttributes
-                }
-            }
-            context("without optional elements") {
-                beforeEach {
-                    originalUser = LDUser(isAnonymous: true)
-                    var userDictionary = originalUser.dictionaryValue(includePrivateAttributes: true, config: LDConfig.stub)
-                    userDictionary[LDUser.CodingKeys.privateAttributes.rawValue] = originalUser.privateAttributes
-                    user = LDUser(userDictionary: userDictionary)
-                }
-                it("creates a user without optional elements") {
-                    expect(user.key) == originalUser.key
-                    expect(user.isAnonymous) == originalUser.isAnonymous
-
-                    expect(user.name).to(beNil())
-                    expect(user.firstName).to(beNil())
-                    expect(user.lastName).to(beNil())
-                    expect(user.country).to(beNil())
-                    expect(user.ipAddress).to(beNil())
-                    expect(user.email).to(beNil())
-                    expect(user.avatar).to(beNil())
-                    expect(user.secondary).to(beNil())
-
-                    expect(user.custom.count) == 2
-                    expect(user.custom[LDUser.CodingKeys.device.rawValue] as? String) == EnvironmentReporter().deviceModel
-                    expect(user.custom[LDUser.CodingKeys.operatingSystem.rawValue] as? String) == EnvironmentReporter().systemVersion
-                    expect(user.privateAttributes).to(beEmpty())
-                }
-            }
-            context("with empty dictionary") {
-                it("creates a user without optional elements or feature flags") {
-                    user = LDUser(userDictionary: [:])
-                    expect(user.key).toNot(beNil())
-                    expect(user.key.isEmpty).to(beFalse())
-                    expect(user.isAnonymous) == false
-
-                    expect(user.secondary).to(beNil())
-                    expect(user.name).to(beNil())
-                    expect(user.firstName).to(beNil())
-                    expect(user.lastName).to(beNil())
-                    expect(user.country).to(beNil())
-                    expect(user.ipAddress).to(beNil())
-                    expect(user.email).to(beNil())
-                    expect(user.avatar).to(beNil())
-                    expect(user.custom).to(beEmpty())
-                    expect(user.privateAttributes).to(beEmpty())
                 }
             }
         }
