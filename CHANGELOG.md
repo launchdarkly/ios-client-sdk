@@ -4,7 +4,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 
 ## [5.4.5] - 2022-03-11
 ### Fixed
-- Fixed race condition in `LDSwiftEventSource` that could cause a crash if the stream is explicitly stopped (such as when `identify` is called) while the stream waiting to reconnect.
+- Fixed race condition in `LDSwiftEventSource` that could cause a crash if the stream is explicitly stopped (such as when `identify` is called) while the stream is waiting to reconnect.
 
 ## [5.4.4] - 2022-01-19
 ### Fixed
