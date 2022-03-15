@@ -82,15 +82,6 @@ extension FlagRequestTracker {
     }
 }
 
-extension FlagRequestTracker: Equatable {
-    public static func == (lhs: FlagRequestTracker, rhs: FlagRequestTracker) -> Bool {
-        if fabs(lhs.startDate.timeIntervalSince(rhs.startDate)) > 0.001 {
-            return false
-        }
-        return lhs.flagCounters == rhs.flagCounters
-    }
-}
-
 extension Dictionary where Key == String, Value == Any {
     var flagRequestTrackerStartDateMillis: Int64? {
         self[FlagRequestTracker.CodingKeys.startDate.rawValue] as? Int64

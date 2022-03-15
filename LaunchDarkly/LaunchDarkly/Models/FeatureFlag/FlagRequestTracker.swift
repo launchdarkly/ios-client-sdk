@@ -6,9 +6,9 @@ struct FlagRequestTracker {
     }
 
     let startDate = Date()
-    var flagCounters = [LDFlagKey: FlagCounter]()
+    var flagCounters: [LDFlagKey: FlagCounter] = [:]
 
-    mutating func trackRequest(flagKey: LDFlagKey, reportedValue: Any?, featureFlag: FeatureFlag?, defaultValue: Any?) {
+    mutating func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue) {
         if flagCounters[flagKey] == nil {
             flagCounters[flagKey] = FlagCounter()
         }
@@ -17,10 +17,10 @@ struct FlagRequestTracker {
         flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
 
         Log.debug(typeName(and: #function) + "\n\tflagKey: \(flagKey)"
-            + "\n\treportedValue: \(String(describing: reportedValue)), "
+            + "\n\treportedValue: \(reportedValue), "
             + "\n\tvariation: \(String(describing: featureFlag?.variation)), "
             + "\n\tversion: \(String(describing: featureFlag?.flagVersion ?? featureFlag?.version)), "
-            + "\n\tdefaultValue: \(String(describing: defaultValue))\n")
+            + "\n\tdefaultValue: \(defaultValue)\n")
     }
 
     var dictionaryValue: [String: Any] {
@@ -38,10 +38,10 @@ final class FlagCounter {
         case defaultValue = "default", counters, value, variation, version, unknown, count
     }
 
-    var defaultValue: Any?
+    var defaultValue: LDValue = .null
     var flagValueCounters: [CounterKey: CounterValue] = [:]
 
-    func trackRequest(reportedValue: Any?, featureFlag: FeatureFlag?, defaultValue: Any?) {
+    func trackRequest(reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue) {
         self.defaultValue = defaultValue
         let key = CounterKey(variation: featureFlag?.variation, version: featureFlag?.versionForEvents)
         if let counter = flagValueCounters[key] {
@@ -53,7 +53,7 @@ final class FlagCounter {
 
     var dictionaryValue: [String: Any] {
         let counters: [[String: Any]] = flagValueCounters.map { (key, value) in
-            var res: [String: Any] = [CodingKeys.value.rawValue: value.value ?? NSNull(),
+            var res: [String: Any] = [CodingKeys.value.rawValue: value.value.toAny() ?? NSNull(),
                                       CodingKeys.count.rawValue: value.count,
                                       CodingKeys.variation.rawValue: key.variation ?? NSNull()]
             if let version = key.version {
@@ -63,7 +63,7 @@ final class FlagCounter {
             }
             return res
         }
-        return [CodingKeys.defaultValue.rawValue: defaultValue ?? NSNull(),
+        return [CodingKeys.defaultValue.rawValue: defaultValue.toAny() ?? NSNull(),
                 CodingKeys.counters.rawValue: counters]
     }
 }
@@ -74,10 +74,10 @@ struct CounterKey: Equatable, Hashable {
 }
 
 class CounterValue {
-    let value: Any?
+    let value: LDValue
     var count: Int = 1
 
-    init(value: Any?) {
+    init(value: LDValue) {
         self.value = value
     }
 

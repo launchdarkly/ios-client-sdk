@@ -38,10 +38,10 @@ struct Event {
     let previousKey: String?
     let creationDate: Date?
     let user: LDUser?
-    let value: Any?
-    let defaultValue: Any?
+    let value: LDValue
+    let defaultValue: LDValue
     let featureFlag: FeatureFlag?
-    let data: Any?
+    let data: LDValue
     let flagRequestTracker: FlagRequestTracker?
     let endDate: Date?
     let includeReason: Bool
@@ -55,10 +55,10 @@ struct Event {
          contextKind: String? = nil,
          previousContextKind: String? = nil,
          user: LDUser? = nil,
-         value: Any? = nil,
-         defaultValue: Any? = nil,
+         value: LDValue = .null,
+         defaultValue: LDValue = .null,
          featureFlag: FeatureFlag? = nil,
-         data: Any? = nil,
+         data: LDValue = .null,
          flagRequestTracker: FlagRequestTracker? = nil,
          endDate: Date? = nil,
          includeReason: Bool = false,
@@ -81,27 +81,19 @@ struct Event {
     }
 
     // swiftlint:disable:next function_parameter_count
-    static func featureEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) -> Event {
-        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "defaultValue: \(String(describing: defaultValue) + "reason: \(String(describing: includeReason))"), "
-            + "featureFlag: \(String(describing: featureFlag))")
+    static func featureEvent(key: String, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) -> Event {
+        Log.debug(typeName(and: #function) + "key: \(key), value: \(value), defaultValue: \(defaultValue), includeReason: \(includeReason), featureFlag: \(String(describing: featureFlag))")
         return Event(kind: .feature, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason)
     }
 
     // swiftlint:disable:next function_parameter_count
-    static func debugEvent(key: String, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag, user: LDUser, includeReason: Bool) -> Event {
-        Log.debug(typeName(and: #function) + "key: " + key + ", value: \(String(describing: value)), " + "defaultValue: \(String(describing: defaultValue) + "reason: \(String(describing: includeReason))"), "
-            + "featureFlag: \(String(describing: featureFlag))")
+    static func debugEvent(key: String, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag, user: LDUser, includeReason: Bool) -> Event {
+        Log.debug(typeName(and: #function) + "key: \(key), value: \(value), defaultValue: \(defaultValue), includeReason: \(includeReason), featureFlag: \(String(describing: featureFlag))")
         return Event(kind: .debug, key: key, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason)
     }
 
-    static func customEvent(key: String, user: LDUser, data: Any? = nil, metricValue: Double? = nil) throws -> Event {
-        Log.debug(typeName(and: #function) + "key: " + key + ", data: \(String(describing: data)), metricValue: \(String(describing: metricValue))")
-        if let data = data {
-            guard JSONSerialization.isValidJSONObject([CodingKeys.data.rawValue: data]) // the top level object must be either an array or an object for isValidJSONObject to work correctly
-            else {
-                throw LDInvalidArgumentError("data is not a JSON convertible value")
-            }
-        }
+    static func customEvent(key: String, user: LDUser, data: LDValue, metricValue: Double? = nil) -> Event {
+        Log.debug(typeName(and: #function) + "key: " + key + ", data: \(data), metricValue: \(String(describing: metricValue))")
         return Event(kind: .custom, key: key, user: user, data: data, metricValue: metricValue)
     }
 
@@ -134,13 +126,13 @@ struct Event {
             eventDictionary[CodingKeys.userKey.rawValue] = user?.key
         }
         if kind.isAlwaysIncludeValueKinds {
-            eventDictionary[CodingKeys.value.rawValue] = value ?? NSNull()
-            eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue ?? NSNull()
+            eventDictionary[CodingKeys.value.rawValue] = value.toAny() ?? NSNull()
+            eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue.toAny() ?? NSNull()
         }
         eventDictionary[CodingKeys.variation.rawValue] = featureFlag?.variation
         // If the flagVersion exists, it is reported as the "version". If not, the version is reported using the "version" key.
         eventDictionary[CodingKeys.version.rawValue] = featureFlag?.flagVersion ?? featureFlag?.version
-        eventDictionary[CodingKeys.data.rawValue] = data
+        eventDictionary[CodingKeys.data.rawValue] = data.toAny()
         if let flagRequestTracker = flagRequestTracker {
             eventDictionary.merge(flagRequestTracker.dictionaryValue) { _, trackerItem in
                 trackerItem  // This should never happen because the eventDictionary does not use any conflicting keys with the flagRequestTracker

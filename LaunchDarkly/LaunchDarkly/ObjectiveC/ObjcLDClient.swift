@@ -746,8 +746,8 @@ public final class ObjcLDClient: NSObject {
      - parameter error: NSError object to hold the invalidJsonObject error if the data is not a valid JSON item. (Optional)
      */
     /// - Tag: track
-    @objc public func track(key: String, data: Any? = nil) throws {
-        try ldClient.track(key: key, data: data, metricValue: nil)
+    @objc public func track(key: String, data: Any? = nil) {
+        ldClient.track(key: key, data: LDValue.fromAny(data), metricValue: nil)
     }
 
     /**
@@ -758,8 +758,8 @@ public final class ObjcLDClient: NSObject {
      - parameter metricValue: A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field will also be returned as part of the custom event for Data Export.
      - parameter error: NSError object to hold the invalidJsonObject error if the data is not a valid JSON item. (Optional)
      */
-    @objc public func track(key: String, data: Any? = nil, metricValue: Double) throws {
-        try ldClient.track(key: key, data: data, metricValue: metricValue)
+    @objc public func track(key: String, data: Any? = nil, metricValue: Double) {
+        ldClient.track(key: key, data: LDValue.fromAny(data), metricValue: metricValue)
     }
 
     /**

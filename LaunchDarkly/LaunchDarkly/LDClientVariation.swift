@@ -92,7 +92,7 @@ extension LDClient {
         let failedConversionMessage = self.failedConversionMessage(featureFlag: featureFlag, defaultValue: defaultValue)
         Log.debug(typeName(and: #function) + "flagKey: \(flagKey), value: \(value), defaultValue: \(defaultValue), " +
                   "featureFlag: \(String(describing: featureFlag)), reason: \(featureFlag?.reason?.description ?? "nil"). \(failedConversionMessage)")
-        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, includeReason: includeReason)
+        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey, value: LDValue.fromAny(value), defaultValue: LDValue.fromAny(defaultValue), featureFlag: featureFlag, user: user, includeReason: includeReason)
         return value
     }
 
