@@ -138,14 +138,29 @@ class EventReporter: EventReporting {
     }
 
     private func publish(_ events: [Event], _ payloadId: String, _ completion: CompletionClosure?) {
-        let eventDictionaries = events.map { $0.dictionaryValue(config: service.config) }
-        self.service.publishEventDictionaries(eventDictionaries, payloadId) { _, urlResponse, error in
-            let shouldRetry = self.processEventResponse(sentEvents: eventDictionaries, response: urlResponse as? HTTPURLResponse, error: error, isRetry: false)
+        let encodingConfig: [CodingUserInfoKey: Any] =
+            [Event.UserInfoKeys.inlineUserInEvents: service.config.inlineUserInEvents,
+             LDUser.UserInfoKeys.allAttributesPrivate: service.config.allUserAttributesPrivate,
+             LDUser.UserInfoKeys.globalPrivateAttributes: service.config.privateUserAttributes.map { $0.name }]
+        let encoder = JSONEncoder()
+        encoder.userInfo = encodingConfig
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(date.millisSince1970)
+        }
+        guard let eventData = try? encoder.encode(events)
+        else {
+            Log.debug(self.typeName(and: #function) + "Failed to serialize event(s) for publication: \(events)")
+            completion?()
+            return
+        }
+        self.service.publishEventData(eventData, payloadId) { _, urlResponse, error in
+            let shouldRetry = self.processEventResponse(sentEvents: events.count, response: urlResponse as? HTTPURLResponse, error: error, isRetry: false)
             if shouldRetry {
                 Log.debug("Retrying event post after delay.")
                 DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0) {
-                    self.service.publishEventDictionaries(eventDictionaries, payloadId) { _, urlResponse, error in
-                        _ = self.processEventResponse(sentEvents: eventDictionaries, response: urlResponse as? HTTPURLResponse, error: error, isRetry: true)
+                    self.service.publishEventData(eventData, payloadId) { _, urlResponse, error in
+                        _ = self.processEventResponse(sentEvents: events.count, response: urlResponse as? HTTPURLResponse, error: error, isRetry: true)
                         completion?()
                     }
                 }
@@ -155,10 +170,10 @@ class EventReporter: EventReporting {
         }
     }
 
-    private func processEventResponse(sentEvents: [[String: Any]], response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> Bool {
+    private func processEventResponse(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> Bool {
         if error == nil && (200..<300).contains(response?.statusCode ?? 0) {
             self.lastEventResponseDate = response?.headerDate ?? self.lastEventResponseDate
-            Log.debug(self.typeName(and: #function) + "Completed sending \(sentEvents.count) event(s)")
+            Log.debug(self.typeName(and: #function) + "Completed sending \(sentEvents) event(s)")
             self.reportSyncComplete(nil)
             return false
         }

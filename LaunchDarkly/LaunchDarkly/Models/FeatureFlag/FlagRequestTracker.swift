@@ -1,10 +1,6 @@
 import Foundation
 
 struct FlagRequestTracker {
-    enum CodingKeys: String, CodingKey {
-        case startDate, features
-    }
-
     let startDate = Date()
     var flagCounters: [LDFlagKey: FlagCounter] = [:]
 
@@ -23,23 +19,22 @@ struct FlagRequestTracker {
             + "\n\tdefaultValue: \(defaultValue)\n")
     }
 
-    var dictionaryValue: [String: Any] {
-        [CodingKeys.startDate.rawValue: startDate.millisSince1970,
-         CodingKeys.features.rawValue: flagCounters.mapValues { $0.dictionaryValue }]
-    }
-
     var hasLoggedRequests: Bool { !flagCounters.isEmpty }
 }
 
 extension FlagRequestTracker: TypeIdentifying { }
 
-final class FlagCounter {
+final class FlagCounter: Encodable {
     enum CodingKeys: String, CodingKey {
-        case defaultValue = "default", counters, value, variation, version, unknown, count
+        case defaultValue = "default", counters
     }
 
-    var defaultValue: LDValue = .null
-    var flagValueCounters: [CounterKey: CounterValue] = [:]
+    enum CounterCodingKeys: String, CodingKey {
+        case value, variation, version, unknown, count
+    }
+
+    private(set) var defaultValue: LDValue = .null
+    private(set) var flagValueCounters: [CounterKey: CounterValue] = [:]
 
     func trackRequest(reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue) {
         self.defaultValue = defaultValue
@@ -51,20 +46,20 @@ final class FlagCounter {
         }
     }
 
-    var dictionaryValue: [String: Any] {
-        let counters: [[String: Any]] = flagValueCounters.map { (key, value) in
-            var res: [String: Any] = [CodingKeys.value.rawValue: value.value.toAny() ?? NSNull(),
-                                      CodingKeys.count.rawValue: value.count,
-                                      CodingKeys.variation.rawValue: key.variation ?? NSNull()]
-            if let version = key.version {
-                res[CodingKeys.version.rawValue] = version
-            } else {
-                res[CodingKeys.unknown.rawValue] = true
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(defaultValue, forKey: .defaultValue)
+        var countersContainer = container.nestedUnkeyedContainer(forKey: .counters)
+        try flagValueCounters.forEach { (key, value) in
+            var counterContainer = countersContainer.nestedContainer(keyedBy: CounterCodingKeys.self)
+            try counterContainer.encodeIfPresent(key.version, forKey: .version)
+            try counterContainer.encodeIfPresent(key.variation, forKey: .variation)
+            try counterContainer.encode(value.count, forKey: .count)
+            try counterContainer.encode(value.value, forKey: .value)
+            if key.version == nil {
+                try counterContainer.encode(true, forKey: .unknown)
             }
-            return res
         }
-        return [CodingKeys.defaultValue.rawValue: defaultValue.toAny() ?? NSNull(),
-                CodingKeys.counters.rawValue: counters]
     }
 }
 
@@ -75,7 +70,7 @@ struct CounterKey: Equatable, Hashable {
 
 class CounterValue {
     let value: LDValue
-    var count: Int = 1
+    private(set) var count: Int = 1
 
     init(value: LDValue) {
         self.value = value

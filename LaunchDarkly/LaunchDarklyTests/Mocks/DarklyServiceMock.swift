@@ -34,10 +34,6 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let dictionary: [String: Any] = ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]
         static let null = NSNull()
 
-        static var knownFlags: [Any] {
-            [bool, int, double, string, array, dictionary, null]
-        }
-
         static func value(from flagKey: LDFlagKey) -> Any? {
             switch flagKey {
             case FlagKeys.bool: return FlagValues.bool
@@ -73,13 +69,6 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
 
     struct Constants {
-        static var streamData: Data {
-            let featureFlags = stubFeatureFlags(includeNullValue: false)
-            let featureFlagDictionaries = featureFlags.dictionaryValue
-            let eventStreamString = "event: put\ndata:\(featureFlagDictionaries.jsonString!)"
-
-            return eventStreamString.data(using: .utf8)!
-        }
         static let error = NSError(domain: NSURLErrorDomain, code: Int(CFNetworkErrors.cfurlErrorResourceUnavailable.rawValue), userInfo: nil)
         static let jsonErrorString = "Bad json data"
         static let errorData = jsonErrorString.data(using: .utf8)!
@@ -230,17 +219,11 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
     
     var stubbedEventResponse: ServiceResponse?
-    var publishEventDictionariesCallCount = 0
-    var publishedEventDictionaries: [[String: Any]]?
-    var publishedEventDictionaryKeys: [String]? {
-        publishedEventDictionaries?.compactMap { $0.eventKey }
-    }
-    var publishedEventDictionaryKinds: [Event.Kind]? {
-        publishedEventDictionaries?.compactMap { $0.eventKind }
-    }
-    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?) {
-        publishEventDictionariesCallCount += 1
-        publishedEventDictionaries = eventDictionaries
+    var publishEventDataCallCount = 0
+    var publishedEventData: Data?
+    func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?) {
+        publishEventDataCallCount += 1
+        publishedEventData = eventData
         completion?(stubbedEventResponse ?? (nil, nil, nil))
     }
 
@@ -320,31 +303,6 @@ extension DarklyServiceMock {
 
     func flagStubName(statusCode: Int, useReport: Bool) -> String {
         "\(Constants.stubNameFlag) using method \(useReport ? URLRequest.HTTPMethods.report : URLRequest.HTTPMethods.get) with response status code \(statusCode)"
-    }
-
-    // MARK: Stream
-
-    var streamHost: String? {
-        config.streamUrl.host
-    }
-    var getStreamRequestStubTest: HTTPStubsTestBlock {
-        isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodGET()
-    }
-    var reportStreamRequestStubTest: HTTPStubsTestBlock {
-        isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodREPORT()
-    }
-
-    /// Use when testing requires the mock service to actually make an event source connection request
-    func stubStreamRequest(useReport: Bool, success: Bool, onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
-        var stubResponse: HTTPStubsResponseBlock = { _ in
-            HTTPStubsResponse(error: Constants.error)
-        }
-        if success {
-            stubResponse = { _ in
-                HTTPStubsResponse(data: Constants.streamData, statusCode: Int32(HTTPURLResponse.StatusCodes.ok), headers: nil)
-            }
-        }
-        stubRequest(passingTest: useReport ? reportStreamRequestStubTest : getStreamRequestStubTest, stub: stubResponse, name: Constants.stubNameStream, onActivation: activate)
     }
 
     // MARK: Publish Event

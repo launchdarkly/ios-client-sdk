@@ -26,13 +26,8 @@ final class DarklyServiceSpec: QuickSpec {
 
         init(mobileKey: String = LDConfig.Constants.mockMobileKey,
              useReport: Bool = Constants.useGetMethod,
-             includeMockEventDictionaries: Bool = false,
-             operatingSystemName: String? = nil,
              diagnosticOptOut: Bool = false) {
 
-            if let operatingSystemName = operatingSystemName {
-                serviceFactoryMock.makeEnvironmentReporterReturnValue.systemName = operatingSystemName
-            }
             config = LDConfig.stub(mobileKey: mobileKey, environmentReporter: EnvironmentReportingMock())
             config.useReport = useReport
             config.diagnosticOptOut = diagnosticOptOut
@@ -40,10 +35,6 @@ final class DarklyServiceSpec: QuickSpec {
             service = DarklyService(config: config, user: user, serviceFactory: serviceFactoryMock)
             httpHeaders = HTTPHeaders(config: config, environmentReporter: config.environmentReporter)
         }   
-
-        func mockEventDictionaries() -> [[String: Any]] {
-            Event.stubEventDictionaries(Constants.eventCount, user: user, config: config)
-        }
 
         func runStubbedGet(statusCode: Int, featureFlags: [LDFlagKey: FeatureFlag]? = nil, flagResponseEtag: String? = nil) {
             serviceMock.stubFlagRequest(statusCode: statusCode, useReport: config.useReport, flagResponseEtag: flagResponseEtag)
@@ -60,7 +51,7 @@ final class DarklyServiceSpec: QuickSpec {
         flagRequestEtagSpec()
         clearFlagRequestCacheSpec()
         createEventSourceSpec()
-        publishEventDictionariesSpec()
+        publishEventDataSpec()
         diagnosticCacheSpec()
         publishDiagnosticSpec()
 
@@ -575,22 +566,23 @@ final class DarklyServiceSpec: QuickSpec {
         }
     }
 
-    private func publishEventDictionariesSpec() {
+    private func publishEventDataSpec() {
+        let testData = Data("abc".utf8)
         var testContext: TestContext!
 
-        describe("publishEventDictionaries") {
+        describe("publishEventData") {
             var eventRequest: URLRequest?
 
             beforeEach {
                 eventRequest = nil
-                testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod, includeMockEventDictionaries: true)
+                testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod)
             }
             context("success") {
                 var responses: ServiceResponses!
                 beforeEach {
                     waitUntil { done in
                         testContext.serviceMock.stubEventRequest(success: true) { eventRequest = $0 }
-                        testContext.service.publishEventDictionaries(testContext.mockEventDictionaries(), UUID().uuidString) { data, response, error in
+                        testContext.service.publishEventData(testData, UUID().uuidString) { data, response, error in
                             responses = (data, response, error)
                             done()
                         }
@@ -612,7 +604,7 @@ final class DarklyServiceSpec: QuickSpec {
                 beforeEach {
                     waitUntil { done in
                         testContext.serviceMock.stubEventRequest(success: false) { eventRequest = $0 }
-                        testContext.service.publishEventDictionaries(testContext.mockEventDictionaries(), UUID().uuidString) { data, response, error in
+                        testContext.service.publishEventData(testData, UUID().uuidString) { data, response, error in
                             responses = (data, response, error)
                             done()
                         }
@@ -633,27 +625,9 @@ final class DarklyServiceSpec: QuickSpec {
                 var responses: ServiceResponses!
                 var eventsPublished = false
                 beforeEach {
-                    testContext = TestContext(mobileKey: "", useReport: Constants.useGetMethod, includeMockEventDictionaries: true)
+                    testContext = TestContext(mobileKey: "", useReport: Constants.useGetMethod)
                     testContext.serviceMock.stubEventRequest(success: true) { eventRequest = $0 }
-                    testContext.service.publishEventDictionaries(testContext.mockEventDictionaries(), UUID().uuidString) { data, response, error in
-                        responses = (data, response, error)
-                        eventsPublished = true
-                    }
-                }
-                it("does not make a request") {
-                    expect(eventRequest).to(beNil())
-                    expect(eventsPublished) == false
-                    expect(responses).to(beNil())
-                }
-            }
-            context("empty event list") {
-                var responses: ServiceResponses!
-                var eventsPublished = false
-                let emptyEventDictionaryList: [[String: Any]] = []
-                beforeEach {
-                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod, includeMockEventDictionaries: true)
-                    testContext.serviceMock.stubEventRequest(success: true) { eventRequest = $0 }
-                    testContext.service.publishEventDictionaries(emptyEventDictionaryList, "") { data, response, error in
+                    testContext.service.publishEventData(testData, UUID().uuidString) { data, response, error in
                         responses = (data, response, error)
                         eventsPublished = true
                     }

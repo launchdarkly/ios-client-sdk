@@ -23,10 +23,6 @@ extension Dictionary where Key == String {
         }
         return differingKeys.union(matchingKeysWithDifferentValues).sorted()
     }
-
-    var base64UrlEncodedString: String? {
-        jsonData?.base64UrlEncodedString
-    }
 }
 
 extension Dictionary where Key == String, Value == Any {
