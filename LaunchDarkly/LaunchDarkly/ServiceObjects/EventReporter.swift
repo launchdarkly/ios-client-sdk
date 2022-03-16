@@ -72,11 +72,11 @@ class EventReporter: EventReporting {
         eventQueue.sync {
             flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue)
             if recordingFeatureEvent {
-                let featureEvent = Event.featureEvent(key: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, includeReason: includeReason)
+                let featureEvent = FeatureEvent(key: flagKey, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false)
                 recordNoSync(featureEvent)
             }
             if recordingDebugEvent, let featureFlag = featureFlag {
-                let debugEvent = Event.debugEvent(key: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, includeReason: includeReason)
+                let debugEvent = FeatureEvent(key: flagKey, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: true)
                 recordNoSync(debugEvent)
             }
         }
@@ -114,9 +114,11 @@ class EventReporter: EventReporting {
             return
         }
 
-        let summaryEvent = Event.summaryEvent(flagRequestTracker: flagRequestTracker)
-        if let summaryEvent = summaryEvent { recordNoSync(summaryEvent) }
-        flagRequestTracker = FlagRequestTracker()
+        if flagRequestTracker.hasLoggedRequests {
+            let summaryEvent = SummaryEvent(flagRequestTracker: flagRequestTracker)
+            self.eventStore.append(summaryEvent)
+            flagRequestTracker = FlagRequestTracker()
+        }
 
         guard !eventStore.isEmpty
         else {

@@ -53,6 +53,8 @@ public struct LDUser: Encodable {
     /// An NSObject wrapper for the Swift LDUser struct. Intended for use in mixed apps when Swift code needs to pass a user into an Objective-C method.
     public var objcLdUser: ObjcLDUser { ObjcLDUser(self) }
 
+    var contextKind: String { isAnonymous ? "anonymousUser" : "user" }
+
     /**
      Initializer to create a LDUser. Client configurable attributes each have an optional parameter to facilitate setting user information into the LDUser. The SDK will automatically set `key`, `device`, `operatingSystem`, and `isAnonymous` attributes if the client does not provide them. The SDK embeds `device` and `operatingSystem` into the `custom` dictionary for transmission to LaunchDarkly.
      - parameter key: String that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user.
@@ -247,7 +249,7 @@ extension LDUser: TypeIdentifying { }
 
 #if DEBUG
     extension LDUser {
-        // Compares all user properties. Excludes the composed FlagStore, which contains the users feature flags
+        // Compares all user properties.
         func isEqual(to otherUser: LDUser) -> Bool {
             key == otherUser.key
                 && secondary == otherUser.secondary

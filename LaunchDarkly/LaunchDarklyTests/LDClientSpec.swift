@@ -254,8 +254,7 @@ final class LDClientSpec: QuickSpec {
             }
             it("records an identify event") {
                 expect(testContext.eventReporterMock.recordCallCount) == 1
-                expect(testContext.recordedEvent?.kind) == .identify
-                expect(testContext.recordedEvent?.key) == testContext.user.key
+                expect((testContext.recordedEvent as? IdentifyEvent)?.user) == testContext.user
             }
             it("converts cached data") {
                 expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
@@ -299,8 +298,7 @@ final class LDClientSpec: QuickSpec {
             }
             it("records an identify event") {
                 expect(testContext.eventReporterMock.recordCallCount) == 1
-                expect(testContext.recordedEvent?.kind) == .identify
-                expect(testContext.recordedEvent?.key) == testContext.user.key
+                expect((testContext.recordedEvent as? IdentifyEvent)?.user) == testContext.user
             }
             it("converts cached data") {
                 expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
@@ -343,8 +341,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("records an identify event") {
                     expect(testContext.eventReporterMock.recordCallCount) == 2 // both start and internalIdentify
-                    expect(testContext.recordedEvent?.kind) == .identify
-                    expect(testContext.recordedEvent?.key) == testContext.user.key
+                    expect((testContext.recordedEvent as? IdentifyEvent)?.user) == testContext.user
                 }
                 it("converts cached data") {
                     expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 2 // Both start and internalIdentify
@@ -378,8 +375,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("records an identify event") {
                     expect(testContext.eventReporterMock.recordCallCount) == 1
-                    expect(testContext.recordedEvent?.kind) == .identify
-                    expect(testContext.recordedEvent?.key) == testContext.subject.user.key
+                    expect((testContext.recordedEvent as? IdentifyEvent)?.user) == testContext.subject.user
                 }
                 it("converts cached data") {
                     expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
@@ -563,8 +559,7 @@ final class LDClientSpec: QuickSpec {
                         }
                         it("records an identify event") {
                             expect(testContext.eventReporterMock.recordCallCount) == 1
-                            expect(testContext.recordedEvent?.kind) == .identify
-                            expect(testContext.recordedEvent?.key) == testContext.user.key
+                            expect((testContext.recordedEvent as? IdentifyEvent)?.user) == testContext.user
                         }
                         it("converts cached data") {
                             expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
@@ -610,8 +605,7 @@ final class LDClientSpec: QuickSpec {
                         }
                         it("records an identify event") {
                             expect(testContext.eventReporterMock.recordCallCount) == 1
-                            expect(testContext.recordedEvent?.kind) == .identify
-                            expect(testContext.recordedEvent?.key) == testContext.user.key
+                            expect((testContext.recordedEvent as? IdentifyEvent)?.user) == testContext.user
                         }
                         it("converts cached data") {
                             expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
@@ -836,7 +830,6 @@ final class LDClientSpec: QuickSpec {
         var testContext: TestContext!
 
         describe("stop") {
-            var event: LaunchDarkly.Event!
             var priorRecordedEvents: Int!
             context("when started") {
                 beforeEach {
@@ -846,7 +839,6 @@ final class LDClientSpec: QuickSpec {
                     beforeEach {
                         testContext = TestContext(startOnline: true)
                         testContext.start()
-                        event = Event.stub(.custom, with: testContext.user)
                         priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                         testContext.subject.close()
@@ -855,7 +847,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        testContext.subject.track(key: event.key!)
+                        testContext.subject.track(key: "abc")
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                     it("flushes the event reporter") {
@@ -866,7 +858,6 @@ final class LDClientSpec: QuickSpec {
                     beforeEach {
                         testContext = TestContext()
                         testContext.start()
-                        event = Event.stub(.custom, with: testContext.user)
                         priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
                         testContext.subject.close()
@@ -875,7 +866,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        testContext.subject.track(key: event.key!)
+                        testContext.subject.track(key: "abc")
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                     it("flushes the event reporter") {
@@ -887,7 +878,6 @@ final class LDClientSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext()
                     testContext.start()
-                    event = Event.stub(.custom, with: testContext.user)
                     testContext.subject.close()
                     priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
@@ -897,7 +887,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.isOnline) == false
                 }
                 it("stops recording events") {
-                    testContext.subject.track(key: event.key!)
+                    testContext.subject.track(key: "abc")
                     expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                 }
                 it("flushes the event reporter") {
@@ -917,7 +907,7 @@ final class LDClientSpec: QuickSpec {
             }
             it("records a custom event when client was started") {
                 testContext.subject.track(key: "customEvent", data: "abc", metricValue: 5.0)
-                let receivedEvent = testContext.eventReporterMock.recordReceivedEvent
+                let receivedEvent = testContext.eventReporterMock.recordReceivedEvent as? CustomEvent
                 expect(receivedEvent?.key) == "customEvent"
                 expect(receivedEvent?.user) == testContext.user
                 expect(receivedEvent?.data) == "abc"
