@@ -90,7 +90,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         }
 
         let changedFlags = [LDFlagKey: LDChangedFlag](uniqueKeysWithValues: changedFlagKeys.map {
-            ($0, LDChangedFlag(key: $0, oldValue: oldFlags[$0]?.value, newValue: newFlags[$0]?.value))
+            ($0, LDChangedFlag(key: $0, oldValue: LDValue.fromAny(oldFlags[$0]?.value), newValue: LDValue.fromAny(newFlags[$0]?.value)))
         })
         Log.debug(typeName(and: #function) + "notifying observers for changes to flags: \(changedFlags.keys.joined(separator: ", ")).")
         selectedObservers.forEach { observer in
