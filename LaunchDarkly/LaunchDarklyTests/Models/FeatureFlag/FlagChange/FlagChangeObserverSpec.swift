@@ -39,11 +39,3 @@ final class FlagChangeObserverSpec: XCTestCase {
         XCTAssertEqual(ownerMock.changedCollectionCount, 1)
     }
 }
-
-extension FlagChangeObserver: Equatable {
-    public static func == (lhs: FlagChangeObserver, rhs: FlagChangeObserver) -> Bool {
-        lhs.flagKeys == rhs.flagKeys && lhs.owner === rhs.owner &&
-            ((lhs.flagChangeHandler == nil && rhs.flagChangeHandler == nil) ||
-                (lhs.flagCollectionChangeHandler == nil && rhs.flagCollectionChangeHandler == nil))
-    }
-}
