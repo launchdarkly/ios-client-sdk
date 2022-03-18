@@ -52,10 +52,10 @@ final class DeprecatedCacheModelV5Spec: QuickSpec, CacheModelTestInterface {
 
 extension LDUser {
     func modelV5DictionaryValue(including featureFlags: [LDFlagKey: FeatureFlag], using lastUpdated: Date?) -> [String: Any] {
-        var userDictionary = dictionaryValueWithAllAttributes()
-        userDictionary.setLastUpdated(lastUpdated)
+        var userDictionary = encodeToLDValue(self, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])?.toAny() as! [String: Any]
+        userDictionary[CodingKeys.privateAttributes.rawValue] = privateAttributes
+        userDictionary["updatedAt"] = lastUpdated?.stringValue
         userDictionary[LDUser.CodingKeys.config.rawValue] = featureFlags.compactMapValues { $0.modelV5dictionaryValue }
-
         return userDictionary
     }
 }

@@ -127,7 +127,3 @@ final class FlagStore: FlagMaintaining {
 }
 
 extension FlagStore: TypeIdentifying { }
-
-extension Dictionary where Key == LDFlagKey, Value == FeatureFlag {
-    var allFlagValues: [LDFlagKey: Any] { compactMapValues { $0.value } }
-}

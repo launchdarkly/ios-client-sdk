@@ -42,11 +42,3 @@ extension Dictionary where Key == String, Value == Any {
         (self[LDUser.CodingKeys.lastUpdated] as? String)?.dateValue
     }
 }
-
-#if DEBUG
-extension Dictionary where Key == String, Value == Any {
-    mutating func setLastUpdated(_ lastUpdated: Date?) {
-        self[LDUser.CodingKeys.lastUpdated] = lastUpdated?.stringValue
-    }
-}
-#endif

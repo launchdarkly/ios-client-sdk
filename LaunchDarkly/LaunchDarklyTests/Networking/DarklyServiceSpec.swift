@@ -110,8 +110,8 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
-                                let expectedUser = testContext.user.dictionaryValue(includePrivateAttributes: true, config: testContext.config)
-                                expect(AnyComparer.isEqual(urlRequest?.url?.lastPathComponent.jsonDictionary, to: expectedUser)) == true
+                                let expectedUser = encodeToLDValue(testContext.user, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])
+                                expect(urlRequest?.url?.lastPathComponent.jsonValue) == expectedUser
                             } else {
                                 fail("request path is missing")
                             }
@@ -163,8 +163,8 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
-                                let expectedUser = testContext.user.dictionaryValue(includePrivateAttributes: true, config: testContext.config)
-                                expect(AnyComparer.isEqual(urlRequest?.url?.lastPathComponent.jsonDictionary, to: expectedUser)) == true
+                                let expectedUser = encodeToLDValue(testContext.user, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])
+                                expect(urlRequest?.url?.lastPathComponent.jsonValue) == expectedUser
                             } else {
                                 fail("request path is missing")
                             }
@@ -538,8 +538,8 @@ final class DarklyServiceSpec: QuickSpec {
                     let receivedArguments = testContext.serviceFactoryMock.makeStreamingProviderReceivedArguments
                     expect(receivedArguments!.url.host) == testContext.config.streamUrl.host
                     expect(receivedArguments!.url.pathComponents.contains(DarklyService.StreamRequestPath.meval)).to(beTrue())
-                    let expectedUser = testContext.user.dictionaryValue(includePrivateAttributes: true, config: testContext.config)
-                    expect(AnyComparer.isEqual(receivedArguments!.url.lastPathComponent.jsonDictionary, to: expectedUser)) == true
+                    let expectedUser = encodeToLDValue(testContext.user, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])
+                    expect(receivedArguments!.url.lastPathComponent.jsonValue) == expectedUser
                     expect(receivedArguments!.httpHeaders).toNot(beEmpty())
                     expect(receivedArguments!.connectMethod).to(be("GET"))
                     expect(receivedArguments!.connectBody).to(beNil())
@@ -559,8 +559,8 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(receivedArguments!.url.lastPathComponent) == DarklyService.StreamRequestPath.meval
                     expect(receivedArguments!.httpHeaders).toNot(beEmpty())
                     expect(receivedArguments!.connectMethod) == DarklyService.HTTPRequestMethod.report
-                    let expectedUser = testContext.user.dictionaryValue(includePrivateAttributes: true, config: testContext.config)
-                    expect(AnyComparer.isEqual(receivedArguments!.connectBody?.jsonDictionary, to: expectedUser)) == true
+                    let expectedUser = encodeToLDValue(testContext.user, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])
+                    expect(try? JSONDecoder().decode(LDValue.self, from: receivedArguments!.connectBody!)) == expectedUser
                 }
             }
         }
@@ -765,8 +765,10 @@ private extension Data {
 }
 
 private extension String {
-    var jsonDictionary: [String: Any]? {
+    var jsonValue: LDValue? {
         let base64encodedString = self.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
-        return Data(base64Encoded: base64encodedString)?.jsonDictionary
+        guard let data = Data(base64Encoded: base64encodedString)
+        else { return nil }
+        return try? JSONDecoder().decode(LDValue.self, from: data)
     }
 }
