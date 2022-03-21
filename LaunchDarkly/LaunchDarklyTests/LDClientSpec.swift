@@ -166,42 +166,29 @@ final class LDClientSpec: QuickSpec {
         let anonUser = LDUser(key: "unknown", isAnonymous: true)
         let knownUser = LDUser(key: "known", isAnonymous: false)
         describe("aliasing") {
-            var ctx: TestContext!
-            beforeEach {
-                ctx = TestContext(autoAliasingOptOut: false)
+            it("automatic aliasing from anonymous to user") {
+                let ctx = TestContext(autoAliasingOptOut: false)
+                ctx.withUser(anonUser).start()
+                ctx.subject.internalIdentify(newUser: knownUser)
+                // init, identify, and alias event
+                expect(ctx.eventReporterMock.recordCallCount) == 3
+                expect(ctx.recordedEvent?.kind) == .alias
             }
-            context("automatic aliasing from anonymous to user") {
-                beforeEach {
-                    ctx.withUser(anonUser).start()
-                    ctx.subject.internalIdentify(newUser: knownUser)
-                }
-                it("records an alias and identify event") {
-                    // init, identify, and alias event
-                    expect(ctx.eventReporterMock.recordCallCount) == 3
-                    expect(ctx.recordedEvent?.kind) == .alias
-                }
+            it("no automatic aliasing from user to user") {
+                let ctx = TestContext(autoAliasingOptOut: false)
+                ctx.withUser(knownUser).start()
+                ctx.subject.internalIdentify(newUser: knownUser)
+                // init and identify event
+                expect(ctx.eventReporterMock.recordCallCount) == 2
+                expect(ctx.recordedEvent?.kind) == .identify
             }
-            context("automatic aliasing from user to user") {
-                beforeEach {
-                    ctx.withUser(knownUser).start()
-                    ctx.subject.internalIdentify(newUser: knownUser)
-                }
-                it("doesnt record an alias event") {
-                    // init and identify event
-                    expect(ctx.eventReporterMock.recordCallCount) == 2
-                    expect(ctx.recordedEvent?.kind) == .identify
-                }
-            }
-            context("automatic aliasing from anonymous to anonymous") {
-                beforeEach {
-                    ctx.withUser(anonUser).start()
-                    ctx.subject.internalIdentify(newUser: anonUser)
-                }
-                it("doesnt record an alias event") {
-                    // init and identify event
-                    expect(ctx.eventReporterMock.recordCallCount) == 2
-                    expect(ctx.recordedEvent?.kind) == .identify
-                }
+            it("no automatic aliasing from anonymous to anonymous") {
+                let ctx = TestContext(autoAliasingOptOut: false)
+                ctx.withUser(anonUser).start()
+                ctx.subject.internalIdentify(newUser: anonUser)
+                // init and identify event
+                expect(ctx.eventReporterMock.recordCallCount) == 2
+                expect(ctx.recordedEvent?.kind) == .identify
             }
         }
     }
@@ -384,43 +371,33 @@ final class LDClientSpec: QuickSpec {
                 }
             }
         }
-        context("when called with cached flags for the user and environment") {
-            beforeEach {
-                testContext = TestContext().withCached(flags: FlagMaintainingMock.stubFlags())
-                withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
-            }
-            it("checks the flag cache for the user and environment") {
-                expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
-                expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
-                expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-            }
-            it("restores user flags from cache") {
-                expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags.flagCollection) == FlagMaintainingMock.stubFlags()
-            }
-            it("converts cached data") {
-                expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
-                expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
-                expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
-            }
+        it("when called with cached flags for the user and environment") {
+            let testContext = TestContext().withCached(flags: FlagMaintainingMock.stubFlags())
+            withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
+
+            expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
+            expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+            expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+
+            expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags.flagCollection) == FlagMaintainingMock.stubFlags()
+
+            expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+            expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
+            expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
         }
-        context("when called without cached flags for the user") {
-            beforeEach {
-                testContext = TestContext()
-                withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
-            }
-            it("checks the flag cache for the user and environment") {
-                expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
-                expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
-                expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-            }
-            it("does not restore user flags from cache") {
-                expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
-            }
-            it("converts cached data") {
-                expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
-                expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
-                expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
-            }
+        it("when called without cached flags for the user") {
+            let testContext = TestContext()
+            withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
+
+            expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
+            expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+            expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+
+            expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
+
+            expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+            expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == testContext.user
+            expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
         }
     }
 
@@ -449,14 +426,13 @@ final class LDClientSpec: QuickSpec {
         }
 
         context("when configured to start offline") {
-            beforeEach {
-                testContext = TestContext()
-            }
             it("completes immediately without timeout") {
+                testContext = TestContext()
                 testContext.start(completion: startCompletion)
                 expect(completed) == true
             }
             it("completes immediately with timeout") {
+                testContext = TestContext()
                 testContext.start(timeOut: 5.0, timeOutCompletion: startTimeoutCompletion())
                 expect(completed) == true
                 expect(didTimeOut) == true
@@ -619,293 +595,189 @@ final class LDClientSpec: QuickSpec {
     }
 
     private func identifySpec() {
-        var testContext: TestContext!
-
         describe("identify") {
-            var newUser: LDUser!
-            context("when the client is online") {
-                beforeEach {
-                    testContext = TestContext(startOnline: true)
-                    testContext.start()
-                    testContext.featureFlagCachingMock.reset()
-                    testContext.cacheConvertingMock.reset()
+            it("when the client is online") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                testContext.featureFlagCachingMock.reset()
+                testContext.cacheConvertingMock.reset()
                     
-                    newUser = LDUser.stub()
-                    testContext.subject.internalIdentify(newUser: newUser)
-                }
-                it("changes to the new user") {
-                    expect(testContext.subject.user) == newUser
-                    expect(testContext.subject.service.user) == newUser
-                    expect(testContext.serviceMock.clearFlagResponseCacheCallCount) == 1
-                    expect(testContext.makeFlagSynchronizerService?.user) == newUser
-                }
-                it("leaves the client online") {
-                    expect(testContext.subject.isOnline) == true
-                    expect(testContext.subject.eventReporter.isOnline) == true
-                    expect(testContext.subject.flagSynchronizer.isOnline) == true
-                }
-                it("uncaches the new users flags") {
-                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
-                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == newUser.key
-                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-                }
-                it("records identify and summary events") {
-                    expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
-                }
-                it("converts cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
-                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
-                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
-                }
-            }
-            context("when the client is offline") {
-                beforeEach {
-                    testContext = TestContext()
-                    testContext.start()
-                    testContext.featureFlagCachingMock.reset()
-                    testContext.cacheConvertingMock.reset()
+                let newUser = LDUser.stub()
+                testContext.subject.internalIdentify(newUser: newUser)
 
-                    newUser = LDUser.stub()
-                    testContext.subject.internalIdentify(newUser: newUser)
-                }
-                it("changes to the new user") {
-                    expect(testContext.subject.user) == newUser
-                    expect(testContext.subject.service.user) == newUser
-                    expect(testContext.serviceMock.clearFlagResponseCacheCallCount) == 1
-                    expect(testContext.makeFlagSynchronizerService?.user) == newUser
-                }
-                it("leaves the client offline") {
-                    expect(testContext.subject.isOnline) == false
-                    expect(testContext.subject.eventReporter.isOnline) == false
-                    expect(testContext.subject.flagSynchronizer.isOnline) == false
-                }
-                it("uncaches the new users flags") {
-                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
-                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == newUser.key
-                    expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-                }
-                it("records identify and summary events") {
-                    expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
-                }
-                it("converts cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
-                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
-                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
-                }
+                expect(testContext.subject.user) == newUser
+                expect(testContext.subject.service.user) == newUser
+                expect(testContext.serviceMock.clearFlagResponseCacheCallCount) == 1
+                expect(testContext.makeFlagSynchronizerService?.user) == newUser
+
+                expect(testContext.subject.isOnline) == true
+                expect(testContext.subject.eventReporter.isOnline) == true
+                expect(testContext.subject.flagSynchronizer.isOnline) == true
+
+                expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
+                expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == newUser.key
+                expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+
+                expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
+
+                expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
+                expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
             }
-            context("when the new user has cached feature flags") {
+            it("when the client is offline") {
+                let testContext = TestContext()
+                testContext.start()
+                testContext.featureFlagCachingMock.reset()
+                testContext.cacheConvertingMock.reset()
+
+                let newUser = LDUser.stub()
+                testContext.subject.internalIdentify(newUser: newUser)
+
+                expect(testContext.subject.user) == newUser
+                expect(testContext.subject.service.user) == newUser
+                expect(testContext.serviceMock.clearFlagResponseCacheCallCount) == 1
+                expect(testContext.makeFlagSynchronizerService?.user) == newUser
+
+                expect(testContext.subject.isOnline) == false
+                expect(testContext.subject.eventReporter.isOnline) == false
+                expect(testContext.subject.flagSynchronizer.isOnline) == false
+
+                expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
+                expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.userKey) == newUser.key
+                expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+
+                expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
+
+                expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
+                expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
+            }
+            it("when the new user has cached feature flags") {
                 let stubFlags = FlagMaintainingMock.stubFlags()
-                beforeEach {
-                    newUser = LDUser.stub()
-                    testContext = TestContext().withCached(userKey: newUser.key, flags: stubFlags)
-                    testContext.start()
-                    testContext.featureFlagCachingMock.reset()
-                    testContext.cacheConvertingMock.reset()
+                let newUser = LDUser.stub()
+                let testContext = TestContext().withCached(userKey: newUser.key, flags: stubFlags)
+                testContext.start()
+                testContext.featureFlagCachingMock.reset()
+                testContext.cacheConvertingMock.reset()
 
-                    testContext.subject.internalIdentify(newUser: newUser)
-                }
-                it("restores the cached users feature flags") {
-                    expect(testContext.subject.user) == newUser
-                    expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
-                    expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags.flagCollection) == stubFlags
-                }
-                it("converts cached data") {
-                    expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
-                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
-                    expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
-                }
+                testContext.subject.internalIdentify(newUser: newUser)
+
+                expect(testContext.subject.user) == newUser
+                expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
+                expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags.flagCollection) == stubFlags
+
+                expect(testContext.cacheConvertingMock.convertCacheDataCallCount) == 1
+                expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.user) == newUser
+                expect(testContext.cacheConvertingMock.convertCacheDataReceivedArguments?.config) == testContext.config
             }
         }
     }
 
     private func setOnlineSpec() {
         describe("setOnline") {
-            var testContext: TestContext!
-
-            context("when the client is offline") {
-                context("setting online") {
-                    beforeEach {
-                        waitUntil { done in
-                            testContext = TestContext()
-                            testContext.start {
-                                testContext.subject.setOnline(true)
-                                done()
-                            }
-                        }
-                    }
-                    it("sets the client and service objects online") {
-                        expect(testContext.throttlerMock?.runThrottledCallCount) == 1
-                        expect(testContext.subject.isOnline) == true
-                        expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
-                        expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
+            it("set online when the client is offline") {
+                let testContext = TestContext()
+                waitUntil { done in
+                    testContext.start {
+                        testContext.subject.setOnline(true)
+                        done()
                     }
                 }
-            }
-            context("when the client is online") {
-                context("setting offline") {
-                    beforeEach {
-                        testContext = TestContext(startOnline: true)
-                        testContext.start()
 
-                        testContext.throttlerMock?.runThrottledCallCount = 0
-                        testContext.subject.setOnline(false)
-                    }
-                    it("takes the client and service objects offline") {
-                        expect(testContext.throttlerMock?.runThrottledCallCount) == 0
-                        expect(testContext.subject.isOnline) == false
-                        expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
-                        expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
-                    }
-                }
+                expect(testContext.throttlerMock?.runThrottledCallCount) == 1
+                expect(testContext.subject.isOnline) == true
+                expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
             }
-            context("when the client runs in the background") {
+            it("set offline when the client is online") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                testContext.throttlerMock?.runThrottledCallCount = 0
+                testContext.subject.setOnline(false)
+
+                expect(testContext.throttlerMock?.runThrottledCallCount) == 0
+                expect(testContext.subject.isOnline) == false
+                expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
+            }
+            context("set online when the client runs in the background") {
                 OperatingSystem.allOperatingSystems.forEach { os in
                     context("on \(os)") {
-                        context("while configured to enable background updates") {
-                            context("and setting online") {
-                                var targetRunThrottledCalls: Int!
-                                beforeEach {
-                                    waitUntil { done in
-                                        testContext = TestContext(operatingSystem: os)
-                                        testContext.start(runMode: .background, completion: done)
-                                    }
-                                    targetRunThrottledCalls = os.isBackgroundEnabled ? 1 : 0
-                                    testContext.subject.setOnline(true)
-                                }
-                                it("takes the client and service objects online") {
-                                    expect(testContext.throttlerMock?.runThrottledCallCount) == targetRunThrottledCalls
-                                    expect(testContext.subject.isOnline) == os.isBackgroundEnabled
-                                    expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
-                                    expect(testContext.makeFlagSynchronizerStreamingMode) == os.backgroundStreamingMode
-                                    expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
-                                    expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
-                                }
-                            }
+                        it("while configured to enable background updates") {
+                            let testContext = TestContext(operatingSystem: os)
+                            waitUntil { testContext.start(runMode: .background, completion: $0) }
+                            testContext.subject.setOnline(true)
+
+                            expect(testContext.throttlerMock?.runThrottledCallCount) == (os.isBackgroundEnabled ? 1 : 0)
+                            expect(testContext.subject.isOnline) == os.isBackgroundEnabled
+                            expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                            expect(testContext.makeFlagSynchronizerStreamingMode) == os.backgroundStreamingMode
+                            expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
+                            expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
                         }
-                        context("while configured to disable background updates") {
-                            beforeEach {
-                                waitUntil { done in
-                                    testContext = TestContext(enableBackgroundUpdates: false, operatingSystem: os)
-                                    testContext.start(runMode: .background, completion: done)
-                                }
-                            }
-                            context("and setting online") {
-                                beforeEach {
-                                    testContext.subject.setOnline(true)
-                                }
-                                it("leaves the client and service objects offline") {
-                                    expect(testContext.throttlerMock?.runThrottledCallCount) == 0
-                                    expect(testContext.subject.isOnline) == false
-                                    expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
-                                    expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.polling
-                                    expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
-                                    expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
-                                }
-                            }
+                        it("while configured to disable background updates") {
+                            let testContext = TestContext(enableBackgroundUpdates: false, operatingSystem: os)
+                            waitUntil { testContext.start(runMode: .background, completion: $0) }
+                            testContext.subject.setOnline(true)
+
+                            expect(testContext.throttlerMock?.runThrottledCallCount) == 0
+                            expect(testContext.subject.isOnline) == false
+                            expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                            expect(testContext.makeFlagSynchronizerStreamingMode) == LDStreamingMode.polling
+                            expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
+                            expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
                         }
                     }
                 }
             }
-            context("when the mobile key is empty") {
-                beforeEach {
-                    waitUntil { done in
-                        testContext = TestContext(newConfig: LDConfig(mobileKey: ""))
-                        testContext.start(completion: done)
-                    }
-                    testContext.throttlerMock?.runThrottledCallCount = 0
+            it("set online when the mobile key is empty") {
+                let testContext = TestContext(newConfig: LDConfig(mobileKey: ""))
+                waitUntil { testContext.start(completion: $0) }
+                testContext.subject.setOnline(true)
 
-                    testContext.subject.setOnline(true)
-                }
-                it("leaves the client and service objects offline") {
-                    expect(testContext.throttlerMock?.runThrottledCallCount) == 0
-                    expect(testContext.subject.isOnline) == false
-                    expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
-                    expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
-                }
+                expect(testContext.throttlerMock?.runThrottledCallCount) == 0
+                expect(testContext.subject.isOnline) == false
+                expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
+                expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
             }
         }
     }
 
     private func closeSpec() {
-        var testContext: TestContext!
-
         describe("stop") {
-            var priorRecordedEvents: Int!
-            context("when started") {
-                beforeEach {
-                    priorRecordedEvents = 0
-                }
-                context("and online") {
-                    beforeEach {
-                        testContext = TestContext(startOnline: true)
-                        testContext.start()
-                        priorRecordedEvents = testContext.eventReporterMock.recordCallCount
+            it("when started and online") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                testContext.subject.close()
 
-                        testContext.subject.close()
-                    }
-                    it("takes the client offline") {
-                        expect(testContext.subject.isOnline) == false
-                    }
-                    it("stops recording events") {
-                        testContext.subject.track(key: "abc")
-                        expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
-                    }
-                    it("flushes the event reporter") {
-                        expect(testContext.eventReporterMock.flushCallCount) == 1
-                    }
-                }
-                context("and offline") {
-                    beforeEach {
-                        testContext = TestContext()
-                        testContext.start()
-                        priorRecordedEvents = testContext.eventReporterMock.recordCallCount
-
-                        testContext.subject.close()
-                    }
-                    it("leaves the client offline") {
-                        expect(testContext.subject.isOnline) == false
-                    }
-                    it("stops recording events") {
-                        testContext.subject.track(key: "abc")
-                        expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
-                    }
-                    it("flushes the event reporter") {
-                        expect(testContext.eventReporterMock.flushCallCount) == 1
-                    }
-                }
+                expect(testContext.subject.isOnline) == false
+                expect(testContext.eventReporterMock.flushCallCount) == 1
             }
-            context("when already stopped") {
-                beforeEach {
-                    testContext = TestContext()
-                    testContext.start()
-                    testContext.subject.close()
-                    priorRecordedEvents = testContext.eventReporterMock.recordCallCount
+            it("when started and offline") {
+                let testContext = TestContext()
+                testContext.start()
+                testContext.subject.close()
 
-                    testContext.subject.close()
-                }
-                it("leaves the client offline") {
-                    expect(testContext.subject.isOnline) == false
-                }
-                it("stops recording events") {
-                    testContext.subject.track(key: "abc")
-                    expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
-                }
-                it("flushes the event reporter") {
-                    expect(testContext.eventReporterMock.flushCallCount) == 1
-                }
+                expect(testContext.subject.isOnline) == false
+                expect(testContext.eventReporterMock.flushCallCount) == 1
+            }
+            it("when already stopped") {
+                let testContext = TestContext()
+                testContext.start()
+                testContext.subject.close()
+                testContext.subject.close()
+
+                expect(testContext.subject.isOnline) == false
+                expect(testContext.eventReporterMock.flushCallCount) == 1
             }
         }
     }
 
     private func trackEventSpec() {
-        var testContext: TestContext!
-
         describe("track event") {
-            beforeEach {
-                testContext = TestContext()
+            it("records a custom event") {
+                let testContext = TestContext()
                 testContext.start()
-            }
-            it("records a custom event when client was started") {
                 testContext.subject.track(key: "customEvent", data: "abc", metricValue: 5.0)
                 let receivedEvent = testContext.eventReporterMock.recordReceivedEvent as? CustomEvent
                 expect(receivedEvent?.key) == "customEvent"
@@ -913,17 +785,13 @@ final class LDClientSpec: QuickSpec {
                 expect(receivedEvent?.data) == "abc"
                 expect(receivedEvent?.metricValue) == 5.0
             }
-            context("when client was stopped") {
-                var priorRecordedEvents: Int!
-                beforeEach {
-                    testContext.subject.close()
-                    priorRecordedEvents = testContext.eventReporterMock.recordCallCount
-
-                    testContext.subject.track(key: "abc")
-                }
-                it("does not record any more events") {
-                    expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
-                }
+            context("does not record when client was stopped") {
+                let testContext = TestContext()
+                testContext.start()
+                testContext.subject.close()
+                let priorRecordedEvents = testContext.eventReporterMock.recordCallCount
+                testContext.subject.track(key: "abc")
+                expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
             }
         }
     }
@@ -950,8 +818,8 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultFlagValues.double)) == DarklyServiceMock.FlagValues.double
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultFlagValues.string)) == DarklyServiceMock.FlagValues.string
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.array, defaultValue: DefaultFlagValues.array) == DarklyServiceMock.FlagValues.array).to(beTrue())
-                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultFlagValues.dictionary)
-                            == DarklyServiceMock.FlagValues.dictionary).to(beTrue())
+                        expect(AnyComparer.isEqual(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultFlagValues.dictionary),
+                                                   to: DarklyServiceMock.FlagValues.dictionary)).to(beTrue())
                     }
                     it("records a flag evaluation event") {
                         _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
@@ -972,7 +840,8 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultFlagValues.double)) == DefaultFlagValues.double
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultFlagValues.string)) == DefaultFlagValues.string
                         expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.array, defaultValue: DefaultFlagValues.array) == DefaultFlagValues.array).to(beTrue())
-                        expect(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultFlagValues.dictionary) == DefaultFlagValues.dictionary).to(beTrue())
+                        expect(AnyComparer.isEqual(testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultFlagValues.dictionary),
+                                                   to: DefaultFlagValues.dictionary)).to(beTrue())
                     }
                     it("records a flag evaluation event") {
                         _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
@@ -1061,161 +930,129 @@ final class LDClientSpec: QuickSpec {
     }
 
     private func onSyncCompleteSuccessSpec() {
-        context("polling") {
-            onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: .polling)
+        it("polling") {
+            self.onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: .polling)
         }
-        context("streaming ping") {
-            onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: .streaming, eventType: .ping)
+        it("streaming ping") {
+            self.onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: .streaming, eventType: .ping)
         }
-        context("streaming put") {
-            onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: .streaming, eventType: .put)
+        it("streaming put") {
+            self.onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: .streaming, eventType: .put)
         }
-        context("streaming patch") {
-            onSyncCompleteStreamingPatchSpec()
+        it("streaming patch") {
+            self.onSyncCompleteStreamingPatchSpec()
         }
-        context("streaming delete") {
-            onSyncCompleteDeleteFlagSpec()
+        it("streaming delete") {
+            self.onSyncCompleteDeleteFlagSpec()
         }
     }
 
     private func onSyncCompleteSuccessReplacingFlagsSpec(streamingMode: LDStreamingMode, eventType: FlagUpdateType? = nil) {
-        var testContext: TestContext!
-        var newFlags: [LDFlagKey: FeatureFlag]!
+        let testContext = TestContext(startOnline: true)
+        testContext.start()
+        testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
+
+        var newFlags = FlagMaintainingMock.stubFlags()
+        newFlags[Constants.newFlagKey] = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.string, useAlternateValue: true)
+
         var updateDate: Date!
+        waitUntil { done in
+            testContext.changeNotifierMock.notifyObserversCallback = done
+            updateDate = Date()
+            testContext.onSyncComplete?(.success(newFlags, eventType))
+        }
 
-        beforeEach {
-            testContext = TestContext(startOnline: true)
-            testContext.start()
-            testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
+        expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
+        expect(AnyComparer.isEqual(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags, to: newFlags)).to(beTrue())
 
-            newFlags = FlagMaintainingMock.stubFlags()
-            newFlags[Constants.newFlagKey] = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.string, useAlternateValue: true)
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
 
-            waitUntil { done in
-                testContext.changeNotifierMock.notifyObserversCallback = done
-                updateDate = Date()
-                testContext.onSyncComplete?(.success(newFlags, eventType))
-            }
-        }
-        it("updates the flag store") {
-            expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
-            expect(testContext.flagStoreMock.replaceStoreReceivedArguments?.newFlags == newFlags).to(beTrue())
-        }
-        it("caches the new flags") {
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
-        }
-        it("informs the flag change notifier of the changed flags") {
-            expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.featureFlags
-            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == testContext.cachedFlags).to(beTrue())
-        }
+        expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.featureFlags
+        expect(AnyComparer.isEqual(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags, to: testContext.cachedFlags)).to(beTrue())
     }
 
     func onSyncCompleteStreamingPatchSpec() {
-        var testContext: TestContext!
-        var flagUpdateDictionary: [String: Any]!
-        var updateDate: Date!
         let stubFlags = FlagMaintainingMock.stubFlags()
-        beforeEach {
-            testContext = TestContext(startOnline: true).withCached(flags: stubFlags)
-            testContext.start()
-            testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-            flagUpdateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
+        let testContext = TestContext(startOnline: true).withCached(flags: stubFlags)
+        testContext.start()
+        testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
+        let flagUpdateDictionary = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
                                                                            value: DarklyServiceMock.FlagValues.int + 1,
                                                                            variation: DarklyServiceMock.Constants.variation + 1,
                                                                            version: DarklyServiceMock.Constants.version + 1)
 
-            waitUntil { done in
-                testContext.changeNotifierMock.notifyObserversCallback = done
-                updateDate = Date()
-                testContext.onSyncComplete?(.success(flagUpdateDictionary, .patch))
-            }
+        var updateDate: Date!
+        waitUntil { done in
+            testContext.changeNotifierMock.notifyObserversCallback = done
+            updateDate = Date()
+            testContext.onSyncComplete?(.success(flagUpdateDictionary, .patch))
         }
-        it("updates the flag store") {
-            expect(testContext.flagStoreMock.updateStoreCallCount) == 1
-            expect(testContext.flagStoreMock.updateStoreReceivedArguments?.updateDictionary == flagUpdateDictionary).to(beTrue())
-        }
-        it("caches the updated flags") {
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
-        }
-        it("informs the flag change notifier of the changed flag") {
-            expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.featureFlags
-            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == stubFlags).to(beTrue())
-        }
+
+        expect(testContext.flagStoreMock.updateStoreCallCount) == 1
+        expect(AnyComparer.isEqual(testContext.flagStoreMock.updateStoreReceivedArguments?.updateDictionary, to: flagUpdateDictionary)).to(beTrue())
+
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
+
+        expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.featureFlags
+        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == stubFlags).to(beTrue())
     }
 
     func onSyncCompleteDeleteFlagSpec() {
-        var testContext: TestContext!
-        var flagUpdateDictionary: [String: Any]!
-        var updateDate: Date!
         let stubFlags = FlagMaintainingMock.stubFlags()
-        beforeEach {
-            testContext = TestContext(startOnline: true).withCached(flags: stubFlags)
-            testContext.start()
-            testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-            flagUpdateDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
+        let testContext = TestContext(startOnline: true).withCached(flags: stubFlags)
+        testContext.start()
+        testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
+        let flagUpdateDictionary = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
 
-            waitUntil { done in
-                testContext.changeNotifierMock.notifyObserversCallback = done
-                updateDate = Date()
-                testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
-            }
+        var updateDate: Date!
+        waitUntil { done in
+            testContext.changeNotifierMock.notifyObserversCallback = done
+            updateDate = Date()
+            testContext.onSyncComplete?(.success(flagUpdateDictionary, .delete))
         }
-        it("updates the flag store") {
-            expect(testContext.flagStoreMock.deleteFlagCallCount) == 1
-            expect(testContext.flagStoreMock.deleteFlagReceivedArguments?.deleteDictionary == flagUpdateDictionary).to(beTrue())
-        }
-        it("caches the updated flags") {
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
-            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
-        }
-        it("informs the flag change notifier of the changed flag") {
-            expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.featureFlags
-            expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == stubFlags).to(beTrue())
-        }
+
+        expect(testContext.flagStoreMock.deleteFlagCallCount) == 1
+        expect(AnyComparer.isEqual(testContext.flagStoreMock.deleteFlagReceivedArguments?.deleteDictionary, to: flagUpdateDictionary)).to(beTrue())
+
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .async
+
+        expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
+        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.featureFlags
+        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == stubFlags).to(beTrue())
     }
 
     func onSyncCompleteErrorSpec() {
         func runTest(_ ctx: String,
                      _ err: SynchronizingError,
                      testError: @escaping ((ConnectionInformation.LastConnectionFailureReason) -> Void)) {
-            var testContext: TestContext!
-            context(ctx) {
-                beforeEach {
-                    testContext = TestContext(startOnline: true)
-                    testContext.start()
-                    testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
-                    testContext.onSyncComplete?(.error(err))
-                }
-                it("takes the client offline when unauthed") {
-                    expect(testContext.subject.isOnline) == !err.isClientUnauthorized
-                }
-                it("does not cache the users flags") {
-                    expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
-                }
-                it("does not call the flag change notifier") {
-                    expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
-                }
-                it("Updates the connection information") {
-                    expect(testContext.subject.getConnectionInformation().lastFailedConnection).to(beCloseTo(Date(), within: 5.0))
-                    testError(testContext.subject.getConnectionInformation().lastConnectionFailureReason)
-                }
+            it(ctx) {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
+                testContext.onSyncComplete?(.error(err))
+
+                expect(testContext.subject.isOnline) == !err.isClientUnauthorized
+                expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
+                expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
+                expect(testContext.subject.getConnectionInformation().lastFailedConnection).to(beCloseTo(Date(), within: 5.0))
+                testError(testContext.subject.getConnectionInformation().lastConnectionFailureReason)
             }
         }
 
@@ -1246,60 +1083,49 @@ final class LDClientSpec: QuickSpec {
     }
 
     private func runModeSpec() {
-        var testContext: TestContext!
-
         describe("didEnterBackground notification") {
             context("after starting client") {
                 context("when online") {
                     OperatingSystem.allOperatingSystems.forEach { os in
                         context("on \(os)") {
-                            context("background updates disabled") {
-                                beforeEach {
-                                    testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, operatingSystem: os)
-                                    testContext.start()
-                                    NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
-                                    expect(testContext.subject.runMode).toEventually(equal(LDClientRunMode.background))
-                                }
-                                it("takes the sdk offline") {
-                                    expect(testContext.subject.isOnline) == true
-                                    expect(testContext.subject.runMode) == LDClientRunMode.background
-                                    expect(testContext.eventReporterMock.isOnline) == true
-                                    expect(testContext.flagSynchronizerMock.isOnline) == false
-                                }
-                            }
-                            context("background updates enabled") {
-                                beforeEach {
-                                    testContext = TestContext(startOnline: true, operatingSystem: os)
-                                    testContext.start()
+                            it("background updates disabled") {
+                                let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, operatingSystem: os)
+                                testContext.start()
+                                NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
+                                expect(testContext.subject.runMode).toEventually(equal(LDClientRunMode.background))
 
-                                    waitUntil { done in
-                                        NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
-                                        DispatchQueue(label: "BackgroundUpdatesEnabled").asyncAfter(deadline: .now() + 0.2, execute: done)
-                                    }
+                                expect(testContext.subject.isOnline) == true
+                                expect(testContext.subject.runMode) == LDClientRunMode.background
+                                expect(testContext.eventReporterMock.isOnline) == true
+                                expect(testContext.flagSynchronizerMock.isOnline) == false
+                            }
+                            it("background updates enabled") {
+                                let testContext = TestContext(startOnline: true, operatingSystem: os)
+                                testContext.start()
+
+                                waitUntil { done in
+                                    NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
+                                    DispatchQueue(label: "BackgroundUpdatesEnabled").asyncAfter(deadline: .now() + 0.2, execute: done)
                                 }
-                                it("leaves the sdk online") {
-                                    expect(testContext.subject.isOnline) == true
-                                    expect(testContext.subject.runMode) == LDClientRunMode.background
-                                    expect(testContext.eventReporterMock.isOnline) == true
-                                    expect(testContext.flagSynchronizerMock.isOnline) == os.isBackgroundEnabled
-                                    expect(testContext.flagSynchronizerMock.streamingMode) == os.backgroundStreamingMode
-                                }
+
+                                expect(testContext.subject.isOnline) == true
+                                expect(testContext.subject.runMode) == LDClientRunMode.background
+                                expect(testContext.eventReporterMock.isOnline) == true
+                                expect(testContext.flagSynchronizerMock.isOnline) == os.isBackgroundEnabled
+                                expect(testContext.flagSynchronizerMock.streamingMode) == os.backgroundStreamingMode
                             }
                         }
                     }
                 }
-                context("when offline") {
-                    beforeEach {
-                        testContext = TestContext()
-                        testContext.start()
-                        NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
-                    }
-                    it("leaves the sdk offline") {
-                        expect(testContext.subject.isOnline) == false
-                        expect(testContext.subject.runMode) == LDClientRunMode.background
-                        expect(testContext.eventReporterMock.isOnline) == false
-                        expect(testContext.flagSynchronizerMock.isOnline) == false
-                    }
+                it("when offline") {
+                    let testContext = TestContext()
+                    testContext.start()
+                    NotificationCenter.default.post(name: testContext.environmentReporterMock.backgroundNotification!, object: self)
+
+                    expect(testContext.subject.isOnline) == false
+                    expect(testContext.subject.runMode) == LDClientRunMode.background
+                    expect(testContext.eventReporterMock.isOnline) == false
+                    expect(testContext.flagSynchronizerMock.isOnline) == false
                 }
             }
         }
@@ -1308,32 +1134,25 @@ final class LDClientSpec: QuickSpec {
             context("after starting client") {
                 OperatingSystem.allOperatingSystems.forEach { os in
                     context("on \(os)") {
-                        context("when online at foreground notification") {
-                            beforeEach {
-                                testContext = TestContext(startOnline: true, operatingSystem: os)
-                                testContext.start(runMode: .background)
-                                NotificationCenter.default.post(name: testContext.environmentReporterMock.foregroundNotification!, object: self)
-                            }
-                            it("takes the sdk online") {
-                                expect(testContext.subject.isOnline) == true
-                                expect(testContext.subject.runMode) == LDClientRunMode.foreground
-                                expect(testContext.eventReporterMock.isOnline) == true
-                                expect(testContext.flagSynchronizerMock.isOnline) == true
-                            }
-                        }
-                        context("when offline at foreground notification") {
-                            beforeEach {
-                                testContext = TestContext(operatingSystem: os)
-                                testContext.start(runMode: .background)
+                        it("when online at foreground notification") {
+                            let testContext = TestContext(startOnline: true, operatingSystem: os)
+                            testContext.start(runMode: .background)
+                            NotificationCenter.default.post(name: testContext.environmentReporterMock.foregroundNotification!, object: self)
 
-                                NotificationCenter.default.post(name: testContext.environmentReporterMock.foregroundNotification!, object: self)
-                            }
-                            it("leaves the sdk offline") {
-                                expect(testContext.subject.isOnline) == false
-                                expect(testContext.subject.runMode) == LDClientRunMode.foreground
-                                expect(testContext.eventReporterMock.isOnline) == false
-                                expect(testContext.flagSynchronizerMock.isOnline) == false
-                            }
+                            expect(testContext.subject.isOnline) == true
+                            expect(testContext.subject.runMode) == LDClientRunMode.foreground
+                            expect(testContext.eventReporterMock.isOnline) == true
+                            expect(testContext.flagSynchronizerMock.isOnline) == true
+                        }
+                        it("when offline at foreground notification") {
+                            let testContext = TestContext(operatingSystem: os)
+                            testContext.start(runMode: .background)
+                            NotificationCenter.default.post(name: testContext.environmentReporterMock.foregroundNotification!, object: self)
+
+                            expect(testContext.subject.isOnline) == false
+                            expect(testContext.subject.runMode) == LDClientRunMode.foreground
+                            expect(testContext.eventReporterMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.isOnline) == false
                         }
                     }
                 }
@@ -1345,124 +1164,87 @@ final class LDClientSpec: QuickSpec {
                 context("and running in the foreground") {
                     context("set background") {
                         context("with background updates enabled") {
-                            context("streaming mode") {
-                                beforeEach {
-                                    testContext = TestContext(startOnline: true, operatingSystem: .macOS)
-                                    testContext.start()
-                                    testContext.subject.setRunMode(.background)
-                                }
-                                it("leaves the event reporter online") {
-                                    expect(testContext.eventReporterMock.isOnline) == true
-                                }
-                                it("sets the flag synchronizer for background streaming online") {
-                                    expect(testContext.flagSynchronizerMock.isOnline) == true
-                                    expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.streaming
-                                }
-                            }
-                            context("polling mode") {
-                                beforeEach {
-                                    testContext = TestContext(startOnline: true, streamingMode: .polling, operatingSystem: .macOS)
-                                    testContext.start()
-                                    testContext.subject.setRunMode(.background)
-                                }
-                                it("leaves the event reporter online") {
-                                    expect(testContext.eventReporterMock.isOnline) == true
-                                }
-                                it("sets the flag synchronizer for background polling online") {
-                                    expect(testContext.flagSynchronizerMock.isOnline) == true
-                                    expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
-                                    expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
-                                }
-                            }
-                        }
-                        context("with background updates disabled") {
-                            beforeEach {
-                                testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, operatingSystem: .macOS)
+                            it("streaming mode") {
+                                let testContext = TestContext(startOnline: true, operatingSystem: .macOS)
                                 testContext.start()
                                 testContext.subject.setRunMode(.background)
-                            }
-                            it("leaves the event reporter online") {
+
                                 expect(testContext.eventReporterMock.isOnline) == true
+                                expect(testContext.flagSynchronizerMock.isOnline) == true
+                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.streaming
                             }
-                            it("sets the flag synchronizer for background polling offline") {
-                                expect(testContext.flagSynchronizerMock.isOnline) == false
+                            it("polling mode") {
+                                let testContext = TestContext(startOnline: true, streamingMode: .polling, operatingSystem: .macOS)
+                                testContext.start()
+                                testContext.subject.setRunMode(.background)
+
+                                expect(testContext.eventReporterMock.isOnline) == true
+                                expect(testContext.flagSynchronizerMock.isOnline) == true
                                 expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
                                 expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
                             }
                         }
-                    }
-                    context("set foreground") {
-                        var eventReporterIsOnlineSetCount: Int!
-                        var flagSynchronizerIsOnlineSetCount: Int!
-                        var makeFlagSynchronizerCallCount: Int!
-                        beforeEach {
-                            testContext = TestContext(startOnline: true, operatingSystem: .macOS)
+                        it("with background updates disabled") {
+                            let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false, operatingSystem: .macOS)
                             testContext.start()
-                            eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
-                            flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
-                            makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
-                            testContext.subject.setRunMode(.foreground)
-                        }
-                        it("makes no changes") {
+                            testContext.subject.setRunMode(.background)
+
                             expect(testContext.eventReporterMock.isOnline) == true
-                            expect(testContext.eventReporterMock.isOnlineSetCount) == eventReporterIsOnlineSetCount
-                            expect(testContext.flagSynchronizerMock.isOnline) == true
-                            expect(testContext.flagSynchronizerMock.isOnlineSetCount) == flagSynchronizerIsOnlineSetCount
-                            expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == makeFlagSynchronizerCallCount
+                            expect(testContext.flagSynchronizerMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
+                            expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
                         }
+                    }
+                    it("set foreground") {
+                        let testContext = TestContext(startOnline: true, operatingSystem: .macOS)
+                        testContext.start()
+                        let eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
+                        let flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
+                        let makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
+                        testContext.subject.setRunMode(.foreground)
+
+                        expect(testContext.eventReporterMock.isOnline) == true
+                        expect(testContext.eventReporterMock.isOnlineSetCount) == eventReporterIsOnlineSetCount
+                        expect(testContext.flagSynchronizerMock.isOnline) == true
+                        expect(testContext.flagSynchronizerMock.isOnlineSetCount) == flagSynchronizerIsOnlineSetCount
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == makeFlagSynchronizerCallCount
                     }
                 }
                 context("and running in the background") {
-                    context("set background") {
-                        var eventReporterIsOnlineSetCount: Int!
-                        var flagSynchronizerIsOnlineSetCount: Int!
-                        var makeFlagSynchronizerCallCount: Int!
-                        beforeEach {
-                            testContext = TestContext(startOnline: true, operatingSystem: .macOS)
-                            testContext.start()
-                            testContext.subject.setRunMode(.background)
-                            eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
-                            flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
-                            makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
-                            testContext.subject.setRunMode(.background)
-                        }
-                        it("makes no changes") {
-                            expect(testContext.eventReporterMock.isOnline) == true
-                            expect(testContext.eventReporterMock.isOnlineSetCount) == eventReporterIsOnlineSetCount
-                            expect(testContext.flagSynchronizerMock.isOnline) == true
-                            expect(testContext.flagSynchronizerMock.isOnlineSetCount) == flagSynchronizerIsOnlineSetCount
-                            expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == makeFlagSynchronizerCallCount
-                        }
+                    it("set background") {
+                        let testContext = TestContext(startOnline: true, operatingSystem: .macOS)
+                        testContext.start()
+                        testContext.subject.setRunMode(.background)
+                        let eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
+                        let flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
+                        let makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
+                        testContext.subject.setRunMode(.background)
+
+                        expect(testContext.eventReporterMock.isOnline) == true
+                        expect(testContext.eventReporterMock.isOnlineSetCount) == eventReporterIsOnlineSetCount
+                        expect(testContext.flagSynchronizerMock.isOnline) == true
+                        expect(testContext.flagSynchronizerMock.isOnlineSetCount) == flagSynchronizerIsOnlineSetCount
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == makeFlagSynchronizerCallCount
                     }
                     context("set foreground") {
-                        context("streaming mode") {
-                            beforeEach {
-                                testContext = TestContext(startOnline: true, operatingSystem: .macOS)
-                                testContext.start(runMode: .background)
-                                testContext.subject.setRunMode(.foreground)
-                            }
-                            it("takes the event reporter online") {
-                                expect(testContext.eventReporterMock.isOnline) == true
-                            }
-                            it("sets the flag synchronizer for foreground streaming online") {
-                                expect(testContext.flagSynchronizerMock.isOnline) == true
-                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.streaming
-                            }
+                        it("streaming mode") {
+                            let testContext = TestContext(startOnline: true, operatingSystem: .macOS)
+                            testContext.start(runMode: .background)
+                            testContext.subject.setRunMode(.foreground)
+
+                            expect(testContext.eventReporterMock.isOnline) == true
+                            expect(testContext.flagSynchronizerMock.isOnline) == true
+                            expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.streaming
                         }
-                        context("polling mode") {
-                            beforeEach {
-                                testContext = TestContext(startOnline: true, streamingMode: .polling, operatingSystem: .macOS)
-                                testContext.start(runMode: .background)
-                                testContext.subject.setRunMode(.foreground)
-                            }
-                            it("takes the event reporter online") {
-                                expect(testContext.eventReporterMock.isOnline) == true
-                            }
-                            it("sets the flag synchronizer for foreground polling online") {
-                                expect(testContext.flagSynchronizerMock.isOnline) == true
-                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
-                                expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .foreground)
-                            }
+                        it("polling mode") {
+                            let testContext = TestContext(startOnline: true, streamingMode: .polling, operatingSystem: .macOS)
+                            testContext.start(runMode: .background)
+                            testContext.subject.setRunMode(.foreground)
+
+                            expect(testContext.eventReporterMock.isOnline) == true
+                            expect(testContext.flagSynchronizerMock.isOnline) == true
+                            expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
+                            expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .foreground)
                         }
                     }
                 }
@@ -1470,121 +1252,81 @@ final class LDClientSpec: QuickSpec {
             context("while offline") {
                 context("and running in the foreground") {
                     context("set background") {
-                        context("with background updates enabled") {
-                            beforeEach {
-                                waitUntil { done in
-                                    testContext = TestContext(operatingSystem: .macOS)
-                                    testContext.start(completion: done)
-                                }
-                                testContext.subject.setRunMode(.background)
-                            }
-                            it("leaves the event reporter offline") {
-                                expect(testContext.eventReporterMock.isOnline) == false
-                            }
-                            it("configures the flag synchronizer for background streaming offline") {
-                                expect(testContext.flagSynchronizerMock.isOnline) == false
-                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.streaming
-                            }
+                        it("with background updates enabled") {
+                            let testContext = TestContext(operatingSystem: .macOS)
+                            waitUntil { testContext.start(completion: $0) }
+
+                            testContext.subject.setRunMode(.background)
+
+                            expect(testContext.eventReporterMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.streaming
                         }
-                        context("with background updates disabled") {
-                            beforeEach {
-                                waitUntil { done in
-                                    testContext = TestContext(enableBackgroundUpdates: false, operatingSystem: .macOS)
-                                    testContext.start(completion: done)
-                                }
-                                testContext.subject.setRunMode(.background)
-                            }
-                            it("leaves the event reporter offline") {
-                                expect(testContext.eventReporterMock.isOnline) == false
-                            }
-                            it("configures the flag synchronizer for background polling offline") {
-                                expect(testContext.flagSynchronizerMock.isOnline) == false
-                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
-                                expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
-                            }
+                        it("with background updates disabled") {
+                            let testContext = TestContext(enableBackgroundUpdates: false, operatingSystem: .macOS)
+                            waitUntil { testContext.start(completion: $0) }
+
+                            testContext.subject.setRunMode(.background)
+
+                            expect(testContext.eventReporterMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
+                            expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
                         }
                     }
-                    context("set foreground") {
-                        var eventReporterIsOnlineSetCount: Int!
-                        var flagSynchronizerIsOnlineSetCount: Int!
-                        var makeFlagSynchronizerCallCount: Int!
-                        beforeEach {
-                            waitUntil { done in
-                                testContext = TestContext(operatingSystem: .macOS)
-                                testContext.start(completion: done)
-                            }
-                                
-                            eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
-                            flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
-                            makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
-                            testContext.subject.setRunMode(.foreground)
-                        }
-                        it("makes no changes") {
-                            expect(testContext.eventReporterMock.isOnline) == false
-                            expect(testContext.eventReporterMock.isOnlineSetCount) == eventReporterIsOnlineSetCount
-                            expect(testContext.flagSynchronizerMock.isOnline) == false
-                            expect(testContext.flagSynchronizerMock.isOnlineSetCount) == flagSynchronizerIsOnlineSetCount
-                            expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == makeFlagSynchronizerCallCount
-                        }
+                    it("set foreground") {
+                        let testContext = TestContext(operatingSystem: .macOS)
+                        waitUntil { testContext.start(completion: $0) }
+
+                        let eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
+                        let flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
+                        let makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
+                        testContext.subject.setRunMode(.foreground)
+
+                        expect(testContext.eventReporterMock.isOnline) == false
+                        expect(testContext.eventReporterMock.isOnlineSetCount) == eventReporterIsOnlineSetCount
+                        expect(testContext.flagSynchronizerMock.isOnline) == false
+                        expect(testContext.flagSynchronizerMock.isOnlineSetCount) == flagSynchronizerIsOnlineSetCount
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == makeFlagSynchronizerCallCount
                     }
                 }
                 context("and running in the background") {
-                    context("set background") {
-                        var eventReporterIsOnlineSetCount: Int!
-                        var flagSynchronizerIsOnlineSetCount: Int!
-                        var makeFlagSynchronizerCallCount: Int!
-                        beforeEach {
-                            waitUntil { done in
-                                testContext = TestContext(operatingSystem: .macOS)
-                                testContext.start(runMode: .background, completion: done)
-                            }
-                                
-                            eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
-                            flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
-                            makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
-                            testContext.subject.setRunMode(.background)
-                        }
-                        it("makes no changes") {
-                            expect(testContext.eventReporterMock.isOnline) == false
-                            expect(testContext.eventReporterMock.isOnlineSetCount) == eventReporterIsOnlineSetCount
-                            expect(testContext.flagSynchronizerMock.isOnline) == false
-                            expect(testContext.flagSynchronizerMock.isOnlineSetCount) == flagSynchronizerIsOnlineSetCount
-                            expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == makeFlagSynchronizerCallCount
-                        }
+                    it("set background") {
+                        let testContext = TestContext(operatingSystem: .macOS)
+                        waitUntil { testContext.start(runMode: .background, completion: $0) }
+
+                        let eventReporterIsOnlineSetCount = testContext.eventReporterMock.isOnlineSetCount
+                        let flagSynchronizerIsOnlineSetCount = testContext.flagSynchronizerMock.isOnlineSetCount
+                        let makeFlagSynchronizerCallCount = testContext.serviceFactoryMock.makeFlagSynchronizerCallCount
+                        testContext.subject.setRunMode(.background)
+
+                        expect(testContext.eventReporterMock.isOnline) == false
+                        expect(testContext.eventReporterMock.isOnlineSetCount) == eventReporterIsOnlineSetCount
+                        expect(testContext.flagSynchronizerMock.isOnline) == false
+                        expect(testContext.flagSynchronizerMock.isOnlineSetCount) == flagSynchronizerIsOnlineSetCount
+                        expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == makeFlagSynchronizerCallCount
                     }
                     context("set foreground") {
-                        context("streaming mode") {
-                            beforeEach {
-                                waitUntil { done in
-                                    testContext = TestContext(operatingSystem: .macOS)
-                                    testContext.start(runMode: .background, completion: done)
-                                }
-                                testContext.subject.setRunMode(.foreground)
-                            }
-                            it("leaves the event reporter offline") {
-                                expect(testContext.eventReporterMock.isOnline) == false
-                            }
-                            it("configures the flag synchronizer for foreground streaming offline") {
-                                expect(testContext.flagSynchronizerMock.isOnline) == false
-                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.streaming
-                            }
+                        it("streaming mode") {
+                            let testContext = TestContext(operatingSystem: .macOS)
+                            waitUntil { testContext.start(runMode: .background, completion: $0) }
+
+                            testContext.subject.setRunMode(.foreground)
+
+                            expect(testContext.eventReporterMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.streaming
                         }
-                        context("polling mode") {
-                            beforeEach {
-                                waitUntil { done in
-                                    testContext = TestContext(streamingMode: .polling, operatingSystem: .macOS)
-                                    testContext.start(runMode: .background, completion: done)
-                                }
-                                testContext.subject.setRunMode(.foreground)
-                            }
-                            it("leaves the event reporter offline") {
-                                expect(testContext.eventReporterMock.isOnline) == false
-                            }
-                            it("configures the flag synchronizer for foreground polling offline") {
-                                expect(testContext.flagSynchronizerMock.isOnline) == false
-                                expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
-                                expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .foreground)
-                            }
+                        it("polling mode") {
+                            let testContext = TestContext(streamingMode: .polling, operatingSystem: .macOS)
+                            waitUntil { testContext.start(runMode: .background, completion: $0) }
+
+                            testContext.subject.setRunMode(.foreground)
+
+                            expect(testContext.eventReporterMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.isOnline) == false
+                            expect(testContext.flagSynchronizerMock.streamingMode) == LDStreamingMode.polling
+                            expect(testContext.flagSynchronizerMock.pollingInterval) == testContext.config.flagPollingInterval(runMode: .foreground)
                         }
                     }
                 }
@@ -1619,16 +1361,15 @@ final class LDClientSpec: QuickSpec {
 
     private func allFlagsSpec() {
         let stubFlags = FlagMaintainingMock.stubFlags()
-        var testContext: TestContext!
         describe("allFlags") {
-            beforeEach {
-                testContext = TestContext().withCached(flags: stubFlags)
-                testContext.start()
-            }
             it("returns all non-null flag values from store") {
+                let testContext = TestContext().withCached(flags: stubFlags)
+                testContext.start()
                 expect(AnyComparer.isEqual(testContext.subject.allFlags, to: stubFlags.compactMapValues { $0.value })).to(beTrue())
             }
             it("returns nil when client is closed") {
+                let testContext = TestContext().withCached(flags: stubFlags)
+                testContext.start()
                 testContext.subject.close()
                 expect(testContext.subject.allFlags).to(beNil())
             }
@@ -1636,109 +1377,70 @@ final class LDClientSpec: QuickSpec {
     }
     
     private func connectionInformationSpec() {
-        var testContext: TestContext!
-        
         describe("ConnectionInformation") {
-            context("when client was started in foreground") {
-                beforeEach {
-                    testContext = TestContext(startOnline: true)
-                    testContext.start()
-                }
-                it("returns a ConnectionInformation object with currentConnectionMode.establishingStreamingConnection") {
-                    expect(testContext.subject.isOnline) == true
-                    expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.establishingStreamingConnection))
-                }
-                it("returns a String from toString") {
-                    expect(testContext.subject.connectionInformation.description).to(beAKindOf(String.self))
-                }
+            it("when client was started in foreground") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                expect(testContext.subject.isOnline) == true
+                expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.establishingStreamingConnection))
             }
-            context("when client was started in background") {
-                beforeEach {
-                    testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
-                    testContext.start()
-                    testContext.subject.setRunMode(.background)
-                }
-                it("returns a ConnectionInformation object with currentConnectionMode.offline") {
-                    expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.offline))
-                }
-                it("returns a String from toString") {
-                    expect(testContext.subject.connectionInformation.description).to(beAKindOf(String.self))
-                }
+            it("when client was started in background") {
+                let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
+                testContext.start()
+                testContext.subject.setRunMode(.background)
+                expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.offline))
             }
-            context("when offline and client started") {
-                beforeEach {
-                    testContext = TestContext()
-                    testContext.start()
-                }
-                it("leaves the sdk offline") {
-                    expect(testContext.subject.isOnline) == false
-                    expect(testContext.eventReporterMock.isOnline) == false
-                    expect(testContext.flagSynchronizerMock.isOnline) == false
-                    expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.offline))
-                }
+            it("client started offline") {
+                let testContext = TestContext()
+                testContext.start()
+                expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.offline))
             }
         }
     }
     
     private func variationDetailSpec() {
         describe("variationDetail") {
-            context("when client was started and flag key doesn't exist") {
-                it("returns FLAG_NOT_FOUND") {
-                    let testContext = TestContext()
-                    testContext.start()
-                    let detail = testContext.subject.variationDetail(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool).reason
-                    if let errorKind = detail?["errorKind"] as? String {
-                        expect(errorKind) == "FLAG_NOT_FOUND"
-                    }
+            it("when flag doesn't exist") {
+                let testContext = TestContext()
+                testContext.start()
+                let detail = testContext.subject.variationDetail(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool).reason
+                if let errorKind = detail?["errorKind"] as? String {
+                    expect(errorKind) == "FLAG_NOT_FOUND"
                 }
             }
         }
     }
 
     private func isInitializedSpec() {
-        var testContext: TestContext!
-
         describe("isInitialized") {
-            context("when client was started but no flag update") {
-                beforeEach {
-                    testContext = TestContext(startOnline: true)
-                    testContext.start()
-                }
-                it("returns false") {
-                    expect(testContext.subject.isInitialized) == false
-                }
-                it("and then stopped returns false") {
-                    testContext.subject.close()
-                    expect(testContext.subject.isInitialized) == false
-                }
+            it("when client was started but no flag update") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+
+                expect(testContext.subject.isInitialized) == false
+
+                testContext.subject.close()
+                expect(testContext.subject.isInitialized) == false
             }
-            context("when client was started offline") {
-                beforeEach {
-                    testContext = TestContext()
-                    testContext.start()
-                }
-                it("returns true") {
-                    expect(testContext.subject.isInitialized) == true
-                }
-                it("and then stopped returns false") {
-                    testContext.subject.close()
-                    expect(testContext.subject.isInitialized) == false
-                }
+            it("when client was started offline") {
+                let testContext = TestContext()
+                testContext.start()
+
+                expect(testContext.subject.isInitialized) == true
+
+                testContext.subject.close()
+                expect(testContext.subject.isInitialized) == false
             }
             for eventType in [nil, FlagUpdateType.ping, FlagUpdateType.put] {
-                context("when client was started and after receiving flags as " + (eventType?.rawValue ?? "poll")) {
-                    beforeEach {
-                        testContext = TestContext(startOnline: true)
-                        testContext.start()
-                        testContext.onSyncComplete?(.success([:], eventType))
-                    }
-                    it("returns true") {
-                        expect(testContext.subject.isInitialized).toEventually(beTrue(), timeout: DispatchTimeInterval.seconds(2))
-                    }
-                    it("and then stopped returns false") {
-                        testContext.subject.close()
-                        expect(testContext.subject.isInitialized) == false
-                    }
+                it("when client was started and after receiving flags as " + (eventType?.rawValue ?? "poll")) {
+                    let testContext = TestContext(startOnline: true)
+                    testContext.start()
+                    testContext.onSyncComplete?(.success([:], eventType))
+
+                    expect(testContext.subject.isInitialized).toEventually(beTrue(), timeout: DispatchTimeInterval.seconds(2))
+
+                    testContext.subject.close()
+                    expect(testContext.subject.isInitialized) == false
                 }
             }
         }

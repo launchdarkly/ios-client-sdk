@@ -87,24 +87,12 @@ final class DiagnosticCacheSpec: QuickSpec {
                 let diagnosticCache = DiagnosticCache(sdkKey: "this_is_a_fake_key")
                 let diagnosticId = diagnosticCache.getDiagnosticId()
 
-                let requestQueue = DispatchQueue(label: "com.launchdarkly.test.diagnosticCacheSpec.incrementDroppedEventCount.concurrent",
-                                                 qos: .userInitiated,
-                                                 attributes: .concurrent)
-                var incrementCallCount = 0
-                waitUntil { done in
-                    let fireTime = DispatchTime.now() + 0.2
-                    for _ in 0..<10 {
-                        requestQueue.asyncAfter(deadline: fireTime) {
-                            diagnosticCache.incrementDroppedEventCount()
-                            DispatchQueue.main.async {
-                                incrementCallCount += 1
-                                if incrementCallCount == 10 {
-                                    done()
-                                }
-                            }
-                        }
-                    }
+                let counter = DispatchSemaphore(value: 0)
+                DispatchQueue.concurrentPerform(iterations: 10) { _ in
+                    diagnosticCache.incrementDroppedEventCount()
+                    counter.signal()
                 }
+                (0..<10).forEach { _ in counter.wait() }
 
                 let diagnosticStats = diagnosticCache.getCurrentStatsAndReset()
                 expect(UUID(uuidString: diagnosticId.diagnosticId)).toNot(beNil())
@@ -253,10 +241,9 @@ final class DiagnosticCacheSpec: QuickSpec {
 
     private func backingStoreSpec() {
         context("backing store") {
-            beforeEach {
-                self.clearStoredCaches()
-            }
             it("stores to expected key") {
+                self.clearStoredCaches()
+
                 let expectedDataKey = "com.launchdarkly.DiagnosticCache.diagnosticData.this_is_a_fake_key"
                 let defaults = UserDefaults.standard
                 let beforeData = defaults.data(forKey: expectedDataKey)

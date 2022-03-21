@@ -527,10 +527,11 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamCreated: true,
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
-                    expect(flagDictionary == FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
-                                                                                     value: DarklyServiceMock.FlagValues.int + 1,
-                                                                                     variation: DarklyServiceMock.Constants.variation + 1,
-                                                                                     version: DarklyServiceMock.Constants.version + 1)).to(beTrue())
+                    let stubPatch = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
+                                                                            value: DarklyServiceMock.FlagValues.int + 1,
+                                                                            variation: DarklyServiceMock.Constants.variation + 1,
+                                                                            version: DarklyServiceMock.Constants.version + 1)
+                    expect(AnyComparer.isEqual(flagDictionary, to: stubPatch)).to(beTrue())
                     expect(streamingEvent) == .patch
                 }
             }
@@ -597,7 +598,8 @@ final class FlagSynchronizerSpec: QuickSpec {
                                                            streamCreated: true,
                                                            streamOpened: true,
                                                            streamClosed: false) }).to(match())
-                    expect(flagDictionary == FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)).to(beTrue())
+                    let stubDelete = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
+                    expect(AnyComparer.isEqual(flagDictionary, to: stubDelete)).to(beTrue())
                     expect(streamingEvent) == .delete
                 }
             }

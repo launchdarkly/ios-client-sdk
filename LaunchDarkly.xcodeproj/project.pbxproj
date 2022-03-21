@@ -110,7 +110,6 @@
 		832D68A4224A38FC005F052A /* CacheConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832D68A1224A38FC005F052A /* CacheConverter.swift */; };
 		832D68A5224A38FC005F052A /* CacheConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832D68A1224A38FC005F052A /* CacheConverter.swift */; };
 		832D68AC224B3321005F052A /* CacheConverterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832D68AB224B3321005F052A /* CacheConverterSpec.swift */; };
-		832EA061203D03B700A93C0E /* AnyComparerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832EA060203D03B700A93C0E /* AnyComparerSpec.swift */; };
 		8335299E1FC37727001166F8 /* FlagMaintainingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */; };
 		83383A5120460DD30024D975 /* SynchronizingErrorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */; };
 		83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */; };
@@ -372,7 +371,6 @@
 		832D689C224A3896005F052A /* DeprecatedCacheModelV5.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeprecatedCacheModelV5.swift; sourceTree = "<group>"; };
 		832D68A1224A38FC005F052A /* CacheConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheConverter.swift; sourceTree = "<group>"; };
 		832D68AB224B3321005F052A /* CacheConverterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheConverterSpec.swift; sourceTree = "<group>"; };
-		832EA060203D03B700A93C0E /* AnyComparerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyComparerSpec.swift; sourceTree = "<group>"; };
 		8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagMaintainingMock.swift; sourceTree = "<group>"; };
 		83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynchronizingErrorSpec.swift; sourceTree = "<group>"; };
 		83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyServiceSpec.swift; sourceTree = "<group>"; };
@@ -721,7 +719,6 @@
 			isa = PBXGroup;
 			children = (
 				83D17EA91FCDA18C00B2823C /* DictionarySpec.swift */,
-				832EA060203D03B700A93C0E /* AnyComparerSpec.swift */,
 				83B6E3F0222EFA3800FF2A6A /* ThreadSpec.swift */,
 			);
 			path = Extensions;
@@ -1401,7 +1398,6 @@
 				B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */,
 				83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */,
 				83CFE7D11F7AD8DC0010544E /* DarklyServiceMock.swift in Sources */,
-				832EA061203D03B700A93C0E /* AnyComparerSpec.swift in Sources */,
 				B43D5AD025FBE1C30022EC90 /* DeprecatedCacheModelSpec.swift in Sources */,
 				832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */,
 				8354AC77224316F800CDE602 /* UserEnvironmentFlagCacheSpec.swift in Sources */,

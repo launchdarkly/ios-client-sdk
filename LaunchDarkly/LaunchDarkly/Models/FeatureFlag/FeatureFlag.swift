@@ -13,10 +13,10 @@ struct FeatureFlag {
     let version: Int?
     /// The feature flag version. It changes whenever this feature flag changes. Used for event reporting only. Server json lists this as "flagVersion". Event json lists this as "version".
     let flagVersion: Int?
-    let trackEvents: Bool?
+    let trackEvents: Bool
     let debugEventsUntilDate: Date?
     let reason: [String: Any]?
-    let trackReason: Bool?
+    let trackReason: Bool
 
     var versionForEvents: Int? { flagVersion ?? version }
 
@@ -25,10 +25,10 @@ struct FeatureFlag {
          variation: Int? = nil,
          version: Int? = nil,
          flagVersion: Int? = nil,
-         trackEvents: Bool? = nil,
+         trackEvents: Bool = false,
          debugEventsUntilDate: Date? = nil,
          reason: [String: Any]? = nil,
-         trackReason: Bool? = nil) {
+         trackReason: Bool = false) {
         self.flagKey = flagKey
         self.value = value is NSNull ? nil : value
         self.variation = variation
@@ -49,10 +49,10 @@ struct FeatureFlag {
                   variation: dictionary.variation,
                   version: dictionary.version,
                   flagVersion: dictionary.flagVersion,
-                  trackEvents: dictionary.trackEvents,
+                  trackEvents: dictionary.trackEvents ?? false,
                   debugEventsUntilDate: Date(millisSince1970: dictionary.debugEventsUntilDate),
                   reason: dictionary.reason,
-                  trackReason: dictionary.trackReason)
+                  trackReason: dictionary.trackReason ?? false)
     }
 
     var dictionaryValue: [String: Any] {
@@ -62,10 +62,10 @@ struct FeatureFlag {
         dictionaryValue[CodingKeys.variation.rawValue] = variation ?? NSNull()
         dictionaryValue[CodingKeys.version.rawValue] = version ?? NSNull()
         dictionaryValue[CodingKeys.flagVersion.rawValue] = flagVersion ?? NSNull()
-        dictionaryValue[CodingKeys.trackEvents.rawValue] = trackEvents ?? NSNull()
+        dictionaryValue[CodingKeys.trackEvents.rawValue] = trackEvents ? true : NSNull()
         dictionaryValue[CodingKeys.debugEventsUntilDate.rawValue] = debugEventsUntilDate?.millisSince1970 ?? NSNull()
         dictionaryValue[CodingKeys.reason.rawValue] = reason ?? NSNull()
-        dictionaryValue[CodingKeys.trackReason.rawValue] = trackReason ?? NSNull()
+        dictionaryValue[CodingKeys.trackReason.rawValue] = trackReason ? true : NSNull()
         return dictionaryValue
     }
 

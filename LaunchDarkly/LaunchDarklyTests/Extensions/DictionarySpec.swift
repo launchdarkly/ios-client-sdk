@@ -7,7 +7,6 @@ final class DictionarySpec: QuickSpec {
     public override func spec() {
         symmetricDifferenceSpec()
         withNullValuesRemovedSpec()
-        dictionarySpec()
     }
 
     private func symmetricDifferenceSpec() {
@@ -24,103 +23,81 @@ final class DictionarySpec: QuickSpec {
                 }
             }
             context("when other is empty") {
-                beforeEach {
-                    otherDictionary = [:]
-                }
                 it("returns all keys in subject") {
+                    otherDictionary = [:]
                     expect(dictionary.symmetricDifference(otherDictionary)) == dictionary.keys.sorted()
                 }
             }
             context("when subject is empty") {
-                beforeEach {
-                    dictionary = [:]
-                }
                 it("returns all keys in other") {
+                    dictionary = [:]
                     expect(dictionary.symmetricDifference(otherDictionary)) == otherDictionary.keys.sorted()
                 }
             }
             context("when subject has an added key") {
-                let addedKey = "addedKey"
-                beforeEach {
-                    dictionary[addedKey] = true
-                }
                 it("returns the different key") {
+                    let addedKey = "addedKey"
+                    dictionary[addedKey] = true
                     expect(dictionary.symmetricDifference(otherDictionary)) == [addedKey]
                 }
             }
             context("when other has an added key") {
-                let addedKey = "addedKey"
-                beforeEach {
-                    otherDictionary[addedKey] = true
-                }
                 it("returns the different key") {
+                    let addedKey = "addedKey"
+                    otherDictionary[addedKey] = true
                     expect(dictionary.symmetricDifference(otherDictionary)) == [addedKey]
                 }
             }
             context("when other has a different key") {
-                let addedKeyA = "addedKeyA"
-                let addedKeyB = "addedKeyB"
-                beforeEach {
+                it("returns the different keys") {
+                    let addedKeyA = "addedKeyA"
+                    let addedKeyB = "addedKeyB"
                     otherDictionary[addedKeyA] = true
                     dictionary[addedKeyB] = true
-                }
-                it("returns the different keys") {
                     expect(dictionary.symmetricDifference(otherDictionary)) == [addedKeyA, addedKeyB]
                 }
             }
             context("when other has a different bool value") {
-                let differingKey = DarklyServiceMock.FlagKeys.bool
-                beforeEach {
-                    otherDictionary[differingKey] = !DarklyServiceMock.FlagValues.bool
-                }
                 it("returns the different key") {
+                    let differingKey = DarklyServiceMock.FlagKeys.bool
+                    otherDictionary[differingKey] = !DarklyServiceMock.FlagValues.bool
                     expect(dictionary.symmetricDifference(otherDictionary)) == [differingKey]
                 }
             }
             context("when other has a different int value") {
-                let differingKey = DarklyServiceMock.FlagKeys.int
-                beforeEach {
-                    otherDictionary[differingKey] = DarklyServiceMock.FlagValues.int + 1
-                }
                 it("returns the different key") {
+                    let differingKey = DarklyServiceMock.FlagKeys.int
+                    otherDictionary[differingKey] = DarklyServiceMock.FlagValues.int + 1
                     expect(dictionary.symmetricDifference(otherDictionary)) == [differingKey]
                 }
             }
             context("when other has a different double value") {
-                let differingKey = DarklyServiceMock.FlagKeys.double
-                beforeEach {
-                    otherDictionary[differingKey] = DarklyServiceMock.FlagValues.double - 1.0
-                }
                 it("returns the different key") {
+                    let differingKey = DarklyServiceMock.FlagKeys.double
+                    otherDictionary[differingKey] = DarklyServiceMock.FlagValues.double - 1.0
                     expect(dictionary.symmetricDifference(otherDictionary)) == [differingKey]
                 }
             }
             context("when other has a different string value") {
-                let differingKey = DarklyServiceMock.FlagKeys.string
-                beforeEach {
-                    otherDictionary[differingKey] = DarklyServiceMock.FlagValues.string + " some new text"
-                }
                 it("returns the different key") {
+                    let differingKey = DarklyServiceMock.FlagKeys.string
+                    otherDictionary[differingKey] = DarklyServiceMock.FlagValues.string + " some new text"
                     expect(dictionary.symmetricDifference(otherDictionary)) == [differingKey]
                 }
             }
             context("when other has a different array value") {
-                let differingKey = DarklyServiceMock.FlagKeys.array
-                beforeEach {
-                    otherDictionary[differingKey] = DarklyServiceMock.FlagValues.array + [4]
-                }
                 it("returns the different key") {
+                    let differingKey = DarklyServiceMock.FlagKeys.array
+                    otherDictionary[differingKey] = DarklyServiceMock.FlagValues.array + [4]
                     expect(dictionary.symmetricDifference(otherDictionary)) == [differingKey]
                 }
             }
             context("when other has a different dictionary value") {
-                let differingKey = DarklyServiceMock.FlagKeys.dictionary
-                beforeEach {
+                it("returns the different key") {
+                    let differingKey = DarklyServiceMock.FlagKeys.dictionary
                     var differingDictionary = DarklyServiceMock.FlagValues.dictionary
                     differingDictionary["sub-flag-a"] = !(differingDictionary["sub-flag-a"] as! Bool)
                     otherDictionary[differingKey] = differingDictionary
-                }
-                it("returns the different key") {
                     expect(dictionary.symmetricDifference(otherDictionary)) == [differingKey]
                 }
             }
@@ -129,52 +106,25 @@ final class DictionarySpec: QuickSpec {
 
     private func withNullValuesRemovedSpec() {
         describe("withNullValuesRemoved") {
-            var dictionary: [String: Any]!
-            var resultingDictionary: [String: Any]!
-            context("when no null values exist") {
-                beforeEach {
-                    dictionary = Dictionary.stub()
-
-                    resultingDictionary = dictionary.withNullValuesRemoved
-                }
-                it("returns the same dictionary") {
-                    expect(dictionary == resultingDictionary).to(beTrue())
-                }
+            it("when no null values exist") {
+                let dictionary = Dictionary.stub()
+                let resultingDictionary = dictionary.withNullValuesRemoved
+                expect(dictionary.keys) == resultingDictionary.keys
             }
             context("when null values exist") {
-                context("in the top level") {
-                    beforeEach {
-                        dictionary = Dictionary.stub().withNullValueAppended
-
-                        resultingDictionary = dictionary.withNullValuesRemoved
-                    }
-                    it("returns the dictionary without the null value") {
-                        expect(resultingDictionary == Dictionary.stub()).to(beTrue())
-                    }
+                it("in the top level") {
+                    var dictionary = Dictionary.stub()
+                    dictionary["null-key"] = NSNull()
+                    let resultingDictionary = dictionary.withNullValuesRemoved
+                    expect(resultingDictionary.keys) == Dictionary.stub().keys
                 }
-                context("in the second level") {
-                    beforeEach {
-                        dictionary = Dictionary.stub()
-                        dictionary[Dictionary.Keys.dictionary] = Dictionary.Values.dictionary.withNullValueAppended
-
-                        resultingDictionary = dictionary.withNullValuesRemoved
-                    }
-                    it("returns a dictionary without the null value") {
-                        expect(resultingDictionary == Dictionary.stub()).to(beTrue())
-                    }
-                }
-            }
-        }
-    }
-
-    private func dictionarySpec() {
-        describe("Optional extension") {
-            context("when both are null") {
-                let dict1: [String: Any]? = nil
-                let dict2: [String: Any]? = nil
-
-                it("does not stack overflow") {
-                    expect(dict1 == dict2).to(beTrue())
+                it("in the second level") {
+                    var dictionary = Dictionary.stub()
+                    var subDict = Dictionary.Values.dictionary
+                    subDict["null-key"] = NSNull()
+                    dictionary[Dictionary.Keys.dictionary] = subDict
+                    let resultingDictionary = dictionary.withNullValuesRemoved
+                    expect((resultingDictionary[Dictionary.Keys.dictionary] as! [String: Any]).keys) == Dictionary.Values.dictionary.keys
                 }
             }
         }
@@ -212,22 +162,10 @@ fileprivate extension Dictionary where Key == String, Value == Any {
     }
 }
 
-extension Optional where Wrapped == [String: Any] {
-    public static func == (lhs: [String: Any]?, rhs: [String: Any]?) -> Bool {
-        AnyComparer.isEqual(lhs, to: rhs)
-    }
-}
-
 extension Dictionary where Key == String, Value == Any {
     func appendNull() -> [String: Any] {
         var dictWithNull = self
         dictWithNull[Keys.null] = Values.null
         return dictWithNull
-    }
-
-    var withNullValueAppended: [String: Any] {
-        var modifiedDictionary = self
-        modifiedDictionary[Keys.null] = Values.null
-        return modifiedDictionary
     }
 }

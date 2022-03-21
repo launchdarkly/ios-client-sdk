@@ -58,10 +58,10 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(featureFlag.value).to(beNil())
                     expect(featureFlag.variation).to(beNil())
                     expect(featureFlag.version).to(beNil())
-                    expect(featureFlag.trackEvents).to(beNil())
+                    expect(featureFlag.trackEvents) == false
                     expect(featureFlag.debugEventsUntilDate).to(beNil())
                     expect(featureFlag.reason).to(beNil())
-                    expect(featureFlag.trackReason).to(beNil())
+                    expect(featureFlag.trackReason) == false
                 }
             }
         }
@@ -127,7 +127,7 @@ final class FeatureFlagSpec: QuickSpec {
                         expect(featureFlag?.variation).to(beNil())
                         expect(featureFlag?.version).to(beNil())
                         expect(featureFlag?.flagVersion).to(beNil())
-                        expect(featureFlag?.trackEvents).to(beNil())
+                        expect(featureFlag?.trackEvents) == false
                     }
                 }
             }
@@ -148,7 +148,7 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(featureFlag?.variation) == DarklyServiceMock.Constants.variation
                     expect(featureFlag?.version).to(beNil())
                     expect(featureFlag?.flagVersion).to(beNil())
-                    expect(featureFlag?.trackEvents).to(beNil())
+                    expect(featureFlag?.trackEvents) == false
                 }
             }
             context("when dictionary only contains the key and version") {
@@ -167,7 +167,7 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(featureFlag?.variation).to(beNil())
                     expect(featureFlag?.version) == DarklyServiceMock.Constants.version
                     expect(featureFlag?.flagVersion).to(beNil())
-                    expect(featureFlag?.trackEvents).to(beNil())
+                    expect(featureFlag?.trackEvents) == false
                 }
             }
             context("when dictionary only contains the key and flagVersion") {
@@ -187,7 +187,7 @@ final class FeatureFlagSpec: QuickSpec {
                     expect(featureFlag?.variation).to(beNil())
                     expect(featureFlag?.version).to(beNil())
                     expect(featureFlag?.flagVersion) == DarklyServiceMock.Constants.flagVersion
-                    expect(featureFlag?.trackEvents).to(beNil())
+                    expect(featureFlag?.trackEvents) == false
                 }
             }
             context("when dictionary only contains the key and trackEvents") {
@@ -261,7 +261,7 @@ final class FeatureFlagSpec: QuickSpec {
             }
             context("without elements") {
                 beforeEach {
-                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: false, includeFlagVersions: false, trackEvents: nil, debugEventsUntilDate: nil)
+                    featureFlags = DarklyServiceMock.Constants.stubFeatureFlags(includeVariations: false, includeVersions: false, includeFlagVersions: false, trackEvents: false, debugEventsUntilDate: nil)
                 }
                 it("creates a dictionary with the value including nil value and version representations") {
                     featureFlags.forEach { flagKey, featureFlag in
@@ -462,82 +462,44 @@ final class FeatureFlagSpec: QuickSpec {
 
     private func shouldCreateDebugEventsSpec() {
         describe("shouldCreateDebugEventsSpec") {
-            var lastEventResponseDate: Date!
-            var shouldCreateDebugEvents: Bool!
-            var flag: FeatureFlag!
-            beforeEach {
-                flag = FeatureFlag(flagKey: "test-key")
-            }
             context("lastEventResponseDate exists") {
-                context("debugEventsUntilDate hasn't passed lastEventResponseDate") {
-                    beforeEach {
-                        lastEventResponseDate = Date().addingTimeInterval(-1.0)
-                        flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: Date())
-                        shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate)
-                    }
-                    it("returns true") {
-                        expect(shouldCreateDebugEvents) == true
-                    }
+                it("debugEventsUntilDate hasn't passed lastEventResponseDate") {
+                    let lastEventResponseDate = Date().addingTimeInterval(-1.0)
+                    let flag = FeatureFlag(flagKey: "test-key", trackEvents: true, debugEventsUntilDate: Date())
+                    expect(flag.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate)) == true
                 }
-                context("debugEventsUntilDate is lastEventResponseDate") {
-                    beforeEach {
-                        lastEventResponseDate = Date()
-                        flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: lastEventResponseDate)
-                        shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate)
-                    }
-                    it("returns true") {
-                        expect(shouldCreateDebugEvents) == true
-                    }
+                it("debugEventsUntilDate is lastEventResponseDate") {
+                    let lastEventResponseDate = Date()
+                    let flag = FeatureFlag(flagKey: "test-key", trackEvents: true, debugEventsUntilDate: lastEventResponseDate)
+                    expect(flag.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate)) == true
                 }
-                context("debugEventsUntilDate has passed lastEventResponseDate") {
-                    beforeEach {
-                        lastEventResponseDate = Date().addingTimeInterval(1.0)
-                        flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: Date())
-                        shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate)
-                    }
-                    it("returns false") {
-                        expect(shouldCreateDebugEvents) == false
-                    }
+                it("debugEventsUntilDate has passed lastEventResponseDate") {
+                    let lastEventResponseDate = Date().addingTimeInterval(1.0)
+                    let flag = FeatureFlag(flagKey: "test-key", trackEvents: true, debugEventsUntilDate: Date())
+                    expect(flag.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate)) == false
                 }
             }
             context("lastEventResponseDate does not exist") {
-                context("debugEventsUntilDate hasn't passed system date") {
-                    beforeEach {
-                        flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(1.0))
-                        shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: nil)
-                    }
-                    it("returns true") {
-                        expect(shouldCreateDebugEvents) == true
-                    }
+                it("debugEventsUntilDate hasn't passed system date") {
+                    let flag = FeatureFlag(flagKey: "test-key", trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(1.0))
+                    expect(flag.shouldCreateDebugEvents(lastEventReportResponseTime: nil)) == true
                 }
-                context("debugEventsUntilDate is system date") {
-                    beforeEach {
-                        // Without creating a SystemDateServiceMock and corresponding service protocol, this is really difficult to test, but the level of accuracy is not crucial. Since the debugEventsUntilDate comes in millisSince1970, setting the debugEventsUntilDate to 1 millisecond beyond the date seems like it will get "close enough" to the current date
-                        flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(0.001))
-                        shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: nil)
-                    }
-                    it("returns true") {
-                        expect(shouldCreateDebugEvents) == true
-                    }
+                it("debugEventsUntilDate is system date") {
+                    // Without creating a SystemDateServiceMock and corresponding service protocol, this is really
+                    // difficult to test, but the level of accuracy is not crucial. Since the debugEventsUntilDate comes
+                    // in millisSince1970, setting the debugEventsUntilDate to 1 millisecond beyond the date seems like
+                    // it will get "close enough" to the current date
+                    let flag = FeatureFlag(flagKey: "test-key", trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(0.001))
+                    expect(flag.shouldCreateDebugEvents(lastEventReportResponseTime: nil)) == true
                 }
-                context("debugEventsUntilDate has passed system date") {
-                    beforeEach {
-                        flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(-1.0))
-                        shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: nil)
-                    }
-                    it("returns false") {
-                        expect(shouldCreateDebugEvents) == false
-                    }
+                it("debugEventsUntilDate has passed system date") {
+                    let flag = FeatureFlag(flagKey: "test-key", trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(-1.0))
+                    expect(flag.shouldCreateDebugEvents(lastEventReportResponseTime: nil)) == false
                 }
             }
-            context("debugEventsUntilDate doesn't exist") {
-                beforeEach {
-                    flag = FeatureFlag(copying: flag, trackEvents: true, debugEventsUntilDate: nil)
-                    shouldCreateDebugEvents = flag.shouldCreateDebugEvents(lastEventReportResponseTime: Date())
-                }
-                it("returns false") {
-                    expect(shouldCreateDebugEvents) == false
-                }
+            it("debugEventsUntilDate doesn't exist") {
+                let flag = FeatureFlag(flagKey: "test-key", trackEvents: true, debugEventsUntilDate: nil)
+                expect(flag.shouldCreateDebugEvents(lastEventReportResponseTime: Date())) == false
             }
         }
     }
@@ -685,7 +647,7 @@ final class FeatureFlagSpec: QuickSpec {
                     featureFlags = flagDictionaries.flagCollection
                 }
                 it("returns the existing FeatureFlag dictionary") {
-                    expect(featureFlags == flagDictionaries).to(beTrue())
+                    expect(AnyComparer.isEqual(featureFlags, to: flagDictionaries)).to(beTrue())
                 }
             }
             context("dictionary does not convert into FeatureFlags") {
