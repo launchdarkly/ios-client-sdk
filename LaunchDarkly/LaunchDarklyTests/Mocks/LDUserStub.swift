@@ -14,16 +14,16 @@ extension LDUser {
         static let ipAddress = "stub.user.ipAddress"
         static let email = "stub.user@email.com"
         static let avatar = "stub.user.avatar"
-        static let device = "stub.user.custom.device"
-        static let operatingSystem = "stub.user.custom.operatingSystem"
-        static let custom: [String: Any] = ["stub.user.custom.keyA": "stub.user.custom.valueA",
+        static let device: LDValue = "stub.user.custom.device"
+        static let operatingSystem: LDValue = "stub.user.custom.operatingSystem"
+        static let custom: [String: LDValue] = ["stub.user.custom.keyA": "stub.user.custom.valueA",
                                             "stub.user.custom.keyB": true,
                                             "stub.user.custom.keyC": 1027,
                                             "stub.user.custom.keyD": 2.71828,
                                             "stub.user.custom.keyE": [0, 1, 2],
                                             "stub.user.custom.keyF": ["1": 1, "2": 2, "3": 3]]
 
-        static func custom(includeSystemValues: Bool) -> [String: Any] {
+        static func custom(includeSystemValues: Bool) -> [String: LDValue] {
             var custom = StubConstants.custom
             if includeSystemValues {
                 custom[CodingKeys.device.rawValue] = StubConstants.device

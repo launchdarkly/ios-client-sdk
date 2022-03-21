@@ -81,7 +81,9 @@ final class DarklyService: DarklyServiceProvider {
 
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
         guard hasMobileKey(#function) else { return }
-        guard let userJson = user.dictionaryValue(includePrivateAttributes: true, config: config).jsonData
+        let encoder = JSONEncoder()
+        encoder.userInfo[LDUser.UserInfoKeys.includePrivateAttributes] = true
+        guard let userJsonData = try? encoder.encode(user)
         else {
             Log.debug(typeName(and: #function, appending: ": ") + "Aborting. Unable to create flagRequest.")
             return
@@ -91,12 +93,12 @@ final class DarklyService: DarklyServiceProvider {
         if let etag = flagRequestEtag {
             headers.merge([HTTPHeaders.HeaderKey.ifNoneMatch: etag]) { orig, _ in orig }
         }
-        var request = URLRequest(url: flagRequestUrl(useReport: useReport, getData: userJson),
+        var request = URLRequest(url: flagRequestUrl(useReport: useReport, getData: userJsonData),
                                  ldHeaders: headers,
                                  ldConfig: config)
         if useReport {
             request.httpMethod = URLRequest.HTTPMethods.report
-            request.httpBody = userJson
+            request.httpBody = userJsonData
         }
 
         self.session.dataTask(with: request) { [weak self] data, response, error in
@@ -145,7 +147,9 @@ final class DarklyService: DarklyServiceProvider {
     func createEventSource(useReport: Bool, 
                            handler: EventHandler, 
                            errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
-        let userJsonData = user.dictionaryValue(includePrivateAttributes: true, config: config).jsonData
+        let encoder = JSONEncoder()
+        encoder.userInfo[LDUser.UserInfoKeys.includePrivateAttributes] = true
+        let userJsonData = try? encoder.encode(user)
 
         var streamRequestUrl = config.streamUrl.appendingPathComponent(StreamRequestPath.meval)
         var connectMethod = HTTPRequestMethod.get
