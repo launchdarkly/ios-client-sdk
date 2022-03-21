@@ -4,11 +4,11 @@ func userType(_ user: LDUser) -> String {
     return user.isAnonymous ? "anonymousUser" : "user" 
 }
 
-struct Event {
+struct Event: Encodable {
     enum CodingKeys: String, CodingKey {
         case key, previousKey, kind, creationDate, user, userKey, 
              value, defaultValue = "default", variation, version, 
-             data, endDate, reason, metricValue,
+             data, startDate, endDate, features, reason, metricValue,
              // for aliasing
              contextKind, previousContextKind
     }
@@ -114,52 +114,48 @@ struct Event {
         return Event(kind: .alias, key: new.key, previousKey: old.key, contextKind: userType(new), previousContextKind: userType(old))
     }
 
-    func dictionaryValue(config: LDConfig) -> [String: Any] {
-        var eventDictionary = [String: Any]()
-        eventDictionary[CodingKeys.kind.rawValue] = kind.rawValue
-        eventDictionary[CodingKeys.key.rawValue] = key
-        eventDictionary[CodingKeys.previousKey.rawValue] = previousKey
-        eventDictionary[CodingKeys.creationDate.rawValue] = creationDate?.millisSince1970
-        if kind.isAlwaysInlineUserKind || config.inlineUserInEvents {
-            eventDictionary[CodingKeys.user.rawValue] = user?.dictionaryValue(includePrivateAttributes: false, config: config)
+    struct UserInfoKeys {
+        static let inlineUserInEvents = CodingUserInfoKey(rawValue: "LD_inlineUserInEvents")!
+    }
+
+    func encode(to encoder: Encoder) throws {
+        let inlineUserInEvents = encoder.userInfo[UserInfoKeys.inlineUserInEvents] as? Bool ?? false
+
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(kind.rawValue, forKey: .kind)
+        try container.encodeIfPresent(key, forKey: .key)
+        try container.encodeIfPresent(previousKey, forKey: .previousKey)
+        try container.encodeIfPresent(creationDate, forKey: .creationDate)
+        if kind.isAlwaysInlineUserKind || inlineUserInEvents {
+            try container.encodeIfPresent(user, forKey: .user)
         } else {
-            eventDictionary[CodingKeys.userKey.rawValue] = user?.key
+            try container.encodeIfPresent(user?.key, forKey: .userKey)
         }
         if kind.isAlwaysIncludeValueKinds {
-            eventDictionary[CodingKeys.value.rawValue] = value.toAny() ?? NSNull()
-            eventDictionary[CodingKeys.defaultValue.rawValue] = defaultValue.toAny() ?? NSNull()
+            try container.encode(value, forKey: .value)
+            try container.encode(defaultValue, forKey: .defaultValue)
         }
-        eventDictionary[CodingKeys.variation.rawValue] = featureFlag?.variation
-        // If the flagVersion exists, it is reported as the "version". If not, the version is reported using the "version" key.
-        eventDictionary[CodingKeys.version.rawValue] = featureFlag?.flagVersion ?? featureFlag?.version
-        eventDictionary[CodingKeys.data.rawValue] = data.toAny()
+        try container.encodeIfPresent(featureFlag?.variation, forKey: .variation)
+        try container.encodeIfPresent(featureFlag?.versionForEvents, forKey: .version)
+        if data != .null {
+            try container.encode(data, forKey: .data)
+        }
         if let flagRequestTracker = flagRequestTracker {
-            eventDictionary.merge(flagRequestTracker.dictionaryValue) { _, trackerItem in
-                trackerItem  // This should never happen because the eventDictionary does not use any conflicting keys with the flagRequestTracker
-            }
+            try container.encode(flagRequestTracker.startDate, forKey: .startDate)
+            try container.encode(flagRequestTracker.flagCounters, forKey: .features)
         }
-        eventDictionary[CodingKeys.endDate.rawValue] = endDate?.millisSince1970
-        eventDictionary[CodingKeys.reason.rawValue] = includeReason || featureFlag?.trackReason ?? false ? featureFlag?.reason : nil
-        eventDictionary[CodingKeys.metricValue.rawValue] = metricValue
-
+        try container.encodeIfPresent(endDate, forKey: .endDate)
+        if let reason = includeReason || featureFlag?.trackReason ?? false ? featureFlag?.reason : nil {
+            try container.encode(LDValue.fromAny(reason), forKey: .reason)
+        }
+        try container.encodeIfPresent(metricValue, forKey: .metricValue)
         if kind.needsContextKind && (user?.isAnonymous == true) {
-            eventDictionary[CodingKeys.contextKind.rawValue] = "anonymousUser"
+            try container.encode("anonymousUser", forKey: .contextKind)
         }
-
         if kind == .alias {
-            eventDictionary[CodingKeys.contextKind.rawValue] = self.contextKind
-            eventDictionary[CodingKeys.previousContextKind.rawValue] = self.previousContextKind
+            try container.encodeIfPresent(self.contextKind, forKey: .contextKind)
+            try container.encodeIfPresent(self.previousContextKind, forKey: .previousContextKind)
         }
-
-        return eventDictionary
-    }
-}
-
-extension Array where Element == [String: Any] {
-    var jsonData: Data? {
-        guard JSONSerialization.isValidJSONObject(self)
-        else { return nil }
-        return try? JSONSerialization.data(withJSONObject: self, options: [])
     }
 }
 

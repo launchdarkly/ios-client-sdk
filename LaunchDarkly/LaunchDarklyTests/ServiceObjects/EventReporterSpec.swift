@@ -105,7 +105,7 @@ final class EventReporterSpec: QuickSpec {
                 expect(testContext.eventReporter.service) === testContext.serviceMock
                 expect(testContext.eventReporter.isOnline) == false
                 expect(testContext.eventReporter.isReportingActive) == false
-                expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
             }
         }
     }
@@ -128,7 +128,7 @@ final class EventReporterSpec: QuickSpec {
                 it("goes offline and stops reporting") {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
-                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 0
                 }
             }
             context("offline to online") {
@@ -141,7 +141,7 @@ final class EventReporterSpec: QuickSpec {
                     it("goes online and starts reporting") {
                         expect(testContext.eventReporter.isOnline) == true
                         expect(testContext.eventReporter.isReportingActive) == true
-                        expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                        expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     }
                 }
                 context("without events") {
@@ -153,7 +153,7 @@ final class EventReporterSpec: QuickSpec {
                     it("goes online and starts reporting") {
                         expect(testContext.eventReporter.isOnline) == true
                         expect(testContext.eventReporter.isReportingActive) == true
-                        expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                        expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     }
                 }
             }
@@ -167,7 +167,7 @@ final class EventReporterSpec: QuickSpec {
                 it("stays online and continues reporting") {
                     expect(testContext.eventReporter.isOnline) == true
                     expect(testContext.eventReporter.isReportingActive) == true
-                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 0
                 }
             }
             context("offline to offline") {
@@ -179,7 +179,7 @@ final class EventReporterSpec: QuickSpec {
                 it("stays offline and does not start reporting") {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
-                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                 }
             }
@@ -197,7 +197,7 @@ final class EventReporterSpec: QuickSpec {
                 it("records events up to event capacity") {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
-                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                 }
                 it("does not record a dropped event to diagnosticCache") {
@@ -215,7 +215,7 @@ final class EventReporterSpec: QuickSpec {
                 it("doesn't record any more events") {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
-                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                     expect(testContext.eventReporter.eventStoreKeys.contains(extraEvent.key!)) == false
                 }
@@ -240,7 +240,6 @@ final class EventReporterSpec: QuickSpec {
                 context("success") {
                     context("with events and tracked requests") {
                         beforeEach {
-                            // The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
                             waitUntil { syncComplete in
                                 testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
@@ -255,10 +254,15 @@ final class EventReporterSpec: QuickSpec {
                         it("reports events and a summary event") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
-                            expect(testContext.serviceMock.publishedEventDictionaries?.count) == Event.Kind.nonSummaryKinds.count + 1
-                            expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys // summary events have no key, this verifies non-summary events
-                            expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
+                            expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                            let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
+                            valueIsArray(published) { valueArray in
+                                expect(valueArray.count) == testContext.events.count + 1
+                                expect(Array(valueArray.prefix(testContext.events.count))) == testContext.events.map { encodeToLDValue($0) }
+                                valueIsObject(valueArray[testContext.events.count]) { summaryObject in
+                                    expect(summaryObject["kind"]) == "summary"
+                                }
+                            }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
@@ -269,7 +273,6 @@ final class EventReporterSpec: QuickSpec {
                     }
                     context("with events only") {
                         beforeEach {
-                            // The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
                             waitUntil { syncComplete in
                                 testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
@@ -283,10 +286,9 @@ final class EventReporterSpec: QuickSpec {
                         it("reports events without a summary event") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
-                            expect(testContext.serviceMock.publishedEventDictionaries?.count) == Event.Kind.nonSummaryKinds.count
-                            expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys // summary events have no key, this verifies non-summary events
-                            expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == false
+                            expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                            let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
+                            expect(published) == encodeToLDValue(testContext.events)
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
@@ -297,7 +299,6 @@ final class EventReporterSpec: QuickSpec {
                     }
                     context("with tracked requests only") {
                         beforeEach {
-                            // The EventReporter will try to report events if it's started online with events. By starting online without events, then adding them, we "beat the timer" by reporting them right away
                             waitUntil { syncComplete in
                                 testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
@@ -311,9 +312,14 @@ final class EventReporterSpec: QuickSpec {
                         it("reports only a summary event") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 1
-                            expect(testContext.serviceMock.publishedEventDictionaries?.count) == 1
-                            expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
+                            expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                            let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
+                            valueIsArray(published) { valueArray in
+                                expect(valueArray.count) == 1
+                                valueIsObject(valueArray[0]) { summaryObject in
+                                    expect(summaryObject["kind"]) == "summary"
+                                }
+                            }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == 1
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
@@ -336,7 +342,7 @@ final class EventReporterSpec: QuickSpec {
                         it("does not report events") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                            expect(testContext.serviceMock.publishEventDataCallCount) == 0
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
@@ -362,11 +368,16 @@ final class EventReporterSpec: QuickSpec {
                         it("drops events after the failure") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 // 1 retry attempt
-                            expect(testContext.eventReporter.eventStoreKeys) == []
-                            expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
-                            expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
-                            expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
+                            expect(testContext.serviceMock.publishEventDataCallCount) == 2 // 1 retry attempt
+                            expect(testContext.eventReporter.eventStore.isEmpty) == true
+                            let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
+                            valueIsArray(published) { valueArray in
+                                expect(valueArray.count) == testContext.events.count + 1
+                                expect(Array(valueArray.prefix(testContext.events.count))) == testContext.events.map { encodeToLDValue($0) }
+                                valueIsObject(valueArray[testContext.events.count]) { summaryObject in
+                                    expect(summaryObject["kind"]) == "summary"
+                                }
+                            }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
@@ -395,11 +406,16 @@ final class EventReporterSpec: QuickSpec {
                         it("drops events after the failure") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 // 1 retry attempt
-                            expect(testContext.eventReporter.eventStoreKeys) == []
-                            expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
-                            expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
-                            expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
+                            expect(testContext.serviceMock.publishEventDataCallCount) == 2 // 1 retry attempt
+                            expect(testContext.eventReporter.eventStore.isEmpty) == true
+                            let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
+                            valueIsArray(published) { valueArray in
+                                expect(valueArray.count) == testContext.events.count + 1
+                                expect(Array(valueArray.prefix(testContext.events.count))) == testContext.events.map { encodeToLDValue($0) }
+                                valueIsObject(valueArray[testContext.events.count]) { summaryObject in
+                                    expect(summaryObject["kind"]) == "summary"
+                                }
+                            }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
@@ -431,11 +447,16 @@ final class EventReporterSpec: QuickSpec {
                         it("drops events events after the failure") {
                             expect(testContext.eventReporter.isOnline) == true
                             expect(testContext.eventReporter.isReportingActive) == true
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 2 // 1 retry attempt
-                            expect(testContext.eventReporter.eventStoreKeys) == []
-                            expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
-                            expect(testContext.serviceMock.publishedEventDictionaryKeys) == testContext.eventKeys
-                            expect(testContext.serviceMock.publishedEventDictionaryKinds?.contains(.summary)) == true
+                            expect(testContext.serviceMock.publishEventDataCallCount) == 2 // 1 retry attempt
+                            expect(testContext.eventReporter.eventStore.isEmpty) == true
+                            let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
+                            valueIsArray(published) { valueArray in
+                                expect(valueArray.count) == testContext.events.count + 1
+                                expect(Array(valueArray.prefix(testContext.events.count))) == testContext.events.map { encodeToLDValue($0) }
+                                valueIsObject(valueArray[testContext.events.count]) { summaryObject in
+                                    expect(summaryObject["kind"]) == "summary"
+                                }
+                            }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
@@ -465,7 +486,7 @@ final class EventReporterSpec: QuickSpec {
                 it("doesn't report events") {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
-                    expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
                     expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
                     expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
@@ -783,12 +804,15 @@ final class EventReporterSpec: QuickSpec {
                     testContext.recordEvents(Event.Kind.allKinds.count)
                 }
                 it("reports events") {
-                    expect(testContext.serviceMock.publishEventDictionariesCallCount).toEventually(equal(1))
-                    expect(testContext.serviceMock.publishedEventDictionaries?.count).toEventually(equal(testContext.events.count))
-                    expect(testContext.serviceMock.publishedEventDictionaryKeys).toEventually(equal(testContext.eventKeys))
+                    expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
                     expect(testContext.eventReporter.eventStore.isEmpty).toEventually(beTrue())
                     expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount).toEventually(equal(1))
                     expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch).toEventually(equal(testContext.events.count))
+                    let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
+                    valueIsArray(published) { valueArray in
+                        expect(valueArray.count) == testContext.events.count
+                        expect(valueArray) == testContext.events.map { encodeToLDValue($0) }
+                    }
                 }
             }
             context("without events") {
@@ -799,7 +823,7 @@ final class EventReporterSpec: QuickSpec {
                 it("doesn't report events") {
                     waitUntil { done in
                         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Constants.eventFlushIntervalHalfSecond) {
-                            expect(testContext.serviceMock.publishEventDictionariesCallCount) == 0
+                            expect(testContext.serviceMock.publishEventDataCallCount) == 0
                             done()
                         }
                     }

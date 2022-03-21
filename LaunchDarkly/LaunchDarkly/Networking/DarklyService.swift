@@ -20,7 +20,7 @@ protocol DarklyServiceProvider: AnyObject {
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?)
     func clearFlagResponseCache()
     func createEventSource(useReport: Bool, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
-    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?)
+    func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?)
     func publishDiagnostic<T: DiagnosticEvent & Encodable>(diagnosticEvent: T, completion: ServiceCompletionHandler?)
 }
 
@@ -173,13 +173,8 @@ final class DarklyService: DarklyServiceProvider {
 
     // MARK: Publish Events
 
-    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?) {
+    func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?) {
         guard hasMobileKey(#function) else { return }
-        guard !eventDictionaries.isEmpty, let eventData = eventDictionaries.jsonData
-        else {
-            return Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No event dictionary.")
-        }
-
         let url = config.eventsUrl.appendingPathComponent(EventRequestPath.bulk)
         let headers = [HTTPHeaders.HeaderKey.eventPayloadIDHeader: payloadId].merging(httpHeaders.eventRequestHeaders) { $1 }
         doPublish(url: url, headers: headers, body: eventData, completion: completion)
