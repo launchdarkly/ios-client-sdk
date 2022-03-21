@@ -544,16 +544,14 @@ public class LDClient {
      - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
      - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
      - parameter metricValue: A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field will also be returned as part of the custom event for Data Export. (Optional)
-
-     - throws: LDInvalidArgumentError if the data is not a valid JSON item
     */
-    public func track(key: String, data: Any? = nil, metricValue: Double? = nil) throws {
+    public func track(key: String, data: LDValue? = nil, metricValue: Double? = nil) {
         guard hasStarted
         else {
             Log.debug(typeName(and: #function) + "aborted. LDClient not started")
             return
         }
-        let event = try Event.customEvent(key: key, user: user, data: data, metricValue: metricValue)
+        let event = Event.customEvent(key: key, user: user, data: data ?? .null, metricValue: metricValue)
         Log.debug(typeName(and: #function) + "event: \(event), data: \(String(describing: data)), metricValue: \(String(describing: metricValue))")
         eventReporter.record(event)
     }

@@ -9,7 +9,7 @@ protocol EventReporting {
 
     func record(_ event: Event)
     // swiftlint:disable:next function_parameter_count
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool)
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool)
     func flush(completion: CompletionClosure?)
 }
 
@@ -65,7 +65,7 @@ class EventReporter: EventReporting {
     }
 
     // swiftlint:disable:next function_parameter_count
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) {
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) {
         let recordingFeatureEvent = featureFlag?.trackEvents == true
         let recordingDebugEvent = featureFlag?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
 

@@ -8,7 +8,7 @@ final class EventReporterSpec: QuickSpec {
     struct Constants {
         static let eventFlushInterval: TimeInterval = 10.0
         static let eventFlushIntervalHalfSecond: TimeInterval = 0.5
-        static let defaultValue = false
+        static let defaultValue: LDValue = false
     }
 
     struct TestContext {
@@ -490,12 +490,17 @@ final class EventReporterSpec: QuickSpec {
 
     private func recordFeatureAndDebugEventsSpec() {
         var testContext: TestContext!
+        let summarizesRequest = { it("summarizes the flag request") {
+            let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
+            expect(flagValueCounter?.value) == LDValue.fromAny(testContext.featureFlag.value)
+            expect(flagValueCounter?.count) == 1
+        }}
         context("record feature and debug events") {
             context("when trackEvents is on and a reason is present") {
                 beforeEach {
                     testContext = TestContext(trackEvents: true)
                     testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                         value: testContext.featureFlag.value!,
+                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
                                                                          defaultValue: Constants.defaultValue,
                                                                          featureFlag: testContext.featureFlagWithReason,
                                                                          user: testContext.user,
@@ -506,18 +511,13 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
                     expect(testContext.eventReporter.eventStoreKinds.contains(.feature)).to(beTrue())
                 }
-                it("tracks the flag request") {
-                    let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                    expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.count) == 1
-                }
+                summarizesRequest()
             }
             context("when a reason is present and reason is false but trackReason is true") {
                 beforeEach {
                     testContext = TestContext(trackEvents: true)
                     testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                         value: testContext.featureFlag.value!,
+                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
                                                                          defaultValue: Constants.defaultValue,
                                                                          featureFlag: testContext.featureFlagWithReasonAndTrackReason,
                                                                          user: testContext.user,
@@ -528,18 +528,13 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
                     expect(testContext.eventReporter.eventStoreKinds.contains(.feature)).to(beTrue())
                 }
-                it("tracks the flag request") {
-                    let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                    expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.count) == 1
-                }
+                summarizesRequest()
             }
             context("when trackEvents is off") {
                 beforeEach {
                     testContext = TestContext(trackEvents: false)
                     testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                         value: testContext.featureFlag.value!,
+                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
                                                                          defaultValue: Constants.defaultValue,
                                                                          featureFlag: testContext.featureFlag,
                                                                          user: testContext.user,
@@ -548,19 +543,19 @@ final class EventReporterSpec: QuickSpec {
                 it("does not record a feature event") {
                     expect(testContext.eventReporter.eventStore).to(beEmpty())
                 }
-                it("tracks the flag request") {
-                    let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                    expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.count) == 1
-                }
+                summarizesRequest()
             }
             context("when debugEventsUntilDate exists") {
                 context("lastEventResponseDate exists") {
                     context("and debugEventsUntilDate is later") {
                         beforeEach {
                             testContext = TestContext(lastEventResponseDate: Date(), trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
+                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                                 value: LDValue.fromAny(testContext.featureFlag.value),
+                                                                                 defaultValue: Constants.defaultValue,
+                                                                                 featureFlag: testContext.featureFlag,
+                                                                                 user: testContext.user,
+                                                                                 includeReason: false)
                         }
                         it("records a debug event") {
                             expect(testContext.eventReporter.eventStore.count) == 1
@@ -569,66 +564,70 @@ final class EventReporterSpec: QuickSpec {
                         }
                         it("tracks the flag request") {
                             let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                            expect(flagValueCounter).toNot(beNil())
-                            expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
+                            expect(flagValueCounter?.value) == LDValue.fromAny(testContext.featureFlag.value)
                             expect(flagValueCounter?.count) == 1
                         }
                     }
                     context("and debugEventsUntilDate is earlier") {
                         beforeEach {
                             testContext = TestContext(lastEventResponseDate: Date(), trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(-TimeInterval.oneSecond))
-                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
+                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                                 value: LDValue.fromAny(testContext.featureFlag.value),
+                                                                                 defaultValue: Constants.defaultValue,
+                                                                                 featureFlag: testContext.featureFlag,
+                                                                                 user: testContext.user,
+                                                                                 includeReason: false)
                         }
                         it("does not record a debug event") {
                             expect(testContext.eventReporter.eventStore).to(beEmpty())
                         }
-                        it("tracks the flag request") {
-                            let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                            expect(flagValueCounter).toNot(beNil())
-                            expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                            expect(flagValueCounter?.count) == 1
-                        }
+                        summarizesRequest()
                     }
                 }
                 context("lastEventResponseDate is nil") {
                     context("and debugEventsUntilDate is later than current time") {
                         beforeEach {
                             testContext = TestContext(lastEventResponseDate: nil, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
+                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                                 value: LDValue.fromAny(testContext.featureFlag.value),
+                                                                                 defaultValue: Constants.defaultValue,
+                                                                                 featureFlag: testContext.featureFlag,
+                                                                                 user: testContext.user,
+                                                                                 includeReason: false)
                         }
                         it("records a debug event") {
                             expect(testContext.eventReporter.eventStore.count) == 1
                             expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
                             expect(testContext.eventReporter.eventStoreKinds.contains(.debug)).to(beTrue())
                         }
-                        it("tracks the flag request") {
-                            let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                            expect(flagValueCounter).toNot(beNil())
-                            expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                            expect(flagValueCounter?.count) == 1
-                        }
+                        summarizesRequest()
                     }
                     context("and debugEventsUntilDate is earlier than current time") {
                         beforeEach {
                             testContext = TestContext(lastEventResponseDate: nil, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(-TimeInterval.oneSecond))
-                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
+                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                                 value: LDValue.fromAny(testContext.featureFlag.value),
+                                                                                 defaultValue: Constants.defaultValue,
+                                                                                 featureFlag: testContext.featureFlag,
+                                                                                 user: testContext.user,
+                                                                                 includeReason: false)
                         }
                         it("does not record a debug event") {
                             expect(testContext.eventReporter.eventStore).to(beEmpty())
                         }
-                        it("tracks the flag request") {
-                            let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                            expect(flagValueCounter).toNot(beNil())
-                            expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                            expect(flagValueCounter?.count) == 1
-                        }
+                        summarizesRequest()
                     }
                 }
             }
             context("when both trackEvents is true and debugEventsUntilDate is later than lastEventResponseDate") {
                 beforeEach {
                     testContext = TestContext(lastEventResponseDate: Date(), trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
+                                                                         defaultValue: Constants.defaultValue,
+                                                                         featureFlag: testContext.featureFlag,
+                                                                         user: testContext.user,
+                                                                         includeReason: false)
                 }
                 it("records a feature and debug event") {
                     expect(testContext.eventReporter.eventStore.count == 2).to(beTrue())
@@ -637,17 +636,17 @@ final class EventReporterSpec: QuickSpec {
                         }.count == 2).to(beTrue())
                     expect(testContext.eventReporter.eventStoreKinds).to(contain([.feature, .debug]))
                 }
-                it("tracks the flag request") {
-                    let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                    expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.count) == 1
-                }
+                summarizesRequest()
             }
             context("when both trackEvents is true, debugEventsUntilDate is later than lastEventResponseDate, reason is false, and track reason is true") {
                 beforeEach {
                     testContext = TestContext(lastEventResponseDate: Date(), trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlagWithReasonAndTrackReason, user: testContext.user, includeReason: false)
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
+                                                                         defaultValue: Constants.defaultValue,
+                                                                         featureFlag: testContext.featureFlagWithReasonAndTrackReason,
+                                                                         user: testContext.user,
+                                                                         includeReason: false)
                 }
                 it("records a feature and debug event") {
                     expect(testContext.eventReporter.eventStore.count == 2).to(beTrue())
@@ -656,33 +655,13 @@ final class EventReporterSpec: QuickSpec {
                         }.count == 2).to(beTrue())
                     expect(testContext.eventReporter.eventStoreKinds).to(contain([.feature, .debug]))
                 }
-                it("tracks the flag request") {
-                    let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                    expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.count) == 1
-                }
+                summarizesRequest()
             }
             context("when debugEventsUntilDate is nil") {
                 beforeEach {
                     testContext = TestContext(lastEventResponseDate: Date(), trackEvents: false, debugEventsUntilDate: nil)
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value!, defaultValue: Constants.defaultValue, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
-                }
-                it("does not record an event") {
-                    expect(testContext.eventReporter.eventStore).to(beEmpty())
-                }
-                it("tracks the flag request") {
-                    let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                    expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.count) == 1
-                }
-            }
-            context("when eventTrackingContext is nil") {
-                beforeEach {
-                    testContext = TestContext(trackEvents: nil)
                     testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                         value: testContext.featureFlag.value!,
+                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
                                                                          defaultValue: Constants.defaultValue,
                                                                          featureFlag: testContext.featureFlag,
                                                                          user: testContext.user,
@@ -691,12 +670,22 @@ final class EventReporterSpec: QuickSpec {
                 it("does not record an event") {
                     expect(testContext.eventReporter.eventStore).to(beEmpty())
                 }
-                it("tracks the flag request") {
-                    let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                    expect(flagValueCounter).toNot(beNil())
-                    expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
-                    expect(flagValueCounter?.count) == 1
+                summarizesRequest()
+            }
+            context("when eventTrackingContext is nil") {
+                beforeEach {
+                    testContext = TestContext(trackEvents: nil)
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
+                                                                         defaultValue: Constants.defaultValue,
+                                                                         featureFlag: testContext.featureFlag,
+                                                                         user: testContext.user,
+                                                                         includeReason: false)
                 }
+                it("does not record an event") {
+                    expect(testContext.eventReporter.eventStore).to(beEmpty())
+                }
+                summarizesRequest()
             }
             context("when multiple flag requests are made") {
                 context("serially") {
@@ -704,7 +693,7 @@ final class EventReporterSpec: QuickSpec {
                         testContext = TestContext(trackEvents: false)
                         for _ in 1...3 {
                             testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                                 value: testContext.featureFlag.value!,
+                                                                                 value: LDValue.fromAny(testContext.featureFlag.value),
                                                                                  defaultValue: Constants.defaultValue,
                                                                                  featureFlag: testContext.featureFlag,
                                                                                  user: testContext.user,
@@ -713,8 +702,7 @@ final class EventReporterSpec: QuickSpec {
                     }
                     it("tracks the flag request") {
                         let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                        expect(flagValueCounter).toNot(beNil())
-                        expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
+                        expect(flagValueCounter?.value) == LDValue.fromAny(testContext.featureFlag.value)
                         expect(flagValueCounter?.count) == 3
                     }
                 }
@@ -738,7 +726,7 @@ final class EventReporterSpec: QuickSpec {
                             for _ in 1...5 {
                                 requestQueue.asyncAfter(deadline: fireTime) {
                                     testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                                         value: testContext.featureFlag.value!,
+                                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
                                                                                          defaultValue: Constants.defaultValue,
                                                                                          featureFlag: testContext.featureFlag,
                                                                                          user: testContext.user,
@@ -750,8 +738,7 @@ final class EventReporterSpec: QuickSpec {
                     }
                     it("tracks the flag request") {
                         let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                        expect(flagValueCounter).toNot(beNil())
-                        expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
+                        expect(flagValueCounter?.value) == LDValue.fromAny(testContext.featureFlag.value)
                         expect(flagValueCounter?.count) == 5
                     }
                 }
@@ -764,17 +751,20 @@ final class EventReporterSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey, value: testContext.featureFlag.value, defaultValue: testContext.featureFlag.value, featureFlag: testContext.featureFlag, user: testContext.user, includeReason: false)
+                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
+                                                                     value: LDValue.fromAny(testContext.featureFlag.value),
+                                                                     defaultValue: LDValue.fromAny(testContext.featureFlag.value),
+                                                                     featureFlag: testContext.featureFlag,
+                                                                     user: testContext.user,
+                                                                     includeReason: false)
             }
             it("tracks flag requests") {
                 let flagCounter = testContext.flagCounter(for: testContext.flagKey)
-                expect(flagCounter).toNot(beNil())
-                expect(AnyComparer.isEqual(flagCounter?.defaultValue, to: testContext.featureFlag.value, considerNilAndNullEqual: true)).to(beTrue())
+                expect(flagCounter?.defaultValue) == LDValue.fromAny(testContext.featureFlag.value)
                 expect(flagCounter?.flagValueCounters.count) == 1
 
                 let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                expect(flagValueCounter).toNot(beNil())
-                expect(AnyComparer.isEqual(flagValueCounter?.value, to: testContext.featureFlag.value)).to(beTrue())
+                expect(flagValueCounter?.value) == LDValue.fromAny(testContext.featureFlag.value)
                 expect(flagValueCounter?.count) == 1
             }
         }

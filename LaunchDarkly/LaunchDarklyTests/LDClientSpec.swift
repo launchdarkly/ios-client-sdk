@@ -855,7 +855,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        expect(try testContext.subject.track(key: event.key!)).toNot(throwError())
+                        testContext.subject.track(key: event.key!)
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                     it("flushes the event reporter") {
@@ -875,7 +875,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.subject.isOnline) == false
                     }
                     it("stops recording events") {
-                        expect(try testContext.subject.track(key: event.key!)).toNot(throwError())
+                        testContext.subject.track(key: event.key!)
                         expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                     }
                     it("flushes the event reporter") {
@@ -897,7 +897,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.subject.isOnline) == false
                 }
                 it("stops recording events") {
-                    expect(try testContext.subject.track(key: event.key!)).toNot(throwError())
+                    testContext.subject.track(key: event.key!)
                     expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
                 }
                 it("flushes the event reporter") {
@@ -911,22 +911,17 @@ final class LDClientSpec: QuickSpec {
         var testContext: TestContext!
 
         describe("track event") {
-            var event: LaunchDarkly.Event!
             beforeEach {
                 testContext = TestContext()
                 testContext.start()
-                event = Event.stub(.custom, with: testContext.user)
             }
-            context("when client was started") {
-                beforeEach {
-                    try! testContext.subject.track(key: event.key!, data: event.data)
-                }
-                it("records a custom event") {
-                    expect(testContext.eventReporterMock.recordReceivedEvent?.key) == event.key
-                    expect(testContext.eventReporterMock.recordReceivedEvent?.user) == event.user
-                    expect(testContext.eventReporterMock.recordReceivedEvent?.data).toNot(beNil())
-                    expect(AnyComparer.isEqual(testContext.eventReporterMock.recordReceivedEvent?.data, to: event.data)).to(beTrue())
-                }
+            it("records a custom event when client was started") {
+                testContext.subject.track(key: "customEvent", data: "abc", metricValue: 5.0)
+                let receivedEvent = testContext.eventReporterMock.recordReceivedEvent
+                expect(receivedEvent?.key) == "customEvent"
+                expect(receivedEvent?.user) == testContext.user
+                expect(receivedEvent?.data) == "abc"
+                expect(receivedEvent?.metricValue) == 5.0
             }
             context("when client was stopped") {
                 var priorRecordedEvents: Int!
@@ -934,7 +929,7 @@ final class LDClientSpec: QuickSpec {
                     testContext.subject.close()
                     priorRecordedEvents = testContext.eventReporterMock.recordCallCount
 
-                    try! testContext.subject.track(key: event.key!, data: event.data)
+                    testContext.subject.track(key: "abc")
                 }
                 it("does not record any more events") {
                     expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
@@ -972,8 +967,8 @@ final class LDClientSpec: QuickSpec {
                         _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DarklyServiceMock.FlagValues.bool)).to(beTrue())
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value) == LDValue.fromAny(DarklyServiceMock.FlagValues.bool)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue) == LDValue.fromAny(DefaultFlagValues.bool)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
                     }
@@ -993,8 +988,8 @@ final class LDClientSpec: QuickSpec {
                         _ = testContext.subject.variation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value, to: DefaultFlagValues.bool)).to(beTrue())
-                        expect(AnyComparer.isEqual(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue, to: DefaultFlagValues.bool)).to(beTrue())
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value) == LDValue.fromAny(DefaultFlagValues.bool)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue) == LDValue.fromAny(DefaultFlagValues.bool)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
                     }
