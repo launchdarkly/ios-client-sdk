@@ -17,7 +17,6 @@ final class EventReporterSpec: QuickSpec {
         var user: LDUser!
         var serviceMock: DarklyServiceMock!
         var events: [Event] = []
-        var eventKeys: [String]! { events.compactMap { $0.key } }
         var lastEventResponseDate: Date?
         var flagKey: LDFlagKey!
         var featureFlag: FeatureFlag!
@@ -180,7 +179,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                    expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
+                    expect(testContext.eventReporter.eventStore) == testContext.events
                 }
             }
         }
@@ -198,7 +197,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                    expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
+                    expect(testContext.eventReporter.eventStore) == testContext.events
                 }
                 it("does not record a dropped event to diagnosticCache") {
                     expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 0
@@ -216,8 +215,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                    expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
-                    expect(testContext.eventReporter.eventStoreKeys.contains(extraEvent.key!)) == false
+                    expect(testContext.eventReporter.eventStore) == testContext.events
                 }
                 it("records a dropped event to diagnosticCache") {
                     expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 1
@@ -488,8 +486,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
-                    expect(testContext.eventReporter.eventStoreKeys) == testContext.eventKeys
-                    expect(testContext.eventReporter.eventStoreKinds.contains(.summary)) == false
+                    expect(testContext.eventReporter.eventStore) == testContext.events
                     expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
                     expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == true
                     guard case .isOffline = testContext.syncResult
@@ -529,8 +526,8 @@ final class EventReporterSpec: QuickSpec {
                 }
                 it("records a feature event") {
                     expect(testContext.eventReporter.eventStore.count) == 1
-                    expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
-                    expect(testContext.eventReporter.eventStoreKinds.contains(.feature)).to(beTrue())
+                    expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.kind) == .feature
+                    expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.key) == testContext.flagKey
                 }
                 summarizesRequest()
             }
@@ -546,8 +543,8 @@ final class EventReporterSpec: QuickSpec {
                 }
                 it("records a feature event") {
                     expect(testContext.eventReporter.eventStore.count) == 1
-                    expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
-                    expect(testContext.eventReporter.eventStoreKinds.contains(.feature)).to(beTrue())
+                    expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.kind) == .feature
+                    expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.key) == testContext.flagKey
                 }
                 summarizesRequest()
             }
@@ -580,8 +577,8 @@ final class EventReporterSpec: QuickSpec {
                         }
                         it("records a debug event") {
                             expect(testContext.eventReporter.eventStore.count) == 1
-                            expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
-                            expect(testContext.eventReporter.eventStoreKinds.contains(.debug)).to(beTrue())
+                            expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.kind) == .debug
+                            expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.key) == testContext.flagKey
                         }
                         it("tracks the flag request") {
                             let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
@@ -618,8 +615,8 @@ final class EventReporterSpec: QuickSpec {
                         }
                         it("records a debug event") {
                             expect(testContext.eventReporter.eventStore.count) == 1
-                            expect(testContext.eventReporter.eventStoreKeys.contains(testContext.flagKey)).to(beTrue())
-                            expect(testContext.eventReporter.eventStoreKinds.contains(.debug)).to(beTrue())
+                            expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.kind) == .debug
+                            expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.key) == testContext.flagKey
                         }
                         summarizesRequest()
                     }
@@ -652,10 +649,9 @@ final class EventReporterSpec: QuickSpec {
                 }
                 it("records a feature and debug event") {
                     expect(testContext.eventReporter.eventStore.count == 2).to(beTrue())
-                    expect(testContext.eventReporter.eventStoreKeys.filter { eventKey in
-                        eventKey == testContext.flagKey
-                        }.count == 2).to(beTrue())
-                    expect(testContext.eventReporter.eventStoreKinds).to(contain([.feature, .debug]))
+                    let features = testContext.eventReporter.eventStore.compactMap { $0 as? FeatureEvent }
+                    expect(features.allSatisfy { $0.key == testContext.flagKey }).to(beTrue())
+                    expect(features.map { $0.kind }).to(contain([.feature, .debug]))
                 }
                 summarizesRequest()
             }
@@ -671,10 +667,9 @@ final class EventReporterSpec: QuickSpec {
                 }
                 it("records a feature and debug event") {
                     expect(testContext.eventReporter.eventStore.count == 2).to(beTrue())
-                    expect(testContext.eventReporter.eventStoreKeys.filter { eventKey in
-                        eventKey == testContext.flagKey
-                        }.count == 2).to(beTrue())
-                    expect(testContext.eventReporter.eventStoreKinds).to(contain([.feature, .debug]))
+                    let features = testContext.eventReporter.eventStore.compactMap { $0 as? FeatureEvent }
+                    expect(features.allSatisfy { $0.key == testContext.flagKey }).to(beTrue())
+                    expect(features.map { $0.kind }).to(contain([.feature, .debug]))
                 }
                 summarizesRequest()
             }
@@ -834,7 +829,6 @@ final class EventReporterSpec: QuickSpec {
 }
 
 extension EventReporter {
-    var eventStoreKeys: [String] { eventStore.compactMap { $0.key } }
     var eventStoreKinds: [Event.Kind] { eventStore.compactMap { $0.kind } }
 }
 

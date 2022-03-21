@@ -306,7 +306,7 @@ public class LDClient {
                                                                    onSyncComplete: self.onFlagSyncComplete)
 
             if self.hasStarted {
-                self.eventReporter.record(Event.identifyEvent(user: self.user))
+                self.eventReporter.record(IdentifyEvent(user: self.user))
             }
 
             self.internalSetOnline(wasOnline, completion: completion)
@@ -551,7 +551,7 @@ public class LDClient {
             Log.debug(typeName(and: #function) + "aborted. LDClient not started")
             return
         }
-        let event = Event.customEvent(key: key, user: user, data: data ?? .null, metricValue: metricValue)
+        let event = CustomEvent(key: key, user: user, data: data ?? .null, metricValue: metricValue)
         Log.debug(typeName(and: #function) + "event: \(event), data: \(String(describing: data)), metricValue: \(String(describing: metricValue))")
         eventReporter.record(event)
     }
@@ -576,7 +576,7 @@ public class LDClient {
             return
         }
 
-        self.eventReporter.record(Event.aliasEvent(newUser: new, oldUser: old))
+        self.eventReporter.record(AliasEvent(key: new.key, previousKey: old.key, contextKind: new.contextKind, previousContextKind: old.contextKind))
     }
 
     /**
@@ -779,7 +779,7 @@ public class LDClient {
             flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
         }
 
-        eventReporter.record(Event.identifyEvent(user: user))
+        eventReporter.record(IdentifyEvent(user: user))
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
         internalSetOnline(configuration.startOnline) {
