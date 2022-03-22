@@ -329,7 +329,7 @@ public class LDClient {
     public var allFlags: [LDFlagKey: Any]? {
         guard hasStarted
         else { return nil }
-        return flagStore.featureFlags.allFlagValues
+        return flagStore.featureFlags.compactMapValues { $0.value }
     }
 
     // MARK: Observing Updates

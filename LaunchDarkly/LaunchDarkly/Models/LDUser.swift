@@ -118,46 +118,6 @@ public struct LDUser: Encodable {
         return custom[attribute.name]
     }
 
-    /// Dictionary with LDUser attribute keys and values, with options to include feature flags and private attributes. LDConfig object used to help resolving what attributes should be private.
-    /// - parameter includePrivateAttributes: Controls whether the resulting dictionary includes private attributes
-    /// - parameter config: Provides supporting information for defining private attributes
-    func dictionaryValue(includePrivateAttributes includePrivate: Bool, config: LDConfig) -> [String: Any] {
-        let allPrivate = !includePrivate && config.allUserAttributesPrivate
-        let privateAttributeNames = includePrivate ? [] : (privateAttributes + config.privateUserAttributes).map { $0.name }
-
-        var dictionary: [String: Any] = [:]
-        var redactedAttributes: [String] = []
-
-        dictionary[CodingKeys.key.rawValue] = key
-        dictionary[CodingKeys.isAnonymous.rawValue] = isAnonymous
-
-        LDUser.optionalAttributes.forEach { attribute in
-            if let value = self.value(for: attribute) {
-                if allPrivate || privateAttributeNames.contains(attribute.name) {
-                    redactedAttributes.append(attribute.name)
-                } else {
-                    dictionary[attribute.name] = value
-                }
-            }
-        }
-
-        var customDictionary: [String: Any] = [:]
-        custom.forEach { attrName, attrVal in
-            if allPrivate || privateAttributeNames.contains(attrName) {
-                redactedAttributes.append(attrName)
-            } else {
-                customDictionary[attrName] = attrVal.toAny()
-            }
-        }
-        dictionary[CodingKeys.custom.rawValue] = customDictionary.isEmpty ? nil : customDictionary
-
-        if !redactedAttributes.isEmpty {
-            dictionary[CodingKeys.privateAttributes.rawValue] = Set(redactedAttributes).sorted()
-        }
-
-        return dictionary
-    }
-
     struct UserInfoKeys {
         static let includePrivateAttributes = CodingUserInfoKey(rawValue: "LD_includePrivateAttributes")!
         static let allAttributesPrivate = CodingUserInfoKey(rawValue: "LD_allAttributesPrivate")!
@@ -246,23 +206,3 @@ extension LDUserWrapper {
 }
 
 extension LDUser: TypeIdentifying { }
-
-#if DEBUG
-    extension LDUser {
-        // Compares all user properties.
-        func isEqual(to otherUser: LDUser) -> Bool {
-            key == otherUser.key
-                && secondary == otherUser.secondary
-                && name == otherUser.name
-                && firstName == otherUser.firstName
-                && lastName == otherUser.lastName
-                && country == otherUser.country
-                && ipAddress == otherUser.ipAddress
-                && email == otherUser.email
-                && avatar == otherUser.avatar
-                && custom == otherUser.custom
-                && isAnonymous == otherUser.isAnonymous
-                && privateAttributes == otherUser.privateAttributes
-        }
-    }
-#endif
