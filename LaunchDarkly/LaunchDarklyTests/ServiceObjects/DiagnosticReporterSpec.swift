@@ -55,7 +55,7 @@ final class DiagnosticReporterSpec: XCTestCase {
         }
 
         func expectNoEvent() {
-            XCTAssertEqual(awaiter.wait(timeout: DispatchTime.now() + 1.0), .timedOut)
+            XCTAssertEqual(awaiter.wait(timeout: DispatchTime.now() + 0.1), .timedOut)
             XCTAssertTrue(receivedEvents.isEmpty)
         }
     }

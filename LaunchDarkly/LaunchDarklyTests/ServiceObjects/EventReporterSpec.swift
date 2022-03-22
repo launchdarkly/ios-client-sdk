@@ -591,21 +591,13 @@ final class EventReporterSpec: QuickSpec {
                 let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
                 reporter.setLastEventResponseDate(Date())
                 let flag = FeatureFlag(flagKey: "unused", trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(3.0))
-                waitUntil { done in
-                    var recordFlagEvaluationCompletionCallCount = 0
-                    let recordFlagEvaluationCompletion = {
-                        DispatchQueue.main.async {
-                            recordFlagEvaluationCompletionCallCount += 1
-                            if recordFlagEvaluationCompletionCallCount == 10 {
-                                done()
-                            }
-                        }
-                    }
-                    DispatchQueue.concurrentPerform(iterations: 10) { _ in
-                        reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: false)
-                        recordFlagEvaluationCompletion()
-                    }
+
+                let counter = DispatchSemaphore(value: 0)
+                DispatchQueue.concurrentPerform(iterations: 10) { _ in
+                    reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: false)
+                    counter.signal()
                 }
+                (0..<10).forEach { _ in counter.wait() }
 
                 expect(reporter.eventStore.count) == 20
                 expect(reporter.eventStore.filter { $0.kind == .feature }.count) == 10
@@ -643,17 +635,14 @@ final class EventReporterSpec: QuickSpec {
                     }
                 }
             }
-            context("without events") {
-                beforeEach {
-                    testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
-                    testContext.eventReporter.isOnline = true
-                }
-                it("doesn't report events") {
-                    waitUntil { done in
-                        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Constants.eventFlushIntervalHalfSecond) {
-                            expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                            done()
-                        }
+            it("without events") {
+                testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
+                testContext.eventReporter.isOnline = true
+
+                waitUntil { done in
+                    DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Constants.eventFlushIntervalHalfSecond) {
+                        expect(testContext.serviceMock.publishEventDataCallCount) == 0
+                        done()
                     }
                 }
             }

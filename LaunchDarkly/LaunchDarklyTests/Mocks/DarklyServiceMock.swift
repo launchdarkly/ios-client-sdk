@@ -99,7 +99,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                      alternateVariationNumber: Bool = true,
                                      bumpFlagVersions: Bool = false,
                                      alternateValuesForKeys alternateValueKeys: [LDFlagKey] = [],
-                                     trackEvents: Bool? = true,
+                                     trackEvents: Bool = true,
                                      debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0)) -> [LDFlagKey: FeatureFlag] {
 
             let flagKeys = includeNullValue ? FlagKeys.knownFlags : FlagKeys.flagsWithAnAlternateValue
@@ -162,7 +162,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                     useAlternateVersion: Bool = false,
                                     useAlternateFlagVersion: Bool = false,
                                     useAlternateVariationNumber: Bool = true,
-                                    trackEvents: Bool? = true,
+                                    trackEvents: Bool = true,
                                     debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0),
                                     includeEvaluationReason: Bool = false,
                                     includeTrackReason: Bool = false) -> FeatureFlag {
