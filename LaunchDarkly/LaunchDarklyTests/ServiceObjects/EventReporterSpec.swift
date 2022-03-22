@@ -8,7 +8,6 @@ final class EventReporterSpec: QuickSpec {
     struct Constants {
         static let eventFlushInterval: TimeInterval = 10.0
         static let eventFlushIntervalHalfSecond: TimeInterval = 0.5
-        static let defaultValue: LDValue = false
     }
 
     struct TestContext {
@@ -18,12 +17,7 @@ final class EventReporterSpec: QuickSpec {
         var serviceMock: DarklyServiceMock!
         var events: [Event] = []
         var lastEventResponseDate: Date?
-        var flagKey: LDFlagKey!
-        var featureFlag: FeatureFlag!
-        var featureFlagWithReason: FeatureFlag!
-        var featureFlagWithReasonAndTrackReason: FeatureFlag!
         var eventStubResponseDate: Date?
-        var flagRequestTracker: FlagRequestTracker? { eventReporter.flagRequestTracker }
         var syncResult: SynchronizingError? = nil
         var diagnosticCache: DiagnosticCachingMock
 
@@ -34,8 +28,6 @@ final class EventReporterSpec: QuickSpec {
              stubResponseOnly: Bool = false,
              stubResponseErrorOnly: Bool = false,
              eventStubResponseDate: Date? = nil,
-             trackEvents: Bool? = true,
-             debugEventsUntilDate: Date? = nil,
              onSyncComplete: EventSyncCompleteClosure? = nil) {
 
             config = LDConfig.stub
@@ -60,11 +52,6 @@ final class EventReporterSpec: QuickSpec {
                 eventReporter.record(event)
             }
             eventReporter.setLastEventResponseDate(self.lastEventResponseDate)
-
-            flagKey = UUID().uuidString
-            featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate)
-            featureFlagWithReason = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate, includeEvaluationReason: true)
-            featureFlagWithReasonAndTrackReason = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool, trackEvents: trackEvents, debugEventsUntilDate: debugEventsUntilDate, includeEvaluationReason: true, includeTrackReason: true)
         }
 
         mutating func recordEvents(_ eventCount: Int) {
@@ -74,21 +61,13 @@ final class EventReporterSpec: QuickSpec {
                 eventReporter.record(event)
             }
         }
-
-        func flagCounter(for key: LDFlagKey) -> FlagCounter? {
-            flagRequestTracker?.flagCounters[key]
-        }
-
-        func flagValueCounter(for key: LDFlagKey, and featureFlag: FeatureFlag?) -> CounterValue? {
-            flagCounter(for: key)?.flagValueCounters[CounterKey(variation: featureFlag?.variation, version: featureFlag?.versionForEvents)]
-        }
     }
 
     override func spec() {
         initSpec()
         isOnlineSpec()
         recordEventSpec()
-        recordFlagEvaluationEventsSpec()
+        testRecordFlagEvaluationEvents()
         reportEventsSpec()
         reportTimerSpec()
     }
@@ -234,6 +213,10 @@ final class EventReporterSpec: QuickSpec {
             afterEach {
                 testContext.eventReporter.isOnline = false
             }
+            let erOnline = {
+                expect(testContext.eventReporter.isOnline) == true
+                expect(testContext.eventReporter.isReportingActive) == true
+            }
             context("online") {
                 context("success") {
                     context("with events and tracked requests") {
@@ -250,8 +233,7 @@ final class EventReporterSpec: QuickSpec {
                             }
                         }
                         it("reports events and a summary event") {
-                            expect(testContext.eventReporter.isOnline) == true
-                            expect(testContext.eventReporter.isReportingActive) == true
+                            erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 1
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             valueIsArray(published) { valueArray in
@@ -282,13 +264,12 @@ final class EventReporterSpec: QuickSpec {
                             }
                         }
                         it("reports events without a summary event") {
-                            expect(testContext.eventReporter.isOnline) == true
-                            expect(testContext.eventReporter.isReportingActive) == true
+                            erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 1
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             expect(published) == encodeToLDValue(testContext.events)
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
-                            expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count
+                            expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == testContext.events.count
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
@@ -308,8 +289,7 @@ final class EventReporterSpec: QuickSpec {
                             }
                         }
                         it("reports only a summary event") {
-                            expect(testContext.eventReporter.isOnline) == true
-                            expect(testContext.eventReporter.isReportingActive) == true
+                            erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 1
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             valueIsArray(published) { valueArray in
@@ -338,8 +318,7 @@ final class EventReporterSpec: QuickSpec {
                             }
                         }
                         it("does not report events") {
-                            expect(testContext.eventReporter.isOnline) == true
-                            expect(testContext.eventReporter.isReportingActive) == true
+                            erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 0
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
@@ -364,8 +343,7 @@ final class EventReporterSpec: QuickSpec {
                             }
                         }
                         it("drops events after the failure") {
-                            expect(testContext.eventReporter.isOnline) == true
-                            expect(testContext.eventReporter.isReportingActive) == true
+                            erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 2 // 1 retry attempt
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
@@ -402,8 +380,7 @@ final class EventReporterSpec: QuickSpec {
                             }
                         }
                         it("drops events after the failure") {
-                            expect(testContext.eventReporter.isOnline) == true
-                            expect(testContext.eventReporter.isReportingActive) == true
+                            erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 2 // 1 retry attempt
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
@@ -443,8 +420,7 @@ final class EventReporterSpec: QuickSpec {
                             }
                         }
                         it("drops events events after the failure") {
-                            expect(testContext.eventReporter.isOnline) == true
-                            expect(testContext.eventReporter.isReportingActive) == true
+                            erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 2 // 1 retry attempt
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
@@ -499,289 +475,146 @@ final class EventReporterSpec: QuickSpec {
         }
     }
 
-    private func recordFlagEvaluationEventsSpec() {
+    func testRecordFlagEvaluationEvents() {
+        let user = LDUser()
+        let serviceMock = DarklyServiceMock()
         describe("recordFlagEvaluationEvents") {
-            recordFeatureAndDebugEventsSpec()
-            trackFlagRequestSpec()
-        }
-    }
-
-    private func recordFeatureAndDebugEventsSpec() {
-        var testContext: TestContext!
-        let summarizesRequest = { it("summarizes the flag request") {
-            let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-            expect(flagValueCounter?.value) == LDValue.fromAny(testContext.featureFlag.value)
-            expect(flagValueCounter?.count) == 1
-        }}
-        context("record feature and debug events") {
-            context("when trackEvents is on and a reason is present") {
-                beforeEach {
-                    testContext = TestContext(trackEvents: true)
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                         defaultValue: Constants.defaultValue,
-                                                                         featureFlag: testContext.featureFlagWithReason,
-                                                                         user: testContext.user,
-                                                                         includeReason: true)
-                }
-                it("records a feature event") {
-                    expect(testContext.eventReporter.eventStore.count) == 1
-                    expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.kind) == .feature
-                    expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.key) == testContext.flagKey
-                }
-                summarizesRequest()
+            it("unknown flag") {
+                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: nil, user: user, includeReason: true)
+                expect(reporter.eventStore.count) == 0
+                expect(reporter.flagRequestTracker.hasLoggedRequests) == true
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.defaultValue) == "b"
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: nil, version: nil)]?.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: nil, version: nil)]?.value) == "a"
             }
-            context("when a reason is present and reason is false but trackReason is true") {
-                beforeEach {
-                    testContext = TestContext(trackEvents: true)
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                         defaultValue: Constants.defaultValue,
-                                                                         featureFlag: testContext.featureFlagWithReasonAndTrackReason,
-                                                                         user: testContext.user,
-                                                                         includeReason: false)
-                }
-                it("records a feature event") {
-                    expect(testContext.eventReporter.eventStore.count) == 1
-                    expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.kind) == .feature
-                    expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.key) == testContext.flagKey
-                }
-                summarizesRequest()
+            it("untracked flag") {
+                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: true)
+                expect(reporter.eventStore.count) == 0
+                expect(reporter.flagRequestTracker.hasLoggedRequests) == true
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.defaultValue) == "b"
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.value) == "a"
             }
-            context("when trackEvents is off") {
-                beforeEach {
-                    testContext = TestContext(trackEvents: false)
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                         defaultValue: Constants.defaultValue,
-                                                                         featureFlag: testContext.featureFlag,
-                                                                         user: testContext.user,
-                                                                         includeReason: false)
-                }
-                it("does not record a feature event") {
-                    expect(testContext.eventReporter.eventStore).to(beEmpty())
-                }
-                summarizesRequest()
+            it("tracked flag") {
+                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: true)
+                expect(reporter.eventStore.count) == 1
+                expect((reporter.eventStore[0] as? FeatureEvent)?.kind) == .feature
+                expect((reporter.eventStore[0] as? FeatureEvent)?.key) == "flag-key"
+                expect((reporter.eventStore[0] as? FeatureEvent)?.user) == user
+                expect((reporter.eventStore[0] as? FeatureEvent)?.value) == "a"
+                expect((reporter.eventStore[0] as? FeatureEvent)?.defaultValue) == "b"
+                expect((reporter.eventStore[0] as? FeatureEvent)?.featureFlag) == flag
+                expect((reporter.eventStore[0] as? FeatureEvent)?.includeReason) == true
+                expect(reporter.flagRequestTracker.hasLoggedRequests) == true
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.defaultValue) == "b"
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.value) == "a"
             }
-            context("when debugEventsUntilDate exists") {
-                context("lastEventResponseDate exists") {
-                    context("and debugEventsUntilDate is later") {
-                        beforeEach {
-                            testContext = TestContext(lastEventResponseDate: Date(), trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                                 value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                                 defaultValue: Constants.defaultValue,
-                                                                                 featureFlag: testContext.featureFlag,
-                                                                                 user: testContext.user,
-                                                                                 includeReason: false)
-                        }
-                        it("records a debug event") {
-                            expect(testContext.eventReporter.eventStore.count) == 1
-                            expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.kind) == .debug
-                            expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.key) == testContext.flagKey
-                        }
-                        it("tracks the flag request") {
-                            let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                            expect(flagValueCounter?.value) == LDValue.fromAny(testContext.featureFlag.value)
-                            expect(flagValueCounter?.count) == 1
-                        }
-                    }
-                    context("and debugEventsUntilDate is earlier") {
-                        beforeEach {
-                            testContext = TestContext(lastEventResponseDate: Date(), trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(-TimeInterval.oneSecond))
-                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                                 value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                                 defaultValue: Constants.defaultValue,
-                                                                                 featureFlag: testContext.featureFlag,
-                                                                                 user: testContext.user,
-                                                                                 includeReason: false)
-                        }
-                        it("does not record a debug event") {
-                            expect(testContext.eventReporter.eventStore).to(beEmpty())
-                        }
-                        summarizesRequest()
-                    }
-                }
-                context("lastEventResponseDate is nil") {
-                    context("and debugEventsUntilDate is later than current time") {
-                        beforeEach {
-                            testContext = TestContext(lastEventResponseDate: nil, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                                 value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                                 defaultValue: Constants.defaultValue,
-                                                                                 featureFlag: testContext.featureFlag,
-                                                                                 user: testContext.user,
-                                                                                 includeReason: false)
-                        }
-                        it("records a debug event") {
-                            expect(testContext.eventReporter.eventStore.count) == 1
-                            expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.kind) == .debug
-                            expect((testContext.eventReporter.eventStore[0] as? FeatureEvent)?.key) == testContext.flagKey
-                        }
-                        summarizesRequest()
-                    }
-                    context("and debugEventsUntilDate is earlier than current time") {
-                        beforeEach {
-                            testContext = TestContext(lastEventResponseDate: nil, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(-TimeInterval.oneSecond))
-                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                                 value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                                 defaultValue: Constants.defaultValue,
-                                                                                 featureFlag: testContext.featureFlag,
-                                                                                 user: testContext.user,
-                                                                                 includeReason: false)
-                        }
-                        it("does not record a debug event") {
-                            expect(testContext.eventReporter.eventStore).to(beEmpty())
-                        }
-                        summarizesRequest()
-                    }
-                }
+            it("debug until past date") {
+                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(-1.0))
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: true)
+                expect(reporter.eventStore.count) == 0
+                expect(reporter.flagRequestTracker.hasLoggedRequests) == true
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.defaultValue) == "b"
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.value) == "a"
             }
-            context("when both trackEvents is true and debugEventsUntilDate is later than lastEventResponseDate") {
-                beforeEach {
-                    testContext = TestContext(lastEventResponseDate: Date(), trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                         defaultValue: Constants.defaultValue,
-                                                                         featureFlag: testContext.featureFlag,
-                                                                         user: testContext.user,
-                                                                         includeReason: false)
-                }
-                it("records a feature and debug event") {
-                    expect(testContext.eventReporter.eventStore.count == 2).to(beTrue())
-                    let features = testContext.eventReporter.eventStore.compactMap { $0 as? FeatureEvent }
-                    expect(features.allSatisfy { $0.key == testContext.flagKey }).to(beTrue())
-                    expect(features.map { $0.kind }).to(contain([.feature, .debug]))
-                }
-                summarizesRequest()
+            it("debug until future date") {
+                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(3.0))
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: false)
+                expect(reporter.eventStore.count) == 1
+                expect((reporter.eventStore[0] as? FeatureEvent)?.kind) == .debug
+                expect((reporter.eventStore[0] as? FeatureEvent)?.key) == "flag-key"
+                expect((reporter.eventStore[0] as? FeatureEvent)?.user) == user
+                expect((reporter.eventStore[0] as? FeatureEvent)?.value) == "a"
+                expect((reporter.eventStore[0] as? FeatureEvent)?.defaultValue) == "b"
+                expect((reporter.eventStore[0] as? FeatureEvent)?.featureFlag) == flag
+                expect((reporter.eventStore[0] as? FeatureEvent)?.includeReason) == false
+                expect(reporter.flagRequestTracker.hasLoggedRequests) == true
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.defaultValue) == "b"
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.value) == "a"
             }
-            context("when both trackEvents is true, debugEventsUntilDate is later than lastEventResponseDate, reason is false, and track reason is true") {
-                beforeEach {
-                    testContext = TestContext(lastEventResponseDate: Date(), trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(TimeInterval.oneSecond))
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                         defaultValue: Constants.defaultValue,
-                                                                         featureFlag: testContext.featureFlagWithReasonAndTrackReason,
-                                                                         user: testContext.user,
-                                                                         includeReason: false)
-                }
-                it("records a feature and debug event") {
-                    expect(testContext.eventReporter.eventStore.count == 2).to(beTrue())
-                    let features = testContext.eventReporter.eventStore.compactMap { $0 as? FeatureEvent }
-                    expect(features.allSatisfy { $0.key == testContext.flagKey }).to(beTrue())
-                    expect(features.map { $0.kind }).to(contain([.feature, .debug]))
-                }
-                summarizesRequest()
+            it("debug until future date earlier than service date") {
+                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                reporter.setLastEventResponseDate(Date().addingTimeInterval(10.0))
+                let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(3.0))
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: true)
+                expect(reporter.eventStore.count) == 0
+                expect(reporter.flagRequestTracker.hasLoggedRequests) == true
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.defaultValue) == "b"
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.value) == "a"
             }
-            context("when debugEventsUntilDate is nil") {
-                beforeEach {
-                    testContext = TestContext(lastEventResponseDate: Date(), trackEvents: false, debugEventsUntilDate: nil)
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                         defaultValue: Constants.defaultValue,
-                                                                         featureFlag: testContext.featureFlag,
-                                                                         user: testContext.user,
-                                                                         includeReason: false)
-                }
-                it("does not record an event") {
-                    expect(testContext.eventReporter.eventStore).to(beEmpty())
-                }
-                summarizesRequest()
+            it("tracked flag and debug date in future") {
+                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                reporter.setLastEventResponseDate(Date().addingTimeInterval(-3.0))
+                let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: true, debugEventsUntilDate: Date())
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: false)
+                expect(reporter.eventStore.count) == 2
+                let featureEvent = reporter.eventStore.first { $0.kind == .feature } as? FeatureEvent
+                let debugEvent = reporter.eventStore.first { $0.kind == .debug } as? FeatureEvent
+                expect(featureEvent?.kind) == .feature
+                expect(featureEvent?.key) == "flag-key"
+                expect(featureEvent?.user) == user
+                expect(featureEvent?.value) == "a"
+                expect(featureEvent?.defaultValue) == "b"
+                expect(featureEvent?.featureFlag) == flag
+                expect(featureEvent?.includeReason) == false
+                expect(debugEvent?.kind) == .debug
+                expect(debugEvent?.key) == "flag-key"
+                expect(debugEvent?.user) == user
+                expect(debugEvent?.value) == "a"
+                expect(debugEvent?.defaultValue) == "b"
+                expect(debugEvent?.featureFlag) == flag
+                expect(debugEvent?.includeReason) == false
+                expect(reporter.flagRequestTracker.hasLoggedRequests) == true
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.defaultValue) == "b"
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.value) == "a"
             }
-            context("when eventTrackingContext is nil") {
-                beforeEach {
-                    testContext = TestContext(trackEvents: nil)
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                         defaultValue: Constants.defaultValue,
-                                                                         featureFlag: testContext.featureFlag,
-                                                                         user: testContext.user,
-                                                                         includeReason: false)
-                }
-                it("does not record an event") {
-                    expect(testContext.eventReporter.eventStore).to(beEmpty())
-                }
-                summarizesRequest()
-            }
-            context("when multiple flag requests are made") {
-                context("serially") {
-                    beforeEach {
-                        testContext = TestContext(trackEvents: false)
-                        for _ in 1...3 {
-                            testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                                 value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                                 defaultValue: Constants.defaultValue,
-                                                                                 featureFlag: testContext.featureFlag,
-                                                                                 user: testContext.user,
-                                                                                 includeReason: false)
-                        }
-                    }
-                    it("tracks the flag request") {
-                        let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                        expect(flagValueCounter?.value) == LDValue.fromAny(testContext.featureFlag.value)
-                        expect(flagValueCounter?.count) == 3
-                    }
-                }
-                context("concurrently") {
-                    let requestQueue = DispatchQueue(label: "com.launchdarkly.test.eventReporterSpec.flagRequestTracking.concurrent", qos: .userInitiated, attributes: .concurrent)
+            it("records events concurrently") {
+                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                reporter.setLastEventResponseDate(Date())
+                let flag = FeatureFlag(flagKey: "unused", trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(3.0))
+                waitUntil { done in
                     var recordFlagEvaluationCompletionCallCount = 0
-                    var recordFlagEvaluationCompletion: (() -> Void)!
-                    beforeEach {
-                        testContext = TestContext(trackEvents: false)
-
-                        waitUntil { done in
-                            recordFlagEvaluationCompletion = {
-                                DispatchQueue.main.async {
-                                    recordFlagEvaluationCompletionCallCount += 1
-                                    if recordFlagEvaluationCompletionCallCount == 5 {
-                                        done()
-                                    }
-                                }
-                            }
-                            let fireTime = DispatchTime.now() + 0.1
-                            for _ in 1...5 {
-                                requestQueue.asyncAfter(deadline: fireTime) {
-                                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                                         value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                                         defaultValue: Constants.defaultValue,
-                                                                                         featureFlag: testContext.featureFlag,
-                                                                                         user: testContext.user,
-                                                                                         includeReason: false)
-                                    recordFlagEvaluationCompletion()
-                                }
+                    let recordFlagEvaluationCompletion = {
+                        DispatchQueue.main.async {
+                            recordFlagEvaluationCompletionCallCount += 1
+                            if recordFlagEvaluationCompletionCallCount == 10 {
+                                done()
                             }
                         }
                     }
-                    it("tracks the flag request") {
-                        let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                        expect(flagValueCounter?.value) == LDValue.fromAny(testContext.featureFlag.value)
-                        expect(flagValueCounter?.count) == 5
+                    DispatchQueue.concurrentPerform(iterations: 10) { _ in
+                        reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: false)
+                        recordFlagEvaluationCompletion()
                     }
                 }
-            }
-        }
-    }
 
-    private func trackFlagRequestSpec() {
-        context("record summary event") {
-            var testContext: TestContext!
-            beforeEach {
-                testContext = TestContext()
-                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: testContext.flagKey,
-                                                                     value: LDValue.fromAny(testContext.featureFlag.value),
-                                                                     defaultValue: LDValue.fromAny(testContext.featureFlag.value),
-                                                                     featureFlag: testContext.featureFlag,
-                                                                     user: testContext.user,
-                                                                     includeReason: false)
-            }
-            it("tracks flag requests") {
-                let flagCounter = testContext.flagCounter(for: testContext.flagKey)
-                expect(flagCounter?.defaultValue) == LDValue.fromAny(testContext.featureFlag.value)
-                expect(flagCounter?.flagValueCounters.count) == 1
-
-                let flagValueCounter = testContext.flagValueCounter(for: testContext.flagKey, and: testContext.featureFlag)
-                expect(flagValueCounter?.value) == LDValue.fromAny(testContext.featureFlag.value)
-                expect(flagValueCounter?.count) == 1
+                expect(reporter.eventStore.count) == 20
+                expect(reporter.eventStore.filter { $0.kind == .feature }.count) == 10
+                expect(reporter.eventStore.filter { $0.kind == .debug }.count) == 10
+                expect(reporter.flagRequestTracker.hasLoggedRequests) == true
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.defaultValue) == "b"
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters.count) == 1
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: nil, version: nil)]?.count) == 10
+                expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: nil, version: nil)]?.value) == "a"
             }
         }
     }
@@ -826,14 +659,6 @@ final class EventReporterSpec: QuickSpec {
             }
         }
     }
-}
-
-extension EventReporter {
-    var eventStoreKinds: [Event.Kind] { eventStore.compactMap { $0.kind } }
-}
-
-extension TimeInterval {
-    static let oneSecond: TimeInterval = 1.0
 }
 
 private extension Date {

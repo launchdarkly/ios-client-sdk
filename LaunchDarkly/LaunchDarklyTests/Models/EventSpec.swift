@@ -202,7 +202,7 @@ final class EventSpec: XCTestCase {
     func testFeatureEventEncodingAnonContextKind() {
         let user = LDUser()
         [false, true].forEach { isDebug in
-            let event = FeatureEvent(key: "event-key", user: user, value: true, defaultValue: false, featureFlag: nil, includeReason: false, isDebug: isDebug)
+            let event = FeatureEvent(key: "event-key", user: user, value: true, defaultValue: false, featureFlag: nil, includeReason: true, isDebug: isDebug)
             encodesToObject(event) { dict in
                 XCTAssertEqual(dict.count, isDebug ? 6 : 7)
                 XCTAssertEqual(dict["kind"], isDebug ? "debug" : "feature")

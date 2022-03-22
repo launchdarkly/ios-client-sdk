@@ -75,7 +75,7 @@ class EventReporter: EventReporting {
                 let featureEvent = FeatureEvent(key: flagKey, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false)
                 recordNoSync(featureEvent)
             }
-            if recordingDebugEvent, let featureFlag = featureFlag {
+            if recordingDebugEvent {
                 let debugEvent = FeatureEvent(key: flagKey, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: true)
                 recordNoSync(debugEvent)
             }
