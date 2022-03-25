@@ -13,9 +13,129 @@ final class FeatureFlagSpec: QuickSpec {
     override func spec() {
         initSpec()
         dictionaryValueSpec()
+        codableSpec()
+        flagCollectionSpec()
         equalsSpec()
         shouldCreateDebugEventsSpec()
         collectionSpec()
+    }
+
+    func codableSpec() {
+        describe("codable") {
+            it("decode minimal") {
+                let minimal: LDValue = ["key": "flag-key"]
+                let flag = try JSONDecoder().decode(FeatureFlag.self, from: try JSONEncoder().encode(minimal))
+                expect(flag.flagKey) == "flag-key"
+                expect(flag.value).to(beNil())
+                expect(flag.variation).to(beNil())
+                expect(flag.version).to(beNil())
+                expect(flag.flagVersion).to(beNil())
+                expect(flag.trackEvents) == false
+                expect(flag.debugEventsUntilDate).to(beNil())
+                expect(flag.reason).to(beNil())
+                expect(flag.trackReason) == false
+            }
+            it("decode full") {
+                let now = Date().millisSince1970
+                let value: LDValue = ["key": "flag-key", "value": [1, 2, 3], "variation": 2, "version": 3,
+                                      "flagVersion": 4, "trackEvents": false, "debugEventsUntilDate": .number(Double(now)),
+                                      "reason": ["kind": "OFF"], "trackReason": true]
+                let flag = try JSONDecoder().decode(FeatureFlag.self, from: try JSONEncoder().encode(value))
+                expect(flag.flagKey) == "flag-key"
+                expect(LDValue.fromAny(flag.value)) == [1, 2, 3]
+                expect(flag.variation) == 2
+                expect(flag.version) == 3
+                expect(flag.flagVersion) == 4
+                expect(flag.trackEvents) == false
+                expect(flag.debugEventsUntilDate?.millisSince1970) == now
+                expect(LDValue.fromAny(flag.reason)) == ["kind": "OFF"]
+                expect(flag.trackReason) == true
+            }
+            it("decode with extra fields") {
+                let extra: LDValue = ["key": "flag-key", "unused": "foo"]
+                let flag = try JSONDecoder().decode(FeatureFlag.self, from: try JSONEncoder().encode(extra))
+                expect(flag.flagKey) == "flag-key"
+            }
+            it("decode missing key") {
+                let testData = try JSONEncoder().encode([:] as LDValue)
+                expect(try JSONDecoder().decode(FeatureFlag.self, from: testData)).to(throwError(errorType: DecodingError.self) { err in
+                    guard case .keyNotFound = err
+                    else { return fail("Expected key not found error") }
+                })
+            }
+            it("decode mismatched type") {
+                let encoder = JSONEncoder()
+                let invalidValues: [LDValue] = [[], ["key": 5], ["key": "a", "variation": "1"],
+                                                ["key": "a", "version": "1"], ["key": "a", "flagVersion": "1"],
+                                                ["key": "a", "trackEvents": "1"], ["key": "a", "trackReason": "1"],
+                                                ["key": "a", "debugEventsUntilDate": "1"]]
+                try invalidValues.map { try encoder.encode($0) }.forEach {
+                    expect(try JSONDecoder().decode(FeatureFlag.self, from: $0)).to(throwError(errorType: DecodingError.self) { err in
+                        guard case .typeMismatch = err
+                        else { return fail("Expected type mismatch error") }
+                    })
+                }
+            }
+            it("encode minimal") {
+                let flag = FeatureFlag(flagKey: "flag-key")
+                encodesToObject(flag) { value in
+                    expect(value.count) == 1
+                    expect(value["key"]) == "flag-key"
+                }
+            }
+            it("encode full") {
+                let now = Date()
+                let flag = FeatureFlag(flagKey: "flag-key", value: [1, 2, 3], variation: 2, version: 3, flagVersion: 4,
+                                       trackEvents: true, debugEventsUntilDate: now, reason: ["kind": "OFF"], trackReason: true)
+                encodesToObject(flag) { value in
+                    expect(value.count) == 9
+                    expect(value["key"]) == "flag-key"
+                    expect(value["value"]) == [1, 2, 3]
+                    expect(value["variation"]) == 2
+                    expect(value["version"]) == 3
+                    expect(value["flagVersion"]) == 4
+                    expect(value["trackEvents"]) == true
+                    expect(value["debugEventsUntilDate"]) == .number(Double(now.millisSince1970))
+                    expect(value["reason"]) == ["kind": "OFF"]
+                    expect(value["trackReason"]) == true
+                }
+            }
+            it("encode omits defaults") {
+                let flag = FeatureFlag(flagKey: "flag-key", trackEvents: false, trackReason: false)
+                encodesToObject(flag) { value in
+                    expect(value.count) == 1
+                    expect(value["key"]) == "flag-key"
+                }
+            }
+        }
+    }
+
+    func flagCollectionSpec() {
+        describe("flag collection coding") {
+            it("decoding non-conflicting keys") {
+                let testData: LDValue = ["key1": [:], "key2": ["key": "key2"]]
+                let flagCollection = try JSONDecoder().decode(FeatureFlagCollection.self, from: JSONEncoder().encode(testData))
+                expect(flagCollection.flags.count) == 2
+                expect(flagCollection.flags["key1"]?.flagKey) == "key1"
+                expect(flagCollection.flags["key2"]?.flagKey) == "key2"
+            }
+            it("decoding conflicting keys throws") {
+                let testData = try JSONEncoder().encode(["flag-key": ["key": "flag-key2"]] as LDValue)
+                expect(try JSONDecoder().decode(FeatureFlagCollection.self, from: testData)).to(throwError(errorType: DecodingError.self) { err in
+                    guard case .dataCorrupted = err
+                    else { return fail("Expected type mismatch error") }
+                })
+            }
+            it("encoding keys") {
+                encodesToObject(FeatureFlagCollection([FeatureFlag(flagKey: "flag-key")])) { values in
+                    expect(values.count) == 1
+                    print(values)
+                    valueIsObject(values["flag-key"]) { flagValue in
+                        expect(flagValue["key"]) == "flag-key"
+                    }
+                }
+            }
+        }
     }
 
     func initSpec() {
