@@ -1165,7 +1165,7 @@ final class LDClientSpec: QuickSpec {
                 testContext.subject.observeError(owner: self) { _ in callCount += 1 }
                 expect(testContext.errorNotifierMock.addErrorObserverCallCount) == 1
                 expect(testContext.errorNotifierMock.addErrorObserverReceivedObserver?.owner) === self
-                testContext.errorNotifierMock.addErrorObserverReceivedObserver?.errorHandler?(ErrorMock())
+                testContext.errorNotifierMock.addErrorObserverReceivedObserver?.errorHandler(ErrorMock())
                 expect(callCount) == 1
             }
             it("stopObserving") {

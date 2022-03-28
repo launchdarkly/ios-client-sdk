@@ -8,7 +8,7 @@ jobs:
         type: string
       ssh-fix:
         type: boolean
-        default: true
+        default: false
       build-doc:
         type: boolean
         default: false
@@ -20,23 +20,20 @@ jobs:
 
     macos:
       xcode: <<parameters.xcode-version>>
+    resource_class: macos.x86.medium.gen2
 
     steps:
     - checkout
 
-    # This hack shouldn't be necessary, as we don't actually use SSH
-    # to get any dependencies, but for some reason starting in the
-    # '12.0.0' Xcode image it's become necessary.
+    # There's an XCode bug present in the 12.0.1 CircleCI image that prevents fetching SSH
+    # dependencies from working in some cases, so we disable CircleCI's rewriting of the HTTPS
+    # GitHub URLs to SSH.
     - when:
         condition: <<parameters.ssh-fix>>
         steps:
           - run:
-              name: SSH fingerprint fix
-              command: |
-                sudo defaults write com.apple.dt.Xcode IDEPackageSupportUseBuiltinSCM YES
-                rm ~/.ssh/id_rsa || true
-                for ip in $(dig @8.8.8.8 bitbucket.org +short); do ssh-keyscan bitbucket.org,$ip; ssh-keyscan $ip; done 2>/dev/null >> ~/.ssh/known_hosts || true
-                for ip in $(dig @8.8.8.8 github.com +short); do ssh-keyscan github.com,$ip; ssh-keyscan $ip; done 2>/dev/null >> ~/.ssh/known_hosts || true
+              name: SSH fix
+              command: git config --global --unset url.ssh://git@github.com.insteadof
 
     - run:
         name: Setup for builds
@@ -87,11 +84,25 @@ jobs:
     - when:
         condition: <<parameters.build-doc>>
         steps:
+          - restore_cache:
+              key: v1-gem-cache-<<parameters.xcode-version>>-
+
+          - run:
+              name: Install jazzy gem
+              command: |
+                gem install jazzy
+                gem cleanup
+                # Used as cache key to prevent storing redundant caches
+                gem list > /tmp/cache-key.txt
+
+          - save_cache:
+              key: v1-gem-cache-<<parameters.xcode-version>>-{{ checksum "/tmp/cache-key.txt" }}
+              paths:
+                - ~/.gem
+
           - run:
               name: Build Documentation
-              command: |
-                sudo gem install jazzy
-                jazzy -o artifacts/docs
+              command: jazzy -o artifacts/docs
 
     - when:
         condition: <<parameters.run-lint>>
@@ -117,17 +128,21 @@ workflows:
   build:
     jobs:
       - build:
-          name: Xcode 12.5 - Swift 5.4
-          xcode-version: '12.5.0'
-          ios-sim: 'platform=iOS Simulator,name=iPhone 8,OS=14.5'
+          name: Xcode 13.1 - Swift 5.5
+          xcode-version: '13.1.0'
+          ios-sim: 'platform=iOS Simulator,name=iPhone 11,OS=15.0'
           build-doc: true
           run-lint: true
+      - build:
+          name: Xcode 12.5 - Swift 5.4
+          xcode-version: '12.5.1'
+          ios-sim: 'platform=iOS Simulator,name=iPhone 8,OS=14.5'
       - build:
           name: Xcode 12.0 - Swift 5.3
           xcode-version: '12.0.1'
           ios-sim: 'platform=iOS Simulator,name=iPhone 8,OS=14.0'
+          ssh-fix: true
       - build:
-          name: Xcode 11.4 - Swift 5.2
-          xcode-version: '11.4.1'
-          ios-sim: 'platform=iOS Simulator,name=iPhone 8,OS=12.2'
-          ssh-fix: false
+          name: Xcode 11.7 - Swift 5.2
+          xcode-version: '11.7.0'
+          ios-sim: 'platform=iOS Simulator,name=iPhone 8,OS=12.4'
