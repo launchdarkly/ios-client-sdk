@@ -1,10 +1,3 @@
-//
-//  ThrottlerSpec.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2018 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import Quick
 import Nimble
@@ -38,13 +31,13 @@ final class ThrottlerSpec: QuickSpec {
                 let throttler = Throttler(maxDelay: Constants.maxDelay)
                 expect(throttler.maxDelay) == Constants.maxDelay
                 expect(throttler.runAttempts) == -1
-                expect(throttler.delayTimer).to(beNil())
+                expect(throttler.workItem).to(beNil())
             }
             it("without a maxDelay parameter") {
                 let throttler = Throttler()
                 expect(throttler.maxDelay) == Throttler.Constants.defaultDelay
                 expect(throttler.runAttempts) == -1
-                expect(throttler.delayTimer).to(beNil())
+                expect(throttler.workItem).to(beNil())
             }
             it("throttling controlled by environment reporter") {
                 expect(self.testThrottler(throttlingDisabled: false).throttlingEnabled) == true
@@ -76,14 +69,14 @@ final class ThrottlerSpec: QuickSpec {
             }
             expect(hasRun) == true
             expect(throttler.safeRunAttempts) == 0
-            expect(throttler.delayTimer).to(beNil())
+            expect(throttler.workItem).to(beNil())
             hasRun = false
             throttler.runThrottled {
                 hasRun = true
             }
             expect(hasRun) == true
             expect(throttler.safeRunAttempts) == 1
-            expect(throttler.delayTimer).to(beNil())
+            expect(throttler.workItem).to(beNil())
         }
     }
 
@@ -113,28 +106,35 @@ final class ThrottlerSpec: QuickSpec {
             throttler.runThrottled { }
             throttler.runThrottled { }
             expect(throttler.safeRunAttempts) == 1
-            var hasRun = false
+            let callDate = Date()
+            var runDate: Date?
             waitUntil(timeout: .seconds(3)) { done in
-                let callDate = Date()
                 throttler.runThrottled {
-                    hasRun = true
+                    runDate = Date()
                     done()
                 }
-                expect(hasRun) == false
-                expect(throttler.delayTimer?.fireDate) >= callDate + 1
-                expect(throttler.delayTimer?.fireDate) <= callDate + 2.5
+                expect(runDate).to(beNil())
             }
-            expect(hasRun) == true
+            expect(runDate) >= callDate + 1
+            expect(runDate) <= callDate + 2.5
         }
     }
 
     func maxDelaySpec() {
         it("limits delay to maxDelay") {
-            let throttler = self.testThrottler()
+            let throttler = Throttler(maxDelay: 1.0)
             (0..<10).forEach { _ in throttler.runThrottled { } }
-            let now = Date()
-            expect(throttler.delayTimer?.fireDate) <= now.addingTimeInterval(Constants.maxDelay)
-            expect(throttler.delayTimer?.fireDate) >= now.addingTimeInterval(Constants.maxDelay / 2) - 0.5
+            let callDate = Date()
+            var runDate: Date?
+            waitUntil(timeout: .seconds(2)) { done in
+                throttler.runThrottled {
+                    runDate = Date()
+                    done()
+                }
+                expect(runDate).to(beNil())
+            }
+            expect(runDate) >= callDate + 0.5
+            expect(runDate) <= callDate + 1.5
             throttler.cancelThrottledRun()
         }
     }
@@ -166,7 +166,7 @@ final class ThrottlerSpec: QuickSpec {
             }
             throttler.cancelThrottledRun()
             expect(throttler.safeRunAttempts) == 2
-            expect(throttler.delayTimer).to(beNil())
+            expect(throttler.workItem).to(beNil())
             // Wait until run would have occured
             Thread.sleep(forTimeInterval: 1.0)
             expect(hasRun).to(beFalse())

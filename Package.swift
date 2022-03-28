@@ -17,9 +17,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/AliSoftware/OHHTTPStubs.git", .exact("9.1.0")),
-        .package(url: "https://github.com/Quick/Quick.git", .exact("3.1.2")),
-        .package(url: "https://github.com/Quick/Nimble.git", .exact("9.2.0")),
-        .package(name: "LDSwiftEventSource", url: "https://github.com/LaunchDarkly/swift-eventsource.git", .exact("1.2.1"))
+        .package(url: "https://github.com/Quick/Quick.git", .exact("4.0.0")),
+        .package(url: "https://github.com/Quick/Nimble.git", .exact("9.2.1")),
+        .package(name: "LDSwiftEventSource", url: "https://github.com/LaunchDarkly/swift-eventsource.git", .exact("1.3.1"))
     ],
     targets: [
         .target(

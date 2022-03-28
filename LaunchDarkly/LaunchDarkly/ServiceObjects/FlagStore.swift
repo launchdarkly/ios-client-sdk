@@ -99,8 +99,7 @@ final class FlagStore: FlagMaintaining {
                     }
                 }
             }
-            guard deleteDictionary.keys.sorted() == [Keys.flagKey, FeatureFlag.CodingKeys.version.rawValue],
-                  let flagKey = deleteDictionary[Keys.flagKey] as? String,
+            guard let flagKey = deleteDictionary[Keys.flagKey] as? String,
                   let newVersion = deleteDictionary[FeatureFlag.CodingKeys.version.rawValue] as? Int
             else {
                 Log.debug(self.typeName(and: #function) + "aborted. Malformed delete dictionary. deleteDictionary: \(String(describing: deleteDictionary))")
