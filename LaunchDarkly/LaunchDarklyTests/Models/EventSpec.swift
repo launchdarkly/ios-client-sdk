@@ -25,7 +25,7 @@ final class EventSpec: XCTestCase {
         XCTAssertEqual(event.user, user)
         XCTAssertEqual(event.value, true)
         XCTAssertEqual(event.defaultValue, false)
-        XCTAssertEqual(event.featureFlag?.allPropertiesMatch(featureFlag), true)
+        XCTAssertEqual(event.featureFlag, featureFlag)
         XCTAssertEqual(event.includeReason, true)
         XCTAssertEqual(event.creationDate, testDate)
     }
@@ -40,7 +40,7 @@ final class EventSpec: XCTestCase {
         XCTAssertEqual(event.user, user)
         XCTAssertEqual(event.value, true)
         XCTAssertEqual(event.defaultValue, false)
-        XCTAssertEqual(event.featureFlag?.allPropertiesMatch(featureFlag), true)
+        XCTAssertEqual(event.featureFlag, featureFlag)
         XCTAssertEqual(event.includeReason, false)
         XCTAssertEqual(event.creationDate, testDate)
     }

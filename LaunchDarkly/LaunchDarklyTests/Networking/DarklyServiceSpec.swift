@@ -758,9 +758,7 @@ final class DarklyServiceSpec: QuickSpec {
 
 private extension Data {
     var flagCollection: [LDFlagKey: FeatureFlag]? {
-        guard let flagDictionary = try? JSONSerialization.jsonDictionary(with: self, options: .allowFragments)
-        else { return nil }
-        return flagDictionary.flagCollection
+        return (try? JSONDecoder().decode(FeatureFlagCollection.self, from: self))?.flags
     }
 }
 

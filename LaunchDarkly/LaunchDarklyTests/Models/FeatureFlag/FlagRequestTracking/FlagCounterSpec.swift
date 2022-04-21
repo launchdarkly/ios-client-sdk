@@ -184,7 +184,7 @@ extension FlagCounter {
         let flagCounter = FlagCounter()
         var featureFlag: FeatureFlag? = nil
         if flagKey.isKnown {
-            featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey, includeVersion: true, includeFlagVersion: true)
+            featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey)
             for _ in 0..<Constants.requestCount {
                 flagCounter.trackRequest(reportedValue: LDValue.fromAny(featureFlag?.value), featureFlag: featureFlag, defaultValue: LDValue.fromAny(featureFlag?.value))
             }

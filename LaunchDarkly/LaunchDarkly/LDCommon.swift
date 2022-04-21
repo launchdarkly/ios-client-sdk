@@ -151,9 +151,7 @@ public enum LDValue: Codable,
     }
 
     func booleanValue() -> Bool {
-        if case .bool(let val) = self {
-            return val
-        }
+        if case .bool(let val) = self { return val }
         return false
     }
 
@@ -166,16 +164,12 @@ public enum LDValue: Codable,
     }
 
     func doubleValue() -> Double {
-        if case .number(let val) = self {
-            return val
-        }
+        if case .number(let val) = self { return val }
         return 0
     }
 
     func stringValue() -> String {
-        if case .string(let val) = self {
-            return val
-        }
+        if case .string(let val) = self { return val }
         return ""
     }
 

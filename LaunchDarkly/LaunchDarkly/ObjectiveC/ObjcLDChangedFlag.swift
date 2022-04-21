@@ -29,11 +29,11 @@ public class ObjcLDChangedFlag: NSObject {
 public final class ObjcLDBoolChangedFlag: ObjcLDChangedFlag {
     /// The changed flag's value before it changed
     @objc public var oldValue: Bool {
-        (changedFlag.oldValue.toAny() as? Bool) ?? false
+        changedFlag.oldValue.booleanValue()
     }
     /// The changed flag's value after it changed
     @objc public var newValue: Bool {
-        (changedFlag.newValue.toAny() as? Bool) ?? false
+        changedFlag.newValue.booleanValue()
     }
 
     override init(_ changedFlag: LDChangedFlag) {
@@ -75,11 +75,11 @@ public final class ObjcLDIntegerChangedFlag: ObjcLDChangedFlag {
 public final class ObjcLDDoubleChangedFlag: ObjcLDChangedFlag {
     /// The changed flag's value before it changed
     @objc public var oldValue: Double {
-        (changedFlag.oldValue.toAny() as? Double) ?? 0.0
+        changedFlag.oldValue.doubleValue()
     }
     /// The changed flag's value after it changed
     @objc public var newValue: Double {
-        (changedFlag.newValue.toAny() as? Double) ?? 0.0
+        changedFlag.newValue.doubleValue()
     }
 
     override init(_ changedFlag: LDChangedFlag) {
@@ -98,11 +98,11 @@ public final class ObjcLDDoubleChangedFlag: ObjcLDChangedFlag {
 public final class ObjcLDStringChangedFlag: ObjcLDChangedFlag {
     /// The changed flag's value before it changed
     @objc public var oldValue: String? {
-        (changedFlag.oldValue.toAny() as? String)
+        changedFlag.oldValue.stringValue()
     }
     /// The changed flag's value after it changed
     @objc public var newValue: String? {
-        (changedFlag.newValue.toAny() as? String)
+        changedFlag.newValue.stringValue()
     }
     
     override init(_ changedFlag: LDChangedFlag) {

@@ -1,118 +1,34 @@
 import Foundation
-import Quick
-import Nimble
+import XCTest
+
 @testable import LaunchDarkly
 
-final class CacheConverterSpec: QuickSpec {
-    struct TestContext {
-        var clientServiceFactoryMock = ClientServiceMockFactory()
-        var cacheConverter: CacheConverter
-        var user: LDUser
-        var config: LDConfig
-        var featureFlagCachingMock: FeatureFlagCachingMock {
-            clientServiceFactoryMock.makeFeatureFlagCacheReturnValue
-        }
-        var expiredCacheThreshold: Date
+final class CacheConverterSpec: XCTestCase {
 
-        init(createCacheData: Bool = false, deprecatedCacheData: DeprecatedCacheModel? = nil) {
-            cacheConverter = CacheConverter(serviceFactory: clientServiceFactoryMock, maxCachedUsers: LDConfig.Defaults.maxCachedUsers)
-            expiredCacheThreshold = Date().addingTimeInterval(CacheConverter.Constants.maxAge)
-            if createCacheData {
-                let (users, userEnvironmentFlagsCollection, mobileKeys) = CacheableUserEnvironmentFlags.stubCollection()
-                user = users[users.count / 2]
-                config = LDConfig(mobileKey: mobileKeys[mobileKeys.count / 2], environmentReporter: EnvironmentReportingMock())
-                featureFlagCachingMock.retrieveFeatureFlagsReturnValue = userEnvironmentFlagsCollection[user.key]?.environmentFlags[config.mobileKey]?.featureFlags
-            } else {
-                user = LDUser.stub()
-                config = LDConfig.stub
-                featureFlagCachingMock.retrieveFeatureFlagsReturnValue = nil
-            }
-            DeprecatedCacheModel.allCases.forEach { model in
-                deprecatedCacheMock(for: model).retrieveFlagsReturnValue = (nil, nil)
-            }
-            if let deprecatedCacheData = deprecatedCacheData {
-                let age = Date().addingTimeInterval(CacheConverter.Constants.maxAge + 1.0)
-                deprecatedCacheMock(for: deprecatedCacheData).retrieveFlagsReturnValue = (FlagMaintainingMock.stubFlags(), age)
-            }
-        }
+    private var serviceFactory: ClientServiceMockFactory!
 
-        func deprecatedCacheMock(for version: DeprecatedCacheModel) -> DeprecatedCacheMock {
-            cacheConverter.deprecatedCaches[version] as! DeprecatedCacheMock
-        }
+    private static var upToDateData: Data!
+
+    override class func setUp() {
+        upToDateData = try! JSONEncoder().encode(["version": 7])
     }
 
-    override func spec() {
-        initSpec()
-        convertCacheDataSpec()
+    override func setUp() {
+        serviceFactory = ClientServiceMockFactory()
     }
 
-    private func initSpec() {
-        var testContext: TestContext!
-        describe("init") {
-            it("creates a cache converter") {
-                testContext = TestContext()
-                expect(testContext.clientServiceFactoryMock.makeFeatureFlagCacheCallCount) == 1
-                expect(testContext.cacheConverter.currentCache) === testContext.clientServiceFactoryMock.makeFeatureFlagCacheReturnValue
-                DeprecatedCacheModel.allCases.forEach { deprecatedCacheModel in
-                    expect(testContext.cacheConverter.deprecatedCaches[deprecatedCacheModel]).toNot(beNil())
-                    expect(testContext.clientServiceFactoryMock.makeDeprecatedCacheModelReceivedModels.contains(deprecatedCacheModel)) == true
-                }
-            }
-        }
+    func testNoKeysGiven() {
+        CacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: [], maxCachedUsers: 0)
+        XCTAssertEqual(serviceFactory.makeKeyedValueCacheCallCount, 0)
+        XCTAssertEqual(serviceFactory.makeFeatureFlagCacheCallCount, 0)
     }
 
-    private func convertCacheDataSpec() {
-        let cacheCases: [DeprecatedCacheModel?] = [.version5, nil] // Nil for no deprecated cache
-        var testContext: TestContext!
-        describe("convertCacheData") {
-            afterEach {
-                // The CacheConverter should always remove all expired data
-                DeprecatedCacheModel.allCases.forEach { model in
-                    expect(testContext.deprecatedCacheMock(for: model).removeDataCallCount) == 1
-                    expect(testContext.deprecatedCacheMock(for: model).removeDataReceivedExpirationDate)
-                        .to(beCloseTo(testContext.expiredCacheThreshold, within: 0.5))
-                }
-            }
-            for deprecatedData in cacheCases {
-                context("current cache and \(deprecatedData?.rawValue ?? "no") deprecated cache data exists") {
-                    it("does not load from deprecated caches") {
-                        testContext = TestContext(createCacheData: true, deprecatedCacheData: deprecatedData)
-                        testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
-                        DeprecatedCacheModel.allCases.forEach {
-                            expect(testContext.deprecatedCacheMock(for: $0).retrieveFlagsCallCount) == 0
-                        }
-                        expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
-                    }
-                }
-                context("no current cache data and \(deprecatedData?.rawValue ?? "no") deprecated cache data exists") {
-                    beforeEach {
-                        testContext = TestContext(createCacheData: false, deprecatedCacheData: deprecatedData)
-                        testContext.cacheConverter.convertCacheData(for: testContext.user, and: testContext.config)
-                    }
-                    it("looks in the deprecated caches for data") {
-                        let searchUpTo = cacheCases.firstIndex(of: deprecatedData)!
-                        DeprecatedCacheModel.allCases.forEach {
-                            expect(testContext.deprecatedCacheMock(for: $0).retrieveFlagsCallCount) == (cacheCases.firstIndex(of: $0)! <= searchUpTo ? 1 : 0)
-                        }
-                    }
-                    if let deprecatedData = deprecatedData {
-                        it("creates current cache data from the deprecated cache data") {
-                            expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-                            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) ==
-                                testContext.deprecatedCacheMock(for: deprecatedData).retrieveFlagsReturnValue?.featureFlags
-                            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.userKey) == testContext.user.key
-                            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.mobileKey) == testContext.config.mobileKey
-                            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated) ==
-                                testContext.deprecatedCacheMock(for: deprecatedData).retrieveFlagsReturnValue?.lastUpdated
-                            expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storeMode) == .sync
-                        }
-                    } else {
-                        it("leaves the current cache data unchanged") {
-                            expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 0
-                        }
-                    }
-                }
-            }
-        }
+    func testUpToDate() {
+        let v7valueCacheMock = KeyedValueCachingMock()
+        serviceFactory.makeFeatureFlagCacheReturnValue.keyedValueCache = v7valueCacheMock
+        v7valueCacheMock.dataReturnValue = CacheConverterSpec.upToDateData
+        CacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: ["key1", "key2"], maxCachedUsers: 0)
+        XCTAssertEqual(serviceFactory.makeFeatureFlagCacheCallCount, 2)
+        XCTAssertEqual(v7valueCacheMock.dataCallCount, 2)
     }
 }

@@ -3,35 +3,29 @@ import LDSwiftEventSource
 @testable import LaunchDarkly
 
 final class ClientServiceMockFactory: ClientServiceCreating {
-    func makeKeyedValueCache() -> KeyedValueCaching {
-        KeyedValueCachingMock()
+    var makeKeyedValueCacheReturnValue = KeyedValueCachingMock()
+    var makeKeyedValueCacheCallCount = 0
+    var makeKeyedValueCacheReceivedCacheKey: String? = nil
+    func makeKeyedValueCache(cacheKey: String?) -> KeyedValueCaching {
+        makeKeyedValueCacheCallCount += 1
+        makeKeyedValueCacheReceivedCacheKey = cacheKey
+        return makeKeyedValueCacheReturnValue
     }
 
     var makeFeatureFlagCacheReturnValue = FeatureFlagCachingMock()
+    var makeFeatureFlagCacheCallback: (() -> Void)?
     var makeFeatureFlagCacheCallCount = 0
-    func makeFeatureFlagCache(maxCachedUsers: Int = 5) -> FeatureFlagCaching {
+    var makeFeatureFlagCacheReceivedParameters: (mobileKey: MobileKey, maxCachedUsers: Int)? = nil
+    func makeFeatureFlagCache(mobileKey: MobileKey, maxCachedUsers: Int = 5) -> FeatureFlagCaching {
         makeFeatureFlagCacheCallCount += 1
+        makeFeatureFlagCacheReceivedParameters = (mobileKey: mobileKey, maxCachedUsers: maxCachedUsers)
+        makeFeatureFlagCacheCallback?()
         return makeFeatureFlagCacheReturnValue
     }
 
-    func makeCacheConverter(maxCachedUsers: Int = 5) -> CacheConverting {
-        CacheConvertingMock()
-    }
-
-    var makeDeprecatedCacheModelReturnValue: DeprecatedCacheMock?
-    var makeDeprecatedCacheModelReturnedValues = [DeprecatedCacheModel: DeprecatedCacheMock]()
-    var makeDeprecatedCacheModelCallCount = 0
-    var makeDeprecatedCacheModelReceivedModels = [DeprecatedCacheModel]()
-    func makeDeprecatedCacheModel(_ model: DeprecatedCacheModel) -> DeprecatedCache {
-        makeDeprecatedCacheModelCallCount += 1
-        makeDeprecatedCacheModelReceivedModels.append(model)
-        var returnedCacheMock = makeDeprecatedCacheModelReturnValue
-        if returnedCacheMock == nil {
-            returnedCacheMock = DeprecatedCacheMock()
-            returnedCacheMock?.model = model
-        }
-        makeDeprecatedCacheModelReturnedValues[model] = returnedCacheMock!
-        return returnedCacheMock!
+    var makeCacheConverterReturnValue = CacheConvertingMock()
+    func makeCacheConverter() -> CacheConverting {
+        return makeCacheConverterReturnValue
     }
 
     func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {

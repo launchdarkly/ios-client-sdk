@@ -138,7 +138,7 @@ class FeatureEvent: Event, SubEvent {
         try container.encode(value, forKey: .value)
         try container.encode(defaultValue, forKey: .defaultValue)
         if let reason = includeReason || featureFlag?.trackReason ?? false ? featureFlag?.reason : nil {
-            try container.encode(LDValue.fromAny(reason), forKey: .reason)
+            try container.encode(reason, forKey: .reason)
         }
         try container.encode(creationDate, forKey: .creationDate)
     }

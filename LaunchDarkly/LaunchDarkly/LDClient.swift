@@ -116,10 +116,10 @@ public class LDClient {
     private func internalSetOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
         internalSetOnlineQueue.sync {
             guard goOnline, self.canGoOnline
-                else {
-                    // go offline, which is not throttled
-                    self.go(online: false, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
-                    return
+            else {
+                // go offline, which is not throttled
+                self.go(online: false, reasonOnlineUnavailable: self.reasonOnlineUnavailable(goOnline: goOnline), completion: completion)
+                return
             }
 
             self.throttler.runThrottled {
@@ -294,9 +294,8 @@ public class LDClient {
             let wasOnline = self.isOnline
             self.internalSetOnline(false)
 
-            cacheConverter.convertCacheData(for: user, and: config)
-            let cachedUserFlags = self.flagCache.retrieveFeatureFlags(forUserWithKey: self.user.key, andMobileKey: self.config.mobileKey) ?? [:]
-            flagStore.replaceStore(newFlags: cachedUserFlags, completion: nil)
+            let cachedUserFlags = self.flagCache.retrieveFeatureFlags(userKey: self.user.key) ?? [:]
+            flagStore.replaceStore(newFlags: FeatureFlagCollection(cachedUserFlags))
             self.service.user = self.user
             self.service.clearFlagResponseCache()
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
@@ -326,7 +325,7 @@ public class LDClient {
 
      LDClient will not provide any source or change information, only flag keys and flag values. The client app should convert the feature flag value into the desired type.
     */
-    public var allFlags: [LDFlagKey: Any]? {
+    public var allFlags: [LDFlagKey: LDValue]? {
         guard hasStarted
         else { return nil }
         return flagStore.featureFlags.compactMapValues { $0.value }
@@ -487,23 +486,21 @@ public class LDClient {
     private func onFlagSyncComplete(result: FlagSyncResult) {
         Log.debug(typeName(and: #function) + "result: \(result)")
         switch result {
-        case let .success(flagDictionary, streamingEvent):
+        case let .flagCollection(flagCollection):
             let oldFlags = flagStore.featureFlags
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
-            switch streamingEvent {
-            case nil, .ping?, .put?:
-                flagStore.replaceStore(newFlags: flagDictionary) {
-                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
-                }
-            case .patch?:
-                flagStore.updateStore(updateDictionary: flagDictionary) {
-                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
-                }
-            case .delete?:
-                flagStore.deleteFlag(deleteDictionary: flagDictionary) {
-                    self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
-                }
-            }
+            flagStore.replaceStore(newFlags: flagCollection)
+            self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
+        case let .patch(featureFlag):
+            let oldFlags = flagStore.featureFlags
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
+            flagStore.updateStore(updatedFlag: featureFlag)
+            self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
+        case let .delete(deleteResponse):
+            let oldFlags = flagStore.featureFlags
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
+            flagStore.deleteFlag(deleteResponse: deleteResponse)
+            self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
         case .upToDate:
             connectionInformation.lastKnownFlagValidity = Date()
             flagChangeNotifier.notifyUnchanged()
@@ -522,7 +519,7 @@ public class LDClient {
 
     private func updateCacheAndReportChanges(user: LDUser,
                                              oldFlags: [LDFlagKey: FeatureFlag]) {
-        flagCache.storeFeatureFlags(flagStore.featureFlags, userKey: user.key, mobileKey: config.mobileKey, lastUpdated: Date(), storeMode: .async)
+        flagCache.storeFeatureFlags(flagStore.featureFlags, userKey: user.key, lastUpdated: Date())
         flagChangeNotifier.notifyObservers(oldFlags: oldFlags, newFlags: flagStore.featureFlags)
     }
 
@@ -635,7 +632,10 @@ public class LDClient {
             return
         }
 
-        let internalUser = user
+        let serviceFactory = serviceFactory ?? ClientServiceFactory()
+        var keys = [config.mobileKey]
+        keys.append(contentsOf: config.getSecondaryMobileKeys().values)
+        serviceFactory.makeCacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: keys, maxCachedUsers: config.maxCachedUsers)
 
         LDClient.instances = [:]
         var mobileKeys = config.getSecondaryMobileKeys()
@@ -651,7 +651,7 @@ public class LDClient {
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
-            let instance = LDClient(serviceFactory: serviceFactory ?? ClientServiceFactory(), configuration: internalConfig, startUser: internalUser, completion: completionCheck)
+            let instance = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startUser: user, completion: completionCheck)
             LDClient.instances?[name] = instance
         }
         completionCheck()
@@ -714,7 +714,6 @@ public class LDClient {
     let serviceFactory: ClientServiceCreating
 
     private(set) var flagCache: FeatureFlagCaching
-    private(set) var cacheConverter: CacheConverting
     private(set) var flagSynchronizer: LDFlagSynchronizing
     var flagChangeNotifier: FlagChangeNotifying
     private(set) var eventReporter: EventReporting
@@ -739,9 +738,8 @@ public class LDClient {
     private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
         self.serviceFactory = serviceFactory
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
-        flagCache = self.serviceFactory.makeFeatureFlagCache(maxCachedUsers: configuration.maxCachedUsers)
+        flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedUsers: configuration.maxCachedUsers)
         flagStore = self.serviceFactory.makeFlagStore()
-        cacheConverter = self.serviceFactory.makeCacheConverter(maxCachedUsers: configuration.maxCachedUsers)
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
         throttler = self.serviceFactory.makeThrottler(environmentReporter: environmentReporter)
 
@@ -774,9 +772,8 @@ public class LDClient {
                                                                     onSyncComplete: onFlagSyncComplete)
 
         Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
-        cacheConverter.convertCacheData(for: user, and: config)
-        if let cachedFlags = flagCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: config.mobileKey), !cachedFlags.isEmpty {
-            flagStore.replaceStore(newFlags: cachedFlags, completion: nil)
+        if let cachedFlags = flagCache.retrieveFeatureFlags(userKey: user.key), !cachedFlags.isEmpty {
+            flagStore.replaceStore(newFlags: FeatureFlagCollection(cachedFlags))
         }
 
         eventReporter.record(IdentifyEvent(user: user))

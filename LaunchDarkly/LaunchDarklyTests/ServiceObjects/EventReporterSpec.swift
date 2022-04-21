@@ -1,7 +1,6 @@
 import Foundation
 import Quick
 import Nimble
-import XCTest
 @testable import LaunchDarkly
 
 final class EventReporterSpec: QuickSpec {

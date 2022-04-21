@@ -2,10 +2,9 @@ import Foundation
 import LDSwiftEventSource
 
 protocol ClientServiceCreating {
-    func makeKeyedValueCache() -> KeyedValueCaching
-    func makeFeatureFlagCache(maxCachedUsers: Int) -> FeatureFlagCaching
-    func makeCacheConverter(maxCachedUsers: Int) -> CacheConverting
-    func makeDeprecatedCacheModel(_ model: DeprecatedCacheModel) -> DeprecatedCache
+    func makeKeyedValueCache(cacheKey: String?) -> KeyedValueCaching
+    func makeFeatureFlagCache(mobileKey: String, maxCachedUsers: Int) -> FeatureFlagCaching
+    func makeCacheConverter() -> CacheConverting
     func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing
     func makeFlagSynchronizer(streamingMode: LDStreamingMode,
@@ -26,22 +25,16 @@ protocol ClientServiceCreating {
 }
 
 final class ClientServiceFactory: ClientServiceCreating {
-    func makeKeyedValueCache() -> KeyedValueCaching {
-        UserDefaults.standard
+    func makeKeyedValueCache(cacheKey: String?) -> KeyedValueCaching {
+        UserDefaults(suiteName: cacheKey)!
     }
 
-    func makeFeatureFlagCache(maxCachedUsers: Int) -> FeatureFlagCaching {
-        UserEnvironmentFlagCache(withKeyedValueCache: makeKeyedValueCache(), maxCachedUsers: maxCachedUsers)
+    func makeFeatureFlagCache(mobileKey: MobileKey, maxCachedUsers: Int) -> FeatureFlagCaching {
+        FeatureFlagCache(serviceFactory: self, mobileKey: mobileKey, maxCachedUsers: maxCachedUsers)
     }
 
-    func makeCacheConverter(maxCachedUsers: Int) -> CacheConverting {
-        CacheConverter(serviceFactory: self, maxCachedUsers: maxCachedUsers)
-    }
-
-    func makeDeprecatedCacheModel(_ model: DeprecatedCacheModel) -> DeprecatedCache {
-        switch model {
-        case .version5: return DeprecatedCacheModelV5(keyedValueCache: makeKeyedValueCache())
-        }
+    func makeCacheConverter() -> CacheConverting {
+        CacheConverter()
     }
 
     func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {

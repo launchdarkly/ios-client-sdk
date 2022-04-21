@@ -50,9 +50,6 @@ public struct LDUser: Encodable {
     */
     public var privateAttributes: [UserAttribute]
 
-    /// An NSObject wrapper for the Swift LDUser struct. Intended for use in mixed apps when Swift code needs to pass a user into an Objective-C method.
-    public var objcLdUser: ObjcLDUser { ObjcLDUser(self) }
-
     var contextKind: String { isAnonymous ? "anonymousUser" : "user" }
 
     /**
@@ -196,12 +193,6 @@ extension LDUser: Equatable {
     init(user: LDUser) {
         wrapped = user
         super.init()
-    }
-}
-
-extension LDUserWrapper {
-    struct Keys {
-        fileprivate static let featureFlags = "featuresJsonDictionary"
     }
 }
 

@@ -188,7 +188,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: boolVariation
     @objc public func boolVariation(forKey key: LDFlagKey, defaultValue: Bool) -> Bool {
-        ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.boolVariation(forKey: key, defaultValue: defaultValue)
     }
 
     /**
@@ -200,8 +200,8 @@ public final class ObjcLDClient: NSObject {
      - returns: ObjcLDBoolEvaluationDetail containing your value as well as useful information on why that value was returned.
     */
     @objc public func boolVariationDetail(forKey key: LDFlagKey, defaultValue: Bool) -> ObjcLDBoolEvaluationDetail {
-        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
-        return ObjcLDBoolEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
+        let evaluationDetail = ldClient.boolVariationDetail(forKey: key, defaultValue: defaultValue)
+        return ObjcLDBoolEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason?.mapValues { $0.toAny() ?? NSNull() })
     }
 
     /**
@@ -229,7 +229,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: integerVariation
     @objc public func integerVariation(forKey key: LDFlagKey, defaultValue: Int) -> Int {
-        ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.intVariation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -241,8 +241,8 @@ public final class ObjcLDClient: NSObject {
      - returns: ObjcLDIntegerEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
     @objc public func integerVariationDetail(forKey key: LDFlagKey, defaultValue: Int) -> ObjcLDIntegerEvaluationDetail {
-        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
-        return ObjcLDIntegerEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
+        let evaluationDetail = ldClient.intVariationDetail(forKey: key, defaultValue: defaultValue)
+        return ObjcLDIntegerEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason?.mapValues { $0.toAny() ?? NSNull() })
     }
 
     /**
@@ -270,7 +270,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: doubleVariation
     @objc public func doubleVariation(forKey key: LDFlagKey, defaultValue: Double) -> Double {
-        ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.doubleVariation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -282,8 +282,8 @@ public final class ObjcLDClient: NSObject {
      - returns: ObjcLDDoubleEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
     @objc public func doubleVariationDetail(forKey key: LDFlagKey, defaultValue: Double) -> ObjcLDDoubleEvaluationDetail {
-        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
-        return ObjcLDDoubleEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
+        let evaluationDetail = ldClient.doubleVariationDetail(forKey: key, defaultValue: defaultValue)
+        return ObjcLDDoubleEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason?.mapValues { $0.toAny() ?? NSNull() })
     }
 
     /**
@@ -311,7 +311,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: stringVariation
     @objc public func stringVariation(forKey key: LDFlagKey, defaultValue: String) -> String {
-        ldClient.variation(forKey: key, defaultValue: defaultValue)
+        ldClient.stringVariation(forKey: key, defaultValue: defaultValue)
     }
     
     /**
@@ -323,8 +323,8 @@ public final class ObjcLDClient: NSObject {
      - returns: ObjcLDStringEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
     @objc public func stringVariationDetail(forKey key: LDFlagKey, defaultValue: String) -> ObjcLDStringEvaluationDetail {
-        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
-        return ObjcLDStringEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
+        let evaluationDetail = ldClient.stringVariationDetail(forKey: key, defaultValue: defaultValue)
+        return ObjcLDStringEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason?.mapValues { $0.toAny() ?? NSNull() })
     }
 
     /**
@@ -351,9 +351,9 @@ public final class ObjcLDClient: NSObject {
      - returns: The requested NSArray feature flag value, or the default value if the flag is missing or cannot be cast to a NSArray, or the client is not started
      */
     /// - Tag: arrayVariation
-    @objc public func arrayVariation(forKey key: LDFlagKey, defaultValue: [Any]) -> [Any] {
-        ldClient.variation(forKey: key, defaultValue: defaultValue)
-    }
+//    @objc public func arrayVariation(forKey key: LDFlagKey, defaultValue: [Any]) -> [Any] {
+//        ldClient.variation(forKey: key, defaultValue: defaultValue)
+//    }
     
     /**
      See [arrayVariation](x-source-tag://arrayVariation) for more information on variation methods.
@@ -363,10 +363,10 @@ public final class ObjcLDClient: NSObject {
      
      - returns: ObjcLDArrayEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func arrayVariationDetail(forKey key: LDFlagKey, defaultValue: [Any]) -> ObjcLDArrayEvaluationDetail {
-        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
-        return ObjcLDArrayEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
-    }
+//    @objc public func arrayVariationDetail(forKey key: LDFlagKey, defaultValue: [Any]) -> ObjcLDArrayEvaluationDetail {
+//        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
+//        return ObjcLDArrayEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason?.mapValues { $0.toAny() })
+//    }
     
     /**
      Returns the NSDictionary variation for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the default value.
@@ -392,9 +392,9 @@ public final class ObjcLDClient: NSObject {
      - returns: The requested NSDictionary feature flag value, or the default value if the flag is missing or cannot be cast to a NSDictionary, or the client is not started
      */
     /// - Tag: dictionaryVariation
-    @objc public func dictionaryVariation(forKey key: LDFlagKey, defaultValue: [String: Any]) -> [String: Any] {
-        ldClient.variation(forKey: key, defaultValue: defaultValue)
-    }
+//    @objc public func dictionaryVariation(forKey key: LDFlagKey, defaultValue: [String: Any]) -> [String: Any] {
+//        ldClient.variation(forKey: key, defaultValue: defaultValue)
+//    }
     
     /**
      See [dictionaryVariation](x-source-tag://dictionaryVariation) for more information on variation methods.
@@ -404,10 +404,10 @@ public final class ObjcLDClient: NSObject {
      
      - returns: ObjcLDDictionaryEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
-    @objc public func dictionaryVariationDetail(forKey key: LDFlagKey, defaultValue: [String: Any]) -> ObjcLDDictionaryEvaluationDetail {
-        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
-        return ObjcLDDictionaryEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason)
-    }
+//    @objc public func dictionaryVariationDetail(forKey key: LDFlagKey, defaultValue: [String: Any]) -> ObjcLDDictionaryEvaluationDetail {
+//        let evaluationDetail = ldClient.variationDetail(forKey: key, defaultValue: defaultValue)
+//        return ObjcLDDictionaryEvaluationDetail(value: evaluationDetail.value, variationIndex: evaluationDetail.variationIndex, reason: evaluationDetail.reason?.mapValues { $0.toAny() })
+//    }
     
     /**
      Returns a dictionary with the flag keys and their values. If the LDClient is not started, returns nil.
@@ -416,7 +416,7 @@ public final class ObjcLDClient: NSObject {
 
      LDClient will not provide any source or change information, only flag keys and flag values. The client app should convert the feature flag value into the desired type.
      */
-    @objc public var allFlags: [LDFlagKey: Any]? { ldClient.allFlags }
+    @objc public var allFlags: [LDFlagKey: Any]? { ldClient.allFlags?.mapValues { $0.toAny() ?? NSNull() } }
 
     // MARK: - Feature Flag Updates
 
