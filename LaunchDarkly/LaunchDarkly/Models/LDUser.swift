@@ -7,7 +7,7 @@ typealias UserKey = String  // use for identifying semantics for strings, partic
  The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user's feature flags, or until the user removes the app from the device.
  The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.
  */
-public struct LDUser: Encodable {
+public struct LDUser: Encodable, Equatable {
 
     /// String keys associated with LDUser properties.
     public enum CodingKeys: String, CodingKey {
@@ -176,13 +176,6 @@ public struct LDUser: Encodable {
         let key = UUID().uuidString
         UserDefaults.standard.set(key, forKey: storedIdKey)
         return key
-    }
-}
-
-extension LDUser: Equatable {
-    /// Compares users by comparing their user keys only, to allow the client app to collect user information over time
-    public static func == (lhs: LDUser, rhs: LDUser) -> Bool {
-        lhs.key == rhs.key
     }
 }
 
