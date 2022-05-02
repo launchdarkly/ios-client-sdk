@@ -23,15 +23,15 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
 
     struct FlagValues {
-        static let bool = true
-        static let int = 7
-        static let double = 3.14159
-        static let string = "string value"
-        static let array = [1, 2, 3]
-        static let dictionary: [String: Any] = ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]
-        static let null = NSNull()
+        static let bool: LDValue = true
+        static let int: LDValue = 7
+        static let double: LDValue = 3.14159
+        static let string: LDValue = "string value"
+        static let array: LDValue = [1, 2, 3]
+        static let dictionary: LDValue = ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]
+        static let null: LDValue = nil
 
-        static func value(from flagKey: LDFlagKey) -> Any? {
+        static func value(from flagKey: LDFlagKey) -> LDValue {
             switch flagKey {
             case FlagKeys.bool: return FlagValues.bool
             case FlagKeys.int: return FlagValues.int
@@ -82,7 +82,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
                                     trackEvents: Bool = true,
                                     debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0)) -> FeatureFlag {
             FeatureFlag(flagKey: flagKey,
-                        value: LDValue.fromAny(FlagValues.value(from: flagKey)),
+                        value: FlagValues.value(from: flagKey),
                         variation: variation,
                         version: version(for: flagKey, useAlternateVersion: useAlternateVersion),
                         flagVersion: flagVersion,

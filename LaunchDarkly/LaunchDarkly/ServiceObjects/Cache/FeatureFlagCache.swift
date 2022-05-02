@@ -4,6 +4,7 @@ import Foundation
 protocol FeatureFlagCaching {
     // sourcery: defaultMockValue = KeyedValueCachingMock()
     var keyedValueCache: KeyedValueCaching { get }
+
     func retrieveFeatureFlags(userKey: String) -> [LDFlagKey: FeatureFlag]?
     func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], userKey: String, lastUpdated: Date)
 }

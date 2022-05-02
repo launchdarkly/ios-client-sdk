@@ -1,19 +1,20 @@
 import Foundation
 
-typealias UserKey = String  // use for identifying semantics for strings, particularly in dictionaries
-
 /**
- LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
- The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user's feature flags, or until the user removes the app from the device.
- The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.
+ LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK.
+
+ For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app,
+ information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected.
+ Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
+
+ The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided
+ the `LDClient` is online and can establish a connection with LaunchDarkly servers, cached information will only be used
+ a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The
+ SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are
+ overwritten by a different user's feature flags, or until the user removes the app from the device. The SDK does not
+ cache user information collected.
  */
 public struct LDUser: Encodable, Equatable {
-
-    /// String keys associated with LDUser properties.
-    public enum CodingKeys: String, CodingKey {
-        /// Key names match the corresponding LDUser property
-        case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", config, privateAttributes = "privateAttrs", secondary
-    }
 
     static let optionalAttributes = UserAttribute.BuiltIn.allBuiltIns.filter { $0.name != "key" && $0.name != "anonymous"}
 
@@ -37,7 +38,7 @@ public struct LDUser: Encodable, Equatable {
     public var email: String?
     /// Client app defined avatar for the user. (Default: nil)
     public var avatar: String?
-    /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device & operatingSystem (which cannot be made private). See `privateAttributes` for details. (Default: nil)
+    /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private, see `privateAttributes` for details. (Default: [:])
     public var custom: [String: LDValue]
     /// Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. isAnonymous cannot be made private. (Default: true)
     public var isAnonymous: Bool
@@ -92,8 +93,8 @@ public struct LDUser: Encodable, Equatable {
         self.avatar = avatar
         self.isAnonymous = isAnonymous ?? (selectedKey == LDUser.defaultKey(environmentReporter: environmentReporter))
         self.custom = custom ?? [:]
-        self.custom.merge([CodingKeys.device.rawValue: .string(environmentReporter.deviceModel),
-                           CodingKeys.operatingSystem.rawValue: .string(environmentReporter.systemVersion)]) { lhs, _ in lhs }
+        self.custom.merge(["device": .string(environmentReporter.deviceModel),
+                           "os": .string(environmentReporter.systemVersion)]) { lhs, _ in lhs }
         self.privateAttributes = privateAttributes ?? []
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
@@ -103,8 +104,8 @@ public struct LDUser: Encodable, Equatable {
     */
     init(environmentReporter: EnvironmentReporting) {
         self.init(key: LDUser.defaultKey(environmentReporter: environmentReporter),
-                  custom: [CodingKeys.device.rawValue: .string(environmentReporter.deviceModel),
-                           CodingKeys.operatingSystem.rawValue: .string(environmentReporter.systemVersion)],
+                  custom: ["device": .string(environmentReporter.deviceModel),
+                           "os": .string(environmentReporter.systemVersion)],
                   isAnonymous: true)
     }
 
@@ -133,7 +134,10 @@ public struct LDUser: Encodable, Equatable {
 
         var container = encoder.container(keyedBy: DynamicKey.self)
         try container.encode(key, forKey: DynamicKey(stringValue: "key")!)
-        try container.encode(isAnonymous, forKey: DynamicKey(stringValue: "anonymous")!)
+
+        if isAnonymous {
+            try container.encode(isAnonymous, forKey: DynamicKey(stringValue: "anonymous")!)
+        }
 
         try LDUser.optionalAttributes.forEach { attribute in
             if let value = self.value(for: attribute) as? String {

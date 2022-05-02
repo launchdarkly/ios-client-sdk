@@ -61,8 +61,8 @@ final class LDUserSpec: QuickSpec {
                     expect(user.email).to(beNil())
                     expect(user.avatar).to(beNil())
                     expect(user.custom.count) == 2
-                    expect(user.custom[LDUser.CodingKeys.device.rawValue]) == .string(environmentReporter.deviceModel)
-                    expect(user.custom[LDUser.CodingKeys.operatingSystem.rawValue]) == .string(environmentReporter.systemVersion)
+                    expect(user.custom["device"]) == .string(environmentReporter.deviceModel)
+                    expect(user.custom["os"]) == .string(environmentReporter.systemVersion)
                     expect(user.privateAttributes).to(beEmpty())
                     expect(user.secondary).to(beNil())
                 }
@@ -106,8 +106,8 @@ final class LDUserSpec: QuickSpec {
                 expect(user.email).to(beNil())
                 expect(user.avatar).to(beNil())
                 expect(user.custom.count) == 2
-                expect(user.custom[LDUser.CodingKeys.device.rawValue]) == .string(environmentReporter.deviceModel)
-                expect(user.custom[LDUser.CodingKeys.operatingSystem.rawValue]) == .string(environmentReporter.systemVersion)
+                expect(user.custom["device"]) == .string(environmentReporter.deviceModel)
+                expect(user.custom["os"]) == .string(environmentReporter.systemVersion)
 
                 expect(user.privateAttributes).to(beEmpty())
             }

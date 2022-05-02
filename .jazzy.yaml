@@ -19,6 +19,7 @@ custom_categories:
     - LDConfig
     - LDUser
     - LDEvaluationDetail
+    - LDValue
 
   - name: Flag Change Observers
     children:
@@ -36,10 +37,8 @@ custom_categories:
   - name: Other Types
     children:
     - LDStreamingMode
-    - LDFlagValueConvertible
     - LDFlagKey
     - LDInvalidArgumentError
-    - LDErrorHandler
 
   - name: Objective-C Core Interfaces
     children:
@@ -47,6 +46,8 @@ custom_categories:
     - ObjcLDConfig
     - ObjcLDUser
     - ObjcLDChangedFlag
+    - ObjcLDValue
+    - ObjcLDValueType
 
   - name: Objective-C EvaluationDetail Wrappers
     children:
@@ -54,14 +55,4 @@ custom_categories:
     - ObjcLDIntegerEvaluationDetail
     - ObjcLDDoubleEvaluationDetail
     - ObjcLDStringEvaluationDetail
-    - ObjcLDArrayEvaluationDetail
-    - ObjcLDDictionaryEvaluationDetail
-
-  - name: Objective-C ChangedFlag Wrappers
-    children:
-    - ObjcLDBoolChangedFlag
-    - ObjcLDIntegerChangedFlag
-    - ObjcLDDoubleChangedFlag
-    - ObjcLDStringChangedFlag
-    - ObjcLDArrayChangedFlag
-    - ObjcLDDictionaryChangedFlag
+    - ObjcLDJSONEvaluationDetail

@@ -122,11 +122,7 @@ struct EnvironmentReporter: EnvironmentReporting {
     var vendorUUID: String? { UIDevice.current.identifierForVendor?.uuidString }
     #endif
 
-    #if INTEGRATION_HARNESS
     var shouldThrottleOnlineCalls: Bool { !isDebugBuild }
-    #else
-    var shouldThrottleOnlineCalls: Bool { true }
-    #endif
 
     let sdkVersion = "5.4.5"
     // Unfortunately, the following does not function in certain configurations, such as when included through SPM

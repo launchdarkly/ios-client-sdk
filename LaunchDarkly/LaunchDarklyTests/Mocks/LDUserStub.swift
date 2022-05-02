@@ -26,8 +26,8 @@ extension LDUser {
         static func custom(includeSystemValues: Bool) -> [String: LDValue] {
             var custom = StubConstants.custom
             if includeSystemValues {
-                custom[CodingKeys.device.rawValue] = StubConstants.device
-                custom[CodingKeys.operatingSystem.rawValue] = StubConstants.operatingSystem
+                custom["device"] = StubConstants.device
+                custom["os"] = StubConstants.operatingSystem
             }
             return custom
         }

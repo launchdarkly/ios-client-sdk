@@ -768,19 +768,19 @@ final class LDClientSpec: QuickSpec {
                 }
                 context("non-Optional default value") {
                     it("returns the flag value") {
-                        expect(testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)) == DarklyServiceMock.FlagValues.bool
-                        expect(testContext.subject.intVariation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultFlagValues.int)) == DarklyServiceMock.FlagValues.int
-                        expect(testContext.subject.doubleVariation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultFlagValues.double)) == DarklyServiceMock.FlagValues.double
-                        expect(testContext.subject.stringVariation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultFlagValues.string)) == DarklyServiceMock.FlagValues.string
-                        expect(testContext.subject.jsonVariation(forKey: DarklyServiceMock.FlagKeys.array, defaultValue: DefaultFlagValues.array)) == LDValue.fromAny(DarklyServiceMock.FlagValues.array)
-                        expect(testContext.subject.jsonVariation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultFlagValues.dictionary)) == LDValue.fromAny(DarklyServiceMock.FlagValues.dictionary)
+                        expect(.bool(testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool))) == DarklyServiceMock.FlagValues.bool
+                        expect(.number(Double(testContext.subject.intVariation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultFlagValues.int)))) == DarklyServiceMock.FlagValues.int
+                        expect(.number(testContext.subject.doubleVariation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultFlagValues.double))) == DarklyServiceMock.FlagValues.double
+                        expect(.string(testContext.subject.stringVariation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultFlagValues.string))) == DarklyServiceMock.FlagValues.string
+                        expect(testContext.subject.jsonVariation(forKey: DarklyServiceMock.FlagKeys.array, defaultValue: DefaultFlagValues.array)) == DarklyServiceMock.FlagValues.array
+                        expect(testContext.subject.jsonVariation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultFlagValues.dictionary)) == DarklyServiceMock.FlagValues.dictionary
                     }
                     it("records a flag evaluation event") {
                         _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value) == LDValue.fromAny(DarklyServiceMock.FlagValues.bool)
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue) == LDValue.fromAny(DefaultFlagValues.bool)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value) == DarklyServiceMock.FlagValues.bool
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue) == .bool(DefaultFlagValues.bool)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
                     }
@@ -800,8 +800,8 @@ final class LDClientSpec: QuickSpec {
                         _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value) == LDValue.fromAny(DefaultFlagValues.bool)
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue) == LDValue.fromAny(DefaultFlagValues.bool)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value) == .bool(DefaultFlagValues.bool)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue) == .bool(DefaultFlagValues.bool)
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag).to(beNil())
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.user) == testContext.user
                     }

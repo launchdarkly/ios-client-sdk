@@ -14,32 +14,21 @@ protocol EventReporting {
 }
 
 class EventReporter: EventReporting {
-    fileprivate struct Constants {
-        static let eventQueueLabel = "com.launchdarkly.eventSyncQueue"
-    }
-
-    private let eventQueue = DispatchQueue(label: Constants.eventQueueLabel, qos: .userInitiated)
     var isOnline: Bool {
-        get { isOnlineQueue.sync { _isOnline } }
-        set {
-            isOnlineQueue.sync {
-                _isOnline = newValue
-                Log.debug(typeName(and: #function, appending: ": ") + "\(_isOnline)")
-                _isOnline ? startReporting(isOnline: _isOnline) : stopReporting()
-            }
-        }
+        get { timerQueue.sync { eventReportTimer != nil } }
+        set { timerQueue.sync { newValue ? startReporting() : stopReporting() } }
     }
 
-    private var _isOnline = false
-    private var isOnlineQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.isOnlineQueue")
     private (set) var lastEventResponseDate: Date?
 
     let service: DarklyServiceProvider
 
+    private let eventQueue = DispatchQueue(label: "com.launchdarkly.eventSyncQueue", qos: .userInitiated)
     // These fields should only be used synchronized on the eventQueue
     private(set) var eventStore: [Event] = []
     private(set) var flagRequestTracker = FlagRequestTracker()
 
+    private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
     private var eventReportTimer: TimeResponding?
     var isReportingActive: Bool { eventReportTimer != nil }
 
@@ -82,15 +71,13 @@ class EventReporter: EventReporting {
         }
     }
 
-    private func startReporting(isOnline: Bool) {
-        guard isOnline && !isReportingActive
+    private func startReporting() {
+        guard eventReportTimer == nil
         else { return }
         eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: eventQueue, execute: reportEvents)
     }
     
     private func stopReporting() {
-        guard isReportingActive
-        else { return }
         eventReportTimer?.cancel()
         eventReportTimer = nil
     }
@@ -134,7 +121,7 @@ class EventReporter: EventReporting {
 
         service.diagnosticCache?.recordEventsInLastBatch(eventsInLastBatch: toPublish.count)
 
-        DispatchQueue.main.async {
+        DispatchQueue.global().async {
             self.publish(toPublish, UUID().uuidString, completion)
         }
     }
@@ -160,7 +147,7 @@ class EventReporter: EventReporting {
             let shouldRetry = self.processEventResponse(sentEvents: events.count, response: urlResponse as? HTTPURLResponse, error: error, isRetry: false)
             if shouldRetry {
                 Log.debug("Retrying event post after delay.")
-                DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1.0) {
+                DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.0) {
                     self.service.publishEventData(eventData, payloadId) { _, urlResponse, error in
                         _ = self.processEventResponse(sentEvents: events.count, response: urlResponse as? HTTPURLResponse, error: error, isRetry: true)
                         completion?()

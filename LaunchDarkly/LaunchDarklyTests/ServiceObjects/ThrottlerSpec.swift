@@ -122,7 +122,9 @@ final class ThrottlerSpec: QuickSpec {
 
     func maxDelaySpec() {
         it("limits delay to maxDelay") {
-            let throttler = Throttler(maxDelay: 1.0)
+            let envReporter = EnvironmentReportingMock()
+            envReporter.shouldThrottleOnlineCalls = true
+            let throttler = Throttler(maxDelay: 1.0, environmentReporter: envReporter)
             (0..<10).forEach { _ in throttler.runThrottled { } }
             let callDate = Date()
             var runDate: Date?

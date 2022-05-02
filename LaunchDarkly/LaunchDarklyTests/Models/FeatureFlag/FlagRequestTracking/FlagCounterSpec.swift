@@ -186,7 +186,7 @@ extension FlagCounter {
         if flagKey.isKnown {
             featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey)
             for _ in 0..<Constants.requestCount {
-                flagCounter.trackRequest(reportedValue: LDValue.fromAny(featureFlag?.value), featureFlag: featureFlag, defaultValue: LDValue.fromAny(featureFlag?.value))
+                flagCounter.trackRequest(reportedValue: featureFlag?.value ?? .null, featureFlag: featureFlag, defaultValue: featureFlag?.value ?? .null)
             }
         } else {
             for _ in 0..<Constants.requestCount {

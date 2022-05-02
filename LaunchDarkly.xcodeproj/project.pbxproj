@@ -11,6 +11,10 @@
 		29A4C47627DA6266005B8D34 /* UserAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A4C47427DA6266005B8D34 /* UserAttribute.swift */; };
 		29A4C47727DA6266005B8D34 /* UserAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A4C47427DA6266005B8D34 /* UserAttribute.swift */; };
 		29A4C47827DA6266005B8D34 /* UserAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A4C47427DA6266005B8D34 /* UserAttribute.swift */; };
+		29F9D19E2812E005008D12C0 /* ObjcLDValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */; };
+		29F9D19F2812E005008D12C0 /* ObjcLDValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */; };
+		29F9D1A02812E005008D12C0 /* ObjcLDValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */; };
+		29F9D1A12812E005008D12C0 /* ObjcLDValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */; };
 		29FE1298280413D4008CC918 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FE1297280413D4008CC918 /* Util.swift */; };
 		29FE1299280413D4008CC918 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FE1297280413D4008CC918 /* Util.swift */; };
 		29FE129A280413D4008CC918 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FE1297280413D4008CC918 /* Util.swift */; };
@@ -311,6 +315,7 @@
 
 /* Begin PBXFileReference section */
 		29A4C47427DA6266005B8D34 /* UserAttribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserAttribute.swift; sourceTree = "<group>"; };
+		29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDValue.swift; sourceTree = "<group>"; };
 		29FE1297280413D4008CC918 /* Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
 		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
 		830DB3AB22380A3E00D65D25 /* HTTPHeadersSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeadersSpec.swift; sourceTree = "<group>"; };
@@ -610,6 +615,7 @@
 				835E1D3E1F63450A00184DB4 /* ObjcLDUser.swift */,
 				835E1D421F685AC900184DB4 /* ObjcLDChangedFlag.swift */,
 				B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */,
+				29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */,
 			);
 			path = ObjectiveC;
 			sourceTree = "<group>";
@@ -1114,6 +1120,7 @@
 				831188652113AE4600D77CB5 /* Date.swift in Sources */,
 				831188672113AE4D00D77CB5 /* Thread.swift in Sources */,
 				C443A40823145FEE00145710 /* ConnectionInformationStore.swift in Sources */,
+				29F9D1A12812E005008D12C0 /* ObjcLDValue.swift in Sources */,
 				8311885C2113AE2200D77CB5 /* HTTPHeaders.swift in Sources */,
 				831188562113AE0800D77CB5 /* FlagSynchronizer.swift in Sources */,
 				8311884A2113ADD700D77CB5 /* FeatureFlag.swift in Sources */,
@@ -1179,6 +1186,7 @@
 				29FE129A280413D4008CC918 /* Util.swift in Sources */,
 				831EF35D20655E730001C643 /* HTTPURLRequest.swift in Sources */,
 				835E4C54206BDF8D004C6E6C /* EnvironmentReporter.swift in Sources */,
+				29F9D1A02812E005008D12C0 /* ObjcLDValue.swift in Sources */,
 				8372668E20D4439600BD1088 /* DateFormatter.swift in Sources */,
 				C43C37E7238DF22C003C1624 /* LDEvaluationDetail.swift in Sources */,
 				831EF36020655E730001C643 /* Data.swift in Sources */,
@@ -1223,6 +1231,7 @@
 				C443A40F23186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
 				C443A40A2315AA4D00145710 /* NetworkReporter.swift in Sources */,
 				831D8B741F72994600ED65E8 /* FlagStore.swift in Sources */,
+				29F9D19E2812E005008D12C0 /* ObjcLDValue.swift in Sources */,
 				8358F2601F476AD800ECE1AF /* FlagChangeNotifier.swift in Sources */,
 				835E1D411F63450A00184DB4 /* ObjcLDUser.swift in Sources */,
 				83FEF8DF1F2667E4001CF12C /* EventReporter.swift in Sources */,
@@ -1320,6 +1329,7 @@
 				C443A40B2315AA4D00145710 /* NetworkReporter.swift in Sources */,
 				83D9EC892062DEAB004D7FA6 /* EventReporter.swift in Sources */,
 				83D9EC8A2062DEAB004D7FA6 /* FlagStore.swift in Sources */,
+				29F9D19F2812E005008D12C0 /* ObjcLDValue.swift in Sources */,
 				83D9EC8B2062DEAB004D7FA6 /* Log.swift in Sources */,
 				83D9EC8C2062DEAB004D7FA6 /* HTTPHeaders.swift in Sources */,
 				C443A40623145FED00145710 /* ConnectionInformationStore.swift in Sources */,

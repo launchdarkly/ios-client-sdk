@@ -13,15 +13,15 @@ public typealias LDFlagCollectionChangeHandler = ([LDFlagKey: LDChangedFlag]) ->
 public typealias LDFlagsUnchangedHandler = () -> Void
 /// A closure used to notify an observer owner that the current connection mode has changed.
 public typealias LDConnectionModeChangedHandler = (ConnectionInformation.ConnectionMode) -> Void
-/// A closure used to notify an observer owner that an error occurred during feature flag processing.
-public typealias LDErrorHandler = (Error) -> Void
 
 extension LDFlagKey {
     private static var anyKeyIdentifier: LDFlagKey { "Darkly.FlagKeyList.Any" }
     static var anyKey: [LDFlagKey] { [anyKeyIdentifier] }
 }
 
+/// An error thrown from APIs when an invalid argument is provided.
 @objc public class LDInvalidArgumentError: NSObject, Error {
+    /// A description of the error.
     public let localizedDescription: String
 
     init(_ description: String) {
@@ -42,6 +42,16 @@ struct DynamicKey: CodingKey {
     }
 }
 
+/**
+ An immutable instance of any data type that is allowed in JSON.
+
+ An `LDValue` can be a null (that is, an instance that represents a JSON null value), a boolean, a number (always
+ encoded internally as double-precision floating-point), a string, an ordered list of `LDValue` values (a JSON array),
+ or a map of strings to `LDValue` values (a JSON object).
+
+ This can be used to represent complex data in a user custom attribute, or to get a feature flag value that uses a
+ complex type or does not always use the same type.
+ */
 public enum LDValue: Codable,
                      Equatable,
                      ExpressibleByNilLiteral,
@@ -62,11 +72,17 @@ public enum LDValue: Codable,
     public typealias IntegerLiteralType = Double
     public typealias FloatLiteralType = Double
 
+    /// Represents a JSON null value.
     case null
+    /// Represents a JSON boolean value.
     case bool(Bool)
+    /// Represents a JSON number value.
     case number(Double)
+    /// Represents a JSON string value.
     case string(String)
+    /// Represents an array of JSON values.
     case array([LDValue])
+    /// Represents a JSON object.
     case object([String: LDValue])
 
     public init(nilLiteral: ()) {
@@ -148,50 +164,5 @@ public enum LDValue: Codable,
             var keyedEncoder = encoder.container(keyedBy: DynamicKey.self)
             try dictValue.forEach { try keyedEncoder.encode($1, forKey: DynamicKey(stringValue: $0)!) }
         }
-    }
-
-    func booleanValue() -> Bool {
-        if case .bool(let val) = self { return val }
-        return false
-    }
-
-    func intValue() -> Int {
-        if case .number(let val) = self {
-            // TODO check
-            return Int.init(val)
-        }
-        return 0
-    }
-
-    func doubleValue() -> Double {
-        if case .number(let val) = self { return val }
-        return 0
-    }
-
-    func stringValue() -> String {
-        if case .string(let val) = self { return val }
-        return ""
-    }
-
-    func toAny() -> Any? {
-        switch self {
-        case .null: return nil
-        case .bool(let boolValue): return boolValue
-        case .number(let doubleValue): return doubleValue
-        case .string(let stringValue): return stringValue
-        case .array(let arrayValue): return arrayValue.map { $0.toAny() }
-        case .object(let dictValue): return dictValue.mapValues { $0.toAny() }
-        }
-    }
-
-    static func fromAny(_ value: Any?) -> LDValue {
-        guard let value = value, !(value is NSNull)
-        else { return .null }
-        if let boolValue = value as? Bool { return .bool(boolValue) }
-        if let numValue = value as? NSNumber { return .number(Double(truncating: numValue)) }
-        if let stringValue = value as? String { return .string(stringValue) }
-        if let arrayValue = value as? [Any?] { return .array(arrayValue.map { LDValue.fromAny($0) }) }
-        if let dictValue = value as? [String: Any?] { return .object(dictValue.mapValues { LDValue.fromAny($0) }) }
-        return .null
     }
 }

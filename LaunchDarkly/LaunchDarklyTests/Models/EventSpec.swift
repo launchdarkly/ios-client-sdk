@@ -85,7 +85,7 @@ final class EventSpec: XCTestCase {
             XCTAssertEqual(dict["previousKey"], "def")
             XCTAssertEqual(dict["contextKind"], "user")
             XCTAssertEqual(dict["previousContextKind"], "anonymousUser")
-            XCTAssertEqual(dict["creationDate"], LDValue.fromAny(event.creationDate.millisSince1970))
+            XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
         }
     }
 
@@ -99,7 +99,7 @@ final class EventSpec: XCTestCase {
             XCTAssertEqual(dict["data"], ["abc", 12])
             XCTAssertEqual(dict["metricValue"], 0.5)
             XCTAssertEqual(dict["userKey"], .string(user.key))
-            XCTAssertEqual(dict["creationDate"], LDValue.fromAny(event.creationDate.millisSince1970))
+            XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
         }
     }
 
@@ -113,7 +113,7 @@ final class EventSpec: XCTestCase {
             XCTAssertEqual(dict["data"], ["key": "val"])
             XCTAssertEqual(dict["userKey"], .string(anonUser.key))
             XCTAssertEqual(dict["contextKind"], "anonymousUser")
-            XCTAssertEqual(dict["creationDate"], LDValue.fromAny(event.creationDate.millisSince1970))
+            XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
         }
     }
 
@@ -126,7 +126,7 @@ final class EventSpec: XCTestCase {
             XCTAssertEqual(dict["key"], "event-key")
             XCTAssertEqual(dict["metricValue"], 2.5)
             XCTAssertEqual(dict["user"], encodeToLDValue(user))
-            XCTAssertEqual(dict["creationDate"], LDValue.fromAny(event.creationDate.millisSince1970))
+            XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
         }
     }
 
@@ -148,7 +148,7 @@ final class EventSpec: XCTestCase {
                 } else {
                     XCTAssertEqual(dict["userKey"], .string(user.key))
                 }
-                XCTAssertEqual(dict["creationDate"], LDValue.fromAny(event.creationDate.millisSince1970))
+                XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
             }
         }
     }
@@ -172,7 +172,7 @@ final class EventSpec: XCTestCase {
                 } else {
                     XCTAssertEqual(dict["userKey"], .string(user.key))
                 }
-                XCTAssertEqual(dict["creationDate"], LDValue.fromAny(event.creationDate.millisSince1970))
+                XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
             }
         }
     }
@@ -194,7 +194,7 @@ final class EventSpec: XCTestCase {
                 } else {
                     XCTAssertEqual(dict["userKey"], .string(user.key))
                 }
-                XCTAssertEqual(dict["creationDate"], LDValue.fromAny(event.creationDate.millisSince1970))
+                XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
             }
         }
     }
@@ -215,7 +215,7 @@ final class EventSpec: XCTestCase {
                     XCTAssertEqual(dict["userKey"], .string(user.key))
                     XCTAssertEqual(dict["contextKind"], "anonymousUser")
                 }
-                XCTAssertEqual(dict["creationDate"], LDValue.fromAny(event.creationDate.millisSince1970))
+                XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
             }
         }
     }
@@ -246,7 +246,7 @@ final class EventSpec: XCTestCase {
                 XCTAssertEqual(dict["kind"], "identify")
                 XCTAssertEqual(dict["key"], .string(user.key))
                 XCTAssertEqual(dict["user"], encodeToLDValue(user))
-                XCTAssertEqual(dict["creationDate"], LDValue.fromAny(event.creationDate.millisSince1970))
+                XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
             }
         }
     }
@@ -260,8 +260,8 @@ final class EventSpec: XCTestCase {
         encodesToObject(event) { dict in
             XCTAssertEqual(dict.count, 4)
             XCTAssertEqual(dict["kind"], "summary")
-            XCTAssertEqual(dict["startDate"], LDValue.fromAny(flagRequestTracker.startDate.millisSince1970))
-            XCTAssertEqual(dict["endDate"], LDValue.fromAny(event.endDate.millisSince1970))
+            XCTAssertEqual(dict["startDate"], .number(Double(flagRequestTracker.startDate.millisSince1970)))
+            XCTAssertEqual(dict["endDate"], .number(Double(event.endDate.millisSince1970)))
             valueIsObject(dict["features"]) { features in
                 XCTAssertEqual(features.count, 1)
                 let counter = FlagCounter()

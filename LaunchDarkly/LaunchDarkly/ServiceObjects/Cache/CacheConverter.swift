@@ -36,6 +36,17 @@ final class CacheConverter: CacheConverting {
 
     init() { }
 
+    private func convertValue(_ value: Any?) -> LDValue {
+        guard let value = value, !(value is NSNull)
+        else { return .null }
+        if let boolValue = value as? Bool { return .bool(boolValue) }
+        if let numValue = value as? NSNumber { return .number(Double(truncating: numValue)) }
+        if let stringValue = value as? String { return .string(stringValue) }
+        if let arrayValue = value as? [Any?] { return .array(arrayValue.map { convertValue($0) }) }
+        if let dictValue = value as? [String: Any?] { return .object(dictValue.mapValues { convertValue($0) }) }
+        return .null
+    }
+
     private func convertV6Data(v6cache: KeyedValueCaching, flagCaches: [MobileKey: FeatureFlagCaching]) {
         guard let cachedV6Data = v6cache.dictionary(forKey: "com.launchDarkly.cachedUserEnvironmentFlags")
         else { return }
@@ -62,13 +73,13 @@ final class CacheConverter: CacheConverting {
                     guard let flagDict = flagDict as? [String: Any]
                     else { return }
                     let flag = FeatureFlag(flagKey: flagKey,
-                                           value: LDValue.fromAny(flagDict["value"]),
+                                           value: convertValue(flagDict["value"]),
                                            variation: flagDict["variation"] as? Int,
                                            version: flagDict["version"] as? Int,
                                            flagVersion: flagDict["flagVersion"] as? Int,
                                            trackEvents: flagDict["trackEvents"] as? Bool ?? false,
                                            debugEventsUntilDate: Date(millisSince1970: flagDict["debugEventsUntilDate"] as? Int64),
-                                           reason: (flagDict["reason"] as? [String: Any])?.mapValues { LDValue.fromAny($0) },
+                                           reason: (flagDict["reason"] as? [String: Any])?.mapValues { convertValue($0) },
                                            trackReason: flagDict["trackReason"] as? Bool ?? false)
                     userEnvFlags[flagKey] = flag
                 }

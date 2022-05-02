@@ -11,43 +11,6 @@ import Foundation
 public final class ObjcLDUser: NSObject {
     var user: LDUser
 
-    /// LDUser secondary attribute used to make `secondary` private
-    @objc public class var attributeSecondary: String {
-        LDUser.CodingKeys.secondary.rawValue
-    }
-    /// LDUser name attribute used to make `name` private
-    @objc public class var attributeName: String {
-        LDUser.CodingKeys.name.rawValue
-    }
-    /// LDUser firstName attribute used to make `firstName` private
-    @objc public class var attributeFirstName: String {
-        LDUser.CodingKeys.firstName.rawValue
-    }
-    /// LDUser lastName attribute used to make `lastName` private
-    @objc public class var attributeLastName: String {
-        LDUser.CodingKeys.lastName.rawValue
-    }
-    /// LDUser country attribute used to make `country` private
-    @objc public class var attributeCountry: String {
-        LDUser.CodingKeys.country.rawValue
-    }
-    /// LDUser ipAddress attribute used to make `ipAddress` private
-    @objc public class var attributeIPAddress: String {
-        LDUser.CodingKeys.ipAddress.rawValue
-    }
-    /// LDUser email attribute used to make `email` private
-    @objc public class var attributeEmail: String {
-        LDUser.CodingKeys.email.rawValue
-    }
-    /// LDUser avatar attribute used to make `avatar` private
-    @objc public class var attributeAvatar: String {
-        LDUser.CodingKeys.avatar.rawValue
-    }
-    /// LDUser custom attribute used to make `custom` private
-    @objc public class var attributeCustom: String {
-        LDUser.CodingKeys.custom.rawValue
-    }
-
     /// Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
     @objc public var key: String {
         return user.key
@@ -92,10 +55,10 @@ public final class ObjcLDUser: NSObject {
         get { user.avatar }
         set { user.avatar = newValue }
     }
-    /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device & operatingSystem (which cannot be made private). See `privateAttributes` for details. (Default: nil)
-    @objc public var custom: [String: Any] {
-        get { user.custom.mapValues { $0.toAny() as Any } }
-        set { user.custom = newValue.mapValues { LDValue.fromAny($0) } }
+    /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private. See `privateAttributes` for details.
+    @objc public var custom: [String: ObjcLDValue] {
+        get { user.custom.mapValues { ObjcLDValue(wrappedValue: $0) } }
+        set { user.custom = newValue.mapValues { $0.wrappedValue } }
     }
     /// Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. isAnonymous cannot be made private. (Default: YES)
     @objc public var isAnonymous: Bool {
@@ -108,7 +71,7 @@ public final class ObjcLDUser: NSObject {
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     This attribute is ignored if `ObjcLDConfig.allUserAttributesPrivate` is YES. Combined with `ObjcLDConfig.privateUserAttributes`. The SDK considers attributes appearing in either list as private. Client apps may define attributes found in `privatizableAttributes` and top level `custom` dictionary keys here. (Default: nil)
+     This attribute is ignored if `ObjcLDConfig.allUserAttributesPrivate` is YES. Combined with `ObjcLDConfig.privateUserAttributes`. The SDK considers attributes appearing in either list as private. Client apps may define attributes found in `privatizableAttributes` and top level `custom` dictionary keys here. (Default: `[]`])
 
      See Also: `ObjcLDConfig.allUserAttributesPrivate` and `ObjcLDConfig.privateUserAttributes`.
 

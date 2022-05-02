@@ -1,7 +1,8 @@
 import Foundation
 
 /**
- Collects the elements of a feature flag that changed as a result of a `clientstream` update or feature flag request.
+ Collects the elements of a feature flag that changed as a result of the SDK receiving an update.
+
  The SDK will pass a LDChangedFlag or a collection of LDChangedFlags into feature flag observer closures. See
  `LDClient.observe(key:owner:handler:)`, `LDClient.observe(keys:owner:handler:)`, and
  `LDClient.observeAll(owner:handler:)` for more details.

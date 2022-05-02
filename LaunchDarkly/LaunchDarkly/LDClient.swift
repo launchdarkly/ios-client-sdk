@@ -17,22 +17,22 @@ enum LDClientRunMode {
 
 ### Getting Feature Flags
  Once the LDClient has started, it makes your feature flags available using the `variation` and `variationDetail` methods. A `variation` is a specific flag value. For example a boolean feature flag has 2 variations, `true` and `false`. You can create feature flags with more than 2 variations using other feature flag types.
- ````
- let boolFlag = LDClient.get()?.variation(forKey: "my-bool-flag", defaultValue: false)
- ````
+ ```
+ let boolFlag = LDClient.get()?.boolVariation(forKey: "my-bool-flag", defaultValue: false)
+ ```
  If you need to know more information about why a given value is returned, use `variationDetail`.
 
- See `variation(forKey: defaultValue:)` or `variationDetail(forKey: defaultValue:)` for details
+ See `boolVariation(forKey: defaultValue:)` or `boolVariationDetail(forKey: defaultValue:)` for details
 
 ### Observing Feature Flags
  You might need to know when a feature flag value changes. This is not required, you can check the flag's value when you need it.
 
  If you want to know when a feature flag value changes, you can check the flag's value. You can also use one of several `observe` methods to have the LDClient notify you when a change occurs. There are several options--you can set up notificiations based on when a specific flag changes, when any flag in a collection changes, or when a flag doesn't change.
- ````
+ ```
  LDClient.get()?.observe("flag-key", owner: self, observer: { [weak self] (changedFlag) in
     self?.updateFlag(key: "flag-key", changedFlag: changedFlag)
  }
- ````
+ ```
  The `changedFlag` passed in to the closure contains the old and new value of the flag.
  */
 public class LDClient {
@@ -268,9 +268,9 @@ public class LDClient {
      
      Normally, the client app should create and set the LDUser and pass that into `start(config: user: completion:)`.
      
-     The client app can change the active `user` by calling identify with a new or updated LDUser. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information. If the client app does not create a LDUser, LDClient creates an anonymous default user, which can affect the feature flags delivered to the LDClient.
+     The client app can change the active `user` by calling identify with a new or updated LDUser. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
      
-     When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). To change both the `config` and `user`, set the LDClient offline, set both properties, then set the LDClient online. A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.
+     When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.
 
      - parameter user: The LDUser set with the desired user.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
@@ -318,13 +318,7 @@ public class LDClient {
 
     private let internalIdentifyQueue: DispatchQueue = DispatchQueue(label: "InternalIdentifyQueue")
 
-    /**
-     Returns a dictionary with the flag keys and their values. If the LDClient is not started, returns nil.
-
-     The dictionary will not contain feature flags from the server with null values.
-
-     LDClient will not provide any source or change information, only flag keys and flag values. The client app should convert the feature flag value into the desired type.
-    */
+    /// Returns a dictionary with the flag keys and their values. If the `LDClient` is not started, returns `nil`.
     public var allFlags: [LDFlagKey: LDValue]? {
         guard hasStarted
         else { return nil }
@@ -340,17 +334,15 @@ public class LDClient {
 
      The SDK executes handlers on the main thread.
 
-     LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See `variation(forKey: defaultValue:)` for details about the SDK and feature flag types.
-
      SeeAlso: `LDChangedFlag` and `stopObserving(owner:)`
 
      ### Usage
-     ````
+     ```
      LDClient.get()?.observe("flag-key", owner: self) { [weak self] (changedFlag) in
-        if let newValue = changedFlag.newValue as? Bool {
-            //do something with the newValue
+        if let .bool(newValue) = changedFlag.newValue {
+            // do something with the newValue
         }
-     ````
+     ```
 
      - parameter key: The LDFlagKey for the flag to observe.
      - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
@@ -368,19 +360,17 @@ public class LDClient {
 
      The SDK executes handlers on the main thread.
 
-     LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See `variation(forKey: defaultValue:)` for details about the SDK and feature flag types.
-
      SeeAlso: `LDChangedFlag` and `stopObserving(owner:)`
 
      ### Usage
-     ````
+     ```
      LDClient.get()?.observe(flagKeys, owner: self) { [weak self] (changedFlags) in     // changedFlags is a [LDFlagKey: LDChangedFlag]
         //There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.
         if let someChangedFlag = changedFlags["some-flag-key"] {    // someChangedFlag is a LDChangedFlag
             //do something with someChangedFlag
          }
      }
-     ````
+     ```
 
      - parameter keys: An array of LDFlagKeys for the flags to observe.
      - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
@@ -398,19 +388,17 @@ public class LDClient {
 
      The SDK executes handlers on the main thread.
 
-     LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See `variation(forKey: defaultValue:)` for details about the SDK and feature flag types.
-
      SeeAlso: `LDChangedFlag` and `stopObserving(owner:)`
 
      ### Usage
-     ````
+     ```
      LDClient.get()?.observeAll(owner: self) { [weak self] (changedFlags) in     // changedFlags is a [LDFlagKey: LDChangedFlag]
         //There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.
         if let someChangedFlag = changedFlags["some-flag-key"] {    // someChangedFlag is a LDChangedFlag
             //do something with someChangedFlag
         }
      }
-     ````
+     ```
 
      - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
@@ -432,12 +420,12 @@ public class LDClient {
      SeeAlso: `stopObserving(owner:)`
 
      ### Usage
-     ````
+     ```
      LDClient.get()?.observeFlagsUnchanged(owner: self) { [weak self] in
          // Do something after an update was received that did not update any flag values.
          //The closure will be called once on the main thread after the update.
      }
-     ````
+     ```
 
      - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDFlagsUnchangedHandler the SDK will execute 1 time when a flag request completes with no flags changed.
@@ -457,11 +445,11 @@ public class LDClient {
      SeeAlso: `stopObserving(owner:)`
      
      ### Usage
-     ````
+     ```
      LDClient.get()?.observeCurrentConnectionMode(owner: self) { [weak self] in
         //do something after ConnectionMode was updated.
      }
-     ````
+     ```
      
      - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDConnectionModeChangedHandler the SDK will execute 1 time when ConnectionInformation.currentConnectionMode is changed.
@@ -528,18 +516,18 @@ public class LDClient {
     /**
      Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called `track`, the app cannot remove the event from the event store.
 
-     LDClient periodically transmits events to LaunchDarkly based on the frequency set in LDConfig.eventFlushInterval. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.
+     LDClient periodically transmits events to LaunchDarkly based on the frequency set in `LDConfig.eventFlushInterval`. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.
 
      Once the SDK's event store is full, the SDK discards events until they can be reported to LaunchDarkly. Configure the size of the event store using `eventCapacity` on the `config`. See `LDConfig` for details.
 
      ### Usage
-     ````
-     let appEventData = ["some-custom-key: "some-custom-value", "another-custom-key": 7]
+     ```
+     let appEventData: LDValue = ["some-custom-key: "some-custom-value", "another-custom-key": 7]
      LDClient.get()?.track(key: "app-event-key", data: appEventData)
-     ````
+     ```
 
-     - parameter key: The key for the event. The SDK does nothing with the key, which can be any string the client app sends
-     - parameter data: The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)
+     - parameter key: The key for the event.
+     - parameter data: The data for the event. (Optional)
      - parameter metricValue: A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field will also be returned as part of the custom event for Data Export. (Optional)
     */
     public func track(key: String, data: LDValue? = nil, metricValue: Double? = nil) {
@@ -685,11 +673,9 @@ public class LDClient {
                     }
                 }
             }
-            DispatchQueue.global().asyncAfter(deadline: .now() + startWaitSeconds) {
-                internalCompletedQueue.async {
-                    if completed {
-                        completion?(completed)
-                    }
+            internalCompletedQueue.asyncAfter(deadline: .now() + startWaitSeconds) {
+                if completed {
+                    completion?(completed)
                 }
             }
         }
@@ -699,7 +685,6 @@ public class LDClient {
      Returns the LDClient instance for a given environment.
 
      - parameter environment: The name of an environment provided in LDConfig.secondaryMobileKeys, defaults to `LDConfig.Constants.primaryEnvironmentName` which is always associated with the `LDConfig.mobileKey` environment.
-
      - returns: The requested LDClient instance.
      */
     public static func get(environment: String = LDConfig.Constants.primaryEnvironmentName) -> LDClient? {
