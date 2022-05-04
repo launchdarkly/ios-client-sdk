@@ -10,4 +10,4 @@ curl --user ${CIRCLE_TOKEN}: \
      --request POST \
      --form config=@.circleci/config.yml \
      --form notify=false \
-        https://circleci.com/api/v1.1/project/github/launchdarkly/ios-swift-client-sdk-private/tree/master
+        https://circleci.com/api/v1.1/project/github/launchdarkly/ios-swift-client-sdk-private/tree/main

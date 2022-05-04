@@ -110,7 +110,7 @@ jobs:
           - run:
               name: CocoaPods spec lint
               command: |
-                if [ "$CIRCLE_BRANCH" = 'master' ]; then
+                if [ "$CIRCLE_BRANCH" = 'main' ]; then
                   pod spec lint
                 else
                   pod lib lint

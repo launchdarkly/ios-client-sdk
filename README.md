@@ -1,7 +1,7 @@
 LaunchDarkly SDK for iOS
 ========================
 
-[![CircleCI](https://circleci.com/gh/launchdarkly/ios-client-sdk/tree/master.svg?style=shield)](https://circleci.com/gh/launchdarkly/ios-client-sdk)
+[![CircleCI](https://circleci.com/gh/launchdarkly/ios-client-sdk/tree/v6.svg?style=shield)](https://circleci.com/gh/launchdarkly/ios-client-sdk)
 [![SwiftPM compatible](https://img.shields.io/badge/SwiftPM-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
 [![CocoaPods compatible](https://img.shields.io/cocoapods/v/LaunchDarkly.svg)](https://cocoapods.org/pods/LaunchDarkly)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
