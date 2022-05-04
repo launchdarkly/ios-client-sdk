@@ -1,10 +1,3 @@
-//
-//  FlagChangeNotifier.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 // sourcery: autoMockable
@@ -97,7 +90,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         }
 
         let changedFlags = [LDFlagKey: LDChangedFlag](uniqueKeysWithValues: changedFlagKeys.map {
-            ($0, LDChangedFlag(key: $0, oldValue: oldFlags[$0]?.value, newValue: newFlags[$0]?.value))
+            ($0, LDChangedFlag(key: $0, oldValue: oldFlags[$0]?.value ?? .null, newValue: newFlags[$0]?.value ?? .null))
         })
         Log.debug(typeName(and: #function) + "notifying observers for changes to flags: \(changedFlags.keys.joined(separator: ", ")).")
         selectedObservers.forEach { observer in
@@ -120,12 +113,15 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     }
 
     private func findChangedFlagKeys(oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag]) -> [LDFlagKey] {
-        oldFlags.symmetricDifference(newFlags) // symmetricDifference tests for equality, which includes version. Exclude version here.
-            .filter {
-                guard let old = oldFlags[$0], let new = newFlags[$0]
-                else { return true }
-                return !(old.variation == new.variation && AnyComparer.isEqual(old.value, to: new.value))
+        let oldKeys = Set(oldFlags.keys)
+        let newKeys = Set(newFlags.keys)
+        let newOrDeletedKeys = oldKeys.symmetricDifference(newKeys)
+        let updatedKeys = oldKeys.intersection(newKeys).filter { possibleUpdatedKey in
+            guard let old = oldFlags[possibleUpdatedKey], let new = newFlags[possibleUpdatedKey]
+            else { return true }
+            return old.variation != new.variation || old.value != new.value
         }
+        return newOrDeletedKeys.union(updatedKeys).sorted()
     }
 }
 

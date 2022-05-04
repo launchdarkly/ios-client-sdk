@@ -1,10 +1,3 @@
-//
-//  DarklyServiceMock.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import Quick
 import Nimble
@@ -24,28 +17,21 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let null = "null-flag"
         static let unknown = "unknown-flag"
 
-        static var knownFlags: [LDFlagKey] {        // known means the SDK has the feature flag value
+        static var knownFlags: [LDFlagKey] {
             [bool, int, double, string, array, dictionary, null]
-        }
-        static var flagsWithAnAlternateValue: [LDFlagKey] {
-            [bool, int, double, string, array, dictionary]
         }
     }
 
     struct FlagValues {
-        static let bool = true
-        static let int = 7
-        static let double = 3.14159
-        static let string = "string value"
-        static let array = [1, 2, 3]
-        static let dictionary: [String: Any] = ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]
-        static let null = NSNull()
+        static let bool: LDValue = true
+        static let int: LDValue = 7
+        static let double: LDValue = 3.14159
+        static let string: LDValue = "string value"
+        static let array: LDValue = [1, 2, 3]
+        static let dictionary: LDValue = ["sub-flag-a": false, "sub-flag-b": 3, "sub-flag-c": 2.71828]
+        static let null: LDValue = nil
 
-        static var knownFlags: [Any] {
-            [bool, int, double, string, array, dictionary, null]
-        }
-
-        static func value(from flagKey: LDFlagKey) -> Any? {
+        static func value(from flagKey: LDFlagKey) -> LDValue {
             switch flagKey {
             case FlagKeys.bool: return FlagValues.bool
             case FlagKeys.int: return FlagValues.int
@@ -57,36 +43,9 @@ final class DarklyServiceMock: DarklyServiceProvider {
             default: return nil
             }
         }
-
-        static func alternateValue(from flagKey: LDFlagKey) -> Any? {
-            alternate(value(from: flagKey))
-        }
-
-        static func alternate<T>(_ value: T) -> T {
-            switch value {
-            case let value as Bool: return !value as! T
-            case let value as Int: return value + 1 as! T
-            case let value as Double: return value + 1.0 as! T
-            case let value as String: return value + "-alternate" as! T
-            case var value as [Any]:
-                value.append(4)
-                return value as! T  // Not sure why, but this crashes if you combine append the value into the return
-            case var value as [String: Any]:
-                value["new-flag"] = "new-value"
-                return value as! T
-            default: return value
-            }
-        }
     }
 
     struct Constants {
-        static var streamData: Data {
-            let featureFlags = stubFeatureFlags(includeNullValue: false)
-            let featureFlagDictionaries = featureFlags.dictionaryValue
-            let eventStreamString = "event: put\ndata:\(featureFlagDictionaries.jsonString!)"
-
-            return eventStreamString.data(using: .utf8)!
-        }
         static let error = NSError(domain: NSURLErrorDomain, code: Int(CFNetworkErrors.cfurlErrorResourceUnavailable.rawValue), userInfo: nil)
         static let jsonErrorString = "Bad json data"
         static let errorData = jsonErrorString.data(using: .utf8)!
@@ -98,101 +57,39 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let mockEventsUrl = URL(string: "https://dummy.events.com")!
         static let mockStreamUrl = URL(string: "https://dummy.stream.com")!
 
-        static let stubNameFlag = "Flag Request Stub"
-        static let stubNameStream = "Stream Connect Stub"
-        static let stubNameEvent = "Event Report Stub"
-        static let stubNameDiagnostic = "Diagnostic Report Stub"
-
         static let variation = 2
         static let version = 4
         static let flagVersion = 3
         static let trackEvents = true
         static let debugEventsUntilDate = Date().addingTimeInterval(30.0)
-        static let reason = Optional(["kind": "OFF"])
+        static let reason: [String: LDValue] = ["kind": "OFF"]
         
-        static func stubFeatureFlags(includeNullValue: Bool = true,
-                                     includeVariations: Bool = true,
-                                     includeVersions: Bool = true,
-                                     includeFlagVersions: Bool = true,
-                                     alternateVariationNumber: Bool = true,
-                                     bumpFlagVersions: Bool = false,
-                                     alternateValuesForKeys alternateValueKeys: [LDFlagKey] = [],
-                                     trackEvents: Bool? = true,
-                                     debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0)) -> [LDFlagKey: FeatureFlag] {
-
-            let flagKeys = includeNullValue ? FlagKeys.knownFlags : FlagKeys.flagsWithAnAlternateValue
+        static func stubFeatureFlags(debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0)) -> [LDFlagKey: FeatureFlag] {
+            let flagKeys = FlagKeys.knownFlags
             let featureFlagTuples = flagKeys.map { flagKey in
-                (flagKey, stubFeatureFlag(for: flagKey,
-                                          includeVariation: includeVariations,
-                                          includeVersion: includeVersions,
-                                          includeFlagVersion: includeFlagVersions,
-                                          useAlternateValue: useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
-                                          useAlternateVersion: bumpFlagVersions && useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
-                                          useAlternateFlagVersion: bumpFlagVersions && useAlternateValue(for: flagKey, alternateValueKeys: alternateValueKeys),
-                                          useAlternateVariationNumber: alternateVariationNumber,
-                                          trackEvents: trackEvents,
-                                          debugEventsUntilDate: debugEventsUntilDate))
+                (flagKey, stubFeatureFlag(for: flagKey, debugEventsUntilDate: debugEventsUntilDate))
             }
 
             return Dictionary(uniqueKeysWithValues: featureFlagTuples)
         }
 
-        private static func useAlternateValue(for flagKey: LDFlagKey, alternateValueKeys: [LDFlagKey]) -> Bool {
-            alternateValueKeys.contains(flagKey)
-        }
-
-        private static func value(for flagKey: LDFlagKey, useAlternateValue: Bool) -> Any? {
-            useAlternateValue ? FlagValues.alternateValue(from: flagKey) : FlagValues.value(from: flagKey)
-        }
-
-        private static func variation(for flagKey: LDFlagKey, includeVariation: Bool, useAlternateValue: Bool) -> Int? {
-            guard includeVariation
-            else { return nil }
-            return useAlternateValue ? variation + 1 : variation
-        }
-
-        private static func variation(for flagKey: LDFlagKey, includeVariation: Bool) -> Int? {
-            guard includeVariation
-            else { return nil }
-            return variation
-        }
-
-        private static func version(for flagKey: LDFlagKey, includeVersion: Bool, useAlternateVersion: Bool) -> Int? {
-            guard includeVersion
-            else { return nil }
+        private static func version(for flagKey: LDFlagKey, useAlternateVersion: Bool) -> Int? {
             return useAlternateVersion ? version + 1 : version
         }
 
-        private static func flagVersion(for flagKey: LDFlagKey, includeFlagVersion: Bool, useAlternateFlagVersion: Bool) -> Int? {
-            guard includeFlagVersion
-            else { return nil }
-            return useAlternateFlagVersion ? flagVersion + 1 : flagVersion
-        }
-        private static func reason(includeEvaluationReason: Bool) -> [String: Any]? {
-            includeEvaluationReason ? reason : nil
-        }
-
         static func stubFeatureFlag(for flagKey: LDFlagKey,
-                                    includeVariation: Bool = true,
-                                    includeVersion: Bool = true,
-                                    includeFlagVersion: Bool = true,
-                                    useAlternateValue: Bool = false,
                                     useAlternateVersion: Bool = false,
-                                    useAlternateFlagVersion: Bool = false,
-                                    useAlternateVariationNumber: Bool = true,
-                                    trackEvents: Bool? = true,
-                                    debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0),
-                                    includeEvaluationReason: Bool = false,
-                                    includeTrackReason: Bool = false) -> FeatureFlag {
+                                    trackEvents: Bool = true,
+                                    debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0)) -> FeatureFlag {
             FeatureFlag(flagKey: flagKey,
-                        value: value(for: flagKey, useAlternateValue: useAlternateValue),
-                         variation: useAlternateVariationNumber ? variation(for: flagKey, includeVariation: includeVariation, useAlternateValue: useAlternateValue) : variation(for: flagKey, includeVariation: includeVariation),
-                         version: version(for: flagKey, includeVersion: includeVersion, useAlternateVersion: useAlternateValue || useAlternateVersion),
-                         flagVersion: flagVersion(for: flagKey, includeFlagVersion: includeFlagVersion, useAlternateFlagVersion: useAlternateValue || useAlternateFlagVersion),
-                         trackEvents: trackEvents,
-                         debugEventsUntilDate: debugEventsUntilDate,
-                         reason: reason(includeEvaluationReason: includeEvaluationReason),
-                         trackReason: includeTrackReason)
+                        value: FlagValues.value(from: flagKey),
+                        variation: variation,
+                        version: version(for: flagKey, useAlternateVersion: useAlternateVersion),
+                        flagVersion: flagVersion,
+                        trackEvents: trackEvents,
+                        debugEventsUntilDate: debugEventsUntilDate,
+                        reason: nil,
+                        trackReason: false)
         }
     }
 
@@ -237,17 +134,11 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
     
     var stubbedEventResponse: ServiceResponse?
-    var publishEventDictionariesCallCount = 0
-    var publishedEventDictionaries: [[String: Any]]?
-    var publishedEventDictionaryKeys: [String]? {
-        publishedEventDictionaries?.compactMap { $0.eventKey }
-    }
-    var publishedEventDictionaryKinds: [Event.Kind]? {
-        publishedEventDictionaries?.compactMap { $0.eventKind }
-    }
-    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?) {
-        publishEventDictionariesCallCount += 1
-        publishedEventDictionaries = eventDictionaries
+    var publishEventDataCallCount = 0
+    var publishedEventData: Data?
+    func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?) {
+        publishEventDataCallCount += 1
+        publishedEventData = eventData
         completion?(stubbedEventResponse ?? (nil, nil, nil))
     }
 
@@ -287,7 +178,7 @@ extension DarklyServiceMock {
                          flagResponseEtag: String? = nil,
                          onActivation activate: ((URLRequest) -> Void)? = nil) {
         let stubbedFeatureFlags = featureFlags ?? Constants.stubFeatureFlags()
-        let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ? stubbedFeatureFlags.dictionaryValue.jsonData! : Data()
+        let responseData = statusCode == HTTPURLResponse.StatusCodes.ok ? try! JSONEncoder().encode(stubbedFeatureFlags) : Data()
         let stubResponse: HTTPStubsResponseBlock = { _ in
             var headers: [String: String] = [:]
             if let flagResponseEtag = flagResponseEtag {
@@ -307,8 +198,7 @@ extension DarklyServiceMock {
     func stubFlagResponse(statusCode: Int, badData: Bool = false, responseOnly: Bool = false, errorOnly: Bool = false, responseDate: Date? = nil) {
         let response = HTTPURLResponse(url: config.baseUrl, statusCode: statusCode, httpVersion: Constants.httpVersion, headerFields: HTTPURLResponse.dateHeader(from: responseDate))
         if statusCode == HTTPURLResponse.StatusCodes.ok {
-            let flagData = try? JSONSerialization.data(withJSONObject: Constants.stubFeatureFlags(includeNullValue: false).dictionaryValue,
-                                                       options: [])
+            let flagData = try? JSONEncoder().encode(Constants.stubFeatureFlags())
             stubbedFlagResponse = (flagData, response, nil)
             if badData {
                 stubbedFlagResponse = (Constants.errorData, response, nil)
@@ -326,32 +216,7 @@ extension DarklyServiceMock {
     }
 
     func flagStubName(statusCode: Int, useReport: Bool) -> String {
-        "\(Constants.stubNameFlag) using method \(useReport ? URLRequest.HTTPMethods.report : URLRequest.HTTPMethods.get) with response status code \(statusCode)"
-    }
-
-    // MARK: Stream
-
-    var streamHost: String? {
-        config.streamUrl.host
-    }
-    var getStreamRequestStubTest: HTTPStubsTestBlock {
-        isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodGET()
-    }
-    var reportStreamRequestStubTest: HTTPStubsTestBlock {
-        isScheme(Constants.schemeHttps) && isHost(streamHost!) && isMethodREPORT()
-    }
-
-    /// Use when testing requires the mock service to actually make an event source connection request
-    func stubStreamRequest(useReport: Bool, success: Bool, onActivation activate: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void)? = nil) {
-        var stubResponse: HTTPStubsResponseBlock = { _ in
-            HTTPStubsResponse(error: Constants.error)
-        }
-        if success {
-            stubResponse = { _ in
-                HTTPStubsResponse(data: Constants.streamData, statusCode: Int32(HTTPURLResponse.StatusCodes.ok), headers: nil)
-            }
-        }
-        stubRequest(passingTest: useReport ? reportStreamRequestStubTest : getStreamRequestStubTest, stub: stubResponse, name: Constants.stubNameStream, onActivation: activate)
+        "Flag request stub using method \(useReport ? URLRequest.HTTPMethods.report : URLRequest.HTTPMethods.get) with response status code \(statusCode)"
     }
 
     // MARK: Publish Event
@@ -370,7 +235,7 @@ extension DarklyServiceMock {
         } : { _ in
             HTTPStubsResponse(error: Constants.error)
         }
-        stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameEvent) { request, _, _ in
+        stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: "Event report stub") { request, _, _ in
             activate?(request)
         }
     }
@@ -407,7 +272,7 @@ extension DarklyServiceMock {
         } : { _ in
             HTTPStubsResponse(error: Constants.error)
         }
-        stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: Constants.stubNameDiagnostic, onActivation: activate)
+        stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: "Diagnostic report stub", onActivation: activate)
     }
 
     // MARK: Stub

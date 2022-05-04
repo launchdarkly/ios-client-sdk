@@ -1,24 +1,9 @@
-//
-//  DiagnosticEventSpec.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2020 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
-import XCTest
 import Quick
 import Nimble
 @testable import LaunchDarkly
 
 final class DiagnosticEventSpec: QuickSpec {
-
-    // We test against plist as well as JSON. Originally we were going to use plist for
-    // the device cache and JSON on the wire, but JSON encoding is faster and smaller
-    // than plist. Leaving testing against it for now.
-    private let testEncoders: [(String, CodingScheme)] =
-        [("JSON", CodingScheme(JSONEncoder(), JSONDecoder())),
-         ("plist", CodingScheme(PropertyListEncoder(), PropertyListDecoder()))]
 
     override func spec() {
         diagnosticIdSpec()
@@ -58,56 +43,58 @@ final class DiagnosticEventSpec: QuickSpec {
             }
         }
         context("DiagnosticId encoding") {
-            for (desc, scheme) in testEncoders {
-                context("using \(desc) encoding") {
-                    it("encodes correct values to keys") {
-                        let uuid = UUID().uuidString
-                        let diagnosticId = DiagnosticId(diagnosticId: uuid, sdkKey: "this_is_a_fake_key")
-                        let decoded = self.loadAndRestoreRaw(scheme, diagnosticId)
-                        expect(decoded.count) == 2
-                        expect((decoded["diagnosticId"] as! String)) == uuid
-                        expect((decoded["sdkKeySuffix"] as! String)) == "ke_key"
-                    }
-                    it("can load and restore through codable protocol") {
-                        let uuid = UUID().uuidString
-                        let diagnosticId = DiagnosticId(diagnosticId: uuid, sdkKey: "this_is_a_fake_key")
-                        let decoded = self.loadAndRestore(scheme, diagnosticId)
-                        expect(decoded?.diagnosticId) == diagnosticId.diagnosticId
-                        expect(decoded?.sdkKeySuffix) == diagnosticId.sdkKeySuffix
-                    }
+            it("encodes correct values to keys") {
+                let uuid = UUID().uuidString
+                let diagnosticId = DiagnosticId(diagnosticId: uuid, sdkKey: "this_is_a_fake_key")
+                encodesToObject(diagnosticId) { decoded in
+                    expect(decoded.count) == 2
+                    expect(decoded["diagnosticId"]) == .string(uuid)
+                    expect(decoded["sdkKeySuffix"]) == "ke_key"
                 }
+            }
+            it("can load and restore through codable protocol") {
+                let uuid = UUID().uuidString
+                let diagnosticId = DiagnosticId(diagnosticId: uuid, sdkKey: "this_is_a_fake_key")
+                let decoded = self.loadAndRestore(diagnosticId)
+                expect(decoded?.diagnosticId) == diagnosticId.diagnosticId
+                expect(decoded?.sdkKeySuffix) == diagnosticId.sdkKeySuffix
             }
         }
     }
 
     private func diagnosticSdkSpec() {
         context("DiagnosticSdk") {
-            let defaultConfig = LDConfig.stub
-            var wrapperConfig = LDConfig.stub
-            wrapperConfig.wrapperName = "ReactNative"
-            wrapperConfig.wrapperVersion = "0.1.0"
-            for (title, config) in [("defaults", defaultConfig), ("wrapper set", wrapperConfig)] {
-                context("with \(title)") {
-                    it("inits with correct values") {
-                        let diagnosticSdk = DiagnosticSdk(config: config)
-                        expect(diagnosticSdk.name) == "ios-client-sdk"
-                        expect(diagnosticSdk.version) == config.environmentReporter.sdkVersion
-                        expect(diagnosticSdk.wrapperName == config.wrapperName) == true
-                        expect(diagnosticSdk.wrapperVersion == config.wrapperVersion) == true
+            context("without wrapper configured") {
+                it("has correct values and encoding") {
+                    let config = LDConfig.stub
+                    let diagnosticSdk = DiagnosticSdk(config: config)
+                    expect(diagnosticSdk.name) == "ios-client-sdk"
+                    expect(diagnosticSdk.version) == config.environmentReporter.sdkVersion
+                    expect(diagnosticSdk.wrapperName).to(beNil())
+                    expect(diagnosticSdk.wrapperVersion).to(beNil())
+                    encodesToObject(diagnosticSdk) { decoded in
+                        expect(decoded.count) == 2
+                        expect(decoded["name"]) == "ios-client-sdk"
+                        expect(decoded["version"]) == .string(config.environmentReporter.sdkVersion)
                     }
-                    for (desc, scheme) in testEncoders {
-                        context("using \(desc) encoding") {
-                            it("encodes correct values to keys") {
-                                let diagnosticSdk = DiagnosticSdk(config: config)
-                                let decoded = self.loadAndRestoreRaw(scheme, diagnosticSdk)
-                                expect((decoded["name"] as! String)) == "ios-client-sdk"
-                                expect((decoded["version"] as! String)) == config.environmentReporter.sdkVersion
-                                expect((decoded["wrapperName"] as! String?) == config.wrapperName) == true
-                                expect((decoded["wrapperVersion"] as! String?) == config.wrapperVersion) == true
-                                let expectedKeys = ["name", "version", "wrapperName", "wrapperVersion"]
-                                expect(decoded.keys.allSatisfy(expectedKeys.contains)) == true
-                            }
-                        }
+                }
+            }
+            context("with wrapper configured") {
+                it("has correct values and encoding") {
+                    var config = LDConfig.stub
+                    config.wrapperName = "ReactNative"
+                    config.wrapperVersion = "0.1.0"
+                    let diagnosticSdk = DiagnosticSdk(config: config)
+                    expect(diagnosticSdk.name) == "ios-client-sdk"
+                    expect(diagnosticSdk.version) == config.environmentReporter.sdkVersion
+                    expect(diagnosticSdk.wrapperName) == config.wrapperName
+                    expect(diagnosticSdk.wrapperVersion) == config.wrapperVersion
+                    encodesToObject(diagnosticSdk) { decoded in
+                        expect(decoded.count) == 4
+                        expect(decoded["name"]) == "ios-client-sdk"
+                        expect(decoded["version"]) == .string(config.environmentReporter.sdkVersion)
+                        expect(decoded["wrapperName"]) == "ReactNative"
+                        expect(decoded["wrapperVersion"]) == "0.1.0"
                     }
                 }
             }
@@ -134,18 +121,15 @@ final class DiagnosticEventSpec: QuickSpec {
                         expect(diagnosticPlatform.streamingEnabled) == environmentReporter.operatingSystem.isStreamingEnabled
                         expect(diagnosticPlatform.deviceType) == environmentReporter.deviceType
                     }
-                    for (desc, scheme) in testEncoders {
-                        context("using \(desc) encoding") {
-                            it("encodes correct values to keys") {
-                                let decoded = self.loadAndRestoreRaw(scheme, diagnosticPlatform)
-                                expect(decoded.count) == 6
-                                expect((decoded["name"] as! String)) == diagnosticPlatform.name
-                                expect((decoded["systemName"] as! String)) == diagnosticPlatform.systemName
-                                expect((decoded["systemVersion"] as! String)) == diagnosticPlatform.systemVersion
-                                expect((decoded["backgroundEnabled"] as! Bool)) == diagnosticPlatform.backgroundEnabled
-                                expect((decoded["streamingEnabled"] as! Bool)) == diagnosticPlatform.streamingEnabled
-                                expect((decoded["deviceType"] as! String)) == diagnosticPlatform.deviceType
-                            }
+                    it("encodes correct values to keys") {
+                        encodesToObject(diagnosticPlatform) { decoded in
+                            expect(decoded.count) == 6
+                            expect(decoded["name"]) == .string(diagnosticPlatform.name)
+                            expect(decoded["systemName"]) == .string(diagnosticPlatform.systemName)
+                            expect(decoded["systemVersion"]) == .string(diagnosticPlatform.systemVersion)
+                            expect(decoded["backgroundEnabled"]) == .bool(diagnosticPlatform.backgroundEnabled)
+                            expect(decoded["streamingEnabled"]) == .bool(diagnosticPlatform.streamingEnabled)
+                            expect(decoded["deviceType"]) == .string(diagnosticPlatform.deviceType)
                         }
                     }
                 }
@@ -164,22 +148,19 @@ final class DiagnosticEventSpec: QuickSpec {
             for streamInit in [DiagnosticStreamInit(timestamp: 1000, durationMillis: 100, failed: true),
                                DiagnosticStreamInit(timestamp: Date().millisSince1970, durationMillis: 0, failed: false)] {
                 context("for init \(String(describing: streamInit))") {
-                    for (desc, scheme) in testEncoders {
-                        context("using \(desc) encoding") {
-                            it("encodes correct values to keys") {
-                                let decoded = self.loadAndRestoreRaw(scheme, streamInit)
-                                expect(decoded.count) == 3
-                                expect((decoded["timestamp"] as! Int64)) == streamInit.timestamp
-                                expect((decoded["durationMillis"] as! Int64)) == Int64(streamInit.durationMillis)
-                                expect((decoded["failed"] as! Bool) == streamInit.failed) == true
-                            }
-                            it("can load and restore through codable protocol") {
-                                let decoded = self.loadAndRestore(scheme, streamInit)
-                                expect(decoded?.timestamp) == streamInit.timestamp
-                                expect(decoded?.durationMillis) == streamInit.durationMillis
-                                expect(decoded?.failed) == streamInit.failed
-                            }
+                    it("encodes correct values to keys") {
+                        encodesToObject(streamInit) { decoded in
+                            expect(decoded.count) == 3
+                            expect(decoded["timestamp"]) == .number(Double(streamInit.timestamp))
+                            expect(decoded["durationMillis"]) == .number(Double(streamInit.durationMillis))
+                            expect(decoded["failed"]) == .bool(streamInit.failed)
                         }
+                    }
+                    it("can load and restore through codable protocol") {
+                        let decoded = self.loadAndRestore(streamInit)
+                        expect(decoded?.timestamp) == streamInit.timestamp
+                        expect(decoded?.durationMillis) == streamInit.durationMillis
+                        expect(decoded?.failed) == streamInit.failed
                     }
                 }
             }
@@ -287,51 +268,48 @@ final class DiagnosticEventSpec: QuickSpec {
                     beforeEach {
                         diagnosticConfig = DiagnosticConfig(config: config)
                     }
-                    for (desc, scheme) in testEncoders {
-                        context("using \(desc) encoding") {
-                            it("encodes correct values to keys") {
-                                let decoded = self.loadAndRestoreRaw(scheme, diagnosticConfig)
-                                expect(decoded.count) == 19
-                                expect((decoded["autoAliasingOptOut"] as! Bool)) == diagnosticConfig.autoAliasingOptOut
-                                expect((decoded["customBaseURI"] as! Bool)) == diagnosticConfig.customBaseURI
-                                expect((decoded["customEventsURI"] as! Bool)) == diagnosticConfig.customEventsURI
-                                expect((decoded["customStreamURI"] as! Bool)) == diagnosticConfig.customStreamURI
-                                expect((decoded["eventsCapacity"] as! Int64)) == Int64(diagnosticConfig.eventsCapacity)
-                                expect((decoded["connectTimeoutMillis"] as! Int64)) == Int64(diagnosticConfig.connectTimeoutMillis)
-                                expect((decoded["eventsFlushIntervalMillis"] as! Int64)) == Int64(diagnosticConfig.eventsFlushIntervalMillis)
-                                expect((decoded["streamingDisabled"] as! Bool)) == diagnosticConfig.streamingDisabled
-                                expect((decoded["allAttributesPrivate"] as! Bool)) == diagnosticConfig.allAttributesPrivate
-                                expect((decoded["pollingIntervalMillis"] as! Int64)) == Int64(diagnosticConfig.pollingIntervalMillis)
-                                expect((decoded["backgroundPollingIntervalMillis"] as! Int64)) == Int64(diagnosticConfig.backgroundPollingIntervalMillis)
-                                expect((decoded["inlineUsersInEvents"] as! Bool)) == diagnosticConfig.inlineUsersInEvents
-                                expect((decoded["useReport"] as! Bool)) == diagnosticConfig.useReport
-                                expect((decoded["backgroundPollingDisabled"] as! Bool)) == diagnosticConfig.backgroundPollingDisabled
-                                expect((decoded["evaluationReasonsRequested"] as! Bool)) == diagnosticConfig.evaluationReasonsRequested
-                                expect((decoded["maxCachedUsers"] as! Int64)) == Int64(diagnosticConfig.maxCachedUsers)
-                                expect((decoded["mobileKeyCount"] as! Int64)) == Int64(diagnosticConfig.mobileKeyCount)
-                                expect((decoded["diagnosticRecordingIntervalMillis"] as! Int64)) == Int64(diagnosticConfig.diagnosticRecordingIntervalMillis)
-                            }
-                            it("can load and restore through codable protocol") {
-                                let decoded = self.loadAndRestore(scheme, diagnosticConfig)
-                                expect(decoded?.customBaseURI) == diagnosticConfig.customBaseURI
-                                expect(decoded?.customEventsURI) == diagnosticConfig.customEventsURI
-                                expect(decoded?.customStreamURI) == diagnosticConfig.customStreamURI
-                                expect(decoded?.eventsCapacity) == diagnosticConfig.eventsCapacity
-                                expect(decoded?.connectTimeoutMillis) == diagnosticConfig.connectTimeoutMillis
-                                expect(decoded?.eventsFlushIntervalMillis) == diagnosticConfig.eventsFlushIntervalMillis
-                                expect(decoded?.streamingDisabled) == diagnosticConfig.streamingDisabled
-                                expect(decoded?.allAttributesPrivate) == diagnosticConfig.allAttributesPrivate
-                                expect(decoded?.pollingIntervalMillis) == diagnosticConfig.pollingIntervalMillis
-                                expect(decoded?.backgroundPollingIntervalMillis) == diagnosticConfig.backgroundPollingIntervalMillis
-                                expect(decoded?.inlineUsersInEvents) == diagnosticConfig.inlineUsersInEvents
-                                expect(decoded?.useReport) == diagnosticConfig.useReport
-                                expect(decoded?.backgroundPollingDisabled) == diagnosticConfig.backgroundPollingDisabled
-                                expect(decoded?.evaluationReasonsRequested) == diagnosticConfig.evaluationReasonsRequested
-                                expect(decoded?.maxCachedUsers) == diagnosticConfig.maxCachedUsers
-                                expect(decoded?.mobileKeyCount) == diagnosticConfig.mobileKeyCount
-                                expect(decoded?.diagnosticRecordingIntervalMillis) == diagnosticConfig.diagnosticRecordingIntervalMillis
-                            }
+                    it("encodes correct values to keys") {
+                        encodesToObject(diagnosticConfig) { decoded in
+                            expect(decoded.count) == 19
+                            expect(decoded["autoAliasingOptOut"]) == .bool(diagnosticConfig.autoAliasingOptOut)
+                            expect(decoded["customBaseURI"]) == .bool(diagnosticConfig.customBaseURI)
+                            expect(decoded["customEventsURI"]) == .bool(diagnosticConfig.customEventsURI)
+                            expect(decoded["customStreamURI"]) == .bool(diagnosticConfig.customStreamURI)
+                            expect(decoded["eventsCapacity"]) == .number(Double(diagnosticConfig.eventsCapacity))
+                            expect(decoded["connectTimeoutMillis"]) == .number(Double(diagnosticConfig.connectTimeoutMillis))
+                            expect(decoded["eventsFlushIntervalMillis"]) == .number(Double(diagnosticConfig.eventsFlushIntervalMillis))
+                            expect(decoded["streamingDisabled"]) == .bool(diagnosticConfig.streamingDisabled)
+                            expect(decoded["allAttributesPrivate"]) == .bool(diagnosticConfig.allAttributesPrivate)
+                            expect(decoded["pollingIntervalMillis"]) == .number(Double(diagnosticConfig.pollingIntervalMillis))
+                            expect(decoded["backgroundPollingIntervalMillis"]) == .number(Double(diagnosticConfig.backgroundPollingIntervalMillis))
+                            expect(decoded["inlineUsersInEvents"]) == .bool(diagnosticConfig.inlineUsersInEvents)
+                            expect(decoded["useReport"]) == .bool(diagnosticConfig.useReport)
+                            expect(decoded["backgroundPollingDisabled"]) == .bool(diagnosticConfig.backgroundPollingDisabled)
+                            expect(decoded["evaluationReasonsRequested"]) == .bool(diagnosticConfig.evaluationReasonsRequested)
+                            expect(decoded["maxCachedUsers"]) == .number(Double(diagnosticConfig.maxCachedUsers))
+                            expect(decoded["mobileKeyCount"]) == .number(Double(diagnosticConfig.mobileKeyCount))
+                            expect(decoded["diagnosticRecordingIntervalMillis"]) == .number(Double(diagnosticConfig.diagnosticRecordingIntervalMillis))
                         }
+                    }
+                    it("can load and restore through codable protocol") {
+                        let decoded = self.loadAndRestore(diagnosticConfig)
+                        expect(decoded?.customBaseURI) == diagnosticConfig.customBaseURI
+                        expect(decoded?.customEventsURI) == diagnosticConfig.customEventsURI
+                        expect(decoded?.customStreamURI) == diagnosticConfig.customStreamURI
+                        expect(decoded?.eventsCapacity) == diagnosticConfig.eventsCapacity
+                        expect(decoded?.connectTimeoutMillis) == diagnosticConfig.connectTimeoutMillis
+                        expect(decoded?.eventsFlushIntervalMillis) == diagnosticConfig.eventsFlushIntervalMillis
+                        expect(decoded?.streamingDisabled) == diagnosticConfig.streamingDisabled
+                        expect(decoded?.allAttributesPrivate) == diagnosticConfig.allAttributesPrivate
+                        expect(decoded?.pollingIntervalMillis) == diagnosticConfig.pollingIntervalMillis
+                        expect(decoded?.backgroundPollingIntervalMillis) == diagnosticConfig.backgroundPollingIntervalMillis
+                        expect(decoded?.inlineUsersInEvents) == diagnosticConfig.inlineUsersInEvents
+                        expect(decoded?.useReport) == diagnosticConfig.useReport
+                        expect(decoded?.backgroundPollingDisabled) == diagnosticConfig.backgroundPollingDisabled
+                        expect(decoded?.evaluationReasonsRequested) == diagnosticConfig.evaluationReasonsRequested
+                        expect(decoded?.maxCachedUsers) == diagnosticConfig.maxCachedUsers
+                        expect(decoded?.mobileKeyCount) == diagnosticConfig.mobileKeyCount
+                        expect(decoded?.diagnosticRecordingIntervalMillis) == diagnosticConfig.diagnosticRecordingIntervalMillis
                     }
                 }
             }
@@ -340,26 +318,22 @@ final class DiagnosticEventSpec: QuickSpec {
 
     private func diagnosticKindSpec() {
         context("DiagnosticKind") {
-            // Cannot encode raw primitives in plist. JSONEncoder will encode raw primitives on newer platforms, but not all supported platforms. For these tests we wrap the kind in an array to allow us to test the encoding.
-            for (desc, scheme) in testEncoders {
-                context("using \(desc) encoding") {
-                    it("encodes to correct values") {
-                        let encodedInit = try? scheme.encode([DiagnosticKind.diagnosticInit])
-                        expect(encodedInit).toNot(beNil())
-                        let decodedInit = (try? scheme.decode(ArrayDecoder.self, from: encodedInit!))!.decoded
-                        expect((decodedInit as! [String])[0]) == "diagnostic-init"
-
-                        let encodedStats = try? scheme.encode([DiagnosticKind.diagnosticStats])
-                        expect(encodedStats).toNot(beNil())
-                        let decodedStats = (try? scheme.decode(ArrayDecoder.self, from: encodedStats!))!.decoded
-                        expect((decodedStats as! [String])[0]) == "diagnostic"
-                    }
-                    it("can load and restore through codable protocol") {
-                        for kind in [DiagnosticKind.diagnosticInit, DiagnosticKind.diagnosticStats] {
-                            let decoded = self.loadAndRestore(scheme, [kind])
-                            expect(decoded) == [kind]
-                        }
-                    }
+            // JSONEncoder will encode raw primitives on newer platforms, but not all supported platforms. For these
+            // tests we wrap the kind in an object to allow us to test the encoding.
+            it("encodes to correct values") {
+                encodesToObject(["abc": DiagnosticKind.diagnosticInit]) { value in
+                    expect(value.count) == 1
+                    expect(value["abc"]) == "diagnostic-init"
+                }
+                encodesToObject(["abc": DiagnosticKind.diagnosticStats]) { value in
+                    expect(value.count) == 1
+                    expect(value["abc"]) == "diagnostic"
+                }
+            }
+            it("can load and restore through codable protocol") {
+                for kind in [DiagnosticKind.diagnosticInit, DiagnosticKind.diagnosticStats] {
+                    let decoded = self.loadAndRestore([kind])
+                    expect(decoded) == [kind]
                 }
             }
         }
@@ -386,22 +360,19 @@ final class DiagnosticEventSpec: QuickSpec {
                 expect(diagnosticInit.configuration.customBaseURI) == true
                 expect(diagnosticInit.platform.backgroundEnabled) == true
             }
-            for (desc, scheme) in testEncoders {
-                context("using \(desc) encoding") {
-                    it("encodes correct values to keys") {
-                        let expectedId = self.loadAndRestoreRaw(scheme, diagnosticId)
-                        let expectedSdk = self.loadAndRestoreRaw(scheme, diagnosticInit.sdk)
-                        let expectedConfig = self.loadAndRestoreRaw(scheme, diagnosticInit.configuration)
-                        let expectedPlatform = self.loadAndRestoreRaw(scheme, diagnosticInit.platform)
-                        let decoded = self.loadAndRestoreRaw(scheme, diagnosticInit)
-                        expect(decoded.count) == 6
-                        expect((decoded["kind"] as! String)) == DiagnosticKind.diagnosticInit.rawValue
-                        expect(AnyComparer.isEqual(decoded["id"], to: expectedId)) == true
-                        expect((decoded["creationDate"] as! Int64)) == now
-                        expect(AnyComparer.isEqual(decoded["sdk"], to: expectedSdk)) == true
-                        expect(AnyComparer.isEqual(decoded["configuration"], to: expectedConfig)) == true
-                        expect(AnyComparer.isEqual(decoded["platform"], to: expectedPlatform)) == true
-                    }
+            it("encodes correct values to keys") {
+                let expectedId = encodeToLDValue(diagnosticId)
+                let expectedSdk = encodeToLDValue(diagnosticInit.sdk)
+                let expectedConfig = encodeToLDValue(diagnosticInit.configuration)
+                let expectedPlatform = encodeToLDValue(diagnosticInit.platform)
+                encodesToObject(diagnosticInit) { decoded in
+                    expect(decoded.count) == 6
+                    expect(decoded["kind"]) == .string(DiagnosticKind.diagnosticInit.rawValue)
+                    expect(decoded["id"]) == expectedId
+                    expect(decoded["creationDate"]) == .number(Double(now))
+                    expect(decoded["sdk"]) == expectedSdk
+                    expect(decoded["configuration"]) == expectedConfig
+                    expect(decoded["platform"]) == expectedPlatform
                 }
             }
         }
@@ -418,7 +389,12 @@ final class DiagnosticEventSpec: QuickSpec {
                     beforeEach {
                         now = Date().millisSince1970
                         diagnosticId = DiagnosticId(diagnosticId: UUID().uuidString, sdkKey: "foobar")
-                        diagnosticStats = DiagnosticStats(id: diagnosticId, creationDate: now, dataSinceDate: now - 60_000, droppedEvents: 5, eventsInLastBatch: 10, streamInits: streamInits)
+                        diagnosticStats = DiagnosticStats(id: diagnosticId,
+                                                          creationDate: now,
+                                                          dataSinceDate: now - 60_000,
+                                                          droppedEvents: 5,
+                                                          eventsInLastBatch: 10,
+                                                          streamInits: streamInits)
                     }
                     it("inits with correct values") {
                         expect(diagnosticStats.kind) == DiagnosticKind.diagnosticStats
@@ -433,21 +409,18 @@ final class DiagnosticEventSpec: QuickSpec {
                             expect(diagnosticStats.streamInits[i].timestamp) == streamInits[i].timestamp
                         }
                     }
-                    for (desc, scheme) in testEncoders {
-                        context("using \(desc) encoding") {
-                            it("encodes correct values to keys") {
-                                let expectedId = self.loadAndRestoreRaw(scheme, diagnosticId)
-                                let expectedInits = streamInits.map { self.loadAndRestoreRaw(scheme, $0) }
-                                let decoded = self.loadAndRestoreRaw(scheme, diagnosticStats)
-                                expect(decoded.count) == 7
-                                expect((decoded["kind"] as! String)) == DiagnosticKind.diagnosticStats.rawValue
-                                expect(AnyComparer.isEqual(decoded["id"], to: expectedId)) == true
-                                expect((decoded["creationDate"] as! Int64)) == now
-                                expect((decoded["dataSinceDate"] as! Int64)) == now - 60_000
-                                expect((decoded["droppedEvents"] as! Int64)) == 5
-                                expect((decoded["eventsInLastBatch"] as! Int64)) == 10
-                                expect(AnyComparer.isEqual(decoded["streamInits"], to: expectedInits)) == true
-                            }
+                    it("encodes correct values to keys") {
+                        let expectedId = encodeToLDValue(diagnosticId)
+                        let expectedInits = encodeToLDValue(streamInits)
+                        encodesToObject(diagnosticStats) { decoded in
+                            expect(decoded.count) == 7
+                            expect(decoded["kind"]) == .string(DiagnosticKind.diagnosticStats.rawValue)
+                            expect(decoded["id"]) == expectedId
+                            expect(decoded["creationDate"]) == .number(Double(now))
+                            expect(decoded["dataSinceDate"]) == .number(Double(now - 60_000))
+                            expect(decoded["droppedEvents"]) == 5
+                            expect(decoded["eventsInLastBatch"]) == 10
+                            expect(decoded["streamInits"]) == expectedInits
                         }
                     }
                 }
@@ -455,112 +428,11 @@ final class DiagnosticEventSpec: QuickSpec {
         }
     }
 
-    private func loadAndRestore<T: Codable>(_ scheme: CodingScheme, _ subject: T?) -> T? {
-        let encoded = try? scheme.encode(subject)
-        return try? scheme.decode(T.self, from: encoded!)
-    }
+    private let encoder = JSONEncoder()
+    private let decoder = JSONDecoder()
 
-    private func loadAndRestoreRaw<T: Encodable>(_ scheme: CodingScheme, _ subject: T) -> [String: Any] {
-        let encoded = try? scheme.encode(subject)
-        expect(encoded).toNot(beNil())
-        return (try? scheme.decode(ObjectDecoder.self, from: encoded!))!.decoded
+    private func loadAndRestore<T: Codable>(_ subject: T?) -> T? {
+        let encoded = try? encoder.encode(subject)
+        return try? decoder.decode(T.self, from: encoded!)
     }
 }
-
-private struct DynamicKey: CodingKey {
-    var intValue: Int?
-    var stringValue: String
-
-    init?(intValue: Int) {
-        self.intValue = intValue
-        self.stringValue = "\(intValue)"
-    }
-
-    init?(stringValue: String) {
-        self.stringValue = stringValue
-    }
-}
-
-private struct ObjectDecoder: Decodable {
-    let decoded: [String: Any]
-
-    init(from decoder: Decoder) throws {
-        var decoded: [String: Any] = [:]
-        let container = try decoder.container(keyedBy: DynamicKey.self)
-        for key in container.allKeys {
-            if let prim = try? container.decode(PrimDecoder.self, forKey: key) {
-                decoded[key.stringValue] = prim.decoded
-            } else if let arr = try? container.decode(ArrayDecoder.self, forKey: key) {
-                decoded[key.stringValue] = arr.decoded
-            } else if let obj = try? container.decode(ObjectDecoder.self, forKey: key) {
-                decoded[key.stringValue] = obj.decoded
-            }
-        }
-        self.decoded = decoded
-    }
-}
-
-private struct ArrayDecoder: Decodable {
-    let decoded: [Any]
-
-    init(from decoder: Decoder) throws {
-        var decoded: [Any] = []
-        var container = try decoder.unkeyedContainer()
-        while !container.isAtEnd {
-            if let prim = try? container.decode(PrimDecoder.self) {
-                decoded.append(prim.decoded)
-            } else if let arr = try? container.decode(ArrayDecoder.self) {
-                decoded.append(arr.decoded)
-            } else if let obj = try? container.decode(ObjectDecoder.self) {
-                decoded.append(obj.decoded)
-            }
-        }
-        self.decoded = decoded
-    }
-}
-
-private struct PrimDecoder: Decodable {
-    let decoded: Any
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let i = try? container.decode(Int64.self) {
-            decoded = i
-        } else if let b = try? container.decode(Bool.self) {
-            decoded = b
-        } else {
-            decoded = try container.decode(String.self)
-        }
-    }
-}
-
-private class CodingScheme: TopLevelEncoder, TopLevelDecoder {
-    let encoder: TopLevelEncoder
-    let decoder: TopLevelDecoder
-
-    init(_ encoder: TopLevelEncoder, _ decoder: TopLevelDecoder) {
-        self.encoder = encoder
-        self.decoder = decoder
-    }
-
-    func encode<T>(_ value: T) throws -> Data where T: Encodable {
-        try encoder.encode(value)
-    }
-
-    func decode<T>(_ type: T.Type, from: Data) throws -> T where T: Decodable {
-        try decoder.decode(type, from: from)
-    }
-}
-
-protocol TopLevelEncoder {
-    func encode<T>(_ value: T) throws -> Data where T: Encodable
-}
-
-protocol TopLevelDecoder {
-    func decode<T>(_ type: T.Type, from: Data) throws -> T where T: Decodable
-}
-
-extension PropertyListEncoder: TopLevelEncoder { }
-extension PropertyListDecoder: TopLevelDecoder { }
-extension JSONEncoder: TopLevelEncoder { }
-extension JSONDecoder: TopLevelDecoder { }

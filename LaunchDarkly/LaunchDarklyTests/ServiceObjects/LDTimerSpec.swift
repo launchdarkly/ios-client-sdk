@@ -31,7 +31,7 @@ final class LDTimerSpec: QuickSpec {
 
                 expect(testContext.ldTimer.timer).toNot(beNil())
                 expect(testContext.ldTimer.isCancelled) == false
-                expect(testContext.ldTimer.fireDate?.isWithin(1.0, of: testContext.fireDate)).to(beTrue())  // 1 second is arbitrary...just want it to be "close"
+                expect(testContext.ldTimer.fireDate).to(beCloseTo(testContext.fireDate, within: 1.0)) // 1 second is arbitrary...just want it to be "close"
 
                 testContext.ldTimer.cancel()
             }

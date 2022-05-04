@@ -1,18 +1,10 @@
-//
-//  ClientServiceFactory.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import LDSwiftEventSource
 
 protocol ClientServiceCreating {
-    func makeKeyedValueCache() -> KeyedValueCaching
-    func makeFeatureFlagCache(maxCachedUsers: Int) -> FeatureFlagCaching
-    func makeCacheConverter(maxCachedUsers: Int) -> CacheConverting
-    func makeDeprecatedCacheModel(_ model: DeprecatedCacheModel) -> DeprecatedCache
+    func makeKeyedValueCache(cacheKey: String?) -> KeyedValueCaching
+    func makeFeatureFlagCache(mobileKey: String, maxCachedUsers: Int) -> FeatureFlagCaching
+    func makeCacheConverter() -> CacheConverting
     func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing
     func makeFlagSynchronizer(streamingMode: LDStreamingMode,
@@ -26,7 +18,6 @@ protocol ClientServiceCreating {
     func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func makeEnvironmentReporter() -> EnvironmentReporting
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling
-    func makeErrorNotifier() -> ErrorNotifying
     func makeConnectionInformation() -> ConnectionInformation
     func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching
     func makeDiagnosticReporter(service: DarklyServiceProvider) -> DiagnosticReporting
@@ -34,25 +25,16 @@ protocol ClientServiceCreating {
 }
 
 final class ClientServiceFactory: ClientServiceCreating {
-    func makeKeyedValueCache() -> KeyedValueCaching {
-        UserDefaults.standard
+    func makeKeyedValueCache(cacheKey: String?) -> KeyedValueCaching {
+        UserDefaults(suiteName: cacheKey)!
     }
 
-    func makeFeatureFlagCache(maxCachedUsers: Int) -> FeatureFlagCaching {
-        UserEnvironmentFlagCache(withKeyedValueCache: makeKeyedValueCache(), maxCachedUsers: maxCachedUsers)
+    func makeFeatureFlagCache(mobileKey: MobileKey, maxCachedUsers: Int) -> FeatureFlagCaching {
+        FeatureFlagCache(serviceFactory: self, mobileKey: mobileKey, maxCachedUsers: maxCachedUsers)
     }
 
-    func makeCacheConverter(maxCachedUsers: Int) -> CacheConverting {
-        CacheConverter(serviceFactory: self, maxCachedUsers: maxCachedUsers)
-    }
-
-    func makeDeprecatedCacheModel(_ model: DeprecatedCacheModel) -> DeprecatedCache {
-        switch model {
-        case .version2: return DeprecatedCacheModelV2(keyedValueCache: makeKeyedValueCache())
-        case .version3: return DeprecatedCacheModelV3(keyedValueCache: makeKeyedValueCache())
-        case .version4: return DeprecatedCacheModelV4(keyedValueCache: makeKeyedValueCache())
-        case .version5: return DeprecatedCacheModelV5(keyedValueCache: makeKeyedValueCache())
-        }
+    func makeCacheConverter() -> CacheConverting {
+        CacheConverter()
     }
 
     func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {
@@ -109,10 +91,6 @@ final class ClientServiceFactory: ClientServiceCreating {
 
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling {
         Throttler(environmentReporter: environmentReporter)
-    }
-
-    func makeErrorNotifier() -> ErrorNotifying {
-        ErrorNotifier()
     }
     
     func makeConnectionInformation() -> ConnectionInformation {

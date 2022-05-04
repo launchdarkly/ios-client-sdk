@@ -1,45 +1,14 @@
-//
-//  LDEventSourceMock.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import LDSwiftEventSource
 @testable import LaunchDarkly
 
 extension EventHandler {
-    func send(event: FlagUpdateType, dict: [String: Any]) {
-        send(event: event, string: dict.jsonString!)
-    }
-
-    func send(event: FlagUpdateType, string: String) {
-        onMessage(eventType: event.rawValue, messageEvent: MessageEvent(data: string))
+    func send(event: String, string: String) {
+        onMessage(eventType: event, messageEvent: MessageEvent(data: string))
     }
 
     func sendPing() {
-        onMessage(eventType: FlagUpdateType.ping.rawValue, messageEvent: MessageEvent(data: ""))
-    }
-
-    func sendPut() {
-        let data = DarklyServiceMock.Constants.stubFeatureFlags(includeNullValue: false, includeVariations: true, includeVersions: true)
-            .dictionaryValue
-        send(event: .put, dict: data)
-    }
-
-    func sendPatch() {
-        let data = FlagMaintainingMock.stubPatchDictionary(key: DarklyServiceMock.FlagKeys.int,
-                                                           value: DarklyServiceMock.FlagValues.int + 1,
-                                                           variation: DarklyServiceMock.Constants.variation + 1,
-                                                           version: DarklyServiceMock.Constants.version + 1)
-        send(event: .patch, dict: data)
-    }
-
-    func sendDelete() {
-        let data = FlagMaintainingMock.stubDeleteDictionary(key: DarklyServiceMock.FlagKeys.int,
-                                                            version: DarklyServiceMock.Constants.version + 1)
-        send(event: .delete, dict: data)
+        onMessage(eventType: "ping", messageEvent: MessageEvent(data: ""))
     }
 
     func sendUnauthorizedError() {

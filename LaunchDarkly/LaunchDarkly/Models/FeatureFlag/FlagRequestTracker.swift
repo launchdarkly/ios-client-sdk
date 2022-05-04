@@ -1,21 +1,10 @@
-//
-//  FlagRequestTracker.swift
-//  LaunchDarkly
-//
-//  Copyright © 2018 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 struct FlagRequestTracker {
-    enum CodingKeys: String, CodingKey {
-        case startDate, features
-    }
-
     let startDate = Date()
-    var flagCounters = [LDFlagKey: FlagCounter]()
+    var flagCounters: [LDFlagKey: FlagCounter] = [:]
 
-    mutating func trackRequest(flagKey: LDFlagKey, reportedValue: Any?, featureFlag: FeatureFlag?, defaultValue: Any?) {
+    mutating func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue) {
         if flagCounters[flagKey] == nil {
             flagCounters[flagKey] = FlagCounter()
         }
@@ -24,15 +13,10 @@ struct FlagRequestTracker {
         flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
 
         Log.debug(typeName(and: #function) + "\n\tflagKey: \(flagKey)"
-            + "\n\treportedValue: \(String(describing: reportedValue)), "
+            + "\n\treportedValue: \(reportedValue), "
             + "\n\tvariation: \(String(describing: featureFlag?.variation)), "
             + "\n\tversion: \(String(describing: featureFlag?.flagVersion ?? featureFlag?.version)), "
-            + "\n\tdefaultValue: \(String(describing: defaultValue))\n")
-    }
-
-    var dictionaryValue: [String: Any] {
-        [CodingKeys.startDate.rawValue: startDate.millisSince1970,
-         CodingKeys.features.rawValue: flagCounters.mapValues { $0.dictionaryValue }]
+            + "\n\tdefaultValue: \(defaultValue)\n")
     }
 
     var hasLoggedRequests: Bool { !flagCounters.isEmpty }
@@ -40,15 +24,19 @@ struct FlagRequestTracker {
 
 extension FlagRequestTracker: TypeIdentifying { }
 
-final class FlagCounter {
+final class FlagCounter: Encodable {
     enum CodingKeys: String, CodingKey {
-        case defaultValue = "default", counters, value, variation, version, unknown, count
+        case defaultValue = "default", counters
     }
 
-    var defaultValue: Any?
-    var flagValueCounters: [CounterKey: CounterValue] = [:]
+    enum CounterCodingKeys: String, CodingKey {
+        case value, variation, version, unknown, count
+    }
 
-    func trackRequest(reportedValue: Any?, featureFlag: FeatureFlag?, defaultValue: Any?) {
+    private(set) var defaultValue: LDValue = .null
+    private(set) var flagValueCounters: [CounterKey: CounterValue] = [:]
+
+    func trackRequest(reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue) {
         self.defaultValue = defaultValue
         let key = CounterKey(variation: featureFlag?.variation, version: featureFlag?.versionForEvents)
         if let counter = flagValueCounters[key] {
@@ -58,20 +46,20 @@ final class FlagCounter {
         }
     }
 
-    var dictionaryValue: [String: Any] {
-        let counters: [[String: Any]] = flagValueCounters.map { (key, value) in
-            var res: [String: Any] = [CodingKeys.value.rawValue: value.value ?? NSNull(),
-                                      CodingKeys.count.rawValue: value.count,
-                                      CodingKeys.variation.rawValue: key.variation ?? NSNull()]
-            if let version = key.version {
-                res[CodingKeys.version.rawValue] = version
-            } else {
-                res[CodingKeys.unknown.rawValue] = true
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(defaultValue, forKey: .defaultValue)
+        var countersContainer = container.nestedUnkeyedContainer(forKey: .counters)
+        try flagValueCounters.forEach { (key, value) in
+            var counterContainer = countersContainer.nestedContainer(keyedBy: CounterCodingKeys.self)
+            try counterContainer.encodeIfPresent(key.version, forKey: .version)
+            try counterContainer.encodeIfPresent(key.variation, forKey: .variation)
+            try counterContainer.encode(value.count, forKey: .count)
+            try counterContainer.encode(value.value, forKey: .value)
+            if key.version == nil {
+                try counterContainer.encode(true, forKey: .unknown)
             }
-            return res
         }
-        return [CodingKeys.defaultValue.rawValue: defaultValue ?? NSNull(),
-                CodingKeys.counters.rawValue: counters]
     }
 }
 
@@ -81,10 +69,10 @@ struct CounterKey: Equatable, Hashable {
 }
 
 class CounterValue {
-    let value: Any?
-    var count: Int = 1
+    let value: LDValue
+    private(set) var count: Int = 1
 
-    init(value: Any?) {
+    init(value: LDValue) {
         self.value = value
     }
 

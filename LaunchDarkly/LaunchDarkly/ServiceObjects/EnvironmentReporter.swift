@@ -1,10 +1,3 @@
-//
-//  EnvironmentReporter.swift
-//  LaunchDarkly
-//
-//  Copyright © 2018 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 #if os(iOS)
@@ -129,13 +122,9 @@ struct EnvironmentReporter: EnvironmentReporting {
     var vendorUUID: String? { UIDevice.current.identifierForVendor?.uuidString }
     #endif
 
-    #if INTEGRATION_HARNESS
     var shouldThrottleOnlineCalls: Bool { !isDebugBuild }
-    #else
-    var shouldThrottleOnlineCalls: Bool { true }
-    #endif
 
-    let sdkVersion = "5.4.5"
+    let sdkVersion = "6.0.0"
     // Unfortunately, the following does not function in certain configurations, such as when included through SPM
 //    var sdkVersion: String {
 //        Bundle(for: LDClient.self).infoDictionary?["CFBundleShortVersionString"] as? String ?? "5.x"

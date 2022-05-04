@@ -1,10 +1,3 @@
-//
-//  FlagChangeNotifierSpec.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import Quick
 import Nimble
@@ -41,9 +34,9 @@ private class MockFlagCollectionChangeObserver {
     let observer: FlagChangeObserver
     var owner: LDObserverOwner?
 
-    private var tracker: CallTracker<[LDFlagKey: LDChangedFlag]>?
-    var callCount: Int { tracker!.callCount }
-    var lastCallArg: [LDFlagKey: LDChangedFlag]? { tracker!.lastCallArg }
+    private var tracker: CallTracker<[LDFlagKey: LDChangedFlag]>
+    var callCount: Int { tracker.callCount }
+    var lastCallArg: [LDFlagKey: LDChangedFlag]? { tracker.lastCallArg }
 
     init(_ keys: [LDFlagKey], owner: LDObserverOwner = FlagChangeHandlerOwnerMock()) {
         self.keys = keys
@@ -61,8 +54,8 @@ private class MockFlagsUnchangedObserver {
     let observer: FlagsUnchangedObserver
     var owner: LDObserverOwner?
 
-    private var tracker: CallTracker<Void>?
-    var callCount: Int { tracker!.callCount }
+    private var tracker: CallTracker<Void>
+    var callCount: Int { tracker.callCount }
 
     init(owner: LDObserverOwner = FlagChangeHandlerOwnerMock()) {
         self.owner = owner
@@ -78,9 +71,9 @@ private class MockConnectionModeChangedObserver {
     let observer: ConnectionModeChangedObserver
     var owner: LDObserverOwner?
 
-    private var tracker: CallTracker<ConnectionInformation.ConnectionMode>?
-    var callCount: Int { tracker!.callCount }
-    var lastCallArg: ConnectionInformation.ConnectionMode? { tracker!.lastCallArg }
+    private var tracker: CallTracker<ConnectionInformation.ConnectionMode>
+    var callCount: Int { tracker.callCount }
+    var lastCallArg: ConnectionInformation.ConnectionMode? { tracker.lastCallArg }
 
     init(owner: LDObserverOwner = FlagChangeHandlerOwnerMock()) {
         self.owner = owner
@@ -425,8 +418,6 @@ private final class FlagChangeHandlerOwnerMock { }
 
 extension LDChangedFlag: Equatable {
     public static func == (lhs: LDChangedFlag, rhs: LDChangedFlag) -> Bool {
-        lhs.key == rhs.key
-            && AnyComparer.isEqual(lhs.oldValue, to: rhs.oldValue)
-            && AnyComparer.isEqual(lhs.newValue, to: rhs.newValue)
+        lhs.key == rhs.key && lhs.oldValue == rhs.oldValue && lhs.newValue == rhs.newValue
     }
 }

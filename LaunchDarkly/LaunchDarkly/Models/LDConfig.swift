@@ -1,17 +1,20 @@
-//
-//  LDConfig.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
-/// Defines the connection modes available to set into LDClient.
+/// Defines the connection modes the SDK may be configured to use to retrieve feature flag data from LaunchDarkly.
 public enum LDStreamingMode {
-    /// In streaming mode, the LDClient opens a long-running connection to LaunchDarkly's streaming server (called *clientstream*). When a flag value changes on the server, the clientstream notifies the SDK to update the value. Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to connect to clientstream. On macOS the client app may run in either foreground or background to connect to clientstream. If streaming mode is not available, the SDK reverts to polling mode.
+    /**
+     In streaming mode, the SDK uses a streaming connection to receive feature flag data from LaunchDarkly. When a flag
+     is updated in the dashboard, the stream notifies the SDK of changes to the evaluation result for the current user.
+
+     Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to
+     use a streaming connection. If streaming mode is not available, the SDK reverts to polling mode.
+     */
     case streaming
-    /// In polling mode, the LDClient requests feature flags from LaunchDarkly's app server at regular intervals defined in the LDConfig. When a flag value changes on the server, the LDClient will learn of the change the next time the SDK requests feature flags.
+    /**
+     In polling mode, the SDK requests feature flag data from the LaunchDarkly service at regular intervals defined in
+     the `LDConfig`. When a flag is updated in the dashboard, the SDK will not show the change until the next time the
+     it requests the feature flag data.
+     */
     case polling
 }
 
@@ -31,18 +34,16 @@ public typealias RequestHeaderTransform = (_ url: URL, _ headers: [String: Strin
 
 /**
  Use LDConfig to configure the LDClient. When initialized, a LDConfig contains the default values which can be changed as needed.
-
- The client app can change the LDConfig by getting the `config` from `LDClient`, adjusting the values, and setting it back into the `LDClient`.
  */
 public struct LDConfig {
 
     /// The default values set when a LDConfig is initialized
     struct Defaults {
-        /// The default url for making feature flag requests
+        /// The default base url for making feature flag requests
         static let baseUrl = URL(string: "https://app.launchdarkly.com")!
-        /// The default url for making event reports
+        /// The default base url for making event reports
         static let eventsUrl = URL(string: "https://mobile.launchdarkly.com")!
-        /// The default url for connecting to the *clientstream*
+        /// The default base url for connecting to streaming service
         static let streamUrl = URL(string: "https://clientstream.launchdarkly.com")!
         
         /// The default maximum number of events the LDClient can store
@@ -67,9 +68,9 @@ public struct LDConfig {
         /// The default setting for private user attributes. (false)
         static let allUserAttributesPrivate = false
         /// The default private user attribute list (nil)
-        static let privateUserAttributes: [String]? = nil
+        static let privateUserAttributes: [UserAttribute] = []
 
-        /// The default HTTP request method for `clientstream` connection and feature flag requests. When true, these requests will use the non-standard verb `REPORT`. When false, these requests will use the standard verb `GET`. (false)
+        /// The default HTTP request method for stream connections and feature flag requests. When true, these requests will use the non-standard verb `REPORT`. When false, these requests will use the standard verb `GET`. (false)
         static let useReport = false
 
         /// The default setting controlling the amount of user data sent in events. When true the SDK will generate events using the full LDUser, excluding private attributes. When false the SDK will generate events using only the LDUser.key. (false)
@@ -150,11 +151,11 @@ public struct LDConfig {
     /// The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
     public var mobileKey: String
 
-    /// The url for making feature flag requests. Do not change unless instructed by LaunchDarkly.
+    /// The base url for making feature flag requests. Do not change unless instructed by LaunchDarkly.
     public var baseUrl: URL = Defaults.baseUrl
-    /// The url for making event reports. Do not change unless instructed by LaunchDarkly.
+    /// The base url for making event reports. Do not change unless instructed by LaunchDarkly.
     public var eventsUrl: URL = Defaults.eventsUrl
-    /// The url for connecting to the *clientstream*. Do not change unless instructed by LaunchDarkly.
+    /// The base url for connecting to the streaming service. Do not change unless instructed by LaunchDarkly.
     public var streamUrl: URL = Defaults.streamUrl
 
     /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)
@@ -169,7 +170,11 @@ public struct LDConfig {
     /// The time interval between feature flag requests while running in the background. Used only for polling mode. (Default: 60 minutes)
     public var backgroundFlagPollingInterval: TimeInterval = Defaults.backgroundFlagPollingInterval
 
-    /// Controls the method the SDK uses to keep feature flags updated. When set to .streaming, connects to `clientstream` which notifies the SDK of feature flag changes. When set to .polling, an efficient polling mechanism is used to periodically request feature flag values. Ignored for watchOS, which always uses .polling. See `LDStreamingMode` for more details. (Default: .streaming)
+    /**
+     Controls the method the SDK uses to keep feature flags updated. (Default: `.streaming`)
+
+     See `LDStreamingMode` for more details.
+     */
     public var streamingMode: LDStreamingMode = Defaults.streamingMode
     /// Indicates whether streaming mode is allowed for the operating system
     private(set) var allowStreamingMode: Bool
@@ -204,14 +209,17 @@ public struct LDConfig {
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     See `LDUser.privatizableAttributes` for the attribute names that can be declared private. To set private user attributes for a specific user, see `LDUser.privateAttributes`. (Default: nil)
+     To set private user attributes for a specific user, see `LDUser.privateAttributes`. (Default: nil)
 
-     See Also: `allUserAttributesPrivate`, `LDUser.privatizableAttributes`, and `LDUser.privateAttributes`.
+     See Also: `allUserAttributesPrivate` and `LDUser.privateAttributes`.
     */
-    public var privateUserAttributes: [String]? = Defaults.privateUserAttributes
+    public var privateUserAttributes: [UserAttribute] = Defaults.privateUserAttributes
 
     /**
-     Directs the SDK to use REPORT for HTTP requests to connect to `clientstream` and make feature flag requests. When false the SDK uses GET for these requests. Do not use unless advised by LaunchDarkly. (Default: false)
+     Directs the SDK to use REPORT for HTTP requests for feature flag data. (Default: `false`)
+
+     This setting applies both to requests to the streaming service, as well as flag requests when the SDK is in polling
+     mode. When false the SDK uses GET for these requests. Do not use unless advised by LaunchDarkly.
     */
     public var useReport: Bool = Defaults.useReport
     private static let flagRetryStatusCodes = [HTTPURLResponse.StatusCodes.methodNotAllowed, HTTPURLResponse.StatusCodes.badRequest, HTTPURLResponse.StatusCodes.notImplemented]
@@ -360,8 +368,7 @@ extension LDConfig: Equatable {
             && lhs.enableBackgroundUpdates == rhs.enableBackgroundUpdates
             && lhs.startOnline == rhs.startOnline
             && lhs.allUserAttributesPrivate == rhs.allUserAttributesPrivate
-            && (lhs.privateUserAttributes == nil && rhs.privateUserAttributes == nil
-                || (lhs.privateUserAttributes != nil && rhs.privateUserAttributes != nil && lhs.privateUserAttributes! == rhs.privateUserAttributes!))
+            && Set(lhs.privateUserAttributes) == Set(rhs.privateUserAttributes)
             && lhs.useReport == rhs.useReport
             && lhs.inlineUserInEvents == rhs.inlineUserInEvents
             && lhs.isDebugMode == rhs.isDebugMode

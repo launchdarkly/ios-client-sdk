@@ -2,6 +2,58 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [6.0.0] - 2022-05-04
+
+Note that Objective-C bridging types are prefixed by `Objc`, but that prefix is not exposed to code written in Objective-C. For example, changes listed to `ObjcLDClient` are changes to the class referred to as `LDClient` from within Objective-C.
+
+### Added
+- Added the `LDValue` class to represent any data type that is allowed in JSON. This new type is used to provide more type safety when representing complex or non-statically determined data types. The SDK also provides the bridge types `ObjcLDValue` and `ObjcLDValueType` for Objective-C interoperability.
+- Added the `UserAttribute` class which provides a less error-prone way to refer to user attribute names in configuration.
+- Added the type specific variation functions, `boolVariation`, `intVariation`, `doubleVariation`, `stringVariation`, and `jsonVariation`, to `LDClient`.
+- Added the type specific detailed variation functions, `boolVariationDetail`, `intVariationDetail`, `doubleVariationDetail`, `stringVariationDetail`, and `jsonVariationDetail`, to `LDClient`.
+- Added `jsonVariation` and `jsonVariationDetail` to `ObjcLDClient`. These functions allow evaluating feature flags where the provided `defaultValue` and the resulting variation can be any valid JSON data type.
+- Added `ObjcLDJSONEvaluationDetail` for retrieving the detailed evaluation information of arbitrary type flag variations.
+- Added `ObjcLDChangedFlagHandler` type alias for new non-type specific Objective-C flag observers.
+
+### Changed (API)
+- `LDClient.track(key: data: metricValue:)` no longer `throws`.
+- The type of the `data` parameter of `LDClient.track(key: data: metricValue:)` has changed from `Any?` to `LDValue?`.
+- `ObjcLDClient.track(key: data:)` and `ObjcLDClient.track(key: data: metricValue:)` no longer `throws`. In Objective-C this change means that the `track` functions no longer accept a `error:` parameter.
+- The type of the `data` parameter of `ObjcLDClient.track(key: data:)` and `ObjcLDClient.track(key: data: metricValue)` has changed from `Any?` to `ObjLDValue?`. In Objective-C this would be a change from `id _Nullable` to `LDValue * _Nullable`.
+- `LDClient.allFlags` now has the type `[LDFlagKey: LDValue]?` rather than `[LDFlagKey: Any]?`.
+- `ObjcLDClient.allFlags` now has the type `[String: ObjcLDValue]?` rather than `[String: Any]?`. In Objective-C this would be a change from `NSDictionary<NSString*, id> * _Nullable` to `NSDictionary<NSString*, LDValue*> * _Nullable`.
+- The type of the `LDUser.custom` dictionary, and the corresponding `LDUser.init` parameter has been changed from `[String: Any]?` to `[String: LDValue]`.
+- The type of the `ObjcLDUser.custom` property has been changed from `[String: Any]?` to `[String: ObjcLDValue]`. In Objective-C this would be a change from `NSDictionary<NSString*, id> * _Nullable` to `NSDictionary<NSString*, LDValue*> * _Nonnull`.
+- The type of the `LDUser.privateAttributes` property, and the corresponding `LDUser.init` parameter, have been changed from `[String]?` to `[UserAttribute]`.
+- The type of the `ObjcLDUser.privateAttributes` property has been changed from `[String]?` to `[String]`. In Objective-C this would be a change from `NSArray<NSString*> * _Nullable` to `NSArray<NSString*> * _Nonnull`.
+- The types of the properties `LDChangedFlag.oldValue` and `LDChangedFlag.newValue` have been changed from `Any?` to `LDValue`.
+- The type of the `LDConfig.privateUserAttributes` property has been changed from `[String]?` to `[UserAttribute]`.
+- `ObjcLDConfig.privateUserAttributes` now has the non-optional type `[String]` rather than `[String]?`. In Objective-C this would be a change from `NSArray<NSString*> * _Nullable` to `NSArray<NSString*> * _Nonnull`.
+- The type of the `LDEvaluationDetail.reason` property has been changed from `[String: Any]` to `[String: LDValue]`.
+- The type of the `reason` property of `ObjcLDBoolEvaluationDetail`, `ObjcLDIntegerEvaluationDetail`, `ObjcLDDoubleEvaluationDetail`, and `ObjcLDStringEvaluationDetail` has been changed from `[String: Any]?` to `[String: ObjcLDValue]?`. In Objective-C this would be a change from `NSDictionary<NSString*, id> * _Nullable` to `NSDictionary<NSString*, LDValue*> * _Nullable`.
+
+### Changed (behavioral)
+- The `Equatable` instance for `LDUser` has been changed to compare all user properties, rather than just the `key` property.
+- Using `"custom"` as a private attribute name in `LDConfig.privateUserAttributes` or `LDUser.privateAttributes` will no longer set all `LDUser` custom attributes private.
+- The automatically set `device` and `operatingSystem` custom attributes can now be set private.
+- SDK versions from 4.0.0 and less than 6.0.0 supported migration of cached flag data from any SDK version of at least 2.3.3. The 6.0.0 release only supports migration of cached flag data from SDK versions of at least 4.0.0.
+
+### Removed
+- Removed `LDClient.variation(forKey: defaultValue:)` and `LDClient.variationDetail(forKey: defaultValue:)` functions. Please use the new type-specific variation functions instead (e.g. `LDClient.boolVariation(forKey: defaultValue:)`).
+- Removed the `LDFlagValueConvertible` protocol which was previously used to constrain the parameters and return types of the variation functions.
+- `LDErrorHandler` and `LDClient.observeError(owner: handler:)` have been removed. Please use `ConnectionInformation` instead.
+- Removed the `LDUser.init(userDictionary: )` and `ObjcLDUser.init(userDictionary: )` initializers, please use the explicit initializers instead.
+- Removed `LDUser.CodingKeys`. To refer to user attributes, please use `UserAttribute` instead.
+- Removed `LDUser.privatizableAttributes` and `ObjcLDUser.privatizableAttributes`.
+- Removed `ObjcLDUser.attributeCustom`.
+- The `LDUser.device` and `LDUser.operatingSystem` properties, and the corresponding `LDUser.init` parameters have been removed. These fields will be included in the `LDUser.custom` dictionary.
+- The `ObjcLDUser.device` and `ObjcLDUser.operatingSystem` properties have been removed. These fields will be included in the `ObjcLDUser.custom` dictionary.
+- The `ObjcLDClient` functions, `arrayVariation`, `arrayVariationDetail`, `dictionaryVariation`, and `dictionaryVariationDetail`, have been removed. Please use `ObjcLDClient.jsonVariation` and `ObjcLDClient.jsonVariationDetail` instead.
+- The per-type instances of `ObjcLDChangedFlag` have been removed. Please use the base class `ObjcLDChangedFlag`, which now provides `oldValue` and `newValue` `ObjcLDValue` properties. The removed classes are `ObjcLDBoolChangedFlag`, `ObjcLDIntegerChangedFlag`, `ObjcLDDoubleChangedFlag`, `ObjcLDStringChangedFlag`, `ObjcLDArrayChangedFlag`, and `ObjcLDDictionaryChangedFlag`.
+- The classes `ObjcLDArrayEvaluationDetail` and `ObjcLDDictionaryEvaluationDetail` have been removed. Please use `ObjcLDJSONEvaluationDetail` instead.
+- The type aliases, `ObjcLDBoolChangedFlagHandler`, `ObjcLDIntegerChangedFlagHandler`, `ObjcLDDoubleChangedFlagHandler`, `ObjcLDStringChangedFlagHandler`, `ObjcLDArrayChangedFlagHandler`, and `ObjcLDDictionaryChangedFlagHandler`, have been removed. Please use `ObjcLDChangedFlagHandler` instead.
+- The `ObjcLDClient` functions, `observeBool`, `observeInteger`, `observeDouble`, `observeString`, `observeArray`, and `observeDictionary`, have been removed. Please use the non-type specific `ObjcLDClient.observe(key: owner: handler:)` instead.
+
 ## [5.4.5] - 2022-03-11
 ### Fixed
 - Fixed race condition in `LDSwiftEventSource` that could cause a crash if the stream is explicitly stopped (such as when `identify` is called) while the stream is waiting to reconnect.
