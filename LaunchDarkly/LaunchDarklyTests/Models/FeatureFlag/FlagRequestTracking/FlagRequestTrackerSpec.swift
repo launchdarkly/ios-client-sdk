@@ -1,10 +1,3 @@
-//
-//  FlagRequestTrackerSpec.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2018 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import XCTest
 
@@ -13,6 +6,7 @@ import XCTest
 final class FlagRequestTrackerSpec: XCTestCase {
     func testInit() {
         let flagRequestTracker = FlagRequestTracker()
+        XCTAssertEqual(flagRequestTracker.flagCounters, [:])
         XCTAssertFalse(flagRequestTracker.hasLoggedRequests)
         let now = Date()
         XCTAssert(flagRequestTracker.startDate <= now)
@@ -22,53 +16,38 @@ final class FlagRequestTrackerSpec: XCTestCase {
     func testTrackRequestInitial() {
         let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
         var flagRequestTracker = FlagRequestTracker()
-        let now = Date().millisSince1970
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true)
-        let dictionaryValue = flagRequestTracker.dictionaryValue
-        XCTAssert(dictionaryValue.flagRequestTrackerStartDateMillis! <= now)
-        XCTAssert(dictionaryValue.flagRequestTrackerStartDateMillis! >= now - 1000)
-        let features = dictionaryValue.flagRequestTrackerFeatures!
-        XCTAssertEqual(features.count, 1)
+        XCTAssertEqual(flagRequestTracker.flagCounters.count, 1)
         let counter = FlagCounter()
         counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true)
-        XCTAssert(AnyComparer.isEqual(features["bool-flag"], to: counter.dictionaryValue))
+        XCTAssertEqual(flagRequestTracker.flagCounters["bool-flag"], counter)
     }
 
     func testTrackRequestSameFlagKey() {
         let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
         var flagRequestTracker = FlagRequestTracker()
-        let now = Date().millisSince1970
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true)
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true)
-        let dictionaryValue = flagRequestTracker.dictionaryValue
-        XCTAssert(dictionaryValue.flagRequestTrackerStartDateMillis! <= now)
-        XCTAssert(dictionaryValue.flagRequestTrackerStartDateMillis! >= now - 1000)
-        let features = dictionaryValue.flagRequestTrackerFeatures!
-        XCTAssertEqual(features.count, 1)
+        XCTAssertEqual(flagRequestTracker.flagCounters.count, 1)
         let counter = FlagCounter()
         counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true)
         counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true)
-        XCTAssert(AnyComparer.isEqual(features["bool-flag"], to: counter.dictionaryValue))
+        XCTAssertEqual(flagRequestTracker.flagCounters["bool-flag"], counter)
     }
 
     func testTrackRequestDifferentFlagKey() {
         let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
         let secondFlag = FeatureFlag(flagKey: "alt-flag", variation: 2, version: 6, flagVersion: 3)
         var flagRequestTracker = FlagRequestTracker()
-        let now = Date().millisSince1970
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true)
         flagRequestTracker.trackRequest(flagKey: "alt-flag", reportedValue: true, featureFlag: secondFlag, defaultValue: false)
-        let dictionaryValue = flagRequestTracker.dictionaryValue
-        XCTAssert(dictionaryValue.flagRequestTrackerStartDateMillis! <= now)
-        XCTAssert(dictionaryValue.flagRequestTrackerStartDateMillis! >= now - 1000)
-        let features = dictionaryValue.flagRequestTrackerFeatures!
-        XCTAssertEqual(features.count, 2)
-        let counter = FlagCounter()
-        counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true)
-        let secondCounter = FlagCounter()
-        secondCounter.trackRequest(reportedValue: true, featureFlag: secondFlag, defaultValue: false)
-        XCTAssert(AnyComparer.isEqual(features["bool-flag"], to: counter.dictionaryValue))
-        XCTAssert(AnyComparer.isEqual(features["alt-flag"], to: secondCounter.dictionaryValue))
+        XCTAssertEqual(flagRequestTracker.flagCounters.count, 2)
+        let counter1 = FlagCounter()
+        counter1.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true)
+        let counter2 = FlagCounter()
+        counter2.trackRequest(reportedValue: true, featureFlag: secondFlag, defaultValue: false)
+        XCTAssertEqual(flagRequestTracker.flagCounters["bool-flag"], counter1)
+        XCTAssertEqual(flagRequestTracker.flagCounters["alt-flag"], counter2)
     }
 
     func testHasLoggedRequests() {
@@ -89,26 +68,20 @@ extension FlagRequestTracker {
     }
 }
 
-extension FlagRequestTracker: Equatable {
-    public static func == (lhs: FlagRequestTracker, rhs: FlagRequestTracker) -> Bool {
-        if !lhs.startDate.isWithin(0.001, of: rhs.startDate) {
-            return false
-        }
-        return lhs.flagCounters == rhs.flagCounters
-    }
-}
-
-extension Dictionary where Key == String, Value == Any {
-    var flagRequestTrackerStartDateMillis: Int64? {
-        self[FlagRequestTracker.CodingKeys.startDate.rawValue] as? Int64
-    }
-    var flagRequestTrackerFeatures: [LDFlagKey: Any]? {
-        self[FlagRequestTracker.CodingKeys.features.rawValue] as? [LDFlagKey: Any]
-    }
-}
-
 extension LDFlagKey {
     var isKnown: Bool {
         DarklyServiceMock.FlagKeys.knownFlags.contains(self)
+    }
+}
+
+extension CounterValue: Equatable {
+    public static func == (lhs: CounterValue, rhs: CounterValue) -> Bool {
+        lhs.value == rhs.value && lhs.count == rhs.count
+    }
+}
+
+extension FlagCounter: Equatable {
+    public static func == (lhs: FlagCounter, rhs: FlagCounter) -> Bool {
+        lhs.defaultValue == rhs.defaultValue && lhs.flagValueCounters == rhs.flagValueCounters
     }
 }

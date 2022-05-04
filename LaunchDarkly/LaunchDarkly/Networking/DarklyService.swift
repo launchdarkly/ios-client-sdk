@@ -1,10 +1,3 @@
-//
-//  DarklyService.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import LDSwiftEventSource
 
@@ -27,7 +20,7 @@ protocol DarklyServiceProvider: AnyObject {
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?)
     func clearFlagResponseCache()
     func createEventSource(useReport: Bool, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
-    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?)
+    func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?)
     func publishDiagnostic<T: DiagnosticEvent & Encodable>(diagnosticEvent: T, completion: ServiceCompletionHandler?)
 }
 
@@ -88,7 +81,9 @@ final class DarklyService: DarklyServiceProvider {
 
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
         guard hasMobileKey(#function) else { return }
-        guard let userJson = user.dictionaryValue(includePrivateAttributes: true, config: config).jsonData
+        let encoder = JSONEncoder()
+        encoder.userInfo[LDUser.UserInfoKeys.includePrivateAttributes] = true
+        guard let userJsonData = try? encoder.encode(user)
         else {
             Log.debug(typeName(and: #function, appending: ": ") + "Aborting. Unable to create flagRequest.")
             return
@@ -98,12 +93,12 @@ final class DarklyService: DarklyServiceProvider {
         if let etag = flagRequestEtag {
             headers.merge([HTTPHeaders.HeaderKey.ifNoneMatch: etag]) { orig, _ in orig }
         }
-        var request = URLRequest(url: flagRequestUrl(useReport: useReport, getData: userJson),
+        var request = URLRequest(url: flagRequestUrl(useReport: useReport, getData: userJsonData),
                                  ldHeaders: headers,
                                  ldConfig: config)
         if useReport {
             request.httpMethod = URLRequest.HTTPMethods.report
-            request.httpBody = userJson
+            request.httpBody = userJsonData
         }
 
         self.session.dataTask(with: request) { [weak self] data, response, error in
@@ -152,7 +147,9 @@ final class DarklyService: DarklyServiceProvider {
     func createEventSource(useReport: Bool, 
                            handler: EventHandler, 
                            errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
-        let userJsonData = user.dictionaryValue(includePrivateAttributes: true, config: config).jsonData
+        let encoder = JSONEncoder()
+        encoder.userInfo[LDUser.UserInfoKeys.includePrivateAttributes] = true
+        let userJsonData = try? encoder.encode(user)
 
         var streamRequestUrl = config.streamUrl.appendingPathComponent(StreamRequestPath.meval)
         var connectMethod = HTTPRequestMethod.get
@@ -176,13 +173,8 @@ final class DarklyService: DarklyServiceProvider {
 
     // MARK: Publish Events
 
-    func publishEventDictionaries(_ eventDictionaries: [[String: Any]], _ payloadId: String, completion: ServiceCompletionHandler?) {
+    func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?) {
         guard hasMobileKey(#function) else { return }
-        guard !eventDictionaries.isEmpty, let eventData = eventDictionaries.jsonData
-        else {
-            return Log.debug(typeName(and: #function, appending: ": ") + "Aborting. No event dictionary.")
-        }
-
         let url = config.eventsUrl.appendingPathComponent(EventRequestPath.bulk)
         let headers = [HTTPHeaders.HeaderKey.eventPayloadIDHeader: payloadId].merging(httpHeaders.eventRequestHeaders) { $1 }
         doPublish(url: url, headers: headers, body: eventData, completion: completion)

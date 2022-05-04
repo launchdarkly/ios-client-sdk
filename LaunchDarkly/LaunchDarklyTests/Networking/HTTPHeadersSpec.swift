@@ -1,10 +1,3 @@
-//
-//  HTTPHeadersSpec.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2019 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import XCTest
 

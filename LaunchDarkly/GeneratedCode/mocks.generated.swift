@@ -11,12 +11,12 @@ import LDSwiftEventSource
 final class CacheConvertingMock: CacheConverting {
 
     var convertCacheDataCallCount = 0
-    var convertCacheDataCallback: (() -> Void)?
-    var convertCacheDataReceivedArguments: (user: LDUser, config: LDConfig)?
-    func convertCacheData(for user: LDUser, and config: LDConfig) {
+    var convertCacheDataCallback: (() throws -> Void)?
+    var convertCacheDataReceivedArguments: (serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedUsers: Int)?
+    func convertCacheData(serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedUsers: Int) {
         convertCacheDataCallCount += 1
-        convertCacheDataReceivedArguments = (user: user, config: config)
-        convertCacheDataCallback?()
+        convertCacheDataReceivedArguments = (serviceFactory: serviceFactory, keysToConvert: keysToConvert, maxCachedUsers: maxCachedUsers)
+        try! convertCacheDataCallback?()
     }
 }
 
@@ -24,17 +24,17 @@ final class CacheConvertingMock: CacheConverting {
 final class DarklyStreamingProviderMock: DarklyStreamingProvider {
 
     var startCallCount = 0
-    var startCallback: (() -> Void)?
+    var startCallback: (() throws -> Void)?
     func start() {
         startCallCount += 1
-        startCallback?()
+        try! startCallback?()
     }
 
     var stopCallCount = 0
-    var stopCallback: (() -> Void)?
+    var stopCallback: (() throws -> Void)?
     func stop() {
         stopCallCount += 1
-        stopCallback?()
+        try! stopCallback?()
     }
 }
 
@@ -42,55 +42,55 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
 final class DiagnosticCachingMock: DiagnosticCaching {
 
     var lastStatsSetCount = 0
-    var setLastStatsCallback: (() -> Void)?
+    var setLastStatsCallback: (() throws -> Void)?
     var lastStats: DiagnosticStats? = nil {
         didSet {
             lastStatsSetCount += 1
-            setLastStatsCallback?()
+            try! setLastStatsCallback?()
         }
     }
 
     var getDiagnosticIdCallCount = 0
-    var getDiagnosticIdCallback: (() -> Void)?
+    var getDiagnosticIdCallback: (() throws -> Void)?
     var getDiagnosticIdReturnValue: DiagnosticId!
     func getDiagnosticId() -> DiagnosticId {
         getDiagnosticIdCallCount += 1
-        getDiagnosticIdCallback?()
+        try! getDiagnosticIdCallback?()
         return getDiagnosticIdReturnValue
     }
 
     var getCurrentStatsAndResetCallCount = 0
-    var getCurrentStatsAndResetCallback: (() -> Void)?
+    var getCurrentStatsAndResetCallback: (() throws -> Void)?
     var getCurrentStatsAndResetReturnValue: DiagnosticStats!
     func getCurrentStatsAndReset() -> DiagnosticStats {
         getCurrentStatsAndResetCallCount += 1
-        getCurrentStatsAndResetCallback?()
+        try! getCurrentStatsAndResetCallback?()
         return getCurrentStatsAndResetReturnValue
     }
 
     var incrementDroppedEventCountCallCount = 0
-    var incrementDroppedEventCountCallback: (() -> Void)?
+    var incrementDroppedEventCountCallback: (() throws -> Void)?
     func incrementDroppedEventCount() {
         incrementDroppedEventCountCallCount += 1
-        incrementDroppedEventCountCallback?()
+        try! incrementDroppedEventCountCallback?()
     }
 
     var recordEventsInLastBatchCallCount = 0
-    var recordEventsInLastBatchCallback: (() -> Void)?
+    var recordEventsInLastBatchCallback: (() throws -> Void)?
     var recordEventsInLastBatchReceivedEventsInLastBatch: Int?
     func recordEventsInLastBatch(eventsInLastBatch: Int) {
         recordEventsInLastBatchCallCount += 1
         recordEventsInLastBatchReceivedEventsInLastBatch = eventsInLastBatch
-        recordEventsInLastBatchCallback?()
+        try! recordEventsInLastBatchCallback?()
     }
 
     var addStreamInitCallCount = 0
-    var addStreamInitCallback: (() -> Void)?
+    var addStreamInitCallback: (() throws -> Void)?
     var addStreamInitReceivedStreamInit: DiagnosticStreamInit?
     func addStreamInit(streamInit: DiagnosticStreamInit) {
         addStreamInitCallCount += 1
         addStreamInitReceivedStreamInit = streamInit
-        addStreamInitCallback?()
+        try! addStreamInitCallback?()
     }
 }
 
@@ -98,12 +98,12 @@ final class DiagnosticCachingMock: DiagnosticCaching {
 final class DiagnosticReportingMock: DiagnosticReporting {
 
     var setModeCallCount = 0
-    var setModeCallback: (() -> Void)?
+    var setModeCallback: (() throws -> Void)?
     var setModeReceivedArguments: (runMode: LDClientRunMode, online: Bool)?
     func setMode(_ runMode: LDClientRunMode, online: Bool) {
         setModeCallCount += 1
         setModeReceivedArguments = (runMode: runMode, online: online)
-        setModeCallback?()
+        try! setModeCallback?()
     }
 }
 
@@ -111,133 +111,102 @@ final class DiagnosticReportingMock: DiagnosticReporting {
 final class EnvironmentReportingMock: EnvironmentReporting {
 
     var isDebugBuildSetCount = 0
-    var setIsDebugBuildCallback: (() -> Void)?
+    var setIsDebugBuildCallback: (() throws -> Void)?
     var isDebugBuild: Bool = true {
         didSet {
             isDebugBuildSetCount += 1
-            setIsDebugBuildCallback?()
+            try! setIsDebugBuildCallback?()
         }
     }
 
     var deviceTypeSetCount = 0
-    var setDeviceTypeCallback: (() -> Void)?
+    var setDeviceTypeCallback: (() throws -> Void)?
     var deviceType: String = Constants.deviceType {
         didSet {
             deviceTypeSetCount += 1
-            setDeviceTypeCallback?()
+            try! setDeviceTypeCallback?()
         }
     }
 
     var deviceModelSetCount = 0
-    var setDeviceModelCallback: (() -> Void)?
+    var setDeviceModelCallback: (() throws -> Void)?
     var deviceModel: String = Constants.deviceModel {
         didSet {
             deviceModelSetCount += 1
-            setDeviceModelCallback?()
+            try! setDeviceModelCallback?()
         }
     }
 
     var systemVersionSetCount = 0
-    var setSystemVersionCallback: (() -> Void)?
+    var setSystemVersionCallback: (() throws -> Void)?
     var systemVersion: String = Constants.systemVersion {
         didSet {
             systemVersionSetCount += 1
-            setSystemVersionCallback?()
+            try! setSystemVersionCallback?()
         }
     }
 
     var systemNameSetCount = 0
-    var setSystemNameCallback: (() -> Void)?
+    var setSystemNameCallback: (() throws -> Void)?
     var systemName: String = Constants.systemName {
         didSet {
             systemNameSetCount += 1
-            setSystemNameCallback?()
+            try! setSystemNameCallback?()
         }
     }
 
     var operatingSystemSetCount = 0
-    var setOperatingSystemCallback: (() -> Void)?
+    var setOperatingSystemCallback: (() throws -> Void)?
     var operatingSystem: OperatingSystem = .iOS {
         didSet {
             operatingSystemSetCount += 1
-            setOperatingSystemCallback?()
+            try! setOperatingSystemCallback?()
         }
     }
 
     var backgroundNotificationSetCount = 0
-    var setBackgroundNotificationCallback: (() -> Void)?
+    var setBackgroundNotificationCallback: (() throws -> Void)?
     var backgroundNotification: Notification.Name? = EnvironmentReporter().backgroundNotification {
         didSet {
             backgroundNotificationSetCount += 1
-            setBackgroundNotificationCallback?()
+            try! setBackgroundNotificationCallback?()
         }
     }
 
     var foregroundNotificationSetCount = 0
-    var setForegroundNotificationCallback: (() -> Void)?
+    var setForegroundNotificationCallback: (() throws -> Void)?
     var foregroundNotification: Notification.Name? = EnvironmentReporter().foregroundNotification {
         didSet {
             foregroundNotificationSetCount += 1
-            setForegroundNotificationCallback?()
+            try! setForegroundNotificationCallback?()
         }
     }
 
     var vendorUUIDSetCount = 0
-    var setVendorUUIDCallback: (() -> Void)?
+    var setVendorUUIDCallback: (() throws -> Void)?
     var vendorUUID: String? = Constants.vendorUUID {
         didSet {
             vendorUUIDSetCount += 1
-            setVendorUUIDCallback?()
+            try! setVendorUUIDCallback?()
         }
     }
 
     var sdkVersionSetCount = 0
-    var setSdkVersionCallback: (() -> Void)?
+    var setSdkVersionCallback: (() throws -> Void)?
     var sdkVersion: String = Constants.sdkVersion {
         didSet {
             sdkVersionSetCount += 1
-            setSdkVersionCallback?()
+            try! setSdkVersionCallback?()
         }
     }
 
     var shouldThrottleOnlineCallsSetCount = 0
-    var setShouldThrottleOnlineCallsCallback: (() -> Void)?
+    var setShouldThrottleOnlineCallsCallback: (() throws -> Void)?
     var shouldThrottleOnlineCalls: Bool = true {
         didSet {
             shouldThrottleOnlineCallsSetCount += 1
-            setShouldThrottleOnlineCallsCallback?()
+            try! setShouldThrottleOnlineCallsCallback?()
         }
-    }
-}
-
-// MARK: - ErrorNotifyingMock
-final class ErrorNotifyingMock: ErrorNotifying {
-
-    var addErrorObserverCallCount = 0
-    var addErrorObserverCallback: (() -> Void)?
-    var addErrorObserverReceivedObserver: ErrorObserver?
-    func addErrorObserver(_ observer: ErrorObserver) {
-        addErrorObserverCallCount += 1
-        addErrorObserverReceivedObserver = observer
-        addErrorObserverCallback?()
-    }
-
-    var removeObserversCallCount = 0
-    var removeObserversCallback: (() -> Void)?
-    var removeObserversReceivedOwner: LDObserverOwner?
-    func removeObservers(for owner: LDObserverOwner) {
-        removeObserversCallCount += 1
-        removeObserversReceivedOwner = owner
-        removeObserversCallback?()
-    }
-
-    var notifyObserversCallCount = 0
-    var notifyObserversCallback: (() -> Void)?
-    var notifyObserversReceivedError: Error?
-    func notifyObservers(of error: Error) {
-        notifyObserversCallCount += 1
-        notifyObserversReceivedError = error
-        notifyObserversCallback?()
     }
 }
 
@@ -245,81 +214,81 @@ final class ErrorNotifyingMock: ErrorNotifying {
 final class EventReportingMock: EventReporting {
 
     var isOnlineSetCount = 0
-    var setIsOnlineCallback: (() -> Void)?
+    var setIsOnlineCallback: (() throws -> Void)?
     var isOnline: Bool = false {
         didSet {
             isOnlineSetCount += 1
-            setIsOnlineCallback?()
+            try! setIsOnlineCallback?()
         }
     }
 
     var lastEventResponseDateSetCount = 0
-    var setLastEventResponseDateCallback: (() -> Void)?
+    var setLastEventResponseDateCallback: (() throws -> Void)?
     var lastEventResponseDate: Date? = nil {
         didSet {
             lastEventResponseDateSetCount += 1
-            setLastEventResponseDateCallback?()
+            try! setLastEventResponseDateCallback?()
         }
     }
 
     var recordCallCount = 0
-    var recordCallback: (() -> Void)?
+    var recordCallback: (() throws -> Void)?
     var recordReceivedEvent: Event?
     func record(_ event: Event) {
         recordCallCount += 1
         recordReceivedEvent = event
-        recordCallback?()
+        try! recordCallback?()
     }
 
     var recordFlagEvaluationEventsCallCount = 0
-    var recordFlagEvaluationEventsCallback: (() -> Void)?
-    var recordFlagEvaluationEventsReceivedArguments: (flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool)?
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: Any?, defaultValue: Any?, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) {
+    var recordFlagEvaluationEventsCallback: (() throws -> Void)?
+    var recordFlagEvaluationEventsReceivedArguments: (flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool)?
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) {
         recordFlagEvaluationEventsCallCount += 1
         recordFlagEvaluationEventsReceivedArguments = (flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, includeReason: includeReason)
-        recordFlagEvaluationEventsCallback?()
+        try! recordFlagEvaluationEventsCallback?()
     }
 
     var flushCallCount = 0
-    var flushCallback: (() -> Void)?
+    var flushCallback: (() throws -> Void)?
     var flushReceivedCompletion: CompletionClosure?
     func flush(completion: CompletionClosure?) {
         flushCallCount += 1
         flushReceivedCompletion = completion
-        flushCallback?()
+        try! flushCallback?()
     }
 }
 
 // MARK: - FeatureFlagCachingMock
 final class FeatureFlagCachingMock: FeatureFlagCaching {
 
-    var maxCachedUsersSetCount = 0
-    var setMaxCachedUsersCallback: (() -> Void)?
-    var maxCachedUsers: Int = 5 {
+    var keyedValueCacheSetCount = 0
+    var setKeyedValueCacheCallback: (() throws -> Void)?
+    var keyedValueCache: KeyedValueCaching = KeyedValueCachingMock() {
         didSet {
-            maxCachedUsersSetCount += 1
-            setMaxCachedUsersCallback?()
+            keyedValueCacheSetCount += 1
+            try! setKeyedValueCacheCallback?()
         }
     }
 
     var retrieveFeatureFlagsCallCount = 0
-    var retrieveFeatureFlagsCallback: (() -> Void)?
-    var retrieveFeatureFlagsReceivedArguments: (userKey: String, mobileKey: String)?
+    var retrieveFeatureFlagsCallback: (() throws -> Void)?
+    var retrieveFeatureFlagsReceivedUserKey: String?
     var retrieveFeatureFlagsReturnValue: [LDFlagKey: FeatureFlag]?
-    func retrieveFeatureFlags(forUserWithKey userKey: String, andMobileKey mobileKey: String) -> [LDFlagKey: FeatureFlag]? {
+    func retrieveFeatureFlags(userKey: String) -> [LDFlagKey: FeatureFlag]? {
         retrieveFeatureFlagsCallCount += 1
-        retrieveFeatureFlagsReceivedArguments = (userKey: userKey, mobileKey: mobileKey)
-        retrieveFeatureFlagsCallback?()
+        retrieveFeatureFlagsReceivedUserKey = userKey
+        try! retrieveFeatureFlagsCallback?()
         return retrieveFeatureFlagsReturnValue
     }
 
     var storeFeatureFlagsCallCount = 0
-    var storeFeatureFlagsCallback: (() -> Void)?
-    var storeFeatureFlagsReceivedArguments: (featureFlags: [LDFlagKey: FeatureFlag], userKey: String, mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode)?
-    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], userKey: String, mobileKey: String, lastUpdated: Date, storeMode: FlagCachingStoreMode) {
+    var storeFeatureFlagsCallback: (() throws -> Void)?
+    var storeFeatureFlagsReceivedArguments: (featureFlags: [LDFlagKey: FeatureFlag], userKey: String, lastUpdated: Date)?
+    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], userKey: String, lastUpdated: Date) {
         storeFeatureFlagsCallCount += 1
-        storeFeatureFlagsReceivedArguments = (featureFlags: featureFlags, userKey: userKey, mobileKey: mobileKey, lastUpdated: lastUpdated, storeMode: storeMode)
-        storeFeatureFlagsCallback?()
+        storeFeatureFlagsReceivedArguments = (featureFlags: featureFlags, userKey: userKey, lastUpdated: lastUpdated)
+        try! storeFeatureFlagsCallback?()
     }
 }
 
@@ -327,64 +296,64 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
 final class FlagChangeNotifyingMock: FlagChangeNotifying {
 
     var addFlagChangeObserverCallCount = 0
-    var addFlagChangeObserverCallback: (() -> Void)?
+    var addFlagChangeObserverCallback: (() throws -> Void)?
     var addFlagChangeObserverReceivedObserver: FlagChangeObserver?
     func addFlagChangeObserver(_ observer: FlagChangeObserver) {
         addFlagChangeObserverCallCount += 1
         addFlagChangeObserverReceivedObserver = observer
-        addFlagChangeObserverCallback?()
+        try! addFlagChangeObserverCallback?()
     }
 
     var addFlagsUnchangedObserverCallCount = 0
-    var addFlagsUnchangedObserverCallback: (() -> Void)?
+    var addFlagsUnchangedObserverCallback: (() throws -> Void)?
     var addFlagsUnchangedObserverReceivedObserver: FlagsUnchangedObserver?
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver) {
         addFlagsUnchangedObserverCallCount += 1
         addFlagsUnchangedObserverReceivedObserver = observer
-        addFlagsUnchangedObserverCallback?()
+        try! addFlagsUnchangedObserverCallback?()
     }
 
     var addConnectionModeChangedObserverCallCount = 0
-    var addConnectionModeChangedObserverCallback: (() -> Void)?
+    var addConnectionModeChangedObserverCallback: (() throws -> Void)?
     var addConnectionModeChangedObserverReceivedObserver: ConnectionModeChangedObserver?
     func addConnectionModeChangedObserver(_ observer: ConnectionModeChangedObserver) {
         addConnectionModeChangedObserverCallCount += 1
         addConnectionModeChangedObserverReceivedObserver = observer
-        addConnectionModeChangedObserverCallback?()
+        try! addConnectionModeChangedObserverCallback?()
     }
 
     var removeObserverCallCount = 0
-    var removeObserverCallback: (() -> Void)?
+    var removeObserverCallback: (() throws -> Void)?
     var removeObserverReceivedOwner: LDObserverOwner?
     func removeObserver(owner: LDObserverOwner) {
         removeObserverCallCount += 1
         removeObserverReceivedOwner = owner
-        removeObserverCallback?()
+        try! removeObserverCallback?()
     }
 
     var notifyConnectionModeChangedObserversCallCount = 0
-    var notifyConnectionModeChangedObserversCallback: (() -> Void)?
+    var notifyConnectionModeChangedObserversCallback: (() throws -> Void)?
     var notifyConnectionModeChangedObserversReceivedConnectionMode: ConnectionInformation.ConnectionMode?
     func notifyConnectionModeChangedObservers(connectionMode: ConnectionInformation.ConnectionMode) {
         notifyConnectionModeChangedObserversCallCount += 1
         notifyConnectionModeChangedObserversReceivedConnectionMode = connectionMode
-        notifyConnectionModeChangedObserversCallback?()
+        try! notifyConnectionModeChangedObserversCallback?()
     }
 
     var notifyUnchangedCallCount = 0
-    var notifyUnchangedCallback: (() -> Void)?
+    var notifyUnchangedCallback: (() throws -> Void)?
     func notifyUnchanged() {
         notifyUnchangedCallCount += 1
-        notifyUnchangedCallback?()
+        try! notifyUnchangedCallback?()
     }
 
     var notifyObserversCallCount = 0
-    var notifyObserversCallback: (() -> Void)?
+    var notifyObserversCallback: (() throws -> Void)?
     var notifyObserversReceivedArguments: (oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag])?
     func notifyObservers(oldFlags: [LDFlagKey: FeatureFlag], newFlags: [LDFlagKey: FeatureFlag]) {
         notifyObserversCallCount += 1
         notifyObserversReceivedArguments = (oldFlags: oldFlags, newFlags: newFlags)
-        notifyObserversCallback?()
+        try! notifyObserversCallback?()
     }
 }
 
@@ -392,32 +361,50 @@ final class FlagChangeNotifyingMock: FlagChangeNotifying {
 final class KeyedValueCachingMock: KeyedValueCaching {
 
     var setCallCount = 0
-    var setCallback: (() -> Void)?
-    var setReceivedArguments: (value: Any?, forKey: String)?
-    func set(_ value: Any?, forKey: String) {
+    var setCallback: (() throws -> Void)?
+    var setReceivedArguments: (value: Data, forKey: String)?
+    func set(_ value: Data, forKey: String) {
         setCallCount += 1
         setReceivedArguments = (value: value, forKey: forKey)
-        setCallback?()
+        try! setCallback?()
+    }
+
+    var dataCallCount = 0
+    var dataCallback: (() throws -> Void)?
+    var dataReceivedForKey: String?
+    var dataReturnValue: Data?
+    func data(forKey: String) -> Data? {
+        dataCallCount += 1
+        dataReceivedForKey = forKey
+        try! dataCallback?()
+        return dataReturnValue
     }
 
     var dictionaryCallCount = 0
-    var dictionaryCallback: (() -> Void)?
+    var dictionaryCallback: (() throws -> Void)?
     var dictionaryReceivedForKey: String?
-    var dictionaryReturnValue: [String: Any]? = nil
+    var dictionaryReturnValue: [String: Any]?
     func dictionary(forKey: String) -> [String: Any]? {
         dictionaryCallCount += 1
         dictionaryReceivedForKey = forKey
-        dictionaryCallback?()
+        try! dictionaryCallback?()
         return dictionaryReturnValue
     }
 
     var removeObjectCallCount = 0
-    var removeObjectCallback: (() -> Void)?
+    var removeObjectCallback: (() throws -> Void)?
     var removeObjectReceivedForKey: String?
     func removeObject(forKey: String) {
         removeObjectCallCount += 1
         removeObjectReceivedForKey = forKey
-        removeObjectCallback?()
+        try! removeObjectCallback?()
+    }
+
+    var removeAllCallCount = 0
+    var removeAllCallback: (() throws -> Void)?
+    func removeAll() {
+        removeAllCallCount += 1
+        try! removeAllCallback?()
     }
 }
 
@@ -425,29 +412,29 @@ final class KeyedValueCachingMock: KeyedValueCaching {
 final class LDFlagSynchronizingMock: LDFlagSynchronizing {
 
     var isOnlineSetCount = 0
-    var setIsOnlineCallback: (() -> Void)?
+    var setIsOnlineCallback: (() throws -> Void)?
     var isOnline: Bool = false {
         didSet {
             isOnlineSetCount += 1
-            setIsOnlineCallback?()
+            try! setIsOnlineCallback?()
         }
     }
 
     var streamingModeSetCount = 0
-    var setStreamingModeCallback: (() -> Void)?
+    var setStreamingModeCallback: (() throws -> Void)?
     var streamingMode: LDStreamingMode = .streaming {
         didSet {
             streamingModeSetCount += 1
-            setStreamingModeCallback?()
+            try! setStreamingModeCallback?()
         }
     }
 
     var pollingIntervalSetCount = 0
-    var setPollingIntervalCallback: (() -> Void)?
+    var setPollingIntervalCallback: (() throws -> Void)?
     var pollingInterval: TimeInterval = 60_000 {
         didSet {
             pollingIntervalSetCount += 1
-            setPollingIntervalCallback?()
+            try! setPollingIntervalCallback?()
         }
     }
 }
@@ -456,18 +443,18 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
 final class ThrottlingMock: Throttling {
 
     var runThrottledCallCount = 0
-    var runThrottledCallback: (() -> Void)?
+    var runThrottledCallback: (() throws -> Void)?
     var runThrottledReceivedRunClosure: RunClosure?
     func runThrottled(_ runClosure: @escaping RunClosure) {
         runThrottledCallCount += 1
         runThrottledReceivedRunClosure = runClosure
-        runThrottledCallback?()
+        try! runThrottledCallback?()
     }
 
     var cancelThrottledRunCallCount = 0
-    var cancelThrottledRunCallback: (() -> Void)?
+    var cancelThrottledRunCallback: (() throws -> Void)?
     func cancelThrottledRun() {
         cancelThrottledRunCallCount += 1
-        cancelThrottledRunCallback?()
+        try! cancelThrottledRunCallback?()
     }
 }

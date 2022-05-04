@@ -1,10 +1,3 @@
-//
-//  LDUserObject.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 /**
@@ -18,52 +11,22 @@ import Foundation
 public final class ObjcLDUser: NSObject {
     var user: LDUser
 
-    /**
-     LDUser attributes that can be marked private.
-
-     The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
-
-     See Also: `ObjcLDConfig.allUserAttributesPrivate`, `ObjcLDConfig.privateUserAttributes`, and `privateAttributes`.
-     */
-    @objc public class var privatizableAttributes: [String] {
-        LDUser.privatizableAttributes
-    }
     /// LDUser secondary attribute used to make `secondary` private
-    @objc public class var attributeSecondary: String {
-        LDUser.CodingKeys.secondary.rawValue
-    }
+    @objc public class var attributeSecondary: String { "secondary" }
     /// LDUser name attribute used to make `name` private
-    @objc public class var attributeName: String {
-        LDUser.CodingKeys.name.rawValue
-    }
+    @objc public class var attributeName: String { "name" }
     /// LDUser firstName attribute used to make `firstName` private
-    @objc public class var attributeFirstName: String {
-        LDUser.CodingKeys.firstName.rawValue
-    }
+    @objc public class var attributeFirstName: String { "firstName" }
     /// LDUser lastName attribute used to make `lastName` private
-    @objc public class var attributeLastName: String {
-        LDUser.CodingKeys.lastName.rawValue
-    }
+    @objc public class var attributeLastName: String { "lastName" }
     /// LDUser country attribute used to make `country` private
-    @objc public class var attributeCountry: String {
-        LDUser.CodingKeys.country.rawValue
-    }
+    @objc public class var attributeCountry: String { "country" }
     /// LDUser ipAddress attribute used to make `ipAddress` private
-    @objc public class var attributeIPAddress: String {
-        LDUser.CodingKeys.ipAddress.rawValue
-    }
+    @objc public class var attributeIPAddress: String { "ip" }
     /// LDUser email attribute used to make `email` private
-    @objc public class var attributeEmail: String {
-        LDUser.CodingKeys.email.rawValue
-    }
+    @objc public class var attributeEmail: String { "email" }
     /// LDUser avatar attribute used to make `avatar` private
-    @objc public class var attributeAvatar: String {
-        LDUser.CodingKeys.avatar.rawValue
-    }
-    /// LDUser custom attribute used to make `custom` private
-    @objc public class var attributeCustom: String {
-        LDUser.CodingKeys.custom.rawValue
-    }
+    @objc public class var attributeAvatar: String { "avatar" }
 
     /// Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
     @objc public var key: String {
@@ -109,39 +72,30 @@ public final class ObjcLDUser: NSObject {
         get { user.avatar }
         set { user.avatar = newValue }
     }
-    /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device & operatingSystem (which cannot be made private). See `privateAttributes` for details. (Default: nil)
-    @objc public var custom: [String: Any]? {
-        get { user.custom }
-        set { user.custom = newValue }
+    /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private. See `privateAttributes` for details.
+    @objc public var custom: [String: ObjcLDValue] {
+        get { user.custom.mapValues { ObjcLDValue(wrappedValue: $0) } }
+        set { user.custom = newValue.mapValues { $0.wrappedValue } }
     }
     /// Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. isAnonymous cannot be made private. (Default: YES)
     @objc public var isAnonymous: Bool {
         get { user.isAnonymous }
         set { user.isAnonymous = newValue }
     }
-    /// Client app defined device for the user. The SDK will determine the device automatically, however the client app can override the value. The SDK will insert the device into the `custom` dictionary. The device cannot be made private. (Default: the system identified device)
-    @objc public var device: String? {
-        get { user.device }
-        set { user.device = newValue }
-    }
-    /// Client app defined operatingSystem for the user. The SDK will determine the operatingSystem automatically, however the client app can override the value. The SDK will insert the operatingSystem into the `custom` dictionary. The operatingSystem cannot be made private. (Default: the system identified operating system)
-    @objc public var operatingSystem: String? {
-        get { user.operatingSystem }
-        set { user.operatingSystem = newValue }
-    }
+
     /**
      Client app defined privateAttributes for the user.
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     This attribute is ignored if `ObjcLDConfig.allUserAttributesPrivate` is YES. Combined with `ObjcLDConfig.privateUserAttributes`. The SDK considers attributes appearing in either list as private. Client apps may define attributes found in `privatizableAttributes` and top level `custom` dictionary keys here. (Default: nil)
+     This attribute is ignored if `ObjcLDConfig.allUserAttributesPrivate` is YES. Combined with `ObjcLDConfig.privateUserAttributes`. The SDK considers attributes appearing in either list as private. Client apps may define most built-in attributes and all top level `custom` dictionary keys here. (Default: `[]`])
 
      See Also: `ObjcLDConfig.allUserAttributesPrivate` and `ObjcLDConfig.privateUserAttributes`.
 
      */
-    @objc public var privateAttributes: [String]? {
-        get { user.privateAttributes }
-        set { user.privateAttributes = newValue }
+    @objc public var privateAttributes: [String] {
+        get { user.privateAttributes.map { $0.name } }
+        set { user.privateAttributes = newValue.map { UserAttribute.forName($0) } }
     }
 
     /**
@@ -163,15 +117,6 @@ public final class ObjcLDUser: NSObject {
     // Initializer to wrap the Swift LDUser into ObjcLDUser for use in Objective-C apps.
     init(_ user: LDUser) {
         self.user = user
-    }
-
-    /**
-     Initializer that takes a NSDictionary and creates a LDUser from the contents. Uses any keys present to define corresponding attribute values. Initializes attributes not present in the dictionary to their default value. The initializer attempts to set `device` and `operatingSystem` from corresponding values embedded in `custom`. The initializer attempts to set feature flags from values set in `config`.
-
-     - parameter userDictionary: NSDictionary with LDUser attribute keys and values.
-     */
-    @objc public init(userDictionary: [String: Any]) {
-        self.user = LDUser(userDictionary: userDictionary)
     }
 
     /// Compares users by comparing their user keys only, to allow the client app to collect user information over time

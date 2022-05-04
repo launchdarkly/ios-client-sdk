@@ -1,10 +1,3 @@
-//
-//  FlagSynchronizer.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import Dispatch
 import LDSwiftEventSource
@@ -42,17 +35,20 @@ enum SynchronizingError: Error {
 }
 
 enum FlagSyncResult {
-    case success([String: Any], FlagUpdateType?)
+    case flagCollection(FeatureFlagCollection)
+    case patch(FeatureFlag)
+    case delete(DeleteResponse)
     case upToDate
     case error(SynchronizingError)
 }
 
+struct DeleteResponse: Decodable {
+    let key: String
+    let version: Int?
+}
+
 typealias CompletionClosure = (() -> Void)
 typealias FlagSyncCompleteClosure = ((FlagSyncResult) -> Void)
-
-enum FlagUpdateType: String {
-    case ping, put, patch, delete
-}
 
 class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     struct Constants {
@@ -83,8 +79,6 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     let pollingInterval: TimeInterval
     let useReport: Bool
     
-    var streamingActive: Bool { eventSource != nil }
-    var pollingActive: Bool { flagRequestTimer != nil }
     private var syncQueue = DispatchQueue(label: Constants.queueName, qos: .utility)
     private var eventSourceStarted: Date?
 
@@ -106,10 +100,10 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             switch streamingMode {
             case .streaming:
                 stopPolling()
-                startEventSource(isOnline: isOnline)
+                startEventSource()
             case .polling:
                 stopEventSource()
-                startPolling(isOnline: isOnline)
+                startPolling()
             }
         } else {
             stopEventSource()
@@ -119,24 +113,9 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     // MARK: Streaming
 
-    private func startEventSource(isOnline: Bool) {
-        guard isOnline,
-            streamingMode == .streaming,
-            !streamingActive
-        else {
-            var reason = ""
-            if !isOnline {
-                reason = "Flag Synchronizer is offline."
-            }
-            if reason.isEmpty && streamingMode != .streaming {
-                reason = "Flag synchronizer is not set for streaming."
-            }
-            if reason.isEmpty && streamingActive {
-                reason  = "Clientstream already connected."
-            }
-            Log.debug(typeName(and: #function) + "aborted. " + reason)
-            return
-        }
+    private func startEventSource() {
+        guard eventSource == nil
+        else { return Log.debug(typeName(and: #function) + "aborted. Clientstream already connected.") }
 
         Log.debug(typeName(and: #function))
         eventSourceStarted = Date()
@@ -148,10 +127,9 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     private func stopEventSource() {
-        guard streamingActive else {
-            Log.debug(typeName(and: #function) + "aborted. Clientstream is not connected.")
-            return
-        }
+        guard eventSource != nil
+        else { return Log.debug(typeName(and: #function) + "aborted. Clientstream is not connected.") }
+
         Log.debug(typeName(and: #function))
         eventSource?.stop()
         eventSource = nil
@@ -159,32 +137,19 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     // MARK: Polling
 
-    private func startPolling(isOnline: Bool) {
-        guard isOnline,
-            streamingMode == .polling,
-            !pollingActive
-        else {
-            var reason = ""
-            if !isOnline { reason = "Flag Synchronizer is offline." }
-            if reason.isEmpty && streamingMode != .polling {
-                reason = "Flag synchronizer is not set for polling."
-            }
-            if reason.isEmpty && pollingActive {
-                reason  = "Polling already active."
-            }
-            Log.debug(typeName(and: #function) + "aborted. " + reason)
-            return
-        }
+    private func startPolling() {
+        guard flagRequestTimer == nil
+        else { return Log.debug(typeName(and: #function) + "aborted. Polling already active.") }
+
         Log.debug(typeName(and: #function))
         flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, execute: processTimer)
-        makeFlagRequest(isOnline: isOnline)
+        makeFlagRequest(isOnline: true)
     }
 
     private func stopPolling() {
-        guard pollingActive else {
-            Log.debug(typeName(and: #function) + "aborted. Polling already inactive.")
-            return
-        }
+        guard flagRequestTimer != nil
+        else { return Log.debug(typeName(and: #function) + "aborted. Polling already inactive.") }
+
         Log.debug(typeName(and: #function))
         flagRequestTimer?.cancel()
         flagRequestTimer = nil
@@ -241,17 +206,12 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             return
         }
         guard let data = serviceResponse.data,
-            let flags = try? JSONSerialization.jsonDictionary(with: data, options: .allowFragments)
+              let flagCollection = try? JSONDecoder().decode(FeatureFlagCollection.self, from: data)
         else {
             reportDataError(serviceResponse.data)
             return
         }
-        reportSuccess(flagDictionary: flags, eventType: streamingActive ? .ping : nil)
-    }
-
-    private func reportSuccess(flagDictionary: [String: Any], eventType: FlagUpdateType?) {
-        Log.debug(typeName(and: #function) + "flagDictionary: \(flagDictionary)" + (eventType == nil ? "" : ", eventType: \(String(describing: eventType))"))
-        reportSyncComplete(.success(flagDictionary, streamingActive ? eventType : nil))
+        reportSyncComplete(.flagCollection(flagCollection))
     }
 
     private func reportDataError(_ data: Data?) {
@@ -308,7 +268,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             reportSyncComplete(.error(.streamEventWhilePolling))
             return true
         }
-        if !streamingActive {
+        if eventSource == nil {
             // Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
             Log.debug(typeName(and: #function) + "aborted. " + "Clientstream is not active.")
             reportSyncComplete(.error(.isOffline))
@@ -336,18 +296,33 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         guard !shouldAbortStreamUpdate()
         else { return }
 
-        let updateType: FlagUpdateType? = FlagUpdateType(rawValue: eventType)
-        switch updateType {
-        case .ping: makeFlagRequest(isOnline: isOnline)
-        case .put, .patch, .delete:
+        switch eventType {
+        case "ping": makeFlagRequest(isOnline: isOnline)
+        case "put":
             guard let data = messageEvent.data.data(using: .utf8),
-                  let flagDictionary = try? JSONSerialization.jsonDictionary(with: data)
+                  let flagCollection = try? JSONDecoder().decode(FeatureFlagCollection.self, from: data)
             else {
                 reportDataError(messageEvent.data.data(using: .utf8))
                 return
             }
-            reportSuccess(flagDictionary: flagDictionary, eventType: updateType)
-        case nil:
+            reportSyncComplete(.flagCollection(flagCollection))
+        case "patch":
+            guard let data = messageEvent.data.data(using: .utf8),
+                  let flag = try? JSONDecoder().decode(FeatureFlag.self, from: data)
+            else {
+                reportDataError(messageEvent.data.data(using: .utf8))
+                return
+            }
+            reportSyncComplete(.patch(flag))
+        case "delete":
+            guard let data = messageEvent.data.data(using: .utf8),
+                  let deleteResponse = try? JSONDecoder().decode(DeleteResponse.self, from: data)
+            else {
+                reportDataError(messageEvent.data.data(using: .utf8))
+                return
+            }
+            reportSyncComplete(.delete(deleteResponse))
+        default:
             Log.debug(typeName(and: #function) + "aborted. Unknown event type.")
             reportSyncComplete(.error(.unknownEventType(eventType)))
             return
@@ -379,20 +354,8 @@ extension FlagSynchronizer {
         makeFlagRequest(isOnline: isOnline)
     }
 
-    func testStreamOnOpened() {
-        onOpened()
-    }
-
-    func testStreamOnClosed() {
-        onClosed()
-    }
-
     func testStreamOnMessage(event: String, messageEvent: MessageEvent) {
         onMessage(eventType: event, messageEvent: messageEvent)
-    }
-
-    func testStreamOnError(error: Error) {
-        onError(error: error)
     }
 }
 

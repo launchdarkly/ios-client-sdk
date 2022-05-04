@@ -1,69 +1,167 @@
-//
-//  CacheConverter.swift
-//  LaunchDarkly
-//
-//  Copyright © 2019 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 // sourcery: autoMockable
 protocol CacheConverting {
-    func convertCacheData(for user: LDUser, and config: LDConfig)
+    func convertCacheData(serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedUsers: Int)
 }
 
-// CacheConverter is not thread-safe; run it from a single thread and don't allow other threads to call convertCacheData or data corruption could occur
+// Cache model in SDK versions >=4.0.0 <6.0.0. Migration is not supported for earlier versions.
+//
+//     [<userKey>: [
+//         “userKey”: <userKey>,
+//         “environmentFlags”: [
+//             <mobileKey>: [
+//                 “userKey”: <userKey>,
+//                 “mobileKey”: <mobileKey>,
+//                 “featureFlags”: [
+//                     <flagKey>: [
+//                         “key”: <flagKey>,
+//                         “version”: <modelVersion>,
+//                         “flagVersion”: <flagVersion>,
+//                         “variation”: <variation>,
+//                         “value”: <value>,
+//                         “trackEvents”: <trackEvents>,
+//                         “debugEventsUntilDate”: <debugEventsUntilDate>,
+//                         "reason: <reason>,
+//                         "trackReason": <trackReason>
+//                         ]
+//                     ]
+//                 ]
+//             ],
+//         “lastUpdated”: <lastUpdated>
+//         ]
+//     ]
+
 final class CacheConverter: CacheConverting {
 
-    struct Constants {
-        static let maxAge: TimeInterval = -90.0 * 24 * 60 * 60 // 90 days
+    init() { }
+
+    private func convertValue(_ value: Any?) -> LDValue {
+        guard let value = value, !(value is NSNull)
+        else { return .null }
+        if let boolValue = value as? Bool { return .bool(boolValue) }
+        if let numValue = value as? NSNumber { return .number(Double(truncating: numValue)) }
+        if let stringValue = value as? String { return .string(stringValue) }
+        if let arrayValue = value as? [Any?] { return .array(arrayValue.map { convertValue($0) }) }
+        if let dictValue = value as? [String: Any?] { return .object(dictValue.mapValues { convertValue($0) }) }
+        return .null
     }
 
-    struct CacheKeys {
-        static let ldUserModelDictionary = "ldUserModelDictionary"
-        static let cachedDataKeyStub = "com.launchdarkly.test.deprecatedCache.cachedDataKey"
-    }
-
-    let currentCache: FeatureFlagCaching
-    private(set) var deprecatedCaches = [DeprecatedCacheModel: DeprecatedCache]()
-
-    init(serviceFactory: ClientServiceCreating, maxCachedUsers: Int) {
-        currentCache = serviceFactory.makeFeatureFlagCache(maxCachedUsers: maxCachedUsers)
-        DeprecatedCacheModel.allCases.forEach { version in
-            deprecatedCaches[version] = serviceFactory.makeDeprecatedCacheModel(version)
-        }
-    }
-
-    func convertCacheData(for user: LDUser, and config: LDConfig) {
-        convertCacheData(for: user, mobileKey: config.mobileKey)
-        removeData()
-    }
-
-    private func convertCacheData(for user: LDUser, mobileKey: String) {
-        guard currentCache.retrieveFeatureFlags(forUserWithKey: user.key, andMobileKey: mobileKey) == nil
+    private func convertV6Data(v6cache: KeyedValueCaching, flagCaches: [MobileKey: FeatureFlagCaching]) {
+        guard let cachedV6Data = v6cache.dictionary(forKey: "com.launchDarkly.cachedUserEnvironmentFlags")
         else { return }
-        for deprecatedCacheModel in DeprecatedCacheModel.allCases {
-            let deprecatedCache = deprecatedCaches[deprecatedCacheModel]
-            guard let cachedData = deprecatedCache?.retrieveFlags(for: user.key, and: mobileKey),
-                let cachedFlags = cachedData.featureFlags
-            else { continue }
-            currentCache.storeFeatureFlags(cachedFlags, userKey: user.key, mobileKey: mobileKey, lastUpdated: cachedData.lastUpdated ?? Date(), storeMode: .sync)
-            return  // If we hit on a cached user, bailout since we converted the flags for that userKey-mobileKey combination; This prefers newer caches over older
+
+        var cachedEnvData: [MobileKey: [String: (updated: Date, flags: [LDFlagKey: FeatureFlag])]] = [:]
+        cachedV6Data.forEach { userKey, userDict in
+            guard let userDict = userDict as? [String: Any],
+                  let userDictUserKey = userDict["userKey"] as? String,
+                  let lastUpdated = (userDict["lastUpdated"] as? String)?.dateValue,
+                  let envsDict = userDict["environmentFlags"] as? [String: Any],
+                  userKey == userDictUserKey
+            else { return }
+            envsDict.forEach { mobileKey, envDict in
+                guard flagCaches.keys.contains(mobileKey),
+                      let envDict = envDict as? [String: Any],
+                      let envUserKey = envDict["userKey"] as? String,
+                      let envMobileKey = envDict["mobileKey"] as? String,
+                      let envFlags = envDict["featureFlags"] as? [String: Any],
+                      envUserKey == userKey && envMobileKey == mobileKey
+                else { return }
+
+                var userEnvFlags: [LDFlagKey: FeatureFlag] = [:]
+                envFlags.forEach { flagKey, flagDict in
+                    guard let flagDict = flagDict as? [String: Any]
+                    else { return }
+                    let flag = FeatureFlag(flagKey: flagKey,
+                                           value: convertValue(flagDict["value"]),
+                                           variation: flagDict["variation"] as? Int,
+                                           version: flagDict["version"] as? Int,
+                                           flagVersion: flagDict["flagVersion"] as? Int,
+                                           trackEvents: flagDict["trackEvents"] as? Bool ?? false,
+                                           debugEventsUntilDate: Date(millisSince1970: flagDict["debugEventsUntilDate"] as? Int64),
+                                           reason: (flagDict["reason"] as? [String: Any])?.mapValues { convertValue($0) },
+                                           trackReason: flagDict["trackReason"] as? Bool ?? false)
+                    userEnvFlags[flagKey] = flag
+                }
+                var otherEnvData = cachedEnvData[mobileKey] ?? [:]
+                otherEnvData[userKey] = (lastUpdated, userEnvFlags)
+                cachedEnvData[mobileKey] = otherEnvData
+            }
         }
+
+        cachedEnvData.forEach { mobileKey, users in
+            users.forEach { userKey, data in
+                flagCaches[mobileKey]?.storeFeatureFlags(data.flags, userKey: userKey, lastUpdated: data.updated)
+            }
+        }
+
+        v6cache.removeObject(forKey: "com.launchDarkly.cachedUserEnvironmentFlags")
     }
 
-    private func removeData() {
-        let maxAge = Date().addingTimeInterval(Constants.maxAge)
-        deprecatedCaches.values.forEach { deprecatedCache in
-            deprecatedCache.removeData(olderThan: maxAge)
+    func convertCacheData(serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedUsers: Int) {
+        var flagCaches: [String: FeatureFlagCaching] = [:]
+        keysToConvert.forEach { mobileKey in
+            let flagCache = serviceFactory.makeFeatureFlagCache(mobileKey: mobileKey, maxCachedUsers: maxCachedUsers)
+            flagCaches[mobileKey] = flagCache
+            // Get current cache version and return if up to date
+            guard let cacheVersionData = flagCache.keyedValueCache.data(forKey: "ld-cache-metadata")
+            else { return } // Convert those that do not have a version
+            guard let cacheVersion = (try? JSONDecoder().decode([String: Int].self, from: cacheVersionData))?["version"],
+                  cacheVersion == 7
+            else {
+                // Metadata is invalid, remove existing data and attempt migration
+                flagCache.keyedValueCache.removeAll()
+                return
+            }
+            // Already up to date
+            flagCaches.removeValue(forKey: mobileKey)
+        }
+
+        // Skip migration if all environments are V7
+        if flagCaches.isEmpty { return }
+
+        // Remove V5 cache data (migration not supported)
+        let standardDefaults = serviceFactory.makeKeyedValueCache(cacheKey: nil)
+        standardDefaults.removeObject(forKey: "com.launchdarkly.dataManager.userEnvironments")
+
+        convertV6Data(v6cache: standardDefaults, flagCaches: flagCaches)
+
+        // Set cache version to skip this logic in the future
+        if let versionMetadata = try? JSONEncoder().encode(["version": 7]) {
+            flagCaches.forEach {
+                $0.value.keyedValueCache.set(versionMetadata, forKey: "ld-cache-metadata")
+            }
         }
     }
 }
 
 extension Date {
     func isExpired(expirationDate: Date) -> Bool {
-        let stringEquivalentDate = self.stringEquivalentDate
-        let stringEquivalentExpirationDate = expirationDate.stringEquivalentDate
-        return stringEquivalentDate.isEarlierThan(stringEquivalentExpirationDate)
+        self.stringEquivalentDate < expirationDate.stringEquivalentDate
     }
+}
+
+extension DateFormatter {
+    /// Date formatter configured to format dates to/from the format 2018-08-13T19:06:38.123Z
+    class var ldDateFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        return formatter
+    }
+}
+
+extension Date {
+    /// Date string using the format 2018-08-13T19:06:38.123Z
+    var stringValue: String { DateFormatter.ldDateFormatter.string(from: self) }
+
+    // When a date is converted to JSON, the resulting string is not as precise as the original date (only to the nearest .001s)
+    // By converting the date to json, then back into a date, the result can be compared with any date re-inflated from json
+    /// Date truncated to the nearest millisecond, which is the precision for string formatted dates
+    var stringEquivalentDate: Date { stringValue.dateValue }
+}
+
+extension String {
+    /// Date converted from a string using the format 2018-08-13T19:06:38.123Z
+    var dateValue: Date { DateFormatter.ldDateFormatter.date(from: self) ?? Date() }
 }

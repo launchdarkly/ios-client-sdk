@@ -1,10 +1,3 @@
-//
-//  Data.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 extension Data {
@@ -13,6 +6,6 @@ extension Data {
     }
 
     var jsonDictionary: [String: Any]? {
-        try? JSONSerialization.jsonDictionary(with: self, options: [.allowFragments])
+        try? JSONSerialization.jsonObject(with: self, options: [.allowFragments]) as? [String: Any]
     }
 }

@@ -1,231 +1,192 @@
-//
-//  FlagCounterSpec.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2018 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import XCTest
 
 @testable import LaunchDarkly
 
 final class FlagCounterSpec: XCTestCase {
+    private let testDefaultValue: LDValue = "d"
+    private let testValue: LDValue = 5.5
+
     func testInit() {
         let flagCounter = FlagCounter()
-        XCTAssertNil(flagCounter.defaultValue)
+        XCTAssertEqual(flagCounter.defaultValue, .null)
         XCTAssert(flagCounter.flagValueCounters.isEmpty)
     }
 
     func testTrackRequestInitialKnown() {
-        let reportedValue = Placeholder()
-        let defaultValue = Placeholder()
-        let featureFlag = FeatureFlag(flagKey: "test-key", variation: 2, flagVersion: 3)
+        let featureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 2, flagVersion: 3)
         let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
-        let result = flagCounter.dictionaryValue
-        XCTAssert(result.flagCounterDefaultValue as! Placeholder === defaultValue)
-        let counters = result.flagCounterFlagValueCounters
-        XCTAssertEqual(counters?.count, 1)
-        let counter = counters![0]
-        XCTAssert(counter.valueCounterReportedValue as! Placeholder === reportedValue)
-        XCTAssertEqual(counter.valueCounterVersion, 3)
-        XCTAssertEqual(counter.valueCounterVariation, 2)
-        XCTAssertNil(counter.valueCounterIsUnknown)
-        XCTAssertEqual(counter.valueCounterCount, 1)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, defaultValue: testDefaultValue)
+        XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
+        XCTAssertEqual(flagCounter.flagValueCounters.count, 1)
+        let counter = flagCounter.flagValueCounters.first!
+        XCTAssertEqual(counter.key.version, 3)
+        XCTAssertEqual(counter.key.variation, 2)
+        XCTAssertEqual(counter.value.value, testValue)
+        XCTAssertEqual(counter.value.count, 1)
     }
 
     func testTrackRequestKnownMatching() {
-        let reportedValue = Placeholder()
-        let defaultValue = Placeholder()
         let featureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 5, flagVersion: 3)
         let secondFeatureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 7, flagVersion: 3)
         let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: secondFeatureFlag, defaultValue: defaultValue)
-        let result = flagCounter.dictionaryValue
-        XCTAssert(result.flagCounterDefaultValue as! Placeholder === defaultValue)
-        let counters = result.flagCounterFlagValueCounters
-        XCTAssertEqual(counters?.count, 1)
-        let counter = counters![0]
-        XCTAssert(counter.valueCounterReportedValue as! Placeholder === reportedValue)
-        XCTAssertEqual(counter.valueCounterVersion, 3)
-        XCTAssertEqual(counter.valueCounterVariation, 2)
-        XCTAssertNil(counter.valueCounterIsUnknown)
-        XCTAssertEqual(counter.valueCounterCount, 2)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, defaultValue: "e")
+        flagCounter.trackRequest(reportedValue: "b", featureFlag: secondFeatureFlag, defaultValue: testDefaultValue)
+        XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
+        XCTAssertEqual(flagCounter.flagValueCounters.count, 1)
+        let counter = flagCounter.flagValueCounters.first!
+        XCTAssertEqual(counter.key.version, 3)
+        XCTAssertEqual(counter.key.variation, 2)
+        XCTAssertEqual(counter.value.value, testValue)
+        XCTAssertEqual(counter.value.count, 2)
     }
 
     func testTrackRequestKnownDifferentVariations() {
-        let reportedValue = Placeholder()
-        let defaultValue = Placeholder()
         let featureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 10, flagVersion: 5)
         let secondFeatureFlag = FeatureFlag(flagKey: "test-key", variation: 3, version: 10, flagVersion: 5)
         let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: secondFeatureFlag, defaultValue: defaultValue)
-        let result = flagCounter.dictionaryValue
-        XCTAssert(result.flagCounterDefaultValue as! Placeholder === defaultValue)
-        let counters = result.flagCounterFlagValueCounters
-        XCTAssertEqual(counters?.count, 2)
-        let counter1 = counters!.first { $0.valueCounterVariation == 2 }!
-        let counter2 = counters!.first { $0.valueCounterVariation == 3 }!
-        XCTAssert(counter1.valueCounterReportedValue as! Placeholder === reportedValue)
-        XCTAssertEqual(counter1.valueCounterVersion, 5)
-        XCTAssertEqual(counter1.valueCounterVariation, 2)
-        XCTAssertNil(counter1.valueCounterIsUnknown)
-        XCTAssertEqual(counter1.valueCounterCount, 1)
-
-        XCTAssert(counter2.valueCounterReportedValue as! Placeholder === reportedValue)
-        XCTAssertEqual(counter2.valueCounterVersion, 5)
-        XCTAssertEqual(counter2.valueCounterVariation, 3)
-        XCTAssertNil(counter2.valueCounterIsUnknown)
-        XCTAssertEqual(counter2.valueCounterCount, 1)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, defaultValue: testDefaultValue)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: secondFeatureFlag, defaultValue: testDefaultValue)
+        XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
+        XCTAssertEqual(flagCounter.flagValueCounters.count, 2)
+        let counter1 = flagCounter.flagValueCounters.first { key, _ in key.variation == 2 }!
+        XCTAssertEqual(counter1.key.version, 5)
+        XCTAssertEqual(counter1.value.value, testValue)
+        XCTAssertEqual(counter1.value.count, 1)
+        let counter2 = flagCounter.flagValueCounters.first { key, _ in key.variation == 3 }!
+        XCTAssertEqual(counter2.key.version, 5)
+        XCTAssertEqual(counter2.value.value, testValue)
+        XCTAssertEqual(counter2.value.count, 1)
     }
 
     func testTrackRequestKnownDifferentFlagVersions() {
-        let reportedValue = Placeholder()
-        let defaultValue = Placeholder()
         let featureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 10, flagVersion: 3)
         let secondFeatureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 10, flagVersion: 5)
         let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: secondFeatureFlag, defaultValue: defaultValue)
-        let result = flagCounter.dictionaryValue
-        XCTAssert(result.flagCounterDefaultValue as! Placeholder === defaultValue)
-        let counters = result.flagCounterFlagValueCounters
-        XCTAssertEqual(counters?.count, 2)
-        let counter1 = counters!.first { $0.valueCounterVersion == 3 }!
-        let counter2 = counters!.first { $0.valueCounterVersion == 5 }!
-        XCTAssert(counter1.valueCounterReportedValue as! Placeholder === reportedValue)
-        XCTAssertEqual(counter1.valueCounterVersion, 3)
-        XCTAssertEqual(counter1.valueCounterVariation, 2)
-        XCTAssertNil(counter1.valueCounterIsUnknown)
-        XCTAssertEqual(counter1.valueCounterCount, 1)
-
-        XCTAssert(counter2.valueCounterReportedValue as! Placeholder === reportedValue)
-        XCTAssertEqual(counter2.valueCounterVersion, 5)
-        XCTAssertEqual(counter2.valueCounterVariation, 2)
-        XCTAssertNil(counter2.valueCounterIsUnknown)
-        XCTAssertEqual(counter2.valueCounterCount, 1)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, defaultValue: testDefaultValue)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: secondFeatureFlag, defaultValue: testDefaultValue)
+        XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
+        XCTAssertEqual(flagCounter.flagValueCounters.count, 2)
+        let counter1 = flagCounter.flagValueCounters.first { key, _ in key.version == 3 }!
+        XCTAssertEqual(counter1.key.variation, 2)
+        XCTAssertEqual(counter1.value.value, testValue)
+        XCTAssertEqual(counter1.value.count, 1)
+        let counter2 = flagCounter.flagValueCounters.first { key, _ in key.version == 5 }!
+        XCTAssertEqual(counter2.key.variation, 2)
+        XCTAssertEqual(counter2.value.value, testValue)
+        XCTAssertEqual(counter2.value.count, 1)
     }
 
-    func testTrackRequestKnownMissingFlagVersionsMatchingVersions() {
-        let reportedValue = Placeholder()
-        let defaultValue = Placeholder()
+    func testTrackRequestKnownMissingFlagVersionMatchingVersions() {
         let featureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 10)
-        let secondFeatureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 10)
+        let secondFeatureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 5, flagVersion: 10)
         let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: secondFeatureFlag, defaultValue: defaultValue)
-        let result = flagCounter.dictionaryValue
-        XCTAssert(result.flagCounterDefaultValue as! Placeholder === defaultValue)
-        let counters = result.flagCounterFlagValueCounters
-        XCTAssertEqual(counters?.count, 1)
-        let counter = counters![0]
-        XCTAssert(counter.valueCounterReportedValue as! Placeholder === reportedValue)
-        XCTAssertEqual(counter.valueCounterVersion, 10)
-        XCTAssertEqual(counter.valueCounterVariation, 2)
-        XCTAssertNil(counter.valueCounterIsUnknown)
-        XCTAssertEqual(counter.valueCounterCount, 2)
-    }
-
-    func testTrackRequestKnownMissingFlagVersionsDifferentVersions() {
-        let reportedValue = Placeholder()
-        let defaultValue = Placeholder()
-        let featureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 5)
-        let secondFeatureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 10)
-        let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue)
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: secondFeatureFlag, defaultValue: defaultValue)
-        let result = flagCounter.dictionaryValue
-        XCTAssert(result.flagCounterDefaultValue as! Placeholder === defaultValue)
-        let counters = result.flagCounterFlagValueCounters
-        XCTAssertEqual(counters?.count, 2)
-        let counter1 = counters!.first { $0.valueCounterVersion == 5 }!
-        let counter2 = counters!.first { $0.valueCounterVersion == 10 }!
-        XCTAssert(counter1.valueCounterReportedValue as! Placeholder === reportedValue)
-        XCTAssertEqual(counter1.valueCounterVersion, 5)
-        XCTAssertEqual(counter1.valueCounterVariation, 2)
-        XCTAssertNil(counter1.valueCounterIsUnknown)
-        XCTAssertEqual(counter1.valueCounterCount, 1)
-
-        XCTAssert(counter2.valueCounterReportedValue as! Placeholder === reportedValue)
-        XCTAssertEqual(counter2.valueCounterVersion, 10)
-        XCTAssertEqual(counter2.valueCounterVariation, 2)
-        XCTAssertNil(counter2.valueCounterIsUnknown)
-        XCTAssertEqual(counter2.valueCounterCount, 1)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, defaultValue: testDefaultValue)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: secondFeatureFlag, defaultValue: testDefaultValue)
+        XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
+        XCTAssertEqual(flagCounter.flagValueCounters.count, 1)
+        let counter = flagCounter.flagValueCounters.first!
+        XCTAssertEqual(counter.key.version, 10)
+        XCTAssertEqual(counter.key.variation, 2)
+        XCTAssertEqual(counter.value.value, testValue)
+        XCTAssertEqual(counter.value.count, 2)
     }
 
     func testTrackRequestInitialUnknown() {
-        let reportedValue = Placeholder()
-        let defaultValue = Placeholder()
         let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: nil, defaultValue: defaultValue)
-        let result = flagCounter.dictionaryValue
-        XCTAssert(result.flagCounterDefaultValue as! Placeholder === defaultValue)
-        let counters = result.flagCounterFlagValueCounters
-        XCTAssertEqual(counters?.count, 1)
-        let counter = counters![0]
-        XCTAssert(counter.valueCounterReportedValue as! Placeholder === reportedValue)
-        XCTAssertNil(counter.valueCounterVersion)
-        XCTAssertNil(counter.valueCounterVariation)
-        XCTAssertEqual(counter.valueCounterIsUnknown, true)
-        XCTAssertEqual(counter.valueCounterCount, 1)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: nil, defaultValue: testDefaultValue)
+        XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
+        XCTAssertEqual(flagCounter.flagValueCounters.count, 1)
+        let counter = flagCounter.flagValueCounters.first!
+        XCTAssertNil(counter.key.version)
+        XCTAssertNil(counter.key.variation)
+        XCTAssertEqual(counter.value.value, testValue)
+        XCTAssertEqual(counter.value.count, 1)
     }
 
     func testTrackRequestSecondUnknown() {
-        let reportedValue = Placeholder()
-        let defaultValue = Placeholder()
         let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: nil, defaultValue: defaultValue)
-        flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: nil, defaultValue: defaultValue)
-        let result = flagCounter.dictionaryValue
-        XCTAssert(result.flagCounterDefaultValue as! Placeholder === defaultValue)
-        let counters = result.flagCounterFlagValueCounters
-        XCTAssertEqual(counters?.count, 1)
-        let counter = counters![0]
-        XCTAssert(counter.valueCounterReportedValue as! Placeholder === reportedValue)
-        XCTAssertNil(counter.valueCounterVersion)
-        XCTAssertNil(counter.valueCounterVariation)
-        XCTAssertEqual(counter.valueCounterIsUnknown, true)
-        XCTAssertEqual(counter.valueCounterCount, 2)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: nil, defaultValue: testDefaultValue)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: nil, defaultValue: testDefaultValue)
+        XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
+        XCTAssertEqual(flagCounter.flagValueCounters.count, 1)
+        let counter = flagCounter.flagValueCounters.first!
+        XCTAssertNil(counter.key.version)
+        XCTAssertNil(counter.key.variation)
+        XCTAssertEqual(counter.value.value, testValue)
+        XCTAssertEqual(counter.value.count, 2)
     }
 
-    func testTrackRequestSecondUnknownWithDifferentValues() {
-        let initialReportedValue = Placeholder()
-        let initialDefaultValue = Placeholder()
-        let secondReportedValue = Placeholder()
-        let secondDefaultValue = Placeholder()
+    func testTrackRequestSecondUnknownWithDifferentVariations() {
+        let unknownFlag1 = FeatureFlag(flagKey: "unused", variation: 1)
+        let unknownFlag2 = FeatureFlag(flagKey: "unused", variation: 2)
         let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: initialReportedValue, featureFlag: nil, defaultValue: initialDefaultValue)
-        flagCounter.trackRequest(reportedValue: secondReportedValue, featureFlag: nil, defaultValue: secondDefaultValue)
-        let result = flagCounter.dictionaryValue
-        XCTAssert(result.flagCounterDefaultValue as! Placeholder === secondDefaultValue)
-        let counters = result.flagCounterFlagValueCounters
-        XCTAssertEqual(counters?.count, 1)
-        let counter = counters![0]
-        XCTAssert(counter.valueCounterReportedValue as! Placeholder === initialReportedValue)
-        XCTAssertNil(counter.valueCounterVersion)
-        XCTAssertNil(counter.valueCounterVariation)
-        XCTAssertEqual(counter.valueCounterIsUnknown, true)
-        XCTAssertEqual(counter.valueCounterCount, 2)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: unknownFlag1, defaultValue: testDefaultValue)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: unknownFlag2, defaultValue: testDefaultValue)
+        XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
+        XCTAssertEqual(flagCounter.flagValueCounters.count, 2)
+        let counter1 = flagCounter.flagValueCounters.first { key, _ in key.variation == 1 }!
+        XCTAssertNil(counter1.key.version)
+        XCTAssertEqual(counter1.key.variation, 1)
+        XCTAssertEqual(counter1.value.value, testValue)
+        XCTAssertEqual(counter1.value.count, 1)
+        let counter2 = flagCounter.flagValueCounters.first { key, _ in key.variation == 2 }!
+        XCTAssertNil(counter2.key.version)
+        XCTAssertEqual(counter2.key.variation, 2)
+        XCTAssertEqual(counter2.value.value, testValue)
+        XCTAssertEqual(counter2.value.count, 1)
+    }
+
+    func testEncoding() {
+        let featureFlag = FeatureFlag(flagKey: "unused", variation: 3, version: 2, flagVersion: 5)
+        let flagCounter = FlagCounter()
+        flagCounter.trackRequest(reportedValue: "a", featureFlag: featureFlag, defaultValue: "b")
+        flagCounter.trackRequest(reportedValue: "a", featureFlag: featureFlag, defaultValue: "b")
+        encodesToObject(flagCounter) { dict in
+            XCTAssertEqual(dict.count, 2)
+            XCTAssertEqual(dict["default"], "b")
+            valueIsArray(dict["counters"]) { counters in
+                XCTAssertEqual(counters.count, 1)
+                valueIsObject(counters[0]) { counter in
+                    XCTAssertEqual(counter.count, 4)
+                    XCTAssertEqual(counter["value"], "a")
+                    XCTAssertEqual(counter["count"], 2)
+                    XCTAssertEqual(counter["version"], 5)
+                    XCTAssertEqual(counter["variation"], 3)
+                }
+            }
+        }
+
+        let flagCounterNulls = FlagCounter()
+        flagCounterNulls.trackRequest(reportedValue: nil, featureFlag: nil, defaultValue: nil)
+        encodesToObject(flagCounterNulls) { dict in
+            XCTAssertEqual(dict.count, 2)
+            XCTAssertEqual(dict["default"], .null)
+            valueIsArray(dict["counters"]) { counters in
+                XCTAssertEqual(counters.count, 1)
+                valueIsObject(counters[0]) { counter in
+                    XCTAssertEqual(counter.count, 3)
+                    XCTAssertEqual(counter["value"], .null)
+                    XCTAssertEqual(counter["count"], 1)
+                    XCTAssertEqual(counter["unknown"], true)
+                }
+            }
+        }
     }
 }
-
-private class Placeholder { }
 
 extension FlagCounter {
     struct Constants {
         static let requestCount = 5
     }
 
-    class func stub(flagKey: LDFlagKey, includeVersion: Bool = true, includeFlagVersion: Bool = true) -> FlagCounter {
+    class func stub(flagKey: LDFlagKey) -> FlagCounter {
         let flagCounter = FlagCounter()
         var featureFlag: FeatureFlag? = nil
         if flagKey.isKnown {
-            featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey, includeVersion: includeVersion, includeFlagVersion: includeFlagVersion)
+            featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey)
             for _ in 0..<Constants.requestCount {
-                flagCounter.trackRequest(reportedValue: featureFlag?.value, featureFlag: featureFlag, defaultValue: featureFlag?.value)
+                flagCounter.trackRequest(reportedValue: featureFlag?.value ?? .null, featureFlag: featureFlag, defaultValue: featureFlag?.value ?? .null)
             }
         } else {
             for _ in 0..<Constants.requestCount {
@@ -234,42 +195,5 @@ extension FlagCounter {
         }
 
         return flagCounter
-    }
-}
-
-extension CounterValue: Equatable {
-    public static func == (lhs: CounterValue, rhs: CounterValue) -> Bool {
-        AnyComparer.isEqual(lhs.value, to: rhs.value) && lhs.count == rhs.count
-    }
-}
-
-extension FlagCounter: Equatable {
-    public static func == (lhs: FlagCounter, rhs: FlagCounter) -> Bool {
-        AnyComparer.isEqual(lhs.defaultValue, to: rhs.defaultValue, considerNilAndNullEqual: true) &&
-            lhs.flagValueCounters == rhs.flagValueCounters
-    }
-}
-
-extension Dictionary where Key == String, Value == Any {
-    var valueCounterReportedValue: Any? {
-        self[FlagCounter.CodingKeys.value.rawValue]
-    }
-    var valueCounterVariation: Int? {
-        self[FlagCounter.CodingKeys.variation.rawValue] as? Int
-    }
-    var valueCounterVersion: Int? {
-        self[FlagCounter.CodingKeys.version.rawValue] as? Int
-    }
-    var valueCounterIsUnknown: Bool? {
-        self[FlagCounter.CodingKeys.unknown.rawValue] as? Bool
-    }
-    var valueCounterCount: Int? {
-        self[FlagCounter.CodingKeys.count.rawValue] as? Int
-    }
-    var flagCounterDefaultValue: Any? {
-        self[FlagCounter.CodingKeys.defaultValue.rawValue]
-    }
-    var flagCounterFlagValueCounters: [[String: Any]]? {
-        self[FlagCounter.CodingKeys.counters.rawValue] as? [[String: Any]]
     }
 }

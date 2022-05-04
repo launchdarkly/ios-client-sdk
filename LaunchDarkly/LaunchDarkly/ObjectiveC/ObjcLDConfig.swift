@@ -1,10 +1,3 @@
-//
-//  LDConfigObject.swift
-//  LaunchDarkly
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 /**
@@ -108,13 +101,13 @@ public final class ObjcLDConfig: NSObject {
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     See `LDUser.privatizableAttributes` (`ObjcLDUser.privatizableAttributes`) for the attribute names that can be declared private. To set private user attributes for a specific user, see `LDUser.privateAttributes` (`ObjcLDUser.privateAttributes`). (Default: nil)
+     To set private user attributes for a specific user, see `LDUser.privateAttributes` (`ObjcLDUser.privateAttributes`). (Default: `[]`)
 
-     See Also: `allUserAttributesPrivate`, `LDUser.privatizableAttributes` (`ObjcLDUser.privatizableAttributes`), and `LDUser.privateAttributes` (`ObjcLDUser.privateAttributes`).
+     See Also: `allUserAttributesPrivate` and `LDUser.privateAttributes` (`ObjcLDUser.privateAttributes`).
      */
-    @objc public var privateUserAttributes: [String]? {
-        get { config.privateUserAttributes }
-        set { config.privateUserAttributes = newValue }
+    @objc public var privateUserAttributes: [String] {
+        get { config.privateUserAttributes.map { $0.name } }
+        set { config.privateUserAttributes = newValue.map { UserAttribute.forName($0) } }
     }
 
     /**

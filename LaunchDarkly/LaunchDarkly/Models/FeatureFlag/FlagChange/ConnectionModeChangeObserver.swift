@@ -1,10 +1,3 @@
-//
-//  ConnectionModeChangeObserver.swift
-//  LaunchDarkly
-//
-//  Copyright © 2019 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 struct ConnectionModeChangedObserver {

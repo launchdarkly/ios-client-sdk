@@ -1,10 +1,3 @@
-//
-//  DiagnosticEvent.swift
-//  LaunchDarkly
-//
-//  Copyright © 2020 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 
 enum DiagnosticKind: String, Codable {

@@ -1,10 +1,3 @@
-//
-//  DarklyServiceSpec.swift
-//  LaunchDarklyTests
-//
-//  Copyright © 2017 Catamorphic Co. All rights reserved.
-//
-
 import Foundation
 import Quick
 import Nimble
@@ -33,13 +26,8 @@ final class DarklyServiceSpec: QuickSpec {
 
         init(mobileKey: String = LDConfig.Constants.mockMobileKey,
              useReport: Bool = Constants.useGetMethod,
-             includeMockEventDictionaries: Bool = false,
-             operatingSystemName: String? = nil,
              diagnosticOptOut: Bool = false) {
 
-            if let operatingSystemName = operatingSystemName {
-                serviceFactoryMock.makeEnvironmentReporterReturnValue.systemName = operatingSystemName
-            }
             config = LDConfig.stub(mobileKey: mobileKey, environmentReporter: EnvironmentReportingMock())
             config.useReport = useReport
             config.diagnosticOptOut = diagnosticOptOut
@@ -47,10 +35,6 @@ final class DarklyServiceSpec: QuickSpec {
             service = DarklyService(config: config, user: user, serviceFactory: serviceFactoryMock)
             httpHeaders = HTTPHeaders(config: config, environmentReporter: config.environmentReporter)
         }   
-
-        func mockEventDictionaries() -> [[String: Any]] {
-            Event.stubEventDictionaries(Constants.eventCount, user: user, config: config)
-        }
 
         func runStubbedGet(statusCode: Int, featureFlags: [LDFlagKey: FeatureFlag]? = nil, flagResponseEtag: String? = nil) {
             serviceMock.stubFlagRequest(statusCode: statusCode, useReport: config.useReport, flagResponseEtag: flagResponseEtag)
@@ -67,7 +51,7 @@ final class DarklyServiceSpec: QuickSpec {
         flagRequestEtagSpec()
         clearFlagRequestCacheSpec()
         createEventSourceSpec()
-        publishEventDictionariesSpec()
+        publishEventDataSpec()
         diagnosticCacheSpec()
         publishDiagnosticSpec()
 
@@ -126,12 +110,8 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
-                                if let encodedUserString = urlRequest?.url?.lastPathComponent,
-                                    let decodedUser = LDUser(base64urlEncodedString: encodedUserString) {
-                                    expect(decodedUser.isEqual(to: testContext.user)) == true
-                                } else {
-                                    fail("encoded user string did not create a user")
-                                }
+                                let expectedUser = encodeToLDValue(testContext.user, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])
+                                expect(urlRequest?.url?.lastPathComponent.jsonValue) == expectedUser
                             } else {
                                 fail("request path is missing")
                             }
@@ -183,12 +163,8 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
-                                if let encodedUserString = urlRequest?.url?.lastPathComponent,
-                                    let decodedUser = LDUser(base64urlEncodedString: encodedUserString) {
-                                    expect(decodedUser.isEqual(to: testContext.user)) == true
-                                } else {
-                                    fail("encoded user string did not create a user")
-                                }
+                                let expectedUser = encodeToLDValue(testContext.user, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])
+                                expect(urlRequest?.url?.lastPathComponent.jsonValue) == expectedUser
                             } else {
                                 fail("request path is missing")
                             }
@@ -562,7 +538,8 @@ final class DarklyServiceSpec: QuickSpec {
                     let receivedArguments = testContext.serviceFactoryMock.makeStreamingProviderReceivedArguments
                     expect(receivedArguments!.url.host) == testContext.config.streamUrl.host
                     expect(receivedArguments!.url.pathComponents.contains(DarklyService.StreamRequestPath.meval)).to(beTrue())
-                    expect(LDUser(base64urlEncodedString: receivedArguments!.url.lastPathComponent)?.isEqual(to: testContext.user)) == true
+                    let expectedUser = encodeToLDValue(testContext.user, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])
+                    expect(receivedArguments!.url.lastPathComponent.jsonValue) == expectedUser
                     expect(receivedArguments!.httpHeaders).toNot(beEmpty())
                     expect(receivedArguments!.connectMethod).to(be("GET"))
                     expect(receivedArguments!.connectBody).to(beNil())
@@ -582,28 +559,30 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(receivedArguments!.url.lastPathComponent) == DarklyService.StreamRequestPath.meval
                     expect(receivedArguments!.httpHeaders).toNot(beEmpty())
                     expect(receivedArguments!.connectMethod) == DarklyService.HTTPRequestMethod.report
-                    expect(LDUser(data: receivedArguments!.connectBody)?.isEqual(to: testContext.user)) == true
+                    let expectedUser = encodeToLDValue(testContext.user, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])
+                    expect(try? JSONDecoder().decode(LDValue.self, from: receivedArguments!.connectBody!)) == expectedUser
                 }
             }
         }
     }
 
-    private func publishEventDictionariesSpec() {
+    private func publishEventDataSpec() {
+        let testData = Data("abc".utf8)
         var testContext: TestContext!
 
-        describe("publishEventDictionaries") {
+        describe("publishEventData") {
             var eventRequest: URLRequest?
 
             beforeEach {
                 eventRequest = nil
-                testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod, includeMockEventDictionaries: true)
+                testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod)
             }
             context("success") {
                 var responses: ServiceResponses!
                 beforeEach {
                     waitUntil { done in
                         testContext.serviceMock.stubEventRequest(success: true) { eventRequest = $0 }
-                        testContext.service.publishEventDictionaries(testContext.mockEventDictionaries(), UUID().uuidString) { data, response, error in
+                        testContext.service.publishEventData(testData, UUID().uuidString) { data, response, error in
                             responses = (data, response, error)
                             done()
                         }
@@ -625,7 +604,7 @@ final class DarklyServiceSpec: QuickSpec {
                 beforeEach {
                     waitUntil { done in
                         testContext.serviceMock.stubEventRequest(success: false) { eventRequest = $0 }
-                        testContext.service.publishEventDictionaries(testContext.mockEventDictionaries(), UUID().uuidString) { data, response, error in
+                        testContext.service.publishEventData(testData, UUID().uuidString) { data, response, error in
                             responses = (data, response, error)
                             done()
                         }
@@ -646,27 +625,9 @@ final class DarklyServiceSpec: QuickSpec {
                 var responses: ServiceResponses!
                 var eventsPublished = false
                 beforeEach {
-                    testContext = TestContext(mobileKey: "", useReport: Constants.useGetMethod, includeMockEventDictionaries: true)
+                    testContext = TestContext(mobileKey: "", useReport: Constants.useGetMethod)
                     testContext.serviceMock.stubEventRequest(success: true) { eventRequest = $0 }
-                    testContext.service.publishEventDictionaries(testContext.mockEventDictionaries(), UUID().uuidString) { data, response, error in
-                        responses = (data, response, error)
-                        eventsPublished = true
-                    }
-                }
-                it("does not make a request") {
-                    expect(eventRequest).to(beNil())
-                    expect(eventsPublished) == false
-                    expect(responses).to(beNil())
-                }
-            }
-            context("empty event list") {
-                var responses: ServiceResponses!
-                var eventsPublished = false
-                let emptyEventDictionaryList: [[String: Any]] = []
-                beforeEach {
-                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod, includeMockEventDictionaries: true)
-                    testContext.serviceMock.stubEventRequest(success: true) { eventRequest = $0 }
-                    testContext.service.publishEventDictionaries(emptyEventDictionaryList, "") { data, response, error in
+                    testContext.service.publishEventData(testData, UUID().uuidString) { data, response, error in
                         responses = (data, response, error)
                         eventsPublished = true
                     }
@@ -797,22 +758,15 @@ final class DarklyServiceSpec: QuickSpec {
 
 private extension Data {
     var flagCollection: [LDFlagKey: FeatureFlag]? {
-        guard let flagDictionary = try? JSONSerialization.jsonDictionary(with: self, options: .allowFragments)
-        else { return nil }
-        return flagDictionary.flagCollection
+        return (try? JSONDecoder().decode(FeatureFlagCollection.self, from: self))?.flags
     }
 }
 
-extension LDUser {
-    init?(base64urlEncodedString: String) {
-        let base64encodedString = base64urlEncodedString.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
-        self.init(data: Data(base64Encoded: base64encodedString))
-    }
-
-    init?(data: Data?) {
-        guard let data = data,
-            let userDictionary = try? JSONSerialization.jsonDictionary(with: data)
+private extension String {
+    var jsonValue: LDValue? {
+        let base64encodedString = self.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        guard let data = Data(base64Encoded: base64encodedString)
         else { return nil }
-        self.init(userDictionary: userDictionary)
+        return try? JSONDecoder().decode(LDValue.self, from: data)
     }
 }
