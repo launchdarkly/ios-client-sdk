@@ -38,6 +38,11 @@ public final class ObjcLDValue: NSObject {
         self.wrappedValue = wrappedValue
     }
 
+    /// Create a new `LDValue` that represents a JSON null.
+    @objc public static func ofNull() -> ObjcLDValue {
+        return ObjcLDValue(wrappedValue: .null)
+    }
+
     /// Create a new `LDValue` from a boolean value.
     @objc public static func of(bool: Bool) -> ObjcLDValue {
         return ObjcLDValue(wrappedValue: .bool(bool))

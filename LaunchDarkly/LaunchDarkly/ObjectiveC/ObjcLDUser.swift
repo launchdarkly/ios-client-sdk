@@ -11,6 +11,23 @@ import Foundation
 public final class ObjcLDUser: NSObject {
     var user: LDUser
 
+    /// LDUser secondary attribute used to make `secondary` private
+    @objc public class var attributeSecondary: String { "secondary" }
+    /// LDUser name attribute used to make `name` private
+    @objc public class var attributeName: String { "name" }
+    /// LDUser firstName attribute used to make `firstName` private
+    @objc public class var attributeFirstName: String { "firstName" }
+    /// LDUser lastName attribute used to make `lastName` private
+    @objc public class var attributeLastName: String { "lastName" }
+    /// LDUser country attribute used to make `country` private
+    @objc public class var attributeCountry: String { "country" }
+    /// LDUser ipAddress attribute used to make `ipAddress` private
+    @objc public class var attributeIPAddress: String { "ip" }
+    /// LDUser email attribute used to make `email` private
+    @objc public class var attributeEmail: String { "email" }
+    /// LDUser avatar attribute used to make `avatar` private
+    @objc public class var attributeAvatar: String { "avatar" }
+
     /// Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
     @objc public var key: String {
         return user.key
@@ -71,7 +88,7 @@ public final class ObjcLDUser: NSObject {
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     This attribute is ignored if `ObjcLDConfig.allUserAttributesPrivate` is YES. Combined with `ObjcLDConfig.privateUserAttributes`. The SDK considers attributes appearing in either list as private. Client apps may define attributes found in `privatizableAttributes` and top level `custom` dictionary keys here. (Default: `[]`])
+     This attribute is ignored if `ObjcLDConfig.allUserAttributesPrivate` is YES. Combined with `ObjcLDConfig.privateUserAttributes`. The SDK considers attributes appearing in either list as private. Client apps may define most built-in attributes and all top level `custom` dictionary keys here. (Default: `[]`])
 
      See Also: `ObjcLDConfig.allUserAttributesPrivate` and `ObjcLDConfig.privateUserAttributes`.
 

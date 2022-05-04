@@ -1,6 +1,8 @@
 import Foundation
 
 extension LDClient {
+    // MARK: Flag variation methods
+
     /**
      Returns the boolean value of a feature flag for a given flag key.
 

@@ -36,9 +36,11 @@ custom_categories:
 
   - name: Other Types
     children:
+    - UserAttribute
     - LDStreamingMode
     - LDFlagKey
     - LDInvalidArgumentError
+    - RequestHeaderTransform
 
   - name: Objective-C Core Interfaces
     children:

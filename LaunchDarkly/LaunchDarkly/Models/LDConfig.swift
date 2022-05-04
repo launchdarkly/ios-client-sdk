@@ -209,9 +209,9 @@ public struct LDConfig {
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     See `LDUser.privatizableAttributes` for the attribute names that can be declared private. To set private user attributes for a specific user, see `LDUser.privateAttributes`. (Default: nil)
+     To set private user attributes for a specific user, see `LDUser.privateAttributes`. (Default: nil)
 
-     See Also: `allUserAttributesPrivate`, `LDUser.privatizableAttributes`, and `LDUser.privateAttributes`.
+     See Also: `allUserAttributesPrivate` and `LDUser.privateAttributes`.
     */
     public var privateUserAttributes: [UserAttribute] = Defaults.privateUserAttributes
 

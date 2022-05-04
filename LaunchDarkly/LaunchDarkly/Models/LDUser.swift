@@ -46,7 +46,7 @@ public struct LDUser: Encodable, Equatable {
     /**
      Client app defined privateAttributes for the user.
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
-     This attribute is ignored if `LDConfig.allUserAttributesPrivate` is true. Combined with `LDConfig.privateUserAttributes`. The SDK considers attributes appearing in either list as private. Client apps may define attributes found in `privatizableAttributes` and top level `custom` dictionary keys here. (Default: nil)
+     This attribute is ignored if `LDConfig.allUserAttributesPrivate` is true. Combined with `LDConfig.privateUserAttributes`. The SDK considers attributes appearing in either list as private. Client apps may define most built-in attributes and all top level `custom` dictionary keys here. (Default: []])
      See Also: `LDConfig.allUserAttributesPrivate` and `LDConfig.privateUserAttributes`.
     */
     public var privateAttributes: [UserAttribute]
