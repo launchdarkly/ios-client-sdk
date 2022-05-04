@@ -17,7 +17,7 @@
     <a title="LDChangedFlag Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 5.4.5 Docs</a> (84% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 6.0.0 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -55,10 +55,10 @@
                 <a href="../Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/LDUser/CodingKeys.html">– CodingKeys</a>
+                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+                <a href="../Enums/LDValue.html">LDValue</a>
               </li>
             </ul>
           </li>
@@ -106,10 +106,13 @@
             <a href="../Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
+                <a href="../Classes/UserAttribute.html">UserAttribute</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a>
+                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
@@ -118,7 +121,7 @@
                 <a href="../Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Other%20Types.html#/s:12LaunchDarkly14LDErrorHandlera">LDErrorHandler</a>
+                <a href="../Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -136,6 +139,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ObjcLDValueType.html">ObjcLDValueType</a>
               </li>
             </ul>
           </li>
@@ -155,33 +164,7 @@
                 <a href="../Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/ObjcLDArrayEvaluationDetail.html">ObjcLDArrayEvaluationDetail</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDictionaryEvaluationDetail.html">ObjcLDDictionaryEvaluationDetail</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Objective-C%20ChangedFlag%20Wrappers.html">Objective-C ChangedFlag Wrappers</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a>
+                <a href="../Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
               </li>
             </ul>
           </li>
@@ -199,14 +182,6 @@
               </li>
             </ul>
           </li>
-          <li class="nav-group-name">
-            <a href="../Other%20Typealiases.html">Other Type Aliases</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Other%20Typealiases.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
-              </li>
-            </ul>
-          </li>
         </ul>
       </nav>
       <article class="main-content">
@@ -220,7 +195,11 @@
 
                 </div>
               </div>
-            <p>Collects the elements of a feature flag that changed as a result of a <code>clientstream</code> update or feature flag request. The SDK will pass a LDChangedFlag or a collection of LDChangedFlags into feature flag observer closures. The client app will have to convert the old/newValue into the expected type. See <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC7observe3key5owner7handlerySS_yXlyAA13LDChangedFlagVctF">LDClient.observe(key:owner:handler:)</a></code>, <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC7observe4keys5owner7handlerySaySSG_yXlySDySSAA13LDChangedFlagVGctF">LDClient.observe(keys:owner:handler:)</a></code>, and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC10observeAll5owner7handleryyXl_ySDySSAA13LDChangedFlagVGctF">LDClient.observeAll(owner:handler:)</a></code> for more details.</p>
+            <p>Collects the elements of a feature flag that changed as a result of the SDK receiving an update.</p>
+
+<p>The SDK will pass a LDChangedFlag or a collection of LDChangedFlags into feature flag observer closures. See
+<code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC7observe3key5owner7handlerySS_yXlyAA13LDChangedFlagVctF">LDClient.observe(key:owner:handler:)</a></code>, <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC7observe4keys5owner7handlerySaySSG_yXlySDySSAA13LDChangedFlagVGctF">LDClient.observe(keys:owner:handler:)</a></code>, and
+<code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC10observeAll5owner7handleryyXl_ySDySSAA13LDChangedFlagVGctF">LDClient.observeAll(owner:handler:)</a></code> for more details.</p>
 
           </section>
           <section class="section task-group-section">
@@ -256,9 +235,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly13LDChangedFlagV8oldValueypSgvp"></a>
+                    <a name="/s:12LaunchDarkly13LDChangedFlagV8oldValueAA7LDValueOvp"></a>
                     <a name="//apple_ref/swift/Property/oldValue" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly13LDChangedFlagV8oldValueypSgvp">oldValue</a>
+                    <a class="token" href="#/s:12LaunchDarkly13LDChangedFlagV8oldValueAA7LDValueOvp">oldValue</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -266,14 +245,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The feature flag&rsquo;s value before the change. The client app will have to convert the oldValue into the expected type.</p>
+                        <p>The feature flag&rsquo;s value before the change.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">oldValue</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">oldValue</span><span class="p">:</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span></code></pre>
 
                         </div>
                       </div>
@@ -283,9 +262,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly13LDChangedFlagV8newValueypSgvp"></a>
+                    <a name="/s:12LaunchDarkly13LDChangedFlagV8newValueAA7LDValueOvp"></a>
                     <a name="//apple_ref/swift/Property/newValue" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly13LDChangedFlagV8newValueypSgvp">newValue</a>
+                    <a class="token" href="#/s:12LaunchDarkly13LDChangedFlagV8newValueAA7LDValueOvp">newValue</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -293,41 +272,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The feature flag&rsquo;s value after the change. The client app will have to convert the newValue into the expected type.</p>
+                        <p>The feature flag&rsquo;s value after the change.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">newValue</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly13LDChangedFlagV011objcChangedD0AA04ObjccD0Cvp"></a>
-                    <a name="//apple_ref/swift/Property/objcChangedFlag" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly13LDChangedFlagV011objcChangedD0AA04ObjccD0Cvp">objcChangedFlag</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>An NSObject wrapper for the Swift LDChangeFlag enum. Intended for use in mixed apps when Swift code needs to pass a LDChangeFlag into an Objective-C method.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">objcChangedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">newValue</span><span class="p">:</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span></code></pre>
 
                         </div>
                       </div>
@@ -340,7 +292,7 @@
         </section>
         <section id="footer">
           <p>Copyright © 2019 Catamorphic Co.</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
         </section>
       </article>
     </div>

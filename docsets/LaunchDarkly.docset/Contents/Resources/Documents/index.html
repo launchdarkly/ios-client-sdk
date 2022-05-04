@@ -16,7 +16,7 @@
     <a title="LaunchDarkly  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 5.4.5 Docs</a> (84% documented)</p>
+        <p><a href="index.html">LaunchDarkly 6.0.0 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -54,10 +54,10 @@
                 <a href="Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/LDUser/CodingKeys.html">– CodingKeys</a>
+                <a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+                <a href="Enums/LDValue.html">LDValue</a>
               </li>
             </ul>
           </li>
@@ -105,10 +105,13 @@
             <a href="Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="Enums/LDStreamingMode.html">LDStreamingMode</a>
+                <a href="Classes/UserAttribute.html">UserAttribute</a>
               </li>
               <li class="nav-group-task">
-                <a href="Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a>
+                <a href="Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
                 <a href="Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
@@ -117,7 +120,7 @@
                 <a href="Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Other%20Types.html#/s:12LaunchDarkly14LDErrorHandlera">LDErrorHandler</a>
+                <a href="Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -135,6 +138,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/ObjcLDValueType.html">ObjcLDValueType</a>
               </li>
             </ul>
           </li>
@@ -154,33 +163,7 @@
                 <a href="Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/ObjcLDArrayEvaluationDetail.html">ObjcLDArrayEvaluationDetail</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDDictionaryEvaluationDetail.html">ObjcLDDictionaryEvaluationDetail</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="Objective-C%20ChangedFlag%20Wrappers.html">Objective-C ChangedFlag Wrappers</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a>
+                <a href="Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
               </li>
             </ul>
           </li>
@@ -198,14 +181,6 @@
               </li>
             </ul>
           </li>
-          <li class="nav-group-name">
-            <a href="Other%20Typealiases.html">Other Type Aliases</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="Other%20Typealiases.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
-              </li>
-            </ul>
-          </li>
         </ul>
       </nav>
       <article class="main-content">
@@ -214,7 +189,7 @@
             
             <h1 id='launchdarkly-sdk-for-ios' class='heading'>LaunchDarkly SDK for iOS</h1>
 
-<p><a href="https://circleci.com/gh/launchdarkly/ios-client-sdk"><img src="https://circleci.com/gh/launchdarkly/ios-client-sdk/tree/master.svg?style=shield" alt="CircleCI"></a>
+<p><a href="https://circleci.com/gh/launchdarkly/ios-client-sdk"><img src="https://circleci.com/gh/launchdarkly/ios-client-sdk/tree/v6.svg?style=shield" alt="CircleCI"></a>
 <a href="https://swift.org/package-manager/"><img src="https://img.shields.io/badge/SwiftPM-compatible-4BC51D.svg?style=flat" alt="SwiftPM compatible"></a>
 <a href="https://cocoapods.org/pods/LaunchDarkly"><img src="https://img.shields.io/cocoapods/v/LaunchDarkly.svg" alt="CocoaPods compatible"></a>
 <a href="https://github.com/Carthage/Carthage"><img src="https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat" alt="Carthage compatible"></a>
@@ -282,7 +257,7 @@
 
 <p>To include LaunchDarkly in a Swift package, simply add it to the dependencies section of your <code>Package.swift</code> file. And add the product &ldquo;LaunchDarkly&rdquo; as a dependency for your targets.</p>
 <pre class="highlight swift"><code><span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span>
-    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/launchdarkly/ios-client-sdk.git"</span><span class="p">,</span> <span class="o">.</span><span class="nf">upToNextMinor</span><span class="p">(</span><span class="nv">from</span><span class="p">:</span> <span class="s">"5.4.5"</span><span class="p">))</span>
+    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/launchdarkly/ios-client-sdk.git"</span><span class="p">,</span> <span class="o">.</span><span class="nf">upToNextMinor</span><span class="p">(</span><span class="nv">from</span><span class="p">:</span> <span class="s">"6.0.0"</span><span class="p">))</span>
 <span class="p">]</span>
 </code></pre>
 <h3 id='cocoapods' class='heading'>CocoaPods</h3>
@@ -290,7 +265,7 @@
 <p>To use the <a href="https://cocoapods.org">CocoaPods</a> dependency manager to integrate LaunchDarkly into your Xcode project, specify it in your <code>Podfile</code>:</p>
 <pre class="highlight ruby"><code><span class="n">use_frameworks!</span>
 <span class="n">target</span> <span class="s1">'YourTargetName'</span> <span class="k">do</span>
-  <span class="n">pod</span> <span class="s1">'LaunchDarkly'</span><span class="p">,</span> <span class="s1">'~&gt; 5.4'</span>
+  <span class="n">pod</span> <span class="s1">'LaunchDarkly'</span><span class="p">,</span> <span class="s1">'~&gt; 6.0'</span>
 <span class="k">end</span>
 </code></pre>
 <h3 id='carthage' class='heading'>Carthage</h3>
@@ -298,7 +273,7 @@
 <p>To use the <a href="https://github.com/Carthage/Carthage">Carthage</a> dependency manager to integrate LaunchDarkly into your Xcode project, specify it in your <code>Cartfile</code>:</p>
 
 <p>To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your <code>Cartfile</code>:</p>
-<pre class="highlight plaintext"><code>github "launchdarkly/ios-client-sdk" ~&gt; 5.4
+<pre class="highlight plaintext"><code>github "launchdarkly/ios-client-sdk" ~&gt; 6.0
 </code></pre>
 <h3 id='manual-installation' class='heading'>Manual installation</h3>
 
@@ -351,7 +326,7 @@
         </section>
         <section id="footer">
           <p>Copyright © 2019 Catamorphic Co.</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
         </section>
       </article>
     </div>

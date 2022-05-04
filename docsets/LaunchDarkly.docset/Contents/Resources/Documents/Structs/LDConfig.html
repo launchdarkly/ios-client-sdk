@@ -17,7 +17,7 @@
     <a title="LDConfig Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 5.4.5 Docs</a> (84% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 6.0.0 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -55,10 +55,10 @@
                 <a href="../Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/LDUser/CodingKeys.html">– CodingKeys</a>
+                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+                <a href="../Enums/LDValue.html">LDValue</a>
               </li>
             </ul>
           </li>
@@ -106,10 +106,13 @@
             <a href="../Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
+                <a href="../Classes/UserAttribute.html">UserAttribute</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a>
+                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
@@ -118,7 +121,7 @@
                 <a href="../Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Other%20Types.html#/s:12LaunchDarkly14LDErrorHandlera">LDErrorHandler</a>
+                <a href="../Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -136,6 +139,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ObjcLDValueType.html">ObjcLDValueType</a>
               </li>
             </ul>
           </li>
@@ -155,33 +164,7 @@
                 <a href="../Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/ObjcLDArrayEvaluationDetail.html">ObjcLDArrayEvaluationDetail</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDictionaryEvaluationDetail.html">ObjcLDDictionaryEvaluationDetail</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Objective-C%20ChangedFlag%20Wrappers.html">Objective-C ChangedFlag Wrappers</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a>
+                <a href="../Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
               </li>
             </ul>
           </li>
@@ -196,14 +179,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../licensetxt.html">LICENSE.txt</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Other%20Typealiases.html">Other Type Aliases</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Other%20Typealiases.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -222,8 +197,6 @@
                 </div>
               </div>
             <p>Use LDConfig to configure the LDClient. When initialized, a LDConfig contains the default values which can be changed as needed.</p>
-
-<p>The client app can change the LDConfig by getting the <code>config</code> from <code><a href="../Classes/LDClient.html">LDClient</a></code>, adjusting the values, and setting it back into the <code><a href="../Classes/LDClient.html">LDClient</a></code>.</p>
 
           </section>
           <section class="section task-group-section">
@@ -325,7 +298,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The url for making feature flag requests. Do not change unless instructed by LaunchDarkly.</p>
+                        <p>The base url for making feature flag requests. Do not change unless instructed by LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -352,7 +325,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The url for making event reports. Do not change unless instructed by LaunchDarkly.</p>
+                        <p>The base url for making event reports. Do not change unless instructed by LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -379,7 +352,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The url for connecting to the <em>clientstream</em>. Do not change unless instructed by LaunchDarkly.</p>
+                        <p>The base url for connecting to the streaming service. Do not change unless instructed by LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -541,7 +514,9 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Controls the method the SDK uses to keep feature flags updated. When set to .streaming, connects to <code>clientstream</code> which notifies the SDK of feature flag changes. When set to .polling, an efficient polling mechanism is used to periodically request feature flag values. Ignored for watchOS, which always uses .polling. See <code><a href="../Enums/LDStreamingMode.html">LDStreamingMode</a></code> for more details. (Default: .streaming)</p>
+                        <p>Controls the method the SDK uses to keep feature flags updated. (Default: <code>.streaming</code>)</p>
+
+<p>See <code><a href="../Enums/LDStreamingMode.html">LDStreamingMode</a></code> for more details.</p>
 
                       </div>
                       <div class="declaration">
@@ -628,7 +603,7 @@
 
 <p>When true, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. (Default: false)</p>
 
-<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">privateUserAttributes</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">LDUser.privateAttributes</a></code></p>
+<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSayAA0E9AttributeCGvp">privateUserAttributes</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code></p>
 
                       </div>
                       <div class="declaration">
@@ -645,9 +620,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp"></a>
+                    <a name="/s:12LaunchDarkly8LDConfigV21privateUserAttributesSayAA0E9AttributeCGvp"></a>
                     <a name="//apple_ref/swift/Property/privateUserAttributes" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">privateUserAttributes</a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSayAA0E9AttributeCGvp">privateUserAttributes</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -659,16 +634,16 @@
 
 <p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
 
-<p>See <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvpZ">LDUser.privatizableAttributes</a></code> for the attribute names that can be declared private. To set private user attributes for a specific user, see <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">LDUser.privateAttributes</a></code>. (Default: nil)</p>
+<p>To set private user attributes for a specific user, see <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code>. (Default: nil)</p>
 
-<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">allUserAttributesPrivate</a></code>, <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvpZ">LDUser.privatizableAttributes</a></code>, and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">LDUser.privateAttributes</a></code>.</p>
+<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">allUserAttributesPrivate</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">privateUserAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">privateUserAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Classes/UserAttribute.html">UserAttribute</a></span><span class="p">]</span></code></pre>
 
                         </div>
                       </div>
@@ -688,7 +663,10 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Directs the SDK to use REPORT for HTTP requests to connect to <code>clientstream</code> and make feature flag requests. When false the SDK uses GET for these requests. Do not use unless advised by LaunchDarkly. (Default: false)</p>
+                        <p>Directs the SDK to use REPORT for HTTP requests for feature flag data. (Default: <code>false</code>)</p>
+
+<p>This setting applies both to requests to the streaming service, as well as flag requests when the SDK is in polling
+mode. When false the SDK uses GET for these requests. Do not use unless advised by LaunchDarkly.</p>
 
                       </div>
                       <div class="declaration">
@@ -967,7 +945,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">headerDelegate</span><span class="p">:</span> <span class="kt"><a href="../Other%20Typealiases.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a></span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">headerDelegate</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a></span><span class="p">?</span></code></pre>
 
                         </div>
                       </div>
@@ -1192,7 +1170,7 @@
         </section>
         <section id="footer">
           <p>Copyright © 2019 Catamorphic Co.</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
         </section>
       </article>
     </div>

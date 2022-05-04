@@ -17,7 +17,7 @@
     <a title="ObjcLDClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 5.4.5 Docs</a> (84% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 6.0.0 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -55,10 +55,10 @@
                 <a href="../Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/LDUser/CodingKeys.html">– CodingKeys</a>
+                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+                <a href="../Enums/LDValue.html">LDValue</a>
               </li>
             </ul>
           </li>
@@ -106,10 +106,13 @@
             <a href="../Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
+                <a href="../Classes/UserAttribute.html">UserAttribute</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a>
+                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
@@ -118,7 +121,7 @@
                 <a href="../Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Other%20Types.html#/s:12LaunchDarkly14LDErrorHandlera">LDErrorHandler</a>
+                <a href="../Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -136,6 +139,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ObjcLDValueType.html">ObjcLDValueType</a>
               </li>
             </ul>
           </li>
@@ -155,33 +164,7 @@
                 <a href="../Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/ObjcLDArrayEvaluationDetail.html">ObjcLDArrayEvaluationDetail</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDictionaryEvaluationDetail.html">ObjcLDDictionaryEvaluationDetail</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Objective-C%20ChangedFlag%20Wrappers.html">Objective-C ChangedFlag Wrappers</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a>
+                <a href="../Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
               </li>
             </ul>
           </li>
@@ -196,14 +179,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../licensetxt.html">LICENSE.txt</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Other%20Typealiases.html">Other Type Aliases</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Other%20Typealiases.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -229,7 +204,7 @@
 <h3 id='startup' class='heading'>Startup</h3>
 
 <ol>
-<li>To customize, configure a LDConfig (<code><a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a></code>) and LDUser (<code><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></code>). The <code>config</code> is required, the <code>user</code> is optional. Both give you additional control over the feature flags delivered to the LDClient. See <code><a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a></code> &amp; <code><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></code> for more details.</li>
+<li>To customize, configure a LDConfig (<code><a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a></code>) and LDUser (<code><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></code>). Both give you additional control over the feature flags delivered to the LDClient. See <code><a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a></code> &amp; <code><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></code> for more details.</li>
 <li>The mobileKey set into the <code><a href="../Structs/LDConfig.html">LDConfig</a></code> comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.</li>
 <li>Call <code>[ObjcLDClient startWithConfig: user: completion:]</code> (<code>ObjcLDClient.startWithConfig(_:config:user:completion:)</code>)</li>
 <li>If you do not pass in a LDUser, LDCLient will create a default for you.</li>
@@ -238,7 +213,7 @@
 </ol>
 <h3 id='getting-feature-flags' class='heading'>Getting Feature Flags</h3>
 
-<p>Once the LDClient has started, it makes your feature flags available using the <code>variation</code> and <code>variationDetail</code> methods. A <code>variation</code> is a specific flag value. For example, a boolean feature flag has 2 variations, <code>YES</code> and <code>NO</code>. You can create feature flags with more than 2 variations using other feature flag types. See <code>LDFlagValue</code> for the available types.</p>
+<p>Once the LDClient has started, it makes your feature flags available using the <code>variation</code> and <code>variationDetail</code> methods. A <code>variation</code> is a specific flag value. For example, a boolean feature flag has 2 variations, <code>YES</code> and <code>NO</code>. You can create feature flags with more than 2 variations using other feature flag types. See <code><a href="../Enums/LDValue.html">LDValue</a></code> for the available types.</p>
 <pre class="highlight swift"><code><span class="kt">BOOL</span> <span class="n">boolFlag</span> <span class="o">=</span> <span class="p">[</span><span class="n">ldClientInstance</span> <span class="nv">boolVariationForKey</span><span class="p">:</span><span class="s">@"my-bool-flag"</span> <span class="n">defaultValue</span><span class="p">:</span><span class="kt">NO</span><span class="p">];</span>
 </code></pre>
 
@@ -717,13 +692,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                       <div class="abstract">
                         <p>Returns the BOOL variation for the given feature flag. If the flag does not exist, cannot be cast to a BOOL, or the LDClient is not started, returns the default value.</p>
 
-<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>YES</em> and <em>NO</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code>LDFlagValue</code> for the available types.</p>
-
-<p>The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default  value. The LDClient must be online to keep the feature flag values up-to-date.</p>
-
-<p>See <code><a href="../Enums/LDStreamingMode.html">LDStreamingMode</a></code> for details about the modes the LDClient uses to update feature flags.</p>
-
-<p>When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.</p>
+<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>YES</em> and <em>NO</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code><a href="../Enums/LDValue.html">LDValue</a></code> for the available types.</p>
 
 <p>A call to <code>boolVariation</code> records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.</p>
 <h3 id='usage' class='heading'>Usage</h3>
@@ -856,13 +825,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                       <div class="abstract">
                         <p>Returns the NSInteger variation for the given feature flag. If the flag does not exist, cannot be cast to a NSInteger, or the LDClient is not started, returns the default value.</p>
 
-<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>YES</em> and <em>NO</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code>LDFlagValue</code> for the available types.</p>
-
-<p>The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.</p>
-
-<p>See <code><a href="../Enums/LDStreamingMode.html">LDStreamingMode</a></code> for details about the modes the LDClient uses to update feature flags.</p>
-
-<p>When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.</p>
+<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>YES</em> and <em>NO</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code><a href="../Enums/LDValue.html">LDValue</a></code> for the available types.</p>
 
 <p>A call to <code>integerVariation</code> records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.</p>
 <h3 id='usage' class='heading'>Usage</h3>
@@ -995,13 +958,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                       <div class="abstract">
                         <p>Returns the double variation for the given feature flag. If the flag does not exist, cannot be cast to a double, or the LDClient is not started, returns the default value.</p>
 
-<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>YES</em> and <em>NO</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code>LDFlagValue</code> for the available types.</p>
-
-<p>The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.</p>
-
-<p>See <code><a href="../Enums/LDStreamingMode.html">LDStreamingMode</a></code> for details about the modes the LDClient uses to update feature flags.</p>
-
-<p>When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.</p>
+<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>YES</em> and <em>NO</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code><a href="../Enums/LDValue.html">LDValue</a></code> for the available types.</p>
 
 <p>A call to <code>doubleVariation</code> records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.</p>
 <h3 id='usage' class='heading'>Usage</h3>
@@ -1132,15 +1089,9 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Returns the NSString variation for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the default value, which may be nil.</p>
+                        <p>Returns the NSString variation for the given feature flag. If the flag does not exist, cannot be cast to a NSString, or the LDClient is not started, returns the default value.</p>
 
-<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>YES</em> and <em>NO</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code>LDFlagValue</code> for the available types.</p>
-
-<p>The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.</p>
-
-<p>See <code><a href="../Enums/LDStreamingMode.html">LDStreamingMode</a></code> for details about the modes the LDClient uses to update feature flags.</p>
-
-<p>When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.</p>
+<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>YES</em> and <em>NO</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code><a href="../Enums/LDValue.html">LDValue</a></code> for the available types.</p>
 
 <p>A call to <code>stringVariation</code> records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.</p>
 <h3 id='usage' class='heading'>Usage</h3>
@@ -1153,7 +1104,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">stringVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">stringVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span></code></pre>
 
                         </div>
                       </div>
@@ -1181,7 +1132,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                               </td>
                               <td>
                                 <div>
-                                  <p>The default value to return if the feature flag key does not exist. The default value may be nil.</p>
+                                  <p>The default value to return if the feature flag key does not exist.</p>
                                 </div>
                               </td>
                             </tr>
@@ -1190,7 +1141,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>The requested NSString feature flag value, or the default value (which may be nil) if the flag is missing or cannot be cast to a NSString, or the client is not started.</p>
+                        <p>The requested NSString feature flag value, or the default value if the flag is missing or cannot be cast to a NSString, or the client is not started.</p>
                       </div>
                     </section>
                   </div>
@@ -1216,7 +1167,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">stringVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a></span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">stringVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a></span></code></pre>
 
                         </div>
                       </div>
@@ -1244,7 +1195,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                               </td>
                               <td>
                                 <div>
-                                  <p>The default value to return if the feature flag key does not exist. The default value may be nil.</p>
+                                  <p>The default value to return if the feature flag key does not exist.</p>
                                 </div>
                               </td>
                             </tr>
@@ -1261,9 +1212,9 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)arrayVariationForKey:defaultValue:"></a>
-                    <a name="//apple_ref/swift/Method/arrayVariation(forKey:defaultValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)arrayVariationForKey:defaultValue:">arrayVariation(forKey:<wbr>defaultValue:<wbr>)</a>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)jsonVariationForKey:defaultValue:"></a>
+                    <a name="//apple_ref/swift/Method/jsonVariation(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)jsonVariationForKey:defaultValue:">jsonVariation(forKey:<wbr>defaultValue:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1271,19 +1222,11 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Returns the NSArray variation for the given feature flag. If the flag does not exist, cannot be cast to a NSArray, or the LDClient is not started, returns the default value, which may be nil..</p>
+                        <p>Returns the JSON variation for the given feature flag. If the flag does not exist, or the LDClient is not started, returns the default value.</p>
 
-<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>YES</em> and <em>NO</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code>LDFlagValue</code> for the available types.</p>
-
-<p>The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.</p>
-
-<p>See <code><a href="../Enums/LDStreamingMode.html">LDStreamingMode</a></code> for details about the modes the LDClient uses to update feature flags.</p>
-
-<p>When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.</p>
-
-<p>A call to <code>arrayVariation</code> records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.</p>
+<p>A call to <code>jsonVariation</code> records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.</p>
 <h3 id='usage' class='heading'>Usage</h3>
-<pre class="highlight swift"><code><span class="kt">NSArray</span> <span class="o">*</span><span class="n">arrayFeatureFlagValue</span> <span class="o">=</span> <span class="p">[</span><span class="n">ldClientInstance</span> <span class="nv">arrayVariationForKey</span><span class="p">:</span><span class="s">@"my-array-flag"</span> <span class="n">defaultValue</span><span class="p">:</span><span class="err">@</span><span class="p">[</span><span class="err">@</span><span class="mi">1</span><span class="p">,</span><span class="err">@</span><span class="mi">2</span><span class="p">,</span><span class="err">@</span><span class="mi">3</span><span class="p">]];</span>
+<pre class="highlight swift"><code><span class="kt">ObjcLDValue</span> <span class="o">*</span><span class="n">featureFlagValue</span> <span class="o">=</span> <span class="p">[</span><span class="n">ldClientInstance</span> <span class="nv">jsonVariationForKey</span><span class="p">:</span><span class="s">@"my-flag"</span> <span class="n">defaultValue</span><span class="p">:[</span><span class="kt">LDValue</span> <span class="nv">ofBool</span><span class="p">:</span><span class="kt">NO</span><span class="p">]];</span>
 </code></pre>
 
                       </div>
@@ -1292,7 +1235,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">arrayVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="p">[</span><span class="kt">Any</span><span class="p">]?)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">Any</span><span class="p">]?</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">jsonVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDValue.html">ObjcLDValue</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ObjcLDValue.html">ObjcLDValue</a></span></code></pre>
 
                         </div>
                       </div>
@@ -1320,7 +1263,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                               </td>
                               <td>
                                 <div>
-                                  <p>The default value to return if the feature flag key does not exist. The default value may be nil.</p>
+                                  <p>The default value to return if the feature flag key does not exist.</p>
                                 </div>
                               </td>
                             </tr>
@@ -1329,7 +1272,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>The requested NSArray feature flag value, or the default value (which may be nil) if the flag is missing or cannot be cast to a NSArray, or the client is not started</p>
+                        <p>The requested feature flag value, or the default value if the flag is missing or the client is not started</p>
                       </div>
                     </section>
                   </div>
@@ -1337,9 +1280,9 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)arrayVariationDetailForKey:defaultValue:"></a>
-                    <a name="//apple_ref/swift/Method/arrayVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)arrayVariationDetailForKey:defaultValue:">arrayVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)jsonVariationDetailForKey:defaultValue:"></a>
+                    <a name="//apple_ref/swift/Method/jsonVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)jsonVariationDetailForKey:defaultValue:">jsonVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1355,7 +1298,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">arrayVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="p">[</span><span class="kt">Any</span><span class="p">]?)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ObjcLDArrayEvaluationDetail.html">ObjcLDArrayEvaluationDetail</a></span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">jsonVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDValue.html">ObjcLDValue</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a></span></code></pre>
 
                         </div>
                       </div>
@@ -1383,7 +1326,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                               </td>
                               <td>
                                 <div>
-                                  <p>The default value to return if the feature flag key does not exist. The default value may be nil.</p>
+                                  <p>The default value to return if the feature flag key does not exist.</p>
                                 </div>
                               </td>
                             </tr>
@@ -1392,146 +1335,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>ObjcLDArrayEvaluationDetail containing your value as well as useful information on why that value was returned.</p>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)dictionaryVariationForKey:defaultValue:"></a>
-                    <a name="//apple_ref/swift/Method/dictionaryVariation(forKey:defaultValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)dictionaryVariationForKey:defaultValue:">dictionaryVariation(forKey:<wbr>defaultValue:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Returns the NSDictionary variation for the given feature flag. If the flag does not exist, cannot be cast to a NSDictionary, or the LDClient is not started, returns the default value, which may be nil..</p>
-
-<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>YES</em> and <em>NO</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code>LDFlagValue</code> for the available types.</p>
-
-<p>The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.</p>
-
-<p>See <code><a href="../Enums/LDStreamingMode.html">LDStreamingMode</a></code> for details about the modes the LDClient uses to update feature flags.</p>
-
-<p>When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.</p>
-
-<p>A call to <code>dictionaryVariation</code> records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.</p>
-<h3 id='usage' class='heading'>Usage</h3>
-<pre class="highlight swift"><code><span class="kt">NSDictionary</span> <span class="o">*</span><span class="n">dictionaryFeatureFlagValue</span> <span class="o">=</span> <span class="p">[</span><span class="n">ldClientInstance</span> <span class="nv">dictionaryVariationForKey</span><span class="p">:</span><span class="s">@"my-dictionary-flag"</span> <span class="n">defaultValue</span><span class="p">:</span><span class="err">@</span><span class="p">{</span><span class="s">@"dictionary"</span><span class="p">:</span><span class="s">@"defaultValue"</span><span class="p">}];</span>
-</code></pre>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">dictionaryVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]?)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>key</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagKey for the requested feature flag.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>defaultValue</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The default value to return if the feature flag key does not exist. The default value may be nil.</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div>
-                        <h4>Return Value</h4>
-                        <p>The requested NSDictionary feature flag value, or the default value (which may be nil) if the flag is missing or cannot be cast to a NSDictionary, or the client is not started</p>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)dictionaryVariationDetailForKey:defaultValue:"></a>
-                    <a name="//apple_ref/swift/Method/dictionaryVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)dictionaryVariationDetailForKey:defaultValue:">dictionaryVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>See <a href="x-source-tag://dictionaryVariation">dictionaryVariation</a> for more information on variation methods.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">dictionaryVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]?)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/ObjcLDDictionaryEvaluationDetail.html">ObjcLDDictionaryEvaluationDetail</a></span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>key</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagKey for the requested feature flag.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>defaultValue</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The default value to return if the feature flag key does not exist. The default value may be nil.</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div>
-                        <h4>Return Value</h4>
-                        <p>ObjcLDDictionaryEvaluationDetail containing your value as well as useful information on why that value was returned.</p>
+                        <p>ObjcLDJSONEvaluationDetail containing your value as well as useful information on why that value was returned.</p>
                       </div>
                     </section>
                   </div>
@@ -1561,7 +1365,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">var</span> <span class="nv">allFlags</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+<span class="kd">public</span> <span class="k">var</span> <span class="nv">allFlags</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span> <span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDValue.html">ObjcLDValue</a></span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -1584,9 +1388,9 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeBool:owner:handler:"></a>
-                    <a name="//apple_ref/swift/Method/observeBool(_:owner:handler:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeBool:owner:handler:">observeBool(_:<wbr>owner:<wbr>handler:<wbr>)</a>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)observe:owner:handler:"></a>
+                    <a name="//apple_ref/swift/Method/observe(_:owner:handler:)" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)observe:owner:handler:">observe(_:<wbr>owner:<wbr>handler:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1594,13 +1398,13 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Sets a handler for the specified BOOL flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values. See <code><a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a></code> for details.</p>
+                        <p>Sets a handler for the specified BOOL flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values. See <code>ObjcLDBoolChangedFlag</code> for details.</p>
 
 <p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
 
 <p>The SDK executes handlers on the main thread.</p>
 
-<p>SeeAlso: <code><a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
+<p>SeeAlso: <code>ObjcLDBoolChangedFlag</code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
 <h3 id='usage' class='heading'>Usage</h3>
 <pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
 <span class="p">[</span><span class="n">ldClientInstance</span> <span class="nv">observeBool</span><span class="p">:</span><span class="s">"my-bool-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDBoolChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">){</span>
@@ -1615,427 +1419,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeBool</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C24LDBoolChangedFlagHandlera">ObjcLDBoolChangedFlagHandler</a></span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>key</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagKey for the flag to observe.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>owner</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>handler</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The block the SDK will execute when the feature flag changes.</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeInteger:owner:handler:"></a>
-                    <a name="//apple_ref/swift/Method/observeInteger(_:owner:handler:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeInteger:owner:handler:">observeInteger(_:<wbr>owner:<wbr>handler:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Sets a handler for the specified NSInteger flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values. See <code><a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a></code> for details.</p>
-
-<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
-
-<p>The SDK executes handlers on the main thread.</p>
-
-<p>SeeAlso: <code><a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
-<h3 id='usage' class='heading'>Usage</h3>
-<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
-<span class="p">[</span><span class="n">ldClientInstance</span> <span class="nv">observeInteger</span><span class="p">:</span><span class="s">"my-integer-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDIntegerChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">){</span>
-   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
-   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showIntegerChangedFlag</span><span class="p">:</span><span class="n">changedFlag</span><span class="p">];</span>
-<span class="p">}];</span>
-</code></pre>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeInteger</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C27LDIntegerChangedFlagHandlera">ObjcLDIntegerChangedFlagHandler</a></span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>key</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagKey for the flag to observe.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>owner</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>handler</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The block the SDK will execute when the feature flag changes.</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeDouble:owner:handler:"></a>
-                    <a name="//apple_ref/swift/Method/observeDouble(_:owner:handler:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeDouble:owner:handler:">observeDouble(_:<wbr>owner:<wbr>handler:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Sets a handler for the specified double flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values. See <code><a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a></code> for details.</p>
-
-<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
-
-<p>The SDK executes handlers on the main thread.</p>
-
-<p>SeeAlso: <code><a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
-<h3 id='usage' class='heading'>Usage</h3>
-<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
-<span class="p">[</span><span class="n">ldClientInstance</span> <span class="nv">observeDouble</span><span class="p">:</span><span class="s">"my-double-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDDoubleChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">){</span>
-   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
-   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showDoubleChangedFlag</span><span class="p">:</span><span class="n">changedFlag</span><span class="p">];</span>
-<span class="p">}];</span>
-</code></pre>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeDouble</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C26LDDoubleChangedFlagHandlera">ObjcLDDoubleChangedFlagHandler</a></span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>key</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagKey for the flag to observe.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>owner</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>handler</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The block the SDK will execute when the feature flag changes.</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeString:owner:handler:"></a>
-                    <a name="//apple_ref/swift/Method/observeString(_:owner:handler:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeString:owner:handler:">observeString(_:<wbr>owner:<wbr>handler:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Sets a handler for the specified NSString flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values. See <code><a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a></code> for details.</p>
-
-<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
-
-<p>The SDK executes handlers on the main thread.</p>
-
-<p>SeeAlso: <code><a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
-<h3 id='usage' class='heading'>Usage</h3>
-<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
-<span class="p">[</span><span class="n">ldClientInstance</span> <span class="nv">observeString</span><span class="p">:</span><span class="s">"my-string-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDStringChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">){</span>
-   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
-   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showStringChangedFlag</span><span class="p">:</span><span class="n">changedFlag</span><span class="p">];</span>
-<span class="p">}];</span>
-</code></pre>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeString</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C26LDStringChangedFlagHandlera">ObjcLDStringChangedFlagHandler</a></span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>key</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagKey for the flag to observe.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>owner</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>handler</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The block the SDK will execute when the feature flag changes.</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeArray:owner:handler:"></a>
-                    <a name="//apple_ref/swift/Method/observeArray(_:owner:handler:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeArray:owner:handler:">observeArray(_:<wbr>owner:<wbr>handler:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Sets a handler for the specified NSArray flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values. See <code><a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a></code> for details.</p>
-
-<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
-
-<p>The SDK executes handlers on the main thread.</p>
-
-<p>SeeAlso: <code><a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
-<h3 id='usage' class='heading'>Usage</h3>
-<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
-<span class="p">[</span><span class="n">ldClientInstance</span> <span class="nv">observeArray</span><span class="p">:</span><span class="s">"my-array-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDArrayChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">){</span>
-   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
-   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showArrayChangedFlag</span><span class="p">:</span><span class="n">changedFlag</span><span class="p">];</span>
-<span class="p">}];</span>
-</code></pre>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeArray</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C25LDArrayChangedFlagHandlera">ObjcLDArrayChangedFlagHandler</a></span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>key</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagKey for the flag to observe.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>owner</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagChangeOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>handler</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The block the SDK will execute when the feature flag changes.</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeDictionary:owner:handler:"></a>
-                    <a name="//apple_ref/swift/Method/observeDictionary(_:owner:handler:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeDictionary:owner:handler:">observeDictionary(_:<wbr>owner:<wbr>handler:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Sets a handler for the specified NSDictionary flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values. See <code><a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a></code> for details.</p>
-
-<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
-
-<p>The SDK executes handlers on the main thread.</p>
-
-<p>SeeAlso: <code><a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a></code> and <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
-<h3 id='usage' class='heading'>Usage</h3>
-<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
-<span class="p">[</span><span class="n">ldClientInstance</span> <span class="nv">observeDictionary</span><span class="p">:</span><span class="s">"my-dictionary-flag"</span> <span class="nv">owner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">LDDictionaryChangedFlag</span> <span class="o">*</span><span class="n">changedFlag</span><span class="p">){</span>
-   <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
-   <span class="p">[</span><span class="n">strongSelf</span> <span class="nv">showDictionaryChangedFlag</span><span class="p">:</span><span class="n">changedFlag</span><span class="p">];</span>
-<span class="p">}];</span>
-</code></pre>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeDictionary</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C30LDDictionaryChangedFlagHandlera">ObjcLDDictionaryChangedFlagHandler</a></span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observe</span><span class="p">(</span><span class="n">_</span> <span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Classes/ObjcLDClient.html#/s:12LaunchDarkly12ObjcLDClientC0C20LDChangedFlagHandlera">ObjcLDChangedFlagHandler</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -2370,9 +1754,9 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeErrorWithOwner:handler:"></a>
-                    <a name="//apple_ref/swift/Method/observeError(owner:handler:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)observeErrorWithOwner:handler:">observeError(owner:<wbr>handler:<wbr>)</a>
+                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C20LDChangedFlagHandlera"></a>
+                    <a name="//apple_ref/swift/Alias/ObjcLDChangedFlagHandler" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C20LDChangedFlagHandlera">ObjcLDChangedFlagHandler</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2380,86 +1764,14 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Sets a handler executed when an error occurs while processing flag or event responses.</p>
-
-<p>The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should capture a strong self reference from a weak reference immediately inside the handler to avoid retain cycles causing a memory leak.</p>
-
-<p>The SDK executes handlers on the main thread.</p>
-
-<p>SeeAlso: <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)stopObservingForOwner:">stopObserving(owner:)</a></code></p>
-<h3 id='usage' class='heading'>Usage</h3>
-<pre class="highlight swift"><code><span class="n">__weak</span> <span class="nf">typeof</span><span class="p">(</span><span class="k">self</span><span class="p">)</span> <span class="n">weakSelf</span> <span class="o">=</span> <span class="k">self</span><span class="p">;</span>
-<span class="p">[[</span><span class="kt">LDClient</span> <span class="n">sharedInstance</span><span class="p">]</span> <span class="nv">observeErrorWithOwner</span><span class="p">:</span><span class="k">self</span> <span class="nv">handler</span><span class="p">:</span><span class="o">^</span><span class="p">(</span><span class="kt">NSError</span> <span class="o">*</span> <span class="n">_Nonnull</span> <span class="n">error</span><span class="p">){</span>
-    <span class="n">__strong</span> <span class="nf">typeof</span><span class="p">(</span><span class="n">weakSelf</span><span class="p">)</span> <span class="n">strongSelf</span> <span class="o">=</span> <span class="n">weakSelf</span><span class="p">;</span>
-    <span class="p">[</span><span class="k">self</span> <span class="nv">doSomethingWithError</span><span class="p">:</span><span class="n">error</span><span class="p">];</span>
-<span class="p">}];</span>
-</code></pre>
+                        <p>Handler passed to the client app when a feature flag value changes</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeError</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly14LDErrorHandlera">LDErrorHandler</a></span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>owner</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>handler</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDErrorHandler the SDK will execute when a network request results in an error.</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C24LDBoolChangedFlagHandlera"></a>
-                    <a name="//apple_ref/swift/Alias/ObjcLDBoolChangedFlagHandler" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C24LDBoolChangedFlagHandlera">ObjcLDBoolChangedFlagHandler</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Handler passed to the client app when a BOOL feature flag value changes</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDBoolChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
 
                         </div>
                       </div>
@@ -2475,237 +1787,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                               </td>
                               <td>
                                 <div>
-                                  <p>The LDBoolChangedFlag passed into the handler containing the old &amp; new flag value</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C27LDIntegerChangedFlagHandlera"></a>
-                    <a name="//apple_ref/swift/Alias/ObjcLDIntegerChangedFlagHandler" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C27LDIntegerChangedFlagHandlera">ObjcLDIntegerChangedFlagHandler</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Handler passed to the client app when a NSInteger feature flag value changes</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDIntegerChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlag</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDIntegerChangedFlag passed into the handler containing the old &amp; new flag value</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C26LDDoubleChangedFlagHandlera"></a>
-                    <a name="//apple_ref/swift/Alias/ObjcLDDoubleChangedFlagHandler" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C26LDDoubleChangedFlagHandlera">ObjcLDDoubleChangedFlagHandler</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Handler passed to the client app when a double feature flag value changes</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDDoubleChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlag</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDDoubleChangedFlag passed into the handler containing the old &amp; new flag value</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C26LDStringChangedFlagHandlera"></a>
-                    <a name="//apple_ref/swift/Alias/ObjcLDStringChangedFlagHandler" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C26LDStringChangedFlagHandlera">ObjcLDStringChangedFlagHandler</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Handler passed to the client app when a NSString feature flag value changes</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDStringChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlag</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDStringChangedFlag passed into the handler containing the old &amp; new flag value</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C25LDArrayChangedFlagHandlera"></a>
-                    <a name="//apple_ref/swift/Alias/ObjcLDArrayChangedFlagHandler" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C25LDArrayChangedFlagHandlera">ObjcLDArrayChangedFlagHandler</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Handler passed to the client app when a NSArray feature flag value changes</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDArrayChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlag</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDArrayChangedFlag passed into the handler containing the old &amp; new flag value</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly12ObjcLDClientC0C30LDDictionaryChangedFlagHandlera"></a>
-                    <a name="//apple_ref/swift/Alias/ObjcLDDictionaryChangedFlagHandler" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly12ObjcLDClientC0C30LDDictionaryChangedFlagHandlera">ObjcLDDictionaryChangedFlagHandler</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Handler passed to the client app when a NSArray feature flag value changes</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">ObjcLDDictionaryChangedFlagHandler</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>changedFlag</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDDictionaryChangedFlag passed into the handler containing the old &amp; new flag value</p>
+                                  <p>The LDChangedFlag passed into the handler containing the old &amp; new flag value</p>
                                 </div>
                               </td>
                             </tr>
@@ -2777,9 +1859,9 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)trackWithKey:data:error:"></a>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)trackWithKey:data:"></a>
                     <a name="//apple_ref/swift/Method/track(key:data:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)trackWithKey:data:error:">track(key:<wbr>data:<wbr>)</a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)trackWithKey:data:">track(key:<wbr>data:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2802,7 +1884,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">track</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">data</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">track</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">data</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDValue.html">ObjcLDValue</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -2855,9 +1937,9 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)trackWithKey:data:metricValue:error:"></a>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)trackWithKey:data:metricValue:"></a>
                     <a name="//apple_ref/swift/Method/track(key:data:metricValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)trackWithKey:data:metricValue:error:">track(key:<wbr>data:<wbr>metricValue:<wbr>)</a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)trackWithKey:data:metricValue:">track(key:<wbr>data:<wbr>metricValue:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -2873,7 +1955,7 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">track</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">data</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">metricValue</span><span class="p">:</span> <span class="kt">Double</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">track</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">data</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDValue.html">ObjcLDValue</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">metricValue</span><span class="p">:</span> <span class="kt">Double</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -3197,7 +2279,7 @@ Subsequent calls to this method cause the LDClient to return. Normally there sho
         </section>
         <section id="footer">
           <p>Copyright © 2019 Catamorphic Co.</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
         </section>
       </article>
     </div>

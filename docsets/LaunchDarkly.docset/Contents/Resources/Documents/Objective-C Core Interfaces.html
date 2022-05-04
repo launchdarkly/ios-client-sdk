@@ -17,7 +17,7 @@
     <a title="Objective-C Core Interfaces  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 5.4.5 Docs</a> (84% documented)</p>
+        <p><a href="index.html">LaunchDarkly 6.0.0 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -55,10 +55,10 @@
                 <a href="Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/LDUser/CodingKeys.html">– CodingKeys</a>
+                <a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+                <a href="Enums/LDValue.html">LDValue</a>
               </li>
             </ul>
           </li>
@@ -106,10 +106,13 @@
             <a href="Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="Enums/LDStreamingMode.html">LDStreamingMode</a>
+                <a href="Classes/UserAttribute.html">UserAttribute</a>
               </li>
               <li class="nav-group-task">
-                <a href="Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a>
+                <a href="Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
                 <a href="Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
@@ -118,7 +121,7 @@
                 <a href="Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Other%20Types.html#/s:12LaunchDarkly14LDErrorHandlera">LDErrorHandler</a>
+                <a href="Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -136,6 +139,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/ObjcLDValueType.html">ObjcLDValueType</a>
               </li>
             </ul>
           </li>
@@ -155,33 +164,7 @@
                 <a href="Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/ObjcLDArrayEvaluationDetail.html">ObjcLDArrayEvaluationDetail</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDDictionaryEvaluationDetail.html">ObjcLDDictionaryEvaluationDetail</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="Objective-C%20ChangedFlag%20Wrappers.html">Objective-C ChangedFlag Wrappers</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a>
+                <a href="Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
               </li>
             </ul>
           </li>
@@ -196,14 +179,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="licensetxt.html">LICENSE.txt</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="Other%20Typealiases.html">Other Type Aliases</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="Other%20Typealiases.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -239,7 +214,7 @@
 <h3 id='startup' class='heading'>Startup</h3>
 
 <ol>
-<li>To customize, configure a LDConfig (<code><a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a></code>) and LDUser (<code><a href="Classes/ObjcLDUser.html">ObjcLDUser</a></code>). The <code>config</code> is required, the <code>user</code> is optional. Both give you additional control over the feature flags delivered to the LDClient. See <code><a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a></code> &amp; <code><a href="Classes/ObjcLDUser.html">ObjcLDUser</a></code> for more details.</li>
+<li>To customize, configure a LDConfig (<code><a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a></code>) and LDUser (<code><a href="Classes/ObjcLDUser.html">ObjcLDUser</a></code>). Both give you additional control over the feature flags delivered to the LDClient. See <code><a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a></code> &amp; <code><a href="Classes/ObjcLDUser.html">ObjcLDUser</a></code> for more details.</li>
 <li>The mobileKey set into the <code><a href="Structs/LDConfig.html">LDConfig</a></code> comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.</li>
 <li>Call <code>[ObjcLDClient startWithConfig: user: completion:]</code> (<code>ObjcLDClient.startWithConfig(_:config:user:completion:)</code>)</li>
 <li>If you do not pass in a LDUser, LDCLient will create a default for you.</li>
@@ -248,7 +223,7 @@
 </ol>
 <h3 id='getting-feature-flags' class='heading'>Getting Feature Flags</h3>
 
-<p>Once the LDClient has started, it makes your feature flags available using the <code>variation</code> and <code>variationDetail</code> methods. A <code>variation</code> is a specific flag value. For example, a boolean feature flag has 2 variations, <code>YES</code> and <code>NO</code>. You can create feature flags with more than 2 variations using other feature flag types. See <code>LDFlagValue</code> for the available types.</p>
+<p>Once the LDClient has started, it makes your feature flags available using the <code>variation</code> and <code>variationDetail</code> methods. A <code>variation</code> is a specific flag value. For example, a boolean feature flag has 2 variations, <code>YES</code> and <code>NO</code>. You can create feature flags with more than 2 variations using other feature flag types. See <code><a href="Enums/LDValue.html">LDValue</a></code> for the available types.</p>
 <pre class="highlight swift"><code><span class="kt">BOOL</span> <span class="n">boolFlag</span> <span class="o">=</span> <span class="p">[</span><span class="n">ldClientInstance</span> <span class="nv">boolVariationForKey</span><span class="p">:</span><span class="s">@"my-bool-flag"</span> <span class="n">defaultValue</span><span class="p">:</span><span class="kt">NO</span><span class="p">];</span>
 </code></pre>
 
@@ -381,13 +356,73 @@
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDValue"></a>
+                    <a name="//apple_ref/swift/Class/ObjcLDValue" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDValue">ObjcLDValue</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Bridged <code><a href="Enums/LDValue.html">LDValue</a></code> type for Objective-C.</p>
+
+<p>Can create instances from Objective-C with the provided <code>of</code> static functions, for example <code>[LDValue ofBool:YES]</code>.</p>
+
+                        <a href="Classes/ObjcLDValue.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt"><a href="Enums/LDValue.html">LDValue</a></span><span class="p">)</span>
+<span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDValue</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@M@LaunchDarkly@E@LDValueType"></a>
+                    <a name="//apple_ref/swift/Enum/ObjcLDValueType" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@E@LDValueType">ObjcLDValueType</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Used to represent the type of an <code><a href="Enums/LDValue.html">LDValue</a></code>.</p>
+
+                        <a href="Enums/ObjcLDValueType.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">LDValueType</span><span class="p">)</span>
+<span class="kd">public</span> <span class="kd">enum</span> <span class="kt">ObjcLDValueType</span> <span class="p">:</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
           <p>Copyright © 2019 Catamorphic Co.</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
         </section>
       </article>
     </div>

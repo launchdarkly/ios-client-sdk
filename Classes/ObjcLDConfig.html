@@ -17,7 +17,7 @@
     <a title="ObjcLDConfig Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 5.4.5 Docs</a> (84% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 6.0.0 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -55,10 +55,10 @@
                 <a href="../Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/LDUser/CodingKeys.html">– CodingKeys</a>
+                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+                <a href="../Enums/LDValue.html">LDValue</a>
               </li>
             </ul>
           </li>
@@ -106,10 +106,13 @@
             <a href="../Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
+                <a href="../Classes/UserAttribute.html">UserAttribute</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a>
+                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
@@ -118,7 +121,7 @@
                 <a href="../Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Other%20Types.html#/s:12LaunchDarkly14LDErrorHandlera">LDErrorHandler</a>
+                <a href="../Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -136,6 +139,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ObjcLDValueType.html">ObjcLDValueType</a>
               </li>
             </ul>
           </li>
@@ -155,33 +164,7 @@
                 <a href="../Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/ObjcLDArrayEvaluationDetail.html">ObjcLDArrayEvaluationDetail</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDictionaryEvaluationDetail.html">ObjcLDDictionaryEvaluationDetail</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Objective-C%20ChangedFlag%20Wrappers.html">Objective-C ChangedFlag Wrappers</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a>
+                <a href="../Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
               </li>
             </ul>
           </li>
@@ -196,14 +179,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../licensetxt.html">LICENSE.txt</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Other%20Typealiases.html">Other Type Aliases</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Other%20Typealiases.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -640,7 +615,7 @@
 
 <p>When YES, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. (Default: NO)</p>
 
-<p>See Also: <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateUserAttributes">privateUserAttributes</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">LDUser.privateAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code>)</p>
+<p>See Also: <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateUserAttributes">privateUserAttributes</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code>)</p>
 
                       </div>
                       <div class="declaration">
@@ -672,9 +647,9 @@
 
 <p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
 
-<p>See <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvpZ">LDUser.privatizableAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(cpy)privatizableAttributes">ObjcLDUser.privatizableAttributes</a></code>) for the attribute names that can be declared private. To set private user attributes for a specific user, see <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">LDUser.privateAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code>). (Default: nil)</p>
+<p>To set private user attributes for a specific user, see <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code>). (Default: <code>[]</code>)</p>
 
-<p>See Also: <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)allUserAttributesPrivate">allUserAttributesPrivate</a></code>, <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV22privatizableAttributesSaySSGvpZ">LDUser.privatizableAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(cpy)privatizableAttributes">ObjcLDUser.privatizableAttributes</a></code>), and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">LDUser.privateAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code>).</p>
+<p>See Also: <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)allUserAttributesPrivate">allUserAttributesPrivate</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code>).</p>
 
                       </div>
                       <div class="declaration">
@@ -682,7 +657,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">var</span> <span class="nv">privateUserAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+<span class="kd">public</span> <span class="k">var</span> <span class="nv">privateUserAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -1084,7 +1059,7 @@
         </section>
         <section id="footer">
           <p>Copyright © 2019 Catamorphic Co.</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
         </section>
       </article>
     </div>

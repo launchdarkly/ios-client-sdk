@@ -16,7 +16,7 @@
     <a title="CHANGELOG  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 5.4.5 Docs</a> (84% documented)</p>
+        <p><a href="index.html">LaunchDarkly 6.0.0 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -54,10 +54,10 @@
                 <a href="Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/LDUser/CodingKeys.html">– CodingKeys</a>
+                <a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+                <a href="Enums/LDValue.html">LDValue</a>
               </li>
             </ul>
           </li>
@@ -105,10 +105,13 @@
             <a href="Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="Enums/LDStreamingMode.html">LDStreamingMode</a>
+                <a href="Classes/UserAttribute.html">UserAttribute</a>
               </li>
               <li class="nav-group-task">
-                <a href="Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a>
+                <a href="Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
                 <a href="Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
@@ -117,7 +120,7 @@
                 <a href="Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Other%20Types.html#/s:12LaunchDarkly14LDErrorHandlera">LDErrorHandler</a>
+                <a href="Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -135,6 +138,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/ObjcLDValueType.html">ObjcLDValueType</a>
               </li>
             </ul>
           </li>
@@ -154,33 +163,7 @@
                 <a href="Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/ObjcLDArrayEvaluationDetail.html">ObjcLDArrayEvaluationDetail</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDDictionaryEvaluationDetail.html">ObjcLDDictionaryEvaluationDetail</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="Objective-C%20ChangedFlag%20Wrappers.html">Objective-C ChangedFlag Wrappers</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a>
+                <a href="Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
               </li>
             </ul>
           </li>
@@ -198,14 +181,6 @@
               </li>
             </ul>
           </li>
-          <li class="nav-group-name">
-            <a href="Other%20Typealiases.html">Other Type Aliases</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="Other%20Typealiases.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
-              </li>
-            </ul>
-          </li>
         </ul>
       </nav>
       <article class="main-content">
@@ -215,6 +190,65 @@
             <h1 id='change-log' class='heading'>Change log</h1>
 
 <p>All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to <a href="http://semver.org">Semantic Versioning</a>.</p>
+<h2 id='6-0-0-2022-05-04' class='heading'>[6.0.0] - 2022-05-04</h2>
+
+<p>Note that Objective-C bridging types are prefixed by <code>Objc</code>, but that prefix is not exposed to code written in Objective-C. For example, changes listed to <code><a href="Classes/ObjcLDClient.html">ObjcLDClient</a></code> are changes to the class referred to as <code><a href="Classes/LDClient.html">LDClient</a></code> from within Objective-C.</p>
+<h3 id='added' class='heading'>Added</h3>
+
+<ul>
+<li>Added the <code><a href="Enums/LDValue.html">LDValue</a></code> class to represent any data type that is allowed in JSON. This new type is used to provide more type safety when representing complex or non-statically determined data types. The SDK also provides the bridge types <code><a href="Classes/ObjcLDValue.html">ObjcLDValue</a></code> and <code><a href="Enums/ObjcLDValueType.html">ObjcLDValueType</a></code> for Objective-C interoperability.</li>
+<li>Added the <code><a href="Classes/UserAttribute.html">UserAttribute</a></code> class which provides a less error-prone way to refer to user attribute names in configuration.</li>
+<li>Added the type specific variation functions, <code>boolVariation</code>, <code>intVariation</code>, <code>doubleVariation</code>, <code>stringVariation</code>, and <code>jsonVariation</code>, to <code><a href="Classes/LDClient.html">LDClient</a></code>.</li>
+<li>Added the type specific detailed variation functions, <code>boolVariationDetail</code>, <code>intVariationDetail</code>, <code>doubleVariationDetail</code>, <code>stringVariationDetail</code>, and <code>jsonVariationDetail</code>, to <code><a href="Classes/LDClient.html">LDClient</a></code>.</li>
+<li>Added <code>jsonVariation</code> and <code>jsonVariationDetail</code> to <code><a href="Classes/ObjcLDClient.html">ObjcLDClient</a></code>. These functions allow evaluating feature flags where the provided <code>defaultValue</code> and the resulting variation can be any valid JSON data type.</li>
+<li>Added <code><a href="Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a></code> for retrieving the detailed evaluation information of arbitrary type flag variations.</li>
+<li>Added <code>ObjcLDChangedFlagHandler</code> type alias for new non-type specific Objective-C flag observers.</li>
+</ul>
+<h3 id='changed-api' class='heading'>Changed (API)</h3>
+
+<ul>
+<li><code>LDClient.track(key: data: metricValue:)</code> no longer <code>throws</code>.</li>
+<li>The type of the <code>data</code> parameter of <code>LDClient.track(key: data: metricValue:)</code> has changed from <code>Any?</code> to <code>LDValue?</code>.</li>
+<li><code>ObjcLDClient.track(key: data:)</code> and <code>ObjcLDClient.track(key: data: metricValue:)</code> no longer <code>throws</code>. In Objective-C this change means that the <code>track</code> functions no longer accept a <code>error:</code> parameter.</li>
+<li>The type of the <code>data</code> parameter of <code>ObjcLDClient.track(key: data:)</code> and <code>ObjcLDClient.track(key: data: metricValue)</code> has changed from <code>Any?</code> to <code>ObjLDValue?</code>. In Objective-C this would be a change from <code>id _Nullable</code> to <code>LDValue * _Nullable</code>.</li>
+<li><code><a href="Classes/LDClient.html#/s:12LaunchDarkly8LDClientC8allFlagsSDySSAA7LDValueOGSgvp">LDClient.allFlags</a></code> now has the type <code>[LDFlagKey: LDValue]?</code> rather than <code>[LDFlagKey: Any]?</code>.</li>
+<li><code><a href="Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(py)allFlags">ObjcLDClient.allFlags</a></code> now has the type <code>[String: ObjcLDValue]?</code> rather than <code>[String: Any]?</code>. In Objective-C this would be a change from <code>NSDictionary&lt;NSString*, id&gt; * _Nullable</code> to <code>NSDictionary&lt;NSString*, LDValue*&gt; * _Nullable</code>.</li>
+<li>The type of the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSAA7LDValueOGvp">LDUser.custom</a></code> dictionary, and the corresponding <code>LDUser.init</code> parameter has been changed from <code>[String: Any]?</code> to <code>[String: LDValue]</code>.</li>
+<li>The type of the <code><a href="Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)custom">ObjcLDUser.custom</a></code> property has been changed from <code>[String: Any]?</code> to <code>[String: ObjcLDValue]</code>. In Objective-C this would be a change from <code>NSDictionary&lt;NSString*, id&gt; * _Nullable</code> to <code>NSDictionary&lt;NSString*, LDValue*&gt; * _Nonnull</code>.</li>
+<li>The type of the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code> property, and the corresponding <code>LDUser.init</code> parameter, have been changed from <code>[String]?</code> to <code>[UserAttribute]</code>.</li>
+<li>The type of the <code><a href="Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code> property has been changed from <code>[String]?</code> to <code>[String]</code>. In Objective-C this would be a change from <code>NSArray&lt;NSString*&gt; * _Nullable</code> to <code>NSArray&lt;NSString*&gt; * _Nonnull</code>.</li>
+<li>The types of the properties <code><a href="Structs/LDChangedFlag.html#/s:12LaunchDarkly13LDChangedFlagV8oldValueAA7LDValueOvp">LDChangedFlag.oldValue</a></code> and <code><a href="Structs/LDChangedFlag.html#/s:12LaunchDarkly13LDChangedFlagV8newValueAA7LDValueOvp">LDChangedFlag.newValue</a></code> have been changed from <code>Any?</code> to <code><a href="Enums/LDValue.html">LDValue</a></code>.</li>
+<li>The type of the <code><a href="Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSayAA0E9AttributeCGvp">LDConfig.privateUserAttributes</a></code> property has been changed from <code>[String]?</code> to <code>[UserAttribute]</code>.</li>
+<li><code><a href="Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateUserAttributes">ObjcLDConfig.privateUserAttributes</a></code> now has the non-optional type <code>[String]</code> rather than <code>[String]?</code>. In Objective-C this would be a change from <code>NSArray&lt;NSString*&gt; * _Nullable</code> to <code>NSArray&lt;NSString*&gt; * _Nonnull</code>.</li>
+<li>The type of the <code><a href="Classes/LDEvaluationDetail.html#/s:12LaunchDarkly18LDEvaluationDetailC6reasonSDySSAA7LDValueOGSgvp">LDEvaluationDetail.reason</a></code> property has been changed from <code>[String: Any]</code> to <code>[String: LDValue]</code>.</li>
+<li>The type of the <code>reason</code> property of <code><a href="Classes/ObjcLDBoolEvaluationDetail.html">ObjcLDBoolEvaluationDetail</a></code>, <code><a href="Classes/ObjcLDIntegerEvaluationDetail.html">ObjcLDIntegerEvaluationDetail</a></code>, <code><a href="Classes/ObjcLDDoubleEvaluationDetail.html">ObjcLDDoubleEvaluationDetail</a></code>, and <code><a href="Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a></code> has been changed from <code>[String: Any]?</code> to <code>[String: ObjcLDValue]?</code>. In Objective-C this would be a change from <code>NSDictionary&lt;NSString*, id&gt; * _Nullable</code> to <code>NSDictionary&lt;NSString*, LDValue*&gt; * _Nullable</code>.</li>
+</ul>
+<h3 id='changed-behavioral' class='heading'>Changed (behavioral)</h3>
+
+<ul>
+<li>The <code>Equatable</code> instance for <code><a href="Structs/LDUser.html">LDUser</a></code> has been changed to compare all user properties, rather than just the <code>key</code> property.</li>
+<li>Using <code>&quot;custom&quot;</code> as a private attribute name in <code><a href="Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSayAA0E9AttributeCGvp">LDConfig.privateUserAttributes</a></code> or <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code> will no longer set all <code><a href="Structs/LDUser.html">LDUser</a></code> custom attributes private.</li>
+<li>The automatically set <code>device</code> and <code>operatingSystem</code> custom attributes can now be set private.</li>
+<li>SDK versions from 4.0.0 and less than 6.0.0 supported migration of cached flag data from any SDK version of at least 2.3.3. The 6.0.0 release only supports migration of cached flag data from SDK versions of at least 4.0.0.</li>
+</ul>
+<h3 id='removed' class='heading'>Removed</h3>
+
+<ul>
+<li>Removed <code>LDClient.variation(forKey: defaultValue:)</code> and <code>LDClient.variationDetail(forKey: defaultValue:)</code> functions. Please use the new type-specific variation functions instead (e.g. <code>LDClient.boolVariation(forKey: defaultValue:)</code>).</li>
+<li>Removed the <code>LDFlagValueConvertible</code> protocol which was previously used to constrain the parameters and return types of the variation functions.</li>
+<li><code>LDErrorHandler</code> and <code>LDClient.observeError(owner: handler:)</code> have been removed. Please use <code><a href="Structs/ConnectionInformation.html">ConnectionInformation</a></code> instead.</li>
+<li>Removed the <code>LDUser.init(userDictionary: )</code> and <code>ObjcLDUser.init(userDictionary: )</code> initializers, please use the explicit initializers instead.</li>
+<li>Removed <code>LDUser.CodingKeys</code>. To refer to user attributes, please use <code><a href="Classes/UserAttribute.html">UserAttribute</a></code> instead.</li>
+<li>Removed <code>LDUser.privatizableAttributes</code> and <code>ObjcLDUser.privatizableAttributes</code>.</li>
+<li>Removed <code>ObjcLDUser.attributeCustom</code>.</li>
+<li>The <code>LDUser.device</code> and <code>LDUser.operatingSystem</code> properties, and the corresponding <code>LDUser.init</code> parameters have been removed. These fields will be included in the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSAA7LDValueOGvp">LDUser.custom</a></code> dictionary.</li>
+<li>The <code>ObjcLDUser.device</code> and <code>ObjcLDUser.operatingSystem</code> properties have been removed. These fields will be included in the <code><a href="Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)custom">ObjcLDUser.custom</a></code> dictionary.</li>
+<li>The <code><a href="Classes/ObjcLDClient.html">ObjcLDClient</a></code> functions, <code>arrayVariation</code>, <code>arrayVariationDetail</code>, <code>dictionaryVariation</code>, and <code>dictionaryVariationDetail</code>, have been removed. Please use <code>ObjcLDClient.jsonVariation</code> and <code>ObjcLDClient.jsonVariationDetail</code> instead.</li>
+<li>The per-type instances of <code><a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></code> have been removed. Please use the base class <code><a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></code>, which now provides <code>oldValue</code> and <code>newValue</code> <code><a href="Classes/ObjcLDValue.html">ObjcLDValue</a></code> properties. The removed classes are <code>ObjcLDBoolChangedFlag</code>, <code>ObjcLDIntegerChangedFlag</code>, <code>ObjcLDDoubleChangedFlag</code>, <code>ObjcLDStringChangedFlag</code>, <code>ObjcLDArrayChangedFlag</code>, and <code>ObjcLDDictionaryChangedFlag</code>.</li>
+<li>The classes <code>ObjcLDArrayEvaluationDetail</code> and <code>ObjcLDDictionaryEvaluationDetail</code> have been removed. Please use <code><a href="Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a></code> instead.</li>
+<li>The type aliases, <code>ObjcLDBoolChangedFlagHandler</code>, <code>ObjcLDIntegerChangedFlagHandler</code>, <code>ObjcLDDoubleChangedFlagHandler</code>, <code>ObjcLDStringChangedFlagHandler</code>, <code>ObjcLDArrayChangedFlagHandler</code>, and <code>ObjcLDDictionaryChangedFlagHandler</code>, have been removed. Please use <code>ObjcLDChangedFlagHandler</code> instead.</li>
+<li>The <code><a href="Classes/ObjcLDClient.html">ObjcLDClient</a></code> functions, <code>observeBool</code>, <code>observeInteger</code>, <code>observeDouble</code>, <code>observeString</code>, <code>observeArray</code>, and <code>observeDictionary</code>, have been removed. Please use the non-type specific <code>ObjcLDClient.observe(key: owner: handler:)</code> instead.</li>
+</ul>
 <h2 id='5-4-5-2022-03-11' class='heading'>[5.4.5] - 2022-03-11</h2>
 <h3 id='fixed' class='heading'>Fixed</h3>
 
@@ -289,7 +323,7 @@
 <h3 id='added' class='heading'>Added</h3>
 
 <ul>
-<li>Adds to <code><a href="Structs/LDConfig.html">LDConfig</a></code> the ability to dynamically configure the HTTP headers on requests through the <code>headerDelegate</code> property, which has the type <code><a href="Other%20Typealiases.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a></code>.</li>
+<li>Adds to <code><a href="Structs/LDConfig.html">LDConfig</a></code> the ability to dynamically configure the HTTP headers on requests through the <code>headerDelegate</code> property, which has the type <code><a href="Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a></code>.</li>
 </ul>
 <h2 id='5-2-0-2020-10-09' class='heading'>[5.2.0] - 2020-10-09</h2>
 <h3 id='added' class='heading'>Added</h3>
@@ -300,7 +334,7 @@
 <h3 id='fixed' class='heading'>Fixed</h3>
 
 <ul>
-<li>Corrected a bug preventing private custom attribute names being recorded in events when all custom attributes are set to be private by including &ldquo;custom&rdquo; in the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSaySSGSgvp">LDUser.privateAttributes</a></code> or <code><a href="Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSaySSGSgvp">LDConfig.privateUserAttributes</a></code> properties.</li>
+<li>Corrected a bug preventing private custom attribute names being recorded in events when all custom attributes are set to be private by including &ldquo;custom&rdquo; in the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code> or <code><a href="Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSayAA0E9AttributeCGvp">LDConfig.privateUserAttributes</a></code> properties.</li>
 <li>Update Nimble to 9.0 and Quick to 3.0 to fix tests when run with Swift 5.3.</li>
 <li>Fixes build warnings in Xcode 12.0.0.</li>
 </ul>
@@ -364,7 +398,7 @@
 <li><code>LDClient.reportEvents()</code> has been renamed to <code><a href="Classes/LDClient.html#/s:12LaunchDarkly8LDClientC5flushyyF">LDClient.flush()</a></code>.</li>
 <li><code>LDClient.stop()</code> has been renamed to <code><a href="Classes/LDClient.html#/s:12LaunchDarkly8LDClientC5closeyyF">LDClient.close()</a></code>.</li>
 <li><code>LDClient.trackEvent(key: data: )</code> method have been renamed to <code>LDClient.track(key: data: )</code></li>
-<li><code>LDClient.allFlagValues</code> has been renamed to <code><a href="Classes/LDClient.html#/s:12LaunchDarkly8LDClientC8allFlagsSDySSypGSgvp">LDClient.allFlags</a></code>.</li>
+<li><code>LDClient.allFlagValues</code> has been renamed to <code><a href="Classes/LDClient.html#/s:12LaunchDarkly8LDClientC8allFlagsSDySSAA7LDValueOGSgvp">LDClient.allFlags</a></code>.</li>
 <li><code>EvaluationDetail</code> has been renamed to <code><a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code>.</li>
 <li>The <code>ObjC&lt;T&gt;EvaluationDetail</code> classes have been renamed to corresponding <code>ObjcLD&lt;T&gt;EvaluationDetail</code>. The names when exposed in Objective-C have been updated to replace the <code>ObjC</code> prefix with <code>LD</code>, e.g. <code>ObjCStringEvaluationDetail</code> to <code>LDStringEvaluationDetail</code>.</li>
 </ul></li>
@@ -1077,7 +1111,7 @@ avoids <code>Too long request string</code> errors</li>
         </section>
         <section id="footer">
           <p>Copyright © 2019 Catamorphic Co.</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
         </section>
       </article>
     </div>

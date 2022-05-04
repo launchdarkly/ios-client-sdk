@@ -17,7 +17,7 @@
     <a title="Core Classes  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 5.4.5 Docs</a> (84% documented)</p>
+        <p><a href="index.html">LaunchDarkly 6.0.0 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -55,10 +55,10 @@
                 <a href="Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
-                <a href="Structs/LDUser/CodingKeys.html">– CodingKeys</a>
+                <a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+                <a href="Enums/LDValue.html">LDValue</a>
               </li>
             </ul>
           </li>
@@ -106,10 +106,13 @@
             <a href="Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="Enums/LDStreamingMode.html">LDStreamingMode</a>
+                <a href="Classes/UserAttribute.html">UserAttribute</a>
               </li>
               <li class="nav-group-task">
-                <a href="Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a>
+                <a href="Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
                 <a href="Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
@@ -118,7 +121,7 @@
                 <a href="Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
               </li>
               <li class="nav-group-task">
-                <a href="Other%20Types.html#/s:12LaunchDarkly14LDErrorHandlera">LDErrorHandler</a>
+                <a href="Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -136,6 +139,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/ObjcLDValueType.html">ObjcLDValueType</a>
               </li>
             </ul>
           </li>
@@ -155,33 +164,7 @@
                 <a href="Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/ObjcLDArrayEvaluationDetail.html">ObjcLDArrayEvaluationDetail</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDDictionaryEvaluationDetail.html">ObjcLDDictionaryEvaluationDetail</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="Objective-C%20ChangedFlag%20Wrappers.html">Objective-C ChangedFlag Wrappers</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a>
+                <a href="Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
               </li>
             </ul>
           </li>
@@ -196,14 +179,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="licensetxt.html">LICENSE.txt</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="Other%20Typealiases.html">Other Type Aliases</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="Other%20Typealiases.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -252,12 +227,12 @@
 <h3 id='getting-feature-flags' class='heading'>Getting Feature Flags</h3>
 
 <p>Once the LDClient has started, it makes your feature flags available using the <code>variation</code> and <code>variationDetail</code> methods. A <code>variation</code> is a specific flag value. For example a boolean feature flag has 2 variations, <code>true</code> and <code>false</code>. You can create feature flags with more than 2 variations using other feature flag types.</p>
-<pre class="highlight swift"><code> <span class="k">let</span> <span class="nv">boolFlag</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()?</span><span class="o">.</span><span class="nf">variation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"my-bool-flag"</span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kc">false</span><span class="p">)</span>
+<pre class="highlight swift"><code> <span class="k">let</span> <span class="nv">boolFlag</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()?</span><span class="o">.</span><span class="nf">boolVariation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"my-bool-flag"</span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kc">false</span><span class="p">)</span>
 </code></pre>
 
 <p>If you need to know more information about why a given value is returned, use <code>variationDetail</code>.</p>
 
-<p>See <code>variation(forKey: defaultValue:)</code> or <code>variationDetail(forKey: defaultValue:)</code> for details</p>
+<p>See <code>boolVariation(forKey: defaultValue:)</code> or <code>boolVariationDetail(forKey: defaultValue:)</code> for details</p>
 <h3 id='observing-feature-flags' class='heading'>Observing Feature Flags</h3>
 
 <p>You might need to know when a feature flag value changes. This is not required, you can check the flag&rsquo;s value when you need it.</p>
@@ -298,8 +273,6 @@
                       <div class="abstract">
                         <p>Use LDConfig to configure the LDClient. When initialized, a LDConfig contains the default values which can be changed as needed.</p>
 
-<p>The client app can change the LDConfig by getting the <code>config</code> from <code><a href="Classes/LDClient.html">LDClient</a></code>, adjusting the values, and setting it back into the <code><a href="Classes/LDClient.html">LDClient</a></code>.</p>
-
                         <a href="Structs/LDConfig.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
@@ -327,9 +300,18 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.
-The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user&rsquo;s feature flags, or until the user removes the app from the device.
-The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.</p>
+                        <p>LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK.</p>
+
+<p>For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app,
+information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected.
+Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
+
+<p>The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided
+the <code><a href="Classes/LDClient.html">LDClient</a></code> is online and can establish a connection with LaunchDarkly servers, cached information will only be used
+a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The
+SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are
+overwritten by a different user&rsquo;s feature flags, or until the user removes the app from the device. The SDK does not
+cache user information collected.</p>
 
                         <a href="Structs/LDUser.html" class="slightly-smaller">See more</a>
                       </div>
@@ -337,8 +319,7 @@ The SDK does not cache user information collected, except for the user key. The 
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">LDUser</span></code></pre>
-<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">LDUser</span><span class="p">:</span> <span class="kt">Equatable</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">LDUser</span> <span class="p">:</span> <span class="kt">Encodable</span><span class="p">,</span> <span class="kt">Equatable</span></code></pre>
 
                         </div>
                       </div>
@@ -374,13 +355,56 @@ explanation of how it is calculated.</p>
                     </section>
                   </div>
                 </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly7LDValueO"></a>
+                    <a name="//apple_ref/swift/Enum/LDValue" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly7LDValueO">LDValue</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>An immutable instance of any data type that is allowed in JSON.</p>
+
+<p>An <code>LDValue</code> can be a null (that is, an instance that represents a JSON null value), a boolean, a number (always
+encoded internally as double-precision floating-point), a string, an ordered list of <code>LDValue</code> values (a JSON array),
+or a map of strings to <code>LDValue</code> values (a JSON object).</p>
+
+<p>This can be used to represent complex data in a user custom attribute, or to get a feature flag value that uses a
+complex type or does not always use the same type.</p>
+
+                        <a href="Enums/LDValue.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">LDValue</span><span class="p">:</span> <span class="kt">Codable</span><span class="p">,</span>
+                     <span class="kt">Equatable</span><span class="p">,</span>
+                     <span class="kt">ExpressibleByNilLiteral</span><span class="p">,</span>
+                     <span class="kt">ExpressibleByBooleanLiteral</span><span class="p">,</span>
+                     <span class="kt">ExpressibleByIntegerLiteral</span><span class="p">,</span>
+                     <span class="kt">ExpressibleByFloatLiteral</span><span class="p">,</span>
+                     <span class="kt">ExpressibleByStringLiteral</span><span class="p">,</span>
+                     <span class="kt">ExpressibleByArrayLiteral</span><span class="p">,</span>
+                     <span class="kt">ExpressibleByDictionaryLiteral</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
               </ul>
             </div>
           </section>
         </section>
         <section id="footer">
           <p>Copyright © 2019 Catamorphic Co.</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
         </section>
       </article>
     </div>

@@ -17,7 +17,7 @@
     <a title="LDClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 5.4.5 Docs</a> (84% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 6.0.0 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -55,10 +55,10 @@
                 <a href="../Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Structs/LDUser/CodingKeys.html">– CodingKeys</a>
+                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+                <a href="../Enums/LDValue.html">LDValue</a>
               </li>
             </ul>
           </li>
@@ -106,10 +106,13 @@
             <a href="../Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
+                <a href="../Classes/UserAttribute.html">UserAttribute</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a>
+                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
@@ -118,7 +121,7 @@
                 <a href="../Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Other%20Types.html#/s:12LaunchDarkly14LDErrorHandlera">LDErrorHandler</a>
+                <a href="../Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -136,6 +139,12 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ObjcLDValueType.html">ObjcLDValueType</a>
               </li>
             </ul>
           </li>
@@ -155,33 +164,7 @@
                 <a href="../Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/ObjcLDArrayEvaluationDetail.html">ObjcLDArrayEvaluationDetail</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDictionaryEvaluationDetail.html">ObjcLDDictionaryEvaluationDetail</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Objective-C%20ChangedFlag%20Wrappers.html">Objective-C ChangedFlag Wrappers</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDBoolChangedFlag.html">ObjcLDBoolChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDIntegerChangedFlag.html">ObjcLDIntegerChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDoubleChangedFlag.html">ObjcLDDoubleChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDStringChangedFlag.html">ObjcLDStringChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDArrayChangedFlag.html">ObjcLDArrayChangedFlag</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/ObjcLDDictionaryChangedFlag.html">ObjcLDDictionaryChangedFlag</a>
+                <a href="../Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
               </li>
             </ul>
           </li>
@@ -196,14 +179,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../licensetxt.html">LICENSE.txt</a>
-              </li>
-            </ul>
-          </li>
-          <li class="nav-group-name">
-            <a href="../Other%20Typealiases.html">Other Type Aliases</a>
-            <ul class="nav-group-tasks">
-              <li class="nav-group-task">
-                <a href="../Other%20Typealiases.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
               </li>
             </ul>
           </li>
@@ -241,12 +216,12 @@
 <h3 id='getting-feature-flags' class='heading'>Getting Feature Flags</h3>
 
 <p>Once the LDClient has started, it makes your feature flags available using the <code>variation</code> and <code>variationDetail</code> methods. A <code>variation</code> is a specific flag value. For example a boolean feature flag has 2 variations, <code>true</code> and <code>false</code>. You can create feature flags with more than 2 variations using other feature flag types.</p>
-<pre class="highlight swift"><code> <span class="k">let</span> <span class="nv">boolFlag</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()?</span><span class="o">.</span><span class="nf">variation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"my-bool-flag"</span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kc">false</span><span class="p">)</span>
+<pre class="highlight swift"><code> <span class="k">let</span> <span class="nv">boolFlag</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()?</span><span class="o">.</span><span class="nf">boolVariation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"my-bool-flag"</span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kc">false</span><span class="p">)</span>
 </code></pre>
 
 <p>If you need to know more information about why a given value is returned, use <code>variationDetail</code>.</p>
 
-<p>See <code>variation(forKey: defaultValue:)</code> or <code>variationDetail(forKey: defaultValue:)</code> for details</p>
+<p>See <code>boolVariation(forKey: defaultValue:)</code> or <code>boolVariationDetail(forKey: defaultValue:)</code> for details</p>
 <h3 id='observing-feature-flags' class='heading'>Observing Feature Flags</h3>
 
 <p>You might need to know when a feature flag value changes. This is not required, you can check the flag&rsquo;s value when you need it.</p>
@@ -479,9 +454,9 @@
 
 <p>Normally, the client app should create and set the LDUser and pass that into <code>start(config: user: completion:)</code>.</p>
 
-<p>The client app can change the active <code>user</code> by calling identify with a new or updated LDUser. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information. If the client app does not create a LDUser, LDClient creates an anonymous default user, which can affect the feature flags delivered to the LDClient.</p>
+<p>The client app can change the active <code>user</code> by calling identify with a new or updated LDUser. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
 
-<p>When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see <code>setOnline(_: completion:)</code> for details). To change both the <code>config</code> and <code>user</code>, set the LDClient offline, set both properties, then set the LDClient online. A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.</p>
+<p>When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see <code>setOnline(_: completion:)</code> for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.</p>
 
                       </div>
                       <div class="declaration">
@@ -526,337 +501,12 @@
                     </section>
                   </div>
                 </li>
-              </ul>
-            </div>
-            <div class="task-group">
-              <div class="task-name-container">
-                <a name="/Retrieving%20Flag%20Values"></a>
-                <a name="//apple_ref/swift/Section/Retrieving Flag Values" class="dashAnchor"></a>
-                <div class="section-name-container">
-                  <a class="section-name-link" href="#/Retrieving%20Flag%20Values"></a>
-                  <h3 class="section-name"><span>Retrieving Flag Values</span>
-</h3>
-                </div>
-              </div>
-              <ul>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly8LDClientC9variation6forKey12defaultValuexSS_xtAA06LDFlagH11ConvertibleRzlF"></a>
-                    <a name="//apple_ref/swift/Method/variation(forKey:defaultValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC9variation6forKey12defaultValuexSS_xtAA06LDFlagH11ConvertibleRzlF">variation(forKey:<wbr>defaultValue:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Returns the variation for the given feature flag. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the default value. Use this method when the default value is a non-Optional type. See <code>variation</code> with the Optional return value when the default value can be nil.</p>
-
-<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>true</em> and <em>false</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code>LDFlagValue</code> for the available types.</p>
-
-<p>The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.</p>
-
-<p>When online, the LDClient has two modes for maintaining feature flag values: <em>streaming</em> and <em>polling</em>. The client app requests the mode by setting the <code>config.streamingMode</code>, see <code><a href="../Structs/LDConfig.html">LDConfig</a></code> for details.</p>
-
-<ul>
-<li>In streaming mode, the LDClient opens a long-running connection to LaunchDarkly&rsquo;s streaming server (called <em>clientstream</em>). When a flag value changes on the server, the clientstream notifies the SDK to update the value. Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to connect to clientstream. On macOS the client app may run in either foreground or background to connect to clientstream. If streaming mode is not available, the SDK reverts to polling mode.</li>
-<li>In polling mode, the LDClient requests feature flags from LaunchDarkly&rsquo;s app server at regular intervals defined in the LDConfig. When a flag value changes on the server, the LDClient will learn of the change the next time the SDK requests feature flags.</li>
-</ul>
-
-<p>When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.</p>
-
-<p>A call to <code>variation</code> records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.</p>
-<h3 id='usage' class='heading'>Usage</h3>
-<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">boolFeatureFlagValue</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()</span><span class="o">!.</span><span class="nf">variation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"bool-flag-key"</span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kc">false</span><span class="p">)</span> <span class="c1">//boolFeatureFlagValue is a Bool</span>
-</code></pre>
-
-<p><strong>Important</strong> The default value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a default value with a type that does not match the feature flag value&rsquo;s type. The SDK will attempt to convert the feature flag&rsquo;s value into the type of the default value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the default value.</p>
-
-<p>Pay close attention to the type of the default value for collections. If the default value collection type is more restrictive than the feature flag, the sdk will return the default value even though the feature flag is present because it cannot convert the feature flag into the type requested via the default value. For example, if the feature flag has the type <code>[String: Any]</code>, but the default value has the type <code>[String: Int]</code>, the sdk will not be able to convert the flags into the requested type, and will return the default value.</p>
-
-<p>To avoid this, make sure the default value type matches the expected feature flag type. Either specify the default value type to be the feature flag type, or cast the default value to the feature flag type prior to making the variation request. In the above example, either specify that the default value&rsquo;s type is [String: Any]:</p>
-<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">defaultValue</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"b"</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span>     <span class="c1">//dictionary type would be [String: Int] without the type specifier</span>
-</code></pre>
-
-<p>or cast the default value into the feature flag type prior to calling variation:</p>
-<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">dictionaryFlagValue</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()</span><span class="o">!.</span><span class="nf">variation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"dictionary-key"</span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="p">[</span><span class="s">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"b"</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span> <span class="k">as</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">])</span>
-</code></pre>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">variation</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">T</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a></span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>forKey</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagKey for the requested feature flag.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>defaultValue</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The default value to return if the feature flag key does not exist.</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div>
-                        <h4>Return Value</h4>
-                        <p>The requested feature flag value, or the default value if the flag is missing or cannot be cast to the default value type, or the client is not started</p>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly8LDClientC15variationDetail6forKey12defaultValueAA012LDEvaluationE0CyxGSS_xtAA06LDFlagI11ConvertibleRzlF"></a>
-                    <a name="//apple_ref/swift/Method/variationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC15variationDetail6forKey12defaultValueAA012LDEvaluationE0CyxGSS_xtAA06LDFlagI11ConvertibleRzlF">variationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Returns the LDEvaluationDetail for the given feature flag. LDEvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns an LDEvaluationDetail with the default value. Use this method when the default value is a non-Optional type. See <code>variationDetail</code> with the Optional return value when the default value can be nil. See <a href="x-source-tag://variationWithdefaultValue">variationWithdefaultValue</a></p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">variationDetail</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a></span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>forKey</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagKey for the requested feature flag.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>defaultValue</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The default value value to return if the feature flag key does not exist.</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div>
-                        <h4>Return Value</h4>
-                        <p>LDEvaluationDetail which wraps the requested feature flag value, or the default value, which variation was served, and the evaluation reason.</p>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly8LDClientC9variation6forKey12defaultValuexSgSS_AGtAA06LDFlagH11ConvertibleRzlF"></a>
-                    <a name="//apple_ref/swift/Method/variation(forKey:defaultValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC9variation6forKey12defaultValuexSgSS_AGtAA06LDFlagH11ConvertibleRzlF">variation(forKey:<wbr>defaultValue:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Returns the variation for the given feature flag. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns the default value, which may be <code>nil</code>. Use this method when the default value is an Optional type. See <code>variation</code> with the non-Optional return value when the default value cannot be nil.</p>
-
-<p>A <em>variation</em> is a specific flag value. For example a boolean feature flag has 2 variations, <em>true</em> and <em>false</em>. You can create feature flags with more than 2 variations using other feature flag types. See <code>LDFlagValue</code> for the available types.</p>
-
-<p>The LDClient must be started in order to return feature flag values. If the LDClient is not started, it will always return the default value. The LDClient must be online to keep the feature flag values up-to-date.</p>
-
-<p>When online, the LDClient has two modes for maintaining feature flag values: <em>streaming</em> and <em>polling</em>. The client app requests the mode by setting the <code>config.streamingMode</code>, see <code><a href="../Structs/LDConfig.html">LDConfig</a></code> for details.</p>
-
-<ul>
-<li>In streaming mode, the LDClient opens a long-running connection to LaunchDarkly&rsquo;s streaming server (called <em>clientstream</em>). When a flag value changes on the server, the clientstream notifies the SDK to update the value. Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to connect to clientstream. On macOS the client app may run in either foreground or background to connect to clientstream. If streaming mode is not available, the SDK reverts to polling mode.</li>
-<li>In polling mode, the LDClient requests feature flags from LaunchDarkly&rsquo;s app server at regular intervals defined in the LDConfig. When a flag value changes on the server, the LDClient will learn of the change the next time the SDK requests feature flags.</li>
-</ul>
-
-<p>When offline, LDClient closes the clientstream connection and no longer requests feature flags. The LDClient will return feature flag values (assuming the LDClient was started), which may not match the values set on the LaunchDarkly server.</p>
-
-<p>A call to <code>variation</code> records events reported later. Recorded events allow clients to analyze usage and assist in debugging issues.</p>
-<h3 id='usage' class='heading'>Usage</h3>
-<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">boolFeatureFlagValue</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">?</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()</span><span class="o">!.</span><span class="nf">variation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"bool-flag-key"</span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kc">nil</span><span class="p">)</span> <span class="c1">//boolFeatureFlagValue is a Bool?</span>
-</code></pre>
-
-<p><strong>Important</strong> The default value tells the SDK the type of the feature flag. In several cases, the feature flag type cannot be determined by the values sent from the server. It is possible to provide a default value with a type that does not match the feature flag value&rsquo;s type. The SDK will attempt to convert the feature flag&rsquo;s value into the type of the default value in the variation request. If that cast fails, the SDK will not be able to determine the correct return type, and will always return the default value.</p>
-
-<p>When specifying <code>nil</code> as the default value, the compiler must also know the type of the optional. Without this information, the compiler will give the error &ldquo;&lsquo;nil&rsquo; requires a contextual type&rdquo;. There are several ways to provide this information, by setting the type on the item holding the return value, by casting the return value to the desired type, or by casting <code>nil</code> to the desired type. We recommend following the above example and setting the type on the return value item.</p>
-
-<p>For this method, the default value is defaulted to <code>nil</code>, allowing the call site to omit the default value.</p>
-
-<p>Pay close attention to the type of the default value for collections. If the default value collection type is more restrictive than the feature flag, the sdk will return the default value even though the feature flag is present because it cannot convert the feature flag into the type requested via the default value. For example, if the feature flag has the type <code>[String: Any]</code>, but the default value has the type <code>[String: Int]</code>, the sdk will not be able to convert the flags into the requested type, and will return the default value.</p>
-
-<p>To avoid this, make sure the default value type matches the expected feature flag type. Either specify the default value value type to be the feature flag type, or cast the default value value to the feature flag type prior to making the variation request. In the above example, either specify that the default value&rsquo;s type is [String: Any]:</p>
-<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">defaultValue</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span> <span class="o">=</span> <span class="p">[</span><span class="s">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"b"</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span>     <span class="c1">//dictionary type would be [String: Int] without the type specifier</span>
-</code></pre>
-
-<p>or cast the default value into the feature flag type prior to calling variation:</p>
-<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">dictionaryFlagValue</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()</span><span class="o">!.</span><span class="nf">variation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"dictionary-key"</span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="p">[</span><span class="s">"a"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">"b"</span><span class="p">:</span> <span class="mi">2</span><span class="p">]</span> <span class="k">as</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt">Any</span><span class="p">]?)</span>
-</code></pre>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">variation</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">T</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">T</span><span class="p">?</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a></span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>forKey</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagKey for the requested feature flag.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>defaultValue</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The default value to return if the feature flag key does not exist. If omitted, the default  value is <code>nil</code>. (Optional)</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div>
-                        <h4>Return Value</h4>
-                        <p>The requested feature flag value, or the default value if the flag is missing or cannot be cast to the default value type, or the client is not started</p>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly8LDClientC15variationDetail6forKey12defaultValueAA012LDEvaluationE0CyxSgGSS_AItAA06LDFlagI11ConvertibleRzlF"></a>
-                    <a name="//apple_ref/swift/Method/variationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC15variationDetail6forKey12defaultValueAA012LDEvaluationE0CyxSgGSS_AItAA06LDFlagI11ConvertibleRzlF">variationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Returns the LDEvaluationDetail for the given feature flag. LDEvaluationDetail gives you more insight into why your variation contains the specified value. If the flag does not exist, cannot be cast to the correct return type, or the LDClient is not started, returns an LDEvaluationDetail with the default value, which may be <code>nil</code>. Use this method when the default value is a Optional type. See <a href="x-source-tag://variationWithoutdefaultValue">variationWithoutdefaultValue</a></p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">variationDetail</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">T</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="p">?</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly22LDFlagValueConvertibleP">LDFlagValueConvertible</a></span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>forKey</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The LDFlagKey for the requested feature flag.</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>defaultValue</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The default value to return if the feature flag key does not exist. If omitted, the default value is <code>nil</code>. (Optional)</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div>
-                        <h4>Return Value</h4>
-                        <p>LDEvaluationDetail which wraps the requested feature flag value, or the default value, which variation was served, and the evaluation reason.</p>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly8LDClientC8allFlagsSDySSypGSgvp"></a>
+                    <a name="/s:12LaunchDarkly8LDClientC8allFlagsSDySSAA7LDValueOGSgvp"></a>
                     <a name="//apple_ref/swift/Property/allFlags" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC8allFlagsSDySSypGSgvp">allFlags</a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC8allFlagsSDySSAA7LDValueOGSgvp">allFlags</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -864,18 +514,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Returns a dictionary with the flag keys and their values. If the LDClient is not started, returns nil.</p>
-
-<p>The dictionary will not contain feature flags from the server with null values.</p>
-
-<p>LDClient will not provide any source or change information, only flag keys and flag values. The client app should convert the feature flag value into the desired type.</p>
+                        <p>Returns a dictionary with the flag keys and their values. If the <code>LDClient</code> is not started, returns <code>nil</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">allFlags</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span> <span class="p">:</span> <span class="kt">Any</span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">allFlags</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span> <span class="p">:</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -914,13 +560,11 @@
 
 <p>The SDK executes handlers on the main thread.</p>
 
-<p>LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See <code>variation(forKey: defaultValue:)</code> for details about the SDK and feature flag types.</p>
-
 <p>SeeAlso: <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObserving5owneryyXl_tF">stopObserving(owner:)</a></code></p>
 <h3 id='usage' class='heading'>Usage</h3>
 <pre class="highlight swift"><code><span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()?</span><span class="o">.</span><span class="nf">observe</span><span class="p">(</span><span class="s">"flag-key"</span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="p">(</span><span class="n">changedFlag</span><span class="p">)</span> <span class="k">in</span>
-   <span class="k">if</span> <span class="k">let</span> <span class="nv">newValue</span> <span class="o">=</span> <span class="n">changedFlag</span><span class="o">.</span><span class="n">newValue</span> <span class="k">as?</span> <span class="kt">Bool</span> <span class="p">{</span>
-       <span class="c1">//do something with the newValue</span>
+   <span class="k">if</span> <span class="kd">let</span> <span class="o">.</span><span class="nf">bool</span><span class="p">(</span><span class="n">newValue</span><span class="p">)</span> <span class="o">=</span> <span class="n">changedFlag</span><span class="o">.</span><span class="n">newValue</span> <span class="p">{</span>
+       <span class="c1">// do something with the newValue</span>
    <span class="p">}</span>
 </code></pre>
 
@@ -997,8 +641,6 @@
 <p>The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
 
 <p>The SDK executes handlers on the main thread.</p>
-
-<p>LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See <code>variation(forKey: defaultValue:)</code> for details about the SDK and feature flag types.</p>
 
 <p>SeeAlso: <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObserving5owneryyXl_tF">stopObserving(owner:)</a></code></p>
 <h3 id='usage' class='heading'>Usage</h3>
@@ -1083,8 +725,6 @@
 <p>The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
 
 <p>The SDK executes handlers on the main thread.</p>
-
-<p>LDChangedFlag does not know the type of oldValue or newValue. The client app should cast the value into the type needed. See <code>variation(forKey: defaultValue:)</code> for details about the SDK and feature flag types.</p>
 
 <p>SeeAlso: <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObserving5owneryyXl_tF">stopObserving(owner:)</a></code></p>
 <h3 id='usage' class='heading'>Usage</h3>
@@ -1328,33 +968,6 @@
                     </section>
                   </div>
                 </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly8LDClientC12observeError5owner7handleryyXl_ys0E0_pctF"></a>
-                    <a name="//apple_ref/swift/Method/observeError(owner:handler:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC12observeError5owner7handleryyXl_ys0E0_pctF">observeError(owner:<wbr>handler:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeError</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly14LDErrorHandlera">LDErrorHandler</a></span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
               </ul>
             </div>
             <div class="task-group">
@@ -1371,9 +984,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly8LDClientC5track3key4data11metricValueySS_ypSgSdSgtKF"></a>
+                    <a name="/s:12LaunchDarkly8LDClientC5track3key4data11metricValueySS_AA7LDValueOSgSdSgtF"></a>
                     <a name="//apple_ref/swift/Method/track(key:data:metricValue:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5track3key4data11metricValueySS_ypSgSdSgtKF">track(key:<wbr>data:<wbr>metricValue:<wbr>)</a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5track3key4data11metricValueySS_AA7LDValueOSgSdSgtF">track(key:<wbr>data:<wbr>metricValue:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1383,25 +996,20 @@
                       <div class="abstract">
                         <p>Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called <code>track</code>, the app cannot remove the event from the event store.</p>
 
-<p>LDClient periodically transmits events to LaunchDarkly based on the frequency set in LDConfig.eventFlushInterval. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.</p>
+<p>LDClient periodically transmits events to LaunchDarkly based on the frequency set in <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV18eventFlushIntervalSdvp">LDConfig.eventFlushInterval</a></code>. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.</p>
 
 <p>Once the SDK&rsquo;s event store is full, the SDK discards events until they can be reported to LaunchDarkly. Configure the size of the event store using <code>eventCapacity</code> on the <code>config</code>. See <code><a href="../Structs/LDConfig.html">LDConfig</a></code> for details.</p>
 <h3 id='usage' class='heading'>Usage</h3>
-<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">appEventData</span> <span class="o">=</span> <span class="p">[</span><span class="s">"some-custom-key: "</span><span class="kd">some</span><span class="o">-</span><span class="n">custom</span><span class="o">-</span><span class="n">value</span><span class="s">", "</span><span class="n">another</span><span class="o">-</span><span class="n">custom</span><span class="o">-</span><span class="n">key</span><span class="s">": 7]
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">appEventData</span><span class="p">:</span> <span class="kt">LDValue</span> <span class="o">=</span> <span class="p">[</span><span class="s">"some-custom-key: "</span><span class="kd">some</span><span class="o">-</span><span class="n">custom</span><span class="o">-</span><span class="n">value</span><span class="s">", "</span><span class="n">another</span><span class="o">-</span><span class="n">custom</span><span class="o">-</span><span class="n">key</span><span class="s">": 7]
 LDClient.get()?.track(key: "</span><span class="n">app</span><span class="o">-</span><span class="n">event</span><span class="o">-</span><span class="n">key</span><span class="s">", data: appEventData)
 </span></code></pre>
-<div class="aside aside-throws">
-    <p class="aside-title">Throws</p>
-    <p>LDInvalidArgumentError if the data is not a valid JSON item</p>
-
-</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">track</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">data</span><span class="p">:</span> <span class="kt">Any</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">metricValue</span><span class="p">:</span> <span class="kt">Double</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">track</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">data</span><span class="p">:</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">metricValue</span><span class="p">:</span> <span class="kt">Double</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1417,7 +1025,7 @@ LDClient.get()?.track(key: "</span><span class="n">app</span><span class="o">-</
                               </td>
                               <td>
                                 <div>
-                                  <p>The key for the event. The SDK does nothing with the key, which can be any string the client app sends</p>
+                                  <p>The key for the event.</p>
                                 </div>
                               </td>
                             </tr>
@@ -1429,7 +1037,7 @@ LDClient.get()?.track(key: "</span><span class="n">app</span><span class="o">-</
                               </td>
                               <td>
                                 <div>
-                                  <p>The data for the event. The SDK does nothing with the data, which can be any valid JSON item the client app sends. (Optional)</p>
+                                  <p>The data for the event. (Optional)</p>
                                 </div>
                               </td>
                             </tr>
@@ -1768,11 +1376,649 @@ Subsequent calls to this method cause the LDClient to return. Normally there sho
                 </li>
               </ul>
             </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Flag%20variation%20methods"></a>
+                <a name="//apple_ref/swift/Section/Flag variation methods" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Flag%20variation%20methods"></a>
+                  <h3 class="section-name"><span>Flag variation methods</span>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC13boolVariation6forKey12defaultValueSbSS_SbtF"></a>
+                    <a name="//apple_ref/swift/Method/boolVariation(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC13boolVariation6forKey12defaultValueSbSS_SbtF">boolVariation(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the boolean value of a feature flag for a given flag key.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">boolVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>the variation for the selected user, or <code>defaultValue</code> if the flag is not available.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC19boolVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySbGSS_SbtF"></a>
+                    <a name="//apple_ref/swift/Method/boolVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC19boolVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySbGSS_SbtF">boolVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the boolean value of a feature flag for a given flag key, in an object that also describes the way the
+value was determined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">boolVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt">Bool</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an <code><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code> object</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC12intVariation6forKey12defaultValueSiSS_SitF"></a>
+                    <a name="//apple_ref/swift/Method/intVariation(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC12intVariation6forKey12defaultValueSiSS_SitF">intVariation(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the integer value of a feature flag for a given flag key.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">intVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>the variation for the selected user, or <code>defaultValue</code> if the flag is not available.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC18intVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySiGSS_SitF"></a>
+                    <a name="//apple_ref/swift/Method/intVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC18intVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySiGSS_SitF">intVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the integer value of a feature flag for a given flag key, in an object that also describes the way the
+value was determined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">intVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt">Int</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an <code><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code> object</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC15doubleVariation6forKey12defaultValueSdSS_SdtF"></a>
+                    <a name="//apple_ref/swift/Method/doubleVariation(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC15doubleVariation6forKey12defaultValueSdSS_SdtF">doubleVariation(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the double-precision floating-point value of a feature flag for a given flag key.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">doubleVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">Double</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Double</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>the variation for the selected user, or <code>defaultValue</code> if the flag is not available.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC21doubleVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySdGSS_SdtF"></a>
+                    <a name="//apple_ref/swift/Method/doubleVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC21doubleVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySdGSS_SdtF">doubleVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the double-precision floating-point value of a feature flag for a given flag key, in an object that also
+describes the way the value was determined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">doubleVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">Double</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt">Double</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an <code><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code> object</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC15stringVariation6forKey12defaultValueS2S_SStF"></a>
+                    <a name="//apple_ref/swift/Method/stringVariation(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC15stringVariation6forKey12defaultValueS2S_SStF">stringVariation(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the string value of a feature flag for a given flag key.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">stringVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>the variation for the selected user, or <code>defaultValue</code> if the flag is not available.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC21stringVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySSGSS_SStF"></a>
+                    <a name="//apple_ref/swift/Method/stringVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC21stringVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySSGSS_SStF">stringVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the string value of a feature flag for a given flag key, in an object that also describes the way the
+value was determined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">stringVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt">String</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an <code><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code> object</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC13jsonVariation6forKey12defaultValueAA7LDValueOSS_AHtF"></a>
+                    <a name="//apple_ref/swift/Method/jsonVariation(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC13jsonVariation6forKey12defaultValueAA7LDValueOSS_AHtF">jsonVariation(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the JSON value of a feature flag for a given flag key.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">jsonVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>the variation for the selected user, or <code>defaultValue</code> if the flag is not available.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC19jsonVariationDetail6forKey12defaultValueAA012LDEvaluationF0CyAA7LDValueOGSS_AJtF"></a>
+                    <a name="//apple_ref/swift/Method/jsonVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC19jsonVariationDetail6forKey12defaultValueAA012LDEvaluationF0CyAA7LDValueOGSS_AJtF">jsonVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the JSON value of a feature flag for a given flag key, in an object that also describes the way the
+value was determined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">jsonVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an <code><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code> object</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </section>
         </section>
         <section id="footer">
           <p>Copyright © 2019 Catamorphic Co.</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
         </section>
       </article>
     </div>
