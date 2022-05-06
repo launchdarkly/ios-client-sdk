@@ -3,6 +3,7 @@
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
 ## [6.0.0] - 2022-05-04
+This major version has accompanying migration guides for [Swift](https://docs.launchdarkly.com/sdk/client-side/ios/migration-5-to-6-swift) and [Objective-C](https://docs.launchdarkly.com/sdk/client-side/ios/migration-5-to-6-objc). Please see the guide for more information on updating to this version of the SDK, as the following is just a summary of the changes.
 
 Note that Objective-C bridging types are prefixed by `Objc`, but that prefix is not exposed to code written in Objective-C. For example, changes listed to `ObjcLDClient` are changes to the class referred to as `LDClient` from within Objective-C.
 
