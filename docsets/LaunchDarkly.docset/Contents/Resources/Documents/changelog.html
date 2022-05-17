@@ -16,7 +16,7 @@
     <a title="CHANGELOG  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 6.0.0 Docs</a> (94% documented)</p>
+        <p><a href="index.html">LaunchDarkly 6.1.0 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -190,7 +190,20 @@
             <h1 id='change-log' class='heading'>Change log</h1>
 
 <p>All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to <a href="http://semver.org">Semantic Versioning</a>.</p>
+<h2 id='6-1-0-2022-05-17' class='heading'>[6.1.0] - 2022-05-17</h2>
+<h3 id='added' class='heading'>Added</h3>
+
+<ul>
+<li>Added the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV19isAnonymousNullableSbSgvp">LDUser.isAnonymousNullable</a></code> property that allows treating the <code>isAnonymous</code> property as nullable.</li>
+</ul>
+<h3 id='fixed' class='heading'>Fixed</h3>
+
+<ul>
+<li>Correctly track whether the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV11isAnonymousSbvp">LDUser.isAnonymous</a></code> property was set explicitly (or by not specifying a key). The variation result for flag rules targeting the <code>anonymous</code> property can differ depending on whether the property is set explicitly.</li>
+</ul>
 <h2 id='6-0-0-2022-05-04' class='heading'>[6.0.0] - 2022-05-04</h2>
+
+<p>This major version has accompanying migration guides for <a href="https://docs.launchdarkly.com/sdk/client-side/ios/migration-5-to-6-swift">Swift</a> and <a href="https://docs.launchdarkly.com/sdk/client-side/ios/migration-5-to-6-objc">Objective-C</a>. Please see the guide for more information on updating to this version of the SDK, as the following is just a summary of the changes.</p>
 
 <p>Note that Objective-C bridging types are prefixed by <code>Objc</code>, but that prefix is not exposed to code written in Objective-C. For example, changes listed to <code><a href="Classes/ObjcLDClient.html">ObjcLDClient</a></code> are changes to the class referred to as <code><a href="Classes/LDClient.html">LDClient</a></code> from within Objective-C.</p>
 <h3 id='added' class='heading'>Added</h3>

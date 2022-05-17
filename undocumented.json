@@ -1,124 +1,124 @@
 {
   "warnings": [
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 3,
       "symbol": "ConnectionInformation",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 4,
       "symbol": "ConnectionInformation.ConnectionMode",
       "symbol_kind": "source.lang.swift.decl.enum",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 5,
       "symbol": "ConnectionInformation.ConnectionMode.establishingStreamingConnection",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 5,
       "symbol": "ConnectionInformation.ConnectionMode.offline",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 5,
       "symbol": "ConnectionInformation.ConnectionMode.polling",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 5,
       "symbol": "ConnectionInformation.ConnectionMode.streaming",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 8,
       "symbol": "ConnectionInformation.LastConnectionFailureReason",
       "symbol_kind": "source.lang.swift.decl.enum",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 22,
       "symbol": "ConnectionInformation.LastConnectionFailureReason.httpError(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 22,
       "symbol": "ConnectionInformation.LastConnectionFailureReason.none",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 22,
       "symbol": "ConnectionInformation.LastConnectionFailureReason.unauthorized",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 22,
       "symbol": "ConnectionInformation.LastConnectionFailureReason.unknownError(_:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 37,
       "symbol": "ConnectionInformation.Constants",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 44,
       "symbol": "ConnectionInformation.lastKnownFlagValidity",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 45,
       "symbol": "ConnectionInformation.lastFailedConnection",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 46,
       "symbol": "ConnectionInformation.currentConnectionMode",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 47,
       "symbol": "ConnectionInformation.lastConnectionFailureReason",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
-      "file": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
+      "file": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private/LaunchDarkly/LaunchDarkly/Models/ConnectionInformation.swift",
       "line": 153,
       "symbol": "ConnectionInformation.LastConnectionFailureReason",
       "symbol_kind": "source.lang.swift.decl.extension",
       "warning": "undocumented"
     }
   ],
-  "source_directory": "/Users/mkeeler/code/launchdarkly/ios-swift-client-sdk-private.git/public-v6"
+  "source_directory": "/Users/gwhelan/repos/sdk-client/ios-swift-client-sdk-private"
 }
