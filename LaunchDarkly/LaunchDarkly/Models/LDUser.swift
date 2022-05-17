@@ -41,7 +41,19 @@ public struct LDUser: Encodable, Equatable {
     /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private, see `privateAttributes` for details. (Default: [:])
     public var custom: [String: LDValue]
     /// Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. isAnonymous cannot be made private. (Default: true)
-    public var isAnonymous: Bool
+    public var isAnonymous: Bool {
+        get { isAnonymousNullable == true }
+        set { isAnonymousNullable = newValue }
+    }
+
+    /**
+     Whether or not the user is anonymous, if that has been specified (or set due to the lack of a `key` property).
+
+     Although the `isAnonymous` property defaults to `false` in terms of LaunchDarkly's indexing behavior, for historical
+     reasons flag evaluation may behave differently if the value is explicitly set to `false` verses being omitted. This
+     field allows treating the property as optional for consisent evaluation with other LaunchDarkly SDKs.
+     */
+    public var isAnonymousNullable: Bool?
 
     /**
      Client app defined privateAttributes for the user.
@@ -91,7 +103,10 @@ public struct LDUser: Encodable, Equatable {
         self.ipAddress = ipAddress
         self.email = email
         self.avatar = avatar
-        self.isAnonymous = isAnonymous ?? (selectedKey == LDUser.defaultKey(environmentReporter: environmentReporter))
+        self.isAnonymousNullable = isAnonymous
+        if isAnonymous == nil && selectedKey == LDUser.defaultKey(environmentReporter: environmentReporter) {
+            self.isAnonymousNullable = true
+        }
         self.custom = custom ?? [:]
         self.custom.merge(["device": .string(environmentReporter.deviceModel),
                            "os": .string(environmentReporter.systemVersion)]) { lhs, _ in lhs }
@@ -135,8 +150,8 @@ public struct LDUser: Encodable, Equatable {
         var container = encoder.container(keyedBy: DynamicKey.self)
         try container.encode(key, forKey: DynamicKey(stringValue: "key")!)
 
-        if isAnonymous {
-            try container.encode(isAnonymous, forKey: DynamicKey(stringValue: "anonymous")!)
+        if let anonymous = isAnonymousNullable {
+            try container.encode(anonymous, forKey: DynamicKey(stringValue: "anonymous")!)
         }
 
         try LDUser.optionalAttributes.forEach { attribute in
