@@ -537,7 +537,7 @@ public class LDClient {
             return
         }
         let event = CustomEvent(key: key, user: user, data: data ?? .null, metricValue: metricValue)
-        Log.debug(typeName(and: #function) + "event: \(event), data: \(String(describing: data)), metricValue: \(String(describing: metricValue))")
+        Log.debug(typeName(and: #function) + "key: \(key), data: \(String(describing: data)), metricValue: \(String(describing: metricValue))")
         eventReporter.record(event)
     }
 
