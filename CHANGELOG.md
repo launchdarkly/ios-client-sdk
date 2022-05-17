@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [6.1.0] - 2022-05-17
+### Added
+- Added the `LDUser.isAnonymousNullable` property that allows treating the `isAnonymous` property as nullable.
+
+### Fixed
+- Correctly track whether the `LDUser.isAnonymous` property was set explicitly (or by not specifying a key). The variation result for flag rules targeting the `anonymous` property can differ depending on whether the property is set explicitly.
+
 ## [6.0.0] - 2022-05-04
 This major version has accompanying migration guides for [Swift](https://docs.launchdarkly.com/sdk/client-side/ios/migration-5-to-6-swift) and [Objective-C](https://docs.launchdarkly.com/sdk/client-side/ios/migration-5-to-6-objc). Please see the guide for more information on updating to this version of the SDK, as the following is just a summary of the changes.
 
