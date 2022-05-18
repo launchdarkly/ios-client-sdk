@@ -1,0 +1,75 @@
+events/requests/method and headers
+tags/stream requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+tags/stream requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":null}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":""}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+tags/poll requests/{"applicationId":null,"applicationVersion":null}
+tags/poll requests/{"applicationId":null,"applicationVersion":""}
+tags/poll requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+tags/poll requests/{"applicationId":"","applicationVersion":null}
+tags/poll requests/{"applicationId":"","applicationVersion":""}
+tags/poll requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":null}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":""}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+tags/event posts/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+tags/event posts/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+tags/event posts/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":null}
+tags/event posts/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":""}
+tags/event posts/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
+tags/disallowed characters
+evaluation/parameterized/evaluationReasons=false/basic values - bool/flag1-bool/evaluate flag with detail
+evaluation/parameterized/evaluationReasons=false/basic values - bool/flag1-bool/evaluate all flags
+evaluation/parameterized/evaluationReasons=false/basic values - bool/flag2-bool/evaluate flag without detail
+evaluation/parameterized/evaluationReasons=false/basic values - bool/flag2-bool/evaluate flag with detail
+evaluation/parameterized/evaluationReasons=false/basic values - bool/flag2-bool/evaluate all flags
+streaming/requests/user properties/GET
+streaming/requests/user properties/REPORT
+streaming/updates/flag delete for previously nonexistent flag is applied
+polling/requests/method and headers/GET
+polling/requests/method and headers/REPORT
+polling/requests/URL path is computed correctly/base URI has no trailing slash/GET
+polling/requests/URL path is computed correctly/base URI has no trailing slash/REPORT
+polling/requests/URL path is computed correctly/base URI has a trailing slash/GET
+polling/requests/URL path is computed correctly/base URI has a trailing slash/REPORT
+polling/requests/query parameters/evaluationReasons set to [none]/GET
+polling/requests/query parameters/evaluationReasons set to [none]/REPORT
+polling/requests/query parameters/evaluationReasons set to false/GET
+polling/requests/query parameters/evaluationReasons set to false/REPORT
+polling/requests/query parameters/evaluationReasons set to true/GET
+polling/requests/query parameters/evaluationReasons set to true/REPORT
+polling/requests/user properties/GET
+polling/requests/user properties/REPORT
+events/user properties/inlineUsers=false/user-private=none/identify event
+events/user properties/inlineUsers=false/user-private=[lastName preferredLanguage]/identify event
+events/user properties/inlineUsers=false, globally-private=[firstName]/user-private=none/identify event
+events/user properties/inlineUsers=false, globally-private=[firstName]/user-private=[lastName preferredLanguage]/identify event
+events/user properties/inlineUsers=false, allAttributesPrivate=true/user-private=none/identify event
+events/user properties/inlineUsers=false, allAttributesPrivate=true/user-private=[lastName preferredLanguage]/identify event
+events/user properties/inlineUsers=false, allAttributesPrivate=true, globally-private=[firstName]/user-private=none/identify event
+events/user properties/inlineUsers=false, allAttributesPrivate=true, globally-private=[firstName]/user-private=[lastName preferredLanguage]/identify event
+events/user properties/inlineUsers=true/user-private=none/identify event
+events/user properties/inlineUsers=true/user-private=none/feature event
+events/user properties/inlineUsers=true/user-private=none/custom event
+events/user properties/inlineUsers=true/user-private=[lastName preferredLanguage]/identify event
+events/user properties/inlineUsers=true/user-private=[lastName preferredLanguage]/feature event
+events/user properties/inlineUsers=true/user-private=[lastName preferredLanguage]/custom event
+events/user properties/inlineUsers=true, globally-private=[firstName]/user-private=none/identify event
+events/user properties/inlineUsers=true, globally-private=[firstName]/user-private=none/feature event
+events/user properties/inlineUsers=true, globally-private=[firstName]/user-private=none/custom event
+events/user properties/inlineUsers=true, globally-private=[firstName]/user-private=[lastName preferredLanguage]/identify event
+events/user properties/inlineUsers=true, globally-private=[firstName]/user-private=[lastName preferredLanguage]/feature event
+events/user properties/inlineUsers=true, globally-private=[firstName]/user-private=[lastName preferredLanguage]/custom event
+events/user properties/inlineUsers=true, allAttributesPrivate=true/user-private=none/identify event
+events/user properties/inlineUsers=true, allAttributesPrivate=true/user-private=none/feature event
+events/user properties/inlineUsers=true, allAttributesPrivate=true/user-private=none/custom event
+events/user properties/inlineUsers=true, allAttributesPrivate=true/user-private=[lastName preferredLanguage]/identify event
+events/user properties/inlineUsers=true, allAttributesPrivate=true/user-private=[lastName preferredLanguage]/feature event
+events/user properties/inlineUsers=true, allAttributesPrivate=true/user-private=[lastName preferredLanguage]/custom event
+events/user properties/inlineUsers=true, allAttributesPrivate=true, globally-private=[firstName]/user-private=none/identify event
+events/user properties/inlineUsers=true, allAttributesPrivate=true, globally-private=[firstName]/user-private=none/feature event
+events/user properties/inlineUsers=true, allAttributesPrivate=true, globally-private=[firstName]/user-private=none/custom event
+events/user properties/inlineUsers=true, allAttributesPrivate=true, globally-private=[firstName]/user-private=[lastName preferredLanguage]/identify event
+events/user properties/inlineUsers=true, allAttributesPrivate=true, globally-private=[firstName]/user-private=[lastName preferredLanguage]/feature event
+events/user properties/inlineUsers=true, allAttributesPrivate=true, globally-private=[firstName]/user-private=[lastName preferredLanguage]/custom event

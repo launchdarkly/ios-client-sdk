@@ -1,5 +1,3 @@
-# See test subconfiguration at `LaunchDarkly/LaunchDarklyTests/.swiftlint.yml`
-
 disabled_rules:
   - line_length
   - trailing_whitespace
@@ -23,8 +21,7 @@ opt_in_rules:
   - vertical_whitespace_closing_braces
 
 included:
-  - LaunchDarkly/LaunchDarkly
-  - LaunchDarkly/LaunchDarklyTests
+  - Source
 
 excluded:
 

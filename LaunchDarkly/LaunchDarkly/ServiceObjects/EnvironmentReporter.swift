@@ -16,7 +16,7 @@ enum OperatingSystem: String {
     static var allOperatingSystems: [OperatingSystem] {
         [.iOS, .watchOS, .macOS, .tvOS]
     }
-    
+
     var isBackgroundEnabled: Bool {
         OperatingSystem.backgroundEnabledOperatingSystems.contains(self)
     }
@@ -123,7 +123,6 @@ struct EnvironmentReporter: EnvironmentReporting {
     #endif
 
     var shouldThrottleOnlineCalls: Bool { !isDebugBuild }
-
     let sdkVersion = "6.1.0"
     // Unfortunately, the following does not function in certain configurations, such as when included through SPM
 //    var sdkVersion: String {

@@ -1,5 +1,42 @@
 version: 2.1
+
 jobs:
+  contract-tests:
+    macos:
+      xcode: '13.1.0'
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install swift lint
+          command: brew install swiftlint
+      - run:
+          name: Run swiftlint
+          command: |
+            cd ./ContractTests
+            swiftlint lint --reporter junit | tee /tmp/contract-test-swiftlint-results.xml
+      - store_artifacts:
+          path: /tmp/contract-test-swiftlint-results.xml
+      - store_test_results:
+          path: /tmp/contract-test-swiftlint-results.xml
+
+      - run:
+          name: Install required ssl libraries
+          command: brew install libressl
+      - run:
+          name: make test output directory
+          command: mkdir /tmp/test-results
+      - run: make build-contract-tests
+      - run:
+          command: make start-contract-test-service
+          background: true
+      - run:
+          name: run contract tests
+          command: TEST_HARNESS_PARAMS="-junit /tmp/test-results/contract-tests-junit.xml" make run-contract-tests
+      - store_test_results:
+          path: /tmp/test-results/
+
   build:
     parameters:
       xcode-version:
@@ -146,3 +183,4 @@ workflows:
           name: Xcode 11.7 - Swift 5.2
           xcode-version: '11.7.0'
           ios-sim: 'platform=iOS Simulator,name=iPhone 8,OS=12.4'
+      - contract-tests
