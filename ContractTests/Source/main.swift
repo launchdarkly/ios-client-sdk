@@ -1,6 +1,7 @@
 import Foundation
 
 let semaphore = DispatchSemaphore(value: 0)
+
 DispatchQueue.global(qos: .userInitiated).async {
     do {
         try app(.detect()).run()
@@ -10,6 +11,7 @@ DispatchQueue.global(qos: .userInitiated).async {
 }
 
 let runLoop = RunLoop.current
-while (semaphore.wait(timeout: .now()) == .timedOut) {
+
+while semaphore.wait(timeout: .now()) == .timedOut {
     runLoop.run(mode: .default, before: .distantFuture)
 }

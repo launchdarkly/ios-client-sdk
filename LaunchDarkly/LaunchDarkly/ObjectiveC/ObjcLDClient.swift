@@ -539,23 +539,6 @@ public final class ObjcLDClient: NSObject {
         ldClient.flush()
     }
 
-    /**
-     Tells the SDK to generate an alias event.
-
-     Associates two users for analytics purposes. 
-     
-     This can be helpful in the situation where a person is represented by multiple 
-     LaunchDarkly users. This may happen, for example, when a person initially logs into 
-     an application-- the person might be represented by an anonymous user prior to logging
-     in and a different user after logging in, as denoted by a different user key.
-
-     - parameter context: the user that will be aliased to
-     - parameter previousContext: the user that will be bound to the new context
-     */
-    @objc public func alias(context: ObjcLDUser, previousContext: ObjcLDUser) {
-        ldClient.alias(context: context.user, previousContext: previousContext.user)
-    }
-
    /**
      Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
      Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.

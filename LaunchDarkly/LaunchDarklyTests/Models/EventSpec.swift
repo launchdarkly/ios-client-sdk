@@ -4,17 +4,6 @@ import XCTest
 @testable import LaunchDarkly
 
 final class EventSpec: XCTestCase {
-    func testAliasEventInit() {
-        let testDate = Date()
-        let event = AliasEvent(key: "abc", previousKey: "def", contextKind: "user", previousContextKind: "anonymousUser", creationDate: testDate)
-        XCTAssertEqual(event.kind, .alias)
-        XCTAssertEqual(event.key, "abc")
-        XCTAssertEqual(event.previousKey, "def")
-        XCTAssertEqual(event.contextKind, "user")
-        XCTAssertEqual(event.previousContextKind, "anonymousUser")
-        XCTAssertEqual(event.creationDate, testDate)
-    }
-
     func testFeatureEventInit() {
         let featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.bool)
         let user = LDUser.stub()
@@ -74,19 +63,6 @@ final class EventSpec: XCTestCase {
         XCTAssertEqual(event.endDate, endDate)
         XCTAssertEqual(event.flagRequestTracker.startDate, flagRequestTracker.startDate)
         XCTAssertEqual(event.flagRequestTracker.flagCounters, flagRequestTracker.flagCounters)
-    }
-
-    func testAliasEventEncoding() {
-        let event = AliasEvent(key: "abc", previousKey: "def", contextKind: "user", previousContextKind: "anonymousUser")
-        encodesToObject(event) { dict in
-            XCTAssertEqual(dict.count, 6)
-            XCTAssertEqual(dict["kind"], "alias")
-            XCTAssertEqual(dict["key"], "abc")
-            XCTAssertEqual(dict["previousKey"], "def")
-            XCTAssertEqual(dict["contextKind"], "user")
-            XCTAssertEqual(dict["previousContextKind"], "anonymousUser")
-            XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
-        }
     }
 
     func testCustomEventEncodingDataAndMetric() {
@@ -292,7 +268,6 @@ extension Event {
         case .identify: return IdentifyEvent(user: user)
         case .custom: return CustomEvent(key: UUID().uuidString, user: user, data: ["custom": .string(UUID().uuidString)])
         case .summary: return SummaryEvent(flagRequestTracker: FlagRequestTracker.stub())
-        case .alias: return AliasEvent(key: UUID().uuidString, previousKey: UUID().uuidString, contextKind: "anonymousUser", previousContextKind: "anonymousUser")
         }
     }
 

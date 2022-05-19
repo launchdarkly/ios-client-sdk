@@ -175,9 +175,6 @@ public struct LDConfig {
 
         /// a closure to allow dynamic changes of headers on connect & reconnect
         static let headerDelegate: RequestHeaderTransform? = nil
-    
-        /// should anonymous users automatically be aliased when identifying
-        static let autoAliasingOptOut: Bool = false
     }
 
     /// Constants relevant to setting up an `LDConfig`
@@ -347,9 +344,6 @@ public struct LDConfig {
 
     let environmentReporter: EnvironmentReporting
 
-    /// should anonymous users automatically be aliased when identifying
-    public var autoAliasingOptOut: Bool = Defaults.autoAliasingOptOut
-
     /// A Dictionary of identifying names to unique mobile keys for all environments
     private var mobileKeys: [String: String] {
         var internalMobileKeys = getSecondaryMobileKeys()
@@ -452,7 +446,6 @@ extension LDConfig: Equatable {
             && lhs.wrapperName == rhs.wrapperName
             && lhs.wrapperVersion == rhs.wrapperVersion
             && lhs.additionalHeaders == rhs.additionalHeaders
-            && lhs.autoAliasingOptOut == rhs.autoAliasingOptOut
     }
 }
 

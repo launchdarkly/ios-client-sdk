@@ -11,10 +11,10 @@ class Event: Encodable {
     }
 
     enum Kind: String {
-        case feature, debug, identify, custom, summary, alias
+        case feature, debug, identify, custom, summary
 
         static var allKinds: [Kind] {
-            [feature, debug, identify, custom, summary, alias]
+            [feature, debug, identify, custom, summary]
         }
     }
 
@@ -32,38 +32,11 @@ class Event: Encodable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(kind.rawValue, forKey: .kind)
         switch self.kind {
-        case .alias: try (self as? AliasEvent)?.encode(to: encoder, container: container)
         case .custom: try (self as? CustomEvent)?.encode(to: encoder, container: container)
         case .debug, .feature: try (self as? FeatureEvent)?.encode(to: encoder, container: container)
         case .identify: try (self as? IdentifyEvent)?.encode(to: encoder, container: container)
         case .summary: try (self as? SummaryEvent)?.encode(to: encoder, container: container)
         }
-    }
-}
-
-class AliasEvent: Event, SubEvent {
-    let key: String
-    let previousKey: String
-    let contextKind: String
-    let previousContextKind: String
-    let creationDate: Date
-
-    init(key: String, previousKey: String, contextKind: String, previousContextKind: String, creationDate: Date = Date()) {
-        self.key = key
-        self.previousKey = previousKey
-        self.contextKind = contextKind
-        self.previousContextKind = previousContextKind
-        self.creationDate = creationDate
-        super.init(kind: .alias)
-    }
-
-    fileprivate func encode(to encoder: Encoder, container: KeyedEncodingContainer<Event.CodingKeys>) throws {
-        var container = container
-        try container.encode(key, forKey: .key)
-        try container.encode(previousKey, forKey: .previousKey)
-        try container.encode(contextKind, forKey: .contextKind)
-        try container.encode(previousContextKind, forKey: .previousContextKind)
-        try container.encode(creationDate, forKey: .creationDate)
     }
 }
 

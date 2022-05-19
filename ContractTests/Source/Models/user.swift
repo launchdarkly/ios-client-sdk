@@ -23,8 +23,8 @@ extension LDUser: Decodable {
         avatar = try values.decodeIfPresent(String.self, forKey: .avatar)
         custom = try values.decodeIfPresent([String: LDValue].self, forKey: .custom) ?? [:]
         isAnonymous = try values.decodeIfPresent(Bool.self, forKey: .isAnonymous) ?? false
-        let _ = try values.decodeIfPresent([String].self, forKey: .privateAttributes)
-        privateAttributes = (try values.decodeIfPresent([String].self, forKey: .privateAttributes) ?? []).map({ UserAttribute.forName($0) })
+        _ = try values.decodeIfPresent([String].self, forKey: .privateAttributes)
+        privateAttributes = (try values.decodeIfPresent([String].self, forKey: .privateAttributes) ?? []).map { UserAttribute.forName($0) }
         secondary = try values.decodeIfPresent(String.self, forKey: .secondary)
     }
 }

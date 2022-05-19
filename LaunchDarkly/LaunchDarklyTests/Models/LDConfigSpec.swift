@@ -31,7 +31,6 @@ final class LDConfigSpec: XCTestCase {
         fileprivate static let wrapperName = "ReactNative"
         fileprivate static let wrapperVersion = "0.1.0"
         fileprivate static let additionalHeaders = ["Proxy-Authorization": "creds"]
-        fileprivate static let autoAliasingOptOut = true
     }
 
     let testFields: [(String, Any, (inout LDConfig, Any?) -> Void)] =
@@ -58,8 +57,7 @@ final class LDConfigSpec: XCTestCase {
          ("diagnostic recording interval", Constants.diagnosticRecordingInterval, { c, v in c.diagnosticRecordingInterval = v as! TimeInterval }),
          ("wrapper name", Constants.wrapperName, { c, v in c.wrapperName = v as! String? }),
          ("wrapper version", Constants.wrapperVersion, { c, v in c.wrapperVersion = v as! String? }),
-         ("additional headers", Constants.additionalHeaders, { c, v in c.additionalHeaders = v as! [String: String]}),
-         ("auto aliasing opt out", Constants.autoAliasingOptOut, { c, v in c.autoAliasingOptOut = v as! Bool })]
+         ("additional headers", Constants.additionalHeaders, { c, v in c.additionalHeaders = v as! [String: String]})]
 
     func testInitDefault() {
         let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey)
@@ -87,7 +85,6 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.wrapperName, LDConfig.Defaults.wrapperName)
         XCTAssertEqual(config.wrapperVersion, LDConfig.Defaults.wrapperVersion)
         XCTAssertEqual(config.additionalHeaders, LDConfig.Defaults.additionalHeaders)
-        XCTAssertEqual(config.autoAliasingOptOut, LDConfig.Defaults.autoAliasingOptOut)
     }
 
     func testInitUpdate() {
@@ -122,7 +119,6 @@ final class LDConfigSpec: XCTestCase {
             XCTAssertEqual(config.wrapperName, Constants.wrapperName, "\(os)")
             XCTAssertEqual(config.wrapperVersion, Constants.wrapperVersion, "\(os)")
             XCTAssertEqual(config.additionalHeaders, Constants.additionalHeaders, "\(os)")
-            XCTAssertEqual(config.autoAliasingOptOut, Constants.autoAliasingOptOut, "\(os)")
         }
     }
 

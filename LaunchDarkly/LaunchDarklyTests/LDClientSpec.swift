@@ -73,8 +73,7 @@ final class LDClientSpec: QuickSpec {
              startOnline: Bool = false,
              streamingMode: LDStreamingMode = .streaming,
              enableBackgroundUpdates: Bool = true,
-             operatingSystem: OperatingSystem? = nil,
-             autoAliasingOptOut: Bool = true) {
+             operatingSystem: OperatingSystem? = nil) {
 
             if let operatingSystem = operatingSystem {
                 serviceFactoryMock.makeEnvironmentReporterReturnValue.operatingSystem = operatingSystem
@@ -95,7 +94,6 @@ final class LDClientSpec: QuickSpec {
             config.streamingMode = streamingMode
             config.enableBackgroundUpdates = enableBackgroundUpdates
             config.eventFlushInterval = 300.0   // 5 min...don't want this to trigger
-            config.autoAliasingOptOut = autoAliasingOptOut
 
             user = LDUser.stub()
         }
@@ -155,39 +153,7 @@ final class LDClientSpec: QuickSpec {
         allFlagsSpec()
         connectionInformationSpec()
         variationDetailSpec()
-        aliasingSpec()
         isInitializedSpec()
-    }
-
-    private func aliasingSpec() {
-        let anonUser = LDUser(key: "unknown", isAnonymous: true)
-        let knownUser = LDUser(key: "known", isAnonymous: false)
-        describe("aliasing") {
-            it("automatic aliasing from anonymous to user") {
-                let ctx = TestContext(autoAliasingOptOut: false)
-                ctx.withUser(anonUser).start()
-                ctx.subject.internalIdentify(newUser: knownUser)
-                // init, identify, and alias event
-                expect(ctx.eventReporterMock.recordCallCount) == 3
-                expect(ctx.recordedEvent?.kind) == .alias
-            }
-            it("no automatic aliasing from user to user") {
-                let ctx = TestContext(autoAliasingOptOut: false)
-                ctx.withUser(knownUser).start()
-                ctx.subject.internalIdentify(newUser: knownUser)
-                // init and identify event
-                expect(ctx.eventReporterMock.recordCallCount) == 2
-                expect(ctx.recordedEvent?.kind) == .identify
-            }
-            it("no automatic aliasing from anonymous to anonymous") {
-                let ctx = TestContext(autoAliasingOptOut: false)
-                ctx.withUser(anonUser).start()
-                ctx.subject.internalIdentify(newUser: anonUser)
-                // init and identify event
-                expect(ctx.eventReporterMock.recordCallCount) == 2
-                expect(ctx.recordedEvent?.kind) == .identify
-            }
-        }
     }
 
     private func startSpec() {

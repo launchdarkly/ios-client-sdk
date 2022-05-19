@@ -2,7 +2,7 @@ import Vapor
 import LaunchDarkly
 
 final class SdkController {
-    private var clients: [Int : LDClient] = [:]
+    private var clients: [Int: LDClient] = [:]
     private var clientCounter = 0
 
     func status(_ req: Request) -> StatusResponse {
@@ -55,7 +55,7 @@ final class SdkController {
                 }
 
                 if let globalPrivate = events.globalPrivateAttributes {
-                    config.privateUserAttributes = globalPrivate.map({ UserAttribute.forName($0) })
+                    config.privateUserAttributes = globalPrivate.map { UserAttribute.forName($0) }
                 }
 
                 if let flushIntervalMs = events.flushIntervalMs {
@@ -82,10 +82,6 @@ final class SdkController {
 
             let clientSide = createInstance.configuration.clientSide
 
-            if let autoAliasingOptOut = clientSide.autoAliasingOptOut {
-                config.autoAliasingOptOut = autoAliasingOptOut
-            }
-
             if let evaluationReasons = clientSide.evaluationReasons {
                 config.evaluationReasons = evaluationReasons
             }
@@ -97,7 +93,7 @@ final class SdkController {
             let dispatchSemaphore = DispatchSemaphore(value: 0)
             let startWaitSeconds = (createInstance.configuration.startWaitTimeMs ?? 5_000) / 1_000
 
-            LDClient.start(config:config, user: clientSide.initialUser, startWaitSeconds: startWaitSeconds) { timedOut in
+            LDClient.start(config: config, user: clientSide.initialUser, startWaitSeconds: startWaitSeconds) { _ in
                 dispatchSemaphore.signal()
             }
 
@@ -150,8 +146,6 @@ final class SdkController {
                     semaphore.signal()
                 }
                 semaphore.wait()
-            case "aliasEvent":
-                client.alias(context: commandParameters.aliasEvent!.user, previousContext: commandParameters.aliasEvent!.previousUser)
             case "customEvent":
                 let event = commandParameters.customEvent!
                 client.track(key: event.eventKey, data: event.data, metricValue: event.metricValue)

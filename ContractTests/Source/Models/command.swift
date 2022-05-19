@@ -31,7 +31,6 @@ struct CommandParameters: Content {
     var evaluateAll: EvaluateAllFlagsParameters?
     var customEvent: CustomEventParameters?
     var identifyEvent: IdentifyEventParameters?
-    var aliasEvent: AliasEventParameters?
 }
 
 struct EvaluateFlagParameters: Content {
@@ -61,11 +60,6 @@ struct CustomEventParameters: Content {
     var metricValue: Double?
 }
 
-struct IdentifyEventParameters: Content,  Decodable {
+struct IdentifyEventParameters: Content, Decodable {
     var user: LDUser
-}
-
-struct AliasEventParameters: Content {
-    var user: LDUser
-    var previousUser: LDUser
 }

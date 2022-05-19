@@ -43,7 +43,6 @@ struct TagParameters: Content {
 
 struct ClientSideParameters: Content {
     var initialUser: LDUser
-    var autoAliasingOptOut: Bool?
     var evaluationReasons: Bool?
     var useReport: Bool?
 }

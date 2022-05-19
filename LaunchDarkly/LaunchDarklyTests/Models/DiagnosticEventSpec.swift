@@ -270,8 +270,7 @@ final class DiagnosticEventSpec: QuickSpec {
                     }
                     it("encodes correct values to keys") {
                         encodesToObject(diagnosticConfig) { decoded in
-                            expect(decoded.count) == 19
-                            expect(decoded["autoAliasingOptOut"]) == .bool(diagnosticConfig.autoAliasingOptOut)
+                            expect(decoded.count) == 18
                             expect(decoded["customBaseURI"]) == .bool(diagnosticConfig.customBaseURI)
                             expect(decoded["customEventsURI"]) == .bool(diagnosticConfig.customEventsURI)
                             expect(decoded["customStreamURI"]) == .bool(diagnosticConfig.customStreamURI)

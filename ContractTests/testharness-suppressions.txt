@@ -7,12 +7,6 @@ evaluation/parameterized/evaluationReasons=false/basic values - bool/flag2-bool/
 streaming/requests/user properties/GET
 streaming/requests/user properties/REPORT
 streaming/updates/flag delete for previously nonexistent flag is applied
-polling/requests/method and headers/GET
-polling/requests/method and headers/REPORT
-polling/requests/URL path is computed correctly/base URI has no trailing slash/GET
-polling/requests/URL path is computed correctly/base URI has no trailing slash/REPORT
-polling/requests/URL path is computed correctly/base URI has a trailing slash/GET
-polling/requests/URL path is computed correctly/base URI has a trailing slash/REPORT
 polling/requests/query parameters/evaluationReasons set to [none]/GET
 polling/requests/query parameters/evaluationReasons set to [none]/REPORT
 polling/requests/query parameters/evaluationReasons set to false/GET
@@ -53,3 +47,124 @@ events/user properties/inlineUsers=true, allAttributesPrivate=true, globally-pri
 events/user properties/inlineUsers=true, allAttributesPrivate=true, globally-private=[firstName]/user-private=[lastName preferredLanguage]/identify event
 events/user properties/inlineUsers=true, allAttributesPrivate=true, globally-private=[firstName]/user-private=[lastName preferredLanguage]/feature event
 events/user properties/inlineUsers=true, allAttributesPrivate=true, globally-private=[firstName]/user-private=[lastName preferredLanguage]/custom event
+evaluation/parameterized/evaluationReasons=true/evaluation reasons - error MALFORMED_FLAG/flag-key/evaluate flag with detail
+events/requests/URL path is computed correctly/base URI has no trailing slash
+events/requests/URL path is computed correctly/base URI has a trailing slash
+events/requests/new payload ID for each post
+events/experimentation/FALLTHROUGH
+events/experimentation/RULE_MATCH
+events/identify events/basic properties/single kind default
+events/identify events/basic properties/single kind non-default
+events/identify events/basic properties/multi-kind
+events/custom events/data and metricValue parameters/data=null
+events/custom events/data and metricValue parameters/data=false
+events/custom events/data and metricValue parameters/data=true
+events/custom events/data and metricValue parameters/data=0
+events/custom events/data and metricValue parameters/data=1000
+events/custom events/data and metricValue parameters/data=1000.5
+events/custom events/data and metricValue parameters/data=""
+events/custom events/data and metricValue parameters/data="abc"
+events/custom events/data and metricValue parameters/data=[1,2]
+events/custom events/data and metricValue parameters/data={"property":true}
+events/custom events/data and metricValue parameters/data=null, omitNullData
+events/custom events/data and metricValue parameters/data=null, metricValue=0.000000
+events/custom events/data and metricValue parameters/data=false, metricValue=0.000000
+events/custom events/data and metricValue parameters/data=true, metricValue=0.000000
+events/custom events/data and metricValue parameters/data=0, metricValue=0.000000
+events/custom events/data and metricValue parameters/data=1000, metricValue=0.000000
+events/custom events/data and metricValue parameters/data=1000.5, metricValue=0.000000
+events/custom events/data and metricValue parameters/data="", metricValue=0.000000
+events/custom events/data and metricValue parameters/data="abc", metricValue=0.000000
+events/custom events/data and metricValue parameters/data=[1,2], metricValue=0.000000
+events/custom events/data and metricValue parameters/data={"property":true}, metricValue=0.000000
+events/custom events/data and metricValue parameters/data=null, omitNullData, metricValue=0.000000
+events/custom events/data and metricValue parameters/data=null, metricValue=-1.500000
+events/custom events/data and metricValue parameters/data=false, metricValue=-1.500000
+events/custom events/data and metricValue parameters/data=true, metricValue=-1.500000
+events/custom events/data and metricValue parameters/data=0, metricValue=-1.500000
+events/custom events/data and metricValue parameters/data=1000, metricValue=-1.500000
+events/custom events/data and metricValue parameters/data=1000.5, metricValue=-1.500000
+events/custom events/data and metricValue parameters/data="", metricValue=-1.500000
+events/custom events/data and metricValue parameters/data="abc", metricValue=-1.500000
+events/custom events/data and metricValue parameters/data=[1,2], metricValue=-1.500000
+events/custom events/data and metricValue parameters/data={"property":true}, metricValue=-1.500000
+events/custom events/data and metricValue parameters/data=null, omitNullData, metricValue=-1.500000
+events/custom events/data and metricValue parameters/data=null, metricValue=1.500000
+events/custom events/data and metricValue parameters/data=false, metricValue=1.500000
+events/custom events/data and metricValue parameters/data=true, metricValue=1.500000
+events/custom events/data and metricValue parameters/data=0, metricValue=1.500000
+events/custom events/data and metricValue parameters/data=1000, metricValue=1.500000
+events/custom events/data and metricValue parameters/data=1000.5, metricValue=1.500000
+events/custom events/data and metricValue parameters/data="", metricValue=1.500000
+events/custom events/data and metricValue parameters/data="abc", metricValue=1.500000
+events/custom events/data and metricValue parameters/data=[1,2], metricValue=1.500000
+events/custom events/data and metricValue parameters/data={"property":true}, metricValue=1.500000
+events/custom events/data and metricValue parameters/data=null, omitNullData, metricValue=1.500000
+events/custom events/basic properties/single kind default
+events/custom events/basic properties/single kind non-default
+events/custom events/basic properties/multi-kind
+events/context properties/single-kind minimal
+events/context properties/multi-kind minimal
+events/context properties/single-kind with attributes, nothing private
+events/context properties/single-kind, allAttributesPrivate
+events/context properties/single-kind, specific private attributes
+events/context properties/single-kind, private attribute nested property
+events/context properties/custom attribute with value false
+events/context properties/custom attribute with value true
+events/context properties/custom attribute with value -1000
+events/context properties/custom attribute with value 0
+events/context properties/custom attribute with value 1000
+events/context properties/custom attribute with value -1000.5
+events/context properties/custom attribute with value 1000.5
+events/context properties/custom attribute with value ""
+events/context properties/custom attribute with value "abc"
+events/context properties/custom attribute with value "has \"escaped\" characters"
+events/context properties/custom attribute with value []
+events/context properties/custom attribute with value ["a","b"]
+events/context properties/custom attribute with value {}
+events/context properties/custom attribute with value {"a":1}
+events/event capacity/capacity is enforced
+events/event capacity/buffer is reset after flush
+events/event capacity/summary event is still included even if buffer was full
+events/disabling/identify event
+streaming/requests/query parameters/evaluationReasons set to [none]/GET
+streaming/requests/query parameters/evaluationReasons set to [none]/REPORT
+streaming/requests/query parameters/evaluationReasons set to false/GET
+streaming/requests/query parameters/evaluationReasons set to false/REPORT
+streaming/requests/query parameters/evaluationReasons set to true/GET
+streaming/requests/query parameters/evaluationReasons set to true/REPORT
+streaming/requests/context properties/single kind minimal/GET
+streaming/requests/context properties/single kind minimal/REPORT
+streaming/requests/context properties/single kind with all attributes/GET
+streaming/requests/context properties/single kind with all attributes/REPORT
+streaming/requests/context properties/multi-kind/GET
+streaming/requests/context properties/multi-kind/REPORT
+streaming/updates/flag delete for previously nonexistent flag is applied
+polling/requests/query parameters/evaluationReasons set to [none]/GET
+polling/requests/query parameters/evaluationReasons set to [none]/REPORT
+polling/requests/query parameters/evaluationReasons set to false/GET
+polling/requests/query parameters/evaluationReasons set to false/REPORT
+polling/requests/query parameters/evaluationReasons set to true/GET
+polling/requests/query parameters/evaluationReasons set to true/REPORT
+polling/requests/context properties/single kind minimal/GET
+polling/requests/context properties/single kind minimal/REPORT
+polling/requests/context properties/single kind with all attributes/GET
+polling/requests/context properties/single kind with all attributes/REPORT
+polling/requests/context properties/multi-kind/GET
+polling/requests/context properties/multi-kind/REPORT
+tags/event posts/{"applicationId":null,"applicationVersion":null}
+tags/event posts/{"applicationId":null,"applicationVersion":""}
+tags/event posts/{"applicationId":null,"applicationVersion":""}
+tags/event posts/{"applicationId":null,"applicationVersion":""}
+tags/event posts/{"applicationId":"","applicationVersion":null}
+tags/event posts/{"applicationId":"","applicationVersion":""}
+tags/event posts/{"applicationId":"","applicationVersion":""}
+tags/event posts/{"applicationId":"","applicationVersion":""}
+tags/event posts/{"applicationId":"","applicationVersion":null}
+tags/event posts/{"applicationId":"","applicationVersion":""}
+tags/event posts/{"applicationId":"","applicationVersion":""}
+tags/event posts/{"applicationId":"","applicationVersion":""}
+tags/event posts/{"applicationId":"","applicationVersion":null}
+tags/event posts/{"applicationId":"","applicationVersion":""}
+tags/event posts/{"applicationId":"","applicationVersion":""}
+tags/event posts/{"applicationId":"","applicationVersion":""}

@@ -288,7 +288,6 @@ public class LDClient {
 
     func internalIdentify(newUser: LDUser, completion: (() -> Void)? = nil) {
         internalIdentifyQueue.sync {
-            let previousUser = self.user
             self.user = newUser
             Log.debug(self.typeName(and: #function) + "new user set with key: " + self.user.key )
             let wasOnline = self.isOnline
@@ -309,10 +308,6 @@ public class LDClient {
             }
 
             self.internalSetOnline(wasOnline, completion: completion)
-
-            if !config.autoAliasingOptOut && previousUser.isAnonymous && !newUser.isAnonymous {
-                self.alias(context: newUser, previousContext: previousUser)
-            }
         }
     }
 
@@ -539,29 +534,6 @@ public class LDClient {
         let event = CustomEvent(key: key, user: user, data: data ?? .null, metricValue: metricValue)
         Log.debug(typeName(and: #function) + "key: \(key), data: \(String(describing: data)), metricValue: \(String(describing: metricValue))")
         eventReporter.record(event)
-    }
-
-    /**
-     Tells the SDK to generate an alias event.
-
-     Associates two users for analytics purposes. 
-     
-     This can be helpful in the situation where a person is represented by multiple 
-     LaunchDarkly users. This may happen, for example, when a person initially logs into 
-     an application-- the person might be represented by an anonymous user prior to logging
-     in and a different user after logging in, as denoted by a different user key.
-
-     - parameter context: the user that will be aliased to
-     - parameter previousContext: the user that will be bound to the new context
-     */
-    public func alias(context new: LDUser, previousContext old: LDUser) {
-        guard hasStarted
-        else {
-            Log.debug(typeName(and: #function) + "aborted. LDClient not started")
-            return
-        }
-
-        self.eventReporter.record(AliasEvent(key: new.key, previousKey: old.key, contextKind: new.contextKind, previousContextKind: old.contextKind))
     }
 
     /**
