@@ -30,9 +30,8 @@ final class SdkController {
                 }
 
                 // TODO(mmk) Need to hook up initialRetryDelayMs
-            }
-
-            if let polling = createInstance.configuration.polling {
+            } else if let polling = createInstance.configuration.polling {
+                config.streamingMode = .polling
                 if let baseUri = polling.baseUri {
                     config.baseUrl = URL(string: baseUri)!
                 }
@@ -68,7 +67,18 @@ final class SdkController {
                 }
             }
 
-            // TODO(mmk) Handle tag parameters
+            if let tags = createInstance.configuration.tags {
+                var applicationInfo = ApplicationInfo()
+                if let id = tags.applicationId {
+                    applicationInfo.applicationIdentifier(id)
+                }
+
+                if let verision = tags.applicationVersion {
+                    applicationInfo.applicationVersion(verision)
+                }
+
+                config.applicationInfo = applicationInfo
+            }
 
             let clientSide = createInstance.configuration.clientSide
 

@@ -231,4 +231,27 @@ final class LDConfigSpec: XCTestCase {
             XCTAssertEqual(config.enableBackgroundUpdates, operatingSystem.isBackgroundEnabled)
         }
     }
+
+    func testApplicationInfoGeneratesTagCorrectly() {
+        var applicationInfo = ApplicationInfo()
+        XCTAssertEqual("", applicationInfo.buildTag())
+
+        applicationInfo.applicationVersion("example-version")
+        XCTAssertEqual("application-version/example-version", applicationInfo.buildTag())
+
+        applicationInfo.applicationIdentifier("example-id")
+        XCTAssertEqual("application-id/example-id application-version/example-version", applicationInfo.buildTag())
+    }
+
+    func testApplicationInfoRejectsInvalidConfigurations() {
+        let values = ["", " ", "/", ":", "🐦", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890._-"]
+        var info = ApplicationInfo()
+
+        for value in values {
+            info.applicationIdentifier(value)
+            info.applicationVersion(value)
+
+            XCTAssertEqual("", info.buildTag())
+        }
+    }
 }

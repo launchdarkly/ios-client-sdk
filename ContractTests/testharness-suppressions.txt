@@ -1,24 +1,4 @@
 events/requests/method and headers
-tags/stream requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
-tags/stream requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
-tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":null}
-tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":""}
-tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
-tags/poll requests/{"applicationId":null,"applicationVersion":null}
-tags/poll requests/{"applicationId":null,"applicationVersion":""}
-tags/poll requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
-tags/poll requests/{"applicationId":"","applicationVersion":null}
-tags/poll requests/{"applicationId":"","applicationVersion":""}
-tags/poll requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
-tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":null}
-tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":""}
-tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
-tags/event posts/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
-tags/event posts/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
-tags/event posts/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":null}
-tags/event posts/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":""}
-tags/event posts/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"}
-tags/disallowed characters
 evaluation/parameterized/evaluationReasons=false/basic values - bool/flag1-bool/evaluate flag with detail
 evaluation/parameterized/evaluationReasons=false/basic values - bool/flag1-bool/evaluate all flags
 evaluation/parameterized/evaluationReasons=false/basic values - bool/flag2-bool/evaluate flag without detail
