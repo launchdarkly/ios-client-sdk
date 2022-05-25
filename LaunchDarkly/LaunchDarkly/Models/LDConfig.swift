@@ -237,7 +237,7 @@ public struct LDConfig {
     /// The time interval between feature flag requests while running in the background. Used only for polling mode. (Default: 60 minutes)
     public var backgroundFlagPollingInterval: TimeInterval = Defaults.backgroundFlagPollingInterval
     /// The configuration for application metadata.
-    public var applicationInfo: ApplicationInfo? = nil
+    public var applicationInfo: ApplicationInfo?
 
     /**
      Controls the method the SDK uses to keep feature flags updated. (Default: `.streaming`)

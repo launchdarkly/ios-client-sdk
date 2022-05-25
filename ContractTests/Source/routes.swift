@@ -1,6 +1,6 @@
 import Vapor
 
-public func routes(_ router: Router) throws {
+func routes(_ router: Router) throws {
     let sdkController = SdkController()
     router.get("/", use: sdkController.status)
     router.post("/", use: sdkController.createClient)

@@ -2,7 +2,7 @@ import Vapor
 
 extension String: Error {}
 
-public func app(_ env: Environment) throws -> Application {
+func app(_ env: Environment) throws -> Application {
     var config = Config.default()
     var env = env
     var services = Services.default()
