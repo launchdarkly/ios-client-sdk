@@ -10,6 +10,7 @@ final class SdkController {
             "client-side",
             "mobile",
             "service-endpoints",
+            "strongly-typed",
             "tags"
         ]
 
@@ -60,10 +61,6 @@ final class SdkController {
 
                 if let flushIntervalMs = events.flushIntervalMs {
                     config.eventFlushInterval =  flushIntervalMs
-                }
-
-                if let inlineUsers = events.inlineUsers {
-                    config.inlineUserInEvents = inlineUsers
                 }
             }
 
@@ -151,12 +148,88 @@ final class SdkController {
                 client.track(key: event.eventKey, data: event.data, metricValue: event.metricValue)
             case "flushEvents":
                 client.flush()
+            case "contextBuild":
+                let contextBuild = commandParameters.contextBuild!
+
+                do {
+                    if let singleParams = contextBuild.single {
+                        let context = try SdkController.buildSingleContextFromParams(singleParams)
+
+                        let encoder = JSONEncoder()
+                        let output = try encoder.encode(context)
+
+                        let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
+                        return CommandResponse.contextBuild(response)
+                    }
+
+                    if let multiParams = contextBuild.multi {
+                        var multiContextBuilder = LDMultiContextBuilder()
+                        try multiParams.forEach {
+                            multiContextBuilder.addContext(try SdkController.buildSingleContextFromParams($0))
+                        }
+
+                        let context = try multiContextBuilder.build().get()
+                        let encoder = JSONEncoder()
+                        let output = try encoder.encode(context)
+
+                        let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
+                        return CommandResponse.contextBuild(response)
+                    }
+                } catch {
+                    let response = ContextBuildResponse(output: nil, error: error.localizedDescription)
+                    return CommandResponse.contextBuild(response)
+                }
+            case "contextConvert":
+                let convertRequest = commandParameters.contextConvert!
+                do {
+                    let decoder = JSONDecoder()
+                    let context: LDContext = try decoder.decode(LDContext.self, from: convertRequest.input)
+
+                    let encoder = JSONEncoder()
+                    let output = try encoder.encode(context)
+
+                    let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
+                    return CommandResponse.contextBuild(response)
+                } catch {
+                    let response = ContextBuildResponse(output: nil, error: error.localizedDescription)
+                    return CommandResponse.contextBuild(response)
+                }
             default:
                 throw Abort(.badRequest)
             }
 
             return CommandResponse.ok
         }
+    }
+
+    static func buildSingleContextFromParams(_ params: SingleContextParameters) throws -> LDContext {
+        var contextBuilder = LDContextBuilder(key: params.key)
+
+        if let kind = params.kind {
+            contextBuilder.kind(kind)
+        }
+
+        if let name = params.name {
+            contextBuilder.name(name)
+        }
+
+        if let transient = params.transient {
+            contextBuilder.transient(transient)
+        }
+
+        if let secondary = params.secondary {
+            contextBuilder.secondary(secondary)
+        }
+
+        if let privateAttributes = params.privateAttribute {
+            privateAttributes.forEach { contextBuilder.addPrivateAttribute(Reference($0)) }
+        }
+
+        if let custom = params.custom {
+            custom.forEach { contextBuilder.trySetValue($0.key, $0.value) }
+        }
+
+        return try contextBuilder.build().get()
     }
 
     func evaluate(_ client: LDClient, _ params: EvaluateFlagParameters) throws -> EvaluateFlagResponse {

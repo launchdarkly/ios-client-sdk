@@ -10,6 +10,7 @@ struct Configuration: Content {
     var credential: String
     var startWaitTimeMs: Double?
     var initCanFail: Bool?
+    // TODO(mmk) Add serviceEndpoints
     var streaming: StreamingParameters?
     var polling: PollingParameters?
     var events: EventParameters?
@@ -24,6 +25,7 @@ struct StreamingParameters: Content {
 
 struct PollingParameters: Content {
     var baseUri: String?
+    // TODO(mmk) Add pollIntervalMs
 }
 
 struct EventParameters: Content {
@@ -33,7 +35,6 @@ struct EventParameters: Content {
     var allAttributesPrivate: Bool?
     var globalPrivateAttributes: [String]?
     var flushIntervalMs: Double?
-    var inlineUsers: Bool?
 }
 
 struct TagParameters: Content {
@@ -42,7 +43,9 @@ struct TagParameters: Content {
 }
 
 struct ClientSideParameters: Content {
+    // TODO(mmk) Remove this user when you have converted everything
     var initialUser: LDUser
+    var initialContext: LDContext?
     var evaluationReasons: Bool?
     var useReport: Bool?
 }

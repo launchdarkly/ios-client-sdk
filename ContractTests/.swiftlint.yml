@@ -12,7 +12,6 @@ opt_in_rules:
   - flatmap_over_map_reduce
   - implicitly_unwrapped_optional
   - let_var_whitespace
-  - missing_docs
   - redundant_nil_coalescing
   - sorted_first_last
   - trailing_closure

@@ -74,7 +74,7 @@ public struct Reference: Codable, Equatable {
         return Result.success(output)
     }
 
-    init(_ value: String) {
+    public init(_ value: String) {
         rawPath = value
 
         if value.isEmpty || value == "/" {
@@ -112,6 +112,17 @@ public struct Reference: Codable, Equatable {
         }
 
         components = referenceComponents
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let reference = try container.decode(String.self)
+        self = Reference(reference)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.rawPath)
     }
 
     public func isValid() -> Bool {

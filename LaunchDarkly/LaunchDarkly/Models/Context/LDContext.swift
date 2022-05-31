@@ -10,7 +10,7 @@ public enum ContextBuilderError: Error {
 }
 
 /// TKTK
-public struct LDContext {
+public struct LDContext: Encodable {
     internal var kind: Kind = .user
     fileprivate var contexts: [LDContext] = []
 
@@ -26,6 +26,68 @@ public struct LDContext {
 
     fileprivate init(canonicalizedKey: String) {
         self.canonicalizedKey = canonicalizedKey
+    }
+
+    public struct Meta: Codable {
+        public var secondary: String?
+        public var privateAttributes: [Reference]?
+
+        enum CodingKeys: CodingKey {
+            case secondary, privateAttributes
+        }
+
+        public var isEmpty: Bool {
+            secondary == nil && (privateAttributes?.isEmpty ?? true)
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeIfPresent(secondary, forKey: .secondary)
+
+            if let privateAttributes = privateAttributes, !privateAttributes.isEmpty {
+                try container.encodeIfPresent(privateAttributes, forKey: .privateAttributes)
+            }
+        }
+    }
+
+    static private func encodeSingleContext(container: inout KeyedEncodingContainer<DynamicCodingKeys>, context: LDContext, discardKind: Bool) throws {
+        if !discardKind {
+            try container.encodeIfPresent(context.kind.description, forKey: DynamicCodingKeys(string: "kind"))
+        }
+
+        try container.encodeIfPresent(context.key, forKey: DynamicCodingKeys(string: "key"))
+        try container.encodeIfPresent(context.name, forKey: DynamicCodingKeys(string: "name"))
+
+        let meta = Meta(secondary:  context.secondary, privateAttributes: context.privateAttributes)
+
+        if !meta.isEmpty {
+            try container.encodeIfPresent(meta, forKey: DynamicCodingKeys(string: "_meta"))
+        }
+
+        if !context.attributes.isEmpty {
+            try context.attributes.forEach {
+                try container.encodeIfPresent($0.value, forKey: DynamicCodingKeys(string: $0.key))
+            }
+        }
+
+        if context.transient {
+            try container.encodeIfPresent(context.transient, forKey: DynamicCodingKeys(string: "transient"))
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: DynamicCodingKeys.self)
+
+        if isMulti() {
+            try container.encodeIfPresent(kind.description, forKey: DynamicCodingKeys(string: "kind"))
+
+            for context in contexts {
+                var contextContainer = container.nestedContainer(keyedBy: DynamicCodingKeys.self, forKey: DynamicCodingKeys(string: context.kind.description))
+                try LDContext.encodeSingleContext(container: &contextContainer, context: context, discardKind: true)
+            }
+        } else {
+            try LDContext.encodeSingleContext(container: &container, context: self, discardKind: false)
+        }
     }
 
     /// TKTK
@@ -111,6 +173,149 @@ public struct LDContext {
     }
 }
 
+extension LDContext: Decodable {
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: DynamicCodingKeys.self)
+
+        switch try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(string: "kind")) {
+        case .none:
+            if container.contains(DynamicCodingKeys(string: "kind")) {
+                throw DecodingError.valueNotFound(
+                    String.self,
+                    DecodingError.Context(
+                        codingPath: [DynamicCodingKeys(string: "kind")],
+                        debugDescription: "Kind cannot be null"
+                    )
+                )
+            }
+
+            let values = try decoder.container(keyedBy: UserCodingKeys.self)
+
+            let key = try values.decode(String.self, forKey: .key)
+            var contextBuilder = LDContextBuilder(key: key)
+            contextBuilder.allowEmptyKey = true
+
+            if let name = try values.decodeIfPresent(String.self, forKey: .name) {
+                contextBuilder.name(name)
+            }
+            if let firstName = try values.decodeIfPresent(String.self, forKey: .firstName) {
+                contextBuilder.trySetValue("firstName", .string(firstName))
+            }
+            if let lastName = try values.decodeIfPresent(String.self, forKey: .lastName) {
+                contextBuilder.trySetValue("lastName", .string(lastName))
+            }
+            if let country = try values.decodeIfPresent(String.self, forKey: .country) {
+                contextBuilder.trySetValue("country", .string(country))
+            }
+            if let ip = try values.decodeIfPresent(String.self, forKey: .ip) {
+                contextBuilder.trySetValue("ip", .string(ip))
+            }
+            if let email = try values.decodeIfPresent(String.self, forKey: .email) {
+                contextBuilder.trySetValue("email", .string(email))
+            }
+            if let avatar = try values.decodeIfPresent(String.self, forKey: .avatar) {
+                contextBuilder.trySetValue("avatar", .string(avatar))
+            }
+
+            let custom = try values.decodeIfPresent([String: LDValue].self, forKey: .custom) ?? [:]
+            custom.forEach { contextBuilder.trySetValue($0.key, $0.value) }
+
+            let isAnonymous = try values.decodeIfPresent(Bool.self, forKey: .isAnonymous) ?? false
+            contextBuilder.transient(isAnonymous)
+
+            let privateAttributeNames = try values.decodeIfPresent([String].self, forKey: .privateAttributeNames) ?? []
+            privateAttributeNames.forEach { contextBuilder.addPrivateAttribute(Reference($0)) }
+
+            if let secondary = try values.decodeIfPresent(String.self, forKey: .secondary) {
+                contextBuilder.secondary(secondary)
+            }
+
+            self = try contextBuilder.build().get()
+        case .some("multi"):
+            let container = try decoder.container(keyedBy: DynamicCodingKeys.self)
+            var multiContextBuilder = LDMultiContextBuilder()
+
+            for key in container.allKeys  {
+                if key.stringValue == "kind" {
+                    continue
+                }
+
+                let contextContainer = try container.nestedContainer(keyedBy: DynamicCodingKeys.self, forKey: DynamicCodingKeys(string: key.stringValue))
+                multiContextBuilder.addContext(try LDContext.decodeSingleContext(container: contextContainer, kind: key.stringValue))
+            }
+
+            self = try multiContextBuilder.build().get()
+        case .some(""):
+            throw DecodingError.valueNotFound(
+                String.self,
+                DecodingError.Context(
+                    codingPath: [DynamicCodingKeys(string: "kind")],
+                    debugDescription: "Kind cannot be empty"
+                )
+            )
+        case .some(let kind):
+            let container = try decoder.container(keyedBy: DynamicCodingKeys.self)
+            self = try LDContext.decodeSingleContext(container: container, kind: kind)
+        }
+    }
+
+    static private func decodeSingleContext(container: KeyedDecodingContainer<DynamicCodingKeys>, kind: String) throws -> LDContext {
+        let key = try container.decode(String.self, forKey: DynamicCodingKeys(string: "key"))
+
+        var contextBuilder = LDContextBuilder(key: key)
+        contextBuilder.kind(kind)
+
+        for key in container.allKeys {
+            switch key.stringValue {
+            case "key":
+                continue
+            case "_meta":
+                if let meta = try container.decodeIfPresent(LDContext.Meta.self, forKey: DynamicCodingKeys(string: "_meta")) {
+                    if let secondary = meta.secondary {
+                        contextBuilder.secondary(secondary)
+                    }
+
+                    if let privateAttributes = meta.privateAttributes {
+                        privateAttributes.forEach { contextBuilder.addPrivateAttribute($0) }
+                    }
+                }
+
+            default:
+                if let value = try container.decodeIfPresent(LDValue.self, forKey: DynamicCodingKeys(string: key.stringValue)) {
+                    contextBuilder.trySetValue(key.stringValue, value)
+                }
+            }
+        }
+
+        return try contextBuilder.build().get()
+    }
+
+    // This CodingKey implementation allows us to dynamically access fields in
+    // any JSON payload without having to pre-define the possible keys.
+    private struct DynamicCodingKeys: CodingKey {
+        // Protocol required implementations
+        var stringValue: String
+        var intValue: Int?
+
+        init?(stringValue: String) {
+            self.stringValue = stringValue
+        }
+
+        init?(intValue: Int) {
+            return nil
+        }
+
+        // Convenience method since we don't want to unwrap everywhere
+        init(string: String) {
+            self.stringValue = string
+        }
+    }
+
+    enum UserCodingKeys: String, CodingKey {
+        case key, name, firstName, lastName, country, ip, email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", config, privateAttributeNames, secondary
+    }
+}
+
 extension LDContext: TypeIdentifying {}
 
 /// TKTK
@@ -125,6 +330,11 @@ public struct LDContextBuilder {
 
     private var key: String?
     private var attributes: [String: LDValue] = [:]
+
+    // Contexts that were deserialized from implicit user formats
+    // are allowed to have empty string keys. Otherwise, key is
+    // never allowed to be empty.
+    fileprivate var allowEmptyKey: Bool = false
 
     /// TKTK
     public init(key: String) {
@@ -190,19 +400,23 @@ public struct LDContextBuilder {
         return true
     }
 
-    mutating func secondary(_ secondary: String) {
+    /// TKTK
+    public mutating func secondary(_ secondary: String) {
         self.secondary = secondary
     }
 
-    mutating func transient(_ transient: Bool) {
+    /// TKTK
+    public mutating func transient(_ transient: Bool) {
         self.transient = transient
     }
 
-    mutating func addPrivateAttribute(_ reference: Reference) {
+    /// TKTK
+    public mutating func addPrivateAttribute(_ reference: Reference) {
         self.privateAttributes.append(reference)
     }
 
-    mutating func removePrivateAttribute(_ reference: Reference) {
+    /// TKTK
+    public mutating func removePrivateAttribute(_ reference: Reference) {
         self.privateAttributes.removeAll { $0 == reference }
     }
 
@@ -216,10 +430,7 @@ public struct LDContextBuilder {
             return Result.failure(.requiresMultiBuilder)
         }
 
-        // TODO(mmk) If we are converting legacy users to newer user contexts,
-        // then the key is allowed to be empty. Otherwise, it cannot be. So we
-        // need to hook up that condition still.
-        if self.key?.isEmpty ?? true {
+        if !allowEmptyKey && self.key?.isEmpty ?? true {
             return Result.failure(.emptyKey)
         }
 
@@ -228,6 +439,7 @@ public struct LDContextBuilder {
         context.contexts = []
         context.name = self.name
         context.transient = self.transient
+        context.secondary = self.secondary
         context.privateAttributes = self.privateAttributes
         context.key = self.key
         context.attributes = self.attributes
@@ -241,6 +453,9 @@ extension LDContextBuilder: TypeIdentifying { }
 /// TKTK
 public struct LDMultiContextBuilder {
     private var contexts: [LDContext] = []
+
+    /// TKTK
+    public init() {}
 
     /// TKTK
     public mutating func addContext(_ context: LDContext) {

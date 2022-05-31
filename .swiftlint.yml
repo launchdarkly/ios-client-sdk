@@ -57,4 +57,9 @@ identifier_name:
     - lhs
     - rhs
 
+missing_docs:
+  error:
+    - open
+    - public
+
 reporter: "xcode"
