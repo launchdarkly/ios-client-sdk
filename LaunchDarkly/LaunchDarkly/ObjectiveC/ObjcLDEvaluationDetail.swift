@@ -9,7 +9,7 @@ public final class ObjcLDBoolEvaluationDetail: NSObject {
     @objc public let variationIndex: Int
     /// A structure representing the main factor that influenced the resultant flag evaluation value.
     @objc public let reason: [String: ObjcLDValue]?
-    
+
     internal init(value: Bool, variationIndex: Int?, reason: [String: ObjcLDValue]?) {
         self.value = value
         self.variationIndex = variationIndex ?? -1
@@ -26,7 +26,7 @@ public final class ObjcLDDoubleEvaluationDetail: NSObject {
     @objc public let variationIndex: Int
     /// A structure representing the main factor that influenced the resultant flag evaluation value.
     @objc public let reason: [String: ObjcLDValue]?
-    
+
     internal init(value: Double, variationIndex: Int?, reason: [String: ObjcLDValue]?) {
         self.value = value
         self.variationIndex = variationIndex ?? -1
@@ -43,7 +43,7 @@ public final class ObjcLDIntegerEvaluationDetail: NSObject {
     @objc public let variationIndex: Int
     /// A structure representing the main factor that influenced the resultant flag evaluation value.
     @objc public let reason: [String: ObjcLDValue]?
-    
+
     internal init(value: Int, variationIndex: Int?, reason: [String: ObjcLDValue]?) {
         self.value = value
         self.variationIndex = variationIndex ?? -1
@@ -60,7 +60,7 @@ public final class ObjcLDStringEvaluationDetail: NSObject {
     @objc public let variationIndex: Int
     /// A structure representing the main factor that influenced the resultant flag evaluation value.
     @objc public let reason: [String: ObjcLDValue]?
-    
+
     internal init(value: String?, variationIndex: Int?, reason: [String: ObjcLDValue]?) {
         self.value = value
         self.variationIndex = variationIndex ?? -1

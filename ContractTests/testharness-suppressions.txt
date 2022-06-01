@@ -1,9 +1,1 @@
-streaming/requests/context properties/single kind with all attributes/GET
-streaming/requests/context properties/single kind with all attributes/REPORT
-streaming/requests/context properties/multi-kind/GET
-streaming/requests/context properties/multi-kind/REPORT
 streaming/updates/flag delete for previously nonexistent flag is applied
-polling/requests/context properties/single kind with all attributes/GET
-polling/requests/context properties/single kind with all attributes/REPORT
-polling/requests/context properties/multi-kind/GET
-polling/requests/context properties/multi-kind/REPORT

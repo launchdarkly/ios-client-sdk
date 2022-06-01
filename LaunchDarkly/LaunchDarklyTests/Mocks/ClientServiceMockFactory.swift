@@ -75,12 +75,12 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     var makeStreamingProviderCallCount = 0
-    var makeStreamingProviderReceivedArguments: (url: URL, 
-                                                 httpHeaders: [String: String], 
-                                                 connectMethod: String?, 
-                                                 connectBody: Data?, 
-                                                 handler: EventHandler, 
-                                                 delegate: RequestHeaderTransform?, 
+    var makeStreamingProviderReceivedArguments: (url: URL,
+                                                 httpHeaders: [String: String],
+                                                 connectMethod: String?,
+                                                 connectBody: Data?,
+                                                 handler: EventHandler,
+                                                 delegate: RequestHeaderTransform?,
                                                  errorHandler: ConnectionErrorHandler?)?
     func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         makeStreamingProviderCallCount += 1
@@ -116,7 +116,7 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         }
         return throttlingMock
     }
-    
+
     func makeConnectionInformation() -> ConnectionInformation {
         ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
     }

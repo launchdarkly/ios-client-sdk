@@ -82,7 +82,7 @@ final class DarklyService: DarklyServiceProvider {
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
         guard hasMobileKey(#function) else { return }
         let encoder = JSONEncoder()
-        encoder.userInfo[LDUser.UserInfoKeys.includePrivateAttributes] = true
+        encoder.userInfo[LDContext.UserInfoKeys.includePrivateAttributes] = true
         guard let contextJsonData = try? encoder.encode(context)
         else {
             Log.debug(typeName(and: #function, appending: ": ") + "Aborting. Unable to create flagRequest.")
@@ -144,11 +144,11 @@ final class DarklyService: DarklyServiceProvider {
 
     // MARK: Streaming
 
-    func createEventSource(useReport: Bool, 
-                           handler: EventHandler, 
+    func createEventSource(useReport: Bool,
+                           handler: EventHandler,
                            errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         let encoder = JSONEncoder()
-        encoder.userInfo[LDUser.UserInfoKeys.includePrivateAttributes] = true
+        encoder.userInfo[LDContext.UserInfoKeys.includePrivateAttributes] = true
         let userJsonData = try? encoder.encode(context)
 
         var streamRequestUrl = config.streamUrl.appendingPathComponent(StreamRequestPath.meval)

@@ -1,6 +1,5 @@
 disabled_rules:
   - line_length
-  - trailing_whitespace
 
 opt_in_rules:
   - contains_over_filter_count
@@ -52,5 +51,8 @@ identifier_name:
     - tag
     - lhs
     - rhs
+
+trailing_whitespace:
+  severity: error
 
 reporter: "xcode"

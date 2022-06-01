@@ -8,7 +8,7 @@ import Foundation
 @objc(LDConfig)
 public final class ObjcLDConfig: NSObject {
     var config: LDConfig
-    
+
     /// The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
     @objc public var mobileKey: String {
         get { config.mobileKey }
@@ -189,7 +189,7 @@ public final class ObjcLDConfig: NSObject {
     @objc public func setSecondaryMobileKeys(_ keys: [String: String]) throws {
         try config.setSecondaryMobileKeys(keys)
     }
-    
+
     /// LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` (`ObjcLDClient.config`) in order to retain previously set values.
     @objc public init(mobileKey: String) {
         config = LDConfig(mobileKey: mobileKey)

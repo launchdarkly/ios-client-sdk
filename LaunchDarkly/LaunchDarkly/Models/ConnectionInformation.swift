@@ -109,7 +109,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
         connectionInformationVar.lastFailedConnection = Date()
         return connectionInformationVar
     }
-    
+
     // This function is used to ensure we switch from establishing a streaming connection to streaming once we are connected.
     static func checkEstablishingStreaming(connectionInformation: ConnectionInformation) -> ConnectionInformation {
         var connectionInformationVar = connectionInformation

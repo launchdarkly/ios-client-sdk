@@ -63,7 +63,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         static let trackEvents = true
         static let debugEventsUntilDate = Date().addingTimeInterval(30.0)
         static let reason: [String: LDValue] = ["kind": "OFF"]
-        
+
         static func stubFeatureFlags(debugEventsUntilDate: Date? = Date().addingTimeInterval(30.0)) -> [LDFlagKey: FeatureFlag] {
             let flagKeys = FlagKeys.knownFlags
             let featureFlagTuples = flagKeys.map { flagKey in
@@ -103,7 +103,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         self.config = config
         self.context = context
     }
-    
+
     var stubbedFlagResponse: ServiceResponse?
     var getFeatureFlagsUseReportCalledValue = [Bool]()
     var getFeatureFlagsCallCount = 0
@@ -117,7 +117,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
     func clearFlagResponseCache() {
         clearFlagResponseCacheCallCount += 1
     }
-    
+
     var createdEventSource: DarklyStreamingProviderMock?
     var createEventSourceCallCount = 0
     var createEventSourceReceivedUseReport: Bool?
@@ -132,7 +132,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         createdEventSource = mock
         return mock
     }
-    
+
     var stubbedEventResponse: ServiceResponse?
     var publishEventDataCallCount = 0
     var publishedEventData: Data?

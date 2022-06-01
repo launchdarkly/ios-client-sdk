@@ -93,7 +93,7 @@ public struct LDContext: Encodable, Equatable {
         }
     }
 
-    static private func encodeSingleContext(container: inout KeyedEncodingContainer<DynamicCodingKeys>, context: LDContext, discardKind: Bool, allAttributesPrivate: Bool, globalPrivateAttributes: SharedDictionary<String, PrivateAttributeLookupNode>) throws {
+    static private func encodeSingleContext(container: inout KeyedEncodingContainer<DynamicCodingKeys>, context: LDContext, discardKind: Bool, includePrivateAttributes: Bool, allAttributesPrivate: Bool, globalPrivateAttributes: SharedDictionary<String, PrivateAttributeLookupNode>) throws {
         if !discardKind {
             try container.encodeIfPresent(context.kind.description, forKey: DynamicCodingKeys(string: "kind"))
         }
@@ -114,7 +114,7 @@ public struct LDContext: Encodable, Equatable {
 
                 var path: [String] = []
                 path.reserveCapacity(10)
-                try LDContext.writeFilterAttribute(context: context, container: &container, parentPath: path, key: key, value: value, redactedAttributes: &redactedAttributes, globalPrivateAttributes: globalPrivateAttributes)
+                try LDContext.writeFilterAttribute(context: context, container: &container, parentPath: path, key: key, value: value, redactedAttributes: &redactedAttributes, includePrivateAttributes: includePrivateAttributes, globalPrivateAttributes: globalPrivateAttributes)
             }
         }
 
@@ -129,11 +129,11 @@ public struct LDContext: Encodable, Equatable {
         }
     }
 
-    static private func writeFilterAttribute(context: LDContext, container: inout KeyedEncodingContainer<DynamicCodingKeys>, parentPath: [String], key: String, value: LDValue, redactedAttributes: inout [String], globalPrivateAttributes: SharedDictionary<String, PrivateAttributeLookupNode>) throws {
+    static private func writeFilterAttribute(context: LDContext, container: inout KeyedEncodingContainer<DynamicCodingKeys>, parentPath: [String], key: String, value: LDValue, redactedAttributes: inout [String], includePrivateAttributes: Bool, globalPrivateAttributes: SharedDictionary<String, PrivateAttributeLookupNode>) throws {
         var path = parentPath
         path.append(key.description)
 
-        let (isReacted, nestedPropertiesAreRedacted) = LDContext.maybeRedact(context: context, parentPath: path, value: value, redactedAttributes: &redactedAttributes, globalPrivateAttributes: globalPrivateAttributes)
+        let (isReacted, nestedPropertiesAreRedacted) = includePrivateAttributes ? (false, false) : LDContext.maybeRedact(context: context, parentPath: path, value: value, redactedAttributes: &redactedAttributes, globalPrivateAttributes: globalPrivateAttributes)
 
         switch value {
         case .object(_) where isReacted:
@@ -147,7 +147,7 @@ public struct LDContext: Encodable, Equatable {
             // TODO(mmk): This might be a problem. We might write a sub container even if all the attributes are completely filtered out.
             var subContainer = container.nestedContainer(keyedBy: DynamicCodingKeys.self, forKey: DynamicCodingKeys(string: key))
             for (key, value) in objectMap {
-                try writeFilterAttribute(context: context, container: &subContainer, parentPath: path, key: key, value: value, redactedAttributes: &redactedAttributes, globalPrivateAttributes: globalPrivateAttributes)
+                try writeFilterAttribute(context: context, container: &subContainer, parentPath: path, key: key, value: value, redactedAttributes: &redactedAttributes, includePrivateAttributes: includePrivateAttributes, globalPrivateAttributes: globalPrivateAttributes)
             }
         case _ where !isReacted:
             try container.encode(value, forKey: DynamicCodingKeys(string: key))
@@ -217,19 +217,23 @@ public struct LDContext: Encodable, Equatable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: DynamicCodingKeys.self)
 
+        let includePrivateAttributes = encoder.userInfo[UserInfoKeys.includePrivateAttributes] as? Bool ?? false
         let allAttributesPrivate = encoder.userInfo[UserInfoKeys.allAttributesPrivate] as? Bool ?? false
         let globalPrivateAttributes = encoder.userInfo[UserInfoKeys.globalPrivateAttributes] as? [Reference] ?? []
-        let globalDictionary = LDContext.makePrivateAttributeLookupData(references: globalPrivateAttributes)
+
+        let allPrivate = !includePrivateAttributes && allAttributesPrivate
+        let globalPrivate = includePrivateAttributes ? [] : globalPrivateAttributes
+        let globalDictionary = LDContext.makePrivateAttributeLookupData(references: globalPrivate)
 
         if isMulti() {
             try container.encodeIfPresent(kind.description, forKey: DynamicCodingKeys(string: "kind"))
 
             for context in contexts {
                 var contextContainer = container.nestedContainer(keyedBy: DynamicCodingKeys.self, forKey: DynamicCodingKeys(string: context.kind.description))
-                try LDContext.encodeSingleContext(container: &contextContainer, context: context, discardKind: true, allAttributesPrivate: allAttributesPrivate, globalPrivateAttributes: globalDictionary)
+                try LDContext.encodeSingleContext(container: &contextContainer, context: context, discardKind: true, includePrivateAttributes: includePrivateAttributes, allAttributesPrivate: allPrivate, globalPrivateAttributes: globalDictionary)
             }
         } else {
-            try LDContext.encodeSingleContext(container: &container, context: self, discardKind: false, allAttributesPrivate: allAttributesPrivate, globalPrivateAttributes: globalDictionary)
+            try LDContext.encodeSingleContext(container: &container, context: self, discardKind: false, includePrivateAttributes: includePrivateAttributes, allAttributesPrivate: allPrivate, globalPrivateAttributes: globalDictionary)
         }
     }
 
