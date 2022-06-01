@@ -52,11 +52,11 @@ final class SdkController {
                 }
 
                 if let allPrivate = events.allAttributesPrivate {
-                    config.allUserAttributesPrivate = allPrivate
+                    config.allContextAttributesPrivate = allPrivate
                 }
 
                 if let globalPrivate = events.globalPrivateAttributes {
-                    config.privateUserAttributes = globalPrivate.map { UserAttribute.forName($0) }
+                    config.privateContextAttributes = globalPrivate.map { Reference($0) }
                 }
 
                 if let flushIntervalMs = events.flushIntervalMs {
@@ -90,7 +90,7 @@ final class SdkController {
             let dispatchSemaphore = DispatchSemaphore(value: 0)
             let startWaitSeconds = (createInstance.configuration.startWaitTimeMs ?? 5_000) / 1_000
 
-            LDClient.start(config: config, user: clientSide.initialUser, startWaitSeconds: startWaitSeconds) { _ in
+            LDClient.start(config: config, context: clientSide.initialContext, startWaitSeconds: startWaitSeconds) { _ in
                 dispatchSemaphore.signal()
             }
 
@@ -139,7 +139,7 @@ final class SdkController {
                 return CommandResponse.evaluateAll(result)
             case "identifyEvent":
                 let semaphore = DispatchSemaphore(value: 0)
-                client.identify(user: commandParameters.identifyEvent!.user) {
+                client.identify(context: commandParameters.identifyEvent!.context) {
                     semaphore.signal()
                 }
                 semaphore.wait()

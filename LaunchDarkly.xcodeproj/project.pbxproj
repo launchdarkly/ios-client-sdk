@@ -212,6 +212,7 @@
 		A31088272837DCA900184942 /* LDContextSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088242837DCA900184942 /* LDContextSpec.swift */; };
 		A31088282837DCA900184942 /* ReferenceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088252837DCA900184942 /* ReferenceSpec.swift */; };
 		A31088292837DCA900184942 /* KindSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088262837DCA900184942 /* KindSpec.swift */; };
+		A33A5F7A28466D04000C29C7 /* LDContextStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33A5F7928466D04000C29C7 /* LDContextStub.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
 		B467791324D8AEEC00897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791224D8AEEC00897F00 /* LDSwiftEventSourceStatic */; };
@@ -414,6 +415,7 @@
 		A31088242837DCA900184942 /* LDContextSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LDContextSpec.swift; sourceTree = "<group>"; };
 		A31088252837DCA900184942 /* ReferenceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReferenceSpec.swift; sourceTree = "<group>"; };
 		A31088262837DCA900184942 /* KindSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KindSpec.swift; sourceTree = "<group>"; };
+		A33A5F7928466D04000C29C7 /* LDContextStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDContextStub.swift; sourceTree = "<group>"; };
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
 		B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDEvaluationDetail.swift; sourceTree = "<group>"; };
@@ -658,6 +660,7 @@
 				832307A71F7DA61B0029815A /* LDEventSourceMock.swift */,
 				832307A91F7ECA630029815A /* LDConfigStub.swift */,
 				83EF67941F994BAD00403126 /* LDUserStub.swift */,
+				A33A5F7928466D04000C29C7 /* LDContextStub.swift */,
 				838F96791FBA551A009CFC45 /* ClientServiceMockFactory.swift */,
 				8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */,
 				831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */,
@@ -1152,14 +1155,12 @@
 				A310881E2837DC0400184942 /* Kind.swift in Sources */,
 				A310881A2837DC0400184942 /* Reference.swift in Sources */,
 				831188522113ADF700D77CB5 /* KeyedValueCache.swift in Sources */,
-				A3422BB9283591D30047396B /* ReferenceSpec.swift in Sources */,
 				831188582113AE0F00D77CB5 /* EventReporter.swift in Sources */,
 				8311885D2113AE2500D77CB5 /* DarklyService.swift in Sources */,
 				831188692113AE5900D77CB5 /* ObjcLDConfig.swift in Sources */,
 				A31088222837DC0400184942 /* LDContext.swift in Sources */,
 				8311886C2113AE6400D77CB5 /* ObjcLDChangedFlag.swift in Sources */,
 				C43C37E8238DF22D003C1624 /* LDEvaluationDetail.swift in Sources */,
-				A3422BB5283591D30047396B /* LDContextSpec.swift in Sources */,
 				8311884C2113ADDE00D77CB5 /* FlagChangeObserver.swift in Sources */,
 				C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
 				831188592113AE1200D77CB5 /* FlagStore.swift in Sources */,
@@ -1178,7 +1179,6 @@
 				29A4C47827DA6266005B8D34 /* UserAttribute.swift in Sources */,
 				8347BB0F21F147E100E56BCD /* LDTimer.swift in Sources */,
 				B4C9D43B2489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
-				A3422BBD283591D30047396B /* KindSpec.swift in Sources */,
 				C443A40523145FBF00145710 /* ConnectionInformation.swift in Sources */,
 				B468E71324B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
 				8354AC732243166900CDE602 /* FeatureFlagCache.swift in Sources */,
@@ -1212,11 +1212,9 @@
 				831EF34A20655E730001C643 /* FeatureFlag.swift in Sources */,
 				C443A40C2315AA4D00145710 /* NetworkReporter.swift in Sources */,
 				831EF34B20655E730001C643 /* LDChangedFlag.swift in Sources */,
-				A3422BBC283591D30047396B /* KindSpec.swift in Sources */,
 				8354AC722243166900CDE602 /* FeatureFlagCache.swift in Sources */,
 				A310881D2837DC0400184942 /* Kind.swift in Sources */,
 				C443A40423145FBE00145710 /* ConnectionInformation.swift in Sources */,
-				A3422BB8283591D30047396B /* ReferenceSpec.swift in Sources */,
 				832D68A4224A38FC005F052A /* CacheConverter.swift in Sources */,
 				831EF34C20655E730001C643 /* FlagChangeObserver.swift in Sources */,
 				831EF34D20655E730001C643 /* FlagsUnchangedObserver.swift in Sources */,
@@ -1251,7 +1249,6 @@
 				831EF36520655E730001C643 /* Thread.swift in Sources */,
 				83B1D7C92073F354006D1B1C /* CwlSysctl.swift in Sources */,
 				831EF36620655E730001C643 /* ObjcLDClient.swift in Sources */,
-				A3422BB4283591D30047396B /* LDContextSpec.swift in Sources */,
 				831EF36720655E730001C643 /* ObjcLDConfig.swift in Sources */,
 				831EF36820655E730001C643 /* ObjcLDUser.swift in Sources */,
 				B4C9D43A2489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
@@ -1275,14 +1272,12 @@
 				A310881B2837DC0400184942 /* Kind.swift in Sources */,
 				A31088172837DC0400184942 /* Reference.swift in Sources */,
 				83A2D6241F51CD7A00EA3BD4 /* LDUser.swift in Sources */,
-				A3422BB6283591D30047396B /* ReferenceSpec.swift in Sources */,
 				8354EFE21F26380700C05156 /* Event.swift in Sources */,
 				C408884923033B7500420721 /* ConnectionInformation.swift in Sources */,
 				831D8B721F71D3E700ED65E8 /* DarklyService.swift in Sources */,
 				A310881F2837DC0400184942 /* LDContext.swift in Sources */,
 				835E1D431F685AC900184DB4 /* ObjcLDChangedFlag.swift in Sources */,
 				8358F25E1F474E5900ECE1AF /* LDChangedFlag.swift in Sources */,
-				A3422BB2283591D30047396B /* LDContextSpec.swift in Sources */,
 				83D559741FD87CC9002D10C8 /* KeyedValueCache.swift in Sources */,
 				C43C37E1236BA050003C1624 /* LDEvaluationDetail.swift in Sources */,
 				831AAE2C20A9E4F600B46DBA /* Throttler.swift in Sources */,
@@ -1301,7 +1296,6 @@
 				29A4C47527DA6266005B8D34 /* UserAttribute.swift in Sources */,
 				831425B1206B030100F2EF36 /* EnvironmentReporter.swift in Sources */,
 				C408884723033B3600420721 /* ConnectionInformationStore.swift in Sources */,
-				A3422BBA283591D30047396B /* KindSpec.swift in Sources */,
 				83B6C4B61F4DE7630055351C /* LDCommon.swift in Sources */,
 				B4C9D4382489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
 				8347BB0C21F147E100E56BCD /* LDTimer.swift in Sources */,
@@ -1349,6 +1343,7 @@
 				83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */,
 				83CFE7D11F7AD8DC0010544E /* DarklyServiceMock.swift in Sources */,
 				832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */,
+				A33A5F7A28466D04000C29C7 /* LDContextStub.swift in Sources */,
 				8354AC77224316F800CDE602 /* FeatureFlagCacheSpec.swift in Sources */,
 				83EBCBB120D9C7B5003A7142 /* FlagCounterSpec.swift in Sources */,
 				83B8C2451FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift in Sources */,
@@ -1382,14 +1377,12 @@
 				A310881C2837DC0400184942 /* Kind.swift in Sources */,
 				A31088182837DC0400184942 /* Reference.swift in Sources */,
 				83D9EC7E2062DEAB004D7FA6 /* FlagChangeObserver.swift in Sources */,
-				A3422BB7283591D30047396B /* ReferenceSpec.swift in Sources */,
 				83D9EC7F2062DEAB004D7FA6 /* FlagsUnchangedObserver.swift in Sources */,
 				83D9EC802062DEAB004D7FA6 /* Event.swift in Sources */,
 				83D9EC822062DEAB004D7FA6 /* ClientServiceFactory.swift in Sources */,
 				A31088202837DC0400184942 /* LDContext.swift in Sources */,
 				83D9EC832062DEAB004D7FA6 /* KeyedValueCache.swift in Sources */,
 				831AAE2D20A9E4F600B46DBA /* Throttler.swift in Sources */,
-				A3422BB3283591D30047396B /* LDContextSpec.swift in Sources */,
 				C43C37E6238DF22B003C1624 /* LDEvaluationDetail.swift in Sources */,
 				83D9EC872062DEAB004D7FA6 /* FlagSynchronizer.swift in Sources */,
 				C443A41023186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
@@ -1408,7 +1401,6 @@
 				29A4C47627DA6266005B8D34 /* UserAttribute.swift in Sources */,
 				831425B2206B030100F2EF36 /* EnvironmentReporter.swift in Sources */,
 				83D9EC922062DEAB004D7FA6 /* Data.swift in Sources */,
-				A3422BBB283591D30047396B /* KindSpec.swift in Sources */,
 				8347BB0D21F147E100E56BCD /* LDTimer.swift in Sources */,
 				8354AC712243166900CDE602 /* FeatureFlagCache.swift in Sources */,
 				C443A40323145FB700145710 /* ConnectionInformation.swift in Sources */,

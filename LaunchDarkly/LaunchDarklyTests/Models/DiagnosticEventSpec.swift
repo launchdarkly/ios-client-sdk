@@ -178,7 +178,7 @@ final class DiagnosticEventSpec: QuickSpec {
         customConfig.connectionTimeout = 30.0
         customConfig.eventFlushInterval = 60.0
         customConfig.streamingMode = .polling
-        customConfig.allUserAttributesPrivate = true
+        customConfig.allContextAttributesPrivate = true
         customConfig.flagPollingInterval = 360.0
         customConfig.backgroundFlagPollingInterval = 1_800.0
         customConfig.inlineUserInEvents = true

@@ -28,8 +28,8 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         return makeCacheConverterReturnValue
     }
 
-    func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {
-        DarklyServiceMock(config: config, user: user)
+    func makeDarklyServiceProvider(config: LDConfig, context: LDContext) -> DarklyServiceProvider {
+        DarklyServiceMock(config: config, context: context)
     }
 
     var makeFlagSynchronizerCallCount = 0

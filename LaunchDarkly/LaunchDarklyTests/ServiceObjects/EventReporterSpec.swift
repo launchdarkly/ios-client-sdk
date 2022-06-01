@@ -12,7 +12,7 @@ final class EventReporterSpec: QuickSpec {
     struct TestContext {
         var eventReporter: EventReporter!
         var config: LDConfig!
-        var user: LDUser!
+        var context: LDContext!
         var serviceMock: DarklyServiceMock!
         var events: [Event] = []
         var lastEventResponseDate: Date?
@@ -33,7 +33,7 @@ final class EventReporterSpec: QuickSpec {
             config.eventCapacity = Event.Kind.allKinds.count
             config.eventFlushInterval = eventFlushInterval ?? Constants.eventFlushInterval
 
-            user = LDUser.stub()
+            context = LDContext.stub()
 
             self.eventStubResponseDate = eventStubResponseDate?.adjustedForHttpUrlHeaderUse
             serviceMock = DarklyServiceMock()
@@ -46,7 +46,7 @@ final class EventReporterSpec: QuickSpec {
             self.lastEventResponseDate = lastEventResponseDate?.adjustedForHttpUrlHeaderUse
             eventReporter = EventReporter(service: serviceMock, onSyncComplete: onSyncComplete)
             (0..<eventCount).forEach {
-                let event = Event.stub(Event.eventKind(for: $0), with: user!)
+                let event = Event.stub(Event.eventKind(for: $0), with: context!)
                 events.append(event)
                 eventReporter.record(event)
             }
@@ -55,7 +55,7 @@ final class EventReporterSpec: QuickSpec {
 
         mutating func recordEvents(_ eventCount: Int) {
             for _ in 0..<eventCount {
-                let event = Event.stub(Event.eventKind(for: events.count), with: user)
+                let event = Event.stub(Event.eventKind(for: events.count), with: context)
                 events.append(event)
                 eventReporter.record(event)
             }
@@ -185,7 +185,7 @@ final class EventReporterSpec: QuickSpec {
                 var extraEvent: Event!
                 beforeEach {
                     testContext = TestContext(eventCount: Event.Kind.allKinds.count)
-                    extraEvent = Event.stub(.feature, with: testContext.user)
+                    extraEvent = Event.stub(.feature, with: testContext.context)
 
                     testContext.eventReporter.record(extraEvent)
                 }
@@ -475,12 +475,12 @@ final class EventReporterSpec: QuickSpec {
     }
 
     func testRecordFlagEvaluationEvents() {
-        let user = LDUser()
+        let context = LDContext.stub()
         let serviceMock = DarklyServiceMock()
         describe("recordFlagEvaluationEvents") {
             it("unknown flag") {
                 let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
-                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: nil, user: user, includeReason: true)
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: nil, context: context, includeReason: true)
                 expect(reporter.eventStore.count) == 0
                 expect(reporter.flagRequestTracker.hasLoggedRequests) == true
                 expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.defaultValue) == "b"
@@ -491,7 +491,7 @@ final class EventReporterSpec: QuickSpec {
             it("untracked flag") {
                 let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
-                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: true)
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: true)
                 expect(reporter.eventStore.count) == 0
                 expect(reporter.flagRequestTracker.hasLoggedRequests) == true
                 expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.defaultValue) == "b"
@@ -502,11 +502,11 @@ final class EventReporterSpec: QuickSpec {
             it("tracked flag") {
                 let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
-                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: true)
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: true)
                 expect(reporter.eventStore.count) == 1
                 expect((reporter.eventStore[0] as? FeatureEvent)?.kind) == .feature
                 expect((reporter.eventStore[0] as? FeatureEvent)?.key) == "flag-key"
-                expect((reporter.eventStore[0] as? FeatureEvent)?.user) == user
+                expect((reporter.eventStore[0] as? FeatureEvent)?.context) == context
                 expect((reporter.eventStore[0] as? FeatureEvent)?.value) == "a"
                 expect((reporter.eventStore[0] as? FeatureEvent)?.defaultValue) == "b"
                 expect((reporter.eventStore[0] as? FeatureEvent)?.featureFlag) == flag
@@ -520,7 +520,7 @@ final class EventReporterSpec: QuickSpec {
             it("debug until past date") {
                 let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(-1.0))
-                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: true)
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: true)
                 expect(reporter.eventStore.count) == 0
                 expect(reporter.flagRequestTracker.hasLoggedRequests) == true
                 expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.defaultValue) == "b"
@@ -531,11 +531,11 @@ final class EventReporterSpec: QuickSpec {
             it("debug until future date") {
                 let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(3.0))
-                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: false)
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
                 expect(reporter.eventStore.count) == 1
                 expect((reporter.eventStore[0] as? FeatureEvent)?.kind) == .debug
                 expect((reporter.eventStore[0] as? FeatureEvent)?.key) == "flag-key"
-                expect((reporter.eventStore[0] as? FeatureEvent)?.user) == user
+                expect((reporter.eventStore[0] as? FeatureEvent)?.context) == context
                 expect((reporter.eventStore[0] as? FeatureEvent)?.value) == "a"
                 expect((reporter.eventStore[0] as? FeatureEvent)?.defaultValue) == "b"
                 expect((reporter.eventStore[0] as? FeatureEvent)?.featureFlag) == flag
@@ -550,7 +550,7 @@ final class EventReporterSpec: QuickSpec {
                 let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
                 reporter.setLastEventResponseDate(Date().addingTimeInterval(10.0))
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(3.0))
-                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: true)
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: true)
                 expect(reporter.eventStore.count) == 0
                 expect(reporter.flagRequestTracker.hasLoggedRequests) == true
                 expect(reporter.flagRequestTracker.flagCounters["flag-key"]?.defaultValue) == "b"
@@ -562,20 +562,20 @@ final class EventReporterSpec: QuickSpec {
                 let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
                 reporter.setLastEventResponseDate(Date().addingTimeInterval(-3.0))
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: true, debugEventsUntilDate: Date())
-                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: false)
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
                 expect(reporter.eventStore.count) == 2
                 let featureEvent = reporter.eventStore.first { $0.kind == .feature } as? FeatureEvent
                 let debugEvent = reporter.eventStore.first { $0.kind == .debug } as? FeatureEvent
                 expect(featureEvent?.kind) == .feature
                 expect(featureEvent?.key) == "flag-key"
-                expect(featureEvent?.user) == user
+                expect(featureEvent?.context) == context
                 expect(featureEvent?.value) == "a"
                 expect(featureEvent?.defaultValue) == "b"
                 expect(featureEvent?.featureFlag) == flag
                 expect(featureEvent?.includeReason) == false
                 expect(debugEvent?.kind) == .debug
                 expect(debugEvent?.key) == "flag-key"
-                expect(debugEvent?.user) == user
+                expect(debugEvent?.context) == context
                 expect(debugEvent?.value) == "a"
                 expect(debugEvent?.defaultValue) == "b"
                 expect(debugEvent?.featureFlag) == flag
@@ -593,7 +593,7 @@ final class EventReporterSpec: QuickSpec {
 
                 let counter = DispatchSemaphore(value: 0)
                 DispatchQueue.concurrentPerform(iterations: 10) { _ in
-                    reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, user: user, includeReason: false)
+                    reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
                     counter.signal()
                 }
                 (0..<10).forEach { _ in counter.wait() }

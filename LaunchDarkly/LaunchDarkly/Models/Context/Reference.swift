@@ -34,7 +34,7 @@ extension ReferenceError: CustomStringConvertible {
     }
 }
 
-public struct Reference: Codable, Equatable {
+public struct Reference: Codable, Equatable, Hashable {
     private var error: ReferenceError?
     private var rawPath: String
     private var components: [Component] = []
@@ -137,6 +137,10 @@ public struct Reference: Codable, Equatable {
         return components.count
     }
 
+    internal func raw() -> String {
+        return rawPath
+    }
+
     public func component(_ index: Int) -> (String, Int?)? {
         if index >= self.depth() {
             return nil
@@ -147,7 +151,7 @@ public struct Reference: Codable, Equatable {
     }
 }
 
-private struct Component: Codable, Equatable {
+private struct Component: Codable, Equatable, Hashable {
     fileprivate let name: String
     fileprivate let value: Int?
 

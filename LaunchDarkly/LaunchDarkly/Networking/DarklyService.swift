@@ -14,7 +14,7 @@ extension EventSource: DarklyStreamingProvider {}
 
 protocol DarklyServiceProvider: AnyObject {
     var config: LDConfig { get }
-    var user: LDUser { get set }
+    var context: LDContext { get set }
     var diagnosticCache: DiagnosticCaching? { get }
 
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?)
@@ -46,16 +46,16 @@ final class DarklyService: DarklyServiceProvider {
     }
 
     let config: LDConfig
-    var user: LDUser
+    var context: LDContext
     let httpHeaders: HTTPHeaders
     let diagnosticCache: DiagnosticCaching?
     private (set) var serviceFactory: ClientServiceCreating
     private var session: URLSession
     var flagRequestEtag: String?
 
-    init(config: LDConfig, user: LDUser, serviceFactory: ClientServiceCreating) {
+    init(config: LDConfig, context: LDContext, serviceFactory: ClientServiceCreating) {
         self.config = config
-        self.user = user
+        self.context = context
         self.serviceFactory = serviceFactory
 
         if !config.mobileKey.isEmpty && !config.diagnosticOptOut {
@@ -83,7 +83,7 @@ final class DarklyService: DarklyServiceProvider {
         guard hasMobileKey(#function) else { return }
         let encoder = JSONEncoder()
         encoder.userInfo[LDUser.UserInfoKeys.includePrivateAttributes] = true
-        guard let userJsonData = try? encoder.encode(user)
+        guard let contextJsonData = try? encoder.encode(context)
         else {
             Log.debug(typeName(and: #function, appending: ": ") + "Aborting. Unable to create flagRequest.")
             return
@@ -93,12 +93,12 @@ final class DarklyService: DarklyServiceProvider {
         if let etag = flagRequestEtag {
             headers.merge([HTTPHeaders.HeaderKey.ifNoneMatch: etag]) { orig, _ in orig }
         }
-        var request = URLRequest(url: flagRequestUrl(useReport: useReport, getData: userJsonData),
+        var request = URLRequest(url: flagRequestUrl(useReport: useReport, getData: contextJsonData),
                                  ldHeaders: headers,
                                  ldConfig: config)
         if useReport {
             request.httpMethod = URLRequest.HTTPMethods.report
-            request.httpBody = userJsonData
+            request.httpBody = contextJsonData
         }
 
         self.session.dataTask(with: request) { [weak self] data, response, error in
@@ -149,7 +149,7 @@ final class DarklyService: DarklyServiceProvider {
                            errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         let encoder = JSONEncoder()
         encoder.userInfo[LDUser.UserInfoKeys.includePrivateAttributes] = true
-        let userJsonData = try? encoder.encode(user)
+        let userJsonData = try? encoder.encode(context)
 
         var streamRequestUrl = config.streamUrl.appendingPathComponent(StreamRequestPath.meval)
         var connectMethod = HTTPRequestMethod.get

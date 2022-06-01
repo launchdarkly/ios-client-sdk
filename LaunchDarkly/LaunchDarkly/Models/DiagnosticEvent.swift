@@ -105,6 +105,7 @@ struct DiagnosticConfig: Codable {
     let useReport: Bool
     let backgroundPollingDisabled: Bool
     let evaluationReasonsRequested: Bool
+    // TODO(mmk) Update this config pattern
     let maxCachedUsers: Int
     let mobileKeyCount: Int
     let diagnosticRecordingIntervalMillis: Int
@@ -118,9 +119,10 @@ struct DiagnosticConfig: Codable {
         connectTimeoutMillis = Int(exactly: round(config.connectionTimeout * 1_000)) ?? .max
         eventsFlushIntervalMillis = Int(exactly: round(config.eventFlushInterval * 1_000)) ?? .max
         streamingDisabled = config.streamingMode == .polling
-        allAttributesPrivate = config.allUserAttributesPrivate
+        allAttributesPrivate = config.allContextAttributesPrivate
         pollingIntervalMillis = Int(exactly: round(config.flagPollingInterval * 1_000)) ?? .max
         backgroundPollingIntervalMillis = Int(exactly: round(config.backgroundFlagPollingInterval * 1_000)) ?? .max
+        // TODO(mmk) Update this config pattern
         inlineUsersInEvents = config.inlineUserInEvents
         useReport = config.useReport
         backgroundPollingDisabled = !config.enableBackgroundUpdates

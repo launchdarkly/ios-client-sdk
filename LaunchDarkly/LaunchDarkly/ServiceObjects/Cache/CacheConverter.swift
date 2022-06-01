@@ -89,9 +89,9 @@ final class CacheConverter: CacheConverting {
             }
         }
 
-        cachedEnvData.forEach { mobileKey, users in
-            users.forEach { userKey, data in
-                flagCaches[mobileKey]?.storeFeatureFlags(data.flags, userKey: userKey, lastUpdated: data.updated)
+        cachedEnvData.forEach { mobileKey, contexts in
+            contexts.forEach { contextKey, data in
+                flagCaches[mobileKey]?.storeFeatureFlags(data.flags, contextKey: contextKey, lastUpdated: data.updated)
             }
         }
 

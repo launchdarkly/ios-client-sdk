@@ -23,7 +23,7 @@ typealias MobileKey = String
 /**
  A callback for dynamically setting http headers when connection & reconnecting to a stream
  or on every poll request. This function should return a copy of the headers recieved with
- any modifications or additions needed. Removing headers is discouraged as it may cause 
+ any modifications or additions needed. Removing headers is discouraged as it may cause
  requests to fail.
 
  - parameter url: The endpoint that is being connected to
@@ -115,7 +115,7 @@ public struct LDConfig {
         static let eventsUrl = URL(string: "https://mobile.launchdarkly.com")!
         /// The default base url for connecting to streaming service
         static let streamUrl = URL(string: "https://clientstream.launchdarkly.com")!
-        
+
         /// The default maximum number of events the LDClient can store
         static let eventCapacity = 100
 
@@ -135,10 +135,10 @@ public struct LDConfig {
         /// The default mode to set LDClient online on a start call. (true)
         static let startOnline = true
 
-        /// The default setting for private user attributes. (false)
-        static let allUserAttributesPrivate = false
-        /// The default private user attribute list (nil)
-        static let privateUserAttributes: [UserAttribute] = []
+        /// The default setting for private context attributes. (false)
+        static let allContextAttributesPrivate = false
+        /// The default private context attribute list (nil)
+        static let privateContextAttributes: [Reference] = []
 
         /// The default HTTP request method for stream connections and feature flag requests. When true, these requests will use the non-standard verb `REPORT`. When false, these requests will use the standard verb `GET`. (false)
         static let useReport = false
@@ -148,7 +148,7 @@ public struct LDConfig {
 
         /// The default setting controlling information logged to the console, and modifying some setting ranges to facilitate debugging. (false)
         static let debugMode = false
-        
+
         /// The default setting for whether we request evaluation reasons for all flags. (false)
         static let evaluationReasons = false
 
@@ -259,30 +259,30 @@ public struct LDConfig {
         }
     }
     private var allowBackgroundUpdates: Bool
-    
+
     /// Controls LDClient start behavior. When true, calling start causes LDClient to go online. When false, calling start causes LDClient to remain offline. If offline at start, set the client online to receive flag updates. (Default: true)
     public var startOnline: Bool = Defaults.startOnline
 
     /**
-     Treat all user attributes as private for event reporting for all users.
+     Treat all context attributes as private for event reporting for all contexts.
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     When true, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. (Default: false)
+     When true, ignores values in either LDConfig.privateContextAttributes or LDContext.privateAttributes. (Default: false)
 
-     See Also: `privateUserAttributes` and `LDUser.privateAttributes`
+     See Also: `privateContextAttributes` and `LDContext.privateAttributes`
     */
-    public var allUserAttributesPrivate: Bool = Defaults.allUserAttributesPrivate
+    public var allContextAttributesPrivate: Bool = Defaults.allContextAttributesPrivate
     /**
-     User attributes and top level custom dictionary keys to treat as private for event reporting for all users.
+     Context attributes and top level custom dictionary keys to treat as private for event reporting for all contexts.
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     To set private user attributes for a specific user, see `LDUser.privateAttributes`. (Default: nil)
+     To set private context attributes for a specific context, see `LDContext.privateAttributes`. (Default: nil)
 
-     See Also: `allUserAttributesPrivate` and `LDUser.privateAttributes`.
+     See Also: `allContextAttributesPrivate` and `LDContext.privateAttributes`.
     */
-    public var privateUserAttributes: [UserAttribute] = Defaults.privateUserAttributes
+    public var privateContextAttributes: [Reference] = Defaults.privateContextAttributes
 
     /**
      Directs the SDK to use REPORT for HTTP requests for feature flag data. (Default: `false`)
@@ -300,10 +300,10 @@ public struct LDConfig {
 
     /// Enables logging for debugging. (Default: false)
     public var isDebugMode: Bool = Defaults.debugMode
-    
+
     /// Enables requesting evaluation reasons for all flags. (Default: false)
     public var evaluationReasons: Bool = Defaults.evaluationReasons
-    
+
     /// An Integer that tells UserEnvironmentFlagCache the maximum number of users to locally cache. Can be set to -1 for unlimited cached users.
     public var maxCachedUsers: Int = Defaults.maxCachedUsers
 
@@ -381,10 +381,10 @@ public struct LDConfig {
     public func getSecondaryMobileKeys() -> [String: String] {
         return _secondaryMobileKeys
     }
-    
+
     /// Internal variable for secondaryMobileKeys computed property
     private var _secondaryMobileKeys: [String: String]
-    
+
     // Internal constructor to enable automated testing
     init(mobileKey: String, environmentReporter: EnvironmentReporting) {
         self.mobileKey = mobileKey
@@ -434,8 +434,8 @@ extension LDConfig: Equatable {
             && lhs.streamingMode == rhs.streamingMode
             && lhs.enableBackgroundUpdates == rhs.enableBackgroundUpdates
             && lhs.startOnline == rhs.startOnline
-            && lhs.allUserAttributesPrivate == rhs.allUserAttributesPrivate
-            && Set(lhs.privateUserAttributes) == Set(rhs.privateUserAttributes)
+            && lhs.allContextAttributesPrivate == rhs.allContextAttributesPrivate
+            && Set(lhs.privateContextAttributes) == Set(rhs.privateContextAttributes)
             && lhs.useReport == rhs.useReport
             && lhs.inlineUserInEvents == rhs.inlineUserInEvents
             && lhs.isDebugMode == rhs.isDebugMode

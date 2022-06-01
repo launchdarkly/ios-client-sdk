@@ -94,14 +94,14 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
 
     var config: LDConfig
-    var user: LDUser
+    var context: LDContext
     var diagnosticCache: DiagnosticCaching? = nil
 
     var activationBlocks = [(testBlock: HTTPStubsTestBlock, callback: ((URLRequest, HTTPStubsDescriptor, HTTPStubsResponse) -> Void))]()
 
-    init(config: LDConfig = LDConfig.stub, user: LDUser = LDUser.stub()) {
+    init(config: LDConfig = LDConfig.stub, context: LDContext = LDContext.stub()) {
         self.config = config
-        self.user = user
+        self.context = context
     }
     
     var stubbedFlagResponse: ServiceResponse?

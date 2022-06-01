@@ -70,8 +70,6 @@ struct CustomEventParameters: Content {
 }
 
 struct IdentifyEventParameters: Content, Decodable {
-    // TODO(mmk) Remove this user when you have converted everything
-    var user: LDUser
     var context: LDContext
 }
 

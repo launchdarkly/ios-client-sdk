@@ -242,10 +242,10 @@ final class EventReportingMock: EventReporting {
 
     var recordFlagEvaluationEventsCallCount = 0
     var recordFlagEvaluationEventsCallback: (() throws -> Void)?
-    var recordFlagEvaluationEventsReceivedArguments: (flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool)?
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) {
+    var recordFlagEvaluationEventsReceivedArguments: (flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)?
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool) {
         recordFlagEvaluationEventsCallCount += 1
-        recordFlagEvaluationEventsReceivedArguments = (flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, includeReason: includeReason)
+        recordFlagEvaluationEventsReceivedArguments = (flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, context: context, includeReason: includeReason)
         try! recordFlagEvaluationEventsCallback?()
     }
 
@@ -273,21 +273,21 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
 
     var retrieveFeatureFlagsCallCount = 0
     var retrieveFeatureFlagsCallback: (() throws -> Void)?
-    var retrieveFeatureFlagsReceivedUserKey: String?
+    var retrieveFeatureFlagsReceivedContextKey: String?
     var retrieveFeatureFlagsReturnValue: [LDFlagKey: FeatureFlag]?
-    func retrieveFeatureFlags(userKey: String) -> [LDFlagKey: FeatureFlag]? {
+    func retrieveFeatureFlags(contextKey: String) -> [LDFlagKey: FeatureFlag]? {
         retrieveFeatureFlagsCallCount += 1
-        retrieveFeatureFlagsReceivedUserKey = userKey
+        retrieveFeatureFlagsReceivedContextKey = contextKey
         try! retrieveFeatureFlagsCallback?()
         return retrieveFeatureFlagsReturnValue
     }
 
     var storeFeatureFlagsCallCount = 0
     var storeFeatureFlagsCallback: (() throws -> Void)?
-    var storeFeatureFlagsReceivedArguments: (featureFlags: [LDFlagKey: FeatureFlag], userKey: String, lastUpdated: Date)?
-    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], userKey: String, lastUpdated: Date) {
+    var storeFeatureFlagsReceivedArguments: (featureFlags: [LDFlagKey: FeatureFlag], contextKey: String, lastUpdated: Date)?
+    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], contextKey: String, lastUpdated: Date) {
         storeFeatureFlagsCallCount += 1
-        storeFeatureFlagsReceivedArguments = (featureFlags: featureFlags, userKey: userKey, lastUpdated: lastUpdated)
+        storeFeatureFlagsReceivedArguments = (featureFlags: featureFlags, contextKey: contextKey, lastUpdated: lastUpdated)
         try! storeFeatureFlagsCallback?()
     }
 }

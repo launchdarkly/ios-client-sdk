@@ -6,7 +6,7 @@ private protocol SubEvent {
 
 class Event: Encodable {
     enum CodingKeys: String, CodingKey {
-        case key, previousKey, kind, creationDate, user, userKey, value, defaultValue = "default", variation, version,
+        case key, previousKey, kind, creationDate, context, contextKeys, value, defaultValue = "default", variation, version,
              data, startDate, endDate, features, reason, metricValue, contextKind, previousContextKind
     }
 
@@ -42,14 +42,14 @@ class Event: Encodable {
 
 class CustomEvent: Event, SubEvent {
     let key: String
-    let user: LDUser
+    let context: LDContext
     let data: LDValue
     let metricValue: Double?
     let creationDate: Date
 
-    init(key: String, user: LDUser, data: LDValue = nil, metricValue: Double? = nil, creationDate: Date = Date()) {
+    init(key: String, context: LDContext, data: LDValue = nil, metricValue: Double? = nil, creationDate: Date = Date()) {
         self.key = key
-        self.user = user
+        self.context = context
         self.data = data
         self.metricValue = metricValue
         self.creationDate = creationDate
@@ -60,13 +60,11 @@ class CustomEvent: Event, SubEvent {
         var container = container
         try container.encode(key, forKey: .key)
         if encoder.userInfo[Event.UserInfoKeys.inlineUserInEvents] as? Bool ?? false {
-            try container.encode(user, forKey: .user)
+            try container.encode(context, forKey: .context)
         } else {
-            try container.encode(user.key, forKey: .userKey)
+            try container.encode(context.contextKeys(), forKey: .contextKeys)
         }
-        if user.isAnonymous == true {
-            try container.encode("anonymousUser", forKey: .contextKind)
-        }
+
         if data != .null {
             try container.encode(data, forKey: .data)
         }
@@ -77,19 +75,19 @@ class CustomEvent: Event, SubEvent {
 
 class FeatureEvent: Event, SubEvent {
     let key: String
-    let user: LDUser
+    let context: LDContext
     let value: LDValue
     let defaultValue: LDValue
     let featureFlag: FeatureFlag?
     let includeReason: Bool
     let creationDate: Date
 
-    init(key: String, user: LDUser, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, includeReason: Bool, isDebug: Bool, creationDate: Date = Date()) {
+    init(key: String, context: LDContext, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, includeReason: Bool, isDebug: Bool, creationDate: Date = Date()) {
         self.key = key
         self.value = value
         self.defaultValue = defaultValue
         self.featureFlag = featureFlag
-        self.user = user
+        self.context = context
         self.includeReason = includeReason
         self.creationDate = creationDate
         super.init(kind: isDebug ? .debug : .feature)
@@ -99,12 +97,9 @@ class FeatureEvent: Event, SubEvent {
         var container = container
         try container.encode(key, forKey: .key)
         if kind == .debug || encoder.userInfo[Event.UserInfoKeys.inlineUserInEvents] as? Bool ?? false {
-            try container.encode(user, forKey: .user)
+            try container.encode(context, forKey: .context)
         } else {
-            try container.encode(user.key, forKey: .userKey)
-        }
-        if kind == .feature && user.isAnonymous == true {
-            try container.encode("anonymousUser", forKey: .contextKind)
+            try container.encode(context.contextKeys(), forKey: .contextKeys)
         }
         try container.encodeIfPresent(featureFlag?.variation, forKey: .variation)
         try container.encodeIfPresent(featureFlag?.versionForEvents, forKey: .version)
@@ -118,19 +113,19 @@ class FeatureEvent: Event, SubEvent {
 }
 
 class IdentifyEvent: Event, SubEvent {
-    let user: LDUser
+    let context: LDContext
     let creationDate: Date
 
-    init(user: LDUser, creationDate: Date = Date()) {
-        self.user = user
+    init(context: LDContext, creationDate: Date = Date()) {
+        self.context = context
         self.creationDate = creationDate
         super.init(kind: .identify)
     }
 
     fileprivate func encode(to encoder: Encoder, container: KeyedEncodingContainer<Event.CodingKeys>) throws {
         var container = container
-        try container.encode(user.key, forKey: .key)
-        try container.encode(user, forKey: .user)
+        try container.encode(context.fullyQualifiedKey(), forKey: .key)
+        try container.encode(context, forKey: .context)
         try container.encode(creationDate, forKey: .creationDate)
     }
 }

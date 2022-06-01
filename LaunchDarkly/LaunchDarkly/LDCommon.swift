@@ -49,7 +49,7 @@ struct DynamicKey: CodingKey {
  encoded internally as double-precision floating-point), a string, an ordered list of `LDValue` values (a JSON array),
  or a map of strings to `LDValue` values (a JSON object).
 
- This can be used to represent complex data in a user custom attribute, or to get a feature flag value that uses a
+ This can be used to represent complex data in a context attribute, or to get a feature flag value that uses a
  complex type or does not always use the same type.
  */
 public enum LDValue: Codable,

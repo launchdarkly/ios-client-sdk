@@ -84,30 +84,30 @@ public final class ObjcLDConfig: NSObject {
     }
 
     /**
-     Treat all user attributes as private for event reporting for all users.
+     Treat all context attributes as private for event reporting for all contexts.
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     When YES, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. (Default: NO)
+     When YES, ignores values in either LDConfig.privateContextAttributes or LDContext.privateAttributes. (Default: NO)
 
-     See Also: `privateUserAttributes` and `LDUser.privateAttributes` (`ObjcLDUser.privateAttributes`)
+     See Also: `privateContextAttributes` and `LDContext.privateAttributes` (`ObjcLDContext.privateAttributes`)
      */
-    @objc public var allUserAttributesPrivate: Bool {
-        get { config.allUserAttributesPrivate }
-        set { config.allUserAttributesPrivate = newValue }
+    @objc public var allContextAttributesPrivate: Bool {
+        get { config.allContextAttributesPrivate }
+        set { config.allContextAttributesPrivate = newValue }
     }
     /**
-     User attributes and top level custom dictionary keys to treat as private for event reporting for all users.
+     Context attributes and top level custom dictionary keys to treat as private for event reporting for all contexts.
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     To set private user attributes for a specific user, see `LDUser.privateAttributes` (`ObjcLDUser.privateAttributes`). (Default: `[]`)
+     To set private context attributes for a specific context, see `LDContext.privateAttributes` (`ObjcLDContext.privateAttributes`). (Default: `[]`)
 
-     See Also: `allUserAttributesPrivate` and `LDUser.privateAttributes` (`ObjcLDUser.privateAttributes`).
+     See Also: `allContextAttributesPrivate` and `LDContext.privateAttributes` (`ObjcLDContext.privateAttributes`).
      */
-    @objc public var privateUserAttributes: [String] {
-        get { config.privateUserAttributes.map { $0.name } }
-        set { config.privateUserAttributes = newValue.map { UserAttribute.forName($0) } }
+    @objc public var privateContextAttributes: [String] {
+        get { config.privateContextAttributes.map { $0.raw() } }
+        set { config.privateContextAttributes = newValue.map { Reference($0) } }
     }
 
     /**

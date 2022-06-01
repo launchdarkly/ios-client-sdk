@@ -5,7 +5,7 @@ protocol ClientServiceCreating {
     func makeKeyedValueCache(cacheKey: String?) -> KeyedValueCaching
     func makeFeatureFlagCache(mobileKey: String, maxCachedUsers: Int) -> FeatureFlagCaching
     func makeCacheConverter() -> CacheConverting
-    func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider
+    func makeDarklyServiceProvider(config: LDConfig, context: LDContext) -> DarklyServiceProvider
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing
     func makeFlagSynchronizer(streamingMode: LDStreamingMode,
                               pollingInterval: TimeInterval,
@@ -37,8 +37,8 @@ final class ClientServiceFactory: ClientServiceCreating {
         CacheConverter()
     }
 
-    func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {
-        DarklyService(config: config, user: user, serviceFactory: self)
+    func makeDarklyServiceProvider(config: LDConfig, context: LDContext) -> DarklyServiceProvider {
+        DarklyService(config: config, context: context, serviceFactory: self)
     }
 
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing {

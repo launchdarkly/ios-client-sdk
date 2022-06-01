@@ -5,8 +5,8 @@ protocol FeatureFlagCaching {
     // sourcery: defaultMockValue = KeyedValueCachingMock()
     var keyedValueCache: KeyedValueCaching { get }
 
-    func retrieveFeatureFlags(userKey: String) -> [LDFlagKey: FeatureFlag]?
-    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], userKey: String, lastUpdated: Date)
+    func retrieveFeatureFlags(contextKey: String) -> [LDFlagKey: FeatureFlag]?
+    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], contextKey: String, lastUpdated: Date)
 }
 
 final class FeatureFlagCache: FeatureFlagCaching {
@@ -24,25 +24,25 @@ final class FeatureFlagCache: FeatureFlagCaching {
         self.maxCachedUsers = maxCachedUsers
     }
 
-    func retrieveFeatureFlags(userKey: String) -> [LDFlagKey: FeatureFlag]? {
-        guard let cachedData = keyedValueCache.data(forKey: "flags-\(Util.sha256base64(userKey))"),
+    func retrieveFeatureFlags(contextKey: String) -> [LDFlagKey: FeatureFlag]? {
+        guard let cachedData = keyedValueCache.data(forKey: "flags-\(Util.sha256base64(contextKey))"),
               let cachedFlags = try? JSONDecoder().decode(FeatureFlagCollection.self, from: cachedData)
         else { return nil }
         return cachedFlags.flags
     }
 
-    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], userKey: String, lastUpdated: Date) {
+    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], contextKey: String, lastUpdated: Date) {
         guard self.maxCachedUsers != 0, let encoded = try? JSONEncoder().encode(featureFlags)
         else { return }
 
-        let userSha = Util.sha256base64(userKey)
-        self.keyedValueCache.set(encoded, forKey: "flags-\(userSha)")
+        let contextSha = Util.sha256base64(contextKey)
+        self.keyedValueCache.set(encoded, forKey: "flags-\(contextSha)")
 
         var cachedUsers: [String: Int64] = [:]
         if let cacheMetadata = self.keyedValueCache.data(forKey: "cached-users") {
             cachedUsers = (try? JSONDecoder().decode([String: Int64].self, from: cacheMetadata)) ?? [:]
         }
-        cachedUsers[userSha] = lastUpdated.millisSince1970
+        cachedUsers[contextSha] = lastUpdated.millisSince1970
         if cachedUsers.count > self.maxCachedUsers && self.maxCachedUsers > 0 {
             let sorted = cachedUsers.sorted { $0.value < $1.value }
             sorted.prefix(cachedUsers.count - self.maxCachedUsers).forEach { sha, _ in

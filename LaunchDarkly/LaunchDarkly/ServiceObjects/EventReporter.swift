@@ -9,7 +9,7 @@ protocol EventReporting {
 
     func record(_ event: Event)
     // swiftlint:disable:next function_parameter_count
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool)
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)
     func flush(completion: CompletionClosure?)
 }
 
@@ -54,18 +54,18 @@ class EventReporter: EventReporting {
     }
 
     // swiftlint:disable:next function_parameter_count
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) {
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool) {
         let recordingFeatureEvent = featureFlag?.trackEvents == true
         let recordingDebugEvent = featureFlag?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
 
         eventQueue.sync {
             flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue)
             if recordingFeatureEvent {
-                let featureEvent = FeatureEvent(key: flagKey, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false)
+                let featureEvent = FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false)
                 recordNoSync(featureEvent)
             }
             if recordingDebugEvent {
-                let debugEvent = FeatureEvent(key: flagKey, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: true)
+                let debugEvent = FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: true)
                 recordNoSync(debugEvent)
             }
         }
@@ -76,7 +76,7 @@ class EventReporter: EventReporting {
         else { return }
         eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: eventQueue, execute: reportEvents)
     }
-    
+
     private func stopReporting() {
         eventReportTimer?.cancel()
         eventReportTimer = nil
@@ -128,9 +128,11 @@ class EventReporter: EventReporting {
 
     private func publish(_ events: [Event], _ payloadId: String, _ completion: CompletionClosure?) {
         let encodingConfig: [CodingUserInfoKey: Any] =
-            [Event.UserInfoKeys.inlineUserInEvents: service.config.inlineUserInEvents,
-             LDUser.UserInfoKeys.allAttributesPrivate: service.config.allUserAttributesPrivate,
-             LDUser.UserInfoKeys.globalPrivateAttributes: service.config.privateUserAttributes.map { $0.name }]
+            [
+                Event.UserInfoKeys.inlineUserInEvents: service.config.inlineUserInEvents,
+                LDContext.UserInfoKeys.allAttributesPrivate: service.config.allContextAttributesPrivate,
+                LDContext.UserInfoKeys.globalPrivateAttributes: service.config.privateContextAttributes.map { $0 }
+            ]
         let encoder = JSONEncoder()
         encoder.userInfo = encodingConfig
         encoder.dateEncodingStrategy = .custom { date, encoder in

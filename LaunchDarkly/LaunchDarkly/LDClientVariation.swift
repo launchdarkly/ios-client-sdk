@@ -8,7 +8,7 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
-     - returns: the variation for the selected user, or `defaultValue` if the flag is not available.
+     - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
     public func boolVariation(forKey flagKey: LDFlagKey, defaultValue: Bool) -> Bool {
         variationDetailInternal(flagKey, defaultValue, needsReason: false).value
@@ -31,7 +31,7 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
-     - returns: the variation for the selected user, or `defaultValue` if the flag is not available.
+     - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
     public func intVariation(forKey flagKey: LDFlagKey, defaultValue: Int) -> Int {
         variationDetailInternal(flagKey, defaultValue, needsReason: false).value
@@ -54,7 +54,7 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
-     - returns: the variation for the selected user, or `defaultValue` if the flag is not available.
+     - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
     public func doubleVariation(forKey flagKey: LDFlagKey, defaultValue: Double) -> Double {
         variationDetailInternal(flagKey, defaultValue, needsReason: false).value
@@ -77,7 +77,7 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
-     - returns: the variation for the selected user, or `defaultValue` if the flag is not available.
+     - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
     public func stringVariation(forKey flagKey: LDFlagKey, defaultValue: String) -> String {
         variationDetailInternal(flagKey, defaultValue, needsReason: false).value
@@ -100,7 +100,7 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
-     - returns: the variation for the selected user, or `defaultValue` if the flag is not available.
+     - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
     public func jsonVariation(forKey flagKey: LDFlagKey, defaultValue: LDValue) -> LDValue {
         variationDetailInternal(flagKey, defaultValue, needsReason: false).value
@@ -137,7 +137,7 @@ extension LDClient {
                                                  value: result.value.toLDValue(),
                                                  defaultValue: defaultValue.toLDValue(),
                                                  featureFlag: featureFlag,
-                                                 user: user,
+                                                 context: context,
                                                  includeReason: needsReason)
         return result
     }

@@ -46,7 +46,7 @@ public final class ObjcLDClient: NSObject {
     // MARK: - State Controls and Indicators
 
     private var ldClient: LDClient
-    
+
     /**
      Reports the online/offline state of the LDClient.
 
@@ -110,9 +110,10 @@ public final class ObjcLDClient: NSObject {
 
         - parameter user: The ObjcLDUser set with the desired user.
        */
-    @objc public func identify(user: ObjcLDUser) {
-        ldClient.identify(user: user.user, completion: nil)
-    }
+// TODO(mmk) Come back to this
+//    @objc public func identify(context: ObjcLDContext) {
+//        ldClient.identify(context: context.context, completion: nil)
+//    }
 
     /**
         The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
@@ -126,9 +127,10 @@ public final class ObjcLDClient: NSObject {
         - parameter user: The ObjcLDUser set with the desired user.
         - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
        */
-    @objc public func identify(user: ObjcLDUser, completion: (() -> Void)? = nil) {
-        ldClient.identify(user: user.user, completion: completion)
-    }
+// TODO(mmk) Come back to this
+//    @objc public func identify(context: ObjcLDContext, completion: (() -> Void)? = nil) {
+//        ldClient.identify(context: context.context, completion: completion)
+//    }
 
     /**
      Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning default values.
@@ -221,13 +223,13 @@ public final class ObjcLDClient: NSObject {
     @objc public func integerVariation(forKey key: LDFlagKey, defaultValue: Int) -> Int {
         ldClient.intVariation(forKey: key, defaultValue: defaultValue)
     }
-    
+
     /**
      See [integerVariation](x-source-tag://integerVariation) for more information on variation methods.
-     
+
      - parameter key: The LDFlagKey for the requested feature flag.
      - parameter defaultValue: The default value to return if the feature flag key does not exist.
-     
+
      - returns: ObjcLDIntegerEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
     @objc public func integerVariationDetail(forKey key: LDFlagKey, defaultValue: Int) -> ObjcLDIntegerEvaluationDetail {
@@ -258,13 +260,13 @@ public final class ObjcLDClient: NSObject {
     @objc public func doubleVariation(forKey key: LDFlagKey, defaultValue: Double) -> Double {
         ldClient.doubleVariation(forKey: key, defaultValue: defaultValue)
     }
-    
+
     /**
      See [doubleVariation](x-source-tag://doubleVariation) for more information on variation methods.
-     
+
      - parameter key: The LDFlagKey for the requested feature flag.
      - parameter defaultValue: The default value to return if the feature flag key does not exist.
-     
+
      - returns: ObjcLDDoubleEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
     @objc public func doubleVariationDetail(forKey key: LDFlagKey, defaultValue: Double) -> ObjcLDDoubleEvaluationDetail {
@@ -295,13 +297,13 @@ public final class ObjcLDClient: NSObject {
     @objc public func stringVariation(forKey key: LDFlagKey, defaultValue: String) -> String {
         ldClient.stringVariation(forKey: key, defaultValue: defaultValue)
     }
-    
+
     /**
      See [stringVariation](x-source-tag://stringVariation) for more information on variation methods.
-     
+
      - parameter key: The LDFlagKey for the requested feature flag.
      - parameter defaultValue: The default value to return if the feature flag key does not exist.
-     
+
      - returns: ObjcLDStringEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
     @objc public func stringVariationDetail(forKey key: LDFlagKey, defaultValue: String) -> ObjcLDStringEvaluationDetail {
@@ -330,13 +332,13 @@ public final class ObjcLDClient: NSObject {
     @objc public func jsonVariation(forKey key: LDFlagKey, defaultValue: ObjcLDValue) -> ObjcLDValue {
         ObjcLDValue(wrappedValue: ldClient.jsonVariation(forKey: key, defaultValue: defaultValue.wrappedValue))
     }
-    
+
     /**
      See [arrayVariation](x-source-tag://arrayVariation) for more information on variation methods.
-     
+
      - parameter key: The LDFlagKey for the requested feature flag.
      - parameter defaultValue: The default value to return if the feature flag key does not exist.
-     
+
      - returns: ObjcLDJSONEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
     @objc public func jsonVariationDetail(forKey key: LDFlagKey, defaultValue: ObjcLDValue) -> ObjcLDJSONEvaluationDetail {
@@ -550,9 +552,10 @@ public final class ObjcLDClient: NSObject {
      - parameter completion: Closure called when the embedded `setOnline` call completes. (Optional)
     */
     /// - Tag: start
-    @objc public static func start(configuration: ObjcLDConfig, user: ObjcLDUser, completion: (() -> Void)? = nil) {
-        LDClient.start(config: configuration.config, user: user.user, completion: completion)
-    }
+// TODO(mmk) Come back to this
+//    @objc public static func start(configuration: ObjcLDConfig, context: ObjcLDContext, completion: (() -> Void)? = nil) {
+//        LDClient.start(config: configuration.config, context: context.context, completion: completion)
+//    }
 
     /**
     See [start](x-source-tag://start) for more information on starting the SDK.
@@ -562,9 +565,10 @@ public final class ObjcLDClient: NSObject {
     - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network.
     - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
     */
-    @objc public static func start(configuration: ObjcLDConfig, user: ObjcLDUser, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
-        LDClient.start(config: configuration.config, user: user.user, startWaitSeconds: startWaitSeconds, completion: completion)
-    }
+// TODO(mmk) Come back to this
+//    @objc public static func start(configuration: ObjcLDConfig, context: ObjcLDContext, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+//        LDClient.start(config: configuration.config, context: context.context, startWaitSeconds: startWaitSeconds, completion: completion)
+//    }
 
     private init(client: LDClient) {
         ldClient = client

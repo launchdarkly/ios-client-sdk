@@ -16,8 +16,8 @@ final class LDConfigSpec: XCTestCase {
         fileprivate static let enableBackgroundUpdates = true
         fileprivate static let startOnline = false
 
-        fileprivate static let allUserAttributesPrivate = true
-        fileprivate static let privateUserAttributes: [UserAttribute] = [UserAttribute.forName("dummy")]
+        fileprivate static let allContextAttributesPrivate = true
+        fileprivate static let privateContextAttributes: [Reference] = [Reference("dummy")]
 
         fileprivate static let useReport = true
 
@@ -47,8 +47,8 @@ final class LDConfigSpec: XCTestCase {
          ("enable background updates", Constants.enableBackgroundUpdates, { c, v in c.enableBackgroundUpdates = v as! Bool }),
          ("start online", Constants.startOnline, { c, v in c.startOnline = v as! Bool }),
          ("debug mode", Constants.debugMode, { c, v in c.isDebugMode = v as! Bool }),
-         ("all user attributes private", Constants.allUserAttributesPrivate, { c, v in c.allUserAttributesPrivate = v as! Bool }),
-         ("private user attributes", Constants.privateUserAttributes, { c, v in c.privateUserAttributes = (v as! [UserAttribute])}),
+         ("all user attributes private", Constants.allContextAttributesPrivate, { c, v in c.allContextAttributesPrivate = v as! Bool }),
+         ("private user attributes", Constants.privateContextAttributes, { c, v in c.privateContextAttributes = (v as! [Reference])}),
          ("use report", Constants.useReport, { c, v in c.useReport = v as! Bool }),
          ("inline user in events", Constants.inlineUserInEvents, { c, v in c.inlineUserInEvents = v as! Bool }),
          ("evaluation reasons", Constants.evaluationReasons, { c, v in c.evaluationReasons = v as! Bool }),
@@ -73,8 +73,8 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.streamingMode, LDConfig.Defaults.streamingMode)
         XCTAssertEqual(config.enableBackgroundUpdates, LDConfig.Defaults.enableBackgroundUpdates)
         XCTAssertEqual(config.startOnline, LDConfig.Defaults.startOnline)
-        XCTAssertEqual(config.allUserAttributesPrivate, LDConfig.Defaults.allUserAttributesPrivate)
-        XCTAssertEqual(config.privateUserAttributes, LDConfig.Defaults.privateUserAttributes)
+        XCTAssertEqual(config.allContextAttributesPrivate, LDConfig.Defaults.allContextAttributesPrivate)
+        XCTAssertEqual(config.privateContextAttributes, LDConfig.Defaults.privateContextAttributes)
         XCTAssertEqual(config.useReport, LDConfig.Defaults.useReport)
         XCTAssertEqual(config.inlineUserInEvents, LDConfig.Defaults.inlineUserInEvents)
         XCTAssertEqual(config.isDebugMode, LDConfig.Defaults.debugMode)
@@ -107,8 +107,8 @@ final class LDConfigSpec: XCTestCase {
             XCTAssertEqual(config.streamingMode, Constants.streamingMode, "\(os)")
             XCTAssertEqual(config.enableBackgroundUpdates, os.isBackgroundEnabled, "\(os)")
             XCTAssertEqual(config.startOnline, Constants.startOnline, "\(os)")
-            XCTAssertEqual(config.allUserAttributesPrivate, Constants.allUserAttributesPrivate, "\(os)")
-            XCTAssertEqual(config.privateUserAttributes, Constants.privateUserAttributes, "\(os)")
+            XCTAssertEqual(config.allContextAttributesPrivate, Constants.allContextAttributesPrivate, "\(os)")
+            XCTAssertEqual(config.privateContextAttributes, Constants.privateContextAttributes, "\(os)")
             XCTAssertEqual(config.useReport, Constants.useReport, "\(os)")
             XCTAssertEqual(config.inlineUserInEvents, Constants.inlineUserInEvents, "\(os)")
             XCTAssertEqual(config.isDebugMode, Constants.debugMode, "\(os)")
