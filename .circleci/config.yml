@@ -165,6 +165,10 @@ workflows:
   build:
     jobs:
       - build:
+          name: Xcode 13.3 - Swift 5.6
+          xcode-version: '13.3.1'
+          ios-sim: 'platform=iOS Simulator,name=iPhone 13,OS=15.4'
+      - build:
           name: Xcode 13.1 - Swift 5.5
           xcode-version: '13.1.0'
           ios-sim: 'platform=iOS Simulator,name=iPhone 11,OS=15.0'
