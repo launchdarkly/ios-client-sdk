@@ -10,7 +10,7 @@ final class CacheConverterSpec: XCTestCase {
     private static var upToDateData: Data!
 
     override class func setUp() {
-        upToDateData = try! JSONEncoder().encode(["version": 7])
+        upToDateData = try! JSONEncoder().encode(["version": 8])
     }
 
     override func setUp() {
@@ -25,7 +25,9 @@ final class CacheConverterSpec: XCTestCase {
 
     func testUpToDate() {
         let v7valueCacheMock = KeyedValueCachingMock()
+        v7valueCacheMock.keysReturnValue = ["key1", "key2"]
         serviceFactory.makeFeatureFlagCacheReturnValue.keyedValueCache = v7valueCacheMock
+        serviceFactory.makeKeyedValueCacheReturnValue = v7valueCacheMock
         v7valueCacheMock.dataReturnValue = CacheConverterSpec.upToDateData
         CacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: ["key1", "key2"], maxCachedUsers: 0)
         XCTAssertEqual(serviceFactory.makeFeatureFlagCacheCallCount, 2)

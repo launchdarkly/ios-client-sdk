@@ -6,7 +6,6 @@ evaluation/parameterized/evaluationReasons=false/basic values - bool/flag2-bool/
 evaluation/parameterized/evaluationReasons=false/basic values - bool/flag2-bool/evaluate all flags
 streaming/requests/user properties/GET
 streaming/requests/user properties/REPORT
-streaming/updates/flag delete for previously nonexistent flag is applied
 polling/requests/method and headers/GET
 polling/requests/method and headers/REPORT
 polling/requests/URL path is computed correctly/base URI has no trailing slash/GET

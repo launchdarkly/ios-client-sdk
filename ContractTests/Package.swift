@@ -6,7 +6,7 @@ let package = Package(
     name: "ContractTests",
     platforms: [
         .iOS(.v10),
-        .macOS(.v10_12),
+        .macOS(.v10_15),
         .watchOS(.v3),
         .tvOS(.v10)
     ],
@@ -17,7 +17,7 @@ let package = Package(
     ],
     dependencies: [
         Package.Dependency.package(name: "LaunchDarkly", path: ".."),
-        .package(url: "https://github.com/vapor/vapor.git", from: "3.0.0")
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0")
     ],
     targets: [
         .target(

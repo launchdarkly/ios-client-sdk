@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   contract-tests:
     macos:
-      xcode: '13.1.0'
+      xcode: '13.4.1'
 
     steps:
       - checkout

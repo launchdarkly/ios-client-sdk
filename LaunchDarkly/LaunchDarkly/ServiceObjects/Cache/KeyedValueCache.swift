@@ -7,6 +7,7 @@ protocol KeyedValueCaching {
     func dictionary(forKey: String) -> [String: Any]?
     func removeObject(forKey: String)
     func removeAll()
+    func keys() -> [String]
 }
 
 extension UserDefaults: KeyedValueCaching {
@@ -16,5 +17,9 @@ extension UserDefaults: KeyedValueCaching {
 
     func removeAll() {
         dictionaryRepresentation().keys.forEach { removeObject(forKey: $0) }
+    }
+
+    func keys() -> [String] {
+        dictionaryRepresentation().keys.map { String($0) }
     }
 }
