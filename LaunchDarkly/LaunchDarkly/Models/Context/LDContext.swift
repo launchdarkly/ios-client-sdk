@@ -304,6 +304,14 @@ public struct LDContext: Encodable, Equatable {
         return canonicalizedKey
     }
 
+    func fullyQualifiedHashedKey() -> String {
+        if kind.isUser() {
+            return Util.sha256base64(fullyQualifiedKey())
+        }
+
+        return Util.sha256base64(fullyQualifiedKey()) + "$"
+    }
+
     /// TKTK
     public func isMulti() -> Bool {
         return self.kind.isMulti()
@@ -563,7 +571,7 @@ extension LDContext: Decodable {
     }
 
     enum UserCodingKeys: String, CodingKey {
-        case key, name, firstName, lastName, country, ip, email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", config, privateAttributeNames, secondary
+        case key, name, firstName, lastName, country, ip, email, avatar, custom, isAnonymous = "anonymous", privateAttributeNames, secondary
     }
 }
 

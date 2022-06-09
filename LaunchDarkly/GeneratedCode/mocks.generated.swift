@@ -128,15 +128,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    var deviceModelSetCount = 0
-    var setDeviceModelCallback: (() throws -> Void)?
-    var deviceModel: String = Constants.deviceModel {
-        didSet {
-            deviceModelSetCount += 1
-            try! setDeviceModelCallback?()
-        }
-    }
-
     var systemVersionSetCount = 0
     var setSystemVersionCallback: (() throws -> Void)?
     var systemVersion: String = Constants.systemVersion {

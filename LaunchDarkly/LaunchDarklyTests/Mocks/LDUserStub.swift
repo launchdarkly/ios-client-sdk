@@ -22,15 +22,6 @@ extension LDUser {
                                             "stub.user.custom.keyD": 2.71828,
                                             "stub.user.custom.keyE": [0, 1, 2],
                                             "stub.user.custom.keyF": ["1": 1, "2": 2, "3": 3]]
-
-        static func custom(includeSystemValues: Bool) -> [String: LDValue] {
-            var custom = StubConstants.custom
-            if includeSystemValues {
-                custom["device"] = StubConstants.device
-                custom["os"] = StubConstants.operatingSystem
-            }
-            return custom
-        }
     }
 
     static func stub(key: String? = nil,
@@ -43,7 +34,7 @@ extension LDUser {
                           ipAddress: StubConstants.ipAddress,
                           email: StubConstants.email,
                           avatar: StubConstants.avatar,
-                          custom: StubConstants.custom(includeSystemValues: true),
+                          custom: StubConstants.custom,
                           isAnonymous: StubConstants.isAnonymous,
                           secondary: StubConstants.secondary)
         return user

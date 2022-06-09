@@ -25,7 +25,7 @@ final class FeatureFlagCache: FeatureFlagCaching {
     }
 
     func retrieveFeatureFlags(contextKey: String) -> [LDFlagKey: FeatureFlag]? {
-        guard let cachedData = keyedValueCache.data(forKey: "flags-\(Util.sha256base64(contextKey))"),
+        guard let cachedData = keyedValueCache.data(forKey: "flags-\(contextKey)"),
               let cachedFlags = try? JSONDecoder().decode(FeatureFlagCollection.self, from: cachedData)
         else { return nil }
         return cachedFlags.flags
@@ -35,14 +35,13 @@ final class FeatureFlagCache: FeatureFlagCaching {
         guard self.maxCachedUsers != 0, let encoded = try? JSONEncoder().encode(featureFlags)
         else { return }
 
-        let contextSha = Util.sha256base64(contextKey)
-        self.keyedValueCache.set(encoded, forKey: "flags-\(contextSha)")
+        self.keyedValueCache.set(encoded, forKey: "flags-\(contextKey)")
 
         var cachedUsers: [String: Int64] = [:]
         if let cacheMetadata = self.keyedValueCache.data(forKey: "cached-users") {
             cachedUsers = (try? JSONDecoder().decode([String: Int64].self, from: cacheMetadata)) ?? [:]
         }
-        cachedUsers[contextSha] = lastUpdated.millisSince1970
+        cachedUsers[contextKey] = lastUpdated.millisSince1970
         if cachedUsers.count > self.maxCachedUsers && self.maxCachedUsers > 0 {
             let sorted = cachedUsers.sorted { $0.value < $1.value }
             sorted.prefix(cachedUsers.count - self.maxCachedUsers).forEach { sha, _ in

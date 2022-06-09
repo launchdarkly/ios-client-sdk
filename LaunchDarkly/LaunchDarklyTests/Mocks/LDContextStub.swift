@@ -15,8 +15,6 @@ extension LDContext {
         static let ipAddress: LDValue = "stub.user.ipAddress"
         static let email: LDValue = "stub.user@email.com"
         static let avatar: LDValue = "stub.user.avatar"
-        static let device: LDValue = "stub.user.custom.device"
-        static let operatingSystem: LDValue = "stub.user.custom.operatingSystem"
         static let custom: [String: LDValue] = ["stub.user.custom.keyA": "stub.user.custom.valueA",
                                             "stub.user.custom.keyB": true,
                                             "stub.user.custom.keyC": 1027,
@@ -44,11 +42,7 @@ extension LDContext {
             builder.trySetValue(key, value)
         }
 
-        builder.trySetValue("device", StubConstants.device)
-        builder.trySetValue("os", StubConstants.operatingSystem)
-
         var context: LDContext? = nil
-
         if case .success(let ctx) = builder.build() {
             context = ctx
         }

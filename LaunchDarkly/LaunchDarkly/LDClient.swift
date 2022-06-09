@@ -295,7 +295,7 @@ public class LDClient {
             let wasOnline = self.isOnline
             self.internalSetOnline(false)
 
-            let cachedContextFlags = self.flagCache.retrieveFeatureFlags(contextKey: self.context.fullyQualifiedKey()) ?? [:]
+            let cachedContextFlags = self.flagCache.retrieveFeatureFlags(contextKey: self.context.fullyQualifiedHashedKey()) ?? [:]
             flagStore.replaceStore(newFlags: FeatureFlagCollection(cachedContextFlags))
             self.service.context = self.context
             self.service.clearFlagResponseCache()
@@ -504,7 +504,7 @@ public class LDClient {
 
     private func updateCacheAndReportChanges(context: LDContext,
                                              oldFlags: [LDFlagKey: FeatureFlag]) {
-        flagCache.storeFeatureFlags(flagStore.featureFlags, contextKey: context.fullyQualifiedKey(), lastUpdated: Date())
+        flagCache.storeFeatureFlags(flagStore.featureFlags, contextKey: context.fullyQualifiedHashedKey(), lastUpdated: Date())
         flagChangeNotifier.notifyObservers(oldFlags: oldFlags, newFlags: flagStore.featureFlags)
     }
 
@@ -733,7 +733,7 @@ public class LDClient {
                                                                     onSyncComplete: onFlagSyncComplete)
 
         Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
-        if let cachedFlags = flagCache.retrieveFeatureFlags(contextKey: context.fullyQualifiedKey()), !cachedFlags.isEmpty {
+        if let cachedFlags = flagCache.retrieveFeatureFlags(contextKey: context.fullyQualifiedHashedKey()), !cachedFlags.isEmpty {
             flagStore.replaceStore(newFlags: FeatureFlagCollection(cachedFlags))
         }
 

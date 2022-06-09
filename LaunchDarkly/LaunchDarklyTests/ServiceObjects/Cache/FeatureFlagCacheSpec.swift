@@ -29,7 +29,7 @@ final class FeatureFlagCacheSpec: XCTestCase {
         let flagCache = FeatureFlagCache(serviceFactory: serviceFactory, mobileKey: "abc", maxCachedUsers: 0)
         XCTAssertNil(flagCache.retrieveFeatureFlags(contextKey: "user1"))
         XCTAssertEqual(mockValueCache.dataCallCount, 1)
-        XCTAssertEqual(mockValueCache.dataReceivedForKey, "flags-\(Util.sha256base64("user1"))")
+        XCTAssertEqual(mockValueCache.dataReceivedForKey, "flags-user1")
     }
 
     func testRetrieveInvalidData() {
@@ -50,7 +50,7 @@ final class FeatureFlagCacheSpec: XCTestCase {
         let retrieved = flagCache.retrieveFeatureFlags(contextKey: "user1")
         XCTAssertEqual(retrieved, testFlagCollection.flags)
         XCTAssertEqual(mockValueCache.dataCallCount, 1)
-        XCTAssertEqual(mockValueCache.dataReceivedForKey, "flags-\(Util.sha256base64("user1"))")
+        XCTAssertEqual(mockValueCache.dataReceivedForKey, "flags-user1")
     }
 
     func testStoreCacheDisabled() {
@@ -77,7 +77,7 @@ final class FeatureFlagCacheSpec: XCTestCase {
             }
         }
         let flagCache = FeatureFlagCache(serviceFactory: serviceFactory, mobileKey: "abc", maxCachedUsers: -1)
-        flagCache.storeFeatureFlags([:], contextKey: "user1", lastUpdated: now)
+        flagCache.storeFeatureFlags([:], contextKey: hashedUserKey, lastUpdated: now)
         XCTAssertEqual(count, 3)
     }
 
@@ -98,7 +98,7 @@ final class FeatureFlagCacheSpec: XCTestCase {
         let earlier = now.addingTimeInterval(-30.0)
         mockValueCache.dataReturnValue = try JSONEncoder().encode(["key1": earlier.millisSince1970])
         let flagCache = FeatureFlagCache(serviceFactory: serviceFactory, mobileKey: "abc", maxCachedUsers: 1)
-        flagCache.storeFeatureFlags(testFlagCollection.flags, contextKey: "user1", lastUpdated: now)
+        flagCache.storeFeatureFlags(testFlagCollection.flags, contextKey: hashedUserKey, lastUpdated: now)
         XCTAssertEqual(mockValueCache.removeObjectCallCount, 1)
         XCTAssertEqual(mockValueCache.removeObjectReceivedForKey, "flags-key1")
         let setMetadata = try JSONDecoder().decode([String: Int64].self, from: mockValueCache.setReceivedArguments!.value)
@@ -116,7 +116,7 @@ final class FeatureFlagCacheSpec: XCTestCase {
         let flagCache = FeatureFlagCache(serviceFactory: serviceFactory, mobileKey: "abc", maxCachedUsers: 2)
         var removedObjects: [String] = []
         mockValueCache.removeObjectCallback = { removedObjects.append(self.mockValueCache.removeObjectReceivedForKey!) }
-        flagCache.storeFeatureFlags(testFlagCollection.flags, contextKey: "user1", lastUpdated: later)
+        flagCache.storeFeatureFlags(testFlagCollection.flags, contextKey: hashedUserKey, lastUpdated: later)
         XCTAssertEqual(mockValueCache.removeObjectCallCount, 2)
         XCTAssertTrue(removedObjects.contains("flags-key1"))
         XCTAssertTrue(removedObjects.contains("flags-key2"))
@@ -129,7 +129,7 @@ final class FeatureFlagCacheSpec: XCTestCase {
         let now = Date()
         mockValueCache.dataReturnValue = try JSONEncoder().encode(["key1": "123"])
         let flagCache = FeatureFlagCache(serviceFactory: serviceFactory, mobileKey: "abc", maxCachedUsers: 1)
-        flagCache.storeFeatureFlags(testFlagCollection.flags, contextKey: "user1", lastUpdated: now)
+        flagCache.storeFeatureFlags(testFlagCollection.flags, contextKey: hashedUserKey, lastUpdated: now)
         XCTAssertEqual(mockValueCache.removeObjectCallCount, 0)
         let setMetadata = try JSONDecoder().decode([String: Int64].self, from: mockValueCache.setReceivedArguments!.value)
         XCTAssertEqual(setMetadata, [hashedUserKey: now.millisSince1970])

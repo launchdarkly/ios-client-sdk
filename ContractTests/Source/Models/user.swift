@@ -6,7 +6,7 @@ extension LDUser: Decodable {
     /// String keys associated with LDUser properties.
     public enum CodingKeys: String, CodingKey {
         /// Key names match the corresponding LDUser property
-        case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", config, privateAttributes = "privateAttributeNames", secondary
+        case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", privateAttributes = "privateAttributeNames", secondary
     }
 
     public init(from decoder: Decoder) throws {

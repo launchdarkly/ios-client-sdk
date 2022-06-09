@@ -26,7 +26,7 @@ final class LDUserSpec: QuickSpec {
                               ipAddress: LDUser.StubConstants.ipAddress,
                               email: LDUser.StubConstants.email,
                               avatar: LDUser.StubConstants.avatar,
-                              custom: LDUser.StubConstants.custom(includeSystemValues: true),
+                              custom: LDUser.StubConstants.custom,
                               isAnonymous: LDUser.StubConstants.isAnonymous,
                               privateAttributes: LDUser.optionalAttributes,
                               secondary: LDUser.StubConstants.secondary)
@@ -41,7 +41,7 @@ final class LDUserSpec: QuickSpec {
                 expect(user.ipAddress) == LDUser.StubConstants.ipAddress
                 expect(user.email) == LDUser.StubConstants.email
                 expect(user.avatar) == LDUser.StubConstants.avatar
-                expect(user.custom == LDUser.StubConstants.custom(includeSystemValues: true)).to(beTrue())
+                expect(user.custom == LDUser.StubConstants.custom).to(beTrue())
                 expect(user.privateAttributes) == LDUser.optionalAttributes
             }
             it("without setting anonymous") {
@@ -67,9 +67,7 @@ final class LDUserSpec: QuickSpec {
                     expect(user.ipAddress).to(beNil())
                     expect(user.email).to(beNil())
                     expect(user.avatar).to(beNil())
-                    expect(user.custom.count) == 2
-                    expect(user.custom["device"]) == .string(environmentReporter.deviceModel)
-                    expect(user.custom["os"]) == .string(environmentReporter.systemVersion)
+                    expect(user.custom.count) == 0
                     expect(user.privateAttributes).to(beEmpty())
                     expect(user.secondary).to(beNil())
                 }
@@ -114,9 +112,7 @@ final class LDUserSpec: QuickSpec {
                 expect(user.ipAddress).to(beNil())
                 expect(user.email).to(beNil())
                 expect(user.avatar).to(beNil())
-                expect(user.custom.count) == 2
-                expect(user.custom["device"]) == .string(environmentReporter.deviceModel)
-                expect(user.custom["os"]) == .string(environmentReporter.systemVersion)
+                expect(user.custom.count) == 0
 
                 expect(user.privateAttributes).to(beEmpty())
             }

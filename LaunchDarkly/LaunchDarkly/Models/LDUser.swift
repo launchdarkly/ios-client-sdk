@@ -108,8 +108,6 @@ public struct LDUser: Encodable, Equatable {
             self.isAnonymousNullable = true
         }
         self.custom = custom ?? [:]
-        self.custom.merge(["device": .string(environmentReporter.deviceModel),
-                           "os": .string(environmentReporter.systemVersion)]) { lhs, _ in lhs }
         self.privateAttributes = privateAttributes ?? []
         Log.debug(typeName(and: #function) + "user: \(self)")
     }
@@ -118,10 +116,7 @@ public struct LDUser: Encodable, Equatable {
      Internal initializer that accepts an environment reporter, used for testing
     */
     init(environmentReporter: EnvironmentReporting) {
-        self.init(key: LDUser.defaultKey(environmentReporter: environmentReporter),
-                  custom: ["device": .string(environmentReporter.deviceModel),
-                           "os": .string(environmentReporter.systemVersion)],
-                  isAnonymous: true)
+        self.init(key: LDUser.defaultKey(environmentReporter: environmentReporter), isAnonymous: true)
     }
 
     private func value(for attribute: UserAttribute) -> Any? {
