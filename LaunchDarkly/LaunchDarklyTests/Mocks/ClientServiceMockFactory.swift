@@ -1,5 +1,5 @@
 import Foundation
-import LDSwiftEventSource
+@_implementationOnly import LDSwiftEventSource
 @testable import LaunchDarkly
 
 final class ClientServiceMockFactory: ClientServiceCreating {

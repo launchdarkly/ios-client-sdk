@@ -1,5 +1,5 @@
 import Foundation
-import LDSwiftEventSource
+@_implementationOnly import LDSwiftEventSource
 
 typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Error?)
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void

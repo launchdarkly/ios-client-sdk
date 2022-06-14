@@ -1,6 +1,6 @@
 import Foundation
 import Dispatch
-import LDSwiftEventSource
+@_implementationOnly import LDSwiftEventSource
 
 // sourcery: autoMockable
 protocol LDFlagSynchronizing {
