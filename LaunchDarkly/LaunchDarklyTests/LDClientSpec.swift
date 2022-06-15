@@ -84,7 +84,7 @@ final class LDClientSpec: QuickSpec {
                 let mobileKey = self.serviceFactoryMock.makeFeatureFlagCacheReceivedParameters!.mobileKey
                 let mockCache = FeatureFlagCachingMock()
                 mockCache.retrieveFeatureFlagsCallback = {
-                    mockCache.retrieveFeatureFlagsReturnValue = self.cachedFlags[mobileKey]?[mockCache.retrieveFeatureFlagsReceivedContextKey!]
+                    mockCache.retrieveFeatureFlagsReturnValue = StoredItems(items: self.cachedFlags[mobileKey]?[mockCache.retrieveFeatureFlagsReceivedContextKey!] ?? [:])
                 }
                 self.serviceFactoryMock.makeFeatureFlagCacheReturnValue = mockCache
             }
@@ -330,14 +330,14 @@ final class LDClientSpec: QuickSpec {
             }
         }
         it("when called with cached flags for the user and environment") {
-            let cachedFlags = ["test-flag": FeatureFlag(flagKey: "test-flag")]
-            let testContext = TestContext().withCached(flags: cachedFlags)
+            let cachedFlags = ["test-flag": StorageItem.item(FeatureFlag(flagKey: "test-flag"))]
+            let testContext = TestContext().withCached(flags: cachedFlags.featureFlags)
             withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
 
             expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
             expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedContextKey) == testContext.context.fullyQualifiedHashedKey()
 
-            expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags?.flags) == cachedFlags
+            expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags) == cachedFlags
 
             expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataCallCount) == 1
             expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedUsers) == testContext.config.maxCachedUsers
@@ -404,7 +404,7 @@ final class LDClientSpec: QuickSpec {
                     context(withCached ? "with cached flags" : "") {
                         beforeEach {
                             if withCached {
-                                _ = testContext.withCached(flags: FlagMaintainingMock.stubFlags())
+                                _ = testContext.withCached(flags: FlagMaintainingMock.stubStoredItems().featureFlags)
                             }
                         }
                         it("does not complete without timeout") {
@@ -580,9 +580,9 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
             }
             it("when the new user has cached feature flags") {
-                let stubFlags = FlagMaintainingMock.stubFlags()
+                let stubFlags = FlagMaintainingMock.stubStoredItems()
                 let newContext = LDContext.stub()
-                let testContext = TestContext().withCached(contextKey: newContext.fullyQualifiedHashedKey(), flags: stubFlags)
+                let testContext = TestContext().withCached(contextKey: newContext.fullyQualifiedHashedKey(), flags: stubFlags.featureFlags)
                 testContext.start()
                 testContext.featureFlagCachingMock.reset()
 
@@ -590,7 +590,7 @@ final class LDClientSpec: QuickSpec {
 
                 expect(testContext.subject.context) == newContext
                 expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
-                expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags?.flags) == stubFlags
+                expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags) == stubFlags
             }
         }
     }
@@ -729,7 +729,7 @@ final class LDClientSpec: QuickSpec {
             }
             context("flag store contains the requested value") {
                 beforeEach {
-                    testContext.flagStoreMock.replaceStore(newFlags: FeatureFlagCollection(FlagMaintainingMock.stubFlags()))
+                    testContext.flagStoreMock.replaceStore(newStoredItems: FlagMaintainingMock.stubStoredItems())
                 }
                 context("non-Optional default value") {
                     it("returns the flag value") {
@@ -746,7 +746,7 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value) == DarklyServiceMock.FlagValues.bool
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue) == .bool(DefaultFlagValues.bool)
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.featureFlags[DarklyServiceMock.FlagKeys.bool]
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.storedItems.featureFlags[DarklyServiceMock.FlagKeys.bool]
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.context) == testContext.context
                     }
                 }
@@ -864,30 +864,30 @@ final class LDClientSpec: QuickSpec {
         testContext.start()
         testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
 
-        let newFlags = ["flag1": FeatureFlag(flagKey: "flag1")]
+        let newStoredItems = ["flag1": StorageItem.item(FeatureFlag(flagKey: "flag1"))]
         var updateDate: Date!
         waitUntil { done in
             testContext.changeNotifierMock.notifyObserversCallback = done
             updateDate = Date()
-            testContext.onSyncComplete?(.flagCollection(FeatureFlagCollection(newFlags)))
+            testContext.onSyncComplete?(.flagCollection(FeatureFlagCollection(newStoredItems.featureFlags)))
         }
 
         expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
-        expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags?.flags) == newFlags
+        expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags) == newStoredItems
 
         expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == newFlags
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storedItems) == newStoredItems
         expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.contextKey) == testContext.context.fullyQualifiedHashedKey()
         expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
 
         expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.featureFlags
+        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.storedItems.featureFlags
         expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags) == [:]
     }
 
     func onSyncCompleteStreamingPatchSpec() {
-        let stubFlags = FlagMaintainingMock.stubFlags()
-        let testContext = TestContext(startOnline: true).withCached(flags: stubFlags)
+        let stubFlags = FlagMaintainingMock.stubStoredItems()
+        let testContext = TestContext(startOnline: true).withCached(flags: stubFlags.featureFlags)
         testContext.start()
         testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
         let updateFlag = FeatureFlag(flagKey: "abc")
@@ -903,18 +903,18 @@ final class LDClientSpec: QuickSpec {
         expect(testContext.flagStoreMock.updateStoreReceivedUpdatedFlag) == updateFlag
 
         expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storedItems) == testContext.flagStoreMock.storedItems
         expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.contextKey) == testContext.context.fullyQualifiedHashedKey()
         expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
 
         expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.featureFlags
-        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == stubFlags).to(beTrue())
+        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.storedItems.featureFlags
+        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == stubFlags.featureFlags).to(beTrue())
     }
 
     func onSyncCompleteDeleteFlagSpec() {
-        let stubFlags = FlagMaintainingMock.stubFlags()
-        let testContext = TestContext(startOnline: true).withCached(flags: stubFlags)
+        let stubFlags = FlagMaintainingMock.stubStoredItems()
+        let testContext = TestContext(startOnline: true).withCached(flags: stubFlags.featureFlags)
         testContext.start()
         testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
         let deleteResponse = DeleteResponse(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
@@ -930,13 +930,13 @@ final class LDClientSpec: QuickSpec {
         expect(testContext.flagStoreMock.deleteFlagReceivedDeleteResponse) == deleteResponse
 
         expect(testContext.featureFlagCachingMock.storeFeatureFlagsCallCount) == 1
-        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.featureFlags) == testContext.flagStoreMock.featureFlags
+        expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.storedItems.featureFlags) == testContext.flagStoreMock.storedItems.featureFlags
         expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.contextKey) == testContext.context.fullyQualifiedHashedKey()
         expect(testContext.featureFlagCachingMock.storeFeatureFlagsReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
 
         expect(testContext.changeNotifierMock.notifyObserversCallCount) == 1
-        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.featureFlags
-        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == stubFlags).to(beTrue())
+        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.newFlags) == testContext.flagStoreMock.storedItems.featureFlags
+        expect(testContext.changeNotifierMock.notifyObserversReceivedArguments?.oldFlags == stubFlags.featureFlags).to(beTrue())
     }
 
     func onSyncCompleteErrorSpec() {
@@ -1261,15 +1261,15 @@ final class LDClientSpec: QuickSpec {
     }
 
     private func allFlagsSpec() {
-        let stubFlags = FlagMaintainingMock.stubFlags()
+        let stubFlags = FlagMaintainingMock.stubStoredItems()
         describe("allFlags") {
             it("returns all non-null flag values from store") {
-                let testContext = TestContext().withCached(flags: stubFlags)
+                let testContext = TestContext().withCached(flags: stubFlags.featureFlags)
                 testContext.start()
-                expect(testContext.subject.allFlags) == stubFlags.compactMapValues { $0.value }
+                expect(testContext.subject.allFlags) == stubFlags.featureFlags.compactMapValues { $0.value }
             }
             it("returns nil when client is closed") {
-                let testContext = TestContext().withCached(flags: stubFlags)
+                let testContext = TestContext().withCached(flags: stubFlags.featureFlags)
                 testContext.start()
                 testContext.subject.close()
                 expect(testContext.subject.allFlags).to(beNil())

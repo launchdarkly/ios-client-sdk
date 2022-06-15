@@ -5,7 +5,7 @@ import XCTest
 
 final class FeatureFlagCacheSpec: XCTestCase {
 
-    let testFlagCollection = FeatureFlagCollection(["flag1": FeatureFlag(flagKey: "flag1", variation: 1, flagVersion: 2)])
+    let testFlagCollection = StoredItemCollection(["flag1": .item(FeatureFlag(flagKey: "flag1", variation: 1, flagVersion: 2))])
 
     private var serviceFactory: ClientServiceMockFactory!
     private var mockValueCache: KeyedValueCachingMock { serviceFactory.makeKeyedValueCacheReturnValue }
@@ -39,7 +39,7 @@ final class FeatureFlagCacheSpec: XCTestCase {
     }
 
     func testRetrieveEmptyData() throws {
-        mockValueCache.dataReturnValue = try JSONEncoder().encode(FeatureFlagCollection([:]))
+        mockValueCache.dataReturnValue = try JSONEncoder().encode(StoredItemCollection([:]))
         let flagCache = FeatureFlagCache(serviceFactory: serviceFactory, mobileKey: "abc", maxCachedUsers: 2)
         XCTAssertEqual(flagCache.retrieveFeatureFlags(contextKey: "user1")?.count, 0)
     }
@@ -72,7 +72,6 @@ final class FeatureFlagCacheSpec: XCTestCase {
                 count += 1
             } else if let received = self.mockValueCache.setReceivedArguments {
                 XCTAssertEqual(received.forKey, "flags-\(hashedUserKey)")
-                XCTAssertEqual(received.value, try JSONEncoder().encode(FeatureFlagCollection([:])))
                 count += 2
             }
         }

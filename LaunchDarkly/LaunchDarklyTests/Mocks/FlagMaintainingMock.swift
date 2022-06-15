@@ -8,20 +8,20 @@ final class FlagMaintainingMock: FlagMaintaining {
         innerStore = FlagStore()
     }
 
-    init(flags: [LDFlagKey: FeatureFlag]) {
-        innerStore = FlagStore(featureFlags: flags)
+    init(storedItems: StoredItems) {
+        innerStore = FlagStore(storedItems: storedItems)
     }
 
-    var featureFlags: [LDFlagKey: FeatureFlag] {
-        innerStore.featureFlags
+    var storedItems: StoredItems {
+        innerStore.storedItems
     }
 
     var replaceStoreCallCount = 0
-    var replaceStoreReceivedNewFlags: FeatureFlagCollection?
-    func replaceStore(newFlags: FeatureFlagCollection) {
+    var replaceStoreReceivedNewFlags: StoredItems?
+    func replaceStore(newStoredItems: StoredItems) {
         replaceStoreCallCount += 1
-        replaceStoreReceivedNewFlags = newFlags
-        innerStore.replaceStore(newFlags: newFlags)
+        replaceStoreReceivedNewFlags = newStoredItems
+        innerStore.replaceStore(newStoredItems: newStoredItems)
     }
 
     var updateStoreCallCount = 0
@@ -44,9 +44,10 @@ final class FlagMaintainingMock: FlagMaintaining {
         innerStore.featureFlag(for: flagKey)
     }
 
-    static func stubFlags() -> [LDFlagKey: FeatureFlag] {
-        var flags = DarklyServiceMock.Constants.stubFeatureFlags()
-        flags["userKey"] = FeatureFlag(flagKey: "userKey",
+    static func stubStoredItems() -> StoredItems {
+        let flags = DarklyServiceMock.Constants.stubFeatureFlags()
+        var storedItems = StoredItems(items: flags)
+        storedItems["userKey"] = .item(FeatureFlag(flagKey: "userKey",
                                        value: .string(UUID().uuidString),
                                        variation: DarklyServiceMock.Constants.variation,
                                        version: DarklyServiceMock.Constants.version,
@@ -54,7 +55,7 @@ final class FlagMaintainingMock: FlagMaintaining {
                                        trackEvents: true,
                                        debugEventsUntilDate: Date().addingTimeInterval(30.0),
                                        reason: DarklyServiceMock.Constants.reason,
-                                       trackReason: false)
-        return flags
+                                       trackReason: false))
+        return storedItems
     }
 }

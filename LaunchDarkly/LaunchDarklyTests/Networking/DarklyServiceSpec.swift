@@ -22,7 +22,7 @@ final class DarklyServiceSpec: QuickSpec {
         var serviceFactoryMock: ClientServiceMockFactory = ClientServiceMockFactory()
         var service: DarklyService!
         var httpHeaders: HTTPHeaders
-        let stubFlags = FlagMaintainingMock.stubFlags()
+        let stubFlags = FlagMaintainingMock.stubStoredItems()
 
         init(mobileKey: String = LDConfig.Constants.mockMobileKey,
              useReport: Bool = Constants.useGetMethod,
@@ -83,13 +83,13 @@ final class DarklyServiceSpec: QuickSpec {
                         beforeEach {
                             waitUntil { done in
                                 testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
-                                                                        featureFlags: testContext.stubFlags,
+                                                                        featureFlags: testContext.stubFlags.featureFlags,
                                                                         useReport: Constants.useReportMethod,
                                                                         onActivation: { _ in
                                                                             reportRequestCount += 1
                                 })
                                 testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
-                                                                        featureFlags: testContext.stubFlags,
+                                                                        featureFlags: testContext.stubFlags.featureFlags,
                                                                         useReport: Constants.useGetMethod,
                                                                         onActivation: { request in
                                                                             getRequestCount += 1
@@ -125,7 +125,7 @@ final class DarklyServiceSpec: QuickSpec {
                         it("calls completion with data, response, and no error") {
                             expect(responses).toNot(beNil())
                             expect(responses?.data).toNot(beNil())
-                            expect(responses?.data?.flagCollection) == testContext.stubFlags
+                            expect(responses?.data?.flagCollection) == testContext.stubFlags.featureFlags
                             expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
                             expect(responses?.error).to(beNil())
                         }
@@ -136,13 +136,13 @@ final class DarklyServiceSpec: QuickSpec {
                             testContext.service.flagRequestEtag = requestEtag
                             waitUntil { done in
                                 testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
-                                                                        featureFlags: testContext.stubFlags,
+                                                                        featureFlags: testContext.stubFlags.featureFlags,
                                                                         useReport: Constants.useReportMethod,
                                                                         onActivation: { _ in
                                                                             reportRequestCount += 1
                                 })
                                 testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
-                                                                        featureFlags: testContext.stubFlags,
+                                                                        featureFlags: testContext.stubFlags.featureFlags,
                                                                         useReport: Constants.useGetMethod,
                                                                         onActivation: { request in
                                                                             getRequestCount += 1
@@ -180,7 +180,7 @@ final class DarklyServiceSpec: QuickSpec {
                         it("calls completion with data, response, and no error") {
                             expect(responses).toNot(beNil())
                             expect(responses?.data).toNot(beNil())
-                            expect(responses?.data?.flagCollection) == testContext.stubFlags
+                            expect(responses?.data?.flagCollection) == testContext.stubFlags.featureFlags
                             expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
                             expect(responses?.error).to(beNil())
                         }
@@ -250,13 +250,13 @@ final class DarklyServiceSpec: QuickSpec {
                         beforeEach {
                             waitUntil { done in
                                 testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
-                                                                        featureFlags: testContext.stubFlags,
+                                                                        featureFlags: testContext.stubFlags.featureFlags,
                                                                         useReport: Constants.useGetMethod,
                                                                         onActivation: { _ in
                                                                             getRequestCount += 1
                                 })
                                 testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
-                                                                        featureFlags: testContext.stubFlags,
+                                                                        featureFlags: testContext.stubFlags.featureFlags,
                                                                         useReport: Constants.useReportMethod,
                                                                         onActivation: { request in
                                                                             reportRequestCount += 1
@@ -291,7 +291,7 @@ final class DarklyServiceSpec: QuickSpec {
                         it("calls completion with data, response, and no error") {
                             expect(responses).toNot(beNil())
                             expect(responses?.data).toNot(beNil())
-                            expect(responses?.data?.flagCollection) == testContext.stubFlags
+                            expect(responses?.data?.flagCollection) == testContext.stubFlags.featureFlags
                             expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
                             expect(responses?.error).to(beNil())
                         }
@@ -302,13 +302,13 @@ final class DarklyServiceSpec: QuickSpec {
                             testContext.service.flagRequestEtag = requestEtag
                             waitUntil { done in
                                 testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
-                                                                        featureFlags: testContext.stubFlags,
+                                                                        featureFlags: testContext.stubFlags.featureFlags,
                                                                         useReport: Constants.useGetMethod,
                                                                         onActivation: { _ in
                                                                             getRequestCount += 1
                                 })
                                 testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
-                                                                        featureFlags: testContext.stubFlags,
+                                                                        featureFlags: testContext.stubFlags.featureFlags,
                                                                         useReport: Constants.useReportMethod,
                                                                         onActivation: { request in
                                                                             reportRequestCount += 1
@@ -344,7 +344,7 @@ final class DarklyServiceSpec: QuickSpec {
                         it("calls completion with data, response, and no error") {
                             expect(responses).toNot(beNil())
                             expect(responses?.data).toNot(beNil())
-                            expect(responses?.data?.flagCollection) == testContext.stubFlags
+                            expect(responses?.data?.flagCollection) == testContext.stubFlags.featureFlags
                             expect(responses?.urlResponse?.httpStatusCode) == HTTPURLResponse.StatusCodes.ok
                             expect(responses?.error).to(beNil())
                         }
@@ -758,7 +758,7 @@ final class DarklyServiceSpec: QuickSpec {
 
 private extension Data {
     var flagCollection: [LDFlagKey: FeatureFlag]? {
-        return (try? JSONDecoder().decode(FeatureFlagCollection.self, from: self))?.flags
+        return (try? JSONDecoder().decode([LDFlagKey: FeatureFlag].self, from: self))
     }
 }
 

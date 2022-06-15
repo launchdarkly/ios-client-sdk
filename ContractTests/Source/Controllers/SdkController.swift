@@ -1,9 +1,19 @@
 import Vapor
 import LaunchDarkly
 
-final class SdkController {
+final class SdkController: RouteCollection {
     private var clients: [Int: LDClient] = [:]
     private var clientCounter = 0
+
+    func boot(routes: RoutesBuilder) {
+        routes.get("", use: status)
+        routes.post("", use: createClient)
+        routes.delete("", use: shutdown)
+
+        let clientRoutes = routes.grouped("clients")
+        clientRoutes.post(":id", use: executeCommand)
+        clientRoutes.delete(":id", use: shutdownClient)
+    }
 
     func status(_ req: Request) -> StatusResponse {
         let capabilities = [
@@ -19,104 +29,104 @@ final class SdkController {
             capabilities: capabilities)
     }
 
-    func createClient(_ req: Request) throws -> Future<HTTPResponse> {
-        return try req.content.decode(CreateInstance.self).map { createInstance in
-            var config = LDConfig(mobileKey: createInstance.configuration.credential)
-            config.enableBackgroundUpdates = true
-            config.isDebugMode = true
+    func createClient(_ req: Request) throws -> Response {
+        let createInstance = try req.content.decode(CreateInstance.self)
+        var config = LDConfig(mobileKey: createInstance.configuration.credential)
+        config.enableBackgroundUpdates = true
+        config.isDebugMode = true
 
-            if let streaming = createInstance.configuration.streaming {
-                if let baseUri = streaming.baseUri {
-                    config.streamUrl = URL(string: baseUri)!
-                }
-
-                // TODO(mmk) Need to hook up initialRetryDelayMs
-            } else if let polling = createInstance.configuration.polling {
-                config.streamingMode = .polling
-                if let baseUri = polling.baseUri {
-                    config.baseUrl = URL(string: baseUri)!
-                }
+        if let streaming = createInstance.configuration.streaming {
+            if let baseUri = streaming.baseUri {
+                config.streamUrl = URL(string: baseUri)!
             }
 
-            if let events = createInstance.configuration.events {
-                if let baseUri = events.baseUri {
-                    config.eventsUrl = URL(string: baseUri)!
-                }
-
-                if let capacity = events.capacity {
-                    config.eventCapacity = capacity
-                }
-
-                if let enable = events.enableDiagnostics {
-                    config.diagnosticOptOut = !enable
-                }
-
-                if let allPrivate = events.allAttributesPrivate {
-                    config.allContextAttributesPrivate = allPrivate
-                }
-
-                if let globalPrivate = events.globalPrivateAttributes {
-                    config.privateContextAttributes = globalPrivate.map { Reference($0) }
-                }
-
-                if let flushIntervalMs = events.flushIntervalMs {
-                    config.eventFlushInterval =  flushIntervalMs
-                }
+            // TODO(mmk) Need to hook up initialRetryDelayMs
+        } else if let polling = createInstance.configuration.polling {
+            config.streamingMode = .polling
+            if let baseUri = polling.baseUri {
+                config.baseUrl = URL(string: baseUri)!
             }
-
-            if let tags = createInstance.configuration.tags {
-                var applicationInfo = ApplicationInfo()
-                if let id = tags.applicationId {
-                    applicationInfo.applicationIdentifier(id)
-                }
-
-                if let verision = tags.applicationVersion {
-                    applicationInfo.applicationVersion(verision)
-                }
-
-                config.applicationInfo = applicationInfo
-            }
-
-            let clientSide = createInstance.configuration.clientSide
-
-            if let evaluationReasons = clientSide.evaluationReasons {
-                config.evaluationReasons = evaluationReasons
-            }
-
-            if let useReport = clientSide.useReport {
-                config.useReport = useReport
-            }
-
-            let dispatchSemaphore = DispatchSemaphore(value: 0)
-            let startWaitSeconds = (createInstance.configuration.startWaitTimeMs ?? 5_000) / 1_000
-
-            LDClient.start(config: config, context: clientSide.initialContext, startWaitSeconds: startWaitSeconds) { _ in
-                dispatchSemaphore.signal()
-            }
-
-            dispatchSemaphore.wait()
-
-            let client = LDClient.get()!
-
-            self.clientCounter += 1
-            self.clients.updateValue(client, forKey: self.clientCounter)
-
-            var headers = HTTPHeaders()
-            headers.add(name: "Location", value: "/clients/\(self.clientCounter)")
-
-            var response = HTTPResponse()
-            response.status = .ok
-            response.headers = headers
-
-            return response
         }
+
+        if let events = createInstance.configuration.events {
+            if let baseUri = events.baseUri {
+                config.eventsUrl = URL(string: baseUri)!
+            }
+
+            if let capacity = events.capacity {
+                config.eventCapacity = capacity
+            }
+
+            if let enable = events.enableDiagnostics {
+                config.diagnosticOptOut = !enable
+            }
+
+            if let allPrivate = events.allAttributesPrivate {
+                config.allContextAttributesPrivate = allPrivate
+            }
+
+            if let globalPrivate = events.globalPrivateAttributes {
+                config.privateContextAttributes = globalPrivate.map{ Reference($0) }
+            }
+
+            if let flushIntervalMs = events.flushIntervalMs {
+                config.eventFlushInterval =  flushIntervalMs
+            }
+        }
+
+        if let tags = createInstance.configuration.tags {
+            var applicationInfo = ApplicationInfo()
+            if let id = tags.applicationId {
+                applicationInfo.applicationIdentifier(id)
+            }
+
+            if let verision = tags.applicationVersion {
+                applicationInfo.applicationVersion(verision)
+            }
+
+            config.applicationInfo = applicationInfo
+        }
+
+        let clientSide = createInstance.configuration.clientSide
+
+        if let evaluationReasons = clientSide.evaluationReasons {
+            config.evaluationReasons = evaluationReasons
+        }
+
+        if let useReport = clientSide.useReport {
+            config.useReport = useReport
+        }
+
+        let dispatchSemaphore = DispatchSemaphore(value: 0)
+        let startWaitSeconds = (createInstance.configuration.startWaitTimeMs ?? 5_000) / 1_000
+
+        LDClient.start(config:config, context: clientSide.initialContext, startWaitSeconds: startWaitSeconds) { timedOut in
+            dispatchSemaphore.signal()
+        }
+
+        dispatchSemaphore.wait()
+
+        let client = LDClient.get()!
+
+        self.clientCounter += 1
+        self.clients.updateValue(client, forKey: self.clientCounter)
+
+        var headers = HTTPHeaders()
+        headers.add(name: "Location", value: "/clients/\(self.clientCounter)")
+
+        let response = Response()
+        response.status = .ok
+        response.headers = headers
+
+        return response
     }
 
     func shutdownClient(_ req: Request) throws -> HTTPStatus {
-        let id = try req.parameters.next(Int.self)
-        guard let client = self.clients[id] else {
-            return HTTPStatus.badRequest
-        }
+        guard let id = req.parameters.get("id", as: Int.self)
+        else { throw Abort(.badRequest) }
+
+        guard let client = self.clients[id]
+        else { return HTTPStatus.badRequest }
 
         client.close()
         clients.removeValue(forKey: id)
@@ -124,82 +134,84 @@ final class SdkController {
         return HTTPStatus.accepted
     }
 
-    func executeCommand(_ req: Request) throws -> Future<CommandResponse> {
-        return try req.content.decode(CommandParameters.self).map { commandParameters in
-            guard let client = self.clients[self.clientCounter] else {
-                throw Abort(.badRequest)
+    func executeCommand(_ req: Request) throws -> CommandResponse {
+        guard let id = req.parameters.get("id", as: Int.self)
+        else { throw Abort(.badRequest) }
+
+        let commandParameters = try req.content.decode(CommandParameters.self)
+        guard let client = self.clients[id] else {
+            throw Abort(.badRequest)
+        }
+
+        switch commandParameters.command {
+        case "evaluate":
+            let result: EvaluateFlagResponse = try self.evaluate(client, commandParameters.evaluate!)
+            return CommandResponse.evaluateFlag(result)
+        case "evaluateAll":
+            let result: EvaluateAllFlagsResponse = try self.evaluateAll(client, commandParameters.evaluateAll!)
+            return CommandResponse.evaluateAll(result)
+        case "identifyEvent":
+            let semaphore = DispatchSemaphore(value: 0)
+            client.identify(context: commandParameters.identifyEvent!.context) {
+                semaphore.signal()
             }
+            semaphore.wait()
+        case "customEvent":
+            let event = commandParameters.customEvent!
+            client.track(key: event.eventKey, data: event.data, metricValue: event.metricValue)
+        case "flushEvents":
+            client.flush()
+        case "contextBuild":
+            let contextBuild = commandParameters.contextBuild!
 
-            switch commandParameters.command {
-            case "evaluate":
-                let result: EvaluateFlagResponse = try self.evaluate(client, commandParameters.evaluate!)
-                return CommandResponse.evaluateFlag(result)
-            case "evaluateAll":
-                let result: EvaluateAllFlagsResponse = try self.evaluateAll(client, commandParameters.evaluateAll!)
-                return CommandResponse.evaluateAll(result)
-            case "identifyEvent":
-                let semaphore = DispatchSemaphore(value: 0)
-                client.identify(context: commandParameters.identifyEvent!.context) {
-                    semaphore.signal()
-                }
-                semaphore.wait()
-            case "customEvent":
-                let event = commandParameters.customEvent!
-                client.track(key: event.eventKey, data: event.data, metricValue: event.metricValue)
-            case "flushEvents":
-                client.flush()
-            case "contextBuild":
-                let contextBuild = commandParameters.contextBuild!
-
-                do {
-                    if let singleParams = contextBuild.single {
-                        let context = try SdkController.buildSingleContextFromParams(singleParams)
-
-                        let encoder = JSONEncoder()
-                        let output = try encoder.encode(context)
-
-                        let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
-                        return CommandResponse.contextBuild(response)
-                    }
-
-                    if let multiParams = contextBuild.multi {
-                        var multiContextBuilder = LDMultiContextBuilder()
-                        try multiParams.forEach {
-                            multiContextBuilder.addContext(try SdkController.buildSingleContextFromParams($0))
-                        }
-
-                        let context = try multiContextBuilder.build().get()
-                        let encoder = JSONEncoder()
-                        let output = try encoder.encode(context)
-
-                        let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
-                        return CommandResponse.contextBuild(response)
-                    }
-                } catch {
-                    let response = ContextBuildResponse(output: nil, error: error.localizedDescription)
-                    return CommandResponse.contextBuild(response)
-                }
-            case "contextConvert":
-                let convertRequest = commandParameters.contextConvert!
-                do {
-                    let decoder = JSONDecoder()
-                    let context: LDContext = try decoder.decode(LDContext.self, from: convertRequest.input)
+            do {
+                if let singleParams = contextBuild.single {
+                    let context = try SdkController.buildSingleContextFromParams(singleParams)
 
                     let encoder = JSONEncoder()
                     let output = try encoder.encode(context)
 
                     let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
                     return CommandResponse.contextBuild(response)
-                } catch {
-                    let response = ContextBuildResponse(output: nil, error: error.localizedDescription)
+                }
+
+                if let multiParams = contextBuild.multi {
+                    var multiContextBuilder = LDMultiContextBuilder()
+                    try multiParams.forEach {
+                        multiContextBuilder.addContext(try SdkController.buildSingleContextFromParams($0))
+                    }
+
+                    let context = try multiContextBuilder.build().get()
+                    let encoder = JSONEncoder()
+                    let output = try encoder.encode(context)
+
+                    let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
                     return CommandResponse.contextBuild(response)
                 }
-            default:
-                throw Abort(.badRequest)
+            } catch {
+                let response = ContextBuildResponse(output: nil, error: error.localizedDescription)
+                return CommandResponse.contextBuild(response)
             }
+        case "contextConvert":
+            let convertRequest = commandParameters.contextConvert!
+            do {
+                let decoder = JSONDecoder()
+                let context: LDContext = try decoder.decode(LDContext.self, from: Data(convertRequest.input.utf8))
 
-            return CommandResponse.ok
+                let encoder = JSONEncoder()
+                let output = try encoder.encode(context)
+
+                let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
+                return CommandResponse.contextBuild(response)
+            } catch {
+                let response = ContextBuildResponse(output: nil, error: error.localizedDescription)
+                return CommandResponse.contextBuild(response)
+            }
+        default:
+            throw Abort(.badRequest)
         }
+
+        return CommandResponse.ok
     }
 
     static func buildSingleContextFromParams(_ params: SingleContextParameters) throws -> LDContext {
@@ -244,7 +256,7 @@ final class SdkController {
                 let result = client.boolVariation(forKey: params.flagKey, defaultValue: defaultValue)
                 return EvaluateFlagResponse(value: LDValue.bool(result))
             }
-            throw "Failed to convert \(params.valueType) to bool"
+            throw Abort(.badRequest, reason: "Failed to convert \(params.valueType) to bool")
         case "int":
             if case let LDValue.number(defaultValue) = params.defaultValue {
                 if params.detail {
@@ -255,7 +267,7 @@ final class SdkController {
                 let result = client.intVariation(forKey: params.flagKey, defaultValue: Int(defaultValue))
                 return EvaluateFlagResponse(value: LDValue.number(Double(result)))
             }
-            throw "Failed to convert \(params.valueType) to int"
+            throw Abort(.badRequest, reason: "Failed to convert \(params.valueType) to int")
         case "double":
             if case let LDValue.number(defaultValue) = params.defaultValue {
                 if params.detail {
@@ -266,7 +278,7 @@ final class SdkController {
                 let result = client.doubleVariation(forKey: params.flagKey, defaultValue: defaultValue)
                 return EvaluateFlagResponse(value: LDValue.number(result), variationIndex: nil, reason: nil)
             }
-            throw "Failed to convert \(params.valueType) to bool"
+            throw Abort(.badRequest, reason: "Failed to convert \(params.valueType) to bool")
         case "string":
             if case let LDValue.string(defaultValue) = params.defaultValue {
                 if params.detail {
@@ -277,7 +289,7 @@ final class SdkController {
                 let result = client.stringVariation(forKey: params.flagKey, defaultValue: defaultValue)
                 return EvaluateFlagResponse(value: LDValue.string(result), variationIndex: nil, reason: nil)
             }
-            throw "Failed to convert \(params.valueType) to string"
+            throw Abort(.badRequest, reason: "Failed to convert \(params.valueType) to string")
         default:
             if params.detail {
                 let result = client.jsonVariationDetail(forKey: params.flagKey, defaultValue: params.defaultValue)

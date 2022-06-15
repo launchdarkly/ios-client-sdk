@@ -5,8 +5,8 @@ protocol FeatureFlagCaching {
     // sourcery: defaultMockValue = KeyedValueCachingMock()
     var keyedValueCache: KeyedValueCaching { get }
 
-    func retrieveFeatureFlags(contextKey: String) -> [LDFlagKey: FeatureFlag]?
-    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], contextKey: String, lastUpdated: Date)
+    func retrieveFeatureFlags(contextKey: String) -> StoredItems?
+    func storeFeatureFlags(_ storedItems: StoredItems, contextKey: String, lastUpdated: Date)
 }
 
 final class FeatureFlagCache: FeatureFlagCaching {
@@ -24,15 +24,15 @@ final class FeatureFlagCache: FeatureFlagCaching {
         self.maxCachedUsers = maxCachedUsers
     }
 
-    func retrieveFeatureFlags(contextKey: String) -> [LDFlagKey: FeatureFlag]? {
+    func retrieveFeatureFlags(contextKey: String) -> StoredItems? {
         guard let cachedData = keyedValueCache.data(forKey: "flags-\(contextKey)"),
-              let cachedFlags = try? JSONDecoder().decode(FeatureFlagCollection.self, from: cachedData)
+              let cachedFlags = try? JSONDecoder().decode(StoredItemCollection.self, from: cachedData)
         else { return nil }
         return cachedFlags.flags
     }
 
-    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], contextKey: String, lastUpdated: Date) {
-        guard self.maxCachedUsers != 0, let encoded = try? JSONEncoder().encode(featureFlags)
+    func storeFeatureFlags(_ storedItems: StoredItems, contextKey: String, lastUpdated: Date) {
+        guard self.maxCachedUsers != 0, let encoded = try? JSONEncoder().encode(StoredItemCollection(storedItems))
         else { return }
 
         self.keyedValueCache.set(encoded, forKey: "flags-\(contextKey)")
