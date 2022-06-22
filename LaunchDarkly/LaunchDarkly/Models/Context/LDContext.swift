@@ -9,7 +9,14 @@ public enum ContextBuilderError: Error {
     case duplicateKinds
 }
 
-/// TKTK
+/// LDContext is a collection of attributes that can be referenced in flag evaluations and analytics
+/// events.
+///
+/// (TKTK - some conceptual text here, and/or a link to a docs page)
+///
+/// To create an LDContext of a single kind, such as a user, you may use `LDContextBuilder`.
+///
+/// To create an LDContext with multiple kinds, use `LDMultiContextBuilder`.
 public struct LDContext: Encodable, Equatable {
     static let storedIdKey: String = "ldDeviceIdentifier"
 
@@ -34,16 +41,16 @@ public struct LDContext: Encodable, Equatable {
         self.init(canonicalizedKey: LDContext.defaultKey(environmentReporting: environmentReporting))
     }
 
-    public struct Meta: Codable {
-        public var secondary: String?
-        public var privateAttributes: [Reference]?
-        public var redactedAttributes: [String]?
+    struct Meta: Codable {
+        var secondary: String?
+        var privateAttributes: [Reference]?
+        var redactedAttributes: [String]?
 
         enum CodingKeys: CodingKey {
             case secondary, privateAttributes, redactedAttributes
         }
 
-        public var isEmpty: Bool {
+        var isEmpty: Bool {
             secondary == nil
             && (privateAttributes?.isEmpty ?? true)
             && (redactedAttributes?.isEmpty ?? true)
@@ -55,7 +62,7 @@ public struct LDContext: Encodable, Equatable {
             self.redactedAttributes = redactedAttributes
         }
 
-        public init(from decoder: Decoder) throws {
+        init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
 
             let secondary = try container.decodeIfPresent(String.self, forKey: .secondary)
@@ -66,7 +73,7 @@ public struct LDContext: Encodable, Equatable {
             self.redactedAttributes = []
         }
 
-        public func encode(to encoder: Encoder) throws {
+        func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encodeIfPresent(secondary, forKey: .secondary)
 
@@ -577,7 +584,15 @@ extension LDContext: Decodable {
 
 extension LDContext: TypeIdentifying {}
 
-/// TKTK
+/// Contains methods for building a single kind `LDContext` with a specified key, defaulting to kind
+/// "user".
+///
+/// You may use these methods to set additional attributes and/or change the kind before calling
+/// `LDContextBuilder.build()`. If you do not change any values, the defaults for the `LDContext` are that its
+/// kind is "user", its key is set to whatever value you passed to `LDContextBuilder.init(key:)`, its transient attribute
+/// is false, and it has no values for any other attributes.
+///
+/// To define a multi-kind LDContext, see `LDMultiContextBuilder`.
 public struct LDContextBuilder {
     private var kind: String = Kind.user.description
 
@@ -595,27 +610,77 @@ public struct LDContextBuilder {
     // never allowed to be empty.
     fileprivate var allowEmptyKey: Bool = false
 
-    /// TKTK
+    /// Create a new LDContextBuilder with the provided `key`.
     public init(key: String) {
         self.key = key
     }
 
-    /// TKTK
+    /// Sets the LDContext's kind attribute.
+    ///
+    /// Every LDContext has a kind. Setting it to an empty string is equivalent to the default kind
+    /// of "user". This value is case-sensitive. Validation rules are as follows:
+    ///
+    /// - It may only contain letters, numbers, and the characters ".", "_", and "-".
+    /// - It cannot equal the literal string "kind".
+    /// - It cannot equal "multi".
+    ///
+    /// If the value is invalid, you will receive an error when `LDContextBuilder.build()` is called.
     public mutating func kind(_ kind: String) {
         self.kind = kind
     }
 
-    /// TKTK
+    /// Sets the LDContext's key attribute.
+    ///
+    /// Every LDContext has a key, which is always a string. There are no restrictions on its value.
+    /// It may be an empty string.
+    ///
+    /// The key attribute can be referenced by flag rules, flag target lists, and segments.
     public mutating func key(_ key: String) {
         self.key = key
     }
 
-    /// TKTK
+    /// Sets the LDContext's name attribute.
+    ///
+    /// This attribute is optional. It has the following special rules:
+    ///
+    /// - Unlike most other attributes, it is always a string if it is specified.
+    /// - The LaunchDarkly dashboard treats this attribute as the preferred display name for users.
     public mutating func name(_ name: String) {
         self.name = name
     }
 
-    /// TKTK
+    /// Sets the value of any attribute for the Context.
+    ///
+    /// This includes only attributes that are addressable in evaluations -- not metadata such as
+    /// secondary or private. If `name` is "privateAttributeNames", it is ignored and no
+    /// attribute is set.
+    ///
+    /// This method uses the `LDValue` type to represent a value of any JSON type: null,
+    /// boolean, number, string, array, or object. For all attribute names that do not have special
+    /// meaning to LaunchDarkly, you may use any of those types. Values of different JSON types are
+    /// always treated as different values: for instance, null, false, and the empty string "" are
+    /// not the same, and the number 1 is not the same as the string "1".
+    ///
+    /// The following attribute names have special restrictions on their value types, and any value
+    /// of an unsupported type will be ignored (leaving the attribute unchanged):
+    ///
+    /// - "kind", "key": Must be a string. See `LDContextBuilder.kind(_:)` and `LDContextBuilder.key(_:)`.
+    ///
+    /// - "name": Must be a string or null. See `LDContextBuilder.name(_:)`.
+    ///
+    /// - "transient": Must be a boolean. See `LDContextBuilder.transient(_:)`.
+    ///
+    /// Values that are JSON arrays or objects have special behavior when referenced in
+    /// flag/segment rules.
+    ///
+    /// A value of `LDValue.null` is equivalent to removing any current non-default value
+    /// of the attribute. Null is not a valid attribute value in the LaunchDarkly model; any
+    /// expressions in feature flags that reference an attribute with a null value will behave as
+    /// if the attribute did not exist.
+    ///
+    /// This method returns true for success, or false if the parameters
+    /// violated one of the restrictions described above (for instance,
+    /// attempting to set "key" to a value that was not a string).
     @discardableResult
     public mutating func trySetValue(_ name: String, _ value: LDValue) -> Bool {
         switch (name, value) {
@@ -659,27 +724,67 @@ public struct LDContextBuilder {
         return true
     }
 
-    /// TKTK
+    /// Sets a secondary key for the LDContext.
+    ///
+    /// This affects feature flag targeting
+    /// <https://docs.launchdarkly.com/home/flags/targeting-users#targeting-rules-based-on-user-attributes>
+    /// as follows: if you have chosen to bucket users by a specific attribute, the secondary key
+    /// (if set) is used to further distinguish between users who are otherwise identical according
+    /// to that attribute. This value is not addressable as an attribute in evaluations: that is, a
+    /// rule clause cannot use the attribute name "secondary".
+    ///
+    /// Setting this value to an empty string is not the same as leaving it unset.
     public mutating func secondary(_ secondary: String) {
         self.secondary = secondary
     }
 
-    /// TKTK
+    /// Sets whether the LDContext is only intended for flag evaluations and should not be indexed by
+    /// LaunchDarkly.
+    ///
+    /// The default value is false. False means that this LDContext represents an entity such as a
+    /// user that you want to be able to see on the LaunchDarkly dashboard.
+    ///
+    /// Setting transient to true excludes this LDContext from the database that is used by the
+    /// dashboard. It does not exclude it from analytics event data, so it is not the same as
+    /// making attributes private; all non-private attributes will still be included in events and
+    /// data export.
+    ///
+    /// This value is also addressable in evaluations as the attribute name "transient". It is
+    /// always treated as a boolean true or false in evaluations.
     public mutating func transient(_ transient: Bool) {
         self.transient = transient
     }
 
-    /// TKTK
+    /// Provide a reference to designate any number of LDContext attributes as private: that is,
+    /// their values will not be sent to LaunchDarkly.
+    ///
+    /// (TKTK: possibly move some of this conceptual information to a non-platform-specific docs page and/or
+    /// have docs team copyedit it here)
+    ///
+    /// See `Reference` for details on how to construct a valid reference.
+    ///
+    /// This action only affects analytics events that involve this particular LDContext. To mark some (or all)
+    /// LDContext attributes as private for all uses, use the overall event configuration for the SDK.
+    ///
+    /// The attributes "kind" and "key", and the metadata properties set by secondary and transient,
+    /// cannot be made private.
     public mutating func addPrivateAttribute(_ reference: Reference) {
         self.privateAttributes.append(reference)
     }
 
-    /// TKTK
+    /// Remove any reference provided through `addPrivateAttribute(_:)`. If the reference was
+    /// added more than once, this method will remove all instances of it.
     public mutating func removePrivateAttribute(_ reference: Reference) {
         self.privateAttributes.removeAll { $0 == reference }
     }
 
-    /// TKTK
+    /// Creates a LDContext from the current LDContextBuilder properties.
+    ///
+    /// The LDContext is immutable and will not be affected by any subsequent actions on the
+    /// LDContextBuilder.
+    ///
+    /// It is possible to specify invalid attributes for a LDContextBuilder, such as an empty key.
+    /// In those situations, this method returns a Result.failure
     public func build() -> Result<LDContext, ContextBuilderError> {
         guard let kind = Kind(self.kind) else {
             return Result.failure(.invalidKind)
@@ -709,19 +814,39 @@ public struct LDContextBuilder {
 
 extension LDContextBuilder: TypeIdentifying { }
 
-/// TKTK
+/// Contains method for building a multi-kind `LDContext`.
+///
+/// Use this type if you need to construct a LDContext that has multiple kind values, each with its
+/// own nested LDContext. To define a single-kind context, use `LDContextBuilder` instead.
+///
+/// Obtain an instance of LDMultiContextBuilder by calling `LDMultiContextBuilder.init()`; then, call
+/// `LDMultiContextBuilder.addContext(_:)` to specify the nested LDContext for each kind.
+/// LDMultiContextBuilder setters return a reference the same builder, so they can be chained
+/// together.
 public struct LDMultiContextBuilder {
     private var contexts: [LDContext] = []
 
-    /// TKTK
+    /// Create a new LDMultiContextBuilder with the provided `key`.
     public init() {}
 
-    /// TKTK
+    /// Adds a nested context for a specific kind to a LDMultiContextBuilder.
+    ///
+    /// It is invalid to add more than one context with the same Kind. This error is detected when
+    /// you call `LDMultiContextBuilder.build()`.
     public mutating func addContext(_ context: LDContext) {
         contexts.append(context)
     }
 
-    /// TKTK
+    /// Creates a LDContext from the current properties.
+    ///
+    /// The LDContext is immutable and will not be affected by any subsequent actions on the
+    /// LDMultiContextBuilder.
+    ///
+    /// It is possible for a LDMultiContextBuilder to represent an invalid state. In those
+    /// situations, a Result.failure will be returned.
+    ///
+    /// If only one context kind was added to the builder, `build` returns a single-kind context rather
+    /// than a multi-kind context.
     public func build() -> Result<LDContext, ContextBuilderError> {
         if contexts.isEmpty {
             return Result.failure(.emptyMultiKind)

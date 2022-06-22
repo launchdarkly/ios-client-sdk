@@ -23,11 +23,11 @@ public enum Kind: Codable, Equatable, Hashable {
         try container.encode(self.description)
     }
 
-    public func isMulti() -> Bool {
+    internal func isMulti() -> Bool {
         self == .multi || self == .custom("multi")
     }
 
-    public func isUser() -> Bool {
+    internal func isUser() -> Bool {
         self == .user || self == .custom("user") || self == .custom("")
     }
 

@@ -18,6 +18,10 @@ custom_categories:
     - LDClient
     - LDConfig
     - LDUser
+    - LDContext
+    - LDContextBuilder
+    - Reference
+    - LDMultiContextBuilder
     - LDEvaluationDetail
     - LDValue
 
