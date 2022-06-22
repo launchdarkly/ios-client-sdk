@@ -4,8 +4,6 @@ import XCTest
 @testable import LaunchDarkly
 
 final class LDContextSpec: XCTestCase {
-    // TOOD(mmk) Make sure we cannot make a context with a kind of kind
-
     func testBuildCanCreateSimpleContext() throws {
         var builder = LDContextBuilder(key: "context-key")
         builder.name("Name")
@@ -13,6 +11,19 @@ final class LDContextSpec: XCTestCase {
 
         let context = try builder.build().get()
         XCTAssertFalse(context.isMulti())
+    }
+
+    func testBuilderWillNotAcceptKindOfTypeKind() {
+        var builder = LDContextBuilder(key: "context-key")
+        builder.kind("kind")
+
+        guard case .failure(let error) = builder.build()
+        else {
+            XCTFail("Builder should not create context with kind 'kind'")
+            return
+        }
+
+        XCTAssertEqual(error, ContextBuilderError.invalidKind)
     }
 
     func testBuilderCanHandleMissingKind() throws {

@@ -213,6 +213,14 @@
 		A31088282837DCA900184942 /* ReferenceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088252837DCA900184942 /* ReferenceSpec.swift */; };
 		A31088292837DCA900184942 /* KindSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088262837DCA900184942 /* KindSpec.swift */; };
 		A33A5F7A28466D04000C29C7 /* LDContextStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33A5F7928466D04000C29C7 /* LDContextStub.swift */; };
+		A36EDFC82853883400D91B05 /* ObjcLDReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFC72853883400D91B05 /* ObjcLDReference.swift */; };
+		A36EDFC92853883400D91B05 /* ObjcLDReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFC72853883400D91B05 /* ObjcLDReference.swift */; };
+		A36EDFCA2853883400D91B05 /* ObjcLDReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFC72853883400D91B05 /* ObjcLDReference.swift */; };
+		A36EDFCB2853883400D91B05 /* ObjcLDReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFC72853883400D91B05 /* ObjcLDReference.swift */; };
+		A36EDFCD2853C50B00D91B05 /* ObjcLDContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */; };
+		A36EDFCE2853C50B00D91B05 /* ObjcLDContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */; };
+		A36EDFCF2853C50B00D91B05 /* ObjcLDContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */; };
+		A36EDFD02853C50B00D91B05 /* ObjcLDContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
 		B467791324D8AEEC00897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791224D8AEEC00897F00 /* LDSwiftEventSourceStatic */; };
@@ -416,6 +424,8 @@
 		A31088252837DCA900184942 /* ReferenceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReferenceSpec.swift; sourceTree = "<group>"; };
 		A31088262837DCA900184942 /* KindSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KindSpec.swift; sourceTree = "<group>"; };
 		A33A5F7928466D04000C29C7 /* LDContextStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDContextStub.swift; sourceTree = "<group>"; };
+		A36EDFC72853883400D91B05 /* ObjcLDReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDReference.swift; sourceTree = "<group>"; };
+		A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDContext.swift; sourceTree = "<group>"; };
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
 		B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDEvaluationDetail.swift; sourceTree = "<group>"; };
@@ -634,12 +644,14 @@
 		835E1D341F63332C00184DB4 /* ObjectiveC */ = {
 			isa = PBXGroup;
 			children = (
+				A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */,
 				835E1D3C1F63450A00184DB4 /* ObjcLDClient.swift */,
 				835E1D3D1F63450A00184DB4 /* ObjcLDConfig.swift */,
 				835E1D3E1F63450A00184DB4 /* ObjcLDUser.swift */,
 				835E1D421F685AC900184DB4 /* ObjcLDChangedFlag.swift */,
 				B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */,
 				29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */,
+				A36EDFC72853883400D91B05 /* ObjcLDReference.swift */,
 			);
 			path = ObjectiveC;
 			sourceTree = "<group>";
@@ -1150,6 +1162,7 @@
 				831188572113AE0B00D77CB5 /* FlagChangeNotifier.swift in Sources */,
 				8311884D2113ADE200D77CB5 /* FlagsUnchangedObserver.swift in Sources */,
 				8311885F2113AE2D00D77CB5 /* HTTPURLRequest.swift in Sources */,
+				A36EDFD02853C50B00D91B05 /* ObjcLDContext.swift in Sources */,
 				B4C9D4362489C8FD004A9B03 /* DiagnosticCache.swift in Sources */,
 				831188452113ADC500D77CB5 /* LDClient.swift in Sources */,
 				A310881E2837DC0400184942 /* Kind.swift in Sources */,
@@ -1184,6 +1197,7 @@
 				8354AC732243166900CDE602 /* FeatureFlagCache.swift in Sources */,
 				8311885B2113AE1D00D77CB5 /* Throttler.swift in Sources */,
 				8311884E2113ADE500D77CB5 /* Event.swift in Sources */,
+				A36EDFCB2853883400D91B05 /* ObjcLDReference.swift in Sources */,
 				832D68A5224A38FC005F052A /* CacheConverter.swift in Sources */,
 				831188432113ADBE00D77CB5 /* LDCommon.swift in Sources */,
 				B4C9D4312489B5FF004A9B03 /* DiagnosticEvent.swift in Sources */,
@@ -1202,6 +1216,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B468E71224B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
+				A36EDFCF2853C50B00D91B05 /* ObjcLDContext.swift in Sources */,
 				831EF34320655E730001C643 /* LDCommon.swift in Sources */,
 				831EF34420655E730001C643 /* LDConfig.swift in Sources */,
 				A31088212837DC0400184942 /* LDContext.swift in Sources */,
@@ -1212,6 +1227,7 @@
 				831EF34A20655E730001C643 /* FeatureFlag.swift in Sources */,
 				C443A40C2315AA4D00145710 /* NetworkReporter.swift in Sources */,
 				831EF34B20655E730001C643 /* LDChangedFlag.swift in Sources */,
+				A36EDFCA2853883400D91B05 /* ObjcLDReference.swift in Sources */,
 				8354AC722243166900CDE602 /* FeatureFlagCache.swift in Sources */,
 				A310881D2837DC0400184942 /* Kind.swift in Sources */,
 				C443A40423145FBE00145710 /* ConnectionInformation.swift in Sources */,
@@ -1267,6 +1283,7 @@
 				83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */,
 				830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */,
 				B4C9D4332489C8FD004A9B03 /* DiagnosticCache.swift in Sources */,
+				A36EDFCD2853C50B00D91B05 /* ObjcLDContext.swift in Sources */,
 				8354EFE51F263DAC00C05156 /* FeatureFlag.swift in Sources */,
 				8372668C20D4439600BD1088 /* DateFormatter.swift in Sources */,
 				A310881B2837DC0400184942 /* Kind.swift in Sources */,
@@ -1301,6 +1318,7 @@
 				8347BB0C21F147E100E56BCD /* LDTimer.swift in Sources */,
 				B468E71024B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
 				8354AC702243166900CDE602 /* FeatureFlagCache.swift in Sources */,
+				A36EDFC82853883400D91B05 /* ObjcLDReference.swift in Sources */,
 				8358F2621F47747F00ECE1AF /* FlagChangeObserver.swift in Sources */,
 				832D68A2224A38FC005F052A /* CacheConverter.swift in Sources */,
 				835E1D401F63450A00184DB4 /* ObjcLDConfig.swift in Sources */,
@@ -1372,6 +1390,7 @@
 				83D9EC782062DEAB004D7FA6 /* LDUser.swift in Sources */,
 				B4C9D4342489C8FD004A9B03 /* DiagnosticCache.swift in Sources */,
 				83D9EC7C2062DEAB004D7FA6 /* FeatureFlag.swift in Sources */,
+				A36EDFCE2853C50B00D91B05 /* ObjcLDContext.swift in Sources */,
 				8372668D20D4439600BD1088 /* DateFormatter.swift in Sources */,
 				83D9EC7D2062DEAB004D7FA6 /* LDChangedFlag.swift in Sources */,
 				A310881C2837DC0400184942 /* Kind.swift in Sources */,
@@ -1406,6 +1425,7 @@
 				C443A40323145FB700145710 /* ConnectionInformation.swift in Sources */,
 				B4C9D4392489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
 				B468E71124B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
+				A36EDFC92853883400D91B05 /* ObjcLDReference.swift in Sources */,
 				83D9EC952062DEAB004D7FA6 /* Date.swift in Sources */,
 				832D68A3224A38FC005F052A /* CacheConverter.swift in Sources */,
 				83D9EC972062DEAB004D7FA6 /* Thread.swift in Sources */,

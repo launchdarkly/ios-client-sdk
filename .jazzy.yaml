@@ -47,6 +47,8 @@ custom_categories:
     - ObjcLDClient
     - ObjcLDConfig
     - ObjcLDUser
+    - ObjcLDReference
+    - ObjcLDContext
     - ObjcLDChangedFlag
     - ObjcLDValue
     - ObjcLDValueType

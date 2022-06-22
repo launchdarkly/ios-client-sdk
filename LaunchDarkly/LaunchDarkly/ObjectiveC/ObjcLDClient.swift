@@ -110,10 +110,9 @@ public final class ObjcLDClient: NSObject {
 
         - parameter user: The ObjcLDUser set with the desired user.
        */
-// TODO(mmk) Come back to this
-//    @objc public func identify(context: ObjcLDContext) {
-//        ldClient.identify(context: context.context, completion: nil)
-//    }
+    @objc public func identify(context: ObjcLDContext) {
+        ldClient.identify(context: context.context, completion: nil)
+    }
 
     /**
         The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
@@ -127,10 +126,9 @@ public final class ObjcLDClient: NSObject {
         - parameter user: The ObjcLDUser set with the desired user.
         - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
        */
-// TODO(mmk) Come back to this
-//    @objc public func identify(context: ObjcLDContext, completion: (() -> Void)? = nil) {
-//        ldClient.identify(context: context.context, completion: completion)
-//    }
+    @objc public func identify(context: ObjcLDContext, completion: (() -> Void)? = nil) {
+        ldClient.identify(context: context.context, completion: completion)
+    }
 
     /**
      Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning default values.
@@ -552,10 +550,9 @@ public final class ObjcLDClient: NSObject {
      - parameter completion: Closure called when the embedded `setOnline` call completes. (Optional)
     */
     /// - Tag: start
-// TODO(mmk) Come back to this
-//    @objc public static func start(configuration: ObjcLDConfig, context: ObjcLDContext, completion: (() -> Void)? = nil) {
-//        LDClient.start(config: configuration.config, context: context.context, completion: completion)
-//    }
+   @objc public static func start(configuration: ObjcLDConfig, context: ObjcLDContext, completion: (() -> Void)? = nil) {
+       LDClient.start(config: configuration.config, context: context.context, completion: completion)
+   }
 
     /**
     See [start](x-source-tag://start) for more information on starting the SDK.
@@ -565,10 +562,9 @@ public final class ObjcLDClient: NSObject {
     - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network.
     - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
     */
-// TODO(mmk) Come back to this
-//    @objc public static func start(configuration: ObjcLDConfig, context: ObjcLDContext, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
-//        LDClient.start(config: configuration.config, context: context.context, startWaitSeconds: startWaitSeconds, completion: completion)
-//    }
+   @objc public static func start(configuration: ObjcLDConfig, context: ObjcLDContext, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+       LDClient.start(config: configuration.config, context: context.context, startWaitSeconds: startWaitSeconds, completion: completion)
+   }
 
     private init(client: LDClient) {
         ldClient = client

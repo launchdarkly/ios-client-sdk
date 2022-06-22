@@ -1,6 +1,6 @@
 import Foundation
 
-enum ReferenceError: Codable, Equatable, Error {
+public enum ReferenceError: Codable, Equatable, Error {
     case empty
     case doubleSlash
     case invalidEscapeSequence
@@ -25,7 +25,7 @@ enum ReferenceError: Codable, Equatable, Error {
 }
 
 extension ReferenceError: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         switch self {
         case .empty: return "empty"
         case .doubleSlash: return "doubleSlash"
@@ -129,11 +129,11 @@ public struct Reference: Codable, Equatable, Hashable {
         return error == nil
     }
 
-    internal func getError() -> ReferenceError? {
+    public func getError() -> ReferenceError? {
         return error
     }
 
-    public func depth() -> Int {
+    internal func depth() -> Int {
         return components.count
     }
 
@@ -141,7 +141,7 @@ public struct Reference: Codable, Equatable, Hashable {
         return rawPath
     }
 
-    public func component(_ index: Int) -> (String, Int?)? {
+    internal func component(_ index: Int) -> (String, Int?)? {
         if index >= self.depth() {
             return nil
         }
