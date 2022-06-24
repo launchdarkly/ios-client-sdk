@@ -43,4 +43,30 @@ final class KindSpec: XCTestCase {
         XCTAssertEqual(Kind("multi"), .multi)
         XCTAssertEqual(Kind("org"), .custom("org"))
     }
+
+    func testKindCanEncodeAndDecodeAppropriately() throws {
+        // I know it seems silly to have these test cases be arrays instead of
+        // simple strings. However, if I can please kindly direct your
+        // attention to https://github.com/apple/swift-corelibs-foundation/issues/4402
+        // you will see that older versions had an issue encoding and decoding JSON
+        // fragments like simple strings.
+        //
+        // Using an array like this is a simple but effective workaround.
+        let testCases = [
+            ("[\"user\"]", Kind("user"), true, false),
+            ("[\"multi\"]", Kind("multi"), false, true),
+            ("[\"org\"]", Kind("org"), false, false)
+        ]
+
+        for (json, expectedKind, isUser, isMulti) in testCases {
+            let kindJson = Data(json.utf8)
+            let kinds = try JSONDecoder().decode([Kind].self, from: kindJson)
+
+            XCTAssertEqual(expectedKind, kinds[0])
+            XCTAssertEqual(isUser, kinds[0].isUser())
+            XCTAssertEqual(isMulti, kinds[0].isMulti())
+
+            try XCTAssertEqual(kindJson, JSONEncoder().encode(kinds))
+        }
+    }
 }

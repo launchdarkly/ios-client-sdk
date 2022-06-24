@@ -212,7 +212,9 @@
 		A31088272837DCA900184942 /* LDContextSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088242837DCA900184942 /* LDContextSpec.swift */; };
 		A31088282837DCA900184942 /* ReferenceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088252837DCA900184942 /* ReferenceSpec.swift */; };
 		A31088292837DCA900184942 /* KindSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088262837DCA900184942 /* KindSpec.swift */; };
+		A31285D42863AFE900D84CF4 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = A31285D32863AFE900D84CF4 /* LDSwiftEventSourceStatic */; };
 		A33A5F7A28466D04000C29C7 /* LDContextStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33A5F7928466D04000C29C7 /* LDContextStub.swift */; };
+		A3570F5A28527B8200CF241A /* LDContextCodableSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */; };
 		A36EDFC82853883400D91B05 /* ObjcLDReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFC72853883400D91B05 /* ObjcLDReference.swift */; };
 		A36EDFC92853883400D91B05 /* ObjcLDReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFC72853883400D91B05 /* ObjcLDReference.swift */; };
 		A36EDFCA2853883400D91B05 /* ObjcLDReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFC72853883400D91B05 /* ObjcLDReference.swift */; };
@@ -223,7 +225,6 @@
 		A36EDFD02853C50B00D91B05 /* ObjcLDContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
-		B467791324D8AEEC00897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791224D8AEEC00897F00 /* LDSwiftEventSourceStatic */; };
 		B467791524D8AEF300897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791424D8AEF300897F00 /* LDSwiftEventSourceStatic */; };
 		B467791724D8AEF800897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791624D8AEF800897F00 /* LDSwiftEventSourceStatic */; };
 		B467791924D8AEFC00897F00 /* LDSwiftEventSourceStatic in Frameworks */ = {isa = PBXBuildFile; productRef = B467791824D8AEFC00897F00 /* LDSwiftEventSourceStatic */; };
@@ -424,6 +425,7 @@
 		A31088252837DCA900184942 /* ReferenceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReferenceSpec.swift; sourceTree = "<group>"; };
 		A31088262837DCA900184942 /* KindSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KindSpec.swift; sourceTree = "<group>"; };
 		A33A5F7928466D04000C29C7 /* LDContextStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDContextStub.swift; sourceTree = "<group>"; };
+		A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDContextCodableSpec.swift; sourceTree = "<group>"; };
 		A36EDFC72853883400D91B05 /* ObjcLDReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDReference.swift; sourceTree = "<group>"; };
 		A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDContext.swift; sourceTree = "<group>"; };
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
@@ -463,7 +465,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B467791324D8AEEC00897F00 /* LDSwiftEventSourceStatic in Frameworks */,
+				A31285D42863AFE900D84CF4 /* LDSwiftEventSourceStatic in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -805,6 +807,7 @@
 				A31088242837DCA900184942 /* LDContextSpec.swift */,
 				A31088252837DCA900184942 /* ReferenceSpec.swift */,
 				A31088262837DCA900184942 /* KindSpec.swift */,
+				A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */,
 			);
 			path = Context;
 			sourceTree = "<group>";
@@ -920,7 +923,7 @@
 			);
 			name = LaunchDarkly_iOS;
 			packageProductDependencies = (
-				B467791224D8AEEC00897F00 /* LDSwiftEventSourceStatic */,
+				A31285D32863AFE900D84CF4 /* LDSwiftEventSourceStatic */,
 			);
 			productName = Darkly;
 			productReference = 8354EFC21F22491C00C05156 /* LaunchDarkly.framework */;
@@ -1371,6 +1374,7 @@
 				830DB3AC22380A3E00D65D25 /* HTTPHeadersSpec.swift in Sources */,
 				831425AF206ABB5300F2EF36 /* EnvironmentReportingMock.swift in Sources */,
 				838AB53F1F72A7D5006F03F5 /* FlagSynchronizerSpec.swift in Sources */,
+				A3570F5A28527B8200CF241A /* LDContextCodableSpec.swift in Sources */,
 				837406D421F760640087B22B /* LDTimerSpec.swift in Sources */,
 				832307A61F7D8D720029815A /* URLRequestSpec.swift in Sources */,
 				832307A81F7DA61B0029815A /* LDEventSourceMock.swift in Sources */,
@@ -1888,6 +1892,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		A31285D32863AFE900D84CF4 /* LDSwiftEventSourceStatic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
+			productName = LDSwiftEventSourceStatic;
+		};
 		B445A6E324C0D1E3000BAD6D /* LDSwiftEventSource */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
@@ -1907,11 +1916,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
 			productName = LDSwiftEventSource;
-		};
-		B467791224D8AEEC00897F00 /* LDSwiftEventSourceStatic */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
-			productName = LDSwiftEventSourceStatic;
 		};
 		B467791424D8AEF300897F00 /* LDSwiftEventSourceStatic */ = {
 			isa = XCSwiftPackageProductDependency;
