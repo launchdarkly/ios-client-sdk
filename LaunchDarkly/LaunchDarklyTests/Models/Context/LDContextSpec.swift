@@ -180,7 +180,7 @@ final class LDContextSpec: XCTestCase {
             ("kind", .string("org")),
             ("key", .string("my-key")),
             ("name", .string("my-name")),
-            ("transient", .bool(true)),
+            ("anonymous", .bool(true)),
             ("attr", .string("my-attr")),
             ("/starts-with-slash", .string("love that prefix")),
             ("/crazy~0name", .string("still works")),
@@ -207,7 +207,7 @@ final class LDContextSpec: XCTestCase {
             var builder = LDContextBuilder(key: "my-key")
             builder.kind("org")
             builder.name("my-name")
-            builder.transient(true)
+            builder.anonymous(true)
             builder.secondary("my-secondary")
             builder.trySetValue("attr", .string("my-attr"))
             builder.trySetValue("starts-with-slash", .string("love that prefix"))
@@ -231,7 +231,7 @@ final class LDContextSpec: XCTestCase {
         builder.key("org")
         builder.kind("org")
         builder.name("my-name")
-        builder.transient(true)
+        builder.anonymous(true)
         builder.trySetValue("attr", .string("my-attr"))
 
         multibuilder.addContext(try builder.build().get())
@@ -242,7 +242,7 @@ final class LDContextSpec: XCTestCase {
             ("kind", LDValue.string("multi")),
             ("key", nil),
             ("name", nil),
-            ("transient", nil),
+            ("anonymous", nil),
             ("attr", nil)
         ]
 

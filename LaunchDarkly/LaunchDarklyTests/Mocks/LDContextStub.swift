@@ -29,7 +29,7 @@ extension LDContext {
 
         builder.name(StubConstants.name)
         builder.secondary(StubConstants.secondary)
-        builder.transient(StubConstants.isAnonymous)
+        builder.anonymous(StubConstants.isAnonymous)
 
         builder.trySetValue("firstName", StubConstants.firstName)
         builder.trySetValue("lastName", StubConstants.lastName)

@@ -25,7 +25,7 @@ public struct LDContext: Encodable, Equatable {
 
     // Meta attributes
     fileprivate var name: String?
-    fileprivate var transient: Bool = false
+    fileprivate var anonymous: Bool = false
     fileprivate var secondary: String?
     internal var privateAttributes: [Reference] = []
 
@@ -131,8 +131,8 @@ public struct LDContext: Encodable, Equatable {
             try container.encodeIfPresent(meta, forKey: DynamicCodingKeys(string: "_meta"))
         }
 
-        if context.transient {
-            try container.encodeIfPresent(context.transient, forKey: DynamicCodingKeys(string: "transient"))
+        if context.anonymous {
+            try container.encodeIfPresent(context.anonymous, forKey: DynamicCodingKeys(string: "anonymous"))
         }
     }
 
@@ -412,8 +412,8 @@ public struct LDContext: Encodable, Equatable {
             return self.key.map { .string($0) }
         case "name":
             return self.name.map { .string($0) }
-        case "transient":
-            return .bool(self.transient)
+        case "anonymous":
+            return .bool(self.anonymous)
         default:
             return self.attributes[name]
         }
@@ -487,7 +487,7 @@ extension LDContext: Decodable {
             custom.forEach { contextBuilder.trySetValue($0.key, $0.value) }
 
             let isAnonymous = try values.decodeIfPresent(Bool.self, forKey: .isAnonymous) ?? false
-            contextBuilder.transient(isAnonymous)
+            contextBuilder.anonymous(isAnonymous)
 
             let privateAttributeNames = try values.decodeIfPresent([String].self, forKey: .privateAttributeNames) ?? []
             privateAttributeNames.forEach { contextBuilder.addPrivateAttribute(Reference($0)) }
@@ -589,7 +589,7 @@ extension LDContext: TypeIdentifying {}
 ///
 /// You may use these methods to set additional attributes and/or change the kind before calling
 /// `LDContextBuilder.build()`. If you do not change any values, the defaults for the `LDContext` are that its
-/// kind is "user", its key is set to whatever value you passed to `LDContextBuilder.init(key:)`, its transient attribute
+/// kind is "user", its key is set to whatever value you passed to `LDContextBuilder.init(key:)`, its anonymous attribute
 /// is false, and it has no values for any other attributes.
 ///
 /// To define a multi-kind LDContext, see `LDMultiContextBuilder`.
@@ -598,7 +598,7 @@ public struct LDContextBuilder {
 
     // Meta attributes
     private var name: String?
-    private var transient: Bool = false
+    private var anonymous: Bool = false
     private var secondary: String?
     private var privateAttributes: [Reference] = []
 
@@ -668,7 +668,7 @@ public struct LDContextBuilder {
     ///
     /// - "name": Must be a string or null. See `LDContextBuilder.name(_:)`.
     ///
-    /// - "transient": Must be a boolean. See `LDContextBuilder.transient(_:)`.
+    /// - "anonymous": Must be a boolean. See `LDContextBuilder.anonymous(_:)`.
     ///
     /// Values that are JSON arrays or objects have special behavior when referenced in
     /// flag/segment rules.
@@ -699,9 +699,9 @@ public struct LDContextBuilder {
             self.name(val)
         case ("name", _):
             return false
-        case ("transient", .bool(let val)):
-            self.transient(val)
-        case ("transient", _):
+        case ("anonymous", .bool(let val)):
+            self.anonymous(val)
+        case ("anonymous", _):
             return false
         case ("secondary", .string(let val)):
             self.secondary(val)
@@ -709,9 +709,6 @@ public struct LDContextBuilder {
             return false
         case ("privateAttributeNames", _):
             Log.debug(typeName(and: #function) + ": The privateAttributeNames property has been replaced with privateAttributes. Refusing to set a property named privateAttributeNames.")
-            return false
-        case ("anonymous", _):
-            Log.debug(typeName(and: #function) + ": The anonymous property has been replaced with transient. Refusing to set a property named anonymous.")
             return false
         case (_, .null):
             self.attributes.removeValue(forKey: name)
@@ -744,15 +741,15 @@ public struct LDContextBuilder {
     /// The default value is false. False means that this LDContext represents an entity such as a
     /// user that you want to be able to see on the LaunchDarkly dashboard.
     ///
-    /// Setting transient to true excludes this LDContext from the database that is used by the
+    /// Setting anonymous to true excludes this LDContext from the database that is used by the
     /// dashboard. It does not exclude it from analytics event data, so it is not the same as
     /// making attributes private; all non-private attributes will still be included in events and
     /// data export.
     ///
-    /// This value is also addressable in evaluations as the attribute name "transient". It is
+    /// This value is also addressable in evaluations as the attribute name "anonymous". It is
     /// always treated as a boolean true or false in evaluations.
-    public mutating func transient(_ transient: Bool) {
-        self.transient = transient
+    public mutating func anonymous(_ anonymous: Bool) {
+        self.anonymous = anonymous
     }
 
     /// Provide a reference to designate any number of LDContext attributes as private: that is,
@@ -766,7 +763,7 @@ public struct LDContextBuilder {
     /// This action only affects analytics events that involve this particular LDContext. To mark some (or all)
     /// LDContext attributes as private for all uses, use the overall event configuration for the SDK.
     ///
-    /// The attributes "kind" and "key", and the metadata properties set by secondary and transient,
+    /// The attributes "kind" and "key", and the metadata properties set by secondary and anonymous,
     /// cannot be made private.
     public mutating func addPrivateAttribute(_ reference: Reference) {
         self.privateAttributes.append(reference)
@@ -802,7 +799,7 @@ public struct LDContextBuilder {
         context.kind = kind
         context.contexts = []
         context.name = self.name
-        context.transient = self.transient
+        context.anonymous = self.anonymous
         context.secondary = self.secondary
         context.privateAttributes = self.privateAttributes
         context.key = self.key

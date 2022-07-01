@@ -9,7 +9,7 @@ final class LDContextCodableSpec: XCTestCase {
             ("{\"key\": \"foo\"}", "{\"key\": \"foo\", \"kind\": \"user\"}"),
             ("{\"key\" : \"foo\", \"name\" : \"bar\"}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"name\" : \"bar\"}"),
             ("{\"key\" : \"foo\", \"custom\" : {\"a\" : \"b\"}}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"a\" : \"b\"}"),
-            ("{\"key\" : \"foo\", \"anonymous\" : true}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"transient\" : true}"),
+            ("{\"key\" : \"foo\", \"anonymous\" : true}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"anonymous\" : true}"),
             ("{\"key\" : \"foo\", \"secondary\" : \"bar\"}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"_meta\" : {\"secondary\" : \"bar\"}}"),
             ("{\"key\" : \"foo\", \"ip\" : \"1\", \"privateAttributeNames\" : [\"ip\"]}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"ip\" : \"1\", \"_meta\" : { \"privateAttributes\" : [\"ip\"]} }")
         ]
@@ -26,7 +26,7 @@ final class LDContextCodableSpec: XCTestCase {
         let testCases = [
             "{\"kind\":\"org\",\"key\":\"foo\"}",
             "{\"kind\":\"user\",\"key\":\"foo\"}",
-            "{\"kind\":\"foo\",\"key\":\"bar\",\"transient\":true}",
+            "{\"kind\":\"foo\",\"key\":\"bar\",\"anonymous\":true}",
             "{\"kind\":\"foo\",\"key\":\"bar\",\"name\":\"Foo\",\"_meta\":{\"privateAttributes\":[\"a\"],\"secondary\":\"baz\"}}",
             "{\"kind\":\"foo\",\"key\":\"bar\",\"object\":{\"a\":\"b\"}}"
         ]
@@ -111,7 +111,7 @@ final class LDContextCodableSpec: XCTestCase {
                         },
                         "baz": {
                             "key": "baz-key",
-                            "transient": true
+                            "anonymous": true
                        }
                    }
                    """
@@ -123,7 +123,7 @@ final class LDContextCodableSpec: XCTestCase {
 
         var bazBuilder = LDContextBuilder(key: "baz-key")
         bazBuilder.kind("baz")
-        bazBuilder.transient(true)
+        bazBuilder.anonymous(true)
 
         var multiBuilder = LDMultiContextBuilder()
         multiBuilder.addContext(try userBuilder.build().get())

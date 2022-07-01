@@ -225,8 +225,8 @@ final class SdkController: RouteCollection {
             contextBuilder.name(name)
         }
 
-        if let transient = params.transient {
-            contextBuilder.transient(transient)
+        if let anonymous = params.anonymous {
+            contextBuilder.anonymous(anonymous)
         }
 
         if let secondary = params.secondary {
