@@ -705,7 +705,7 @@ public class LDClient {
         config = configuration
         let anonymousUser = LDUser(environmentReporter: environmentReporter)
         user = anonymousUser
-        let anonymousContext = LDContext(environmentReporting: environmentReporter)
+        let anonymousContext = LDContext()
         context = startContext ?? anonymousContext
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, context: context)
         diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service)

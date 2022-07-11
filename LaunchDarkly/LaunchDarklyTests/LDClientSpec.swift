@@ -309,7 +309,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
                 }
                 it("uses anonymous user") {
-                    expect(testContext.subject.context.fullyQualifiedKey()) == LDContext.defaultKey(environmentReporting: testContext.environmentReporterMock)
+                    expect(testContext.subject.context.fullyQualifiedKey()) == LDContext.defaultKey(kind: testContext.subject.context.kind)
                     expect(testContext.subject.service.context) == testContext.subject.context
                     expect(testContext.makeFlagSynchronizerService?.context) == testContext.subject.context
                     expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.context) == testContext.subject.context

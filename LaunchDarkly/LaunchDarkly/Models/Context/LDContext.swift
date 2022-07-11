@@ -37,8 +37,8 @@ public struct LDContext: Encodable, Equatable {
         self.canonicalizedKey = canonicalizedKey
     }
 
-    init(environmentReporting: EnvironmentReporting) {
-        self.init(canonicalizedKey: LDContext.defaultKey(environmentReporting: environmentReporting))
+    init() {
+        self.init(canonicalizedKey: LDContext.defaultKey(kind: Kind.user))
     }
 
     struct Meta: Codable {
@@ -212,6 +212,20 @@ public struct LDContext: Encodable, Equatable {
         }
 
         return (false, nestedPropertiesAreRedacted)
+    }
+
+    static internal func defaultKey(kind: Kind) -> String {
+        // ldDeviceIdentifier is used for users to be compatible with
+        // older SDKs
+        let storedIdKey = kind.isUser() ? "ldDeviceIdentifier" : "ldGeneratedContextKey:\(kind)"
+        if let storedId = UserDefaults.standard.string(forKey: storedIdKey) {
+            return storedId
+        }
+
+        let key = UUID().uuidString
+        UserDefaults.standard.set(key, forKey: storedIdKey)
+
+        return key
     }
 
     internal struct UserInfoKeys {
@@ -418,25 +432,6 @@ public struct LDContext: Encodable, Equatable {
             return self.attributes[name]
         }
     }
-
-    /// Default key is the LDContext.key the SDK provides when any intializer is called without defining the key. The key should be constant with respect to the client app installation on a specific device. (The key may change if the client app is uninstalled and then reinstalled on the same device.)
-    /// - parameter environmentReporter: The environmentReporter provides selected information that varies between OS regarding how it's determined
-    static func defaultKey(environmentReporting: EnvironmentReporting) -> String {
-        // For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
-        // For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
-        if let vendorUUID = environmentReporting.vendorUUID {
-            return vendorUUID
-        }
-
-        if let storedId = UserDefaults.standard.string(forKey: storedIdKey) {
-            return storedId
-        }
-
-        let key = UUID().uuidString
-        UserDefaults.standard.set(key, forKey: storedIdKey)
-
-        return key
-    }
 }
 
 extension LDContext: Decodable {
@@ -584,6 +579,11 @@ extension LDContext: Decodable {
 
 extension LDContext: TypeIdentifying {}
 
+enum LDContextBuilderKey {
+    case generateKey
+    case key(String)
+}
+
 /// Contains methods for building a single kind `LDContext` with a specified key, defaulting to kind
 /// "user".
 ///
@@ -602,7 +602,7 @@ public struct LDContextBuilder {
     private var secondary: String?
     private var privateAttributes: [Reference] = []
 
-    private var key: String?
+    private var key: LDContextBuilderKey
     private var attributes: [String: LDValue] = [:]
 
     // Contexts that were deserialized from implicit user formats
@@ -610,9 +610,22 @@ public struct LDContextBuilder {
     // never allowed to be empty.
     fileprivate var allowEmptyKey: Bool = false
 
+    /// Create a new LDContextBuilder.
+    ///
+    /// By default, this builder will create an anonymous LDContext
+    /// with a generated key. This key will be cached locally and
+    /// reused for the same context kind.
+    ///
+    /// If `LDContextBuilder.key` is called, a key will no longer be
+    /// generated and the anonymous status will match the value
+    /// provided by `LDContextBuilder.anonymous` or false by default.
+    public init() {
+        self.key = .generateKey
+    }
+
     /// Create a new LDContextBuilder with the provided `key`.
     public init(key: String) {
-        self.key = key
+        self.key = .key(key)
     }
 
     /// Sets the LDContext's kind attribute.
@@ -636,7 +649,7 @@ public struct LDContextBuilder {
     ///
     /// The key attribute can be referenced by flag rules, flag target lists, and segments.
     public mutating func key(_ key: String) {
-        self.key = key
+        self.key = .key(key)
     }
 
     /// Sets the LDContext's name attribute.
@@ -791,18 +804,28 @@ public struct LDContextBuilder {
             return Result.failure(.requiresMultiBuilder)
         }
 
-        if !allowEmptyKey && self.key?.isEmpty ?? true {
+        var contextKey = ""
+        var anonymous = self.anonymous
+        switch self.key {
+        case let .key(key):
+            contextKey = key
+        case .generateKey:
+            contextKey = LDContext.defaultKey(kind: kind)
+            anonymous = true
+        }
+
+        if !allowEmptyKey && contextKey.isEmpty {
             return Result.failure(.emptyKey)
         }
 
-        var context = LDContext(canonicalizedKey: canonicalizeKeyForKind(kind: kind, key: self.key!, omitUserKind: true))
+        var context = LDContext(canonicalizedKey: canonicalizeKeyForKind(kind: kind, key: contextKey, omitUserKind: true))
         context.kind = kind
         context.contexts = []
         context.name = self.name
-        context.anonymous = self.anonymous
+        context.anonymous = anonymous
         context.secondary = self.secondary
         context.privateAttributes = self.privateAttributes
-        context.key = self.key
+        context.key = contextKey
         context.attributes = self.attributes
 
         return Result.success(context)

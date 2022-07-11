@@ -37,6 +37,46 @@ final class LDContextSpec: XCTestCase {
         XCTAssertTrue(context.kind.isUser())
     }
 
+    func testBuilderWillForceAnonymousToTrueForGeneratedKeys() throws {
+        var builder = LDContextBuilder()
+        builder.anonymous(false)
+
+        let context = try builder.build().get()
+        XCTAssertFalse(context.fullyQualifiedKey().isEmpty)
+
+        guard case let .bool(anonymous) = context.getValue(Reference("anonymous"))
+        else {
+            XCTFail("Anonymous could not be retrieved")
+            return
+        }
+
+        XCTAssertTrue(anonymous)
+    }
+
+    func testBuilderWillGenerateSameKeyForSameContextKind() throws {
+        var builder = LDContextBuilder()
+        let userContext1 = try builder.build().get()
+        let userContext2 = try builder.build().get()
+
+        builder.kind("org")
+
+        let orgContext1 = try builder.build().get()
+        let orgContext2 = try builder.build().get()
+
+        builder.kind("user")
+        let userContext3 = try builder.build().get()
+
+        // All user keys are the same
+        XCTAssertEqual(userContext1.fullyQualifiedKey(), userContext2.fullyQualifiedKey())
+        XCTAssertEqual(userContext1.fullyQualifiedKey(), userContext3.fullyQualifiedKey())
+
+        // All org keys are the same
+        XCTAssertEqual(orgContext1.fullyQualifiedKey(), orgContext2.fullyQualifiedKey())
+
+        // But they aren't equal to each other
+        XCTAssertNotEqual(userContext1.fullyQualifiedKey(), orgContext1.fullyQualifiedKey())
+    }
+
     func testSingleContextHasCorrectCanonicalKey() throws {
         let tests: [(String, String, String)] = [
             ("key", "user", "key"),

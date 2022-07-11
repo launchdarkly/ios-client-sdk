@@ -23,6 +23,10 @@ public final class ObjcLDContext: NSObject {
 public final class ObjcLDContextBuilder: NSObject {
     var builder: LDContextBuilder
 
+    @objc public override init() {
+        builder = LDContextBuilder()
+    }
+
     @objc public init(key: String) {
         builder = LDContextBuilder(key: key)
     }
