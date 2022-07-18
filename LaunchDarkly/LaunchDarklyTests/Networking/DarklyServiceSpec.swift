@@ -106,7 +106,7 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(reportRequestCount) == 0
                         }
                         it("creates a GET request") {
-                            // GET request url has the form https://<host>/msdk/evalx/users/<base64encodedUser>
+                            // GET request url has the form https://<host>/msdk/evalx/contexts/<base64encodedContext>
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
@@ -159,7 +159,7 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(reportRequestCount) == 0
                         }
                         it("creates a GET request") {
-                            // GET request url has the form https://<host>/msdk/evalx/users/<base64encodedUser>
+                            // GET request url has the form https://<host>/msdk/evalx/contexts/<base64encodedContext>
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
@@ -273,7 +273,7 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(reportRequestCount) == 1
                         }
                         it("creates a REPORT request") {
-                            // REPORT request url has the form https://<host>/msdk/evalx/user; httpBody contains the user dictionary
+                            // REPORT request url has the form https://<host>/msdk/evalx/context; httpBody contains the context dictionary
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasSuffix(DarklyService.FlagRequestPath.report)).to(beTrue())
@@ -325,7 +325,7 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(reportRequestCount) == 1
                         }
                         it("creates a REPORT request") {
-                            // REPORT request url has the form https://<host>/msdk/evalx/user; httpBody contains the user dictionary
+                            // REPORT request url has the form https://<host>/msdk/evalx/context; httpBody contains the context dictionary
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasSuffix(DarklyService.FlagRequestPath.report)).to(beTrue())

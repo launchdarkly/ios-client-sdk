@@ -43,8 +43,6 @@ struct TagParameters: Content {
 }
 
 struct ClientSideParameters: Content {
-    // TODO(mmk) Remove this user when you have converted everything
-    var initialUser: LDUser?
     var initialContext: LDContext?
     var evaluationReasons: Bool?
     var useReport: Bool?

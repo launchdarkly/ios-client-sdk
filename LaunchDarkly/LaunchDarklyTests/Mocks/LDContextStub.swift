@@ -3,24 +3,24 @@ import Foundation
 
 extension LDContext {
     struct StubConstants {
-        static let key: LDValue = "stub.user.key"
+        static let key: LDValue = "stub.context.key"
 
-        static let name = "stub.user.name"
-        static let secondary = "stub.user.secondary"
+        static let name = "stub.context.name"
+        static let secondary = "stub.context.secondary"
         static let isAnonymous = false
 
-        static let firstName: LDValue = "stub.user.firstName"
-        static let lastName: LDValue = "stub.user.lastName"
-        static let country: LDValue = "stub.user.country"
-        static let ipAddress: LDValue = "stub.user.ipAddress"
-        static let email: LDValue = "stub.user@email.com"
-        static let avatar: LDValue = "stub.user.avatar"
-        static let custom: [String: LDValue] = ["stub.user.custom.keyA": "stub.user.custom.valueA",
-                                            "stub.user.custom.keyB": true,
-                                            "stub.user.custom.keyC": 1027,
-                                            "stub.user.custom.keyD": 2.71828,
-                                            "stub.user.custom.keyE": [0, 1, 2],
-                                            "stub.user.custom.keyF": ["1": 1, "2": 2, "3": 3]]
+        static let firstName: LDValue = "stub.context.firstName"
+        static let lastName: LDValue = "stub.context.lastName"
+        static let country: LDValue = "stub.context.country"
+        static let ipAddress: LDValue = "stub.context.ipAddress"
+        static let email: LDValue = "stub.context@email.com"
+        static let avatar: LDValue = "stub.context.avatar"
+        static let custom: [String: LDValue] = ["stub.context.custom.keyA": "stub.context.custom.valueA",
+                                            "stub.context.custom.keyB": true,
+                                            "stub.context.custom.keyC": 1027,
+                                            "stub.context.custom.keyD": 2.71828,
+                                            "stub.context.custom.keyE": [0, 1, 2],
+                                            "stub.context.custom.keyF": ["1": 1, "2": 2, "3": 3]]
     }
 
     static func stub(key: String? = nil,

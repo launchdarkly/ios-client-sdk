@@ -119,11 +119,11 @@ public final class ObjcLDConfig: NSObject {
     }
 
     /**
-     Controls how the SDK reports the user in analytics event reports. When set to YES, event reports will contain the user attributes, except attributes marked as private. When set to NO, event reports will contain the user's key only, reducing the size of event reports. (Default: NO)
+     Controls how the SDK reports the context[f in analytics event reports. When set to YES, event reports will contain the context attributes, except attributes marked as private. When set to NO, event reports will contain the context keys only, reducing the size of event reports. (Default: NO)
      */
-    @objc public var inlineUserInEvents: Bool {
-        get { config.inlineUserInEvents }
-        set { config.inlineUserInEvents = newValue }
+    @objc public var inlineContextInEvents: Bool {
+        get { config.inlineContextInEvents }
+        set { config.inlineContextInEvents = newValue }
     }
 
     /// Enables logging for debugging. (Default: NO)
@@ -138,10 +138,10 @@ public final class ObjcLDConfig: NSObject {
         set { config.evaluationReasons = newValue }
     }
 
-    /// An Integer that tells UserEnvironmentFlagCache the maximum number of users to locally cache. Can be set to -1 for unlimited cached users. (Default: 5)
-    @objc public var maxCachedUsers: Int {
-        get { config.maxCachedUsers }
-        set { config.maxCachedUsers = newValue }
+    /// An Integer that tells ContextEnvironmentFlagCache the maximum number of contexts to locally cache. Can be set to -1 for unlimited cached contexts. (Default: 5)
+    @objc public var maxCachedContexts: Int {
+        get { config.maxCachedContexts }
+        set { config.maxCachedContexts = newValue }
     }
 
     /**

@@ -32,8 +32,8 @@ final class DarklyService: DarklyServiceProvider {
     }
 
     struct FlagRequestPath {
-        static let get = "msdk/evalx/users"
-        static let report = "msdk/evalx/user"
+        static let get = "msdk/evalx/contexts"
+        static let report = "msdk/evalx/context"
     }
 
     struct StreamRequestPath {
@@ -149,7 +149,7 @@ final class DarklyService: DarklyServiceProvider {
                            errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         let encoder = JSONEncoder()
         encoder.userInfo[LDContext.UserInfoKeys.includePrivateAttributes] = true
-        let userJsonData = try? encoder.encode(context)
+        let contextJsonData = try? encoder.encode(context)
 
         var streamRequestUrl = config.streamUrl.appendingPathComponent(StreamRequestPath.meval)
         var connectMethod = HTTPRequestMethod.get
@@ -157,9 +157,9 @@ final class DarklyService: DarklyServiceProvider {
 
         if useReport {
             connectMethod = HTTPRequestMethod.report
-            connectBody = userJsonData
+            connectBody = contextJsonData
         } else {
-            streamRequestUrl.appendPathComponent(userJsonData?.base64UrlEncodedString ?? "", isDirectory: false)
+            streamRequestUrl.appendPathComponent(contextJsonData?.base64UrlEncodedString ?? "", isDirectory: false)
         }
 
         return serviceFactory.makeStreamingProvider(url: shouldGetReasons(url: streamRequestUrl),

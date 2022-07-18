@@ -26,7 +26,7 @@ final class LDClientSpec: QuickSpec {
         var context: LDContext!
         var subject: LDClient!
         let serviceFactoryMock = ClientServiceMockFactory()
-        // mock getters based on setting up the user & subject
+        // mock getters based on setting up the context & subject
         var serviceMock: DarklyServiceMock! {
             subject.service as? DarklyServiceMock
         }
@@ -188,7 +188,7 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                 expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
             }
-            it("saves the user") {
+            it("saves the context") {
                 expect(testContext.subject.context) == testContext.context
                 expect(testContext.subject.service.context) == testContext.context
                 expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
@@ -197,7 +197,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.context) == testContext.context
             }
-            it("uncaches the new users flags") {
+            it("uncaches the new contexts flags") {
                 expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
                 expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedContextKey) == testContext.context.fullyQualifiedHashedKey()
             }
@@ -207,7 +207,7 @@ final class LDClientSpec: QuickSpec {
             }
             it("converts cached data") {
                 expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataCallCount) == 1
-                expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedUsers) == testContext.config.maxCachedUsers
+                expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedContexts) == testContext.config.maxCachedContexts
                 expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.keysToConvert) == [testContext.config.mobileKey]
             }
             it("starts in foreground") {
@@ -231,7 +231,7 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                 expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
             }
-            it("saves the user") {
+            it("saves the context") {
                 expect(testContext.subject.context) == testContext.context
                 expect(testContext.subject.service.context) == testContext.context
                 expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
@@ -240,7 +240,7 @@ final class LDClientSpec: QuickSpec {
                 }
                 expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.context) == testContext.context
             }
-            it("uncaches the new users flags") {
+            it("uncaches the new contexts flags") {
                 expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
                 expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedContextKey) == testContext.context.fullyQualifiedHashedKey()
             }
@@ -250,15 +250,15 @@ final class LDClientSpec: QuickSpec {
             }
             it("converts cached data") {
                 expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataCallCount) == 1
-                expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedUsers) == testContext.config.maxCachedUsers
+                expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedContexts) == testContext.config.maxCachedContexts
                 expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.keysToConvert) == [testContext.config.mobileKey]
             }
             it("starts in foreground") {
                 expect(testContext.subject.runMode) == .foreground
             }
         }
-        context("when called without user") {
-            context("after setting user") {
+        context("when called without context") {
+            context("after setting context") {
                 beforeEach {
                     testContext = TestContext(startOnline: true).withContext(nil)
                     withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
@@ -273,7 +273,7 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                     expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
                 }
-                it("saves the user") {
+                it("saves the context") {
                     expect(testContext.subject.context) == testContext.context
                     expect(testContext.subject.service.context) == testContext.context
                     expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
@@ -282,7 +282,7 @@ final class LDClientSpec: QuickSpec {
                     }
                     expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.context) == testContext.context
                 }
-                it("uncaches the new users flags") {
+                it("uncaches the new contexts flags") {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 2 // called on init and subsequent identify
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedContextKey) == testContext.context.fullyQualifiedHashedKey()
                 }
@@ -292,11 +292,11 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("converts cached data") {
                     expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataCallCount) == 1
-                    expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedUsers) == testContext.config.maxCachedUsers
+                    expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedContexts) == testContext.config.maxCachedContexts
                     expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.keysToConvert) == [testContext.config.mobileKey]
                 }
             }
-            context("without setting user") {
+            context("without setting context") {
                 beforeEach {
                     testContext = TestContext(startOnline: true).withContext(nil)
                     withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
@@ -308,13 +308,13 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                     expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
                 }
-                it("uses anonymous user") {
+                it("uses anonymous context") {
                     expect(testContext.subject.context.fullyQualifiedKey()) == LDContext.defaultKey(kind: testContext.subject.context.kind)
                     expect(testContext.subject.service.context) == testContext.subject.context
                     expect(testContext.makeFlagSynchronizerService?.context) == testContext.subject.context
                     expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.context) == testContext.subject.context
                 }
-                it("uncaches the new users flags") {
+                it("uncaches the new contexts flags") {
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
                     expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedContextKey) == testContext.subject.context.fullyQualifiedHashedKey()
                 }
@@ -324,12 +324,12 @@ final class LDClientSpec: QuickSpec {
                 }
                 it("converts cached data") {
                     expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataCallCount) == 1
-                    expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedUsers) == testContext.config.maxCachedUsers
+                    expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedContexts) == testContext.config.maxCachedContexts
                     expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.keysToConvert) == [testContext.config.mobileKey]
                 }
             }
         }
-        it("when called with cached flags for the user and environment") {
+        it("when called with cached flags for the context and environment") {
             let cachedFlags = ["test-flag": StorageItem.item(FeatureFlag(flagKey: "test-flag"))]
             let testContext = TestContext().withCached(flags: cachedFlags.featureFlags)
             withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
@@ -340,10 +340,10 @@ final class LDClientSpec: QuickSpec {
             expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags) == cachedFlags
 
             expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataCallCount) == 1
-            expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedUsers) == testContext.config.maxCachedUsers
+            expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedContexts) == testContext.config.maxCachedContexts
             expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.keysToConvert) == [testContext.config.mobileKey]
         }
-        it("when called without cached flags for the user") {
+        it("when called without cached flags for the context") {
             let testContext = TestContext()
             withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
 
@@ -353,7 +353,7 @@ final class LDClientSpec: QuickSpec {
             expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
 
             expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataCallCount) == 1
-            expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedUsers) == testContext.config.maxCachedUsers
+            expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedContexts) == testContext.config.maxCachedContexts
             expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.keysToConvert) == [testContext.config.mobileKey]
         }
     }
@@ -471,7 +471,7 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
                             expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
                         }
-                        it("saves the user") {
+                        it("saves the context") {
                             expect(testContext.subject.context) == testContext.context
                             expect(testContext.subject.service.context) == testContext.context
                             expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
@@ -480,7 +480,7 @@ final class LDClientSpec: QuickSpec {
                             }
                             expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.context) == testContext.context
                         }
-                        it("uncaches the new users flags") {
+                        it("uncaches the new contexts flags") {
                             expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
                             expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedContextKey) == testContext.context.fullyQualifiedHashedKey()
                         }
@@ -510,7 +510,7 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: .background)
                             expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.config) == testContext.config
                         }
-                        it("saves the user") {
+                        it("saves the context") {
                             expect(testContext.subject.context) == testContext.context
                             expect(testContext.subject.service.context) == testContext.context
                             expect(testContext.serviceFactoryMock.makeFlagSynchronizerReceivedParameters).toNot(beNil())
@@ -519,7 +519,7 @@ final class LDClientSpec: QuickSpec {
                             }
                             expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.context) == testContext.context
                         }
-                        it("uncaches the new users flags") {
+                        it("uncaches the new contexts flags") {
                             expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsCallCount) == 1
                             expect(testContext.featureFlagCachingMock.retrieveFeatureFlagsReceivedContextKey) == testContext.context.fullyQualifiedHashedKey()
                         }
@@ -579,7 +579,7 @@ final class LDClientSpec: QuickSpec {
 
                 expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
             }
-            it("when the new user has cached feature flags") {
+            it("when the new context has cached feature flags") {
                 let stubFlags = FlagMaintainingMock.stubStoredItems()
                 let newContext = LDContext.stub()
                 let testContext = TestContext().withCached(contextKey: newContext.fullyQualifiedHashedKey(), flags: stubFlags.featureFlags)

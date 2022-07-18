@@ -18,7 +18,7 @@ final class CacheConverterSpec: XCTestCase {
     }
 
     func testNoKeysGiven() {
-        CacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: [], maxCachedUsers: 0)
+        CacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: [], maxCachedContexts: 0)
         XCTAssertEqual(serviceFactory.makeKeyedValueCacheCallCount, 0)
         XCTAssertEqual(serviceFactory.makeFeatureFlagCacheCallCount, 0)
     }
@@ -29,7 +29,7 @@ final class CacheConverterSpec: XCTestCase {
         serviceFactory.makeFeatureFlagCacheReturnValue.keyedValueCache = v7valueCacheMock
         serviceFactory.makeKeyedValueCacheReturnValue = v7valueCacheMock
         v7valueCacheMock.dataReturnValue = CacheConverterSpec.upToDateData
-        CacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: ["key1", "key2"], maxCachedUsers: 0)
+        CacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: ["key1", "key2"], maxCachedContexts: 0)
         XCTAssertEqual(serviceFactory.makeFeatureFlagCacheCallCount, 2)
         XCTAssertEqual(v7valueCacheMock.dataCallCount, 2)
     }

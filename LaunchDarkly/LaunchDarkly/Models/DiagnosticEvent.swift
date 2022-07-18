@@ -101,12 +101,11 @@ struct DiagnosticConfig: Codable {
     let allAttributesPrivate: Bool
     let pollingIntervalMillis: Int
     let backgroundPollingIntervalMillis: Int
-    let inlineUsersInEvents: Bool
+    let inlineContextsInEvents: Bool
     let useReport: Bool
     let backgroundPollingDisabled: Bool
     let evaluationReasonsRequested: Bool
-    // TODO(mmk) Update this config pattern
-    let maxCachedUsers: Int
+    let maxCachedContexts: Int
     let mobileKeyCount: Int
     let diagnosticRecordingIntervalMillis: Int
     let customHeaders: Bool
@@ -122,13 +121,12 @@ struct DiagnosticConfig: Codable {
         allAttributesPrivate = config.allContextAttributesPrivate
         pollingIntervalMillis = Int(exactly: round(config.flagPollingInterval * 1_000)) ?? .max
         backgroundPollingIntervalMillis = Int(exactly: round(config.backgroundFlagPollingInterval * 1_000)) ?? .max
-        // TODO(mmk) Update this config pattern
-        inlineUsersInEvents = config.inlineUserInEvents
+        inlineContextsInEvents = config.inlineContextInEvents
         useReport = config.useReport
         backgroundPollingDisabled = !config.enableBackgroundUpdates
         evaluationReasonsRequested = config.evaluationReasons
         // While the SDK treats all negative values as unlimited, for consistency we only send -1 for diagnostics
-        maxCachedUsers = config.maxCachedUsers >= 0 ? config.maxCachedUsers : -1
+        maxCachedContexts = config.maxCachedContexts >= 0 ? config.maxCachedContexts : -1
         mobileKeyCount = 1 + (config.getSecondaryMobileKeys().count)
         diagnosticRecordingIntervalMillis = Int(exactly: round(config.diagnosticRecordingInterval * 1_000)) ?? .max
         customHeaders = !config.additionalHeaders.isEmpty || config.headerDelegate != nil

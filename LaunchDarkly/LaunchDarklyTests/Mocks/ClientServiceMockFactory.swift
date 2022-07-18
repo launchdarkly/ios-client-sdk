@@ -15,10 +15,10 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     var makeFeatureFlagCacheReturnValue = FeatureFlagCachingMock()
     var makeFeatureFlagCacheCallback: (() -> Void)?
     var makeFeatureFlagCacheCallCount = 0
-    var makeFeatureFlagCacheReceivedParameters: (mobileKey: MobileKey, maxCachedUsers: Int)? = nil
-    func makeFeatureFlagCache(mobileKey: MobileKey, maxCachedUsers: Int = 5) -> FeatureFlagCaching {
+    var makeFeatureFlagCacheReceivedParameters: (mobileKey: MobileKey, maxCachedContexts: Int)? = nil
+    func makeFeatureFlagCache(mobileKey: MobileKey, maxCachedContexts: Int = 5) -> FeatureFlagCaching {
         makeFeatureFlagCacheCallCount += 1
-        makeFeatureFlagCacheReceivedParameters = (mobileKey: mobileKey, maxCachedUsers: maxCachedUsers)
+        makeFeatureFlagCacheReceivedParameters = (mobileKey: mobileKey, maxCachedContexts: maxCachedContexts)
         makeFeatureFlagCacheCallback?()
         return makeFeatureFlagCacheReturnValue
     }

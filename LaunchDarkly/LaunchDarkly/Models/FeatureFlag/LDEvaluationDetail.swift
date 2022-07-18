@@ -5,7 +5,7 @@ import Foundation
  explanation of how it is calculated.
  */
 public final class LDEvaluationDetail<T> {
-    /// The value of the flag for the current user.
+    /// The value of the flag for the current context.
     public let value: T
     /// The index of the returned value within the flag's list of variations, or `nil` if the default was returned.
     public let variationIndex: Int?

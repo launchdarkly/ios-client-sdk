@@ -262,8 +262,6 @@ public class LDClient {
     let config: LDConfig
     let service: DarklyServiceProvider
     private(set) var context: LDContext
-    // TODO(mmk) Remove this when we are done
-    private(set) var user: LDUser
 
     /**
      The LDContext set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the context. See `LDContext` for details about what information can be retained.
@@ -597,7 +595,7 @@ public class LDClient {
         let serviceFactory = serviceFactory ?? ClientServiceFactory()
         var keys = [config.mobileKey]
         keys.append(contentsOf: config.getSecondaryMobileKeys().values)
-        serviceFactory.makeCacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: keys, maxCachedUsers: config.maxCachedUsers)
+        serviceFactory.makeCacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: keys, maxCachedContexts: config.maxCachedContexts)
 
         LDClient.instances = [:]
         var mobileKeys = config.getSecondaryMobileKeys()
@@ -697,14 +695,12 @@ public class LDClient {
     private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
         self.serviceFactory = serviceFactory
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
-        flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedUsers: configuration.maxCachedUsers)
+        flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
         throttler = self.serviceFactory.makeThrottler(environmentReporter: environmentReporter)
 
         config = configuration
-        let anonymousUser = LDUser(environmentReporter: environmentReporter)
-        user = anonymousUser
         let anonymousContext = LDContext()
         context = startContext ?? anonymousContext
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, context: context)

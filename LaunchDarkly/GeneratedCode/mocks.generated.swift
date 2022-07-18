@@ -12,10 +12,10 @@ final class CacheConvertingMock: CacheConverting {
 
     var convertCacheDataCallCount = 0
     var convertCacheDataCallback: (() throws -> Void)?
-    var convertCacheDataReceivedArguments: (serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedUsers: Int)?
-    func convertCacheData(serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedUsers: Int) {
+    var convertCacheDataReceivedArguments: (serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedContexts: Int)?
+    func convertCacheData(serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedContexts: Int) {
         convertCacheDataCallCount += 1
-        convertCacheDataReceivedArguments = (serviceFactory: serviceFactory, keysToConvert: keysToConvert, maxCachedUsers: maxCachedUsers)
+        convertCacheDataReceivedArguments = (serviceFactory: serviceFactory, keysToConvert: keysToConvert, maxCachedContexts: maxCachedContexts)
         try! convertCacheDataCallback?()
     }
 }

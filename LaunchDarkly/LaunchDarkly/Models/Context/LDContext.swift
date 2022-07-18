@@ -229,7 +229,6 @@ public struct LDContext: Encodable, Equatable {
     }
 
     internal struct UserInfoKeys {
-        // TODO(mmk): Everywhere we use DynamicCodingKey, we should CodingUserInfoKey
         static let includePrivateAttributes = CodingUserInfoKey(rawValue: "LD_includePrivateAttributes")!
         static let allAttributesPrivate = CodingUserInfoKey(rawValue: "LD_allAttributesPrivate")!
         static let globalPrivateAttributes = CodingUserInfoKey(rawValue: "LD_globalPrivateAttributes")!

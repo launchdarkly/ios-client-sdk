@@ -79,7 +79,7 @@ final class EventSpec: XCTestCase {
         }
     }
 
-    func testCustomEventEncodingAnonUser() {
+    func testCustomEventEncodingAnonContext() {
         let context = LDContext.stub()
         let event = CustomEvent(key: "event-key", context: context, data: ["key": "val"])
         encodesToObject(event) { dict in
@@ -95,7 +95,7 @@ final class EventSpec: XCTestCase {
     func testCustomEventEncodingInlining() {
         let context = LDContext.stub()
         let event = CustomEvent(key: "event-key", context: context, data: nil, metricValue: 2.5)
-        encodesToObject(event, userInfo: [Event.UserInfoKeys.inlineUserInEvents: true]) { dict in
+        encodesToObject(event, userInfo: [Event.UserInfoKeys.inlineContextInEvents: true]) { dict in
             XCTAssertEqual(dict.count, 5)
             XCTAssertEqual(dict["kind"], "custom")
             XCTAssertEqual(dict["key"], "event-key")
@@ -194,13 +194,13 @@ final class EventSpec: XCTestCase {
         }
     }
 
-    func testFeatureEventEncodingInlinesUserForDebugOrConfig() {
+    func testFeatureEventEncodingInlinesContextForDebugOrConfig() {
         let context = LDContext.stub()
         let featureFlag = FeatureFlag(flagKey: "flag-key", version: 3)
         let featureEvent = FeatureEvent(key: "event-key", context: context, value: true, defaultValue: false, featureFlag: featureFlag, includeReason: false, isDebug: false)
         let debugEvent = FeatureEvent(key: "event-key", context: context, value: true, defaultValue: false, featureFlag: featureFlag, includeReason: false, isDebug: true)
-        let encodedFeature = encodeToLDValue(featureEvent, userInfo: [Event.UserInfoKeys.inlineUserInEvents: true])
-        let encodedDebug = encodeToLDValue(debugEvent, userInfo: [Event.UserInfoKeys.inlineUserInEvents: false])
+        let encodedFeature = encodeToLDValue(featureEvent, userInfo: [Event.UserInfoKeys.inlineContextInEvents: true])
+        let encodedDebug = encodeToLDValue(debugEvent, userInfo: [Event.UserInfoKeys.inlineContextInEvents: false])
         [encodedFeature, encodedDebug].forEach { valueIsObject($0) { dict in
             XCTAssertEqual(dict.count, 7)
             XCTAssertEqual(dict["key"], "event-key")
@@ -213,9 +213,9 @@ final class EventSpec: XCTestCase {
 
     func testIdentifyEventEncoding() throws {
         let context = LDContext.stub()
-        for inlineUser in [true, false] {
+        for inlineContext in [true, false] {
             let event = IdentifyEvent(context: context)
-            encodesToObject(event, userInfo: [Event.UserInfoKeys.inlineUserInEvents: inlineUser]) { dict in
+            encodesToObject(event, userInfo: [Event.UserInfoKeys.inlineContextInEvents: inlineContext]) { dict in
                 XCTAssertEqual(dict.count, 4)
                 XCTAssertEqual(dict["kind"], "identify")
                 XCTAssertEqual(dict["key"], .string(context.fullyQualifiedKey()))
@@ -249,8 +249,7 @@ final class EventSpec: XCTestCase {
 
 extension Event: Equatable {
     public static func == (_ lhs: Event, _ rhs: Event) -> Bool {
-        // TODO(mmk) Do we need this inline users stuff?
-        let config = [LDContext.UserInfoKeys.includePrivateAttributes: true, Event.UserInfoKeys.inlineUserInEvents: true]
+        let config = [LDContext.UserInfoKeys.includePrivateAttributes: true, Event.UserInfoKeys.inlineContextInEvents: true]
         return encodeToLDValue(lhs, userInfo: config) == encodeToLDValue(rhs, userInfo: config)
     }
 }

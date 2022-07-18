@@ -186,30 +186,11 @@ public struct Reference: Codable, Equatable, Hashable {
     }
 
     /// Returns raw string that was passed into constructor.
-    internal func raw() -> String {
+    public func raw() -> String {
         return rawPath
     }
 
-    /// Retrieves a single path component from the attribute reference.
-    ///
-    /// For a simple attribute reference such as "name" with no leading slash,
-    /// if index is zero, `component` returns the attribute name and None.
-    ///
-    /// For an attribute reference with a leading slash, if index is less than
-    /// `Reference.depth()`, `component` returns the path component as a string
-    /// for its first value. The second value is an `Int?` that is the integer
-    /// value of that string if applicable, or None if the string does not
-    /// represent an integer; this is used to implement a "find a value by
-    /// index within a JSON array" behavior similar to JSON Pointer.
-    ///
-    /// If index is out of range, it returns None.
-    ///
-    /// ```
-    /// Reference("a").component(0);      // returns ("a", nil)
-    /// Reference("/a/b").component(1);   // returns ("b", nil)
-    /// Reference("/a/3").component(1);   // returns ("3", 3)
-    /// ```
-    public func component(_ index: Int) -> (String, Int?)? {
+    internal func component(_ index: Int) -> (String, Int?)? {
         if index >= self.depth() {
             return nil
         }

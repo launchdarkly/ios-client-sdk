@@ -4,7 +4,7 @@ import Foundation
 public enum LDStreamingMode {
     /**
      In streaming mode, the SDK uses a streaming connection to receive feature flag data from LaunchDarkly. When a flag
-     is updated in the dashboard, the stream notifies the SDK of changes to the evaluation result for the current user.
+     is updated in the dashboard, the stream notifies the SDK of changes to the evaluation result for the current context.
 
      Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to
      use a streaming connection. If streaming mode is not available, the SDK reverts to polling mode.
@@ -143,8 +143,8 @@ public struct LDConfig {
         /// The default HTTP request method for stream connections and feature flag requests. When true, these requests will use the non-standard verb `REPORT`. When false, these requests will use the standard verb `GET`. (false)
         static let useReport = false
 
-        /// The default setting controlling the amount of user data sent in events. When true the SDK will generate events using the full LDUser, excluding private attributes. When false the SDK will generate events using only the LDUser.key. (false)
-        static let inlineUserInEvents = false
+        /// The default setting controlling the amount of context data sent in events. When true the SDK will generate events using the full LDContext, excluding private attributes. When false the SDK will generate events using only `LDContext.contextKeys()`. (false)
+        static let inlineContextInEvents = false
 
         /// The default setting controlling information logged to the console, and modifying some setting ranges to facilitate debugging. (false)
         static let debugMode = false
@@ -152,8 +152,8 @@ public struct LDConfig {
         /// The default setting for whether we request evaluation reasons for all flags. (false)
         static let evaluationReasons = false
 
-        /// The default setting for the maximum number of locally cached users. (5)
-        static let maxCachedUsers = 5
+        /// The default setting for the maximum number of locally cached contexts. (5)
+        static let maxCachedContexts = 5
 
         /// The default setting for whether sending diagnostic data is disabled. (false)
         static let diagnosticOptOut = false
@@ -294,9 +294,9 @@ public struct LDConfig {
     private static let flagRetryStatusCodes = [HTTPURLResponse.StatusCodes.methodNotAllowed, HTTPURLResponse.StatusCodes.badRequest, HTTPURLResponse.StatusCodes.notImplemented]
 
     /**
-     Controls how the SDK reports the user in analytics event reports. When set to true, event reports will contain the user attributes, except attributes marked as private. When set to false, event reports will contain the user's key only, reducing the size of event reports. (Default: false)
+     Controls how the SDK reports the context in analytics event reports. When set to true, event reports will contain the context attributes, except attributes marked as private. When set to false, event reports will contain the context keys only, reducing the size of event reports. (Default: false)
     */
-    public var inlineUserInEvents: Bool = Defaults.inlineUserInEvents
+    public var inlineContextInEvents: Bool = Defaults.inlineContextInEvents
 
     /// Enables logging for debugging. (Default: false)
     public var isDebugMode: Bool = Defaults.debugMode
@@ -304,8 +304,8 @@ public struct LDConfig {
     /// Enables requesting evaluation reasons for all flags. (Default: false)
     public var evaluationReasons: Bool = Defaults.evaluationReasons
 
-    /// An Integer that tells UserEnvironmentFlagCache the maximum number of users to locally cache. Can be set to -1 for unlimited cached users.
-    public var maxCachedUsers: Int = Defaults.maxCachedUsers
+    /// An Integer that tells ContextEnvironmentFlagCache the maximum number of contexts to locally cache. Can be set to -1 for unlimited cached contexts.
+    public var maxCachedContexts: Int = Defaults.maxCachedContexts
 
     /**
      Set to true to opt out of sending diagnostic data. (Default: false)
@@ -437,10 +437,10 @@ extension LDConfig: Equatable {
             && lhs.allContextAttributesPrivate == rhs.allContextAttributesPrivate
             && Set(lhs.privateContextAttributes) == Set(rhs.privateContextAttributes)
             && lhs.useReport == rhs.useReport
-            && lhs.inlineUserInEvents == rhs.inlineUserInEvents
+            && lhs.inlineContextInEvents == rhs.inlineContextInEvents
             && lhs.isDebugMode == rhs.isDebugMode
             && lhs.evaluationReasons == rhs.evaluationReasons
-            && lhs.maxCachedUsers == rhs.maxCachedUsers
+            && lhs.maxCachedContexts == rhs.maxCachedContexts
             && lhs.diagnosticOptOut == rhs.diagnosticOptOut
             && lhs.diagnosticRecordingInterval == rhs.diagnosticRecordingInterval
             && lhs.wrapperName == rhs.wrapperName
