@@ -43,9 +43,6 @@ jobs:
         type: string
       ios-sim:
         type: string
-      ssh-fix:
-        type: boolean
-        default: false
       build-doc:
         type: boolean
         default: false
@@ -61,16 +58,6 @@ jobs:
 
     steps:
     - checkout
-
-    # There's an XCode bug present in the 12.0.1 CircleCI image that prevents fetching SSH
-    # dependencies from working in some cases, so we disable CircleCI's rewriting of the HTTPS
-    # GitHub URLs to SSH.
-    - when:
-        condition: <<parameters.ssh-fix>>
-        steps:
-          - run:
-              name: SSH fix
-              command: git config --global --unset url.ssh://git@github.com.insteadof
 
     - run:
         name: Setup for builds
@@ -178,11 +165,6 @@ workflows:
           name: Xcode 12.5 - Swift 5.4
           xcode-version: '12.5.1'
           ios-sim: 'platform=iOS Simulator,name=iPhone 8,OS=14.5'
-      - build:
-          name: Xcode 12.0 - Swift 5.3
-          xcode-version: '12.0.1'
-          ios-sim: 'platform=iOS Simulator,name=iPhone 8,OS=14.0'
-          ssh-fix: true
       - build:
           name: Xcode 11.7 - Swift 5.2
           xcode-version: '11.7.0'
