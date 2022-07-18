@@ -661,11 +661,7 @@ public struct LDContextBuilder {
         self.name = name
     }
 
-    /// Sets the value of any attribute for the Context.
-    ///
-    /// This includes only attributes that are addressable in evaluations -- not metadata such as
-    /// secondary or private. If `name` is "privateAttributeNames", it is ignored and no
-    /// attribute is set.
+    /// Sets the value of any attribute for the Context except for private attributes.
     ///
     /// This method uses the `LDValue` type to represent a value of any JSON type: null,
     /// boolean, number, string, array, or object. For all attribute names that do not have special
@@ -679,6 +675,8 @@ public struct LDContextBuilder {
     /// - "kind", "key": Must be a string. See `LDContextBuilder.kind(_:)` and `LDContextBuilder.key(_:)`.
     ///
     /// - "name": Must be a string or null. See `LDContextBuilder.name(_:)`.
+    ///
+    /// - "secondary": Must be a string. See `LDContextBuilder.secondary(_:)`.
     ///
     /// - "anonymous": Must be a boolean. See `LDContextBuilder.anonymous(_:)`.
     ///
@@ -718,9 +716,6 @@ public struct LDContextBuilder {
         case ("secondary", .string(let val)):
             self.secondary(val)
         case ("secondary", _):
-            return false
-        case ("privateAttributeNames", _):
-            Log.debug(typeName(and: #function) + ": The privateAttributeNames property has been replaced with privateAttributes. Refusing to set a property named privateAttributeNames.")
             return false
         case (_, .null):
             self.attributes.removeValue(forKey: name)
