@@ -2,6 +2,17 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [6.2.0] - 2022-09-01
+### Added:
+- CI builds now include a cross-platform test suite implemented in https://github.com/launchdarkly/sdk-test-harness. This covers many test cases that are also implemented in unit tests, but may be extended in the future to ensure consistent behavior across SDKs in other areas.
+- Introduced ApplicationInfo, for configuration of application metadata that may be used in LaunchDarkly analytics or other product features. This does not affect feature flag evaluations.
+
+### Changed:
+- Updated LDSwiftEventSource to 2.0.0. We no longer bind to a static product; rather, we let the build determine static vs dynamic linking.
+
+### Fixed:
+- Previously a deleted flag could be made available in the SDK if the deletion events were processed out of order. This is no longer the case.
+
 ## [6.1.0] - 2022-05-17
 ### Added
 - Added the `LDUser.isAnonymousNullable` property that allows treating the `isAnonymous` property as nullable.
