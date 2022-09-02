@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>ObjcLDChangedFlag Class Reference</title>
+    <title>ApplicationInfo Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Class/ObjcLDChangedFlag" class="dashAnchor"></a>
-    <a title="ObjcLDChangedFlag Class Reference"></a>
+    <a name="//apple_ref/swift/Struct/ApplicationInfo" class="dashAnchor"></a>
+    <a title="ApplicationInfo Structure Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html">LaunchDarkly 6.2.0 Docs</a> (94% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../index.html">LaunchDarkly Reference</a>
         <img id="carat" src="../img/carat.png" alt=""/>
-        ObjcLDChangedFlag Class Reference
+        ApplicationInfo Structure Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -195,18 +195,18 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>ObjcLDChangedFlag</h1>
+            <h1>ApplicationInfo</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt"><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></span><span class="p">)</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="kt">ObjcLDChangedFlag</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ApplicationInfo</span> <span class="p">:</span> <span class="kt">Equatable</span></code></pre>
 
                 </div>
               </div>
-            <p>Collects the elements of a feature flag that changed as a result of a <code>clientstream</code> update or feature flag request. The SDK will pass a typed ObjcLDChangedFlag or a collection of ObjcLDChangedFlags into feature flag observer blocks. This is the base type for the typed ObjcLDChangedFlags passed into observer blocks. The client app will have to convert the ObjcLDChangedFlag into the expected typed ObjcLDChangedFlag type.</p>
+            <p>Defines application metadata.</p>
 
-<p>See the typed <code><a href="../Classes/ObjcLDClient.html">ObjcLDClient</a></code> observeWithKey:owner:handler:, observeWithKeys:owner:handler:, and observeAllWithOwner:handler: for more details.</p>
+<p>These properties are optional and informational. They may be used in LaunchDarkly
+analytics or other product features, but they do not affect feature flag evaluations.</p>
 
           </section>
           <section class="section task-group-section">
@@ -215,9 +215,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDChangedFlag(py)key"></a>
-                    <a name="//apple_ref/swift/Property/key" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDChangedFlag(py)key">key</a>
+                    <a name="/s:12LaunchDarkly15ApplicationInfoVACycfc"></a>
+                    <a name="//apple_ref/swift/Method/init()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly15ApplicationInfoVACycfc">init()</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -225,15 +225,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The changed feature flag&rsquo;s key</p>
+                        <p>Undocumented</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">let</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">String</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">()</span></code></pre>
 
                         </div>
                       </div>
@@ -243,9 +242,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDChangedFlag(py)oldValue"></a>
-                    <a name="//apple_ref/swift/Property/oldValue" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDChangedFlag(py)oldValue">oldValue</a>
+                    <a name="/s:12LaunchDarkly15ApplicationInfoV21applicationIdentifieryySSF"></a>
+                    <a name="//apple_ref/swift/Method/applicationIdentifier(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly15ApplicationInfoV21applicationIdentifieryySSF">applicationIdentifier(_:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -253,15 +252,18 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The value from before the flag change occurred.</p>
+                        <p>A unique identifier representing the application where the LaunchDarkly SDK is running.</p>
+
+<p>This can be specified as any string value as long as it only uses the following characters:
+ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
+characters will be ignored.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">let</span> <span class="nv">oldValue</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDValue.html">ObjcLDValue</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">mutating</span> <span class="kd">func</span> <span class="nf">applicationIdentifier</span><span class="p">(</span><span class="n">_</span> <span class="nv">applicationId</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -271,9 +273,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDChangedFlag(py)newValue"></a>
-                    <a name="//apple_ref/swift/Property/newValue" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDChangedFlag(py)newValue">newValue</a>
+                    <a name="/s:12LaunchDarkly15ApplicationInfoV18applicationVersionyySSF"></a>
+                    <a name="//apple_ref/swift/Method/applicationVersion(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly15ApplicationInfoV18applicationVersionyySSF">applicationVersion(_:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -281,15 +283,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The value after the flag change occurred.</p>
+                        <p>A unique identifier representing the version of the application where the LaunchDarkly SDK
+is running.</p>
+
+<p>This can be specified as any string value as long as it only uses the following characters:
+ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
+characters will be ignored.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">let</span> <span class="nv">newValue</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDValue.html">ObjcLDValue</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">mutating</span> <span class="kd">func</span> <span class="nf">applicationVersion</span><span class="p">(</span><span class="n">_</span> <span class="nv">applicationVersion</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>

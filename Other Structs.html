@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Other Types  Reference</title>
+    <title>Other Structures  Reference</title>
     <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Section/Other Types" class="dashAnchor"></a>
-    <a title="Other Types  Reference"></a>
+    <a name="//apple_ref/swift/Section/Other Structures" class="dashAnchor"></a>
+    <a title="Other Structures  Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="index.html">LaunchDarkly 6.2.0 Docs</a> (94% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="index.html">LaunchDarkly Reference</a>
         <img id="carat" src="img/carat.png" alt=""/>
-        Other Types  Reference
+        Other Structures  Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -195,8 +195,9 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Other Types</h1>
-            
+            <h1>Other Structures</h1>
+            <p>The following structures are available globally.</p>
+
           </section>
           <section class="section task-group-section">
             <div class="task-group">
@@ -204,9 +205,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly13UserAttributeC"></a>
-                    <a name="//apple_ref/swift/Class/UserAttribute" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly13UserAttributeC">UserAttribute</a>
+                    <a name="/s:12LaunchDarkly15ApplicationInfoV"></a>
+                    <a name="//apple_ref/swift/Struct/ApplicationInfo" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly15ApplicationInfoV">ApplicationInfo</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -214,172 +215,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Represents a built-in or custom attribute name supported by <code><a href="Structs/LDUser.html">LDUser</a></code>.</p>
+                        <p>Defines application metadata.</p>
 
-<p>This abstraction helps to distinguish attribute names from other <code>String</code> values.</p>
+<p>These properties are optional and informational. They may be used in LaunchDarkly
+analytics or other product features, but they do not affect feature flag evaluations.</p>
 
-<p>For a more complete description of user attributes and how they can be referenced in feature flag rules, see the
-reference guides <a href="https://docs.launchdarkly.com/home/users/attributes">Setting user attributes</a> and
-<a href="https://docs.launchdarkly.com/home/flags/targeting-users">Targeting users</a>.</p>
-
-                        <a href="Classes/UserAttribute.html" class="slightly-smaller">See more</a>
+                        <a href="Structs/ApplicationInfo.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">UserAttribute</span> <span class="p">:</span> <span class="kt">Equatable</span><span class="p">,</span> <span class="kt">Hashable</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ApplicationInfo</span> <span class="p">:</span> <span class="kt">Equatable</span></code></pre>
 
                         </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly15LDStreamingModeO"></a>
-                    <a name="//apple_ref/swift/Enum/LDStreamingMode" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly15LDStreamingModeO">LDStreamingMode</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Defines the connection modes the SDK may be configured to use to retrieve feature flag data from LaunchDarkly.</p>
-
-                        <a href="Enums/LDStreamingMode.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">LDStreamingMode</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly9LDFlagKeya"></a>
-                    <a name="//apple_ref/swift/Alias/LDFlagKey" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>The feature flag key is a String. This typealias helps define where the SDK expects the string to be a feature flag key.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">LDFlagKey</span> <span class="o">=</span> <span class="kt">String</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDInvalidArgumentError"></a>
-                    <a name="//apple_ref/swift/Class/LDInvalidArgumentError" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDInvalidArgumentError">LDInvalidArgumentError</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>An error thrown from APIs when an invalid argument is provided.</p>
-
-                        <a href="Classes/LDInvalidArgumentError.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="kt">LDInvalidArgumentError</span> <span class="p">:</span> <span class="kt">NSObject</span><span class="p">,</span> <span class="kt">Error</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly22RequestHeaderTransforma"></a>
-                    <a name="//apple_ref/swift/Alias/RequestHeaderTransform" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>A callback for dynamically setting http headers when connection &amp; reconnecting to a stream
-or on every poll request. This function should return a copy of the headers recieved with
-any modifications or additions needed. Removing headers is discouraged as it may cause 
-requests to fail.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">RequestHeaderTransform</span> <span class="o">=</span> <span class="p">(</span><span class="n">_</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="n">_</span> <span class="nv">headers</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">String</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">String</span><span class="p">]</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>url</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The endpoint that is being connected to</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>headers</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>The default headers that would be used</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div>
-                        <h4>Return Value</h4>
-                        <p>The headers that will be used in the request</p>
                       </div>
                     </section>
                   </div>

@@ -16,7 +16,7 @@
     <a title="CHANGELOG  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 6.1.0 Docs</a> (94% documented)</p>
+        <p><a href="index.html">LaunchDarkly 6.2.0 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -181,6 +181,14 @@
               </li>
             </ul>
           </li>
+          <li class="nav-group-name">
+            <a href="Other%20Structs.html">Other Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Structs/ApplicationInfo.html">ApplicationInfo</a>
+              </li>
+            </ul>
+          </li>
         </ul>
       </nav>
       <article class="main-content">
@@ -190,6 +198,23 @@
             <h1 id='change-log' class='heading'>Change log</h1>
 
 <p>All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to <a href="http://semver.org">Semantic Versioning</a>.</p>
+<h2 id='6-2-0-2022-09-01' class='heading'>[6.2.0] - 2022-09-01</h2>
+<h3 id='added' class='heading'>Added:</h3>
+
+<ul>
+<li>CI builds now include a cross-platform test suite implemented in <a href="https://github.com/launchdarkly/sdk-test-harness">https://github.com/launchdarkly/sdk-test-harness</a>. This covers many test cases that are also implemented in unit tests, but may be extended in the future to ensure consistent behavior across SDKs in other areas.</li>
+<li>Introduced ApplicationInfo, for configuration of application metadata that may be used in LaunchDarkly analytics or other product features. This does not affect feature flag evaluations.</li>
+</ul>
+<h3 id='changed' class='heading'>Changed:</h3>
+
+<ul>
+<li>Updated LDSwiftEventSource to 2.0.0. We no longer bind to a static product; rather, we let the build determine static vs dynamic linking.</li>
+</ul>
+<h3 id='fixed' class='heading'>Fixed:</h3>
+
+<ul>
+<li>Previously a deleted flag could be made available in the SDK if the deletion events were processed out of order. This is no longer the case.</li>
+</ul>
 <h2 id='6-1-0-2022-05-17' class='heading'>[6.1.0] - 2022-05-17</h2>
 <h3 id='added' class='heading'>Added</h3>
 

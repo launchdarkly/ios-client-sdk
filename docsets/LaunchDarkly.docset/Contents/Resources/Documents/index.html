@@ -16,7 +16,7 @@
     <a title="LaunchDarkly  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 6.1.0 Docs</a> (94% documented)</p>
+        <p><a href="index.html">LaunchDarkly 6.2.0 Docs</a> (94% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -181,6 +181,14 @@
               </li>
             </ul>
           </li>
+          <li class="nav-group-name">
+            <a href="Other%20Structs.html">Other Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Structs/ApplicationInfo.html">ApplicationInfo</a>
+              </li>
+            </ul>
+          </li>
         </ul>
       </nav>
       <article class="main-content">
@@ -257,7 +265,7 @@
 
 <p>To include LaunchDarkly in a Swift package, simply add it to the dependencies section of your <code>Package.swift</code> file. And add the product &ldquo;LaunchDarkly&rdquo; as a dependency for your targets.</p>
 <pre class="highlight swift"><code><span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span>
-    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/launchdarkly/ios-client-sdk.git"</span><span class="p">,</span> <span class="o">.</span><span class="nf">upToNextMinor</span><span class="p">(</span><span class="nv">from</span><span class="p">:</span> <span class="s">"6.1.0"</span><span class="p">))</span>
+    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/launchdarkly/ios-client-sdk.git"</span><span class="p">,</span> <span class="o">.</span><span class="nf">upToNextMinor</span><span class="p">(</span><span class="nv">from</span><span class="p">:</span> <span class="s">"6.2.0"</span><span class="p">))</span>
 <span class="p">]</span>
 </code></pre>
 <h3 id='cocoapods' class='heading'>CocoaPods</h3>
@@ -265,7 +273,7 @@
 <p>To use the <a href="https://cocoapods.org">CocoaPods</a> dependency manager to integrate LaunchDarkly into your Xcode project, specify it in your <code>Podfile</code>:</p>
 <pre class="highlight ruby"><code><span class="n">use_frameworks!</span>
 <span class="n">target</span> <span class="s1">'YourTargetName'</span> <span class="k">do</span>
-  <span class="n">pod</span> <span class="s1">'LaunchDarkly'</span><span class="p">,</span> <span class="s1">'~&gt; 6.1'</span>
+  <span class="n">pod</span> <span class="s1">'LaunchDarkly'</span><span class="p">,</span> <span class="s1">'~&gt; 6.2'</span>
 <span class="k">end</span>
 </code></pre>
 <h3 id='carthage' class='heading'>Carthage</h3>
@@ -273,7 +281,7 @@
 <p>To use the <a href="https://github.com/Carthage/Carthage">Carthage</a> dependency manager to integrate LaunchDarkly into your Xcode project, specify it in your <code>Cartfile</code>:</p>
 
 <p>To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your <code>Cartfile</code>:</p>
-<pre class="highlight plaintext"><code>github "launchdarkly/ios-client-sdk" ~&gt; 6.1
+<pre class="highlight plaintext"><code>github "launchdarkly/ios-client-sdk" ~&gt; 6.2
 </code></pre>
 <h3 id='manual-installation' class='heading'>Manual installation</h3>
 
@@ -293,7 +301,7 @@
 </ol>
 <h2 id='learn-more' class='heading'>Learn more</h2>
 
-<p>Check out our <a href="https://docs.launchdarkly.com">documentation</a> for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the <a href="https://docs.launchdarkly.com/docs/ios-sdk-reference">complete reference guide for this SDK</a>.</p>
+<p>Read our <a href="https://docs.launchdarkly.com">documentation</a> for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the <a href="https://docs.launchdarkly.com/sdk/client-side/ios">complete reference guide for this SDK</a>.</p>
 <h2 id='testing' class='heading'>Testing</h2>
 
 <p>We run integration tests for all our SDKs using a centralized test harness. This approach gives us the ability to test for consistency across SDKs, as well as test networking behavior in a long-running application. These tests cover each method in the SDK, and verify that event sending, flag evaluation, stream reconnection, and other aspects of the SDK all behave correctly.</p>
@@ -311,7 +319,7 @@
 <li>Turn off a feature that you realize is causing performance problems in production, without needing to re-deploy, or even restart the application with a changed configuration file.</li>
 <li>Grant access to certain features based on user attributes, like payment plan (eg: users on the ‘gold’ plan get access to more features than users in the ‘silver’ plan). Disable parts of your application to facilitate maintenance, without taking everything offline.</li>
 </ul></li>
-<li>LaunchDarkly provides feature flag SDKs for a wide variety of languages and technologies. Check out <a href="https://docs.launchdarkly.com/sdk">our documentation</a> for a complete list.</li>
+<li>LaunchDarkly provides feature flag SDKs for a wide variety of languages and technologies. Read <a href="https://docs.launchdarkly.com/sdk">our documentation</a> for a complete list.</li>
 <li>Explore LaunchDarkly
 
 <ul>
