@@ -274,8 +274,8 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
     var retrieveFeatureFlagsCallCount = 0
     var retrieveFeatureFlagsCallback: (() throws -> Void)?
     var retrieveFeatureFlagsReceivedUserKey: String?
-    var retrieveFeatureFlagsReturnValue: [LDFlagKey: FeatureFlag]?
-    func retrieveFeatureFlags(userKey: String) -> [LDFlagKey: FeatureFlag]? {
+    var retrieveFeatureFlagsReturnValue: StoredItems?
+    func retrieveFeatureFlags(userKey: String) -> StoredItems? {
         retrieveFeatureFlagsCallCount += 1
         retrieveFeatureFlagsReceivedUserKey = userKey
         try! retrieveFeatureFlagsCallback?()
@@ -284,10 +284,10 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
 
     var storeFeatureFlagsCallCount = 0
     var storeFeatureFlagsCallback: (() throws -> Void)?
-    var storeFeatureFlagsReceivedArguments: (featureFlags: [LDFlagKey: FeatureFlag], userKey: String, lastUpdated: Date)?
-    func storeFeatureFlags(_ featureFlags: [LDFlagKey: FeatureFlag], userKey: String, lastUpdated: Date) {
+    var storeFeatureFlagsReceivedArguments: (storedItems: StoredItems, userKey: String, lastUpdated: Date)?
+    func storeFeatureFlags(_ storedItems: StoredItems, userKey: String, lastUpdated: Date) {
         storeFeatureFlagsCallCount += 1
-        storeFeatureFlagsReceivedArguments = (featureFlags: featureFlags, userKey: userKey, lastUpdated: lastUpdated)
+        storeFeatureFlagsReceivedArguments = (storedItems: storedItems, userKey: userKey, lastUpdated: lastUpdated)
         try! storeFeatureFlagsCallback?()
     }
 }
@@ -405,6 +405,15 @@ final class KeyedValueCachingMock: KeyedValueCaching {
     func removeAll() {
         removeAllCallCount += 1
         try! removeAllCallback?()
+    }
+
+    var keysCallCount = 0
+    var keysCallback: (() throws -> Void)?
+    var keysReturnValue: [String]!
+    func keys() -> [String] {
+        keysCallCount += 1
+        try! keysCallback?()
+        return keysReturnValue
     }
 }
 

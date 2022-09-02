@@ -11,6 +11,7 @@ struct HTTPHeaders {
         static let ifNoneMatch = "If-None-Match"
         static let eventPayloadIDHeader = "X-LaunchDarkly-Payload-ID"
         static let sdkWrapper = "X-LaunchDarkly-Wrapper"
+        static let tags = "X-LaunchDarkly-Tags"
     }
 
     struct HeaderValue {
@@ -24,12 +25,14 @@ struct HTTPHeaders {
     private let authKey: String
     private let userAgent: String
     private let wrapperHeaderVal: String?
+    private let applicationTag: String
 
     init(config: LDConfig, environmentReporter: EnvironmentReporting) {
         self.mobileKey = config.mobileKey
         self.additionalHeaders = config.additionalHeaders
         self.userAgent = "\(environmentReporter.systemName)/\(environmentReporter.sdkVersion)"
         self.authKey = "\(HeaderValue.apiKey) \(config.mobileKey)"
+        self.applicationTag = config.applicationInfo?.buildTag() ?? ""
 
         if let wrapperName = config.wrapperName {
             if let wrapperVersion = config.wrapperVersion {
@@ -48,6 +51,10 @@ struct HTTPHeaders {
 
         if let wrapperHeader = wrapperHeaderVal {
             headers[HeaderKey.sdkWrapper] = wrapperHeader
+        }
+
+        if !self.applicationTag.isEmpty {
+            headers[HeaderKey.tags] = self.applicationTag
         }
 
         return headers

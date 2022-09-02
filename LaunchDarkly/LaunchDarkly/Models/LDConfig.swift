@@ -32,6 +32,76 @@ typealias MobileKey = String
  */
 public typealias RequestHeaderTransform = (_ url: URL, _ headers: [String: String]) -> [String: String]
 
+/// Defines application metadata.
+///
+/// These properties are optional and informational. They may be used in LaunchDarkly
+/// analytics or other product features, but they do not affect feature flag evaluations.
+public struct ApplicationInfo: Equatable {
+    private var applicationId: String
+    private var applicationVersion: String
+
+    public init() {
+        applicationId = ""
+        applicationVersion = ""
+    }
+
+    /// A unique identifier representing the application where the LaunchDarkly SDK is running.
+    ///
+    /// This can be specified as any string value as long as it only uses the following characters:
+    /// ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
+    /// characters will be ignored.
+    public mutating func applicationIdentifier(_ applicationId: String) {
+        if let error = validate(applicationId) {
+            Log.debug("applicationIdentifier \(error)")
+            return
+        }
+
+        self.applicationId = applicationId
+    }
+
+    /// A unique identifier representing the version of the application where the LaunchDarkly SDK
+    /// is running.
+    ///
+    /// This can be specified as any string value as long as it only uses the following characters:
+    /// ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
+    /// characters will be ignored.
+    public mutating func applicationVersion(_ applicationVersion: String) {
+        if let error = validate(applicationVersion) {
+            Log.debug("applicationVersion \(error)")
+            return
+        }
+
+        self.applicationVersion = applicationVersion
+    }
+
+    func buildTag() -> String {
+        var tags: [String] = []
+
+        if !applicationId.isEmpty {
+            tags.append("application-id/\(applicationId)")
+        }
+
+        if !applicationVersion.isEmpty {
+            tags.append("application-version/\(applicationVersion)")
+        }
+
+        return tags.lazy.joined(separator: " ")
+    }
+
+    private func validate(_ value: String) -> String? {
+        let allowed = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
+        if value.rangeOfCharacter(from: allowed.inverted) != nil {
+            return "contained invalid characters"
+        }
+
+        if value.count > 64 {
+            return "longer than 64 characters and was discarded"
+        }
+
+        return nil
+    }
+}
+
 /**
  Use LDConfig to configure the LDClient. When initialized, a LDConfig contains the default values which can be changed as needed.
  */
@@ -169,6 +239,8 @@ public struct LDConfig {
     public var flagPollingInterval: TimeInterval = Defaults.flagPollingInterval
     /// The time interval between feature flag requests while running in the background. Used only for polling mode. (Default: 60 minutes)
     public var backgroundFlagPollingInterval: TimeInterval = Defaults.backgroundFlagPollingInterval
+    /// The configuration for application metadata.
+    public var applicationInfo: ApplicationInfo?
 
     /**
      Controls the method the SDK uses to keep feature flags updated. (Default: `.streaming`)
@@ -364,6 +436,7 @@ extension LDConfig: Equatable {
             && lhs.eventFlushInterval == rhs.eventFlushInterval
             && lhs.flagPollingInterval == rhs.flagPollingInterval
             && lhs.backgroundFlagPollingInterval == rhs.backgroundFlagPollingInterval
+            && lhs.applicationInfo == rhs.applicationInfo
             && lhs.streamingMode == rhs.streamingMode
             && lhs.enableBackgroundUpdates == rhs.enableBackgroundUpdates
             && lhs.startOnline == rhs.startOnline

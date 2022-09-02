@@ -133,6 +133,34 @@ final class FeatureFlagSpec: XCTestCase {
         }
     }
 
+    func testStoredItemCollectionDecodeValid() throws {
+        let testData: LDValue = [
+            "flags": [
+                "key1": ["item": ["key": "key1"]],
+                "key2": ["tombstone": 10]
+            ]
+        ]
+        let encoded = try JSONEncoder().encode(testData)
+        let storedItemCollection = try JSONDecoder().decode(StoredItemCollection.self, from: encoded)
+        XCTAssertEqual(storedItemCollection.flags.count, 2)
+        XCTAssertEqual(storedItemCollection.flags.featureFlags["key1"]?.flagKey, "key1")
+        XCTAssertNil(storedItemCollection.flags.featureFlags["key2"])
+    }
+
+    func testStoredItemCollectionEncoding() {
+        let collection = StoredItemCollection(["flag-key": .item(FeatureFlag(flagKey: "flag-key"))])
+        encodesToObject(collection) { values in
+            XCTAssertEqual(values.count, 1)
+            valueIsObject(values["flags"]) { flags in
+                valueIsObject(flags["flag-key"]) { storageItem in
+                    valueIsObject(storageItem["item"]) { flagValue in
+                        XCTAssertEqual(flagValue["key"], "flag-key")
+                    }
+                }
+            }
+        }
+    }
+
     func testFlagCollectionDecodeValid() throws {
         let testData: LDValue = ["key1": [:], "key2": ["key": "key2"]]
         let flagCollection = try JSONDecoder().decode(FeatureFlagCollection.self, from: JSONEncoder().encode(testData))
@@ -180,6 +208,19 @@ final class FeatureFlagSpec: XCTestCase {
         XCTAssertEqual(FeatureFlag(flagKey: "t", version: 4).versionForEvents, 4)
         XCTAssertEqual(FeatureFlag(flagKey: "t", flagVersion: 3).versionForEvents, 3)
         XCTAssertEqual(FeatureFlag(flagKey: "t", version: 2, flagVersion: 3).versionForEvents, 3)
+    }
+}
+
+extension StorageItem: Equatable {
+    public static func == (lhs: StorageItem, rhs: StorageItem) -> Bool {
+        switch (lhs, rhs) {
+        case let (.item(lFlag), .item(rFlag)):
+            return lFlag == rFlag
+        case let (.tombstone(lVersion), .tombstone(rVersion)):
+            return lVersion == rVersion
+        default:
+            return false
+        }
     }
 }
 

@@ -104,3 +104,15 @@ struct FeatureFlagCollection: Codable {
         try flags.encode(to: encoder)
     }
 }
+
+struct StoredItemCollection: Codable {
+    let flags: StoredItems
+
+    init(_ flags: StoredItems) {
+        self.flags = flags
+    }
+
+    init(_ collection: FeatureFlagCollection) {
+        self.flags = StoredItems(items: collection.flags)
+    }
+}

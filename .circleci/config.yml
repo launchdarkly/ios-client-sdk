@@ -1,14 +1,48 @@
 version: 2.1
+
 jobs:
+  contract-tests:
+    macos:
+      xcode: '13.4.1'
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install swift lint
+          command: brew install swiftlint
+      - run:
+          name: Run swiftlint
+          command: |
+            cd ./ContractTests
+            swiftlint lint --reporter junit | tee /tmp/contract-test-swiftlint-results.xml
+      - store_artifacts:
+          path: /tmp/contract-test-swiftlint-results.xml
+      - store_test_results:
+          path: /tmp/contract-test-swiftlint-results.xml
+
+      - run:
+          name: Install required ssl libraries
+          command: brew install libressl
+      - run:
+          name: make test output directory
+          command: mkdir /tmp/test-results
+      - run: make build-contract-tests
+      - run:
+          command: make start-contract-test-service
+          background: true
+      - run:
+          name: run contract tests
+          command: TEST_HARNESS_PARAMS="-junit /tmp/test-results/contract-tests-junit.xml" make run-contract-tests
+      - store_test_results:
+          path: /tmp/test-results/
+
   build:
     parameters:
       xcode-version:
         type: string
       ios-sim:
         type: string
-      ssh-fix:
-        type: boolean
-        default: false
       build-doc:
         type: boolean
         default: false
@@ -24,16 +58,6 @@ jobs:
 
     steps:
     - checkout
-
-    # There's an XCode bug present in the 12.0.1 CircleCI image that prevents fetching SSH
-    # dependencies from working in some cases, so we disable CircleCI's rewriting of the HTTPS
-    # GitHub URLs to SSH.
-    - when:
-        condition: <<parameters.ssh-fix>>
-        steps:
-          - run:
-              name: SSH fix
-              command: git config --global --unset url.ssh://git@github.com.insteadof
 
     - run:
         name: Setup for builds
@@ -128,6 +152,10 @@ workflows:
   build:
     jobs:
       - build:
+          name: Xcode 13.3 - Swift 5.6
+          xcode-version: '13.3.1'
+          ios-sim: 'platform=iOS Simulator,name=iPhone 13,OS=15.4'
+      - build:
           name: Xcode 13.1 - Swift 5.5
           xcode-version: '13.1.0'
           ios-sim: 'platform=iOS Simulator,name=iPhone 11,OS=15.0'
@@ -138,11 +166,7 @@ workflows:
           xcode-version: '12.5.1'
           ios-sim: 'platform=iOS Simulator,name=iPhone 8,OS=14.5'
       - build:
-          name: Xcode 12.0 - Swift 5.3
-          xcode-version: '12.0.1'
-          ios-sim: 'platform=iOS Simulator,name=iPhone 8,OS=14.0'
-          ssh-fix: true
-      - build:
           name: Xcode 11.7 - Swift 5.2
           xcode-version: '11.7.0'
           ios-sim: 'platform=iOS Simulator,name=iPhone 8,OS=12.4'
+      - contract-tests

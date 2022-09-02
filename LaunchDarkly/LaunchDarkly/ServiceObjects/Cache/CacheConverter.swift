@@ -91,11 +91,26 @@ final class CacheConverter: CacheConverting {
 
         cachedEnvData.forEach { mobileKey, users in
             users.forEach { userKey, data in
-                flagCaches[mobileKey]?.storeFeatureFlags(data.flags, userKey: userKey, lastUpdated: data.updated)
+                flagCaches[mobileKey]?.storeFeatureFlags(StoredItems(items: data.flags), userKey: userKey, lastUpdated: data.updated)
             }
         }
 
         v6cache.removeObject(forKey: "com.launchDarkly.cachedUserEnvironmentFlags")
+    }
+
+    private func convertV7Data(flagCaches: inout [MobileKey: FeatureFlagCaching]) {
+        for (_, flagCaching) in flagCaches {
+            flagCaching.keyedValueCache.keys().forEach { key in
+                guard let cachedData = flagCaching.keyedValueCache.data(forKey: key),
+                      let cachedFlags = try? JSONDecoder().decode(FeatureFlagCollection.self, from: cachedData)
+                else { return }
+
+                guard let encoded = try? JSONEncoder().encode(StoredItemCollection(cachedFlags))
+                else { return }
+
+                flagCaching.keyedValueCache.set(encoded, forKey: key)
+            }
+        }
     }
 
     func convertCacheData(serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedUsers: Int) {
@@ -107,17 +122,20 @@ final class CacheConverter: CacheConverting {
             guard let cacheVersionData = flagCache.keyedValueCache.data(forKey: "ld-cache-metadata")
             else { return } // Convert those that do not have a version
             guard let cacheVersion = (try? JSONDecoder().decode([String: Int].self, from: cacheVersionData))?["version"],
-                  cacheVersion == 7
+                  cacheVersion == 7 || cacheVersion == 8
             else {
                 // Metadata is invalid, remove existing data and attempt migration
                 flagCache.keyedValueCache.removeAll()
                 return
             }
-            // Already up to date
-            flagCaches.removeValue(forKey: mobileKey)
+
+            if cacheVersion == 8 {
+                // Already up to date
+                flagCaches.removeValue(forKey: mobileKey)
+            }
         }
 
-        // Skip migration if all environments are V7
+        // Skip migration if all environments are V8
         if flagCaches.isEmpty { return }
 
         // Remove V5 cache data (migration not supported)
@@ -125,9 +143,10 @@ final class CacheConverter: CacheConverting {
         standardDefaults.removeObject(forKey: "com.launchdarkly.dataManager.userEnvironments")
 
         convertV6Data(v6cache: standardDefaults, flagCaches: flagCaches)
+        convertV7Data(flagCaches: &flagCaches)
 
         // Set cache version to skip this logic in the future
-        if let versionMetadata = try? JSONEncoder().encode(["version": 7]) {
+        if let versionMetadata = try? JSONEncoder().encode(["version": 8]) {
             flagCaches.forEach {
                 $0.value.keyedValueCache.set(versionMetadata, forKey: "ld-cache-metadata")
             }

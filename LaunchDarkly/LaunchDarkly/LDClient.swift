@@ -38,9 +38,9 @@ enum LDClientRunMode {
 public class LDClient {
 
     // MARK: - State Controls and Indicators
-    
+
     private static var instances: [String: LDClient]?
-    
+
     /**
      Reports the online/offline state of the LDClient.
 
@@ -130,7 +130,7 @@ public class LDClient {
     }
 
     private let internalSetOnlineQueue: DispatchQueue = DispatchQueue(label: "InternalSetOnlineQueue")
-    
+
     private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
         let owner = "SetOnlineOwner" as AnyObject
         var completed = false
@@ -262,14 +262,14 @@ public class LDClient {
     let config: LDConfig
     let service: DarklyServiceProvider
     private(set) var user: LDUser
-    
+
     /**
      The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
-     
+
      Normally, the client app should create and set the LDUser and pass that into `start(config: user: completion:)`.
-     
+
      The client app can change the active `user` by calling identify with a new or updated LDUser. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
-     
+
      When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.
 
      - parameter user: The LDUser set with the desired user.
@@ -295,7 +295,7 @@ public class LDClient {
             self.internalSetOnline(false)
 
             let cachedUserFlags = self.flagCache.retrieveFeatureFlags(userKey: self.user.key) ?? [:]
-            flagStore.replaceStore(newFlags: FeatureFlagCollection(cachedUserFlags))
+            flagStore.replaceStore(newStoredItems: cachedUserFlags)
             self.service.user = self.user
             self.service.clearFlagResponseCache()
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
@@ -322,7 +322,7 @@ public class LDClient {
     public var allFlags: [LDFlagKey: LDValue]? {
         guard hasStarted
         else { return nil }
-        return flagStore.featureFlags.compactMapValues { $0.value }
+        return flagStore.storedItems.featureFlags.compactMapValues { $0.value }
     }
 
     // MARK: Observing Updates
@@ -352,7 +352,7 @@ public class LDClient {
         Log.debug(typeName(and: #function) + "flagKey: \(key), owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(key: key, owner: owner, flagChangeHandler: handler))
     }
-    
+
     /**
      Sets a handler for the specified flag keys executed on the specified owner. If any observed flag's value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values. See `LDChangedFlag` for details.
 
@@ -407,7 +407,7 @@ public class LDClient {
         Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, flagCollectionChangeHandler: handler))
     }
-    
+
     /**
      Sets a handler executed when a flag update leaves the flags unchanged from their previous values.
 
@@ -434,23 +434,23 @@ public class LDClient {
         Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
         flagChangeNotifier.addFlagsUnchangedObserver(FlagsUnchangedObserver(owner: owner, flagsUnchangedHandler: handler))
     }
-    
+
     /**
      Sets a handler executed when ConnectionInformation.currentConnectionMode changes.
-     
+
      The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying `[weak self]` inside handlers to avoid retain cycles causing a memory leak.
-     
+
      The SDK executes handlers on the main thread.
-     
+
      SeeAlso: `stopObserving(owner:)`
-     
+
      ### Usage
      ```
      LDClient.get()?.observeCurrentConnectionMode(owner: self) { [weak self] in
         //do something after ConnectionMode was updated.
      }
      ```
-     
+
      - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
      - parameter handler: The LDConnectionModeChangedHandler the SDK will execute 1 time when ConnectionInformation.currentConnectionMode is changed.
      */
@@ -475,20 +475,20 @@ public class LDClient {
         Log.debug(typeName(and: #function) + "result: \(result)")
         switch result {
         case let .flagCollection(flagCollection):
-            let oldFlags = flagStore.featureFlags
+            let oldStoredItems = flagStore.storedItems
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
-            flagStore.replaceStore(newFlags: flagCollection)
-            self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
+            flagStore.replaceStore(newStoredItems: StoredItems(items: flagCollection.flags))
+            self.updateCacheAndReportChanges(user: self.user, oldStoredItems: oldStoredItems)
         case let .patch(featureFlag):
-            let oldFlags = flagStore.featureFlags
+            let oldStoredItems = flagStore.storedItems
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.updateStore(updatedFlag: featureFlag)
-            self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
+            self.updateCacheAndReportChanges(user: self.user, oldStoredItems: oldStoredItems)
         case let .delete(deleteResponse):
-            let oldFlags = flagStore.featureFlags
+            let oldStoredItems = flagStore.storedItems
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.deleteFlag(deleteResponse: deleteResponse)
-            self.updateCacheAndReportChanges(user: self.user, oldFlags: oldFlags)
+            self.updateCacheAndReportChanges(user: self.user, oldStoredItems: oldStoredItems)
         case .upToDate:
             connectionInformation.lastKnownFlagValidity = Date()
             flagChangeNotifier.notifyUnchanged()
@@ -506,9 +506,9 @@ public class LDClient {
     }
 
     private func updateCacheAndReportChanges(user: LDUser,
-                                             oldFlags: [LDFlagKey: FeatureFlag]) {
-        flagCache.storeFeatureFlags(flagStore.featureFlags, userKey: user.key, lastUpdated: Date())
-        flagChangeNotifier.notifyObservers(oldFlags: oldFlags, newFlags: flagStore.featureFlags)
+                                             oldStoredItems: StoredItems) {
+        flagCache.storeFeatureFlags(flagStore.storedItems, userKey: user.key, lastUpdated: Date())
+        flagChangeNotifier.notifyObservers(oldFlags: oldStoredItems.featureFlags, newFlags: flagStore.storedItems.featureFlags)
     }
 
     // MARK: Events
@@ -544,10 +544,10 @@ public class LDClient {
     /**
      Tells the SDK to generate an alias event.
 
-     Associates two users for analytics purposes. 
-     
-     This can be helpful in the situation where a person is represented by multiple 
-     LaunchDarkly users. This may happen, for example, when a person initially logs into 
+     Associates two users for analytics purposes.
+
+     This can be helpful in the situation where a person is represented by multiple
+     LaunchDarkly users. This may happen, for example, when a person initially logs into
      an application-- the person might be represented by an anonymous user prior to logging
      in and a different user after logging in, as denoted by a different user key.
 
@@ -574,7 +574,7 @@ public class LDClient {
     public func flush() {
         LDClient.instances?.forEach { $1.internalFlush() }
     }
-    
+
     private func internalFlush() {
         eventReporter.flush(completion: nil)
     }
@@ -587,7 +587,7 @@ public class LDClient {
             Log.debug(typeName(and: #function) + "result: success")
         }
     }
-    
+
     @objc private func didCloseEventSource() {
         Log.debug(typeName(and: #function))
         self.connectionInformation = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: self.connectionInformation)
@@ -694,7 +694,7 @@ public class LDClient {
         }
         return internalInstances[environment]
     }
-    
+
     // MARK: - Private
     let serviceFactory: ClientServiceCreating
 
@@ -719,7 +719,7 @@ public class LDClient {
     }
     private var _initialized = false
     private var initializedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.initializedQueue")
-    
+
     private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
         self.serviceFactory = serviceFactory
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
@@ -739,14 +739,14 @@ public class LDClient {
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,
                                                                     service: service)
-        
+
         if let backgroundNotification = environmentReporter.backgroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
         }
         if let foregroundNotification = environmentReporter.foregroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
         }
-        
+
         NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
 
         eventReporter = self.serviceFactory.makeEventReporter(service: service, onSyncComplete: onEventSyncComplete)
@@ -758,7 +758,7 @@ public class LDClient {
 
         Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
         if let cachedFlags = flagCache.retrieveFeatureFlags(userKey: user.key), !cachedFlags.isEmpty {
-            flagStore.replaceStore(newFlags: FeatureFlagCollection(cachedFlags))
+            flagStore.replaceStore(newStoredItems: cachedFlags)
         }
 
         eventReporter.record(IdentifyEvent(user: user))
