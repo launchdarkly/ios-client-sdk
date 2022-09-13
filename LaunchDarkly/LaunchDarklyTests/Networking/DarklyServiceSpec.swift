@@ -2,7 +2,7 @@ import Foundation
 import Quick
 import Nimble
 import OHHTTPStubs
-import LDSwiftEventSource
+@_implementationOnly import LDSwiftEventSource
 @testable import LaunchDarkly
 
 final class DarklyServiceSpec: QuickSpec {

@@ -3,7 +3,7 @@ import Quick
 import Nimble
 import OHHTTPStubs
 import OHHTTPStubsSwift
-import LDSwiftEventSource
+@_implementationOnly import LDSwiftEventSource
 @testable import LaunchDarkly
 
 final class DarklyServiceMock: DarklyServiceProvider {

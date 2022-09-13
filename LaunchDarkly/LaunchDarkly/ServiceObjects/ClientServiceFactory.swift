@@ -1,5 +1,5 @@
 import Foundation
-import LDSwiftEventSource
+@_implementationOnly import LDSwiftEventSource
 
 protocol ClientServiceCreating {
     func makeKeyedValueCache(cacheKey: String?) -> KeyedValueCaching

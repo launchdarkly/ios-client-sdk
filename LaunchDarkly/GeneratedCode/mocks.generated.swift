@@ -2,7 +2,7 @@
 // DO NOT EDIT
 
 import Foundation
-import LDSwiftEventSource
+@_implementationOnly import LDSwiftEventSource
 @testable import LaunchDarkly
 
 // swiftlint:disable large_tuple

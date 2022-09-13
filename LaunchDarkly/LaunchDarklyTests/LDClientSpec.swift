@@ -1,7 +1,7 @@
 import Foundation
 import Quick
 import Nimble
-import LDSwiftEventSource
+@_implementationOnly import LDSwiftEventSource
 @testable import LaunchDarkly
 
 final class LDClientSpec: QuickSpec {
