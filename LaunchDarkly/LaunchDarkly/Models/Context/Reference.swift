@@ -47,8 +47,8 @@ extension ReferenceError: CustomStringConvertible {
 ///
 /// If the string starts with '/', then this is treated as a slash-delimited path reference where the
 /// first component is the name of an attribute, and subsequent components are the names of nested JSON
-/// object properties (or, if they are numeric, the indices of JSON array elements). In this syntax, the
-/// escape sequences "~0" and "~1" represent '~' and '/' respectively within a path component.
+/// object properties. In this syntax, the escape sequences "~0" and "~1" represent '~' and '/'
+/// respectively within a path component.
 ///
 /// If the string does not start with '/', then it is treated as the literal name of an attribute.
 ///
@@ -63,7 +63,6 @@ extension ReferenceError: CustomStringConvertible {
 ///     "street": "99 Main St.",
 ///     "city": "Westview"
 ///   },
-///   "groups": [ "p", "q" ],
 ///   "a/b": "ok"
 /// }
 /// ```
@@ -72,12 +71,11 @@ extension ReferenceError: CustomStringConvertible {
 ///
 /// - Reference("name") or Reference("/name") would refer to the value "xyz"
 /// - Reference("/address/street") would refer to the value "99 Main St."
-/// - Reference("/groups/0") would refer to the value "p"
 /// - Reference("a/b") or Reference("/a~1b") would refer to the value "ok"
 public struct Reference: Codable, Equatable, Hashable {
     private var error: ReferenceError?
     private var rawPath: String
-    private var components: [Component] = []
+    private var components: [String] = []
 
     static func unescapePath(_ part: String) -> Result<String, ReferenceError> {
         if !part.contains("~") {
@@ -128,11 +126,11 @@ public struct Reference: Codable, Equatable, Hashable {
         }
 
         if value.prefix(1) != "/" {
-            components = [Component(name: value, value: nil)]
+            components = [value]
             return
         }
 
-        var referenceComponents: [Component] = []
+        var referenceComponents: [String] = []
         let parts = value.components(separatedBy: "/")
         for (index, part) in parts.enumerated() {
             if index == 0 {
@@ -149,7 +147,7 @@ public struct Reference: Codable, Equatable, Hashable {
             let result = Reference.unescapePath(part)
             switch result {
             case .success(let unescapedPath):
-                referenceComponents.append(Component(name: unescapedPath, value: Int(part)))
+                referenceComponents.append(unescapedPath)
             case .failure(let err):
                 error = err
                 return
@@ -190,22 +188,11 @@ public struct Reference: Codable, Equatable, Hashable {
         return rawPath
     }
 
-    internal func component(_ index: Int) -> (String, Int?)? {
+    internal func component(_ index: Int) -> String? {
         if index >= self.depth() {
             return nil
         }
 
-        let component = self.components[index]
-        return (component.name, component.value)
-    }
-}
-
-private struct Component: Codable, Equatable, Hashable {
-    fileprivate let name: String
-    fileprivate let value: Int?
-
-    init(name: String, value: Int?) {
-        self.name = name
-        self.value = value
+        return self.components[index]
     }
 }

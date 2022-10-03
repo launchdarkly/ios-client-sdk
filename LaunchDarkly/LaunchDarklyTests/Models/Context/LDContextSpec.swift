@@ -234,14 +234,13 @@ final class LDContextSpec: XCTestCase {
             ("secondary", nil),
             // Can index arrays and objects
             ("/my-map/array", .array([.string("first"), .string("second")])),
-            ("/my-map/array/1", .string("second")),
-            ("/my-map/array/2", nil),
+            ("/my-map/1", .bool(true)),
             ("my-map/missing", nil),
             ("/starts-with-slash/1", nil)
         ]
 
         let array: [LDValue] = [.string("first"), .string("second")]
-        let map: [String: LDValue] = ["array": .array(array)]
+        let map: [String: LDValue] = ["array": .array(array), "1": .bool(true)]
 
         for (input, expectedValue) in tests {
             var builder = LDContextBuilder(key: "my-key")

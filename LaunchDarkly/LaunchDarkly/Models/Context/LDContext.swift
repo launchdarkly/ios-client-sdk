@@ -189,7 +189,7 @@ public struct LDContext: Encodable, Equatable {
 
             var hasMatch = true
             for (index, parentPart) in parentPath.enumerated() {
-                if let (name, _) = privateAttribute.component(index) {
+                if let name = privateAttribute.component(index) {
                     if name != parentPart {
                         hasMatch = false
                         break
@@ -280,7 +280,7 @@ public struct LDContext: Encodable, Equatable {
             let parentMap = returnValue
 
             for index in 0...reference.depth() {
-                if let (name, _) = reference.component(index) {
+                if let name = reference.component(index) {
                     if !parentMap.contains(name) {
                         let nextNode = PrivateAttributeLookupNode()
 
@@ -352,7 +352,7 @@ public struct LDContext: Encodable, Equatable {
             return nil
         }
 
-        guard let (component, _) = reference.component(0) else {
+        guard let component = reference.component(0) else {
             return nil
         }
 
@@ -370,22 +370,8 @@ public struct LDContext: Encodable, Equatable {
         }
 
         for depth in 1..<reference.depth() {
-            guard let (name, index) = reference.component(depth) else {
+            guard let name = reference.component(depth) else {
                 return nil
-            }
-
-            if let idx = index {
-                switch attribute {
-                case .array(let array):
-                    if idx < array.count {
-                        attribute = array[idx]
-                    } else {
-                        return nil
-                    }
-                    continue
-                default:
-                    return nil
-                }
             }
 
             switch attribute {

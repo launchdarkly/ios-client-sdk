@@ -31,7 +31,7 @@ final class ReferenceSpec: XCTestCase {
             let ref = Reference(test)
             XCTAssertTrue(ref.isValid())
             XCTAssertEqual(1, ref.depth())
-            XCTAssertEqual(test, ref.component(0)?.0)
+            XCTAssertEqual(test, ref.component(0))
         }
     }
 
@@ -47,27 +47,26 @@ final class ReferenceSpec: XCTestCase {
             let ref = Reference(ref)
             XCTAssertTrue(ref.isValid())
             XCTAssertEqual(1, ref.depth())
-            XCTAssertEqual(expected, ref.component(0)?.0)
+            XCTAssertEqual(expected, ref.component(0))
         }
     }
 
     func testHandlesSubcomponents() {
-        let tests: [(String, Int, Int, String, Int?)] = [
-            ("/a/b", 2, 0, "a", nil),
-            ("/a/b", 2, 1, "b", nil),
-            ("/a~1b/c", 2, 0, "a/b", nil),
-            ("/a~1b/c", 2, 1, "c", nil),
-            ("/a/10/20/30x", 4, 1, "10", 10),
-            ("/a/10/20/30x", 4, 2, "20", 20),
-            ("/a/10/20/30x", 4, 3, "30x", nil)
+        let tests: [(String, Int, Int, String)] = [
+            ("/a/b", 2, 0, "a"),
+            ("/a/b", 2, 1, "b"),
+            ("/a~1b/c", 2, 0, "a/b"),
+            ("/a~1b/c", 2, 1, "c"),
+            ("/a/10/20/30x", 4, 1, "10"),
+            ("/a/10/20/30x", 4, 2, "20"),
+            ("/a/10/20/30x", 4, 3, "30x")
         ]
 
-        for (input, expectedLength, index, expectedName, expectedValue) in tests {
+        for (input, expectedLength, index, expectedName) in tests {
             let reference = Reference(input)
 
             XCTAssertEqual(expectedLength, reference.depth())
-            XCTAssertEqual(expectedName, reference.component(index)?.0)
-            XCTAssertEqual(expectedValue, reference.component(index)?.1)
+            XCTAssertEqual(expectedName, reference.component(index))
         }
     }
 
