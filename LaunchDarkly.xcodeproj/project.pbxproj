@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -877,7 +877,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8354EFD61F22491C00C05156 /* Build configuration list for PBXNativeTarget "LaunchDarkly_iOS" */;
 			buildPhases = (
-				835E1CFE1F61AC0600184DB4 /* ShellScript */,
+				835E1CFE1F61AC0600184DB4 /* Run Script */,
 				8354EFBD1F22491C00C05156 /* Sources */,
 				8354EFBE1F22491C00C05156 /* Frameworks */,
 				8354EFBF1F22491C00C05156 /* Headers */,
@@ -1052,6 +1052,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		830C2AC120741687001D645D /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -1065,6 +1066,7 @@
 		};
 		830C2AC2207416A5001D645D /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -1078,6 +1080,7 @@
 		};
 		833FD9F821C01333001F80EB /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -1095,6 +1098,7 @@
 		};
 		83411A561FABCA2200E5CF39 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -1106,13 +1110,15 @@
 			shellPath = /bin/sh;
 			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\nif which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run krzysztofzablocki/Sourcery\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
 		};
-		835E1CFE1F61AC0600184DB4 /* ShellScript */ = {
+		835E1CFE1F61AC0600184DB4 /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
+			name = "Run Script";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1437,7 +1443,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 6.2.0;
+				MARKETING_VERSION = 7.0.0;
 				MODULEMAP_FILE = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
 				PRODUCT_NAME = LaunchDarkly_tvOS;
@@ -1460,7 +1466,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 6.2.0;
+				MARKETING_VERSION = 7.0.0;
 				MODULEMAP_FILE = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
 				PRODUCT_NAME = LaunchDarkly_tvOS;
@@ -1483,7 +1489,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 6.2.0;
+				MARKETING_VERSION = 7.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = LaunchDarkly_macOS;
 				SDKROOT = macosx;
@@ -1504,7 +1510,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 6.2.0;
+				MARKETING_VERSION = 7.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = LaunchDarkly_macOS;
 				SDKROOT = macosx;
@@ -1547,11 +1553,11 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DYLIB_COMPATIBILITY_VERSION = 6.2.0;
-				DYLIB_CURRENT_VERSION = 6.2.0;
+				DYLIB_COMPATIBILITY_VERSION = 7.0.0;
+				DYLIB_CURRENT_VERSION = 7.0.0;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				FRAMEWORK_VERSION = C;
+				FRAMEWORK_VERSION = D;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -1567,8 +1573,8 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Framework/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -1576,10 +1582,10 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TVOS_DEPLOYMENT_TARGET = 10.0;
+				TVOS_DEPLOYMENT_TARGET = 11.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
-				WATCHOS_DEPLOYMENT_TARGET = 3.0;
+				WATCHOS_DEPLOYMENT_TARGET = 4.0;
 			};
 			name = Debug;
 		};
@@ -1618,11 +1624,11 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DYLIB_COMPATIBILITY_VERSION = 6.2.0;
-				DYLIB_CURRENT_VERSION = 6.2.0;
+				DYLIB_COMPATIBILITY_VERSION = 7.0.0;
+				DYLIB_CURRENT_VERSION = 7.0.0;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				FRAMEWORK_VERSION = C;
+				FRAMEWORK_VERSION = D;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1632,19 +1638,19 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Framework/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TVOS_DEPLOYMENT_TARGET = 10.0;
+				TVOS_DEPLOYMENT_TARGET = 11.0;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
-				WATCHOS_DEPLOYMENT_TARGET = 3.0;
+				WATCHOS_DEPLOYMENT_TARGET = 4.0;
 			};
 			name = Release;
 		};
@@ -1658,7 +1664,7 @@
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
-				MARKETING_VERSION = 6.2.0;
+				MARKETING_VERSION = 7.0.0;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = LaunchDarkly;
@@ -1678,7 +1684,7 @@
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
-				MARKETING_VERSION = 6.2.0;
+				MARKETING_VERSION = 7.0.0;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = LaunchDarkly;
@@ -1720,7 +1726,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 6.2.0;
+				MARKETING_VERSION = 7.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
 				PRODUCT_NAME = LaunchDarkly_watchOS;
 				SDKROOT = watchos;
@@ -1742,7 +1748,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 6.2.0;
+				MARKETING_VERSION = 7.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
 				PRODUCT_NAME = LaunchDarkly_watchOS;
 				SDKROOT = watchos;
@@ -1816,7 +1822,7 @@
 			repositoryURL = "https://github.com/LaunchDarkly/swift-eventsource.git";
 			requirement = {
 				kind = exactVersion;
-				version = 2.0.0;
+				version = 3.0.0;
 			};
 		};
 		B4903D9624BD61B200F087C4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */ = {

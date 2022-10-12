@@ -5,10 +5,10 @@ import PackageDescription
 let package = Package(
     name: "LaunchDarkly",
     platforms: [
-        .iOS(.v10),
-        .macOS(.v10_12),
-        .watchOS(.v3),
-        .tvOS(.v10)
+        .iOS(.v11),
+        .macOS(.v10_13),
+        .watchOS(.v4),
+        .tvOS(.v11)
     ],
     products: [
         .library(
@@ -19,7 +19,7 @@ let package = Package(
         .package(url: "https://github.com/AliSoftware/OHHTTPStubs.git", .exact("9.1.0")),
         .package(url: "https://github.com/Quick/Quick.git", .exact("4.0.0")),
         .package(url: "https://github.com/Quick/Nimble.git", .exact("9.2.1")),
-        .package(name: "LDSwiftEventSource", url: "https://github.com/LaunchDarkly/swift-eventsource.git", .exact("2.0.0"))
+        .package(name: "LDSwiftEventSource", url: "https://github.com/LaunchDarkly/swift-eventsource.git", .exact("3.0.0"))
     ],
     targets: [
         .target(
