@@ -13,7 +13,7 @@ enum StorageItem: Codable {
         }
     }
 
-    enum CodingKeys : CodingKey {
+    enum CodingKeys: CodingKey {
         case item, tombstone
     }
 

@@ -29,10 +29,10 @@ And supports the following device platforms:
 
 | Platform | Version |
 | -------- | ------- |
-| iOS      | 10.0    |
-| watchOS  | 3.0     |
-| tvOS     | 10.0    |
-| macOS    | 10.12   |
+| iOS      | 11.0    |
+| watchOS  | 4.0     |
+| tvOS     | 11.0    |
+| macOS    | 10.13   |
 
 Installation
 -----------
