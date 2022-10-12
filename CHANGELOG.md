@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [7.0.0] - 2022-10-12
+### Changed:
+- Dropped support for older versions in accordance with the new [Xcode 14 release](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes).
+
 ## [6.2.0] - 2022-09-01
 ### Added:
 - CI builds now include a cross-platform test suite implemented in https://github.com/launchdarkly/sdk-test-harness. This covers many test cases that are also implemented in unit tests, but may be extended in the future to ensure consistent behavior across SDKs in other areas.
