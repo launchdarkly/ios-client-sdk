@@ -22,7 +22,7 @@ typealias MobileKey = String
 
 /**
  A callback for dynamically setting http headers when connection & reconnecting to a stream
- or on every poll request. This function should return a copy of the headers recieved with
+ or on every poll request. This function should return a copy of the headers received with
  any modifications or additions needed. Removing headers is discouraged as it may cause 
  requests to fail.
 

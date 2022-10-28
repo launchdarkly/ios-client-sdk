@@ -57,6 +57,11 @@ public final class ObjcLDConfig: NSObject {
         get { config.backgroundFlagPollingInterval }
         set { config.backgroundFlagPollingInterval = newValue }
     }
+    /// The application info meta data.
+    @objc public var applicationInfo: ObjcLDApplicationInfo {
+        get { ObjcLDApplicationInfo(config.applicationInfo) }
+        set { config.applicationInfo = newValue.applicationInfo }
+    }
 
     /// The minimum interval between feature flag requests. Used only for polling mode. (5 minutes)
     @objc public var minFlagPollingInterval: TimeInterval {
