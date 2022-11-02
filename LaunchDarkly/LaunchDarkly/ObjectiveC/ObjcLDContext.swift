@@ -40,7 +40,6 @@ public final class ObjcLDContextBuilder: NSObject {
     @objc public func kind(kind: String) { builder.kind(kind) }
     @objc public func key(key: String) { builder.key(key) }
     @objc public func name(name: String) { builder.name(name) }
-    @objc public func secondary(secondary: String) { builder.secondary(secondary) }
     @objc public func anonymous(anonymous: Bool) { builder.anonymous(anonymous) }
     @objc public func addPrivateAttribute(reference: ObjcLDReference) { builder.addPrivateAttribute(reference.reference) }
     @objc public func removePrivateAttribute(reference: ObjcLDReference) { builder.removePrivateAttribute(reference.reference) }

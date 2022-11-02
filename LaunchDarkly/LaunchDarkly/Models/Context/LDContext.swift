@@ -26,7 +26,6 @@ public struct LDContext: Encodable, Equatable {
     // Meta attributes
     fileprivate var name: String?
     fileprivate var anonymous: Bool = false
-    fileprivate var secondary: String?
     internal var privateAttributes: [Reference] = []
 
     fileprivate var key: String?
@@ -42,22 +41,19 @@ public struct LDContext: Encodable, Equatable {
     }
 
     struct Meta: Codable {
-        var secondary: String?
         var privateAttributes: [Reference]?
         var redactedAttributes: [String]?
 
         enum CodingKeys: CodingKey {
-            case secondary, privateAttributes, redactedAttributes
+            case privateAttributes, redactedAttributes
         }
 
         var isEmpty: Bool {
-            secondary == nil
-            && (privateAttributes?.isEmpty ?? true)
+            (privateAttributes?.isEmpty ?? true)
             && (redactedAttributes?.isEmpty ?? true)
         }
 
-        init(secondary: String?, privateAttributes: [Reference]?, redactedAttributes: [String]?) {
-            self.secondary = secondary
+        init(privateAttributes: [Reference]?, redactedAttributes: [String]?) {
             self.privateAttributes = privateAttributes
             self.redactedAttributes = redactedAttributes
         }
@@ -65,17 +61,14 @@ public struct LDContext: Encodable, Equatable {
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
 
-            let secondary = try container.decodeIfPresent(String.self, forKey: .secondary)
             let privateAttributes = try container.decodeIfPresent([Reference].self, forKey: .privateAttributes)
 
-            self.secondary = secondary
             self.privateAttributes = privateAttributes
             self.redactedAttributes = []
         }
 
         func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encodeIfPresent(secondary, forKey: .secondary)
 
             if let privateAttributes = privateAttributes, !privateAttributes.isEmpty {
                 try container.encodeIfPresent(privateAttributes, forKey: .privateAttributes)
@@ -125,7 +118,7 @@ public struct LDContext: Encodable, Equatable {
             }
         }
 
-        let meta = Meta(secondary: context.secondary, privateAttributes: context.privateAttributes, redactedAttributes: redactedAttributes)
+        let meta = Meta(privateAttributes: context.privateAttributes, redactedAttributes: redactedAttributes)
 
         if !meta.isEmpty {
             try container.encodeIfPresent(meta, forKey: DynamicCodingKeys(string: "_meta"))
@@ -441,6 +434,9 @@ extension LDContext: Decodable {
             var contextBuilder = LDContextBuilder(key: key)
             contextBuilder.allowEmptyKey = true
 
+            let custom = try values.decodeIfPresent([String: LDValue].self, forKey: .custom) ?? [:]
+            custom.forEach { contextBuilder.trySetValue($0.key, $0.value) }
+
             if let name = try values.decodeIfPresent(String.self, forKey: .name) {
                 contextBuilder.name(name)
             }
@@ -449,6 +445,9 @@ extension LDContext: Decodable {
             }
             if let lastName = try values.decodeIfPresent(String.self, forKey: .lastName) {
                 contextBuilder.trySetValue("lastName", .string(lastName))
+            }
+            if let secondary = try values.decodeIfPresent(String.self, forKey: .secondary) {
+                contextBuilder.trySetValue("secondary", .string(secondary))
             }
             if let country = try values.decodeIfPresent(String.self, forKey: .country) {
                 contextBuilder.trySetValue("country", .string(country))
@@ -463,18 +462,11 @@ extension LDContext: Decodable {
                 contextBuilder.trySetValue("avatar", .string(avatar))
             }
 
-            let custom = try values.decodeIfPresent([String: LDValue].self, forKey: .custom) ?? [:]
-            custom.forEach { contextBuilder.trySetValue($0.key, $0.value) }
-
             let isAnonymous = try values.decodeIfPresent(Bool.self, forKey: .isAnonymous) ?? false
             contextBuilder.anonymous(isAnonymous)
 
             let privateAttributeNames = try values.decodeIfPresent([String].self, forKey: .privateAttributeNames) ?? []
             privateAttributeNames.forEach { contextBuilder.addPrivateAttribute(Reference($0)) }
-
-            if let secondary = try values.decodeIfPresent(String.self, forKey: .secondary) {
-                contextBuilder.secondary(secondary)
-            }
 
             self = try contextBuilder.build().get()
         case .some("multi"):
@@ -517,10 +509,6 @@ extension LDContext: Decodable {
                 continue
             case "_meta":
                 if let meta = try container.decodeIfPresent(LDContext.Meta.self, forKey: DynamicCodingKeys(string: "_meta")) {
-                    if let secondary = meta.secondary {
-                        contextBuilder.secondary(secondary)
-                    }
-
                     if let privateAttributes = meta.privateAttributes {
                         privateAttributes.forEach { contextBuilder.addPrivateAttribute($0) }
                     }
@@ -584,7 +572,6 @@ public struct LDContextBuilder {
     // Meta attributes
     private var name: String?
     private var anonymous: Bool = false
-    private var secondary: String?
     private var privateAttributes: [Reference] = []
 
     private var key: LDContextBuilderKey
@@ -662,8 +649,6 @@ public struct LDContextBuilder {
     ///
     /// - "name": Must be a string or null. See `LDContextBuilder.name(_:)`.
     ///
-    /// - "secondary": Must be a string. See `LDContextBuilder.secondary(_:)`.
-    ///
     /// - "anonymous": Must be a boolean. See `LDContextBuilder.anonymous(_:)`.
     ///
     /// Values that are JSON arrays or objects have special behavior when referenced in
@@ -699,10 +684,6 @@ public struct LDContextBuilder {
             self.anonymous(val)
         case ("anonymous", _):
             return false
-        case ("secondary", .string(let val)):
-            self.secondary(val)
-        case ("secondary", _):
-            return false
         case (_, .null):
             self.attributes.removeValue(forKey: name)
             return false
@@ -712,20 +693,6 @@ public struct LDContextBuilder {
         }
 
         return true
-    }
-
-    /// Sets a secondary key for the LDContext.
-    ///
-    /// This affects feature flag targeting
-    /// <https://docs.launchdarkly.com/home/flags/targeting-users#targeting-rules-based-on-user-attributes>
-    /// as follows: if you have chosen to bucket users by a specific attribute, the secondary key
-    /// (if set) is used to further distinguish between users who are otherwise identical according
-    /// to that attribute. This value is not addressable as an attribute in evaluations: that is, a
-    /// rule clause cannot use the attribute name "secondary".
-    ///
-    /// Setting this value to an empty string is not the same as leaving it unset.
-    public mutating func secondary(_ secondary: String) {
-        self.secondary = secondary
     }
 
     /// Sets whether the LDContext is only intended for flag evaluations and should not be indexed by
@@ -756,8 +723,7 @@ public struct LDContextBuilder {
     /// This action only affects analytics events that involve this particular LDContext. To mark some (or all)
     /// LDContext attributes as private for all uses, use the overall event configuration for the SDK.
     ///
-    /// The attributes "kind" and "key", and the metadata properties set by secondary and anonymous,
-    /// cannot be made private.
+    /// The attributes "kind" and "key", and the metadata properties set by anonymous, cannot be made private.
     public mutating func addPrivateAttribute(_ reference: Reference) {
         self.privateAttributes.append(reference)
     }
@@ -803,7 +769,6 @@ public struct LDContextBuilder {
         context.contexts = []
         context.name = self.name
         context.anonymous = anonymous
-        context.secondary = self.secondary
         context.privateAttributes = self.privateAttributes
         context.key = contextKey
         context.attributes = self.attributes

@@ -10,7 +10,7 @@ final class LDContextCodableSpec: XCTestCase {
             ("{\"key\" : \"foo\", \"name\" : \"bar\"}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"name\" : \"bar\"}"),
             ("{\"key\" : \"foo\", \"custom\" : {\"a\" : \"b\"}}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"a\" : \"b\"}"),
             ("{\"key\" : \"foo\", \"anonymous\" : true}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"anonymous\" : true}"),
-            ("{\"key\" : \"foo\", \"secondary\" : \"bar\"}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"_meta\" : {\"secondary\" : \"bar\"}}"),
+            ("{\"key\" : \"foo\", \"secondary\" : \"bar\"}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"secondary\" : \"bar\"}"),
             ("{\"key\" : \"foo\", \"ip\" : \"1\", \"privateAttributeNames\" : [\"ip\"]}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"ip\" : \"1\", \"_meta\" : { \"privateAttributes\" : [\"ip\"]} }")
         ]
 
@@ -22,12 +22,22 @@ final class LDContextCodableSpec: XCTestCase {
         }
     }
 
+    func testUserCustomAttributesAreOverriddenByOldBuiltIns() throws {
+        let userJson = "{\"key\" : \"foo\", \"anonymous\" : true, \"secondary\": \"my secondary\", \"custom\": {\"anonymous\": false, \"secondary\": \"custom secondary\"}}"
+        let explicitFormat = "{\"kind\" : \"user\", \"key\" : \"foo\", \"anonymous\" : true, \"secondary\": \"my secondary\"}"
+
+        let userContext = try JSONDecoder().decode(LDContext.self, from: Data(userJson.utf8))
+        let explicitContext = try JSONDecoder().decode(LDContext.self, from: Data(explicitFormat.utf8))
+
+        XCTAssertEqual(userContext, explicitContext)
+    }
+
     func testSingleContextKindsAreDecodedAndEncodedWithoutLossOfInformation() throws {
         let testCases = [
             "{\"kind\":\"org\",\"key\":\"foo\"}",
             "{\"kind\":\"user\",\"key\":\"foo\"}",
             "{\"kind\":\"foo\",\"key\":\"bar\",\"anonymous\":true}",
-            "{\"kind\":\"foo\",\"key\":\"bar\",\"name\":\"Foo\",\"_meta\":{\"privateAttributes\":[\"a\"],\"secondary\":\"baz\"}}",
+            "{\"kind\":\"foo\",\"key\":\"bar\",\"name\":\"Foo\",\"_meta\":{\"privateAttributes\":[\"a\"]}}",
             "{\"kind\":\"foo\",\"key\":\"bar\",\"object\":{\"a\":\"b\"}}"
         ]
 

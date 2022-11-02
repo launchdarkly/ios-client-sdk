@@ -229,10 +229,6 @@ final class SdkController: RouteCollection {
             contextBuilder.anonymous(anonymous)
         }
 
-        if let secondary = params.secondary {
-            contextBuilder.secondary(secondary)
-        }
-
         if let privateAttributes = params.privateAttribute {
             privateAttributes.forEach { contextBuilder.addPrivateAttribute(Reference($0)) }
         }

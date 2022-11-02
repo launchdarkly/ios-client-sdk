@@ -7,7 +7,6 @@ final class LDContextSpec: XCTestCase {
     func testBuildCanCreateSimpleContext() throws {
         var builder = LDContextBuilder(key: "context-key")
         builder.name("Name")
-        builder.secondary("Secondary")
 
         let context = try builder.build().get()
         XCTAssertFalse(context.isMulti())
@@ -231,7 +230,6 @@ final class LDContextSpec: XCTestCase {
             ("/a//b", nil),
             // Hidden meta attributes
             ("privateAttributes", nil),
-            ("secondary", nil),
             // Can index arrays and objects
             ("/my-map/array", .array([.string("first"), .string("second")])),
             ("/my-map/1", .bool(true)),
@@ -247,7 +245,6 @@ final class LDContextSpec: XCTestCase {
             builder.kind("org")
             builder.name("my-name")
             builder.anonymous(true)
-            builder.secondary("my-secondary")
             builder.trySetValue("attr", .string("my-attr"))
             builder.trySetValue("starts-with-slash", .string("love that prefix"))
             builder.trySetValue("crazy~name", .string("still works"))

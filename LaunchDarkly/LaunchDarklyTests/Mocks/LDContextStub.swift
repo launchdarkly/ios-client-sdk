@@ -6,7 +6,6 @@ extension LDContext {
         static let key: LDValue = "stub.context.key"
 
         static let name = "stub.context.name"
-        static let secondary = "stub.context.secondary"
         static let isAnonymous = false
 
         static let firstName: LDValue = "stub.context.firstName"
@@ -28,7 +27,6 @@ extension LDContext {
         var builder = LDContextBuilder(key: key ?? UUID().uuidString)
 
         builder.name(StubConstants.name)
-        builder.secondary(StubConstants.secondary)
         builder.anonymous(StubConstants.isAnonymous)
 
         builder.trySetValue("firstName", StubConstants.firstName)

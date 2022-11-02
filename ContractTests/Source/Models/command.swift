@@ -83,12 +83,11 @@ struct SingleContextParameters: Content, Decodable {
     var key: String
     var name: String?
     var anonymous: Bool?
-    var secondary: String?
     var privateAttribute: [String]?
     var custom: [String:LDValue]?
 
     private enum CodingKeys: String, CodingKey {
-        case kind, key, name, anonymous, secondary, privateAttribute = "private", custom
+        case kind, key, name, anonymous, privateAttribute = "private", custom
     }
 }
 
