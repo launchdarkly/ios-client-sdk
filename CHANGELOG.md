@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [7.1.0] - 2022-11-08
+### Added:
+- Added Objective C bindings for ApplicationInfo.
+
 ## [7.0.0] - 2022-10-12
 ### Changed:
 - Dropped support for older versions in accordance with the new [Xcode 14 release](https://developer.apple.com/documentation/xcode-release-notes/xcode-14-release-notes).
