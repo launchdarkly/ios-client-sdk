@@ -212,6 +212,10 @@
 		A36EDFCE2853C50B00D91B05 /* ObjcLDContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */; };
 		A36EDFCF2853C50B00D91B05 /* ObjcLDContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */; };
 		A36EDFD02853C50B00D91B05 /* ObjcLDContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */; };
+		A3799D4529033665008D4A8E /* ObjcLDApplicationInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3799D4429033665008D4A8E /* ObjcLDApplicationInfo.swift */; };
+		A3799D4629033665008D4A8E /* ObjcLDApplicationInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3799D4429033665008D4A8E /* ObjcLDApplicationInfo.swift */; };
+		A3799D4729033665008D4A8E /* ObjcLDApplicationInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3799D4429033665008D4A8E /* ObjcLDApplicationInfo.swift */; };
+		A3799D4829033665008D4A8E /* ObjcLDApplicationInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3799D4429033665008D4A8E /* ObjcLDApplicationInfo.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
 		B468E71024B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
@@ -409,6 +413,7 @@
 		A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDContextCodableSpec.swift; sourceTree = "<group>"; };
 		A36EDFC72853883400D91B05 /* ObjcLDReference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDReference.swift; sourceTree = "<group>"; };
 		A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDContext.swift; sourceTree = "<group>"; };
+		A3799D4429033665008D4A8E /* ObjcLDApplicationInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDApplicationInfo.swift; sourceTree = "<group>"; };
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
 		B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDEvaluationDetail.swift; sourceTree = "<group>"; };
@@ -632,6 +637,7 @@
 				B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */,
 				29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */,
 				A36EDFC72853883400D91B05 /* ObjcLDReference.swift */,
+				A3799D4429033665008D4A8E /* ObjcLDApplicationInfo.swift */,
 			);
 			path = ObjectiveC;
 			sourceTree = "<group>";
@@ -1179,6 +1185,7 @@
 				830DB3B12239B54900D65D25 /* URLResponse.swift in Sources */,
 				831188512113ADF400D77CB5 /* ClientServiceFactory.swift in Sources */,
 				831188442113ADC200D77CB5 /* LDConfig.swift in Sources */,
+				A3799D4829033665008D4A8E /* ObjcLDApplicationInfo.swift in Sources */,
 				83906A7721190B1900D7D3C5 /* FlagRequestTracker.swift in Sources */,
 				B495A8A52787762C0051977C /* LDClientVariation.swift in Sources */,
 				831188622113AE3A00D77CB5 /* Data.swift in Sources */,
@@ -1209,6 +1216,7 @@
 				831EF34D20655E730001C643 /* FlagsUnchangedObserver.swift in Sources */,
 				A31088192837DC0400184942 /* Reference.swift in Sources */,
 				831EF34E20655E730001C643 /* Event.swift in Sources */,
+				A3799D4729033665008D4A8E /* ObjcLDApplicationInfo.swift in Sources */,
 				C443A41123186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
 				831EF35020655E730001C643 /* ClientServiceFactory.swift in Sources */,
 				831EF35120655E730001C643 /* KeyedValueCache.swift in Sources */,
@@ -1294,6 +1302,7 @@
 				B4C9D42E2489B5FF004A9B03 /* DiagnosticEvent.swift in Sources */,
 				83B8C2471FE4071F0082B8A9 /* HTTPURLResponse.swift in Sources */,
 				830DB3AE2239B54900D65D25 /* URLResponse.swift in Sources */,
+				A3799D4529033665008D4A8E /* ObjcLDApplicationInfo.swift in Sources */,
 				83DDBEF61FA24A7E00E428B6 /* Data.swift in Sources */,
 				B495A8A22787762C0051977C /* LDClientVariation.swift in Sources */,
 				838F96781FBA504A009CFC45 /* ClientServiceFactory.swift in Sources */,
@@ -1398,6 +1407,7 @@
 				B4C9D42F2489B5FF004A9B03 /* DiagnosticEvent.swift in Sources */,
 				83D9EC992062DEAB004D7FA6 /* ObjcLDConfig.swift in Sources */,
 				830DB3AF2239B54900D65D25 /* URLResponse.swift in Sources */,
+				A3799D4629033665008D4A8E /* ObjcLDApplicationInfo.swift in Sources */,
 				B495A8A32787762C0051977C /* LDClientVariation.swift in Sources */,
 				83D9EC9C2062DEAB004D7FA6 /* ObjcLDChangedFlag.swift in Sources */,
 			);
@@ -1443,7 +1453,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 7.0.0;
+				MARKETING_VERSION = 7.1.0;
 				MODULEMAP_FILE = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
 				PRODUCT_NAME = LaunchDarkly_tvOS;
@@ -1466,7 +1476,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 7.0.0;
+				MARKETING_VERSION = 7.1.0;
 				MODULEMAP_FILE = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
 				PRODUCT_NAME = LaunchDarkly_tvOS;
@@ -1489,7 +1499,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 7.0.0;
+				MARKETING_VERSION = 7.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = LaunchDarkly_macOS;
 				SDKROOT = macosx;
@@ -1510,7 +1520,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 7.0.0;
+				MARKETING_VERSION = 7.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = LaunchDarkly_macOS;
 				SDKROOT = macosx;
@@ -1553,8 +1563,8 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DYLIB_COMPATIBILITY_VERSION = 7.0.0;
-				DYLIB_CURRENT_VERSION = 7.0.0;
+				DYLIB_COMPATIBILITY_VERSION = 7.1.0;
+				DYLIB_CURRENT_VERSION = 7.1.0;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_VERSION = D;
@@ -1624,8 +1634,8 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DYLIB_COMPATIBILITY_VERSION = 7.0.0;
-				DYLIB_CURRENT_VERSION = 7.0.0;
+				DYLIB_COMPATIBILITY_VERSION = 7.1.0;
+				DYLIB_CURRENT_VERSION = 7.1.0;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FRAMEWORK_VERSION = D;
@@ -1664,7 +1674,7 @@
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
-				MARKETING_VERSION = 7.0.0;
+				MARKETING_VERSION = 7.1.0;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = LaunchDarkly;
@@ -1684,7 +1694,7 @@
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
-				MARKETING_VERSION = 7.0.0;
+				MARKETING_VERSION = 7.1.0;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = LaunchDarkly;
@@ -1726,7 +1736,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 7.0.0;
+				MARKETING_VERSION = 7.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
 				PRODUCT_NAME = LaunchDarkly_watchOS;
 				SDKROOT = watchos;
@@ -1748,7 +1758,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 7.0.0;
+				MARKETING_VERSION = 7.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
 				PRODUCT_NAME = LaunchDarkly_watchOS;
 				SDKROOT = watchos;
