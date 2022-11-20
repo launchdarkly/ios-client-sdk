@@ -157,6 +157,25 @@ public struct Reference: Codable, Equatable, Hashable {
         components = referenceComponents
     }
 
+    private init() {
+        rawPath = ""
+        components = []
+        error = nil
+    }
+
+    public init(literal value: String) {
+        if value.isEmpty {
+            self.init(value)
+            return
+        }
+
+        self.init()
+        let str = value.replacingOccurrences(of: "~", with: "~0").replacingOccurrences(of: "/", with: "~1")
+        self.rawPath = str
+        self.components = [value]
+        self.error = nil
+    }
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let reference = try container.decode(String.self)

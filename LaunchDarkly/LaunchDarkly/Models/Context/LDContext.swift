@@ -686,10 +686,8 @@ public struct LDContextBuilder {
             return false
         case (_, .null):
             self.attributes.removeValue(forKey: name)
-            return false
         case (_, _):
             self.attributes.updateValue(value, forKey: name)
-            return false
         }
 
         return true

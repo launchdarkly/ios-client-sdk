@@ -61,8 +61,9 @@ final class LDContextCodableSpec: XCTestCase {
                            "c": "should be removed",
                            "d": "should be retained"
                        },
+                       "/complex/attribute": "should be removed",
                        "_meta":{
-                           "privateAttributes":["a", "/b/c"],
+                           "privateAttributes":["a", "/b/c", "~1complex~1attribute"],
                            "secondary":"baz"
                        }
                    }

@@ -115,6 +115,15 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
+        Deprecated identify method which accepts a legacy LDUser instead of an LDContext.
+
+        This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `identify(context)` for details.
+     */
+    @objc public func identify(user: ObjcLDUser) {
+        ldClient.identify(user: user.user, completion: nil)
+    }
+
+    /**
         The LDContext set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the context. See `LDContext` for details about what information can be retained.
 
         Normally, the client app should create and set the LDContext and pass that into `start(config: context: completion:)`.
@@ -128,6 +137,15 @@ public final class ObjcLDClient: NSObject {
        */
     @objc public func identify(context: ObjcLDContext, completion: (() -> Void)? = nil) {
         ldClient.identify(context: context.context, completion: completion)
+    }
+
+    /**
+        Deprecated identify method which accepts a legacy LDUser instead of an LDContext.
+
+        This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `identify(context:completion:)` for details.
+     */
+    @objc public func identify(user: ObjcLDUser, completion: (() -> Void)? = nil) {
+        ldClient.identify(user: user.user, completion: completion)
     }
 
     /**
@@ -555,6 +573,15 @@ public final class ObjcLDClient: NSObject {
    }
 
     /**
+        Deprecated start method which accepts a legacy LDUser instead of an LDContext.
+
+        This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `start(configuration:context:completion:)` for details.
+     */
+    @objc public static func start(configuration: ObjcLDConfig, user: ObjcLDUser, completion: (() -> Void)? = nil) {
+       LDClient.start(config: configuration.config, user: user.user, completion: completion)
+   }
+
+    /**
     See [start](x-source-tag://start) for more information on starting the SDK.
 
     - parameter configuration: The LDConfig that contains the desired configuration. (Required)
@@ -564,6 +591,15 @@ public final class ObjcLDClient: NSObject {
     */
    @objc public static func start(configuration: ObjcLDConfig, context: ObjcLDContext, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
        LDClient.start(config: configuration.config, context: context.context, startWaitSeconds: startWaitSeconds, completion: completion)
+   }
+
+    /**
+        Deprecated start method which accepts a legacy LDUser instead of an LDContext.
+
+        This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `start(configuration:context:startWaitSeconds:completion:)` for details.
+     */
+   @objc public static func start(configuration: ObjcLDConfig, user: ObjcLDUser, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+       LDClient.start(config: configuration.config, user: user.user, startWaitSeconds: startWaitSeconds, completion: completion)
    }
 
     private init(client: LDClient) {

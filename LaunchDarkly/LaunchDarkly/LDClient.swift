@@ -286,6 +286,20 @@ public class LDClient {
         }
     }
 
+    /**
+     Deprecated identify method which accepts a legacy LDUser instead of an LDContext.
+
+     This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `identify(context:completion:)` for details.
+     */
+    public func identify(user: LDUser, completion: (() -> Void)? = nil) {
+        switch user.toContext() {
+        case .failure(let error):
+            Log.debug(self.typeName(and: #function) + "user created an invalid context: SDK identified context WILL NOT CHANGE: " + error.localizedDescription )
+        case .success(let context):
+            identify(context: context, completion: completion)
+        }
+    }
+
     func internalIdentify(newContext: LDContext, completion: (() -> Void)? = nil) {
         internalIdentifyQueue.sync {
             self.context = newContext
@@ -582,6 +596,22 @@ public class LDClient {
         start(serviceFactory: nil, config: config, context: context, completion: completion)
     }
 
+    /**
+     Deprecated start method which accepts a legacy LDUser instead of an LDContext.
+
+     This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `start(config:context:completion:)` for details.
+     */
+    public static func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
+        switch user?.toContext() {
+        case nil:
+            start(serviceFactory: nil, config: config, context: nil, completion: completion)
+        case .failure(let error):
+            Log.debug(self.typeName(and: #function) + "user created an invalid context: " + error.localizedDescription )
+        case .success(let context):
+            start(serviceFactory: nil, config: config, context: context, completion: completion)
+        }
+    }
+
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
         Log.debug("LDClient starting")
         if serviceFactory != nil {
@@ -627,6 +657,22 @@ public class LDClient {
     */
     public static func start(config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, completion: completion)
+    }
+
+    /**
+     Deprecated start method which accepts a legacy LDUser instead of an LDContext.
+
+     This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `start(config:context:startWaitSeconds:completion:)` for details.
+     */
+    public static func start(config: LDConfig, user: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        switch user?.toContext() {
+        case nil:
+            start(serviceFactory: nil, config: config, context: nil, startWaitSeconds: startWaitSeconds, completion: completion)
+        case .failure(let error):
+            Log.debug(self.typeName(and: #function) + "user created an invalid context: " + error.localizedDescription )
+        case .success(let context):
+            start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, completion: completion)
+        }
     }
 
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
