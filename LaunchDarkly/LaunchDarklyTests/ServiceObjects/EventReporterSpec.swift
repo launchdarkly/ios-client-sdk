@@ -15,14 +15,14 @@ final class EventReporterSpec: QuickSpec {
         var context: LDContext!
         var serviceMock: DarklyServiceMock!
         var events: [Event] = []
-        var lastEventResponseDate: Date?
+        var lastEventResponseDate: Date
         var eventStubResponseDate: Date?
         var syncResult: SynchronizingError? = nil
         var diagnosticCache: DiagnosticCachingMock
 
         init(eventCount: Int = 0,
              eventFlushInterval: TimeInterval? = nil,
-             lastEventResponseDate: Date? = nil,
+             lastEventResponseDate: Date = Date.distantPast,
              stubResponseSuccess: Bool = true,
              stubResponseOnly: Bool = false,
              stubResponseErrorOnly: Bool = false,
@@ -43,7 +43,7 @@ final class EventReporterSpec: QuickSpec {
             diagnosticCache = DiagnosticCachingMock()
             serviceMock.diagnosticCache = diagnosticCache
 
-            self.lastEventResponseDate = lastEventResponseDate?.adjustedForHttpUrlHeaderUse
+            self.lastEventResponseDate = lastEventResponseDate.adjustedForHttpUrlHeaderUse
             eventReporter = EventReporter(service: serviceMock, onSyncComplete: onSyncComplete)
             (0..<eventCount).forEach {
                 let event = Event.stub(Event.eventKind(for: $0), with: context!)
@@ -321,7 +321,7 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.serviceMock.publishEventDataCallCount) == 0
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
                             expect(testContext.eventReporter.eventStore.isEmpty) == true
-                            expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
+                            expect(testContext.eventReporter.lastEventResponseDate) == Date.distantPast
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
                         }
@@ -355,7 +355,7 @@ final class EventReporterSpec: QuickSpec {
                             }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
-                            expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
+                            expect(testContext.eventReporter.lastEventResponseDate) == Date.distantPast
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
                             guard case let .request(error) = testContext.syncResult
                             else {
@@ -392,7 +392,7 @@ final class EventReporterSpec: QuickSpec {
                             }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
-                            expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
+                            expect(testContext.eventReporter.lastEventResponseDate) == Date.distantPast
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
                             let expectedError = testContext.serviceMock.errorEventHTTPURLResponse
                             guard case let .response(error) = testContext.syncResult
@@ -432,7 +432,7 @@ final class EventReporterSpec: QuickSpec {
                             }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
-                            expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
+                            expect(testContext.eventReporter.lastEventResponseDate) == Date.distantPast
                             expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == false
                             guard case let .request(error) = testContext.syncResult
                             else {
@@ -462,7 +462,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
                     expect(testContext.eventReporter.eventStore) == testContext.events
-                    expect(testContext.eventReporter.lastEventResponseDate).to(beNil())
+                    expect(testContext.eventReporter.lastEventResponseDate) == Date.distantPast
                     expect(testContext.eventReporter.flagRequestTracker.hasLoggedRequests) == true
                     guard case .isOffline = testContext.syncResult
                     else {

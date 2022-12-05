@@ -105,7 +105,7 @@ final class CacheConverter: CacheConverting {
                 if key == "context-users" {
                     guard let data = flagCaching.keyedValueCache.data(forKey: "cached-users")
                     else {
-                        return;
+                        return
                     }
                     flagCaching.keyedValueCache.removeObject(forKey: "cached-users")
                     flagCaching.keyedValueCache.set(data, forKey: "cached-contexts")

@@ -131,7 +131,7 @@ public class LDClient {
 
     private let internalSetOnlineQueue: DispatchQueue = DispatchQueue(label: "InternalSetOnlineQueue")
 
-    private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
+    private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion: (() -> Void)?) {
         let owner = "SetOnlineOwner" as AnyObject
         var completed = false
         let internalCompletedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.goCompletedQueue")

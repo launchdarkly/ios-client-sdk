@@ -5,7 +5,8 @@ typealias EventSyncCompleteClosure = ((SynchronizingError?) -> Void)
 protocol EventReporting {
     // sourcery: defaultMockValue = false
     var isOnline: Bool { get set }
-    var lastEventResponseDate: Date? { get }
+    // sourcery: defaultMockValue = Date.distantPast
+    var lastEventResponseDate: Date { get }
 
     func record(_ event: Event)
     // swiftlint:disable:next function_parameter_count
@@ -19,7 +20,7 @@ class EventReporter: EventReporting {
         set { timerQueue.sync { newValue ? startReporting() : stopReporting() } }
     }
 
-    private (set) var lastEventResponseDate: Date?
+    private (set) var lastEventResponseDate: Date
 
     let service: DarklyServiceProvider
 
@@ -37,6 +38,7 @@ class EventReporter: EventReporting {
     init(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) {
         self.service = service
         self.onSyncComplete = onSyncComplete
+        self.lastEventResponseDate = Date()
     }
 
     func record(_ event: Event) {
@@ -59,7 +61,7 @@ class EventReporter: EventReporting {
         let recordingDebugEvent = featureFlag?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
 
         eventQueue.sync {
-            flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue)
+            flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
             if recordingFeatureEvent {
                 let featureEvent = FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false)
                 recordNoSync(featureEvent)
@@ -163,7 +165,11 @@ class EventReporter: EventReporting {
 
     private func processEventResponse(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> Bool {
         if error == nil && (200..<300).contains(response?.statusCode ?? 0) {
-            self.lastEventResponseDate = response?.headerDate ?? self.lastEventResponseDate
+            let serverTime = response?.headerDate ?? self.lastEventResponseDate
+            if serverTime > self.lastEventResponseDate {
+                self.lastEventResponseDate = serverTime
+            }
+
             Log.debug(self.typeName(and: #function) + "Completed sending \(sentEvents) event(s)")
             self.reportSyncComplete(nil)
             return false
@@ -204,7 +210,7 @@ extension EventReporter: TypeIdentifying { }
 
 #if DEBUG
     extension EventReporter {
-        func setLastEventResponseDate(_ date: Date?) {
+        func setLastEventResponseDate(_ date: Date) {
             lastEventResponseDate = date
         }
 

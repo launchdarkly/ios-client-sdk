@@ -88,7 +88,7 @@ public final class ObjcLDClient: NSObject {
      - parameter goOnline:    Desired online/offline mode for the LDClient
      - parameter completion:  Completion block called when setOnline completes. (Optional)
      */
-    @objc public func setOnline(_ goOnline: Bool, completion:(() -> Void)? = nil) {
+    @objc public func setOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
         ldClient.setOnline(goOnline, completion: completion)
     }
 

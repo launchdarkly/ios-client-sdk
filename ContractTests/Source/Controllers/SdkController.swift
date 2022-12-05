@@ -21,7 +21,8 @@ final class SdkController: RouteCollection {
             "mobile",
             "service-endpoints",
             "strongly-typed",
-            "tags"
+            "tags",
+            "user-type"
         ]
 
         return StatusResponse(
@@ -66,7 +67,7 @@ final class SdkController: RouteCollection {
             }
 
             if let globalPrivate = events.globalPrivateAttributes {
-                config.privateContextAttributes = globalPrivate.map{ Reference($0) }
+                config.privateContextAttributes = globalPrivate.map { Reference($0) }
             }
 
             if let flushIntervalMs = events.flushIntervalMs {
@@ -100,8 +101,14 @@ final class SdkController: RouteCollection {
         let dispatchSemaphore = DispatchSemaphore(value: 0)
         let startWaitSeconds = (createInstance.configuration.startWaitTimeMs ?? 5_000) / 1_000
 
-        LDClient.start(config:config, context: clientSide.initialContext, startWaitSeconds: startWaitSeconds) { timedOut in
-            dispatchSemaphore.signal()
+        if let context = clientSide.initialContext {
+            LDClient.start(config: config, context: context, startWaitSeconds: startWaitSeconds) { _ in
+                dispatchSemaphore.signal()
+            }
+        } else if let user = clientSide.initialUser {
+            LDClient.start(config: config, user: user, startWaitSeconds: startWaitSeconds) { _ in
+                dispatchSemaphore.signal()
+            }
         }
 
         dispatchSemaphore.wait()
@@ -152,8 +159,14 @@ final class SdkController: RouteCollection {
             return CommandResponse.evaluateAll(result)
         case "identifyEvent":
             let semaphore = DispatchSemaphore(value: 0)
-            client.identify(context: commandParameters.identifyEvent!.context) {
-                semaphore.signal()
+            if let context = commandParameters.identifyEvent!.context {
+                client.identify(context: context) {
+                    semaphore.signal()
+                }
+            } else if let user = commandParameters.identifyEvent!.user {
+                client.identify(user: user) {
+                    semaphore.signal()
+                }
             }
             semaphore.wait()
         case "customEvent":

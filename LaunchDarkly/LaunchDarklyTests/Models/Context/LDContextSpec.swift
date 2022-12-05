@@ -123,7 +123,7 @@ final class LDContextSpec: XCTestCase {
     func testMultikindBuilderRequiresContext() throws {
         let multiBuilder = LDMultiContextBuilder()
         switch multiBuilder.build() {
-        case .success(_):
+        case .success:
             XCTFail("Multibuilder should have failed to build.")
         case .failure(let error):
             XCTAssertEqual(error, .emptyMultiKind)
@@ -145,7 +145,7 @@ final class LDContextSpec: XCTestCase {
         multiBuilder.addContext(multiContext)
 
         switch multiBuilder.build() {
-        case .success(_):
+        case .success:
             XCTFail("Multibuilder should have failed to build with a multi-context.")
         case .failure(let error):
             XCTAssertEqual(error, .nestedMultiKind)
@@ -159,7 +159,7 @@ final class LDContextSpec: XCTestCase {
         multiBuilder.addContext(try LDContextBuilder(key: "second").build().get())
 
         switch multiBuilder.build() {
-        case .success(_):
+        case .success:
             XCTFail("Multibuilder should have failed to build.")
         case .failure(let error):
             XCTAssertEqual(error, .duplicateKinds)

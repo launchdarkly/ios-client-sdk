@@ -70,7 +70,8 @@ struct CustomEventParameters: Content {
 }
 
 struct IdentifyEventParameters: Content, Decodable {
-    var context: LDContext
+    var context: LDContext?
+    var user: LDUser?
 }
 
 struct ContextBuildParameters: Content, Decodable {
@@ -84,7 +85,7 @@ struct SingleContextParameters: Content, Decodable {
     var name: String?
     var anonymous: Bool?
     var privateAttribute: [String]?
-    var custom: [String:LDValue]?
+    var custom: [String: LDValue]?
 
     private enum CodingKeys: String, CodingKey {
         case kind, key, name, anonymous, privateAttribute = "private", custom

@@ -215,7 +215,7 @@ final class EventReportingMock: EventReporting {
 
     var lastEventResponseDateSetCount = 0
     var setLastEventResponseDateCallback: (() throws -> Void)?
-    var lastEventResponseDate: Date? = nil {
+    var lastEventResponseDate: Date = Date.distantPast {
         didSet {
             lastEventResponseDateSetCount += 1
             try! setLastEventResponseDateCallback?()

@@ -44,6 +44,7 @@ struct TagParameters: Content {
 
 struct ClientSideParameters: Content {
     var initialContext: LDContext?
+    var initialUser: LDUser?
     var evaluationReasons: Bool?
     var useReport: Bool?
 }

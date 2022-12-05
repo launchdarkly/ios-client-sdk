@@ -228,8 +228,8 @@ final class EventSpec: XCTestCase {
     func testSummaryEventEncoding() {
         let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
         var flagRequestTracker = FlagRequestTracker()
-        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true)
-        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true)
+        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
+        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         let event = SummaryEvent(flagRequestTracker: flagRequestTracker, endDate: Date())
         encodesToObject(event) { dict in
             XCTAssertEqual(dict.count, 4)
@@ -239,8 +239,8 @@ final class EventSpec: XCTestCase {
             valueIsObject(dict["features"]) { features in
                 XCTAssertEqual(features.count, 1)
                 let counter = FlagCounter()
-                counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true)
-                counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true)
+                counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
+                counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
                 XCTAssertEqual(features["bool-flag"], encodeToLDValue(counter))
             }
         }

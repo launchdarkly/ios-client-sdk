@@ -136,7 +136,7 @@ public struct LDContext: Encodable, Equatable {
         let (isReacted, nestedPropertiesAreRedacted) = includePrivateAttributes ? (false, false) : LDContext.maybeRedact(context: context, parentPath: path, value: value, redactedAttributes: &redactedAttributes, globalPrivateAttributes: globalPrivateAttributes)
 
         switch value {
-        case .object(_) where isReacted:
+        case .object where isReacted:
             break
         case .object(let objectMap):
             if !nestedPropertiesAreRedacted {
@@ -165,7 +165,7 @@ public struct LDContext: Encodable, Equatable {
         }
 
         var shouldCheckNestedProperties: Bool = false
-        if case .object(_) = value {
+        if case .object = value {
             shouldCheckNestedProperties = true
         }
 
