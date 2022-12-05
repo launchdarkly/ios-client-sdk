@@ -22,8 +22,6 @@ public struct LDUser: Encodable, Equatable {
 
     /// Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
     public var key: String
-    /// The secondary key for the user. Read the [documentation](https://docs.launchdarkly.com/home/flags/rollouts) for more information on it's use for percentage rollout bucketing.
-    public var secondary: String?
     /// Client app defined name for the user. (Default: nil)
     public var name: String?
     /// Client app defined first name for the user. (Default: nil)
@@ -40,20 +38,8 @@ public struct LDUser: Encodable, Equatable {
     public var avatar: String?
     /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private, see `privateAttributes` for details. (Default: [:])
     public var custom: [String: LDValue]
-    /// Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. isAnonymous cannot be made private. (Default: true)
-    public var isAnonymous: Bool {
-        get { isAnonymousNullable == true }
-        set { isAnonymousNullable = newValue }
-    }
-
-    /**
-     Whether or not the user is anonymous, if that has been specified (or set due to the lack of a `key` property).
-
-     Although the `isAnonymous` property defaults to `false` in terms of LaunchDarkly's indexing behavior, for historical
-     reasons flag evaluation may behave differently if the value is explicitly set to `false` verses being omitted. This
-     field allows treating the property as optional for consisent evaluation with other LaunchDarkly SDKs.
-     */
-    public var isAnonymousNullable: Bool?
+    /// Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. isAnonymous cannot be made private. (Default: false)
+    public var isAnonymous: Bool
 
     /**
      Client app defined privateAttributes for the user.
@@ -78,7 +64,6 @@ public struct LDUser: Encodable, Equatable {
      - parameter custom: Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device & operatingSystem (which cannot be made private). See `privateAttributes` for details. (Default: nil)
      - parameter isAnonymous: Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. (Default: nil)
      - parameter privateAttributes: Client app defined privateAttributes for the user. (Default: nil)
-     - parameter secondary: Secondary attribute value. (Default: nil)
      */
     public init(key: String? = nil,
                 name: String? = nil,
@@ -90,12 +75,10 @@ public struct LDUser: Encodable, Equatable {
                 avatar: String? = nil,
                 custom: [String: LDValue]? = nil,
                 isAnonymous: Bool? = nil,
-                privateAttributes: [UserAttribute]? = nil,
-                secondary: String? = nil) {
+                privateAttributes: [UserAttribute]? = nil) {
         let environmentReporter = EnvironmentReporter()
         let selectedKey = key ?? LDUser.defaultKey(environmentReporter: environmentReporter)
         self.key = selectedKey
-        self.secondary = secondary
         self.name = name
         self.firstName = firstName
         self.lastName = lastName
@@ -103,9 +86,11 @@ public struct LDUser: Encodable, Equatable {
         self.ipAddress = ipAddress
         self.email = email
         self.avatar = avatar
-        self.isAnonymousNullable = isAnonymous
         if isAnonymous == nil && selectedKey == LDUser.defaultKey(environmentReporter: environmentReporter) {
-            self.isAnonymousNullable = true
+            self.isAnonymous = true
+        } else {
+            // If not nil, use the value, otherwise false.
+            self.isAnonymous = isAnonymous ?? false;
         }
         self.custom = custom ?? [:]
         self.privateAttributes = privateAttributes ?? []
@@ -170,9 +155,6 @@ public struct LDUser: Encodable, Equatable {
         if let avatar = avatar {
             contextBuilder.trySetValue("avatar", avatar.toLDValue())
         }
-        if let secondary = secondary {
-            contextBuilder.trySetValue("secondary", secondary.toLDValue())
-        }
 
         privateAttributes.forEach { privateAttribute in
             contextBuilder.addPrivateAttribute(Reference(literal: privateAttribute.name))
@@ -194,8 +176,8 @@ public struct LDUser: Encodable, Equatable {
         var container = encoder.container(keyedBy: DynamicKey.self)
         try container.encode(key, forKey: DynamicKey(stringValue: "key")!)
 
-        if let anonymous = isAnonymousNullable {
-            try container.encode(anonymous, forKey: DynamicKey(stringValue: "anonymous")!)
+        if isAnonymous {
+            try container.encode(true, forKey: DynamicKey(stringValue: "anonymous")!)
         }
 
         try LDUser.optionalAttributes.forEach { attribute in

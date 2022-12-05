@@ -11,8 +11,6 @@ import Foundation
 public final class ObjcLDUser: NSObject {
     var user: LDUser
 
-    /// LDUser secondary attribute used to make `secondary` private
-    @objc public class var attributeSecondary: String { "secondary" }
     /// LDUser name attribute used to make `name` private
     @objc public class var attributeName: String { "name" }
     /// LDUser firstName attribute used to make `firstName` private
@@ -31,11 +29,6 @@ public final class ObjcLDUser: NSObject {
     /// Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
     @objc public var key: String {
         return user.key
-    }
-    /// The secondary key for the user. Read the [documentation](https://docs.launchdarkly.com/home/flags/rollouts) for more information on it's use for percentage rollout bucketing.
-    @objc public var secondary: String? {
-        get { user.secondary }
-        set { user.secondary = newValue }
     }
     /// Client app defined name for the user. (Default: nil)
     @objc public var name: String? {

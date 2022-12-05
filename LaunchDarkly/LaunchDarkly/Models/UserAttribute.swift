@@ -17,8 +17,6 @@ public class UserAttribute: Equatable, Hashable {
     public struct BuiltIn {
         /// Represents the user key attribute.
         public static let key = UserAttribute("key") { $0.key }
-        /// Represents the secondary key attribute.
-        public static let secondaryKey = UserAttribute("secondary") { $0.secondary }
         /// Represents the IP address attribute.
         public static let ip = UserAttribute("ip") { $0.ipAddress } // swiftlint:disable:this identifier_name
         /// Represents the email address attribute.
@@ -36,7 +34,7 @@ public class UserAttribute: Equatable, Hashable {
         /// Represents the anonymous attribute.
         public static let anonymous = UserAttribute("anonymous") { $0.isAnonymous }
 
-        static let allBuiltIns = [key, secondaryKey, ip, email, name, avatar, firstName, lastName, country, anonymous]
+        static let allBuiltIns = [key, ip, email, name, avatar, firstName, lastName, country, anonymous]
     }
 
     static var builtInMap = { return BuiltIn.allBuiltIns.reduce(into: [:]) { $0[$1.name] = $1 } }()

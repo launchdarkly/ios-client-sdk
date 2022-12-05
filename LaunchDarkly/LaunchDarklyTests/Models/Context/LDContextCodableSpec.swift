@@ -10,7 +10,7 @@ final class LDContextCodableSpec: XCTestCase {
             ("{\"key\" : \"foo\", \"name\" : \"bar\"}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"name\" : \"bar\"}"),
             ("{\"key\" : \"foo\", \"custom\" : {\"a\" : \"b\"}}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"a\" : \"b\"}"),
             ("{\"key\" : \"foo\", \"anonymous\" : true}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"anonymous\" : true}"),
-            ("{\"key\" : \"foo\", \"secondary\" : \"bar\"}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"secondary\" : \"bar\"}"),
+            ("{\"key\" : \"foo\"}", "{\"kind\" : \"user\", \"key\" : \"foo\"}"),
             ("{\"key\" : \"foo\", \"ip\" : \"1\", \"privateAttributeNames\" : [\"ip\"]}", "{\"kind\" : \"user\", \"key\" : \"foo\", \"ip\" : \"1\", \"_meta\" : { \"privateAttributes\" : [\"ip\"]} }")
         ]
 
@@ -24,7 +24,8 @@ final class LDContextCodableSpec: XCTestCase {
 
     func testUserCustomAttributesAreOverriddenByOldBuiltIns() throws {
         let userJson = "{\"key\" : \"foo\", \"anonymous\" : true, \"secondary\": \"my secondary\", \"custom\": {\"anonymous\": false, \"secondary\": \"custom secondary\"}}"
-        let explicitFormat = "{\"kind\" : \"user\", \"key\" : \"foo\", \"anonymous\" : true, \"secondary\": \"my secondary\"}"
+        // Secondary is not supported, so we should get the custom version for that.
+        let explicitFormat = "{\"kind\" : \"user\", \"key\" : \"foo\", \"anonymous\" : true, \"secondary\": \"custom secondary\"}"
 
         let userContext = try JSONDecoder().decode(LDContext.self, from: Data(userJson.utf8))
         let explicitContext = try JSONDecoder().decode(LDContext.self, from: Data(explicitFormat.utf8))
@@ -64,7 +65,6 @@ final class LDContextCodableSpec: XCTestCase {
                        "/complex/attribute": "should be removed",
                        "_meta":{
                            "privateAttributes":["a", "/b/c", "~1complex~1attribute"],
-                           "secondary":"baz"
                        }
                    }
                    """
@@ -90,7 +90,6 @@ final class LDContextCodableSpec: XCTestCase {
                        },
                        "_meta":{
                            "privateAttributes":["a", "/b/c"],
-                           "secondary":"baz"
                        }
                    }
                    """

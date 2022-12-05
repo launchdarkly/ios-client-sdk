@@ -28,15 +28,12 @@ final class LDUserSpec: QuickSpec {
                               avatar: LDUser.StubConstants.avatar,
                               custom: LDUser.StubConstants.custom(includeSystemValues: true),
                               isAnonymous: LDUser.StubConstants.isAnonymous,
-                              privateAttributes: LDUser.optionalAttributes,
-                              secondary: LDUser.StubConstants.secondary)
+                              privateAttributes: LDUser.optionalAttributes)
                 expect(user.key) == LDUser.StubConstants.key
-                expect(user.secondary) == LDUser.StubConstants.secondary
                 expect(user.name) == LDUser.StubConstants.name
                 expect(user.firstName) == LDUser.StubConstants.firstName
                 expect(user.lastName) == LDUser.StubConstants.lastName
                 expect(user.isAnonymous) == LDUser.StubConstants.isAnonymous
-                expect(user.isAnonymousNullable) == LDUser.StubConstants.isAnonymous
                 expect(user.country) == LDUser.StubConstants.country
                 expect(user.ipAddress) == LDUser.StubConstants.ipAddress
                 expect(user.email) == LDUser.StubConstants.email
@@ -46,8 +43,6 @@ final class LDUserSpec: QuickSpec {
             }
             it("without setting anonymous") {
                 user = LDUser(key: "abc")
-                expect(user.isAnonymous) == false
-                expect(user.isAnonymousNullable).to(beNil())
             }
             context("called without optional elements") {
                 var environmentReporter: EnvironmentReporter!
@@ -58,7 +53,6 @@ final class LDUserSpec: QuickSpec {
                 it("creates a LDUser without optional elements") {
                     expect(user.key) == LDUser.defaultKey(environmentReporter: environmentReporter)
                     expect(user.isAnonymous) == true
-                    expect(user.isAnonymousNullable) == true
 
                     expect(user.name).to(beNil())
                     expect(user.firstName).to(beNil())
@@ -68,7 +62,6 @@ final class LDUserSpec: QuickSpec {
                     expect(user.email).to(beNil())
                     expect(user.avatar).to(beNil())
                     expect(user.privateAttributes).to(beEmpty())
-                    expect(user.secondary).to(beNil())
                 }
             }
             context("called without a key multiple times") {
@@ -83,7 +76,6 @@ final class LDUserSpec: QuickSpec {
                     users.forEach { user in
                         expect(user.key) == LDUser.defaultKey(environmentReporter: environmentReporter)
                         expect(user.isAnonymous) == true
-                        expect(user.isAnonymousNullable) == true
                     }
                 }
             }
@@ -101,9 +93,7 @@ final class LDUserSpec: QuickSpec {
             it("creates a user with system values matching the environment reporter") {
                 expect(user.key) == LDUser.defaultKey(environmentReporter: environmentReporter)
                 expect(user.isAnonymous) == true
-                expect(user.isAnonymousNullable) == true
 
-                expect(user.secondary).to(beNil())
                 expect(user.name).to(beNil())
                 expect(user.firstName).to(beNil())
                 expect(user.lastName).to(beNil())

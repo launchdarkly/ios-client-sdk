@@ -4,7 +4,6 @@ import Foundation
 extension LDUser {
     struct StubConstants {
         static let key = "stub.user.key"
-        static let secondary = "stub.user.secondary"
         static let userKey = "userKey"
         static let name = "stub.user.name"
         static let firstName = "stub.user.firstName"
@@ -44,8 +43,7 @@ extension LDUser {
                           email: StubConstants.email,
                           avatar: StubConstants.avatar,
                           custom: StubConstants.custom(includeSystemValues: true),
-                          isAnonymous: StubConstants.isAnonymous,
-                          secondary: StubConstants.secondary)
+                          isAnonymous: StubConstants.isAnonymous)
         return user
     }
 }

@@ -27,7 +27,6 @@ final class LDUserToContextSpec: XCTestCase {
         user.custom = ["/nested/attribute": "here is a nested attribute"]
         user.isAnonymous = true
         user.privateAttributes = [UserAttribute("/nested/attribute")]
-        user.secondary = "secondary"
 
         var builder = LDContextBuilder(key: "user-key")
         builder.name("Example user")
@@ -40,7 +39,6 @@ final class LDUserToContextSpec: XCTestCase {
         builder.trySetValue("/nested/attribute", "here is a nested attribute".toLDValue())
         builder.anonymous(true)
         builder.addPrivateAttribute(Reference(literal: "/nested/attribute"))
-        builder.trySetValue("secondary", "secondary".toLDValue())
 
         let context = try builder.build().get()
         let userContext = try user.toContext().get()

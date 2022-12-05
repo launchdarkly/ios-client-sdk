@@ -446,9 +446,6 @@ extension LDContext: Decodable {
             if let lastName = try values.decodeIfPresent(String.self, forKey: .lastName) {
                 contextBuilder.trySetValue("lastName", .string(lastName))
             }
-            if let secondary = try values.decodeIfPresent(String.self, forKey: .secondary) {
-                contextBuilder.trySetValue("secondary", .string(secondary))
-            }
             if let country = try values.decodeIfPresent(String.self, forKey: .country) {
                 contextBuilder.trySetValue("country", .string(country))
             }
@@ -546,7 +543,7 @@ extension LDContext: Decodable {
     }
 
     enum UserCodingKeys: String, CodingKey {
-        case key, name, firstName, lastName, country, ip, email, avatar, custom, isAnonymous = "anonymous", privateAttributeNames, secondary
+        case key, name, firstName, lastName, country, ip, email, avatar, custom, isAnonymous = "anonymous", privateAttributeNames
     }
 }
 
