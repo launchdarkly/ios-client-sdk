@@ -1,11 +1,10 @@
 import Foundation
 
 /**
- LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
+ LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK.
 
- The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user's feature flags, or until the user removes the app from the device.
-
- The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.
+ The usage of LDUser is no longer recommended and is retained only to ease the adoption of the `LDContext` class. New
+ code using this SDK should make use of the `LDContextBuilder` to construct an equivalent `Kind.user` kind context.
  */
 @objc (LDUser)
 public final class ObjcLDUser: NSObject {

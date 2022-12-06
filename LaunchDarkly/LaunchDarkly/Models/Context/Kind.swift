@@ -1,8 +1,20 @@
 import Foundation
 
+/// Kind is an enumeration set by the application to describe what kind of entity an `LDContext`
+/// represents. The meaning of this is completely up to the application. When no Kind is
+/// specified, the default is `Kind.user`.
+///
+/// For a multi-context (see `LDMultiContextBuilder`), the Kind is always `Kind.multi`;
+/// there is a specific Kind for each of the individual Contexts within it.
 public enum Kind: Codable, Equatable, Hashable {
+    /// user is both the default Kind and also the kind used for legacy users in earlier versions of this SDK.
     case user
+
+    /// multi is only usable by constructing a multi-context using `LDMultiContextBuilder`. Attempting to set
+    /// a context kind to multi directly will result in an invalid context.
     case multi
+
+    /// The custom case handles arbitrarily defined contexts (e.g. org, account, server).
     case custom(String)
 
     public init(from decoder: Decoder) throws {

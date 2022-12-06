@@ -1,18 +1,23 @@
 import Foundation
 
+/// Enumeration representing various modes of failures when constructing an `LDContext`.
 public enum ContextBuilderError: Error {
+    /// The provided kind either contains invalid characters, or is the disallowed kind "kind".
     case invalidKind
+    /// The `LDMultiContextBuilder` must be used when attempting to build a multi-context.
     case requiresMultiBuilder
+    /// The JSON representations for the context was missing the "key" property.
     case emptyKey
+    /// Attempted to build a multi-context without providing any contexts.
     case emptyMultiKind
+    /// A multi-context cannot contain another multi-context.
     case nestedMultiKind
+    /// Attempted to build a multi-context containing 2 or more contexts with the same kind.
     case duplicateKinds
 }
 
 /// LDContext is a collection of attributes that can be referenced in flag evaluations and analytics
 /// events.
-///
-/// (TKTK - some conceptual text here, and/or a link to a docs page)
 ///
 /// To create an LDContext of a single kind, such as a user, you may use `LDContextBuilder`.
 ///
@@ -312,7 +317,10 @@ public struct LDContext: Encodable, Equatable {
         return (nil, false)
     }
 
-    /// TKTK
+    /// FullyQualifiedKey returns a string that describes the entire Context based on Kind and Key values.
+    ///
+    /// This value is used whenever LaunchDarkly needs a string identifier based on all of the Kind and
+    /// Key values in the context; the SDK may use this for caching previously seen contexts, for instance.
     public func fullyQualifiedKey() -> String {
         return canonicalizedKey
     }
@@ -325,11 +333,12 @@ public struct LDContext: Encodable, Equatable {
         return Util.sha256base64(fullyQualifiedKey()) + "$"
     }
 
-    /// TKTK
+    /// - Returns: true if the `LDContext` is a multi-context; false otherwise.
     public func isMulti() -> Bool {
         return self.kind.isMulti()
     }
 
+    //// - Returns: A hash mapping a context's kind to its key.
     public func contextKeys() -> [String: String] {
         guard isMulti() else {
             return [kind.description: key ?? ""]
@@ -339,7 +348,20 @@ public struct LDContext: Encodable, Equatable {
         return keys
     }
 
-    /// TKTK
+    /// Looks up the value of any attribute of the `LDContext`, or a value contained within an
+    /// attribute, based on a `Reference`. This includes only attributes that are addressable in evaluations.
+    ///
+    /// This implements the same behavior that the SDK uses to resolve attribute references during a flag
+    /// evaluation. In a context, the `Reference` can represent a simple attribute name-- either a
+    /// built-in one like "name" or "key", or a custom attribute that was set by `LDContextBuilder.trySetValue(...)`--
+    /// or, it can be a slash-delimited path using a JSON-Pointer-like syntax. See `Reference` for more details.
+    ///
+    /// For a multi-context, the only supported attribute name is "kind".
+    ///
+    /// If the value is found, the return value is the attribute value, using the type `LDValue` to
+    /// represent a value of any JSON type.
+    ///
+    /// If there is no such attribute, or if the `Reference` is invalid, the return value is nil.
     public func getValue(_ reference: Reference) -> LDValue? {
         if !reference.isValid() {
             return nil
@@ -354,7 +376,7 @@ public struct LDContext: Encodable, Equatable {
                 return .string(String(kind))
             }
 
-            Log.debug(typeName(and: #function) + ": Cannot get non-kind attribute from multi-kind context")
+            Log.debug(typeName(and: #function) + ": Cannot get non-kind attribute from multi-context")
             return nil
         }
 
@@ -562,7 +584,7 @@ enum LDContextBuilderKey {
 /// kind is "user", its key is set to whatever value you passed to `LDContextBuilder.init(key:)`, its anonymous attribute
 /// is false, and it has no values for any other attributes.
 ///
-/// To define a multi-kind LDContext, see `LDMultiContextBuilder`.
+/// To define a multi-context, see `LDMultiContextBuilder`.
 public struct LDContextBuilder {
     private var kind: String = Kind.user.description
 
@@ -710,15 +732,53 @@ public struct LDContextBuilder {
     /// Provide a reference to designate any number of LDContext attributes as private: that is,
     /// their values will not be sent to LaunchDarkly.
     ///
-    /// (TKTK: possibly move some of this conceptual information to a non-platform-specific docs page and/or
-    /// have docs team copyedit it here)
+    /// This action only affects analytics events that involve this particular `LDContext`. To mark some (or all)
+    /// Context attributes as private for all contexts, use the overall event configuration for the SDK.
     ///
-    /// See `Reference` for details on how to construct a valid reference.
+    /// In this example, firstName is marked as private, but lastName is not:
     ///
-    /// This action only affects analytics events that involve this particular LDContext. To mark some (or all)
-    /// LDContext attributes as private for all uses, use the overall event configuration for the SDK.
+    /// ```swift
+    /// var builder = LDContextBuilder(key: "my-key")
+    /// builder.kind("org")
+    /// builder.trySetValue("firstName", "Pierre")
+    /// builder.trySetValue("lastName", "Menard")
+    /// builder.addPrivate(Reference("firstName"))
     ///
-    /// The attributes "kind" and "key", and the metadata properties set by anonymous, cannot be made private.
+    /// let context = try builder.build().get()
+    /// ```
+    ///
+    /// The attributes "kind", "key", and "anonymous" cannot be made private.
+    ///
+    /// This is a metadata property, rather than an attribute that can be addressed in evaluations: that is,
+    /// a rule clause that references the attribute name "private" will not use this value, but instead will
+    /// use whatever value (if any) you have set for that name with `trySetValue(...)`.
+    ///
+    /// # Designating an entire attribute as private
+    ///
+    /// If the parameter is an attribute name such as "email" that does not start with a '/' character, the
+    /// entire attribute is private.
+    ///
+    /// # Designating a property within a JSON object as private
+    ///
+    /// If the parameter starts with a '/' character, it is interpreted as a slash-delimited path to a
+    /// property within a JSON object. The first path component is an attribute name, and each following
+    /// component is a property name.
+    ///
+    /// For instance, suppose that the attribute "address" had the following JSON object value:
+    /// {"street": {"line1": "abc", "line2": "def"}, "city": "ghi"}
+    ///
+    ///   - Calling either addPrivateAttribute(Reference("address")) or addPrivateAddress(Reference("/address")) would
+    ///     cause the entire "address" attribute to be private.
+    ///   - Calling addPrivateAttribute("/address/street") would cause the "street" property to be private, so that
+    ///     only {"city": "ghi"} is included in analytics.
+    ///   - Calling addPrivateAttribute("/address/street/line2") would cause only "line2" within "street" to be private,
+    ///     so that {"street": {"line1": "abc"}, "city": "ghi"} is included in analytics.
+    ///
+    /// This syntax deliberately resembles JSON Pointer, but other JSON Pointer features such as array
+    /// indexing are not supported.
+    ///
+    /// If an attribute's actual name starts with a '/' character, you must use the same escaping syntax as
+    /// JSON Pointer: replace "~" with "~0", and "/" with "~1".
     public mutating func addPrivateAttribute(_ reference: Reference) {
         self.privateAttributes.append(reference)
     }
@@ -774,7 +834,7 @@ public struct LDContextBuilder {
 
 extension LDContextBuilder: TypeIdentifying { }
 
-/// Contains method for building a multi-kind `LDContext`.
+/// Contains method for building a multi-context.
 ///
 /// Use this type if you need to construct a LDContext that has multiple kind values, each with its
 /// own nested LDContext. To define a single-kind context, use `LDContextBuilder` instead.
@@ -806,7 +866,7 @@ public struct LDMultiContextBuilder {
     /// situations, a Result.failure will be returned.
     ///
     /// If only one context kind was added to the builder, `build` returns a single-kind context rather
-    /// than a multi-kind context.
+    /// than a multi-context.
     public func build() -> Result<LDContext, ContextBuilderError> {
         if contexts.isEmpty {
             return Result.failure(.emptyMultiKind)

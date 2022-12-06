@@ -1,8 +1,23 @@
 import Foundation
 
+/// An enumeration describing the individual failure conditions which may occur when constructing a `Reference`.
 public enum ReferenceError: Codable, Equatable, Error {
+    /// empty means that you tried to create a `Reference` from an empty string, or a string that consisted only of a
+    /// slash.
+    ///
+    /// For details of the attribute reference syntax, see `Reference`.
     case empty
+
+    /// doubleSlash means that an attribute reference contained a double slash or trailing slash causing one path
+    /// component to be empty, such as "/a//b" or "/a/b/".
+    ///
+    /// For details of the attribute reference syntax, see `Reference`.
     case doubleSlash
+
+    /// invalidEscapeSequence means that an attribute reference contained contained a "~" character that was not
+    /// followed by "0" or "1".
+    ///
+    /// For details of the attribute reference syntax, see `Reference`.
     case invalidEscapeSequence
 
     public init(from decoder: Decoder) throws {
