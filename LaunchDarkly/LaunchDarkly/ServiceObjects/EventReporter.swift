@@ -131,7 +131,6 @@ class EventReporter: EventReporting {
     private func publish(_ events: [Event], _ payloadId: String, _ completion: CompletionClosure?) {
         let encodingConfig: [CodingUserInfoKey: Any] =
             [
-                Event.UserInfoKeys.inlineContextInEvents: service.config.inlineContextInEvents,
                 LDContext.UserInfoKeys.allAttributesPrivate: service.config.allContextAttributesPrivate,
                 LDContext.UserInfoKeys.globalPrivateAttributes: service.config.privateContextAttributes.map { $0 }
             ]

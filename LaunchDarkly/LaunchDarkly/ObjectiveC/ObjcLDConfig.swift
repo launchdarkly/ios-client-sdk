@@ -123,14 +123,6 @@ public final class ObjcLDConfig: NSObject {
         set { config.useReport = newValue }
     }
 
-    /**
-     Controls how the SDK reports the context[f in analytics event reports. When set to YES, event reports will contain the context attributes, except attributes marked as private. When set to NO, event reports will contain the context keys only, reducing the size of event reports. (Default: NO)
-     */
-    @objc public var inlineContextInEvents: Bool {
-        get { config.inlineContextInEvents }
-        set { config.inlineContextInEvents = newValue }
-    }
-
     /// Enables logging for debugging. (Default: NO)
     @objc public var debugMode: Bool {
         get { config.isDebugMode }

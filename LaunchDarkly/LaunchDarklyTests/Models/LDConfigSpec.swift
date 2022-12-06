@@ -21,8 +21,6 @@ final class LDConfigSpec: XCTestCase {
 
         fileprivate static let useReport = true
 
-        fileprivate static let inlineContextInEvents = true
-
         fileprivate static let debugMode = true
         fileprivate static let evaluationReasons = true
         fileprivate static let maxCachedContexts = -1
@@ -50,7 +48,6 @@ final class LDConfigSpec: XCTestCase {
          ("all context attributes private", Constants.allContextAttributesPrivate, { c, v in c.allContextAttributesPrivate = v as! Bool }),
          ("private context attributes", Constants.privateContextAttributes, { c, v in c.privateContextAttributes = (v as! [Reference])}),
          ("use report", Constants.useReport, { c, v in c.useReport = v as! Bool }),
-         ("inline context in events", Constants.inlineContextInEvents, { c, v in c.inlineContextInEvents = v as! Bool }),
          ("evaluation reasons", Constants.evaluationReasons, { c, v in c.evaluationReasons = v as! Bool }),
          ("max cached contexts", Constants.maxCachedContexts, { c, v in c.maxCachedContexts = v as! Int }),
          ("diagnostic opt out", Constants.diagnosticOptOut, { c, v in c.diagnosticOptOut = v as! Bool }),
@@ -76,7 +73,6 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.allContextAttributesPrivate, LDConfig.Defaults.allContextAttributesPrivate)
         XCTAssertEqual(config.privateContextAttributes, LDConfig.Defaults.privateContextAttributes)
         XCTAssertEqual(config.useReport, LDConfig.Defaults.useReport)
-        XCTAssertEqual(config.inlineContextInEvents, LDConfig.Defaults.inlineContextInEvents)
         XCTAssertEqual(config.isDebugMode, LDConfig.Defaults.debugMode)
         XCTAssertEqual(config.evaluationReasons, LDConfig.Defaults.evaluationReasons)
         XCTAssertEqual(config.maxCachedContexts, LDConfig.Defaults.maxCachedContexts)
@@ -110,7 +106,6 @@ final class LDConfigSpec: XCTestCase {
             XCTAssertEqual(config.allContextAttributesPrivate, Constants.allContextAttributesPrivate, "\(os)")
             XCTAssertEqual(config.privateContextAttributes, Constants.privateContextAttributes, "\(os)")
             XCTAssertEqual(config.useReport, Constants.useReport, "\(os)")
-            XCTAssertEqual(config.inlineContextInEvents, Constants.inlineContextInEvents, "\(os)")
             XCTAssertEqual(config.isDebugMode, Constants.debugMode, "\(os)")
             XCTAssertEqual(config.evaluationReasons, Constants.evaluationReasons, "\(os)")
             XCTAssertEqual(config.maxCachedContexts, Constants.maxCachedContexts, "\(os)")

@@ -101,7 +101,6 @@ struct DiagnosticConfig: Codable {
     let allAttributesPrivate: Bool
     let pollingIntervalMillis: Int
     let backgroundPollingIntervalMillis: Int
-    let inlineContextsInEvents: Bool
     let useReport: Bool
     let backgroundPollingDisabled: Bool
     let evaluationReasonsRequested: Bool
@@ -121,7 +120,6 @@ struct DiagnosticConfig: Codable {
         allAttributesPrivate = config.allContextAttributesPrivate
         pollingIntervalMillis = Int(exactly: round(config.flagPollingInterval * 1_000)) ?? .max
         backgroundPollingIntervalMillis = Int(exactly: round(config.backgroundFlagPollingInterval * 1_000)) ?? .max
-        inlineContextsInEvents = config.inlineContextInEvents
         useReport = config.useReport
         backgroundPollingDisabled = !config.enableBackgroundUpdates
         evaluationReasonsRequested = config.evaluationReasons

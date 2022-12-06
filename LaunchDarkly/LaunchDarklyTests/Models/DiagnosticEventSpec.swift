@@ -181,7 +181,6 @@ final class DiagnosticEventSpec: QuickSpec {
         customConfig.allContextAttributesPrivate = true
         customConfig.flagPollingInterval = 360.0
         customConfig.backgroundFlagPollingInterval = 1_800.0
-        customConfig.inlineContextInEvents = true
         customConfig.useReport = true
         customConfig.enableBackgroundUpdates = true
         customConfig.evaluationReasons = true
@@ -212,7 +211,6 @@ final class DiagnosticEventSpec: QuickSpec {
                     expect(diagnosticConfig.allAttributesPrivate) == false
                     expect(diagnosticConfig.pollingIntervalMillis) == 300_000
                     expect(diagnosticConfig.backgroundPollingIntervalMillis) == 3_600_000
-                    expect(diagnosticConfig.inlineContextsInEvents) == false
                     expect(diagnosticConfig.useReport) == false
                     expect(diagnosticConfig.backgroundPollingDisabled) == true
                     expect(diagnosticConfig.evaluationReasonsRequested) == false
@@ -235,7 +233,6 @@ final class DiagnosticEventSpec: QuickSpec {
                     expect(diagnosticConfig.allAttributesPrivate) == true
                     expect(diagnosticConfig.pollingIntervalMillis) == 360_000
                     expect(diagnosticConfig.backgroundPollingIntervalMillis) == 1_800_000
-                    expect(diagnosticConfig.inlineContextsInEvents) == true
                     expect(diagnosticConfig.useReport) == true
                     expect(diagnosticConfig.backgroundPollingDisabled) == false
                     expect(diagnosticConfig.evaluationReasonsRequested) == true
@@ -270,7 +267,7 @@ final class DiagnosticEventSpec: QuickSpec {
                     }
                     it("encodes correct values to keys") {
                         encodesToObject(diagnosticConfig) { decoded in
-                            expect(decoded.count) == 18
+                            expect(decoded.count) == 17
                             expect(decoded["customBaseURI"]) == .bool(diagnosticConfig.customBaseURI)
                             expect(decoded["customEventsURI"]) == .bool(diagnosticConfig.customEventsURI)
                             expect(decoded["customStreamURI"]) == .bool(diagnosticConfig.customStreamURI)
@@ -281,7 +278,6 @@ final class DiagnosticEventSpec: QuickSpec {
                             expect(decoded["allAttributesPrivate"]) == .bool(diagnosticConfig.allAttributesPrivate)
                             expect(decoded["pollingIntervalMillis"]) == .number(Double(diagnosticConfig.pollingIntervalMillis))
                             expect(decoded["backgroundPollingIntervalMillis"]) == .number(Double(diagnosticConfig.backgroundPollingIntervalMillis))
-                            expect(decoded["inlineContextsInEvents"]) == .bool(diagnosticConfig.inlineContextsInEvents)
                             expect(decoded["useReport"]) == .bool(diagnosticConfig.useReport)
                             expect(decoded["backgroundPollingDisabled"]) == .bool(diagnosticConfig.backgroundPollingDisabled)
                             expect(decoded["evaluationReasonsRequested"]) == .bool(diagnosticConfig.evaluationReasonsRequested)
@@ -302,7 +298,6 @@ final class DiagnosticEventSpec: QuickSpec {
                         expect(decoded?.allAttributesPrivate) == diagnosticConfig.allAttributesPrivate
                         expect(decoded?.pollingIntervalMillis) == diagnosticConfig.pollingIntervalMillis
                         expect(decoded?.backgroundPollingIntervalMillis) == diagnosticConfig.backgroundPollingIntervalMillis
-                        expect(decoded?.inlineContextsInEvents) == diagnosticConfig.inlineContextsInEvents
                         expect(decoded?.useReport) == diagnosticConfig.useReport
                         expect(decoded?.backgroundPollingDisabled) == diagnosticConfig.backgroundPollingDisabled
                         expect(decoded?.evaluationReasonsRequested) == diagnosticConfig.evaluationReasonsRequested

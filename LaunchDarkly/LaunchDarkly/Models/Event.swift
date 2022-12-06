@@ -24,10 +24,6 @@ class Event: Encodable {
         self.kind = kind
     }
 
-    struct UserInfoKeys {
-        static let inlineContextInEvents = CodingUserInfoKey(rawValue: "LD_inlineContextInEvents")!
-    }
-
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(kind.rawValue, forKey: .kind)
@@ -59,11 +55,7 @@ class CustomEvent: Event, SubEvent {
     fileprivate func encode(to encoder: Encoder, container: KeyedEncodingContainer<Event.CodingKeys>) throws {
         var container = container
         try container.encode(key, forKey: .key)
-        if encoder.userInfo[Event.UserInfoKeys.inlineContextInEvents] as? Bool ?? false {
-            try container.encode(context, forKey: .context)
-        } else {
-            try container.encode(context.contextKeys(), forKey: .contextKeys)
-        }
+        try container.encode(context.contextKeys(), forKey: .contextKeys)
 
         if data != .null {
             try container.encode(data, forKey: .data)
@@ -96,7 +88,7 @@ class FeatureEvent: Event, SubEvent {
     fileprivate func encode(to encoder: Encoder, container: KeyedEncodingContainer<Event.CodingKeys>) throws {
         var container = container
         try container.encode(key, forKey: .key)
-        if kind == .debug || encoder.userInfo[Event.UserInfoKeys.inlineContextInEvents] as? Bool ?? false {
+        if kind == .debug {
             try container.encode(context, forKey: .context)
         } else {
             try container.encode(context.contextKeys(), forKey: .contextKeys)

@@ -95,12 +95,12 @@ final class EventSpec: XCTestCase {
     func testCustomEventEncodingInlining() {
         let context = LDContext.stub()
         let event = CustomEvent(key: "event-key", context: context, data: nil, metricValue: 2.5)
-        encodesToObject(event, userInfo: [Event.UserInfoKeys.inlineContextInEvents: true]) { dict in
+        encodesToObject(event) { dict in
             XCTAssertEqual(dict.count, 5)
             XCTAssertEqual(dict["kind"], "custom")
             XCTAssertEqual(dict["key"], "event-key")
             XCTAssertEqual(dict["metricValue"], 2.5)
-            XCTAssertEqual(dict["context"], encodeToLDValue(context))
+            XCTAssertEqual(dict["contextKeys"], .object(["user": .string(context.fullyQualifiedKey())]))
             XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
         }
     }
@@ -194,14 +194,12 @@ final class EventSpec: XCTestCase {
         }
     }
 
-    func testFeatureEventEncodingInlinesContextForDebugOrConfig() {
+    func testFeatureEventEncodingInlinesContextForDebug() {
         let context = LDContext.stub()
         let featureFlag = FeatureFlag(flagKey: "flag-key", version: 3)
-        let featureEvent = FeatureEvent(key: "event-key", context: context, value: true, defaultValue: false, featureFlag: featureFlag, includeReason: false, isDebug: false)
         let debugEvent = FeatureEvent(key: "event-key", context: context, value: true, defaultValue: false, featureFlag: featureFlag, includeReason: false, isDebug: true)
-        let encodedFeature = encodeToLDValue(featureEvent, userInfo: [Event.UserInfoKeys.inlineContextInEvents: true])
-        let encodedDebug = encodeToLDValue(debugEvent, userInfo: [Event.UserInfoKeys.inlineContextInEvents: false])
-        [encodedFeature, encodedDebug].forEach { valueIsObject($0) { dict in
+        let encodedDebug = encodeToLDValue(debugEvent)
+        [encodedDebug].forEach { valueIsObject($0) { dict in
             XCTAssertEqual(dict.count, 7)
             XCTAssertEqual(dict["key"], "event-key")
             XCTAssertEqual(dict["value"], true)
@@ -213,15 +211,13 @@ final class EventSpec: XCTestCase {
 
     func testIdentifyEventEncoding() throws {
         let context = LDContext.stub()
-        for inlineContext in [true, false] {
-            let event = IdentifyEvent(context: context)
-            encodesToObject(event, userInfo: [Event.UserInfoKeys.inlineContextInEvents: inlineContext]) { dict in
-                XCTAssertEqual(dict.count, 4)
+        let event = IdentifyEvent(context: context)
+        encodesToObject(event) { dict in
+            XCTAssertEqual(dict.count, 4)
                 XCTAssertEqual(dict["kind"], "identify")
                 XCTAssertEqual(dict["key"], .string(context.fullyQualifiedKey()))
                 XCTAssertEqual(dict["context"], encodeToLDValue(context))
                 XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
-            }
         }
     }
 
@@ -249,7 +245,7 @@ final class EventSpec: XCTestCase {
 
 extension Event: Equatable {
     public static func == (_ lhs: Event, _ rhs: Event) -> Bool {
-        let config = [LDContext.UserInfoKeys.includePrivateAttributes: true, Event.UserInfoKeys.inlineContextInEvents: true]
+        let config = [LDContext.UserInfoKeys.includePrivateAttributes: true]
         return encodeToLDValue(lhs, userInfo: config) == encodeToLDValue(rhs, userInfo: config)
     }
 }

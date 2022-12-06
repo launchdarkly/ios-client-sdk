@@ -143,9 +143,6 @@ public struct LDConfig {
         /// The default HTTP request method for stream connections and feature flag requests. When true, these requests will use the non-standard verb `REPORT`. When false, these requests will use the standard verb `GET`. (false)
         static let useReport = false
 
-        /// The default setting controlling the amount of context data sent in events. When true the SDK will generate events using the full LDContext, excluding private attributes. When false the SDK will generate events using only `LDContext.contextKeys()`. (false)
-        static let inlineContextInEvents = false
-
         /// The default setting controlling information logged to the console, and modifying some setting ranges to facilitate debugging. (false)
         static let debugMode = false
 
@@ -293,11 +290,6 @@ public struct LDConfig {
     public var useReport: Bool = Defaults.useReport
     private static let flagRetryStatusCodes = [HTTPURLResponse.StatusCodes.methodNotAllowed, HTTPURLResponse.StatusCodes.badRequest, HTTPURLResponse.StatusCodes.notImplemented]
 
-    /**
-     Controls how the SDK reports the context in analytics event reports. When set to true, event reports will contain the context attributes, except attributes marked as private. When set to false, event reports will contain the context keys only, reducing the size of event reports. (Default: false)
-    */
-    public var inlineContextInEvents: Bool = Defaults.inlineContextInEvents
-
     /// Enables logging for debugging. (Default: false)
     public var isDebugMode: Bool = Defaults.debugMode
 
@@ -437,7 +429,6 @@ extension LDConfig: Equatable {
             && lhs.allContextAttributesPrivate == rhs.allContextAttributesPrivate
             && Set(lhs.privateContextAttributes) == Set(rhs.privateContextAttributes)
             && lhs.useReport == rhs.useReport
-            && lhs.inlineContextInEvents == rhs.inlineContextInEvents
             && lhs.isDebugMode == rhs.isDebugMode
             && lhs.evaluationReasons == rhs.evaluationReasons
             && lhs.maxCachedContexts == rhs.maxCachedContexts
