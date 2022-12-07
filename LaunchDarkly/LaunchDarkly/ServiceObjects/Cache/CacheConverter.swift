@@ -2,7 +2,7 @@ import Foundation
 
 // sourcery: autoMockable
 protocol CacheConverting {
-    func convertCacheData(serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedUsers: Int)
+    func convertCacheData(serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedContexts: Int)
 }
 
 // Cache model in SDK versions >=4.0.0 <6.0.0. Migration is not supported for earlier versions.
@@ -89,9 +89,9 @@ final class CacheConverter: CacheConverting {
             }
         }
 
-        cachedEnvData.forEach { mobileKey, users in
-            users.forEach { userKey, data in
-                flagCaches[mobileKey]?.storeFeatureFlags(StoredItems(items: data.flags), userKey: userKey, lastUpdated: data.updated)
+        cachedEnvData.forEach { mobileKey, contexts in
+            contexts.forEach { contextKey, data in
+                flagCaches[mobileKey]?.storeFeatureFlags(StoredItems(items: data.flags), contextKey: contextKey, lastUpdated: data.updated)
             }
         }
 
@@ -101,6 +101,17 @@ final class CacheConverter: CacheConverting {
     private func convertV7Data(flagCaches: inout [MobileKey: FeatureFlagCaching]) {
         for (_, flagCaching) in flagCaches {
             flagCaching.keyedValueCache.keys().forEach { key in
+                // Deal with renaming context-users cache key
+                if key == "context-users" {
+                    guard let data = flagCaching.keyedValueCache.data(forKey: "cached-users")
+                    else {
+                        return
+                    }
+                    flagCaching.keyedValueCache.removeObject(forKey: "cached-users")
+                    flagCaching.keyedValueCache.set(data, forKey: "cached-contexts")
+                    return
+                }
+
                 guard let cachedData = flagCaching.keyedValueCache.data(forKey: key),
                       let cachedFlags = try? JSONDecoder().decode(FeatureFlagCollection.self, from: cachedData)
                 else { return }
@@ -113,10 +124,10 @@ final class CacheConverter: CacheConverting {
         }
     }
 
-    func convertCacheData(serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedUsers: Int) {
+    func convertCacheData(serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedContexts: Int) {
         var flagCaches: [String: FeatureFlagCaching] = [:]
         keysToConvert.forEach { mobileKey in
-            let flagCache = serviceFactory.makeFeatureFlagCache(mobileKey: mobileKey, maxCachedUsers: maxCachedUsers)
+            let flagCache = serviceFactory.makeFeatureFlagCache(mobileKey: mobileKey, maxCachedContexts: maxCachedContexts)
             flagCaches[mobileKey] = flagCache
             // Get current cache version and return if up to date
             guard let cacheVersionData = flagCache.keyedValueCache.data(forKey: "ld-cache-metadata")

@@ -5,15 +5,15 @@ protocol FeatureFlagCaching {
     // sourcery: defaultMockValue = KeyedValueCachingMock()
     var keyedValueCache: KeyedValueCaching { get }
 
-    func retrieveFeatureFlags(userKey: String) -> StoredItems?
-    func storeFeatureFlags(_ storedItems: StoredItems, userKey: String, lastUpdated: Date)
+    func retrieveFeatureFlags(contextKey: String) -> StoredItems?
+    func storeFeatureFlags(_ storedItems: StoredItems, contextKey: String, lastUpdated: Date)
 }
 
 final class FeatureFlagCache: FeatureFlagCaching {
     let keyedValueCache: KeyedValueCaching
-    let maxCachedUsers: Int
+    let maxCachedContexts: Int
 
-    init(serviceFactory: ClientServiceCreating, mobileKey: MobileKey, maxCachedUsers: Int) {
+    init(serviceFactory: ClientServiceCreating, mobileKey: MobileKey, maxCachedContexts: Int) {
         let cacheKey: String
         if let bundleId = Bundle.main.bundleIdentifier {
             cacheKey = "\(Util.sha256base64(bundleId)).\(Util.sha256base64(mobileKey))"
@@ -21,37 +21,36 @@ final class FeatureFlagCache: FeatureFlagCaching {
             cacheKey = Util.sha256base64(mobileKey)
         }
         self.keyedValueCache = serviceFactory.makeKeyedValueCache(cacheKey: "com.launchdarkly.client.\(cacheKey)")
-        self.maxCachedUsers = maxCachedUsers
+        self.maxCachedContexts = maxCachedContexts
     }
 
-    func retrieveFeatureFlags(userKey: String) -> StoredItems? {
-        guard let cachedData = keyedValueCache.data(forKey: "flags-\(Util.sha256base64(userKey))"),
+    func retrieveFeatureFlags(contextKey: String) -> StoredItems? {
+        guard let cachedData = keyedValueCache.data(forKey: "flags-\(contextKey)"),
               let cachedFlags = try? JSONDecoder().decode(StoredItemCollection.self, from: cachedData)
         else { return nil }
         return cachedFlags.flags
     }
 
-    func storeFeatureFlags(_ storedItems: StoredItems, userKey: String, lastUpdated: Date) {
-        guard self.maxCachedUsers != 0, let encoded = try? JSONEncoder().encode(StoredItemCollection(storedItems))
+    func storeFeatureFlags(_ storedItems: StoredItems, contextKey: String, lastUpdated: Date) {
+        guard self.maxCachedContexts != 0, let encoded = try? JSONEncoder().encode(StoredItemCollection(storedItems))
         else { return }
 
-        let userSha = Util.sha256base64(userKey)
-        self.keyedValueCache.set(encoded, forKey: "flags-\(userSha)")
+        self.keyedValueCache.set(encoded, forKey: "flags-\(contextKey)")
 
-        var cachedUsers: [String: Int64] = [:]
-        if let cacheMetadata = self.keyedValueCache.data(forKey: "cached-users") {
-            cachedUsers = (try? JSONDecoder().decode([String: Int64].self, from: cacheMetadata)) ?? [:]
+        var cachedContexts: [String: Int64] = [:]
+        if let cacheMetadata = self.keyedValueCache.data(forKey: "cached-contexts") {
+            cachedContexts = (try? JSONDecoder().decode([String: Int64].self, from: cacheMetadata)) ?? [:]
         }
-        cachedUsers[userSha] = lastUpdated.millisSince1970
-        if cachedUsers.count > self.maxCachedUsers && self.maxCachedUsers > 0 {
-            let sorted = cachedUsers.sorted { $0.value < $1.value }
-            sorted.prefix(cachedUsers.count - self.maxCachedUsers).forEach { sha, _ in
-                cachedUsers.removeValue(forKey: sha)
+        cachedContexts[contextKey] = lastUpdated.millisSince1970
+        if cachedContexts.count > self.maxCachedContexts && self.maxCachedContexts > 0 {
+            let sorted = cachedContexts.sorted { $0.value < $1.value }
+            sorted.prefix(cachedContexts.count - self.maxCachedContexts).forEach { sha, _ in
+                cachedContexts.removeValue(forKey: sha)
                 self.keyedValueCache.removeObject(forKey: "flags-\(sha)")
             }
         }
-        if let encoded = try? JSONEncoder().encode(cachedUsers) {
-            self.keyedValueCache.set(encoded, forKey: "cached-users")
+        if let encoded = try? JSONEncoder().encode(cachedContexts) {
+            self.keyedValueCache.set(encoded, forKey: "cached-contexts")
         }
     }
 }

@@ -5,13 +5,13 @@ enum LDClientRunMode {
 }
 
 /**
- The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a user (LDUser) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly's servers to get the feature flag values you set in the Dashboard.
+ The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a contexts (LDContext) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly's servers to get the feature flag values you set in the Dashboard.
 ## Usage
 ### Startup
- 1. To customize, configure a `LDConfig` and `LDUser`. The `config` is required, the `user` is optional. Both give you additional control over the feature flags delivered to the LDClient. See `LDConfig` & `LDUser` for more details.
+ 1. To customize, configure a `LDConfig` and `LDContext`. The `config` is required, the `context` is optional. Both give you additional control over the feature flags delivered to the LDClient. See `LDConfig` & `LDContext` for more details.
     - The mobileKey set into the `LDConfig` comes from your LaunchDarkly Account settings. If you have multiple projects be sure to choose the correct Mobile key.
- 2. Call `LDClient.start(config: user: completion:)`
-    - If you do not pass in a LDUser, LDClient will create a default for you.
+ 2. Call `LDClient.start(config: context: completion:)`
+    - If you do not pass in a LDContext, LDClient will create a default for you.
     - The optional completion closure allows the LDClient to notify your app when it received flag values.
  3. Because LDClient instances are stored statically, you do not have to keep a reference to it in your code. Get the primary instances with `LDClient.get()`
 
@@ -91,7 +91,7 @@ public class LDClient {
 
      When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.
 
-     The SDK protects itself from multiple rapid calls to setOnline(true) by enforcing an increasing delay (called *throttling*) each time setOnline(true) is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the `setOnline(true)` will proceed, assuming that the client app has not called `setOnline(false)` during the delay. Therefore a call to setOnline(true) may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid setOnline(true) calls. Calls to setOnline(false) are not throttled. Note that calls to `start(config: user: completion:)`, and setting the `config` or `user` can also call `setOnline(true)` under certain conditions. After the delay, the SDK resets and the client app can make a susequent call to setOnline(true) without being throttled.
+     The SDK protects itself from multiple rapid calls to setOnline(true) by enforcing an increasing delay (called *throttling*) each time setOnline(true) is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the `setOnline(true)` will proceed, assuming that the client app has not called `setOnline(false)` during the delay. Therefore a call to setOnline(true) may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid setOnline(true) calls. Calls to setOnline(false) are not throttled. Note that calls to `start(config: context: completion:)`, and setting the `config` or `context` can also call `setOnline(true)` under certain conditions. After the delay, the SDK resets and the client app can make a susequent call to setOnline(true) without being throttled.
 
      Client apps can set a completion closure called when the setOnline call completes. For unthrottled `setOnline(true)` and all `setOnline(false)` calls, the SDK will call the closure immediately on completion of this method. For throttled `setOnline(true)` calls, the SDK will call the closure after the throttling delay at the completion of the setOnline method.
 
@@ -131,7 +131,7 @@ public class LDClient {
 
     private let internalSetOnlineQueue: DispatchQueue = DispatchQueue(label: "InternalSetOnlineQueue")
 
-    private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion:(() -> Void)?) {
+    private func go(online goOnline: Bool, reasonOnlineUnavailable: String, completion: (() -> Void)?) {
         let owner = "SetOnlineOwner" as AnyObject
         var completed = false
         let internalCompletedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.goCompletedQueue")
@@ -261,42 +261,55 @@ public class LDClient {
 
     let config: LDConfig
     let service: DarklyServiceProvider
-    private(set) var user: LDUser
+    private(set) var context: LDContext
 
     /**
-     The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See `LDUser` for details about what information can be retained.
+     The LDContext set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the context. See `LDContext` for details about what information can be retained.
 
-     Normally, the client app should create and set the LDUser and pass that into `start(config: user: completion:)`.
+     Normally, the client app should create and set the LDContext and pass that into `start(config: context: completion:)`.
 
-     The client app can change the active `user` by calling identify with a new or updated LDUser. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
+     The client app can change the active `context` by calling identify with a new or updated LDContext. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
 
-     When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.
+     When a new context is set, the LDClient goes offline and sets the new context. If the client was online when the new context was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready.
 
-     - parameter user: The LDUser set with the desired user.
+     - parameter context: The LDContext set with the desired context.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
     */
-    public func identify(user: LDUser, completion: (() -> Void)? = nil) {
+    public func identify(context: LDContext, completion: (() -> Void)? = nil) {
         let dispatch = DispatchGroup()
         LDClient.instances?.forEach { _, instance in
             dispatch.enter()
-            instance.internalIdentify(newUser: user, completion: dispatch.leave)
+            instance.internalIdentify(newContext: context, completion: dispatch.leave)
         }
         if let completion = completion {
             dispatch.notify(queue: DispatchQueue.global(), execute: completion)
         }
     }
 
-    func internalIdentify(newUser: LDUser, completion: (() -> Void)? = nil) {
+    /**
+     Deprecated identify method which accepts a legacy LDUser instead of an LDContext.
+
+     This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `identify(context:completion:)` for details.
+     */
+    public func identify(user: LDUser, completion: (() -> Void)? = nil) {
+        switch user.toContext() {
+        case .failure(let error):
+            Log.debug(self.typeName(and: #function) + "user created an invalid context: SDK identified context WILL NOT CHANGE: " + error.localizedDescription )
+        case .success(let context):
+            identify(context: context, completion: completion)
+        }
+    }
+
+    func internalIdentify(newContext: LDContext, completion: (() -> Void)? = nil) {
         internalIdentifyQueue.sync {
-            let previousUser = self.user
-            self.user = newUser
-            Log.debug(self.typeName(and: #function) + "new user set with key: " + self.user.key )
+            self.context = newContext
+            Log.debug(self.typeName(and: #function) + "new context set with key: " + self.context.fullyQualifiedKey() )
             let wasOnline = self.isOnline
             self.internalSetOnline(false)
 
-            let cachedUserFlags = self.flagCache.retrieveFeatureFlags(userKey: self.user.key) ?? [:]
-            flagStore.replaceStore(newStoredItems: cachedUserFlags)
-            self.service.user = self.user
+            let cachedContextFlags = self.flagCache.retrieveFeatureFlags(contextKey: self.context.fullyQualifiedHashedKey()) ?? [:]
+            flagStore.replaceStore(newStoredItems: cachedContextFlags)
+            self.service.context = self.context
             self.service.clearFlagResponseCache()
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
@@ -305,14 +318,10 @@ public class LDClient {
                                                                    onSyncComplete: self.onFlagSyncComplete)
 
             if self.hasStarted {
-                self.eventReporter.record(IdentifyEvent(user: self.user))
+                self.eventReporter.record(IdentifyEvent(context: self.context))
             }
 
             self.internalSetOnline(wasOnline, completion: completion)
-
-            if !config.autoAliasingOptOut && previousUser.isAnonymous && !newUser.isAnonymous {
-                self.alias(context: newUser, previousContext: previousUser)
-            }
         }
     }
 
@@ -478,17 +487,17 @@ public class LDClient {
             let oldStoredItems = flagStore.storedItems
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.replaceStore(newStoredItems: StoredItems(items: flagCollection.flags))
-            self.updateCacheAndReportChanges(user: self.user, oldStoredItems: oldStoredItems)
+            self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems)
         case let .patch(featureFlag):
             let oldStoredItems = flagStore.storedItems
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.updateStore(updatedFlag: featureFlag)
-            self.updateCacheAndReportChanges(user: self.user, oldStoredItems: oldStoredItems)
+            self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems)
         case let .delete(deleteResponse):
             let oldStoredItems = flagStore.storedItems
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.deleteFlag(deleteResponse: deleteResponse)
-            self.updateCacheAndReportChanges(user: self.user, oldStoredItems: oldStoredItems)
+            self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems)
         case .upToDate:
             connectionInformation.lastKnownFlagValidity = Date()
             flagChangeNotifier.notifyUnchanged()
@@ -505,9 +514,9 @@ public class LDClient {
         connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
     }
 
-    private func updateCacheAndReportChanges(user: LDUser,
+    private func updateCacheAndReportChanges(context: LDContext,
                                              oldStoredItems: StoredItems) {
-        flagCache.storeFeatureFlags(flagStore.storedItems, userKey: user.key, lastUpdated: Date())
+        flagCache.storeFeatureFlags(flagStore.storedItems, contextKey: context.fullyQualifiedHashedKey(), lastUpdated: Date())
         flagChangeNotifier.notifyObservers(oldFlags: oldStoredItems.featureFlags, newFlags: flagStore.storedItems.featureFlags)
     }
 
@@ -536,32 +545,9 @@ public class LDClient {
             Log.debug(typeName(and: #function) + "aborted. LDClient not started")
             return
         }
-        let event = CustomEvent(key: key, user: user, data: data ?? .null, metricValue: metricValue)
+        let event = CustomEvent(key: key, context: context, data: data ?? .null, metricValue: metricValue)
         Log.debug(typeName(and: #function) + "key: \(key), data: \(String(describing: data)), metricValue: \(String(describing: metricValue))")
         eventReporter.record(event)
-    }
-
-    /**
-     Tells the SDK to generate an alias event.
-
-     Associates two users for analytics purposes.
-
-     This can be helpful in the situation where a person is represented by multiple
-     LaunchDarkly users. This may happen, for example, when a person initially logs into
-     an application-- the person might be represented by an anonymous user prior to logging
-     in and a different user after logging in, as denoted by a different user key.
-
-     - parameter context: the user that will be aliased to
-     - parameter previousContext: the user that will be bound to the new context
-     */
-    public func alias(context new: LDUser, previousContext old: LDUser) {
-        guard hasStarted
-        else {
-            Log.debug(typeName(and: #function) + "aborted. LDClient not started")
-            return
-        }
-
-        self.eventReporter.record(AliasEvent(key: new.key, previousKey: old.key, contextKind: new.contextKind, previousContextKind: old.contextKind))
     }
 
     /**
@@ -596,21 +582,37 @@ public class LDClient {
     // MARK: Initializing and Accessing
 
     /**
-     Starts the LDClient using the passed in `config` & `user`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
-     Starting the LDClient means setting the `config` & `user`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.
-     If the `start` call omits the `user`, the LDClient uses a default `LDUser`.
+     Starts the LDClient using the passed in `config` & `context`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+     Starting the LDClient means setting the `config` & `context`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.
+     If the `start` call omits the `context`, the LDClient uses a default `LDContext`.
      If the` start` call includes the optional `completion` closure, LDClient calls the `completion` closure when `setOnline(_: completion:)` embedded in the `init` method completes. This method listens for flag updates so the completion will only return once an update has occurred. The `start` call is subject to throttling delays, therefore the `completion` closure call may be delayed.
-     Subsequent calls to this method cause the LDClient to return. Normally there should only be one call to start. To change `user`, use `identify`.
+     Subsequent calls to this method cause the LDClient to return. Normally there should only be one call to start. To change `context`, use `identify`.
      - parameter configuration: The LDConfig that contains the desired configuration. (Required)
-     - parameter user: The LDUser set with the desired user. If omitted, LDClient sets a default user. (Optional)
+     - parameter context: The LDContext set with the desired context. If omitted, LDClient sets a default context. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes. (Optional)
     */
     /// - Tag: start
-    public static func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
-        start(serviceFactory: nil, config: config, user: user, completion: completion)
+    public static func start(config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
+        start(serviceFactory: nil, config: config, context: context, completion: completion)
     }
 
-    static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
+    /**
+     Deprecated start method which accepts a legacy LDUser instead of an LDContext.
+
+     This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `start(config:context:completion:)` for details.
+     */
+    public static func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
+        switch user?.toContext() {
+        case nil:
+            start(serviceFactory: nil, config: config, context: nil, completion: completion)
+        case .failure(let error):
+            Log.debug(self.typeName(and: #function) + "user created an invalid context: " + error.localizedDescription )
+        case .success(let context):
+            start(serviceFactory: nil, config: config, context: context, completion: completion)
+        }
+    }
+
+    static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
         Log.debug("LDClient starting")
         if serviceFactory != nil {
             get()?.close()
@@ -623,7 +625,7 @@ public class LDClient {
         let serviceFactory = serviceFactory ?? ClientServiceFactory()
         var keys = [config.mobileKey]
         keys.append(contentsOf: config.getSecondaryMobileKeys().values)
-        serviceFactory.makeCacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: keys, maxCachedUsers: config.maxCachedUsers)
+        serviceFactory.makeCacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: keys, maxCachedContexts: config.maxCachedContexts)
 
         LDClient.instances = [:]
         var mobileKeys = config.getSecondaryMobileKeys()
@@ -639,7 +641,7 @@ public class LDClient {
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
-            let instance = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startUser: user, completion: completionCheck)
+            let instance = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context, completion: completionCheck)
             LDClient.instances?[name] = instance
         }
         completionCheck()
@@ -649,23 +651,39 @@ public class LDClient {
     See [start](x-source-tag://start) for more information on starting the SDK.
 
     - parameter configuration: The LDConfig that contains the desired configuration. (Required)
-    - parameter user: The LDUser set with the desired user. If omitted, LDClient sets a default user. (Optional)
+    - parameter context: The LDContext set with the desired context. If omitted, LDClient sets a default context. (Optional)
     - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network.
     - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
     */
-    public static func start(config: LDConfig, user: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
-        start(serviceFactory: nil, config: config, user: user, startWaitSeconds: startWaitSeconds, completion: completion)
+    public static func start(config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, completion: completion)
     }
 
-    static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, user: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+    /**
+     Deprecated start method which accepts a legacy LDUser instead of an LDContext.
+
+     This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `start(config:context:startWaitSeconds:completion:)` for details.
+     */
+    public static func start(config: LDConfig, user: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        switch user?.toContext() {
+        case nil:
+            start(serviceFactory: nil, config: config, context: nil, startWaitSeconds: startWaitSeconds, completion: completion)
+        case .failure(let error):
+            Log.debug(self.typeName(and: #function) + "user created an invalid context: " + error.localizedDescription )
+        case .success(let context):
+            start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, completion: completion)
+        }
+    }
+
+    static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         var completed = true
         let internalCompletedQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
         if !config.startOnline {
-            start(serviceFactory: serviceFactory, config: config, user: user)
+            start(serviceFactory: serviceFactory, config: config, context: context)
             completion?(completed)
         } else {
             let startTime = Date().timeIntervalSince1970
-            start(serviceFactory: serviceFactory, config: config, user: user) {
+            start(serviceFactory: serviceFactory, config: config, context: context) {
                 internalCompletedQueue.async {
                     if startTime + startWaitSeconds > Date().timeIntervalSince1970 && completed {
                         completed = false
@@ -720,18 +738,18 @@ public class LDClient {
     private var _initialized = false
     private var initializedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.initializedQueue")
 
-    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startUser: LDUser?, completion: (() -> Void)? = nil) {
+    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
         self.serviceFactory = serviceFactory
         environmentReporter = self.serviceFactory.makeEnvironmentReporter()
-        flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedUsers: configuration.maxCachedUsers)
+        flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
         throttler = self.serviceFactory.makeThrottler(environmentReporter: environmentReporter)
 
         config = configuration
-        let anonymousUser = LDUser(environmentReporter: environmentReporter)
-        user = startUser ?? anonymousUser
-        service = self.serviceFactory.makeDarklyServiceProvider(config: config, user: user)
+        let anonymousContext = LDContext()
+        context = startContext ?? anonymousContext
+        service = self.serviceFactory.makeDarklyServiceProvider(config: config, context: context)
         diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service)
         eventReporter = self.serviceFactory.makeEventReporter(service: service)
         connectionInformation = self.serviceFactory.makeConnectionInformation()
@@ -757,11 +775,11 @@ public class LDClient {
                                                                     onSyncComplete: onFlagSyncComplete)
 
         Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
-        if let cachedFlags = flagCache.retrieveFeatureFlags(userKey: user.key), !cachedFlags.isEmpty {
+        if let cachedFlags = flagCache.retrieveFeatureFlags(contextKey: context.fullyQualifiedHashedKey()), !cachedFlags.isEmpty {
             flagStore.replaceStore(newStoredItems: cachedFlags)
         }
 
-        eventReporter.record(IdentifyEvent(user: user))
+        eventReporter.record(IdentifyEvent(context: context))
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
         internalSetOnline(configuration.startOnline) {

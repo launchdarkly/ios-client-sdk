@@ -1,18 +1,15 @@
 import Foundation
 
 /**
- LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
+ LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK.
 
- The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user's feature flags, or until the user removes the app from the device.
-
- The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.
+ The usage of LDUser is no longer recommended and is retained only to ease the adoption of the `LDContext` class. New
+ code using this SDK should make use of the `LDContextBuilder` to construct an equivalent `Kind.user` kind context.
  */
 @objc (LDUser)
 public final class ObjcLDUser: NSObject {
     var user: LDUser
 
-    /// LDUser secondary attribute used to make `secondary` private
-    @objc public class var attributeSecondary: String { "secondary" }
     /// LDUser name attribute used to make `name` private
     @objc public class var attributeName: String { "name" }
     /// LDUser firstName attribute used to make `firstName` private
@@ -31,11 +28,6 @@ public final class ObjcLDUser: NSObject {
     /// Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
     @objc public var key: String {
         return user.key
-    }
-    /// The secondary key for the user. Read the [documentation](https://docs.launchdarkly.com/home/flags/rollouts) for more information on it's use for percentage rollout bucketing.
-    @objc public var secondary: String? {
-        get { user.secondary }
-        set { user.secondary = newValue }
     }
     /// Client app defined name for the user. (Default: nil)
     @objc public var name: String? {
@@ -124,5 +116,15 @@ public final class ObjcLDUser: NSObject {
         guard let otherUser = object as? ObjcLDUser
         else { return false }
         return user == otherUser.user
+    }
+
+    /// Convert a legacy LDUser to the newer LDContext
+    @objc public func toContext() -> ContextBuilderResult {
+        switch self.user.toContext() {
+        case .success(let context):
+            return ContextBuilderResult.fromSuccess(context)
+        case .failure(let error):
+            return ContextBuilderResult.fromError(error)
+        }
     }
 }

@@ -4,24 +4,30 @@ import LaunchDarkly
 enum CommandResponse: Content, Encodable {
     case evaluateFlag(EvaluateFlagResponse)
     case evaluateAll(EvaluateAllFlagsResponse)
+    case contextBuild(ContextBuildResponse)
+    case contextConvert(ContextBuildResponse)
     case ok
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
 
-        if case let CommandResponse.evaluateFlag(response) = self {
+        switch self {
+        case .evaluateFlag(let response):
             try container.encode(response)
             return
-        }
-
-        if case let CommandResponse.evaluateAll(response) = self {
+        case .evaluateAll(let response):
             try container.encode(response)
             return
+        case .contextBuild(let response):
+            try container.encode(response)
+            return
+        case .contextConvert(let response):
+            try container.encode(response)
+            return
+        case .ok:
+            try container.encode(true)
+            return
         }
-
-        try container.encode(true)
-
-        return
     }
 }
 
@@ -31,7 +37,8 @@ struct CommandParameters: Content {
     var evaluateAll: EvaluateAllFlagsParameters?
     var customEvent: CustomEventParameters?
     var identifyEvent: IdentifyEventParameters?
-    var aliasEvent: AliasEventParameters?
+    var contextBuild: ContextBuildParameters?
+    var contextConvert: ContextConvertParameters?
 }
 
 struct EvaluateFlagParameters: Content {
@@ -48,6 +55,7 @@ struct EvaluateFlagResponse: Content {
 }
 
 struct EvaluateAllFlagsParameters: Content {
+    // TODO(mmk) Add support for withReasons, clientSideOnly, and detailsOnlyForTrackedFlags
 }
 
 struct EvaluateAllFlagsResponse: Content {
@@ -61,11 +69,34 @@ struct CustomEventParameters: Content {
     var metricValue: Double?
 }
 
-struct IdentifyEventParameters: Content,  Decodable {
-    var user: LDUser
+struct IdentifyEventParameters: Content, Decodable {
+    var context: LDContext?
+    var user: LDUser?
 }
 
-struct AliasEventParameters: Content {
-    var user: LDUser
-    var previousUser: LDUser
+struct ContextBuildParameters: Content, Decodable {
+    var single: SingleContextParameters?
+    var multi: [SingleContextParameters]?
+}
+
+struct SingleContextParameters: Content, Decodable {
+    var kind: String?
+    var key: String
+    var name: String?
+    var anonymous: Bool?
+    var privateAttribute: [String]?
+    var custom: [String: LDValue]?
+
+    private enum CodingKeys: String, CodingKey {
+        case kind, key, name, anonymous, privateAttribute = "private", custom
+    }
+}
+
+struct ContextBuildResponse: Content, Encodable {
+    var output: String?
+    var error: String?
+}
+
+struct ContextConvertParameters: Content, Decodable {
+    var input: String
 }

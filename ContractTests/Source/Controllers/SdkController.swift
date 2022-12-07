@@ -2,7 +2,7 @@ import Vapor
 import LaunchDarkly
 
 final class SdkController: RouteCollection {
-    private var clients: [Int : LDClient] = [:]
+    private var clients: [Int: LDClient] = [:]
     private var clientCounter = 0
 
     func boot(routes: RoutesBuilder) {
@@ -20,7 +20,9 @@ final class SdkController: RouteCollection {
             "client-side",
             "mobile",
             "service-endpoints",
-            "tags"
+            "strongly-typed",
+            "tags",
+            "user-type"
         ]
 
         return StatusResponse(
@@ -61,19 +63,15 @@ final class SdkController: RouteCollection {
             }
 
             if let allPrivate = events.allAttributesPrivate {
-                config.allUserAttributesPrivate = allPrivate
+                config.allContextAttributesPrivate = allPrivate
             }
 
             if let globalPrivate = events.globalPrivateAttributes {
-                config.privateUserAttributes = globalPrivate.map({ UserAttribute.forName($0) })
+                config.privateContextAttributes = globalPrivate.map { Reference($0) }
             }
 
             if let flushIntervalMs = events.flushIntervalMs {
                 config.eventFlushInterval =  flushIntervalMs
-            }
-
-            if let inlineUsers = events.inlineUsers {
-                config.inlineUserInEvents = inlineUsers
             }
         }
 
@@ -92,10 +90,6 @@ final class SdkController: RouteCollection {
 
         let clientSide = createInstance.configuration.clientSide
 
-        if let autoAliasingOptOut = clientSide.autoAliasingOptOut {
-            config.autoAliasingOptOut = autoAliasingOptOut
-        }
-
         if let evaluationReasons = clientSide.evaluationReasons {
             config.evaluationReasons = evaluationReasons
         }
@@ -107,8 +101,14 @@ final class SdkController: RouteCollection {
         let dispatchSemaphore = DispatchSemaphore(value: 0)
         let startWaitSeconds = (createInstance.configuration.startWaitTimeMs ?? 5_000) / 1_000
 
-        LDClient.start(config:config, user: clientSide.initialUser, startWaitSeconds: startWaitSeconds) { timedOut in
-            dispatchSemaphore.signal()
+        if let context = clientSide.initialContext {
+            LDClient.start(config: config, context: context, startWaitSeconds: startWaitSeconds) { _ in
+                dispatchSemaphore.signal()
+            }
+        } else if let user = clientSide.initialUser {
+            LDClient.start(config: config, user: user, startWaitSeconds: startWaitSeconds) { _ in
+                dispatchSemaphore.signal()
+            }
         }
 
         dispatchSemaphore.wait()
@@ -159,22 +159,98 @@ final class SdkController: RouteCollection {
             return CommandResponse.evaluateAll(result)
         case "identifyEvent":
             let semaphore = DispatchSemaphore(value: 0)
-            client.identify(user: commandParameters.identifyEvent!.user) {
-                semaphore.signal()
+            if let context = commandParameters.identifyEvent!.context {
+                client.identify(context: context) {
+                    semaphore.signal()
+                }
+            } else if let user = commandParameters.identifyEvent!.user {
+                client.identify(user: user) {
+                    semaphore.signal()
+                }
             }
             semaphore.wait()
-        case "aliasEvent":
-            client.alias(context: commandParameters.aliasEvent!.user, previousContext: commandParameters.aliasEvent!.previousUser)
         case "customEvent":
             let event = commandParameters.customEvent!
             client.track(key: event.eventKey, data: event.data, metricValue: event.metricValue)
         case "flushEvents":
             client.flush()
+        case "contextBuild":
+            let contextBuild = commandParameters.contextBuild!
+
+            do {
+                if let singleParams = contextBuild.single {
+                    let context = try SdkController.buildSingleContextFromParams(singleParams)
+
+                    let encoder = JSONEncoder()
+                    let output = try encoder.encode(context)
+
+                    let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
+                    return CommandResponse.contextBuild(response)
+                }
+
+                if let multiParams = contextBuild.multi {
+                    var multiContextBuilder = LDMultiContextBuilder()
+                    try multiParams.forEach {
+                        multiContextBuilder.addContext(try SdkController.buildSingleContextFromParams($0))
+                    }
+
+                    let context = try multiContextBuilder.build().get()
+                    let encoder = JSONEncoder()
+                    let output = try encoder.encode(context)
+
+                    let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
+                    return CommandResponse.contextBuild(response)
+                }
+            } catch {
+                let response = ContextBuildResponse(output: nil, error: error.localizedDescription)
+                return CommandResponse.contextBuild(response)
+            }
+        case "contextConvert":
+            let convertRequest = commandParameters.contextConvert!
+            do {
+                let decoder = JSONDecoder()
+                let context: LDContext = try decoder.decode(LDContext.self, from: Data(convertRequest.input.utf8))
+
+                let encoder = JSONEncoder()
+                let output = try encoder.encode(context)
+
+                let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
+                return CommandResponse.contextBuild(response)
+            } catch {
+                let response = ContextBuildResponse(output: nil, error: error.localizedDescription)
+                return CommandResponse.contextBuild(response)
+            }
         default:
             throw Abort(.badRequest)
         }
 
         return CommandResponse.ok
+    }
+
+    static func buildSingleContextFromParams(_ params: SingleContextParameters) throws -> LDContext {
+        var contextBuilder = LDContextBuilder(key: params.key)
+
+        if let kind = params.kind {
+            contextBuilder.kind(kind)
+        }
+
+        if let name = params.name {
+            contextBuilder.name(name)
+        }
+
+        if let anonymous = params.anonymous {
+            contextBuilder.anonymous(anonymous)
+        }
+
+        if let privateAttributes = params.privateAttribute {
+            privateAttributes.forEach { contextBuilder.addPrivateAttribute(Reference($0)) }
+        }
+
+        if let custom = params.custom {
+            custom.forEach { contextBuilder.trySetValue($0.key, $0.value) }
+        }
+
+        return try contextBuilder.build().get()
     }
 
     func evaluate(_ client: LDClient, _ params: EvaluateFlagParameters) throws -> EvaluateFlagResponse {

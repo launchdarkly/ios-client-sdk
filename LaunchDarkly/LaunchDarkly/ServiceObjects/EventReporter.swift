@@ -5,11 +5,12 @@ typealias EventSyncCompleteClosure = ((SynchronizingError?) -> Void)
 protocol EventReporting {
     // sourcery: defaultMockValue = false
     var isOnline: Bool { get set }
-    var lastEventResponseDate: Date? { get }
+    // sourcery: defaultMockValue = Date.distantPast
+    var lastEventResponseDate: Date { get }
 
     func record(_ event: Event)
     // swiftlint:disable:next function_parameter_count
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool)
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)
     func flush(completion: CompletionClosure?)
 }
 
@@ -19,7 +20,7 @@ class EventReporter: EventReporting {
         set { timerQueue.sync { newValue ? startReporting() : stopReporting() } }
     }
 
-    private (set) var lastEventResponseDate: Date?
+    private (set) var lastEventResponseDate: Date
 
     let service: DarklyServiceProvider
 
@@ -37,6 +38,7 @@ class EventReporter: EventReporting {
     init(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) {
         self.service = service
         self.onSyncComplete = onSyncComplete
+        self.lastEventResponseDate = Date()
     }
 
     func record(_ event: Event) {
@@ -54,18 +56,18 @@ class EventReporter: EventReporting {
     }
 
     // swiftlint:disable:next function_parameter_count
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) {
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool) {
         let recordingFeatureEvent = featureFlag?.trackEvents == true
         let recordingDebugEvent = featureFlag?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
 
         eventQueue.sync {
-            flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue)
+            flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
             if recordingFeatureEvent {
-                let featureEvent = FeatureEvent(key: flagKey, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false)
+                let featureEvent = FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false)
                 recordNoSync(featureEvent)
             }
             if recordingDebugEvent {
-                let debugEvent = FeatureEvent(key: flagKey, user: user, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: true)
+                let debugEvent = FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: true)
                 recordNoSync(debugEvent)
             }
         }
@@ -76,7 +78,7 @@ class EventReporter: EventReporting {
         else { return }
         eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: eventQueue, execute: reportEvents)
     }
-    
+
     private func stopReporting() {
         eventReportTimer?.cancel()
         eventReportTimer = nil
@@ -128,9 +130,10 @@ class EventReporter: EventReporting {
 
     private func publish(_ events: [Event], _ payloadId: String, _ completion: CompletionClosure?) {
         let encodingConfig: [CodingUserInfoKey: Any] =
-            [Event.UserInfoKeys.inlineUserInEvents: service.config.inlineUserInEvents,
-             LDUser.UserInfoKeys.allAttributesPrivate: service.config.allUserAttributesPrivate,
-             LDUser.UserInfoKeys.globalPrivateAttributes: service.config.privateUserAttributes.map { $0.name }]
+            [
+                LDContext.UserInfoKeys.allAttributesPrivate: service.config.allContextAttributesPrivate,
+                LDContext.UserInfoKeys.globalPrivateAttributes: service.config.privateContextAttributes.map { $0 }
+            ]
         let encoder = JSONEncoder()
         encoder.userInfo = encodingConfig
         encoder.dateEncodingStrategy = .custom { date, encoder in
@@ -161,7 +164,11 @@ class EventReporter: EventReporting {
 
     private func processEventResponse(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> Bool {
         if error == nil && (200..<300).contains(response?.statusCode ?? 0) {
-            self.lastEventResponseDate = response?.headerDate ?? self.lastEventResponseDate
+            let serverTime = response?.headerDate ?? self.lastEventResponseDate
+            if serverTime > self.lastEventResponseDate {
+                self.lastEventResponseDate = serverTime
+            }
+
             Log.debug(self.typeName(and: #function) + "Completed sending \(sentEvents) event(s)")
             self.reportSyncComplete(nil)
             return false
@@ -202,7 +209,7 @@ extension EventReporter: TypeIdentifying { }
 
 #if DEBUG
     extension EventReporter {
-        func setLastEventResponseDate(_ date: Date?) {
+        func setLastEventResponseDate(_ date: Date) {
             lastEventResponseDate = date
         }
 

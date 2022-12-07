@@ -12,10 +12,10 @@ final class CacheConvertingMock: CacheConverting {
 
     var convertCacheDataCallCount = 0
     var convertCacheDataCallback: (() throws -> Void)?
-    var convertCacheDataReceivedArguments: (serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedUsers: Int)?
-    func convertCacheData(serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedUsers: Int) {
+    var convertCacheDataReceivedArguments: (serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedContexts: Int)?
+    func convertCacheData(serviceFactory: ClientServiceCreating, keysToConvert: [MobileKey], maxCachedContexts: Int) {
         convertCacheDataCallCount += 1
-        convertCacheDataReceivedArguments = (serviceFactory: serviceFactory, keysToConvert: keysToConvert, maxCachedUsers: maxCachedUsers)
+        convertCacheDataReceivedArguments = (serviceFactory: serviceFactory, keysToConvert: keysToConvert, maxCachedContexts: maxCachedContexts)
         try! convertCacheDataCallback?()
     }
 }
@@ -128,15 +128,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    var deviceModelSetCount = 0
-    var setDeviceModelCallback: (() throws -> Void)?
-    var deviceModel: String = Constants.deviceModel {
-        didSet {
-            deviceModelSetCount += 1
-            try! setDeviceModelCallback?()
-        }
-    }
-
     var systemVersionSetCount = 0
     var setSystemVersionCallback: (() throws -> Void)?
     var systemVersion: String = Constants.systemVersion {
@@ -224,7 +215,7 @@ final class EventReportingMock: EventReporting {
 
     var lastEventResponseDateSetCount = 0
     var setLastEventResponseDateCallback: (() throws -> Void)?
-    var lastEventResponseDate: Date? = nil {
+    var lastEventResponseDate: Date = Date.distantPast {
         didSet {
             lastEventResponseDateSetCount += 1
             try! setLastEventResponseDateCallback?()
@@ -242,10 +233,10 @@ final class EventReportingMock: EventReporting {
 
     var recordFlagEvaluationEventsCallCount = 0
     var recordFlagEvaluationEventsCallback: (() throws -> Void)?
-    var recordFlagEvaluationEventsReceivedArguments: (flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool)?
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, user: LDUser, includeReason: Bool) {
+    var recordFlagEvaluationEventsReceivedArguments: (flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)?
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool) {
         recordFlagEvaluationEventsCallCount += 1
-        recordFlagEvaluationEventsReceivedArguments = (flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, user: user, includeReason: includeReason)
+        recordFlagEvaluationEventsReceivedArguments = (flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, context: context, includeReason: includeReason)
         try! recordFlagEvaluationEventsCallback?()
     }
 
@@ -273,21 +264,21 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
 
     var retrieveFeatureFlagsCallCount = 0
     var retrieveFeatureFlagsCallback: (() throws -> Void)?
-    var retrieveFeatureFlagsReceivedUserKey: String?
+    var retrieveFeatureFlagsReceivedContextKey: String?
     var retrieveFeatureFlagsReturnValue: StoredItems?
-    func retrieveFeatureFlags(userKey: String) -> StoredItems? {
+    func retrieveFeatureFlags(contextKey: String) -> StoredItems? {
         retrieveFeatureFlagsCallCount += 1
-        retrieveFeatureFlagsReceivedUserKey = userKey
+        retrieveFeatureFlagsReceivedContextKey = contextKey
         try! retrieveFeatureFlagsCallback?()
         return retrieveFeatureFlagsReturnValue
     }
 
     var storeFeatureFlagsCallCount = 0
     var storeFeatureFlagsCallback: (() throws -> Void)?
-    var storeFeatureFlagsReceivedArguments: (storedItems: StoredItems, userKey: String, lastUpdated: Date)?
-    func storeFeatureFlags(_ storedItems: StoredItems, userKey: String, lastUpdated: Date) {
+    var storeFeatureFlagsReceivedArguments: (storedItems: StoredItems, contextKey: String, lastUpdated: Date)?
+    func storeFeatureFlags(_ storedItems: StoredItems, contextKey: String, lastUpdated: Date) {
         storeFeatureFlagsCallCount += 1
-        storeFeatureFlagsReceivedArguments = (storedItems: storedItems, userKey: userKey, lastUpdated: lastUpdated)
+        storeFeatureFlagsReceivedArguments = (storedItems: storedItems, contextKey: contextKey, lastUpdated: lastUpdated)
         try! storeFeatureFlagsCallback?()
     }
 }

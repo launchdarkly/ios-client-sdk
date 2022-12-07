@@ -15,10 +15,10 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     var makeFeatureFlagCacheReturnValue = FeatureFlagCachingMock()
     var makeFeatureFlagCacheCallback: (() -> Void)?
     var makeFeatureFlagCacheCallCount = 0
-    var makeFeatureFlagCacheReceivedParameters: (mobileKey: MobileKey, maxCachedUsers: Int)? = nil
-    func makeFeatureFlagCache(mobileKey: MobileKey, maxCachedUsers: Int = 5) -> FeatureFlagCaching {
+    var makeFeatureFlagCacheReceivedParameters: (mobileKey: MobileKey, maxCachedContexts: Int)? = nil
+    func makeFeatureFlagCache(mobileKey: MobileKey, maxCachedContexts: Int = 5) -> FeatureFlagCaching {
         makeFeatureFlagCacheCallCount += 1
-        makeFeatureFlagCacheReceivedParameters = (mobileKey: mobileKey, maxCachedUsers: maxCachedUsers)
+        makeFeatureFlagCacheReceivedParameters = (mobileKey: mobileKey, maxCachedContexts: maxCachedContexts)
         makeFeatureFlagCacheCallback?()
         return makeFeatureFlagCacheReturnValue
     }
@@ -28,8 +28,8 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         return makeCacheConverterReturnValue
     }
 
-    func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {
-        DarklyServiceMock(config: config, user: user)
+    func makeDarklyServiceProvider(config: LDConfig, context: LDContext) -> DarklyServiceProvider {
+        DarklyServiceMock(config: config, context: context)
     }
 
     var makeFlagSynchronizerCallCount = 0
@@ -75,12 +75,12 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     var makeStreamingProviderCallCount = 0
-    var makeStreamingProviderReceivedArguments: (url: URL, 
-                                                 httpHeaders: [String: String], 
-                                                 connectMethod: String?, 
-                                                 connectBody: Data?, 
-                                                 handler: EventHandler, 
-                                                 delegate: RequestHeaderTransform?, 
+    var makeStreamingProviderReceivedArguments: (url: URL,
+                                                 httpHeaders: [String: String],
+                                                 connectMethod: String?,
+                                                 connectBody: Data?,
+                                                 handler: EventHandler,
+                                                 delegate: RequestHeaderTransform?,
                                                  errorHandler: ConnectionErrorHandler?)?
     func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         makeStreamingProviderCallCount += 1
@@ -116,7 +116,7 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         }
         return throttlingMock
     }
-    
+
     func makeConnectionInformation() -> ConnectionInformation {
         ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
     }

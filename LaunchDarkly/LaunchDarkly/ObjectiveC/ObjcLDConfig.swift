@@ -8,7 +8,7 @@ import Foundation
 @objc(LDConfig)
 public final class ObjcLDConfig: NSObject {
     var config: LDConfig
-    
+
     /// The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
     @objc public var mobileKey: String {
         get { config.mobileKey }
@@ -89,30 +89,30 @@ public final class ObjcLDConfig: NSObject {
     }
 
     /**
-     Treat all user attributes as private for event reporting for all users.
+     Treat all context attributes as private for event reporting for all contexts.
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     When YES, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. (Default: NO)
+     When YES, ignores values in either LDConfig.privateContextAttributes or LDContext.privateAttributes. (Default: NO)
 
-     See Also: `privateUserAttributes` and `LDUser.privateAttributes` (`ObjcLDUser.privateAttributes`)
+     See Also: `privateContextAttributes` and `LDContext.privateAttributes` (`ObjcLDContext.privateAttributes`)
      */
-    @objc public var allUserAttributesPrivate: Bool {
-        get { config.allUserAttributesPrivate }
-        set { config.allUserAttributesPrivate = newValue }
+    @objc public var allContextAttributesPrivate: Bool {
+        get { config.allContextAttributesPrivate }
+        set { config.allContextAttributesPrivate = newValue }
     }
     /**
-     User attributes and top level custom dictionary keys to treat as private for event reporting for all users.
+     Context attributes and top level custom dictionary keys to treat as private for event reporting for all contexts.
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     To set private user attributes for a specific user, see `LDUser.privateAttributes` (`ObjcLDUser.privateAttributes`). (Default: `[]`)
+     To set private context attributes for a specific context, see `LDContext.privateAttributes` (`ObjcLDContext.privateAttributes`). (Default: `[]`)
 
-     See Also: `allUserAttributesPrivate` and `LDUser.privateAttributes` (`ObjcLDUser.privateAttributes`).
+     See Also: `allContextAttributesPrivate` and `LDContext.privateAttributes` (`ObjcLDContext.privateAttributes`).
      */
-    @objc public var privateUserAttributes: [String] {
-        get { config.privateUserAttributes.map { $0.name } }
-        set { config.privateUserAttributes = newValue.map { UserAttribute.forName($0) } }
+    @objc public var privateContextAttributes: [String] {
+        get { config.privateContextAttributes.map { $0.raw() } }
+        set { config.privateContextAttributes = newValue.map { Reference($0) } }
     }
 
     /**
@@ -121,14 +121,6 @@ public final class ObjcLDConfig: NSObject {
     @objc public var useReport: Bool {
         get { config.useReport }
         set { config.useReport = newValue }
-    }
-
-    /**
-     Controls how the SDK reports the user in analytics event reports. When set to YES, event reports will contain the user attributes, except attributes marked as private. When set to NO, event reports will contain the user's key only, reducing the size of event reports. (Default: NO)
-     */
-    @objc public var inlineUserInEvents: Bool {
-        get { config.inlineUserInEvents }
-        set { config.inlineUserInEvents = newValue }
     }
 
     /// Enables logging for debugging. (Default: NO)
@@ -143,10 +135,10 @@ public final class ObjcLDConfig: NSObject {
         set { config.evaluationReasons = newValue }
     }
 
-    /// An Integer that tells UserEnvironmentFlagCache the maximum number of users to locally cache. Can be set to -1 for unlimited cached users. (Default: 5)
-    @objc public var maxCachedUsers: Int {
-        get { config.maxCachedUsers }
-        set { config.maxCachedUsers = newValue }
+    /// An Integer that tells ContextEnvironmentFlagCache the maximum number of contexts to locally cache. Can be set to -1 for unlimited cached contexts. (Default: 5)
+    @objc public var maxCachedContexts: Int {
+        get { config.maxCachedContexts }
+        set { config.maxCachedContexts = newValue }
     }
 
     /**
@@ -194,7 +186,7 @@ public final class ObjcLDConfig: NSObject {
     @objc public func setSecondaryMobileKeys(_ keys: [String: String]) throws {
         try config.setSecondaryMobileKeys(keys)
     }
-    
+
     /// LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` (`ObjcLDClient.config`) in order to retain previously set values.
     @objc public init(mobileKey: String) {
         config = LDConfig(mobileKey: mobileKey)

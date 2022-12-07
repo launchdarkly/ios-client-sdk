@@ -78,13 +78,13 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     private var isOnlineQueue = DispatchQueue(label: "com.launchdarkly.FlagSynchronizer.isOnlineQueue")
     let pollingInterval: TimeInterval
     let useReport: Bool
-    
+
     private var syncQueue = DispatchQueue(label: Constants.queueName, qos: .utility)
     private var eventSourceStarted: Date?
 
-    init(streamingMode: LDStreamingMode, 
-         pollingInterval: TimeInterval, 
-         useReport: Bool, 
+    init(streamingMode: LDStreamingMode,
+         pollingInterval: TimeInterval,
+         useReport: Bool,
          service: DarklyServiceProvider,
          onSyncComplete: FlagSyncCompleteClosure?) {
         Log.debug(FlagSynchronizer.typeName(and: #function) + "streamingMode: \(streamingMode), " + "pollingInterval: \(pollingInterval), " + "useReport: \(useReport)")
@@ -226,7 +226,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             onSyncComplete(result)
         }
     }
-    
+
     // sourcery: noMock
     deinit {
         onSyncComplete = nil

@@ -17,7 +17,11 @@ custom_categories:
     children:
     - LDClient
     - LDConfig
+    - LDContext
+    - LDContextBuilder
     - LDUser
+    - Reference
+    - LDMultiContextBuilder
     - LDEvaluationDetail
     - LDValue
 
@@ -36,7 +40,6 @@ custom_categories:
 
   - name: Other Types
     children:
-    - UserAttribute
     - LDStreamingMode
     - LDFlagKey
     - LDInvalidArgumentError
@@ -46,8 +49,10 @@ custom_categories:
     children:
     - ObjcLDClient
     - ObjcLDConfig
-    - ObjcLDUser
+    - ObjcLDReference
+    - ObjcLDContext
     - ObjcLDChangedFlag
+    - ObjcLDUser
     - ObjcLDValue
     - ObjcLDValueType
 

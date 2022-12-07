@@ -38,8 +38,6 @@ protocol EnvironmentReporting {
     var isDebugBuild: Bool { get }
     // sourcery: defaultMockValue = Constants.deviceType
     var deviceType: String { get }
-    // sourcery: defaultMockValue = Constants.deviceModel
-    var deviceModel: String { get }
     // sourcery: defaultMockValue = Constants.systemVersion
     var systemVersion: String { get }
     // sourcery: defaultMockValue = Constants.systemName
@@ -67,25 +65,6 @@ struct EnvironmentReporter: EnvironmentReporting {
 
     struct Constants {
         fileprivate static let simulatorModelIdentifier = "SIMULATOR_MODEL_IDENTIFIER"
-    }
-
-    var deviceModel: String {
-        #if os(OSX)
-        return Sysctl.model
-        #else
-        // Obtaining the device model from https://stackoverflow.com/questions/26028918/how-to-determine-the-current-iphone-device-model answer by Jens Schwarzer
-        if let simulatorModelIdentifier = ProcessInfo().environment[Constants.simulatorModelIdentifier] {
-            return simulatorModelIdentifier
-        }
-        // the physical device code here is not automatically testable. Manual testing on physical devices is required.
-        var systemInfo = utsname()
-        _ = uname(&systemInfo)
-        guard let deviceModel = String(bytes: Data(bytes: &systemInfo.machine, count: Int(_SYS_NAMELEN)), encoding: .ascii)
-        else {
-            return deviceType
-        }
-        return deviceModel.trimmingCharacters(in: .controlCharacters)
-        #endif
     }
 
     #if os(iOS)
@@ -123,7 +102,7 @@ struct EnvironmentReporter: EnvironmentReporting {
     #endif
 
     var shouldThrottleOnlineCalls: Bool { !isDebugBuild }
-    let sdkVersion = "7.1.0"
+    let sdkVersion = "8.0.0"
     // Unfortunately, the following does not function in certain configurations, such as when included through SPM
 //    var sdkVersion: String {
 //        Bundle(for: LDClient.self).infoDictionary?["CFBundleShortVersionString"] as? String ?? "5.x"

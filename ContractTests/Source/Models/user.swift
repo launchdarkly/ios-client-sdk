@@ -6,7 +6,7 @@ extension LDUser: Decodable {
     /// String keys associated with LDUser properties.
     public enum CodingKeys: String, CodingKey {
         /// Key names match the corresponding LDUser property
-        case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", config, privateAttributes = "privateAttributeNames", secondary
+        case key, name, firstName, lastName, country, ipAddress = "ip", email, avatar, custom, isAnonymous = "anonymous", device, operatingSystem = "os", config, privateAttributes = "privateAttributeNames"
     }
 
     public init(from decoder: Decoder) throws {
@@ -23,8 +23,7 @@ extension LDUser: Decodable {
         avatar = try values.decodeIfPresent(String.self, forKey: .avatar)
         custom = try values.decodeIfPresent([String: LDValue].self, forKey: .custom) ?? [:]
         isAnonymous = try values.decodeIfPresent(Bool.self, forKey: .isAnonymous) ?? false
-        let _ = try values.decodeIfPresent([String].self, forKey: .privateAttributes)
-        privateAttributes = (try values.decodeIfPresent([String].self, forKey: .privateAttributes) ?? []).map({ UserAttribute.forName($0) })
-        secondary = try values.decodeIfPresent(String.self, forKey: .secondary)
+        _ = try values.decodeIfPresent([String].self, forKey: .privateAttributes)
+        privateAttributes = (try values.decodeIfPresent([String].self, forKey: .privateAttributes) ?? []).map { UserAttribute.forName($0) }
     }
 }

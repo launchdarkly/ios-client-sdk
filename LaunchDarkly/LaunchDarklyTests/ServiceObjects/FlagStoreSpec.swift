@@ -101,7 +101,7 @@ final class FlagStoreSpec: XCTestCase {
                 XCTAssertNil(flagStore.featureFlag(for: flagKey))
                 return
             }
-            
+
             XCTAssertEqual(flagStore.featureFlag(for: flagKey), flag)
         }
         XCTAssertNil(flagStore.featureFlag(for: DarklyServiceMock.FlagKeys.unknown))

@@ -16,22 +16,19 @@ final class LDConfigSpec: XCTestCase {
         fileprivate static let enableBackgroundUpdates = true
         fileprivate static let startOnline = false
 
-        fileprivate static let allUserAttributesPrivate = true
-        fileprivate static let privateUserAttributes: [UserAttribute] = [UserAttribute.forName("dummy")]
+        fileprivate static let allContextAttributesPrivate = true
+        fileprivate static let privateContextAttributes: [Reference] = [Reference("dummy")]
 
         fileprivate static let useReport = true
 
-        fileprivate static let inlineUserInEvents = true
-
         fileprivate static let debugMode = true
         fileprivate static let evaluationReasons = true
-        fileprivate static let maxCachedUsers = -1
+        fileprivate static let maxCachedContexts = -1
         fileprivate static let diagnosticOptOut = true
         fileprivate static let diagnosticRecordingInterval: TimeInterval = 600.0
         fileprivate static let wrapperName = "ReactNative"
         fileprivate static let wrapperVersion = "0.1.0"
         fileprivate static let additionalHeaders = ["Proxy-Authorization": "creds"]
-        fileprivate static let autoAliasingOptOut = true
     }
 
     let testFields: [(String, Any, (inout LDConfig, Any?) -> Void)] =
@@ -48,18 +45,16 @@ final class LDConfigSpec: XCTestCase {
          ("enable background updates", Constants.enableBackgroundUpdates, { c, v in c.enableBackgroundUpdates = v as! Bool }),
          ("start online", Constants.startOnline, { c, v in c.startOnline = v as! Bool }),
          ("debug mode", Constants.debugMode, { c, v in c.isDebugMode = v as! Bool }),
-         ("all user attributes private", Constants.allUserAttributesPrivate, { c, v in c.allUserAttributesPrivate = v as! Bool }),
-         ("private user attributes", Constants.privateUserAttributes, { c, v in c.privateUserAttributes = (v as! [UserAttribute])}),
+         ("all context attributes private", Constants.allContextAttributesPrivate, { c, v in c.allContextAttributesPrivate = v as! Bool }),
+         ("private context attributes", Constants.privateContextAttributes, { c, v in c.privateContextAttributes = (v as! [Reference])}),
          ("use report", Constants.useReport, { c, v in c.useReport = v as! Bool }),
-         ("inline user in events", Constants.inlineUserInEvents, { c, v in c.inlineUserInEvents = v as! Bool }),
          ("evaluation reasons", Constants.evaluationReasons, { c, v in c.evaluationReasons = v as! Bool }),
-         ("max cached users", Constants.maxCachedUsers, { c, v in c.maxCachedUsers = v as! Int }),
+         ("max cached contexts", Constants.maxCachedContexts, { c, v in c.maxCachedContexts = v as! Int }),
          ("diagnostic opt out", Constants.diagnosticOptOut, { c, v in c.diagnosticOptOut = v as! Bool }),
          ("diagnostic recording interval", Constants.diagnosticRecordingInterval, { c, v in c.diagnosticRecordingInterval = v as! TimeInterval }),
          ("wrapper name", Constants.wrapperName, { c, v in c.wrapperName = v as! String? }),
          ("wrapper version", Constants.wrapperVersion, { c, v in c.wrapperVersion = v as! String? }),
-         ("additional headers", Constants.additionalHeaders, { c, v in c.additionalHeaders = v as! [String: String]}),
-         ("auto aliasing opt out", Constants.autoAliasingOptOut, { c, v in c.autoAliasingOptOut = v as! Bool })]
+         ("additional headers", Constants.additionalHeaders, { c, v in c.additionalHeaders = v as! [String: String]})]
 
     func testInitDefault() {
         let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey)
@@ -75,19 +70,17 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.streamingMode, LDConfig.Defaults.streamingMode)
         XCTAssertEqual(config.enableBackgroundUpdates, LDConfig.Defaults.enableBackgroundUpdates)
         XCTAssertEqual(config.startOnline, LDConfig.Defaults.startOnline)
-        XCTAssertEqual(config.allUserAttributesPrivate, LDConfig.Defaults.allUserAttributesPrivate)
-        XCTAssertEqual(config.privateUserAttributes, LDConfig.Defaults.privateUserAttributes)
+        XCTAssertEqual(config.allContextAttributesPrivate, LDConfig.Defaults.allContextAttributesPrivate)
+        XCTAssertEqual(config.privateContextAttributes, LDConfig.Defaults.privateContextAttributes)
         XCTAssertEqual(config.useReport, LDConfig.Defaults.useReport)
-        XCTAssertEqual(config.inlineUserInEvents, LDConfig.Defaults.inlineUserInEvents)
         XCTAssertEqual(config.isDebugMode, LDConfig.Defaults.debugMode)
         XCTAssertEqual(config.evaluationReasons, LDConfig.Defaults.evaluationReasons)
-        XCTAssertEqual(config.maxCachedUsers, LDConfig.Defaults.maxCachedUsers)
+        XCTAssertEqual(config.maxCachedContexts, LDConfig.Defaults.maxCachedContexts)
         XCTAssertEqual(config.diagnosticOptOut, LDConfig.Defaults.diagnosticOptOut)
         XCTAssertEqual(config.diagnosticRecordingInterval, LDConfig.Defaults.diagnosticRecordingInterval)
         XCTAssertEqual(config.wrapperName, LDConfig.Defaults.wrapperName)
         XCTAssertEqual(config.wrapperVersion, LDConfig.Defaults.wrapperVersion)
         XCTAssertEqual(config.additionalHeaders, LDConfig.Defaults.additionalHeaders)
-        XCTAssertEqual(config.autoAliasingOptOut, LDConfig.Defaults.autoAliasingOptOut)
     }
 
     func testInitUpdate() {
@@ -110,19 +103,17 @@ final class LDConfigSpec: XCTestCase {
             XCTAssertEqual(config.streamingMode, Constants.streamingMode, "\(os)")
             XCTAssertEqual(config.enableBackgroundUpdates, os.isBackgroundEnabled, "\(os)")
             XCTAssertEqual(config.startOnline, Constants.startOnline, "\(os)")
-            XCTAssertEqual(config.allUserAttributesPrivate, Constants.allUserAttributesPrivate, "\(os)")
-            XCTAssertEqual(config.privateUserAttributes, Constants.privateUserAttributes, "\(os)")
+            XCTAssertEqual(config.allContextAttributesPrivate, Constants.allContextAttributesPrivate, "\(os)")
+            XCTAssertEqual(config.privateContextAttributes, Constants.privateContextAttributes, "\(os)")
             XCTAssertEqual(config.useReport, Constants.useReport, "\(os)")
-            XCTAssertEqual(config.inlineUserInEvents, Constants.inlineUserInEvents, "\(os)")
             XCTAssertEqual(config.isDebugMode, Constants.debugMode, "\(os)")
             XCTAssertEqual(config.evaluationReasons, Constants.evaluationReasons, "\(os)")
-            XCTAssertEqual(config.maxCachedUsers, Constants.maxCachedUsers, "\(os)")
+            XCTAssertEqual(config.maxCachedContexts, Constants.maxCachedContexts, "\(os)")
             XCTAssertEqual(config.diagnosticOptOut, Constants.diagnosticOptOut, "\(os)")
             XCTAssertEqual(config.diagnosticRecordingInterval, Constants.diagnosticRecordingInterval, "\(os)")
             XCTAssertEqual(config.wrapperName, Constants.wrapperName, "\(os)")
             XCTAssertEqual(config.wrapperVersion, Constants.wrapperVersion, "\(os)")
             XCTAssertEqual(config.additionalHeaders, Constants.additionalHeaders, "\(os)")
-            XCTAssertEqual(config.autoAliasingOptOut, Constants.autoAliasingOptOut, "\(os)")
         }
     }
 

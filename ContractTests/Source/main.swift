@@ -2,6 +2,7 @@ import Foundation
 import Vapor
 
 let semaphore = DispatchSemaphore(value: 0)
+
 DispatchQueue.global(qos: .userInitiated).async {
     do {
         var env = try Environment.detect()
@@ -16,6 +17,7 @@ DispatchQueue.global(qos: .userInitiated).async {
 }
 
 let runLoop = RunLoop.current
-while (semaphore.wait(timeout: .now()) == .timedOut) {
+
+while semaphore.wait(timeout: .now()) == .timedOut {
     runLoop.run(mode: .default, before: .distantFuture)
 }

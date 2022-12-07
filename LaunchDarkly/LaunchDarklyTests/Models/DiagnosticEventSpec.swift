@@ -178,14 +178,13 @@ final class DiagnosticEventSpec: QuickSpec {
         customConfig.connectionTimeout = 30.0
         customConfig.eventFlushInterval = 60.0
         customConfig.streamingMode = .polling
-        customConfig.allUserAttributesPrivate = true
+        customConfig.allContextAttributesPrivate = true
         customConfig.flagPollingInterval = 360.0
         customConfig.backgroundFlagPollingInterval = 1_800.0
-        customConfig.inlineUserInEvents = true
         customConfig.useReport = true
         customConfig.enableBackgroundUpdates = true
         customConfig.evaluationReasons = true
-        customConfig.maxCachedUsers = -2
+        customConfig.maxCachedContexts = -2
         try! customConfig.setSecondaryMobileKeys(["test": "foobar1", "debug": "foobar2"])
         customConfig.diagnosticRecordingInterval = 600.0
         customConfig.wrapperName = "ReactNative"
@@ -212,11 +211,10 @@ final class DiagnosticEventSpec: QuickSpec {
                     expect(diagnosticConfig.allAttributesPrivate) == false
                     expect(diagnosticConfig.pollingIntervalMillis) == 300_000
                     expect(diagnosticConfig.backgroundPollingIntervalMillis) == 3_600_000
-                    expect(diagnosticConfig.inlineUsersInEvents) == false
                     expect(diagnosticConfig.useReport) == false
                     expect(diagnosticConfig.backgroundPollingDisabled) == true
                     expect(diagnosticConfig.evaluationReasonsRequested) == false
-                    expect(diagnosticConfig.maxCachedUsers) == 5
+                    expect(diagnosticConfig.maxCachedContexts) == 5
                     expect(diagnosticConfig.mobileKeyCount) == 1
                     expect(diagnosticConfig.diagnosticRecordingIntervalMillis) == 900_000
                     expect(diagnosticConfig.customHeaders) == false
@@ -235,12 +233,11 @@ final class DiagnosticEventSpec: QuickSpec {
                     expect(diagnosticConfig.allAttributesPrivate) == true
                     expect(diagnosticConfig.pollingIntervalMillis) == 360_000
                     expect(diagnosticConfig.backgroundPollingIntervalMillis) == 1_800_000
-                    expect(diagnosticConfig.inlineUsersInEvents) == true
                     expect(diagnosticConfig.useReport) == true
                     expect(diagnosticConfig.backgroundPollingDisabled) == false
                     expect(diagnosticConfig.evaluationReasonsRequested) == true
                     // All negative values become -1 for consistency
-                    expect(diagnosticConfig.maxCachedUsers) == -1
+                    expect(diagnosticConfig.maxCachedContexts) == -1
                     expect(diagnosticConfig.mobileKeyCount) == 3
                     expect(diagnosticConfig.diagnosticRecordingIntervalMillis) == 600_000
                     expect(diagnosticConfig.customHeaders) == false
@@ -270,8 +267,7 @@ final class DiagnosticEventSpec: QuickSpec {
                     }
                     it("encodes correct values to keys") {
                         encodesToObject(diagnosticConfig) { decoded in
-                            expect(decoded.count) == 19
-                            expect(decoded["autoAliasingOptOut"]) == .bool(diagnosticConfig.autoAliasingOptOut)
+                            expect(decoded.count) == 17
                             expect(decoded["customBaseURI"]) == .bool(diagnosticConfig.customBaseURI)
                             expect(decoded["customEventsURI"]) == .bool(diagnosticConfig.customEventsURI)
                             expect(decoded["customStreamURI"]) == .bool(diagnosticConfig.customStreamURI)
@@ -282,11 +278,10 @@ final class DiagnosticEventSpec: QuickSpec {
                             expect(decoded["allAttributesPrivate"]) == .bool(diagnosticConfig.allAttributesPrivate)
                             expect(decoded["pollingIntervalMillis"]) == .number(Double(diagnosticConfig.pollingIntervalMillis))
                             expect(decoded["backgroundPollingIntervalMillis"]) == .number(Double(diagnosticConfig.backgroundPollingIntervalMillis))
-                            expect(decoded["inlineUsersInEvents"]) == .bool(diagnosticConfig.inlineUsersInEvents)
                             expect(decoded["useReport"]) == .bool(diagnosticConfig.useReport)
                             expect(decoded["backgroundPollingDisabled"]) == .bool(diagnosticConfig.backgroundPollingDisabled)
                             expect(decoded["evaluationReasonsRequested"]) == .bool(diagnosticConfig.evaluationReasonsRequested)
-                            expect(decoded["maxCachedUsers"]) == .number(Double(diagnosticConfig.maxCachedUsers))
+                            expect(decoded["maxCachedContexts"]) == .number(Double(diagnosticConfig.maxCachedContexts))
                             expect(decoded["mobileKeyCount"]) == .number(Double(diagnosticConfig.mobileKeyCount))
                             expect(decoded["diagnosticRecordingIntervalMillis"]) == .number(Double(diagnosticConfig.diagnosticRecordingIntervalMillis))
                         }
@@ -303,11 +298,10 @@ final class DiagnosticEventSpec: QuickSpec {
                         expect(decoded?.allAttributesPrivate) == diagnosticConfig.allAttributesPrivate
                         expect(decoded?.pollingIntervalMillis) == diagnosticConfig.pollingIntervalMillis
                         expect(decoded?.backgroundPollingIntervalMillis) == diagnosticConfig.backgroundPollingIntervalMillis
-                        expect(decoded?.inlineUsersInEvents) == diagnosticConfig.inlineUsersInEvents
                         expect(decoded?.useReport) == diagnosticConfig.useReport
                         expect(decoded?.backgroundPollingDisabled) == diagnosticConfig.backgroundPollingDisabled
                         expect(decoded?.evaluationReasonsRequested) == diagnosticConfig.evaluationReasonsRequested
-                        expect(decoded?.maxCachedUsers) == diagnosticConfig.maxCachedUsers
+                        expect(decoded?.maxCachedContexts) == diagnosticConfig.maxCachedContexts
                         expect(decoded?.mobileKeyCount) == diagnosticConfig.mobileKeyCount
                         expect(decoded?.diagnosticRecordingIntervalMillis) == diagnosticConfig.diagnosticRecordingIntervalMillis
                     }

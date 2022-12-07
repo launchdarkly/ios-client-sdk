@@ -4,7 +4,7 @@ import Foundation
 public enum LDStreamingMode {
     /**
      In streaming mode, the SDK uses a streaming connection to receive feature flag data from LaunchDarkly. When a flag
-     is updated in the dashboard, the stream notifies the SDK of changes to the evaluation result for the current user.
+     is updated in the dashboard, the stream notifies the SDK of changes to the evaluation result for the current context.
 
      Streaming mode is not available on watchOS. On iOS and tvOS, the client app must be running in the foreground to
      use a streaming connection. If streaming mode is not available, the SDK reverts to polling mode.
@@ -23,7 +23,7 @@ typealias MobileKey = String
 /**
  A callback for dynamically setting http headers when connection & reconnecting to a stream
  or on every poll request. This function should return a copy of the headers received with
- any modifications or additions needed. Removing headers is discouraged as it may cause 
+ any modifications or additions needed. Removing headers is discouraged as it may cause
  requests to fail.
 
  - parameter url: The endpoint that is being connected to
@@ -115,7 +115,7 @@ public struct LDConfig {
         static let eventsUrl = URL(string: "https://mobile.launchdarkly.com")!
         /// The default base url for connecting to streaming service
         static let streamUrl = URL(string: "https://clientstream.launchdarkly.com")!
-        
+
         /// The default maximum number of events the LDClient can store
         static let eventCapacity = 100
 
@@ -135,25 +135,22 @@ public struct LDConfig {
         /// The default mode to set LDClient online on a start call. (true)
         static let startOnline = true
 
-        /// The default setting for private user attributes. (false)
-        static let allUserAttributesPrivate = false
-        /// The default private user attribute list (nil)
-        static let privateUserAttributes: [UserAttribute] = []
+        /// The default setting for private context attributes. (false)
+        static let allContextAttributesPrivate = false
+        /// The default private context attribute list (nil)
+        static let privateContextAttributes: [Reference] = []
 
         /// The default HTTP request method for stream connections and feature flag requests. When true, these requests will use the non-standard verb `REPORT`. When false, these requests will use the standard verb `GET`. (false)
         static let useReport = false
 
-        /// The default setting controlling the amount of user data sent in events. When true the SDK will generate events using the full LDUser, excluding private attributes. When false the SDK will generate events using only the LDUser.key. (false)
-        static let inlineUserInEvents = false
-
         /// The default setting controlling information logged to the console, and modifying some setting ranges to facilitate debugging. (false)
         static let debugMode = false
-        
+
         /// The default setting for whether we request evaluation reasons for all flags. (false)
         static let evaluationReasons = false
 
-        /// The default setting for the maximum number of locally cached users. (5)
-        static let maxCachedUsers = 5
+        /// The default setting for the maximum number of locally cached contexts. (5)
+        static let maxCachedContexts = 5
 
         /// The default setting for whether sending diagnostic data is disabled. (false)
         static let diagnosticOptOut = false
@@ -175,9 +172,6 @@ public struct LDConfig {
 
         /// a closure to allow dynamic changes of headers on connect & reconnect
         static let headerDelegate: RequestHeaderTransform? = nil
-    
-        /// should anonymous users automatically be aliased when identifying
-        static let autoAliasingOptOut: Bool = false
     }
 
     /// Constants relevant to setting up an `LDConfig`
@@ -262,30 +256,30 @@ public struct LDConfig {
         }
     }
     private var allowBackgroundUpdates: Bool
-    
+
     /// Controls LDClient start behavior. When true, calling start causes LDClient to go online. When false, calling start causes LDClient to remain offline. If offline at start, set the client online to receive flag updates. (Default: true)
     public var startOnline: Bool = Defaults.startOnline
 
     /**
-     Treat all user attributes as private for event reporting for all users.
+     Treat all context attributes as private for event reporting for all contexts.
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     When true, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. (Default: false)
+     When true, ignores values in either LDConfig.privateContextAttributes or LDContext.privateAttributes. (Default: false)
 
-     See Also: `privateUserAttributes` and `LDUser.privateAttributes`
+     See Also: `privateContextAttributes` and `LDContext.privateAttributes`
     */
-    public var allUserAttributesPrivate: Bool = Defaults.allUserAttributesPrivate
+    public var allContextAttributesPrivate: Bool = Defaults.allContextAttributesPrivate
     /**
-     User attributes and top level custom dictionary keys to treat as private for event reporting for all users.
+     Context attributes and top level custom dictionary keys to treat as private for event reporting for all contexts.
 
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
 
-     To set private user attributes for a specific user, see `LDUser.privateAttributes`. (Default: nil)
+     To set private context attributes for a specific context, see `LDContext.privateAttributes`. (Default: nil)
 
-     See Also: `allUserAttributesPrivate` and `LDUser.privateAttributes`.
+     See Also: `allContextAttributesPrivate` and `LDContext.privateAttributes`.
     */
-    public var privateUserAttributes: [UserAttribute] = Defaults.privateUserAttributes
+    public var privateContextAttributes: [Reference] = Defaults.privateContextAttributes
 
     /**
      Directs the SDK to use REPORT for HTTP requests for feature flag data. (Default: `false`)
@@ -296,19 +290,14 @@ public struct LDConfig {
     public var useReport: Bool = Defaults.useReport
     private static let flagRetryStatusCodes = [HTTPURLResponse.StatusCodes.methodNotAllowed, HTTPURLResponse.StatusCodes.badRequest, HTTPURLResponse.StatusCodes.notImplemented]
 
-    /**
-     Controls how the SDK reports the user in analytics event reports. When set to true, event reports will contain the user attributes, except attributes marked as private. When set to false, event reports will contain the user's key only, reducing the size of event reports. (Default: false)
-    */
-    public var inlineUserInEvents: Bool = Defaults.inlineUserInEvents
-
     /// Enables logging for debugging. (Default: false)
     public var isDebugMode: Bool = Defaults.debugMode
-    
+
     /// Enables requesting evaluation reasons for all flags. (Default: false)
     public var evaluationReasons: Bool = Defaults.evaluationReasons
-    
-    /// An Integer that tells UserEnvironmentFlagCache the maximum number of users to locally cache. Can be set to -1 for unlimited cached users.
-    public var maxCachedUsers: Int = Defaults.maxCachedUsers
+
+    /// An Integer that tells ContextEnvironmentFlagCache the maximum number of contexts to locally cache. Can be set to -1 for unlimited cached contexts.
+    public var maxCachedContexts: Int = Defaults.maxCachedContexts
 
     /**
      Set to true to opt out of sending diagnostic data. (Default: false)
@@ -347,9 +336,6 @@ public struct LDConfig {
 
     let environmentReporter: EnvironmentReporting
 
-    /// should anonymous users automatically be aliased when identifying
-    public var autoAliasingOptOut: Bool = Defaults.autoAliasingOptOut
-
     /// A Dictionary of identifying names to unique mobile keys for all environments
     private var mobileKeys: [String: String] {
         var internalMobileKeys = getSecondaryMobileKeys()
@@ -387,10 +373,10 @@ public struct LDConfig {
     public func getSecondaryMobileKeys() -> [String: String] {
         return _secondaryMobileKeys
     }
-    
+
     /// Internal variable for secondaryMobileKeys computed property
     private var _secondaryMobileKeys: [String: String]
-    
+
     // Internal constructor to enable automated testing
     init(mobileKey: String, environmentReporter: EnvironmentReporting) {
         self.mobileKey = mobileKey
@@ -440,19 +426,17 @@ extension LDConfig: Equatable {
             && lhs.streamingMode == rhs.streamingMode
             && lhs.enableBackgroundUpdates == rhs.enableBackgroundUpdates
             && lhs.startOnline == rhs.startOnline
-            && lhs.allUserAttributesPrivate == rhs.allUserAttributesPrivate
-            && Set(lhs.privateUserAttributes) == Set(rhs.privateUserAttributes)
+            && lhs.allContextAttributesPrivate == rhs.allContextAttributesPrivate
+            && Set(lhs.privateContextAttributes) == Set(rhs.privateContextAttributes)
             && lhs.useReport == rhs.useReport
-            && lhs.inlineUserInEvents == rhs.inlineUserInEvents
             && lhs.isDebugMode == rhs.isDebugMode
             && lhs.evaluationReasons == rhs.evaluationReasons
-            && lhs.maxCachedUsers == rhs.maxCachedUsers
+            && lhs.maxCachedContexts == rhs.maxCachedContexts
             && lhs.diagnosticOptOut == rhs.diagnosticOptOut
             && lhs.diagnosticRecordingInterval == rhs.diagnosticRecordingInterval
             && lhs.wrapperName == rhs.wrapperName
             && lhs.wrapperVersion == rhs.wrapperVersion
             && lhs.additionalHeaders == rhs.additionalHeaders
-            && lhs.autoAliasingOptOut == rhs.autoAliasingOptOut
     }
 }
 

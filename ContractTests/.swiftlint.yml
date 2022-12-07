@@ -1,6 +1,9 @@
+# See test subconfiguration at `LaunchDarkly/LaunchDarklyTests/.swiftlint.yml`
+
 disabled_rules:
+  - cyclomatic_complexity
   - line_length
-  - trailing_whitespace
+  - todo
 
 opt_in_rules:
   - contains_over_filter_count
@@ -26,8 +29,8 @@ included:
 excluded:
 
 function_body_length:
-  warning: 50
-  error: 70
+  warning: 70
+  error: 90
 
 type_body_length:
   warning: 300
@@ -39,7 +42,7 @@ file_length:
 
 identifier_name:
   min_length: # only min_length
-    warning: 3 # only warning
+    warning: 2 # only warning
   max_length:
     warning: 50
     error: 60
@@ -53,5 +56,13 @@ identifier_name:
     - tag
     - lhs
     - rhs
+
+trailing_whitespace:
+  severity: error
+
+missing_docs:
+  error:
+    - open
+    - public
 
 reporter: "xcode"

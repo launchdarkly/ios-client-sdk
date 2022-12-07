@@ -16,22 +16,22 @@ final class FlagRequestTrackerSpec: XCTestCase {
     func testTrackRequestInitial() {
         let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
         var flagRequestTracker = FlagRequestTracker()
-        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true)
+        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters.count, 1)
         let counter = FlagCounter()
-        counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true)
+        counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters["bool-flag"], counter)
     }
 
     func testTrackRequestSameFlagKey() {
         let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
         var flagRequestTracker = FlagRequestTracker()
-        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true)
-        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true)
+        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
+        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters.count, 1)
         let counter = FlagCounter()
-        counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true)
-        counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true)
+        counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
+        counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters["bool-flag"], counter)
     }
 
@@ -39,20 +39,20 @@ final class FlagRequestTrackerSpec: XCTestCase {
         let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
         let secondFlag = FeatureFlag(flagKey: "alt-flag", variation: 2, version: 6, flagVersion: 3)
         var flagRequestTracker = FlagRequestTracker()
-        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true)
-        flagRequestTracker.trackRequest(flagKey: "alt-flag", reportedValue: true, featureFlag: secondFlag, defaultValue: false)
+        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
+        flagRequestTracker.trackRequest(flagKey: "alt-flag", reportedValue: true, featureFlag: secondFlag, defaultValue: false, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters.count, 2)
         let counter1 = FlagCounter()
-        counter1.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true)
+        counter1.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         let counter2 = FlagCounter()
-        counter2.trackRequest(reportedValue: true, featureFlag: secondFlag, defaultValue: false)
+        counter2.trackRequest(reportedValue: true, featureFlag: secondFlag, defaultValue: false, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters["bool-flag"], counter1)
         XCTAssertEqual(flagRequestTracker.flagCounters["alt-flag"], counter2)
     }
 
     func testHasLoggedRequests() {
         var flagRequestTracker = FlagRequestTracker()
-        flagRequestTracker.trackRequest(flagKey: "test-key", reportedValue: nil, featureFlag: FeatureFlag(flagKey: "test-key"), defaultValue: nil)
+        flagRequestTracker.trackRequest(flagKey: "test-key", reportedValue: nil, featureFlag: FeatureFlag(flagKey: "test-key"), defaultValue: nil, context: LDContext.stub())
         XCTAssert(flagRequestTracker.hasLoggedRequests)
     }
 }

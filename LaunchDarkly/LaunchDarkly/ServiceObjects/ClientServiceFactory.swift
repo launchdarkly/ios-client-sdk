@@ -3,9 +3,9 @@ import LDSwiftEventSource
 
 protocol ClientServiceCreating {
     func makeKeyedValueCache(cacheKey: String?) -> KeyedValueCaching
-    func makeFeatureFlagCache(mobileKey: String, maxCachedUsers: Int) -> FeatureFlagCaching
+    func makeFeatureFlagCache(mobileKey: String, maxCachedContexts: Int) -> FeatureFlagCaching
     func makeCacheConverter() -> CacheConverting
-    func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider
+    func makeDarklyServiceProvider(config: LDConfig, context: LDContext) -> DarklyServiceProvider
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing
     func makeFlagSynchronizer(streamingMode: LDStreamingMode,
                               pollingInterval: TimeInterval,
@@ -29,16 +29,16 @@ final class ClientServiceFactory: ClientServiceCreating {
         UserDefaults(suiteName: cacheKey)!
     }
 
-    func makeFeatureFlagCache(mobileKey: MobileKey, maxCachedUsers: Int) -> FeatureFlagCaching {
-        FeatureFlagCache(serviceFactory: self, mobileKey: mobileKey, maxCachedUsers: maxCachedUsers)
+    func makeFeatureFlagCache(mobileKey: MobileKey, maxCachedContexts: Int) -> FeatureFlagCaching {
+        FeatureFlagCache(serviceFactory: self, mobileKey: mobileKey, maxCachedContexts: maxCachedContexts)
     }
 
     func makeCacheConverter() -> CacheConverting {
         CacheConverter()
     }
 
-    func makeDarklyServiceProvider(config: LDConfig, user: LDUser) -> DarklyServiceProvider {
-        DarklyService(config: config, user: user, serviceFactory: self)
+    func makeDarklyServiceProvider(config: LDConfig, context: LDContext) -> DarklyServiceProvider {
+        DarklyService(config: config, context: context, serviceFactory: self)
     }
 
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing {
@@ -65,11 +65,11 @@ final class ClientServiceFactory: ClientServiceCreating {
         EventReporter(service: service, onSyncComplete: onSyncComplete)
     }
 
-    func makeStreamingProvider(url: URL, 
-                               httpHeaders: [String: String], 
+    func makeStreamingProvider(url: URL,
+                               httpHeaders: [String: String],
                                connectMethod: String,
-                               connectBody: Data?, 
-                               handler: EventHandler, 
+                               connectBody: Data?,
+                               handler: EventHandler,
                                delegate: RequestHeaderTransform?,
                                errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         var config: EventSource.Config = EventSource.Config(handler: handler, url: url)
@@ -92,7 +92,7 @@ final class ClientServiceFactory: ClientServiceCreating {
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling {
         Throttler(environmentReporter: environmentReporter)
     }
-    
+
     func makeConnectionInformation() -> ConnectionInformation {
         ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
     }

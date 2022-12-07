@@ -26,6 +26,6 @@ let package = Package(
                 .product(name: "LaunchDarkly", package: "LaunchDarkly"),
                 .product(name: "Vapor", package: "vapor")
             ],
-            path: "Source"),
+            path: "Source")
     ],
     swiftLanguageVersions: [.v5])

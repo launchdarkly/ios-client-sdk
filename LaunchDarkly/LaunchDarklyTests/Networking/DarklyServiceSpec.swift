@@ -6,9 +6,9 @@ import LDSwiftEventSource
 @testable import LaunchDarkly
 
 final class DarklyServiceSpec: QuickSpec {
-    
+
     typealias ServiceResponses = (data: Data?, urlResponse: URLResponse?, error: Error?)
-    
+
     struct Constants {
         static let eventCount = 3
         static let useGetMethod = false
@@ -16,7 +16,7 @@ final class DarklyServiceSpec: QuickSpec {
     }
 
     struct TestContext {
-        let user = LDUser.stub()
+        let context = LDContext.stub()
         var config: LDConfig!
         var serviceMock: DarklyServiceMock!
         var serviceFactoryMock: ClientServiceMockFactory = ClientServiceMockFactory()
@@ -32,9 +32,9 @@ final class DarklyServiceSpec: QuickSpec {
             config.useReport = useReport
             config.diagnosticOptOut = diagnosticOptOut
             serviceMock = DarklyServiceMock(config: config)
-            service = DarklyService(config: config, user: user, serviceFactory: serviceFactoryMock)
+            service = DarklyService(config: config, context: context, serviceFactory: serviceFactoryMock)
             httpHeaders = HTTPHeaders(config: config, environmentReporter: config.environmentReporter)
-        }   
+        }
 
         func runStubbedGet(statusCode: Int, featureFlags: [LDFlagKey: FeatureFlag]? = nil, flagResponseEtag: String? = nil) {
             serviceMock.stubFlagRequest(statusCode: statusCode, useReport: config.useReport, flagResponseEtag: flagResponseEtag)
@@ -45,7 +45,7 @@ final class DarklyServiceSpec: QuickSpec {
             }
         }
     }
-    
+
     override func spec() {
         getFeatureFlagsSpec()
         flagRequestEtagSpec()
@@ -106,12 +106,12 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(reportRequestCount) == 0
                         }
                         it("creates a GET request") {
-                            // GET request url has the form https://<host>/msdk/evalx/users/<base64encodedUser>
+                            // GET request url has the form https://<host>/msdk/evalx/contexts/<base64encodedContext>
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
-                                let expectedUser = encodeToLDValue(testContext.user, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])
-                                expect(urlRequest?.url?.lastPathComponent.jsonValue) == expectedUser
+                                let expectedContext = encodeToLDValue(testContext.context, userInfo: [LDContext.UserInfoKeys.includePrivateAttributes: true])
+                                expect(urlRequest?.url?.lastPathComponent.jsonValue) == expectedContext
                             } else {
                                 fail("request path is missing")
                             }
@@ -159,12 +159,12 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(reportRequestCount) == 0
                         }
                         it("creates a GET request") {
-                            // GET request url has the form https://<host>/msdk/evalx/users/<base64encodedUser>
+                            // GET request url has the form https://<host>/msdk/evalx/contexts/<base64encodedContext>
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
-                                let expectedUser = encodeToLDValue(testContext.user, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])
-                                expect(urlRequest?.url?.lastPathComponent.jsonValue) == expectedUser
+                                let expectedContext = encodeToLDValue(testContext.context, userInfo: [LDContext.UserInfoKeys.includePrivateAttributes: true])
+                                expect(urlRequest?.url?.lastPathComponent.jsonValue) == expectedContext
                             } else {
                                 fail("request path is missing")
                             }
@@ -273,7 +273,7 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(reportRequestCount) == 1
                         }
                         it("creates a REPORT request") {
-                            // REPORT request url has the form https://<host>/msdk/evalx/user; httpBody contains the user dictionary
+                            // REPORT request url has the form https://<host>/msdk/evalx/context; httpBody contains the context dictionary
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasSuffix(DarklyService.FlagRequestPath.report)).to(beTrue())
@@ -325,7 +325,7 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(reportRequestCount) == 1
                         }
                         it("creates a REPORT request") {
-                            // REPORT request url has the form https://<host>/msdk/evalx/user; httpBody contains the user dictionary
+                            // REPORT request url has the form https://<host>/msdk/evalx/context; httpBody contains the context dictionary
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasSuffix(DarklyService.FlagRequestPath.report)).to(beTrue())
@@ -538,8 +538,8 @@ final class DarklyServiceSpec: QuickSpec {
                     let receivedArguments = testContext.serviceFactoryMock.makeStreamingProviderReceivedArguments
                     expect(receivedArguments!.url.host) == testContext.config.streamUrl.host
                     expect(receivedArguments!.url.pathComponents.contains(DarklyService.StreamRequestPath.meval)).to(beTrue())
-                    let expectedUser = encodeToLDValue(testContext.user, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])
-                    expect(receivedArguments!.url.lastPathComponent.jsonValue) == expectedUser
+                    let expectedContext = encodeToLDValue(testContext.context, userInfo: [LDContext.UserInfoKeys.includePrivateAttributes: true])
+                    expect(receivedArguments!.url.lastPathComponent.jsonValue) == expectedContext
                     expect(receivedArguments!.httpHeaders).toNot(beEmpty())
                     expect(receivedArguments!.connectMethod).to(be("GET"))
                     expect(receivedArguments!.connectBody).to(beNil())
@@ -559,8 +559,8 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(receivedArguments!.url.lastPathComponent) == DarklyService.StreamRequestPath.meval
                     expect(receivedArguments!.httpHeaders).toNot(beEmpty())
                     expect(receivedArguments!.connectMethod) == DarklyService.HTTPRequestMethod.report
-                    let expectedUser = encodeToLDValue(testContext.user, userInfo: [LDUser.UserInfoKeys.includePrivateAttributes: true])
-                    expect(try? JSONDecoder().decode(LDValue.self, from: receivedArguments!.connectBody!)) == expectedUser
+                    let expectedContext = encodeToLDValue(testContext.context, userInfo: [LDContext.UserInfoKeys.includePrivateAttributes: true])
+                    expect(try? JSONDecoder().decode(LDValue.self, from: receivedArguments!.connectBody!)) == expectedContext
                 }
             }
         }
@@ -590,7 +590,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 it("makes a valid request") {
                     expect(eventRequest).toNot(beNil())
-                    expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema3
+                    expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema4
                     expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventPayloadIDHeader]?.count) == 36
                 }
                 it("calls completion with data, response, and no error") {
@@ -612,7 +612,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 it("makes a valid request") {
                     expect(eventRequest).toNot(beNil())
-                    expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema3
+                    expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventSchema]) == HTTPHeaders.HeaderValue.eventSchema4
                     expect(eventRequest?.allHTTPHeaderFields?[HTTPHeaders.HeaderKey.eventPayloadIDHeader]?.count) == 36
                 }
                 it("calls completion with error and no data or response") {
