@@ -17,7 +17,7 @@
     <a title="LDUser Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 7.0.0 Docs</a> (94% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 8.0.0 Docs</a> (92% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -52,7 +52,19 @@
                 <a href="../Structs/LDConfig/Minima.html">– Minima</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/LDContext.html">LDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDContextBuilder.html">LDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/LDUser.html">LDUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/Reference.html">Reference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
@@ -106,12 +118,6 @@
             <a href="../Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Classes/UserAttribute.html">UserAttribute</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
@@ -135,10 +141,16 @@
                 <a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/ObjcLDUser.html">ObjcLDUser</a>
+                <a href="../Classes/ObjcLDReference.html">ObjcLDReference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContext.html">ObjcLDContext</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDUser.html">ObjcLDUser</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
@@ -183,6 +195,46 @@
             </ul>
           </li>
           <li class="nav-group-name">
+            <a href="../Other%20Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ContextBuilderResult.html">ContextBuilderResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDApplicationInfo.html">ObjcLDApplicationInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContextBuilder.html">ObjcLDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDMultiContextBuilder.html">ObjcLDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UserAttribute.html">UserAttribute</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/ContextBuilderError.html">ContextBuilderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Kind.html">Kind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ReferenceError.html">ReferenceError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
             <a href="../Other%20Structs.html">Other Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
@@ -205,16 +257,8 @@
               </div>
             <p>LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK.</p>
 
-<p>For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app,
-information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected.
-Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
-
-<p>The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided
-the <code><a href="../Classes/LDClient.html">LDClient</a></code> is online and can establish a connection with LaunchDarkly servers, cached information will only be used
-a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The
-SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are
-overwritten by a different user&rsquo;s feature flags, or until the user removes the app from the device. The SDK does not
-cache user information collected.</p>
+<p>The usage of LDUser is no longer recommended and is retained only to ease the adoption of the <code><a href="../Structs/LDContext.html">LDContext</a></code> class. New
+code using this SDK should make use of the <code><a href="../Structs/LDContextBuilder.html">LDContextBuilder</a></code> to construct an equivalent <code><a href="../Enums/Kind.html#/s:12LaunchDarkly4KindO4useryA2CmF">Kind.user</a></code> kind context.</p>
 
           </section>
           <section class="section task-group-section">
@@ -241,33 +285,6 @@ cache user information collected.</p>
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">key</span><span class="p">:</span> <span class="kt">String</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly6LDUserV9secondarySSSgvp"></a>
-                    <a name="//apple_ref/swift/Property/secondary" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly6LDUserV9secondarySSSgvp">secondary</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>The secondary key for the user. Read the <a href="https://docs.launchdarkly.com/home/flags/rollouts">documentation</a> for more information on it&rsquo;s use for percentage rollout bucketing.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">secondary</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
 
                         </div>
                       </div>
@@ -503,45 +520,14 @@ cache user information collected.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV3keySSvp">key</a></code> to set this attribute. isAnonymous cannot be made private. (Default: true)</p>
+                        <p>Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV3keySSvp">key</a></code> to set this attribute. isAnonymous cannot be made private. (Default: false)</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isAnonymous</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly6LDUserV19isAnonymousNullableSbSgvp"></a>
-                    <a name="//apple_ref/swift/Property/isAnonymousNullable" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly6LDUserV19isAnonymousNullableSbSgvp">isAnonymousNullable</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Whether or not the user is anonymous, if that has been specified (or set due to the lack of a <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV3keySSvp">key</a></code> property).</p>
-
-<p>Although the <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV11isAnonymousSbvp">isAnonymous</a></code> property defaults to <code>false</code> in terms of LaunchDarkly&rsquo;s indexing behavior, for historical
-reasons flag evaluation may behave differently if the value is explicitly set to <code>false</code> verses being omitted. This
-field allows treating the property as optional for consisent evaluation with other LaunchDarkly SDKs.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isAnonymousNullable</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isAnonymous</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -563,8 +549,8 @@ field allows treating the property as optional for consisent evaluation with oth
                       <div class="abstract">
                         <p>Client app defined privateAttributes for the user.
 The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
-This attribute is ignored if <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">LDConfig.allUserAttributesPrivate</a></code> is true. Combined with <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSayAA0E9AttributeCGvp">LDConfig.privateUserAttributes</a></code>. The SDK considers attributes appearing in either list as private. Client apps may define most built-in attributes and all top level <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSAA7LDValueOGvp">custom</a></code> dictionary keys here. (Default: []])
-See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">LDConfig.allUserAttributesPrivate</a></code> and <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSayAA0E9AttributeCGvp">LDConfig.privateUserAttributes</a></code>.</p>
+This attribute is ignored if <code>LDConfig.allUserAttributesPrivate</code> is true. Combined with <code>LDConfig.privateUserAttributes</code>. The SDK considers attributes appearing in either list as private. Client apps may define most built-in attributes and all top level <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSAA7LDValueOGvp">custom</a></code> dictionary keys here. (Default: []])
+See Also: <code>LDConfig.allUserAttributesPrivate</code> and <code>LDConfig.privateUserAttributes</code>.</p>
 
                       </div>
                       <div class="declaration">
@@ -581,9 +567,9 @@ See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24a
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly6LDUserV3key4name9firstName04lastG07country9ipAddress5email6avatar6custom11isAnonymous17privateAttributes9secondaryACSSSg_A7PSDySSAA7LDValueOGSgSbSgSayAA13UserAttributeCGSgAPtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(key:name:firstName:lastName:country:ipAddress:email:avatar:custom:isAnonymous:privateAttributes:secondary:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly6LDUserV3key4name9firstName04lastG07country9ipAddress5email6avatar6custom11isAnonymous17privateAttributes9secondaryACSSSg_A7PSDySSAA7LDValueOGSgSbSgSayAA13UserAttributeCGSgAPtcfc">init(key:<wbr>name:<wbr>firstName:<wbr>lastName:<wbr>country:<wbr>ipAddress:<wbr>email:<wbr>avatar:<wbr>custom:<wbr>isAnonymous:<wbr>privateAttributes:<wbr>secondary:<wbr>)</a>
+                    <a name="/s:12LaunchDarkly6LDUserV3key4name9firstName04lastG07country9ipAddress5email6avatar6custom11isAnonymous17privateAttributesACSSSg_A7OSDySSAA7LDValueOGSgSbSgSayAA13UserAttributeCGSgtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(key:name:firstName:lastName:country:ipAddress:email:avatar:custom:isAnonymous:privateAttributes:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly6LDUserV3key4name9firstName04lastG07country9ipAddress5email6avatar6custom11isAnonymous17privateAttributesACSSSg_A7OSDySSAA7LDValueOGSgSbSgSayAA13UserAttributeCGSgtcfc">init(key:<wbr>name:<wbr>firstName:<wbr>lastName:<wbr>country:<wbr>ipAddress:<wbr>email:<wbr>avatar:<wbr>custom:<wbr>isAnonymous:<wbr>privateAttributes:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -608,8 +594,7 @@ See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24a
             <span class="nv">avatar</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
             <span class="nv">custom</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">:</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
             <span class="nv">isAnonymous</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-            <span class="nv">privateAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Classes/UserAttribute.html">UserAttribute</a></span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span>
-            <span class="nv">secondary</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+            <span class="nv">privateAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Classes/UserAttribute.html">UserAttribute</a></span><span class="p">]?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -746,18 +731,6 @@ See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24a
                               <td>
                                 <div>
                                   <p>Client app defined privateAttributes for the user. (Default: nil)</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>secondary</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>Secondary attribute value. (Default: nil)</p>
                                 </div>
                               </td>
                             </tr>

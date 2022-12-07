@@ -17,7 +17,7 @@
     <a title="ObjcLDConfig Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 7.0.0 Docs</a> (94% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 8.0.0 Docs</a> (92% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -52,7 +52,19 @@
                 <a href="../Structs/LDConfig/Minima.html">– Minima</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/LDContext.html">LDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDContextBuilder.html">LDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/LDUser.html">LDUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/Reference.html">Reference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
@@ -106,12 +118,6 @@
             <a href="../Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Classes/UserAttribute.html">UserAttribute</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
@@ -135,10 +141,16 @@
                 <a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/ObjcLDUser.html">ObjcLDUser</a>
+                <a href="../Classes/ObjcLDReference.html">ObjcLDReference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContext.html">ObjcLDContext</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDUser.html">ObjcLDUser</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
@@ -179,6 +191,46 @@
               </li>
               <li class="nav-group-task">
                 <a href="../licensetxt.html">LICENSE.txt</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ContextBuilderResult.html">ContextBuilderResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDApplicationInfo.html">ObjcLDApplicationInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContextBuilder.html">ObjcLDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDMultiContextBuilder.html">ObjcLDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UserAttribute.html">UserAttribute</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/ContextBuilderError.html">ContextBuilderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Kind.html">Kind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ReferenceError.html">ReferenceError</a>
               </li>
             </ul>
           </li>
@@ -467,6 +519,34 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDConfig(py)applicationInfo"></a>
+                    <a name="//apple_ref/swift/Property/applicationInfo" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)applicationInfo">applicationInfo</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The application info meta data.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+<span class="kd">public</span> <span class="k">var</span> <span class="nv">applicationInfo</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDApplicationInfo.html">ObjcLDApplicationInfo</a></span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/c:@M@LaunchDarkly@objc(cs)LDConfig(py)minFlagPollingInterval"></a>
                     <a name="//apple_ref/swift/Property/minFlagPollingInterval" class="dashAnchor"></a>
                     <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)minFlagPollingInterval">minFlagPollingInterval</a>
@@ -607,9 +687,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDConfig(py)allUserAttributesPrivate"></a>
-                    <a name="//apple_ref/swift/Property/allUserAttributesPrivate" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)allUserAttributesPrivate">allUserAttributesPrivate</a>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDConfig(py)allContextAttributesPrivate"></a>
+                    <a name="//apple_ref/swift/Property/allContextAttributesPrivate" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)allContextAttributesPrivate">allContextAttributesPrivate</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -617,13 +697,13 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Treat all user attributes as private for event reporting for all users.</p>
+                        <p>Treat all context attributes as private for event reporting for all contexts.</p>
 
 <p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
 
-<p>When YES, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. (Default: NO)</p>
+<p>When YES, ignores values in either LDConfig.privateContextAttributes or LDContext.privateAttributes. (Default: NO)</p>
 
-<p>See Also: <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateUserAttributes">privateUserAttributes</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code>)</p>
+<p>See Also: <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateContextAttributes">privateContextAttributes</a></code> and <code>LDContext.privateAttributes</code> (<code>ObjcLDContext.privateAttributes</code>)</p>
 
                       </div>
                       <div class="declaration">
@@ -631,7 +711,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">var</span> <span class="nv">allUserAttributesPrivate</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+<span class="kd">public</span> <span class="k">var</span> <span class="nv">allContextAttributesPrivate</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -641,9 +721,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateUserAttributes"></a>
-                    <a name="//apple_ref/swift/Property/privateUserAttributes" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateUserAttributes">privateUserAttributes</a>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateContextAttributes"></a>
+                    <a name="//apple_ref/swift/Property/privateContextAttributes" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)privateContextAttributes">privateContextAttributes</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -651,13 +731,13 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>User attributes and top level custom dictionary keys to treat as private for event reporting for all users.</p>
+                        <p>Context attributes and top level custom dictionary keys to treat as private for event reporting for all contexts.</p>
 
 <p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
 
-<p>To set private user attributes for a specific user, see <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code>). (Default: <code>[]</code>)</p>
+<p>To set private context attributes for a specific context, see <code>LDContext.privateAttributes</code> (<code>ObjcLDContext.privateAttributes</code>). (Default: <code>[]</code>)</p>
 
-<p>See Also: <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)allUserAttributesPrivate">allUserAttributesPrivate</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code> (<code><a href="../Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code>).</p>
+<p>See Also: <code><a href="../Classes/ObjcLDConfig.html#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)allContextAttributesPrivate">allContextAttributesPrivate</a></code> and <code>LDContext.privateAttributes</code> (<code>ObjcLDContext.privateAttributes</code>).</p>
 
                       </div>
                       <div class="declaration">
@@ -665,7 +745,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">var</span> <span class="nv">privateUserAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+<span class="kd">public</span> <span class="k">var</span> <span class="nv">privateContextAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span><span class="p">]</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -694,34 +774,6 @@
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
 <span class="kd">public</span> <span class="k">var</span> <span class="nv">useReport</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDConfig(py)inlineUserInEvents"></a>
-                    <a name="//apple_ref/swift/Property/inlineUserInEvents" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)inlineUserInEvents">inlineUserInEvents</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Controls how the SDK reports the user in analytics event reports. When set to YES, event reports will contain the user attributes, except attributes marked as private. When set to NO, event reports will contain the user&rsquo;s key only, reducing the size of event reports. (Default: NO)</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">var</span> <span class="nv">inlineUserInEvents</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -787,9 +839,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDConfig(py)maxCachedUsers"></a>
-                    <a name="//apple_ref/swift/Property/maxCachedUsers" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)maxCachedUsers">maxCachedUsers</a>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDConfig(py)maxCachedContexts"></a>
+                    <a name="//apple_ref/swift/Property/maxCachedContexts" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDConfig(py)maxCachedContexts">maxCachedContexts</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -797,7 +849,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>An Integer that tells UserEnvironmentFlagCache the maximum number of users to locally cache. Can be set to -1 for unlimited cached users. (Default: 5)</p>
+                        <p>An Integer that tells ContextEnvironmentFlagCache the maximum number of contexts to locally cache. Can be set to -1 for unlimited cached contexts. (Default: 5)</p>
 
                       </div>
                       <div class="declaration">
@@ -805,7 +857,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">var</span> <span class="nv">maxCachedUsers</span><span class="p">:</span> <span class="kt">Int</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+<span class="kd">public</span> <span class="k">var</span> <span class="nv">maxCachedContexts</span><span class="p">:</span> <span class="kt">Int</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>

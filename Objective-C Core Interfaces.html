@@ -17,7 +17,7 @@
     <a title="Objective-C Core Interfaces  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 7.0.0 Docs</a> (94% documented)</p>
+        <p><a href="index.html">LaunchDarkly 8.0.0 Docs</a> (92% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -52,7 +52,19 @@
                 <a href="Structs/LDConfig/Minima.html">– Minima</a>
               </li>
               <li class="nav-group-task">
+                <a href="Structs/LDContext.html">LDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/LDContextBuilder.html">LDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Structs/LDUser.html">LDUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/Reference.html">Reference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
@@ -106,12 +118,6 @@
             <a href="Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="Classes/UserAttribute.html">UserAttribute</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
@@ -135,10 +141,16 @@
                 <a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/ObjcLDUser.html">ObjcLDUser</a>
+                <a href="Classes/ObjcLDReference.html">ObjcLDReference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDContext.html">ObjcLDContext</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDUser.html">ObjcLDUser</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/ObjcLDValue.html">ObjcLDValue</a>
@@ -183,6 +195,46 @@
             </ul>
           </li>
           <li class="nav-group-name">
+            <a href="Other%20Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/ContextBuilderResult.html">ContextBuilderResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDApplicationInfo.html">ObjcLDApplicationInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDContextBuilder.html">ObjcLDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDMultiContextBuilder.html">ObjcLDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/UserAttribute.html">UserAttribute</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Other%20Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Enums/ContextBuilderError.html">ContextBuilderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/Kind.html">Kind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/ReferenceError.html">ReferenceError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
             <a href="Other%20Structs.html">Other Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
@@ -214,18 +266,18 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a user (LDUser) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly&rsquo;s servers to get the feature flag values you set in the Dashboard.</p>
+                        <p>The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a context (LDContext) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly&rsquo;s servers to get the feature flag values you set in the Dashboard.</p>
 <h3 id='objc-classes' class='heading'>Objc Classes</h3>
 
-<p>The SDK creates an Objective-C native style API by wrapping Swift specific classes, properties, and methods into Objective-C wrapper classes prefixed by <code>Objc</code>. By defining Objective-C specific names, client apps written in Objective-C can use a native coding style, including using familiar LaunchDarkly SDK names like <code><a href="Classes/LDClient.html">LDClient</a></code>, <code><a href="Structs/LDConfig.html">LDConfig</a></code>, and <code><a href="Structs/LDUser.html">LDUser</a></code>. Objective-C developers should refer to the Objc documentation by following the Objc specific links following type, property, and method names.</p>
+<p>The SDK creates an Objective-C native style API by wrapping Swift specific classes, properties, and methods into Objective-C wrapper classes prefixed by <code>Objc</code>. By defining Objective-C specific names, client apps written in Objective-C can use a native coding style, including using familiar LaunchDarkly SDK names like <code><a href="Classes/LDClient.html">LDClient</a></code>, <code><a href="Structs/LDConfig.html">LDConfig</a></code>, and <code><a href="Structs/LDContext.html">LDContext</a></code>. Objective-C developers should refer to the Objc documentation by following the Objc specific links following type, property, and method names.</p>
 <h2 id='usage' class='heading'>Usage</h2>
 <h3 id='startup' class='heading'>Startup</h3>
 
 <ol>
-<li>To customize, configure a LDConfig (<code><a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a></code>) and LDUser (<code><a href="Classes/ObjcLDUser.html">ObjcLDUser</a></code>). Both give you additional control over the feature flags delivered to the LDClient. See <code><a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a></code> &amp; <code><a href="Classes/ObjcLDUser.html">ObjcLDUser</a></code> for more details.</li>
+<li>To customize, configure a LDConfig (<code><a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a></code>) and LDContext (<code>ObjcLDContxt</code>). Both give you additional control over the feature flags delivered to the LDClient. See <code><a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a></code> &amp; <code><a href="Classes/ObjcLDContext.html">ObjcLDContext</a></code> for more details.</li>
 <li>The mobileKey set into the <code><a href="Structs/LDConfig.html">LDConfig</a></code> comes from your LaunchDarkly Account settings (on the left, at the bottom). If you have multiple projects be sure to choose the correct Mobile key.</li>
-<li>Call <code>[ObjcLDClient startWithConfig: user: completion:]</code> (<code>ObjcLDClient.startWithConfig(_:config:user:completion:)</code>)</li>
-<li>If you do not pass in a LDUser, LDCLient will create a default for you.</li>
+<li>Call <code>[ObjcLDClient startWithConfig: context: completion:]</code> (<code>ObjcLDClient.startWithConfig(_:config:context:completion:)</code>)</li>
+<li>If you do not pass in a LDContext, LDCLient will create a default for you.</li>
 <li>The optional completion closure allows the LDClient to notify your app when it has gone online.</li>
 <li>Because the LDClient is a singleton, you do not have to keep a reference to it in your code.</li>
 </ol>
@@ -303,9 +355,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDUser"></a>
-                    <a name="//apple_ref/swift/Class/ObjcLDUser" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDUser">ObjcLDUser</a>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)Reference"></a>
+                    <a name="//apple_ref/swift/Class/ObjcLDReference" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)Reference">ObjcLDReference</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -313,20 +365,50 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK. For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app, information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected, which LaunchDarkly does not use except as the client directs to refine feature flags. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
+                        <p>Undocumented</p>
 
-<p>The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided the LDClient is online and can establish a connection with LaunchDarkly servers, cached information will only be used a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are overwritten by a different user&rsquo;s feature flags, or until the user removes the app from the device.</p>
-
-<p>The SDK does not cache user information collected, except for the user key. The user key is used to identify the cached feature flags for that user. Client app developers should use caution not to use sensitive user information as the user-key.</p>
-
-                        <a href="Classes/ObjcLDUser.html" class="slightly-smaller">See more</a>
+                        <a href="Classes/ObjcLDReference.html" class="slightly-smaller">See more</a>
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt"><a href="Structs/LDUser.html">LDUser</a></span><span class="p">)</span>
-<span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDUser</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt"><a href="Structs/Reference.html">Reference</a></span><span class="p">)</span>
+<span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDReference</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDContext"></a>
+                    <a name="//apple_ref/swift/Class/ObjcLDContext" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDContext">ObjcLDContext</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>LDContext is a collection of attributes that can be referenced in flag evaluations and analytics
+events.</p>
+
+<p>To create an LDContext of a single kind, such as a user, you may use <code><a href="Structs/LDContextBuilder.html">LDContextBuilder</a></code>.</p>
+
+<p>To create an LDContext with multiple kinds, use <code><a href="Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a></code>.</p>
+
+                        <a href="Classes/ObjcLDContext.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt"><a href="Structs/LDContext.html">LDContext</a></span><span class="p">)</span>
+<span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDContext</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
 
                         </div>
                       </div>
@@ -358,6 +440,38 @@
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt"><a href="Structs/LDChangedFlag.html">LDChangedFlag</a></span><span class="p">)</span>
 <span class="kd">public</span> <span class="kd">class</span> <span class="kt">ObjcLDChangedFlag</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@M@LaunchDarkly@objc(cs)LDUser"></a>
+                    <a name="//apple_ref/swift/Class/ObjcLDUser" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDUser">ObjcLDUser</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK.</p>
+
+<p>The usage of LDUser is no longer recommended and is retained only to ease the adoption of the <code><a href="Structs/LDContext.html">LDContext</a></code> class. New
+code using this SDK should make use of the <code><a href="Structs/LDContextBuilder.html">LDContextBuilder</a></code> to construct an equivalent <code><a href="Enums/Kind.html#/s:12LaunchDarkly4KindO4useryA2CmF">Kind.user</a></code> kind context.</p>
+
+                        <a href="Classes/ObjcLDUser.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt"><a href="Structs/LDUser.html">LDUser</a></span><span class="p">)</span>
+<span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDUser</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
 
                         </div>
                       </div>

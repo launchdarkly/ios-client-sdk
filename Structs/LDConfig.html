@@ -17,7 +17,7 @@
     <a title="LDConfig Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 7.0.0 Docs</a> (94% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 8.0.0 Docs</a> (92% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -52,7 +52,19 @@
                 <a href="../Structs/LDConfig/Minima.html">– Minima</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/LDContext.html">LDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDContextBuilder.html">LDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/LDUser.html">LDUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/Reference.html">Reference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
@@ -106,12 +118,6 @@
             <a href="../Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Classes/UserAttribute.html">UserAttribute</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
@@ -135,10 +141,16 @@
                 <a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/ObjcLDUser.html">ObjcLDUser</a>
+                <a href="../Classes/ObjcLDReference.html">ObjcLDReference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContext.html">ObjcLDContext</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDUser.html">ObjcLDUser</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
@@ -179,6 +191,46 @@
               </li>
               <li class="nav-group-task">
                 <a href="../licensetxt.html">LICENSE.txt</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ContextBuilderResult.html">ContextBuilderResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDApplicationInfo.html">ObjcLDApplicationInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContextBuilder.html">ObjcLDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDMultiContextBuilder.html">ObjcLDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UserAttribute.html">UserAttribute</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/ContextBuilderError.html">ContextBuilderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Kind.html">Kind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ReferenceError.html">ReferenceError</a>
               </li>
             </ul>
           </li>
@@ -622,9 +674,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp"></a>
-                    <a name="//apple_ref/swift/Property/allUserAttributesPrivate" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">allUserAttributesPrivate</a>
+                    <a name="/s:12LaunchDarkly8LDConfigV27allContextAttributesPrivateSbvp"></a>
+                    <a name="//apple_ref/swift/Property/allContextAttributesPrivate" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDConfigV27allContextAttributesPrivateSbvp">allContextAttributesPrivate</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -632,20 +684,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Treat all user attributes as private for event reporting for all users.</p>
+                        <p>Treat all context attributes as private for event reporting for all contexts.</p>
 
 <p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
 
-<p>When true, ignores values in either LDConfig.privateUserAttributes or LDUser.privateAttributes. (Default: false)</p>
+<p>When true, ignores values in either LDConfig.privateContextAttributes or LDContext.privateAttributes. (Default: false)</p>
 
-<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSayAA0E9AttributeCGvp">privateUserAttributes</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code></p>
+<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24privateContextAttributesSayAA9ReferenceVGvp">privateContextAttributes</a></code> and <code>LDContext.privateAttributes</code></p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">allUserAttributesPrivate</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">allContextAttributesPrivate</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -655,9 +707,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly8LDConfigV21privateUserAttributesSayAA0E9AttributeCGvp"></a>
-                    <a name="//apple_ref/swift/Property/privateUserAttributes" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDConfigV21privateUserAttributesSayAA0E9AttributeCGvp">privateUserAttributes</a>
+                    <a name="/s:12LaunchDarkly8LDConfigV24privateContextAttributesSayAA9ReferenceVGvp"></a>
+                    <a name="//apple_ref/swift/Property/privateContextAttributes" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDConfigV24privateContextAttributesSayAA9ReferenceVGvp">privateContextAttributes</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -665,20 +717,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>User attributes and top level custom dictionary keys to treat as private for event reporting for all users.</p>
+                        <p>Context attributes and top level custom dictionary keys to treat as private for event reporting for all contexts.</p>
 
 <p>The SDK will not include private attribute values in analytics events, but private attribute names will be sent.</p>
 
-<p>To set private user attributes for a specific user, see <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code>. (Default: nil)</p>
+<p>To set private context attributes for a specific context, see <code>LDContext.privateAttributes</code>. (Default: nil)</p>
 
-<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV24allUserAttributesPrivateSbvp">allUserAttributesPrivate</a></code> and <code><a href="../Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code>.</p>
+<p>See Also: <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV27allContextAttributesPrivateSbvp">allContextAttributesPrivate</a></code> and <code>LDContext.privateAttributes</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">privateUserAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Classes/UserAttribute.html">UserAttribute</a></span><span class="p">]</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">privateContextAttributes</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Structs/Reference.html">Reference</a></span><span class="p">]</span></code></pre>
 
                         </div>
                       </div>
@@ -709,33 +761,6 @@ mode. When false the SDK uses GET for these requests. Do not use unless advised 
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">useReport</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly8LDConfigV18inlineUserInEventsSbvp"></a>
-                    <a name="//apple_ref/swift/Property/inlineUserInEvents" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDConfigV18inlineUserInEventsSbvp">inlineUserInEvents</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Controls how the SDK reports the user in analytics event reports. When set to true, event reports will contain the user attributes, except attributes marked as private. When set to false, event reports will contain the user&rsquo;s key only, reducing the size of event reports. (Default: false)</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">inlineUserInEvents</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
@@ -799,9 +824,9 @@ mode. When false the SDK uses GET for these requests. Do not use unless advised 
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly8LDConfigV14maxCachedUsersSivp"></a>
-                    <a name="//apple_ref/swift/Property/maxCachedUsers" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDConfigV14maxCachedUsersSivp">maxCachedUsers</a>
+                    <a name="/s:12LaunchDarkly8LDConfigV17maxCachedContextsSivp"></a>
+                    <a name="//apple_ref/swift/Property/maxCachedContexts" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDConfigV17maxCachedContextsSivp">maxCachedContexts</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -809,14 +834,14 @@ mode. When false the SDK uses GET for these requests. Do not use unless advised 
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>An Integer that tells UserEnvironmentFlagCache the maximum number of users to locally cache. Can be set to -1 for unlimited cached users.</p>
+                        <p>An Integer that tells ContextEnvironmentFlagCache the maximum number of contexts to locally cache. Can be set to -1 for unlimited cached contexts.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">maxCachedUsers</span><span class="p">:</span> <span class="kt">Int</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">maxCachedContexts</span><span class="p">:</span> <span class="kt">Int</span></code></pre>
 
                         </div>
                       </div>
@@ -1035,33 +1060,6 @@ mode. When false the SDK uses GET for these requests. Do not use unless advised 
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">objcLdConfig</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly8LDConfigV18autoAliasingOptOutSbvp"></a>
-                    <a name="//apple_ref/swift/Property/autoAliasingOptOut" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDConfigV18autoAliasingOptOutSbvp">autoAliasingOptOut</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>should anonymous users automatically be aliased when identifying</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">autoAliasingOptOut</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>

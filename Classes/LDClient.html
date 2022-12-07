@@ -17,7 +17,7 @@
     <a title="LDClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 7.0.0 Docs</a> (94% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 8.0.0 Docs</a> (92% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -52,7 +52,19 @@
                 <a href="../Structs/LDConfig/Minima.html">– Minima</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Structs/LDContext.html">LDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDContextBuilder.html">LDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Structs/LDUser.html">LDUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/Reference.html">Reference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
@@ -106,12 +118,6 @@
             <a href="../Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Classes/UserAttribute.html">UserAttribute</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
@@ -135,10 +141,16 @@
                 <a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/ObjcLDUser.html">ObjcLDUser</a>
+                <a href="../Classes/ObjcLDReference.html">ObjcLDReference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContext.html">ObjcLDContext</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDUser.html">ObjcLDUser</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
@@ -183,6 +195,46 @@
             </ul>
           </li>
           <li class="nav-group-name">
+            <a href="../Other%20Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ContextBuilderResult.html">ContextBuilderResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDApplicationInfo.html">ObjcLDApplicationInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContextBuilder.html">ObjcLDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDMultiContextBuilder.html">ObjcLDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UserAttribute.html">UserAttribute</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/ContextBuilderError.html">ContextBuilderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Kind.html">Kind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ReferenceError.html">ReferenceError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
             <a href="../Other%20Structs.html">Other Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
@@ -203,20 +255,20 @@
 
                 </div>
               </div>
-            <p>The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a user (LDUser) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly&rsquo;s servers to get the feature flag values you set in the Dashboard.</p>
+            <p>The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a contexts (LDContext) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly&rsquo;s servers to get the feature flag values you set in the Dashboard.</p>
 <h2 id='usage' class='heading'>Usage</h2>
 <h3 id='startup' class='heading'>Startup</h3>
 
 <ol>
-<li>To customize, configure a <code><a href="../Structs/LDConfig.html">LDConfig</a></code> and <code><a href="../Structs/LDUser.html">LDUser</a></code>. The <code>config</code> is required, the <code>user</code> is optional. Both give you additional control over the feature flags delivered to the LDClient. See <code><a href="../Structs/LDConfig.html">LDConfig</a></code> &amp; <code><a href="../Structs/LDUser.html">LDUser</a></code> for more details.
+<li>To customize, configure a <code><a href="../Structs/LDConfig.html">LDConfig</a></code> and <code><a href="../Structs/LDContext.html">LDContext</a></code>. The <code>config</code> is required, the <code>context</code> is optional. Both give you additional control over the feature flags delivered to the LDClient. See <code><a href="../Structs/LDConfig.html">LDConfig</a></code> &amp; <code><a href="../Structs/LDContext.html">LDContext</a></code> for more details.
 
 <ul>
 <li>The mobileKey set into the <code><a href="../Structs/LDConfig.html">LDConfig</a></code> comes from your LaunchDarkly Account settings. If you have multiple projects be sure to choose the correct Mobile key.</li>
 </ul></li>
-<li>Call <code>LDClient.start(config: user: completion:)</code>
+<li>Call <code>LDClient.start(config: context: completion:)</code>
 
 <ul>
-<li>If you do not pass in a LDUser, LDClient will create a default for you.</li>
+<li>If you do not pass in a LDContext, LDClient will create a default for you.</li>
 <li>The optional completion closure allows the LDClient to notify your app when it received flag values.</li>
 </ul></li>
 <li>Because LDClient instances are stored statically, you do not have to keep a reference to it in your code. Get the primary instances with <code>LDClient.get()</code></li>
@@ -338,7 +390,7 @@
 
 <p>When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.</p>
 
-<p>The SDK protects itself from multiple rapid calls to setOnline(true) by enforcing an increasing delay (called <em>throttling</em>) each time setOnline(true) is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the <code>setOnline(true)</code> will proceed, assuming that the client app has not called <code>setOnline(false)</code> during the delay. Therefore a call to setOnline(true) may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid setOnline(true) calls. Calls to setOnline(false) are not throttled. Note that calls to <code>start(config: user: completion:)</code>, and setting the <code>config</code> or <code>user</code> can also call <code>setOnline(true)</code> under certain conditions. After the delay, the SDK resets and the client app can make a susequent call to setOnline(true) without being throttled.</p>
+<p>The SDK protects itself from multiple rapid calls to setOnline(true) by enforcing an increasing delay (called <em>throttling</em>) each time setOnline(true) is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the <code>setOnline(true)</code> will proceed, assuming that the client app has not called <code>setOnline(false)</code> during the delay. Therefore a call to setOnline(true) may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid setOnline(true) calls. Calls to setOnline(false) are not throttled. Note that calls to <code>start(config: context: completion:)</code>, and setting the <code>config</code> or <code>context</code> can also call <code>setOnline(true)</code> under certain conditions. After the delay, the SDK resets and the client app can make a susequent call to setOnline(true) without being throttled.</p>
 
 <p>Client apps can set a completion closure called when the setOnline call completes. For unthrottled <code>setOnline(true)</code> and all <code>setOnline(false)</code> calls, the SDK will call the closure immediately on completion of this method. For throttled <code>setOnline(true)</code> calls, the SDK will call the closure after the throttling delay at the completion of the setOnline method.</p>
 
@@ -448,9 +500,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly8LDClientC8identify4user10completionyAA6LDUserV_yycSgtF"></a>
-                    <a name="//apple_ref/swift/Method/identify(user:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC8identify4user10completionyAA6LDUserV_yycSgtF">identify(user:<wbr>completion:<wbr>)</a>
+                    <a name="/s:12LaunchDarkly8LDClientC8identify7context10completionyAA9LDContextV_yycSgtF"></a>
+                    <a name="//apple_ref/swift/Method/identify(context:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC8identify7context10completionyAA9LDContextV_yycSgtF">identify(context:<wbr>completion:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -458,20 +510,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The LDUser set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the user. See <code><a href="../Structs/LDUser.html">LDUser</a></code> for details about what information can be retained.</p>
+                        <p>The LDContext set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the context. See <code><a href="../Structs/LDContext.html">LDContext</a></code> for details about what information can be retained.</p>
 
-<p>Normally, the client app should create and set the LDUser and pass that into <code>start(config: user: completion:)</code>.</p>
+<p>Normally, the client app should create and set the LDContext and pass that into <code>start(config: context: completion:)</code>.</p>
 
-<p>The client app can change the active <code>user</code> by calling identify with a new or updated LDUser. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
+<p>The client app can change the active <code>context</code> by calling identify with a new or updated LDContext. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
 
-<p>When a new user is set, the LDClient goes offline and sets the new user. If the client was online when the new user was set, it goes online again, subject to a throttling delay if in force (see <code>setOnline(_: completion:)</code> for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new user are ready.</p>
+<p>When a new context is set, the LDClient goes offline and sets the new context. If the client was online when the new context was set, it goes online again, subject to a throttling delay if in force (see <code>setOnline(_: completion:)</code> for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">identify</span><span class="p">(</span><span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDUser.html">LDUser</a></span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">identify</span><span class="p">(</span><span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDContext.html">LDContext</a></span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -482,12 +534,12 @@
                             <tr>
                               <td>
                                 <code>
-                                <em>user</em>
+                                <em>context</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>The LDUser set with the desired user.</p>
+                                  <p>The LDContext set with the desired context.</p>
                                 </div>
                               </td>
                             </tr>
@@ -505,6 +557,35 @@
                             </tr>
                           </tbody>
                         </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC8identify4user10completionyAA6LDUserV_yycSgtF"></a>
+                    <a name="//apple_ref/swift/Method/identify(user:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC8identify4user10completionyAA6LDUserV_yycSgtF">identify(user:<wbr>completion:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deprecated identify method which accepts a legacy LDUser instead of an LDContext.</p>
+
+<p>This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC8identify7context10completionyAA9LDContextV_yycSgtF">identify(context:completion:)</a></code> for details.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">identify</span><span class="p">(</span><span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDUser.html">LDUser</a></span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
                       </div>
                     </section>
                   </div>
@@ -1070,71 +1151,6 @@ LDClient.get()?.track(key: "</span><span class="n">app</span><span class="o">-</
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly8LDClientC5alias7context15previousContextyAA6LDUserV_AHtF"></a>
-                    <a name="//apple_ref/swift/Method/alias(context:previousContext:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5alias7context15previousContextyAA6LDUserV_AHtF">alias(context:<wbr>previousContext:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Tells the SDK to generate an alias event.</p>
-
-<p>Associates two users for analytics purposes.</p>
-
-<p>This can be helpful in the situation where a person is represented by multiple
-LaunchDarkly users. This may happen, for example, when a person initially logs into
-an application&ndash; the person might be represented by an anonymous user prior to logging
-in and a different user after logging in, as denoted by a different user key.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">alias</span><span class="p">(</span><span class="n">context</span> <span class="nv">new</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDUser.html">LDUser</a></span><span class="p">,</span> <span class="n">previousContext</span> <span class="nv">old</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDUser.html">LDUser</a></span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>context</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>the user that will be aliased to</p>
-                                </div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>previousContext</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>the user that will be bound to the new context</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
                     <a name="/s:12LaunchDarkly8LDClientC5flushyyF"></a>
                     <a name="//apple_ref/swift/Method/flush()" class="dashAnchor"></a>
                     <a class="token" href="#/s:12LaunchDarkly8LDClientC5flushyyF">flush()</a>
@@ -1179,9 +1195,9 @@ sent, it only triggers a background task to send events immediately.</p>
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly8LDClientC5start6config4user10completionyAA8LDConfigV_AA6LDUserVSgyycSgtFZ"></a>
-                    <a name="//apple_ref/swift/Method/start(config:user:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5start6config4user10completionyAA8LDConfigV_AA6LDUserVSgyycSgtFZ">start(config:<wbr>user:<wbr>completion:<wbr>)</a>
+                    <a name="/s:12LaunchDarkly8LDClientC5start6config7context10completionyAA8LDConfigV_AA9LDContextVSgyycSgtFZ"></a>
+                    <a name="//apple_ref/swift/Method/start(config:context:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5start6config7context10completionyAA8LDConfigV_AA9LDContextVSgyycSgtFZ">start(config:<wbr>context:<wbr>completion:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1189,18 +1205,18 @@ sent, it only triggers a background task to send events immediately.</p>
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Starts the LDClient using the passed in <code>config</code> &amp; <code>user</code>. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
-Starting the LDClient means setting the <code>config</code> &amp; <code>user</code>, setting the client online if <code>config.startOnline</code> is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call <code>start</code>, no methods will work.
-If the <code>start</code> call omits the <code>user</code>, the LDClient uses a default <code><a href="../Structs/LDUser.html">LDUser</a></code>.
+                        <p>Starts the LDClient using the passed in <code>config</code> &amp; <code>context</code>. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+Starting the LDClient means setting the <code>config</code> &amp; <code>context</code>, setting the client online if <code>config.startOnline</code> is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call <code>start</code>, no methods will work.
+If the <code>start</code> call omits the <code>context</code>, the LDClient uses a default <code><a href="../Structs/LDContext.html">LDContext</a></code>.
 If the<code>start</code> call includes the optional <code>completion</code> closure, LDClient calls the <code>completion</code> closure when <code>setOnline(_: completion:)</code> embedded in the <code>init</code> method completes. This method listens for flag updates so the completion will only return once an update has occurred. The <code>start</code> call is subject to throttling delays, therefore the <code>completion</code> closure call may be delayed.
-Subsequent calls to this method cause the LDClient to return. Normally there should only be one call to start. To change <code>user</code>, use <code>identify</code>.</p>
+Subsequent calls to this method cause the LDClient to return. Normally there should only be one call to start. To change <code>context</code>, use <code>identify</code>.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">config</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDConfig.html">LDConfig</a></span><span class="p">,</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDUser.html">LDUser</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">config</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDConfig.html">LDConfig</a></span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDContext.html">LDContext</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1223,12 +1239,12 @@ Subsequent calls to this method cause the LDClient to return. Normally there sho
                             <tr>
                               <td>
                                 <code>
-                                <em>user</em>
+                                <em>context</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>The LDUser set with the desired user. If omitted, LDClient sets a default user. (Optional)</p>
+                                  <p>The LDContext set with the desired context. If omitted, LDClient sets a default context. (Optional)</p>
                                 </div>
                               </td>
                             </tr>
@@ -1253,9 +1269,38 @@ Subsequent calls to this method cause the LDClient to return. Normally there sho
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly8LDClientC5start6config4user0D11WaitSeconds10completionyAA8LDConfigV_AA6LDUserVSgSdySbcSgtFZ"></a>
-                    <a name="//apple_ref/swift/Method/start(config:user:startWaitSeconds:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5start6config4user0D11WaitSeconds10completionyAA8LDConfigV_AA6LDUserVSgSdySbcSgtFZ">start(config:<wbr>user:<wbr>startWaitSeconds:<wbr>completion:<wbr>)</a>
+                    <a name="/s:12LaunchDarkly8LDClientC5start6config4user10completionyAA8LDConfigV_AA6LDUserVSgyycSgtFZ"></a>
+                    <a name="//apple_ref/swift/Method/start(config:user:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5start6config4user10completionyAA8LDConfigV_AA6LDUserVSgyycSgtFZ">start(config:<wbr>user:<wbr>completion:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deprecated start method which accepts a legacy LDUser instead of an LDContext.</p>
+
+<p>This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC5start6config7context10completionyAA8LDConfigV_AA9LDContextVSgyycSgtFZ">start(config:context:completion:)</a></code> for details.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">config</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDConfig.html">LDConfig</a></span><span class="p">,</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDUser.html">LDUser</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC5start6config7context0D11WaitSeconds10completionyAA8LDConfigV_AA9LDContextVSgSdySbcSgtFZ"></a>
+                    <a name="//apple_ref/swift/Method/start(config:context:startWaitSeconds:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5start6config7context0D11WaitSeconds10completionyAA8LDConfigV_AA9LDContextVSgSdySbcSgtFZ">start(config:<wbr>context:<wbr>startWaitSeconds:<wbr>completion:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -1270,7 +1315,7 @@ Subsequent calls to this method cause the LDClient to return. Normally there sho
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">config</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDConfig.html">LDConfig</a></span><span class="p">,</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDUser.html">LDUser</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">startWaitSeconds</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">((</span><span class="n">_</span> <span class="nv">timedOut</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">config</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDConfig.html">LDConfig</a></span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDContext.html">LDContext</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">startWaitSeconds</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">((</span><span class="n">_</span> <span class="nv">timedOut</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -1293,12 +1338,12 @@ Subsequent calls to this method cause the LDClient to return. Normally there sho
                             <tr>
                               <td>
                                 <code>
-                                <em>user</em>
+                                <em>context</em>
                                 </code>
                               </td>
                               <td>
                                 <div>
-                                  <p>The LDUser set with the desired user. If omitted, LDClient sets a default user. (Optional)</p>
+                                  <p>The LDContext set with the desired context. If omitted, LDClient sets a default context. (Optional)</p>
                                 </div>
                               </td>
                             </tr>
@@ -1328,6 +1373,35 @@ Subsequent calls to this method cause the LDClient to return. Normally there sho
                             </tr>
                           </tbody>
                         </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC5start6config4user0D11WaitSeconds10completionyAA8LDConfigV_AA6LDUserVSgSdySbcSgtFZ"></a>
+                    <a name="//apple_ref/swift/Method/start(config:user:startWaitSeconds:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5start6config4user0D11WaitSeconds10completionyAA8LDConfigV_AA6LDUserVSgSdySbcSgtFZ">start(config:<wbr>user:<wbr>startWaitSeconds:<wbr>completion:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Deprecated start method which accepts a legacy LDUser instead of an LDContext.</p>
+
+<p>This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC5start6config7context0D11WaitSeconds10completionyAA8LDConfigV_AA9LDContextVSgSdySbcSgtFZ">start(config:context:startWaitSeconds:completion:)</a></code> for details.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">config</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDConfig.html">LDConfig</a></span><span class="p">,</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDUser.html">LDUser</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">startWaitSeconds</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">((</span><span class="n">_</span> <span class="nv">timedOut</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
                       </div>
                     </section>
                   </div>
@@ -1452,7 +1526,7 @@ Subsequent calls to this method cause the LDClient to return. Normally there sho
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>the variation for the selected user, or <code>defaultValue</code> if the flag is not available.</p>
+                        <p>the variation for the selected context, or <code>defaultValue</code> if the flag is not available.</p>
                       </div>
                     </section>
                   </div>
@@ -1577,7 +1651,7 @@ value was determined.</p>
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>the variation for the selected user, or <code>defaultValue</code> if the flag is not available.</p>
+                        <p>the variation for the selected context, or <code>defaultValue</code> if the flag is not available.</p>
                       </div>
                     </section>
                   </div>
@@ -1702,7 +1776,7 @@ value was determined.</p>
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>the variation for the selected user, or <code>defaultValue</code> if the flag is not available.</p>
+                        <p>the variation for the selected context, or <code>defaultValue</code> if the flag is not available.</p>
                       </div>
                     </section>
                   </div>
@@ -1827,7 +1901,7 @@ describes the way the value was determined.</p>
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>the variation for the selected user, or <code>defaultValue</code> if the flag is not available.</p>
+                        <p>the variation for the selected context, or <code>defaultValue</code> if the flag is not available.</p>
                       </div>
                     </section>
                   </div>
@@ -1952,7 +2026,7 @@ value was determined.</p>
                       </div>
                       <div>
                         <h4>Return Value</h4>
-                        <p>the variation for the selected user, or <code>defaultValue</code> if the flag is not available.</p>
+                        <p>the variation for the selected context, or <code>defaultValue</code> if the flag is not available.</p>
                       </div>
                     </section>
                   </div>

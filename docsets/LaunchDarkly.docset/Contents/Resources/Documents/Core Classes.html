@@ -17,7 +17,7 @@
     <a title="Core Classes  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 7.0.0 Docs</a> (94% documented)</p>
+        <p><a href="index.html">LaunchDarkly 8.0.0 Docs</a> (92% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -52,7 +52,19 @@
                 <a href="Structs/LDConfig/Minima.html">– Minima</a>
               </li>
               <li class="nav-group-task">
+                <a href="Structs/LDContext.html">LDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/LDContextBuilder.html">LDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="Structs/LDUser.html">LDUser</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/Reference.html">Reference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
@@ -106,12 +118,6 @@
             <a href="Other%20Types.html">Other Types</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="Classes/UserAttribute.html">UserAttribute</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Enums/LDStreamingMode.html">LDStreamingMode</a>
               </li>
               <li class="nav-group-task">
@@ -135,10 +141,16 @@
                 <a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/ObjcLDUser.html">ObjcLDUser</a>
+                <a href="Classes/ObjcLDReference.html">ObjcLDReference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDContext.html">ObjcLDContext</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDUser.html">ObjcLDUser</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/ObjcLDValue.html">ObjcLDValue</a>
@@ -183,6 +195,46 @@
             </ul>
           </li>
           <li class="nav-group-name">
+            <a href="Other%20Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/ContextBuilderResult.html">ContextBuilderResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDApplicationInfo.html">ObjcLDApplicationInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDContextBuilder.html">ObjcLDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDMultiContextBuilder.html">ObjcLDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/UserAttribute.html">UserAttribute</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Other%20Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Enums/ContextBuilderError.html">ContextBuilderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/Kind.html">Kind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/ReferenceError.html">ReferenceError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
             <a href="Other%20Structs.html">Other Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
@@ -214,20 +266,20 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a user (LDUser) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly&rsquo;s servers to get the feature flag values you set in the Dashboard.</p>
+                        <p>The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a contexts (LDContext) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly&rsquo;s servers to get the feature flag values you set in the Dashboard.</p>
 <h2 id='usage' class='heading'>Usage</h2>
 <h3 id='startup' class='heading'>Startup</h3>
 
 <ol>
-<li>To customize, configure a <code><a href="Structs/LDConfig.html">LDConfig</a></code> and <code><a href="Structs/LDUser.html">LDUser</a></code>. The <code>config</code> is required, the <code>user</code> is optional. Both give you additional control over the feature flags delivered to the LDClient. See <code><a href="Structs/LDConfig.html">LDConfig</a></code> &amp; <code><a href="Structs/LDUser.html">LDUser</a></code> for more details.
+<li>To customize, configure a <code><a href="Structs/LDConfig.html">LDConfig</a></code> and <code><a href="Structs/LDContext.html">LDContext</a></code>. The <code>config</code> is required, the <code>context</code> is optional. Both give you additional control over the feature flags delivered to the LDClient. See <code><a href="Structs/LDConfig.html">LDConfig</a></code> &amp; <code><a href="Structs/LDContext.html">LDContext</a></code> for more details.
 
 <ul>
 <li>The mobileKey set into the <code><a href="Structs/LDConfig.html">LDConfig</a></code> comes from your LaunchDarkly Account settings. If you have multiple projects be sure to choose the correct Mobile key.</li>
 </ul></li>
-<li>Call <code>LDClient.start(config: user: completion:)</code>
+<li>Call <code>LDClient.start(config: context: completion:)</code>
 
 <ul>
-<li>If you do not pass in a LDUser, LDClient will create a default for you.</li>
+<li>If you do not pass in a LDContext, LDClient will create a default for you.</li>
 <li>The optional completion closure allows the LDClient to notify your app when it received flag values.</li>
 </ul></li>
 <li>Because LDClient instances are stored statically, you do not have to keep a reference to it in your code. Get the primary instances with <code>LDClient.get()</code></li>
@@ -298,6 +350,76 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:12LaunchDarkly9LDContextV"></a>
+                    <a name="//apple_ref/swift/Struct/LDContext" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly9LDContextV">LDContext</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>LDContext is a collection of attributes that can be referenced in flag evaluations and analytics
+events.</p>
+
+<p>To create an LDContext of a single kind, such as a user, you may use <code><a href="Structs/LDContextBuilder.html">LDContextBuilder</a></code>.</p>
+
+<p>To create an LDContext with multiple kinds, use <code><a href="Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a></code>.</p>
+
+                        <a href="Structs/LDContext.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">LDContext</span> <span class="p">:</span> <span class="kt">Encodable</span><span class="p">,</span> <span class="kt">Equatable</span></code></pre>
+<pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">LDContext</span><span class="p">:</span> <span class="kt">Decodable</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly16LDContextBuilderV"></a>
+                    <a name="//apple_ref/swift/Struct/LDContextBuilder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly16LDContextBuilderV">LDContextBuilder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Contains methods for building a single kind <code><a href="Structs/LDContext.html">LDContext</a></code> with a specified key, defaulting to kind
+&ldquo;user&rdquo;.</p>
+
+<p>You may use these methods to set additional attributes and/or change the kind before calling
+<code><a href="Structs/LDContextBuilder.html#/s:12LaunchDarkly16LDContextBuilderV5builds6ResultOyAA0C0VAA07ContextD5ErrorOGyF">LDContextBuilder.build()</a></code>. If you do not change any values, the defaults for the <code><a href="Structs/LDContext.html">LDContext</a></code> are that its
+kind is &ldquo;user&rdquo;, its key is set to whatever value you passed to <code><a href="Structs/LDContextBuilder.html#/s:12LaunchDarkly16LDContextBuilderV3keyACSS_tcfc">LDContextBuilder.init(key:)</a></code>, its anonymous attribute
+is false, and it has no values for any other attributes.</p>
+
+<p>To define a multi-context, see <code><a href="Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a></code>.</p>
+
+                        <a href="Structs/LDContextBuilder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">LDContextBuilder</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:12LaunchDarkly6LDUserV"></a>
                     <a name="//apple_ref/swift/Struct/LDUser" class="dashAnchor"></a>
                     <a class="token" href="#/s:12LaunchDarkly6LDUserV">LDUser</a>
@@ -310,16 +432,8 @@
                       <div class="abstract">
                         <p>LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK.</p>
 
-<p>For example, the client app may launch with the SDK defined anonymous user. As the user works with the client app,
-information may be collected as needed and sent to LaunchDarkly. The client app controls the information collected.
-Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
-
-<p>The SDK caches last known feature flags for use on app startup to provide continuity with the last app run. Provided
-the <code><a href="Classes/LDClient.html">LDClient</a></code> is online and can establish a connection with LaunchDarkly servers, cached information will only be used
-a very short time. Once the latest feature flags arrive at the SDK, the SDK no longer uses cached feature flags. The
-SDK retains feature flags on the last 5 client defined users. The SDK will retain feature flags until they are
-overwritten by a different user&rsquo;s feature flags, or until the user removes the app from the device. The SDK does not
-cache user information collected.</p>
+<p>The usage of LDUser is no longer recommended and is retained only to ease the adoption of the <code><a href="Structs/LDContext.html">LDContext</a></code> class. New
+code using this SDK should make use of the <code><a href="Structs/LDContextBuilder.html">LDContextBuilder</a></code> to construct an equivalent <code><a href="Enums/Kind.html#/s:12LaunchDarkly4KindO4useryA2CmF">Kind.user</a></code> kind context.</p>
 
                         <a href="Structs/LDUser.html" class="slightly-smaller">See more</a>
                       </div>
@@ -328,6 +442,107 @@ cache user information collected.</p>
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">LDUser</span> <span class="p">:</span> <span class="kt">Encodable</span><span class="p">,</span> <span class="kt">Equatable</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly9ReferenceV"></a>
+                    <a name="//apple_ref/swift/Struct/Reference" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly9ReferenceV">Reference</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Represents an attribute name or path expression identifying a value within a Context.</p>
+
+<p>This can be used to retrieve a value with <code><a href="Structs/LDContext.html#/s:12LaunchDarkly9LDContextV8getValueyAA7LDValueOSgAA9ReferenceVF">LDContext.getValue(_:)</a></code>, or to identify an attribute or
+nested value that should be considered private with
+<code><a href="Structs/LDContextBuilder.html#/s:12LaunchDarkly16LDContextBuilderV19addPrivateAttributeyyAA9ReferenceVF">LDContextBuilder.addPrivateAttribute(_:)</a></code> (the SDK configuration can also have a list of
+private attribute references).</p>
+
+<p>This is represented as a separate type, rather than just a string, so that validation and parsing can
+be done ahead of time if an attribute reference will be used repeatedly later (such as in flag
+evaluations).</p>
+
+<p>If the string starts with &lsquo;/&rsquo;, then this is treated as a slash-delimited path reference where the
+first component is the name of an attribute, and subsequent components are the names of nested JSON
+object properties. In this syntax, the escape sequences &ldquo;~0&rdquo; and &ldquo;~1&rdquo; represent &lsquo;~&rsquo; and &lsquo;/&rsquo;
+respectively within a path component.</p>
+
+<p>If the string does not start with &lsquo;/&rsquo;, then it is treated as the literal name of an attribute.</p>
+
+<p>For instance, if the JSON representation of a context is as follows&ndash;</p>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"key"</span><span class="p">:</span><span class="w"> </span><span class="s2">"123"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"xyz"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"street"</span><span class="p">:</span><span class="w"> </span><span class="s2">"99 Main St."</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"city"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Westview"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"a/b"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ok"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>&ndash; then</p>
+
+<ul>
+<li>Reference(&ldquo;name&rdquo;) or Reference(&ldquo;/name&rdquo;) would refer to the value &ldquo;xyz&rdquo;</li>
+<li>Reference(&ldquo;/address/street&rdquo;) would refer to the value &ldquo;99 Main St.&rdquo;</li>
+<li>Reference(&ldquo;a/b&rdquo;) or Reference(&ldquo;/a~1b&rdquo;) would refer to the value &ldquo;ok&rdquo;</li>
+</ul>
+
+                        <a href="Structs/Reference.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">Reference</span> <span class="p">:</span> <span class="kt">Codable</span><span class="p">,</span> <span class="kt">Equatable</span><span class="p">,</span> <span class="kt">Hashable</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly21LDMultiContextBuilderV"></a>
+                    <a name="//apple_ref/swift/Struct/LDMultiContextBuilder" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly21LDMultiContextBuilderV">LDMultiContextBuilder</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Contains method for building a multi-context.</p>
+
+<p>Use this type if you need to construct a LDContext that has multiple kind values, each with its
+own nested LDContext. To define a single-kind context, use <code><a href="Structs/LDContextBuilder.html">LDContextBuilder</a></code> instead.</p>
+
+<p>Obtain an instance of LDMultiContextBuilder by calling <code><a href="Structs/LDMultiContextBuilder.html#/s:12LaunchDarkly21LDMultiContextBuilderVACycfc">LDMultiContextBuilder.init()</a></code>; then, call
+<code><a href="Structs/LDMultiContextBuilder.html#/s:12LaunchDarkly21LDMultiContextBuilderV03addD0yyAA9LDContextVF">LDMultiContextBuilder.addContext(_:)</a></code> to specify the nested LDContext for each kind.
+LDMultiContextBuilder setters return a reference the same builder, so they can be chained
+together.</p>
+
+                        <a href="Structs/LDMultiContextBuilder.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">LDMultiContextBuilder</span></code></pre>
 
                         </div>
                       </div>
@@ -382,7 +597,7 @@ explanation of how it is calculated.</p>
 encoded internally as double-precision floating-point), a string, an ordered list of <code>LDValue</code> values (a JSON array),
 or a map of strings to <code>LDValue</code> values (a JSON object).</p>
 
-<p>This can be used to represent complex data in a user custom attribute, or to get a feature flag value that uses a
+<p>This can be used to represent complex data in a context attribute, or to get a feature flag value that uses a
 complex type or does not always use the same type.</p>
 
                         <a href="Enums/LDValue.html" class="slightly-smaller">See more</a>
