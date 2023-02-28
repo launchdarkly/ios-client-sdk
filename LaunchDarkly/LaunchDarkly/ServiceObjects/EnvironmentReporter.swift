@@ -102,7 +102,7 @@ struct EnvironmentReporter: EnvironmentReporting {
     #endif
 
     var shouldThrottleOnlineCalls: Bool { !isDebugBuild }
-    let sdkVersion = "8.0.0"
+    let sdkVersion = "8.0.1"
     // Unfortunately, the following does not function in certain configurations, such as when included through SPM
 //    var sdkVersion: String {
 //        Bundle(for: LDClient.self).infoDictionary?["CFBundleShortVersionString"] as? String ?? "5.x"
