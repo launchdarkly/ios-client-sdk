@@ -9,10 +9,6 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ## [8.0.0] - 2022-12-07
 The latest version of this SDK supports LaunchDarkly's new custom contexts feature. Contexts are an evolution of a previously-existing concept, "users." Contexts let you create targeting rules for feature flags based on a variety of different information, including attributes pertaining to users, organizations, devices, and more. You can even combine contexts to create "multi-contexts."
 
-This feature is only available to members of LaunchDarkly's Early Access Program (EAP). If you're in the EAP, you can use contexts by updating your SDK to the latest version and, if applicable, updating your Relay Proxy. Outdated SDK versions do not support contexts, and will cause unpredictable flag evaluation behavior.
-
-If you are not in the EAP, only use single contexts of kind "user", or continue to use the user type if available. If you try to create contexts, the context will be sent to LaunchDarkly, but any data not related to the user object will be ignored.
-
 For detailed information about this version, please refer to the list below. For information on how to upgrade from the previous version, please read the migration guide for [Swift](https://docs.launchdarkly.com/sdk/client-side/ios/migration-7-to-8-swift) or [Objective-C](https://docs.launchdarkly.com/sdk/client-side/ios/migration-7-to-8-objc).
 
 ### Added:
