@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   contract-tests:
     macos:
-      xcode: '14.0.1'
+      xcode: '14.2.0'
 
     steps:
       - checkout
@@ -58,6 +58,13 @@ jobs:
 
     steps:
     - checkout
+
+    # XCode11 has a bug related to respecting system known_hosts.  The CircleCI checkout
+    # step is automatically setting all git URLs to use ssh.  Since we do not have any
+    # private dependencies in this repo, it is ok to not us SSH for fetching the dependencies
+    - run:
+        name: Remove Git SSH restriction (XCode 11 bug workaround)
+        command: git config --global --remove-section url."ssh://git@github.com"
 
     - run:
         name: Setup for builds
