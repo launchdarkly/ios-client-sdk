@@ -67,6 +67,13 @@ final class DarklyService: DarklyServiceProvider {
         self.httpHeaders = HTTPHeaders(config: config, environmentReporter: serviceFactory.makeEnvironmentReporter())
         // URLSessionConfiguration is a class, but `.default` creates a new instance. This does not effect other session configuration.
         let sessionConfig = URLSessionConfiguration.default
+
+        if #available(iOS 13, macOS 10.15, tvOS 13, watchOS 6, *) {
+            sessionConfig.tlsMinimumSupportedProtocolVersion = .TLSv12
+        } else {
+            sessionConfig.tlsMinimumSupportedProtocol = .tlsProtocol12
+        }
+
         // We always revalidate the cache which we handle manually
         sessionConfig.requestCachePolicy = .reloadIgnoringLocalCacheData
         sessionConfig.urlCache = nil
