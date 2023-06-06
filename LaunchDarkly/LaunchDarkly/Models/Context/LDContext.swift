@@ -689,8 +689,8 @@ public struct LDContextBuilder {
         case ("", _):
             Log.debug(typeName(and: #function) + ": Provided attribute is empty. Ignoring.")
             return false
-        case ("kind", .string(kind)):
-            self.kind(kind)
+        case ("kind", .string(let val)):
+            self.kind(val)
         case ("kind", _):
             return false
         case ("key", .string(let val)):

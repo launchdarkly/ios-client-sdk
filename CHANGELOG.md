@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [8.1.0] - 2023-06-05
+### Changed:
+- Enforce TLS v1.2 as a required minimum.
+
+### Fixed:
+- Allow setting kind through `trySet`.
+
 ## [8.0.1] - 2023-02-28
 ### Fixed:
 - Remove the extra `privateAttributes` meta field from the event payload. This extra field prevented LaunchDarkly services from accepting SDK events when private attributes were specified.
