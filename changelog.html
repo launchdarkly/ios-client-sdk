@@ -16,7 +16,7 @@
     <a title="CHANGELOG  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 8.0.0 Docs</a> (92% documented)</p>
+        <p><a href="index.html">LaunchDarkly 8.1.0 Docs</a> (92% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -250,13 +250,26 @@
             <h1 id='change-log' class='heading'>Change log</h1>
 
 <p>All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to <a href="http://semver.org">Semantic Versioning</a>.</p>
+<h2 id='8-1-0-2023-06-05' class='heading'>[8.1.0] - 2023-06-05</h2>
+<h3 id='changed' class='heading'>Changed:</h3>
+
+<ul>
+<li>Enforce TLS v1.2 as a required minimum.</li>
+</ul>
+<h3 id='fixed' class='heading'>Fixed:</h3>
+
+<ul>
+<li>Allow setting kind through <code>trySet</code>.</li>
+</ul>
+<h2 id='8-0-1-2023-02-28' class='heading'>[8.0.1] - 2023-02-28</h2>
+<h3 id='fixed' class='heading'>Fixed:</h3>
+
+<ul>
+<li>Remove the extra <code>privateAttributes</code> meta field from the event payload. This extra field prevented LaunchDarkly services from accepting SDK events when private attributes were specified.</li>
+</ul>
 <h2 id='8-0-0-2022-12-07' class='heading'>[8.0.0] - 2022-12-07</h2>
 
 <p>The latest version of this SDK supports LaunchDarkly&rsquo;s new custom contexts feature. Contexts are an evolution of a previously-existing concept, &ldquo;users.&rdquo; Contexts let you create targeting rules for feature flags based on a variety of different information, including attributes pertaining to users, organizations, devices, and more. You can even combine contexts to create &ldquo;multi-contexts.&rdquo;</p>
-
-<p>This feature is only available to members of LaunchDarkly&rsquo;s Early Access Program (EAP). If you&rsquo;re in the EAP, you can use contexts by updating your SDK to the latest version and, if applicable, updating your Relay Proxy. Outdated SDK versions do not support contexts, and will cause unpredictable flag evaluation behavior.</p>
-
-<p>If you are not in the EAP, only use single contexts of kind &ldquo;user&rdquo;, or continue to use the user type if available. If you try to create contexts, the context will be sent to LaunchDarkly, but any data not related to the user object will be ignored.</p>
 
 <p>For detailed information about this version, please refer to the list below. For information on how to upgrade from the previous version, please read the migration guide for <a href="https://docs.launchdarkly.com/sdk/client-side/ios/migration-7-to-8-swift">Swift</a> or <a href="https://docs.launchdarkly.com/sdk/client-side/ios/migration-7-to-8-objc">Objective-C</a>.</p>
 <h3 id='added' class='heading'>Added:</h3>
