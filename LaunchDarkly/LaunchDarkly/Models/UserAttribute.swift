@@ -9,6 +9,7 @@ import Foundation
  reference guides [Setting user attributes](https://docs.launchdarkly.com/home/users/attributes) and
  [Targeting users](https://docs.launchdarkly.com/home/flags/targeting-users).
  */
+@available(*, deprecated)
 public class UserAttribute: Equatable, Hashable {
 
     /**
