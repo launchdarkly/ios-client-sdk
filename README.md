@@ -9,7 +9,7 @@ LaunchDarkly SDK for iOS
 
 LaunchDarkly overview
 -------------------------
-[LaunchDarkly](https://www.launchdarkly.com) is a feature management platform that serves over 100 billion feature flags daily to help teams build better software, faster. [Get started](https://docs.launchdarkly.com/home/getting-started) using LaunchDarkly today!
+[LaunchDarkly](https://www.launchdarkly.com) is a feature management platform that serves trillions of feature flags daily to help teams build better software, faster. [Get started](https://docs.launchdarkly.com/home/getting-started) using LaunchDarkly today!
 
 [![Twitter Follow](https://img.shields.io/twitter/follow/launchdarkly.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/intent/follow?screen_name=launchdarkly)
 
@@ -49,7 +49,7 @@ To include LaunchDarkly in a Swift package, simply add it to the dependencies se
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/launchdarkly/ios-client-sdk.git", .upToNextMinor(from: "8.1.0"))
+    .package(url: "https://github.com/launchdarkly/ios-client-sdk.git", .upToNextMinor(from: "8.2.0"))
 ]
 ```
 
@@ -60,7 +60,7 @@ To use the [CocoaPods](https://cocoapods.org) dependency manager to integrate La
 ```ruby
 use_frameworks!
 target 'YourTargetName' do
-  pod 'LaunchDarkly', '~> 8.1'
+  pod 'LaunchDarkly', '~> 8.2'
 end
 ```
 
@@ -71,7 +71,7 @@ To use the [Carthage](https://github.com/Carthage/Carthage) dependency manager t
 To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-client-sdk" ~> 8.1
+github "launchdarkly/ios-client-sdk" ~> 8.2
 ```
 
 ### Manual installation

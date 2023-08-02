@@ -7,6 +7,7 @@ import Foundation
  code using this SDK should make use of the `LDContextBuilder` to construct an equivalent `Kind.user` kind context.
  */
 @objc (LDUser)
+@available(*, deprecated, message: "Use ObjcLDContextBuilder to construct a context of kind 'user'")
 public final class ObjcLDUser: NSObject {
     var user: LDUser
 

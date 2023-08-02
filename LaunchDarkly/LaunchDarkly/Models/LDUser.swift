@@ -6,6 +6,7 @@ import Foundation
  The usage of LDUser is no longer recommended and is retained only to ease the adoption of the `LDContext` class. New
  code using this SDK should make use of the `LDContextBuilder` to construct an equivalent `Kind.user` kind context.
  */
+@available(*, deprecated, message: "Use LDContextBuilder to construct a context of kind 'user'")
 public struct LDUser: Encodable, Equatable {
 
     static let optionalAttributes = UserAttribute.BuiltIn.allBuiltIns.filter { $0.name != "key" && $0.name != "anonymous"}
@@ -217,6 +218,7 @@ public struct LDUser: Encodable, Equatable {
 }
 
 /// Class providing ObjC interoperability with the LDUser struct
+@available(*, deprecated)
 @objc final class LDUserWrapper: NSObject {
     let wrapped: LDUser
 
@@ -226,4 +228,5 @@ public struct LDUser: Encodable, Equatable {
     }
 }
 
+@available(*, deprecated)
 extension LDUser: TypeIdentifying { }

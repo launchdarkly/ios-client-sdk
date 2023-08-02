@@ -291,6 +291,7 @@ public class LDClient {
 
      This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `identify(context:completion:)` for details.
      */
+    @available(*, deprecated, message: "Use identify(context:completion:)")
     public func identify(user: LDUser, completion: (() -> Void)? = nil) {
         switch user.toContext() {
         case .failure(let error):
@@ -601,6 +602,7 @@ public class LDClient {
 
      This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `start(config:context:completion:)` for details.
      */
+    @available(*, deprecated, message: "Use start(config:context:completion:)")
     public static func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
         switch user?.toContext() {
         case nil:
@@ -664,6 +666,7 @@ public class LDClient {
 
      This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `start(config:context:startWaitSeconds:completion:)` for details.
      */
+    @available(*, deprecated, message: "Use start(config:context:startWithSeconds:completion:)")
     public static func start(config: LDConfig, user: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         switch user?.toContext() {
         case nil:

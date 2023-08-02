@@ -119,6 +119,7 @@ public final class ObjcLDClient: NSObject {
 
         This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `identify(context)` for details.
      */
+    @available(*, deprecated, message: "Use identify(context)")
     @objc public func identify(user: ObjcLDUser) {
         ldClient.identify(user: user.user, completion: nil)
     }
@@ -144,6 +145,7 @@ public final class ObjcLDClient: NSObject {
 
         This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `identify(context:completion:)` for details.
      */
+    @available(*, deprecated, message: "Use identify(context:completion:)")
     @objc public func identify(user: ObjcLDUser, completion: (() -> Void)? = nil) {
         ldClient.identify(user: user.user, completion: completion)
     }
@@ -577,6 +579,7 @@ public final class ObjcLDClient: NSObject {
 
         This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `start(configuration:context:completion:)` for details.
      */
+    @available(*, deprecated, message: "Use start(configuration:context:completion:)")
     @objc public static func start(configuration: ObjcLDConfig, user: ObjcLDUser, completion: (() -> Void)? = nil) {
        LDClient.start(config: configuration.config, user: user.user, completion: completion)
    }
@@ -598,6 +601,7 @@ public final class ObjcLDClient: NSObject {
 
         This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `start(configuration:context:startWaitSeconds:completion:)` for details.
      */
+   @available(*, deprecated, message: "Use start(configuration:context:startWaitSeconds:completion:)")
    @objc public static func start(configuration: ObjcLDConfig, user: ObjcLDUser, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
        LDClient.start(config: configuration.config, user: user.user, startWaitSeconds: startWaitSeconds, completion: completion)
    }
