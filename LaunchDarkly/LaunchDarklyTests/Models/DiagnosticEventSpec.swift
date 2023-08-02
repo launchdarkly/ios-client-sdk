@@ -69,13 +69,13 @@ final class DiagnosticEventSpec: QuickSpec {
                     let config = LDConfig.stub
                     let diagnosticSdk = DiagnosticSdk(config: config)
                     expect(diagnosticSdk.name) == "ios-client-sdk"
-                    expect(diagnosticSdk.version) == config.environmentReporter.sdkVersion
+                    expect(diagnosticSdk.version) == ReportingConsts.sdkVersion
                     expect(diagnosticSdk.wrapperName).to(beNil())
                     expect(diagnosticSdk.wrapperVersion).to(beNil())
                     encodesToObject(diagnosticSdk) { decoded in
                         expect(decoded.count) == 2
                         expect(decoded["name"]) == "ios-client-sdk"
-                        expect(decoded["version"]) == .string(config.environmentReporter.sdkVersion)
+                        expect(decoded["version"]) == .string(ReportingConsts.sdkVersion)
                     }
                 }
             }
@@ -86,13 +86,13 @@ final class DiagnosticEventSpec: QuickSpec {
                     config.wrapperVersion = "0.1.0"
                     let diagnosticSdk = DiagnosticSdk(config: config)
                     expect(diagnosticSdk.name) == "ios-client-sdk"
-                    expect(diagnosticSdk.version) == config.environmentReporter.sdkVersion
+                    expect(diagnosticSdk.version) == ReportingConsts.sdkVersion
                     expect(diagnosticSdk.wrapperName) == config.wrapperName
                     expect(diagnosticSdk.wrapperVersion) == config.wrapperVersion
                     encodesToObject(diagnosticSdk) { decoded in
                         expect(decoded.count) == 4
                         expect(decoded["name"]) == "ios-client-sdk"
-                        expect(decoded["version"]) == .string(config.environmentReporter.sdkVersion)
+                        expect(decoded["version"]) == .string(ReportingConsts.sdkVersion)
                         expect(decoded["wrapperName"]) == "ReactNative"
                         expect(decoded["wrapperVersion"]) == "0.1.0"
                     }
@@ -109,17 +109,19 @@ final class DiagnosticEventSpec: QuickSpec {
                 context("with operating system \(String(describing: os))") {
                     beforeEach {
                         environmentReporter = EnvironmentReportingMock()
-                        environmentReporter.operatingSystem = os
-                        let config = LDConfig(mobileKey: "testKey", environmentReporter: environmentReporter)
-                        diagnosticPlatform = DiagnosticPlatform(config: config)
+                        diagnosticPlatform = DiagnosticPlatform(environmentReporting: environmentReporter)
                     }
                     it("inits with os values") {
                         expect(diagnosticPlatform.name) == "swift"
-                        expect(diagnosticPlatform.systemName) == environmentReporter.operatingSystem.rawValue
                         expect(diagnosticPlatform.systemVersion) == environmentReporter.systemVersion
-                        expect(diagnosticPlatform.backgroundEnabled) == environmentReporter.operatingSystem.isBackgroundEnabled
-                        expect(diagnosticPlatform.streamingEnabled) == environmentReporter.operatingSystem.isStreamingEnabled
-                        expect(diagnosticPlatform.deviceType) == environmentReporter.deviceType
+                        expect(diagnosticPlatform.deviceType) == environmentReporter.deviceModel
+
+                        // TODO(os-tests): We need to expand this to the other OSs
+                        if os == .iOS && os == SystemCapabilities.operatingSystem {
+                            expect(diagnosticPlatform.systemName) == os.rawValue
+                            expect(diagnosticPlatform.backgroundEnabled) == os.isBackgroundEnabled
+                            expect(diagnosticPlatform.streamingEnabled) == os.isStreamingEnabled
+                        }
                     }
                     it("encodes correct values to keys") {
                         encodesToObject(diagnosticPlatform) { decoded in
@@ -168,9 +170,7 @@ final class DiagnosticEventSpec: QuickSpec {
     }
 
     private func customizedConfig() -> LDConfig {
-        let environmentReporter = EnvironmentReportingMock()
-        environmentReporter.operatingSystem = OperatingSystem.backgroundEnabledOperatingSystems.first!
-        var customConfig = LDConfig(mobileKey: "foobar", environmentReporter: environmentReporter)
+        var customConfig = LDConfig(mobileKey: "foobar", autoEnvAttributes: .disabled, isDebugBuild: true)
         customConfig.baseUrl = URL(string: "https://clientstream.launchdarkly.com")!
         customConfig.eventsUrl = URL(string: "https://app.launchdarkly.com")!
         customConfig.streamUrl = URL(string: "https://mobile.launchdarkly.com")!
@@ -193,9 +193,7 @@ final class DiagnosticEventSpec: QuickSpec {
     }
 
     private func diagnosticConfigSpec() {
-        let environmentReporter = EnvironmentReportingMock()
-        environmentReporter.operatingSystem = OperatingSystem.backgroundEnabledOperatingSystems.first!
-        let defaultConfig = LDConfig(mobileKey: "foobar", environmentReporter: environmentReporter)
+        let defaultConfig = LDConfig(mobileKey: "foobar", autoEnvAttributes: .disabled, isDebugBuild: true)
         let customConfig = customizedConfig()
         context("DiagnosticConfig") {
             context("init with default config") {
@@ -234,7 +232,10 @@ final class DiagnosticEventSpec: QuickSpec {
                     expect(diagnosticConfig.pollingIntervalMillis) == 360_000
                     expect(diagnosticConfig.backgroundPollingIntervalMillis) == 1_800_000
                     expect(diagnosticConfig.useReport) == true
-                    expect(diagnosticConfig.backgroundPollingDisabled) == false
+                    // TODO(os-tests): We need to expand this to the other OSs
+                    if SystemCapabilities.operatingSystem == .iOS {
+                        expect(diagnosticConfig.backgroundPollingDisabled) == true
+                    }
                     expect(diagnosticConfig.evaluationReasonsRequested) == true
                     // All negative values become -1 for consistency
                     expect(diagnosticConfig.maxCachedContexts) == -1
@@ -342,7 +343,7 @@ final class DiagnosticEventSpec: QuickSpec {
             beforeEach {
                 now = Date().millisSince1970
                 diagnosticId = DiagnosticId(diagnosticId: UUID().uuidString, sdkKey: "foobar")
-                diagnosticInit = DiagnosticInit(config: customConfig, diagnosticId: diagnosticId, creationDate: now)
+                diagnosticInit = DiagnosticInit(config: customConfig, environmentReporting: EnvironmentReportingMock(), diagnosticId: diagnosticId, creationDate: now)
             }
             it("inits with correct values") {
                 expect(diagnosticInit.kind) == DiagnosticKind.diagnosticInit
@@ -352,7 +353,10 @@ final class DiagnosticEventSpec: QuickSpec {
                 // Spot check sub objects, just to ensure config is being passed along
                 expect(diagnosticInit.sdk.wrapperName) == customConfig.wrapperName
                 expect(diagnosticInit.configuration.customBaseURI) == true
-                expect(diagnosticInit.platform.backgroundEnabled) == true
+                // TODO(os-tests): We need to expand this to the other OSs
+                if SystemCapabilities.operatingSystem == .iOS {
+                    expect(diagnosticInit.platform.backgroundEnabled) == false
+                }
             }
             it("encodes correct values to keys") {
                 let expectedId = encodeToLDValue(diagnosticId)

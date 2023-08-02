@@ -19,7 +19,6 @@ custom_categories:
     - LDConfig
     - LDContext
     - LDContextBuilder
-    - LDUser
     - Reference
     - LDMultiContextBuilder
     - LDEvaluationDetail
@@ -52,7 +51,6 @@ custom_categories:
     - ObjcLDReference
     - ObjcLDContext
     - ObjcLDChangedFlag
-    - ObjcLDUser
     - ObjcLDValue
     - ObjcLDValueType
 

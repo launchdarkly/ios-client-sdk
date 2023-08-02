@@ -5,7 +5,7 @@ protocol ClientServiceCreating {
     func makeKeyedValueCache(cacheKey: String?) -> KeyedValueCaching
     func makeFeatureFlagCache(mobileKey: String, maxCachedContexts: Int) -> FeatureFlagCaching
     func makeCacheConverter() -> CacheConverting
-    func makeDarklyServiceProvider(config: LDConfig, context: LDContext) -> DarklyServiceProvider
+    func makeDarklyServiceProvider(config: LDConfig, context: LDContext, envReporter: EnvironmentReporting) -> DarklyServiceProvider
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing
     func makeFlagSynchronizer(streamingMode: LDStreamingMode,
                               pollingInterval: TimeInterval,
@@ -16,11 +16,11 @@ protocol ClientServiceCreating {
     func makeEventReporter(service: DarklyServiceProvider) -> EventReporting
     func makeEventReporter(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting
     func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
-    func makeEnvironmentReporter() -> EnvironmentReporting
+    func makeEnvironmentReporter(config: LDConfig) -> EnvironmentReporting
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling
     func makeConnectionInformation() -> ConnectionInformation
     func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching
-    func makeDiagnosticReporter(service: DarklyServiceProvider) -> DiagnosticReporting
+    func makeDiagnosticReporter(service: DarklyServiceProvider, environmentReporter: EnvironmentReporting) -> DiagnosticReporting
     func makeFlagStore() -> FlagMaintaining
 }
 
@@ -37,8 +37,8 @@ final class ClientServiceFactory: ClientServiceCreating {
         CacheConverter()
     }
 
-    func makeDarklyServiceProvider(config: LDConfig, context: LDContext) -> DarklyServiceProvider {
-        DarklyService(config: config, context: context, serviceFactory: self)
+    func makeDarklyServiceProvider(config: LDConfig, context: LDContext, envReporter: EnvironmentReporting) -> DarklyServiceProvider {
+      DarklyService(config: config, context: context, envReporter: envReporter, serviceFactory: self)
     }
 
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing {
@@ -85,12 +85,22 @@ final class ClientServiceFactory: ClientServiceCreating {
         return EventSource(config: config)
     }
 
-    func makeEnvironmentReporter() -> EnvironmentReporting {
-        EnvironmentReporter()
+    func makeEnvironmentReporter(config: LDConfig) -> EnvironmentReporting {
+        let builder = EnvironmentReporterBuilder()
+
+        if let info = config.applicationInfo {
+            builder.applicationInfo(info)
+        }
+
+        if config.autoEnvAttributes {
+            builder.enableCollectionFromPlatform()
+        }
+
+        return builder.build()
     }
 
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling {
-        Throttler(environmentReporter: environmentReporter)
+        Throttler()
     }
 
     func makeConnectionInformation() -> ConnectionInformation {
@@ -101,8 +111,8 @@ final class ClientServiceFactory: ClientServiceCreating {
         DiagnosticCache(sdkKey: sdkKey)
     }
 
-    func makeDiagnosticReporter(service: DarklyServiceProvider) -> DiagnosticReporting {
-        DiagnosticReporter(service: service)
+    func makeDiagnosticReporter(service: DarklyServiceProvider, environmentReporter: EnvironmentReporting) -> DiagnosticReporting {
+        DiagnosticReporter(service: service, environmentReporting: environmentReporter)
     }
 
     func makeFlagStore() -> FlagMaintaining {

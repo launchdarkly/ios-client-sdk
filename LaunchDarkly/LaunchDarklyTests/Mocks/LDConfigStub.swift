@@ -9,11 +9,11 @@ extension LDConfig {
     }
 
     static var stub: LDConfig {
-        stub(mobileKey: Constants.mockMobileKey, environmentReporter: EnvironmentReportingMock())
+        stub(mobileKey: Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: true)
     }
 
-    static func stub(mobileKey: String, environmentReporter: EnvironmentReportingMock) -> LDConfig {
-        var config = LDConfig(mobileKey: mobileKey, environmentReporter: environmentReporter)
+    static func stub(mobileKey: String, autoEnvAttributes: AutoEnvAttributes, isDebugBuild: Bool) -> LDConfig {
+        var config = LDConfig(mobileKey: mobileKey, autoEnvAttributes: autoEnvAttributes, isDebugBuild: isDebugBuild)
         config.baseUrl = DarklyServiceMock.Constants.mockBaseUrl
         config.eventsUrl = DarklyServiceMock.Constants.mockEventsUrl
         config.streamUrl = DarklyServiceMock.Constants.mockStreamUrl

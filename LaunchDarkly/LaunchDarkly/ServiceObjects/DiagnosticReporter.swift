@@ -7,13 +7,15 @@ protocol DiagnosticReporting {
 
 class DiagnosticReporter: DiagnosticReporting {
     private let service: DarklyServiceProvider
+    private let environmentReporting: EnvironmentReporting
     private var timer: TimeResponding?
     private var sentInit: Bool
     private let stateQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.state", qos: .background)
     private let workQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.work", qos: .background)
 
-    init(service: DarklyServiceProvider) {
+    init(service: DarklyServiceProvider, environmentReporting: EnvironmentReporting) {
         self.service = service
+        self.environmentReporting = environmentReporting
         self.sentInit = false
     }
 
@@ -35,6 +37,7 @@ class DiagnosticReporter: DiagnosticReporting {
                         sendDiagnosticEventAsync(diagnosticEvent: lastStats)
                     }
                     let initEvent = DiagnosticInit(config: service.config,
+                                                   environmentReporting: environmentReporting,
                                                    diagnosticId: cache.getDiagnosticId(),
                                                    creationDate: Date().millisSince1970)
                     sendDiagnosticEventAsync(diagnosticEvent: initEvent)

@@ -131,7 +131,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
         }
         if reason.isEmpty && config.streamingMode == .streaming && !config.allowStreamingMode {
             reason = " LDConfig disallowed streaming mode. "
-            reason += !ldClient.environmentReporter.operatingSystem.isStreamingEnabled ? "Streaming is not allowed on \(ldClient.environmentReporter.operatingSystem)." : "Unknown reason."
+            reason += !SystemCapabilities.operatingSystem.isStreamingEnabled ? "Streaming is not allowed on \(SystemCapabilities.operatingSystem)." : "Unknown reason."
         }
         Log.debug(ldClient.typeName(and: #function, appending: ": ") + "\(streamingMode)\(reason)")
         return streamingMode

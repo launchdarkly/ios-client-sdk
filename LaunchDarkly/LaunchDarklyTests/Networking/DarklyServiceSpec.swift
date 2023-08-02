@@ -18,6 +18,7 @@ final class DarklyServiceSpec: QuickSpec {
     struct TestContext {
         let context = LDContext.stub()
         var config: LDConfig!
+        var envReporterMock = EnvironmentReportingMock()
         var serviceMock: DarklyServiceMock!
         var serviceFactoryMock: ClientServiceMockFactory = ClientServiceMockFactory()
         var service: DarklyService!
@@ -28,12 +29,12 @@ final class DarklyServiceSpec: QuickSpec {
              useReport: Bool = Constants.useGetMethod,
              diagnosticOptOut: Bool = false) {
 
-            config = LDConfig.stub(mobileKey: mobileKey, environmentReporter: EnvironmentReportingMock())
+            config = LDConfig.stub(mobileKey: mobileKey, autoEnvAttributes: .disabled, isDebugBuild: true)
             config.useReport = useReport
             config.diagnosticOptOut = diagnosticOptOut
             serviceMock = DarklyServiceMock(config: config)
-            service = DarklyService(config: config, context: context, serviceFactory: serviceFactoryMock)
-            httpHeaders = HTTPHeaders(config: config, environmentReporter: config.environmentReporter)
+            service = DarklyService(config: config, context: context, envReporter: envReporterMock, serviceFactory: serviceFactoryMock)
+            httpHeaders = HTTPHeaders(config: config, environmentReporter: envReporterMock)
         }
 
         func runStubbedGet(statusCode: Int, featureFlags: [LDFlagKey: FeatureFlag]? = nil, flagResponseEtag: String? = nil) {

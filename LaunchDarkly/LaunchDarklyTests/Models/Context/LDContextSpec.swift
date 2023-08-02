@@ -130,9 +130,8 @@ final class LDContextSpec: XCTestCase {
         }
     }
 
-    func testMultikindCannotContainAnotherMultiKind() throws {
+    func testMultiBuilderFlattensMulticontext() throws {
         var multiBuilder = LDMultiContextBuilder()
-
         var builder = LDContextBuilder(key: "key")
         multiBuilder.addContext(try builder.build().get())
 
@@ -142,13 +141,21 @@ final class LDContextSpec: XCTestCase {
 
         let multiContext = try multiBuilder.build().get()
 
+        // Reset to a new builder
+        multiBuilder = LDMultiContextBuilder()
         multiBuilder.addContext(multiContext)
 
         switch multiBuilder.build() {
-        case .success:
-            XCTFail("Multibuilder should have failed to build with a multi-context.")
-        case .failure(let error):
-            XCTAssertEqual(error, .nestedMultiKind)
+        case .success(let context):
+            // Ensure we didn't remove them from the existing context.
+            XCTAssertEqual(2, multiContext.contextKeys().count)
+
+            XCTAssertTrue(context.isMulti())
+            let contextKeys = context.contextKeys()
+            XCTAssertEqual(contextKeys["user"], "key")
+            XCTAssertEqual(contextKeys["org"], "orgKey")
+        case .failure:
+            XCTFail("Multi-kind builder should not have failed.")
         }
     }
 

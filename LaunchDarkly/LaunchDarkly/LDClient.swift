@@ -286,24 +286,14 @@ public class LDClient {
         }
     }
 
-    /**
-     Deprecated identify method which accepts a legacy LDUser instead of an LDContext.
-
-     This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `identify(context:completion:)` for details.
-     */
-    @available(*, deprecated, message: "Use identify(context:completion:)")
-    public func identify(user: LDUser, completion: (() -> Void)? = nil) {
-        switch user.toContext() {
-        case .failure(let error):
-            Log.debug(self.typeName(and: #function) + "user created an invalid context: SDK identified context WILL NOT CHANGE: " + error.localizedDescription )
-        case .success(let context):
-            identify(context: context, completion: completion)
-        }
-    }
-
     func internalIdentify(newContext: LDContext, completion: (() -> Void)? = nil) {
+        var updatedContext = newContext
+        if config.autoEnvAttributes {
+            updatedContext = AutoEnvContextModifier(environmentReporter: environmentReporter).modifyContext(updatedContext)
+        }
+
         internalIdentifyQueue.sync {
-            self.context = newContext
+            self.context = updatedContext
             Log.debug(self.typeName(and: #function) + "new context set with key: " + self.context.fullyQualifiedKey() )
             let wasOnline = self.isOnline
             self.internalSetOnline(false)
@@ -597,23 +587,6 @@ public class LDClient {
         start(serviceFactory: nil, config: config, context: context, completion: completion)
     }
 
-    /**
-     Deprecated start method which accepts a legacy LDUser instead of an LDContext.
-
-     This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `start(config:context:completion:)` for details.
-     */
-    @available(*, deprecated, message: "Use start(config:context:completion:)")
-    public static func start(config: LDConfig, user: LDUser? = nil, completion: (() -> Void)? = nil) {
-        switch user?.toContext() {
-        case nil:
-            start(serviceFactory: nil, config: config, context: nil, completion: completion)
-        case .failure(let error):
-            Log.debug(self.typeName(and: #function) + "user created an invalid context: " + error.localizedDescription )
-        case .success(let context):
-            start(serviceFactory: nil, config: config, context: context, completion: completion)
-        }
-    }
-
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
         Log.debug("LDClient starting")
         if serviceFactory != nil {
@@ -659,23 +632,6 @@ public class LDClient {
     */
     public static func start(config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, completion: completion)
-    }
-
-    /**
-     Deprecated start method which accepts a legacy LDUser instead of an LDContext.
-
-     This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See `start(config:context:startWaitSeconds:completion:)` for details.
-     */
-    @available(*, deprecated, message: "Use start(config:context:startWithSeconds:completion:)")
-    public static func start(config: LDConfig, user: LDUser? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
-        switch user?.toContext() {
-        case nil:
-            start(serviceFactory: nil, config: config, context: nil, startWaitSeconds: startWaitSeconds, completion: completion)
-        case .failure(let error):
-            Log.debug(self.typeName(and: #function) + "user created an invalid context: " + error.localizedDescription )
-        case .success(let context):
-            start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, completion: completion)
-        }
     }
 
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
@@ -743,7 +699,7 @@ public class LDClient {
 
     private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
         self.serviceFactory = serviceFactory
-        environmentReporter = self.serviceFactory.makeEnvironmentReporter()
+        environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
         flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
@@ -752,8 +708,13 @@ public class LDClient {
         config = configuration
         let anonymousContext = LDContext()
         context = startContext ?? anonymousContext
-        service = self.serviceFactory.makeDarklyServiceProvider(config: config, context: context)
-        diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service)
+
+        if config.autoEnvAttributes {
+            context = AutoEnvContextModifier(environmentReporter: environmentReporter).modifyContext(context)
+        }
+
+        service = self.serviceFactory.makeDarklyServiceProvider(config: config, context: context, envReporter: environmentReporter)
+        diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service, environmentReporter: environmentReporter)
         eventReporter = self.serviceFactory.makeEventReporter(service: service)
         connectionInformation = self.serviceFactory.makeConnectionInformation()
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
@@ -761,10 +722,10 @@ public class LDClient {
                                                                     useReport: config.useReport,
                                                                     service: service)
 
-        if let backgroundNotification = environmentReporter.backgroundNotification {
+        if let backgroundNotification = SystemCapabilities.backgroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
         }
-        if let foregroundNotification = environmentReporter.foregroundNotification {
+        if let foregroundNotification = SystemCapabilities.foregroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
         }
 

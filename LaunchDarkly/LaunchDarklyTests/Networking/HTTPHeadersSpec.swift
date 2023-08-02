@@ -12,7 +12,7 @@ final class HTTPHeadersSpec: XCTestCase {
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.authorization],
                        "\(HTTPHeaders.HeaderValue.apiKey) \(config.mobileKey)")
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.userAgent],
-               "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)")
+                       "\(SystemCapabilities.systemName)/\(ReportingConsts.sdkVersion)")
         XCTAssertNil(headers[HTTPHeaders.HeaderKey.ifNoneMatch])
     }
 
@@ -23,7 +23,7 @@ final class HTTPHeadersSpec: XCTestCase {
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.authorization],
                        "\(HTTPHeaders.HeaderValue.apiKey) \(config.mobileKey)")
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.userAgent],
-                       "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)")
+                       "\(SystemCapabilities.systemName)/\(ReportingConsts.sdkVersion)")
     }
 
     func testEventRequestDefaultHeaders() {
@@ -33,7 +33,7 @@ final class HTTPHeadersSpec: XCTestCase {
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.authorization],
                        "\(HTTPHeaders.HeaderValue.apiKey) \(config.mobileKey)")
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.userAgent],
-                       "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)")
+                       "\(SystemCapabilities.systemName)/\(ReportingConsts.sdkVersion)")
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.contentType], HTTPHeaders.HeaderValue.applicationJson)
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.accept], HTTPHeaders.HeaderValue.applicationJson)
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.eventSchema], HTTPHeaders.HeaderValue.eventSchema4)
@@ -46,7 +46,7 @@ final class HTTPHeadersSpec: XCTestCase {
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.authorization],
                        "\(HTTPHeaders.HeaderValue.apiKey) \(config.mobileKey)")
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.userAgent],
-                       "\(EnvironmentReportingMock.Constants.systemName)/\(EnvironmentReportingMock.Constants.sdkVersion)")
+                       "\(SystemCapabilities.systemName)/\(ReportingConsts.sdkVersion)")
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.contentType], HTTPHeaders.HeaderValue.applicationJson)
         XCTAssertEqual(headers[HTTPHeaders.HeaderKey.accept], HTTPHeaders.HeaderValue.applicationJson)
         XCTAssertNil(headers[HTTPHeaders.HeaderKey.eventSchema])
@@ -92,18 +92,26 @@ final class HTTPHeadersSpec: XCTestCase {
         }
     }
 
-    func testAdditionalHeadersInConfig() {
-        var config = LDConfig.stub
-        config.additionalHeaders = ["Proxy-Authorization": "token",
-                                    HTTPHeaders.HeaderKey.authorization: "feh"]
-        let httpHeaders = HTTPHeaders(config: config, environmentReporter: EnvironmentReportingMock())
+    func testApplicationInfoTagIsGeneratedCorrectly() {
+        let config = LDConfig.stub
+        var appInfo = ApplicationInfo()
+
+        appInfo.applicationIdentifier("example-id")
+        appInfo.applicationName("example-name")
+        appInfo.applicationVersion("example-version")
+        appInfo.applicationVersionName("example-version-name")
+
+        let environmentReporter = EnvironmentReportingMock()
+        environmentReporter.applicationInfo = appInfo
+
+        let httpHeaders = HTTPHeaders(config: config, environmentReporter: environmentReporter)
+
         let allRequestTypes = [httpHeaders.flagRequestHeaders,
                                httpHeaders.eventSourceHeaders,
                                httpHeaders.eventRequestHeaders,
                                httpHeaders.diagnosticRequestHeaders]
         allRequestTypes.forEach { headers in
-            XCTAssertEqual(headers["Proxy-Authorization"], "token", "Should include additional headers")
-            XCTAssertEqual(headers[HTTPHeaders.HeaderKey.authorization], "feh", "Should overwrite headers")
+            XCTAssertEqual(headers["X-LaunchDarkly-Tags"], Optional("application-id/example-id application-name/example-name application-version/example-version application-version-name/example-version-name"))
         }
     }
 }

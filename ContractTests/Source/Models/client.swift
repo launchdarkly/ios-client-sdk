@@ -39,12 +39,14 @@ struct EventParameters: Content {
 
 struct TagParameters: Content {
     var applicationId: String?
+    var applicationName: String?
     var applicationVersion: String?
+    var applicationVersionName: String?
 }
 
 struct ClientSideParameters: Content {
-    var initialContext: LDContext?
-    var initialUser: LDUser?
+    var initialContext: LDContext
     var evaluationReasons: Bool?
     var useReport: Bool?
+    var includeEnvironmentAttributes: Bool?
 }

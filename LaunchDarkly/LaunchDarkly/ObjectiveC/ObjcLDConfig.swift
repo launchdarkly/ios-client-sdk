@@ -188,8 +188,8 @@ public final class ObjcLDConfig: NSObject {
     }
 
     /// LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` (`ObjcLDClient.config`) in order to retain previously set values.
-    @objc public init(mobileKey: String) {
-        config = LDConfig(mobileKey: mobileKey)
+    @objc public init(mobileKey: String, autoEnvAttributes: AutoEnvAttributes) {
+        config = LDConfig(mobileKey: mobileKey, autoEnvAttributes: autoEnvAttributes)
     }
 
     // Initializer to wrap the Swift LDConfig into ObjcLDConfig for use in Objective-C apps.

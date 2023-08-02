@@ -70,8 +70,7 @@ struct CustomEventParameters: Content {
 }
 
 struct IdentifyEventParameters: Content, Decodable {
-    var context: LDContext?
-    var user: LDUser?
+    var context: LDContext
 }
 
 struct ContextBuildParameters: Content, Decodable {
