@@ -17,7 +17,7 @@
     <a title="ApplicationInfo Structure Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 8.2.0 Docs</a> (92% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 9.0.0 Docs</a> (91% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -56,9 +56,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/LDContextBuilder.html">LDContextBuilder</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/Reference.html">Reference</a>
@@ -150,9 +147,6 @@
                 <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/ObjcLDUser.html">ObjcLDUser</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
               </li>
               <li class="nav-group-task">
@@ -212,17 +206,14 @@
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
               </li>
-              <li class="nav-group-task">
-                <a href="../Classes/UserAttribute.html">UserAttribute</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
-              </li>
             </ul>
           </li>
           <li class="nav-group-name">
             <a href="../Other%20Enums.html">Other Enumerations</a>
             <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/AutoEnvAttributes.html">AutoEnvAttributes</a>
+              </li>
               <li class="nav-group-task">
                 <a href="../Enums/ContextBuilderError.html">ContextBuilderError</a>
               </li>
@@ -258,7 +249,7 @@
             <p>Defines application metadata.</p>
 
 <p>These properties are optional and informational. They may be used in LaunchDarkly
-analytics or other product features, but they do not affect feature flag evaluations.</p>
+analytics or other product features.</p>
 
           </section>
           <section class="section task-group-section">
@@ -325,6 +316,37 @@ characters will be ignored.</p>
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:12LaunchDarkly15ApplicationInfoV15applicationNameyySSF"></a>
+                    <a name="//apple_ref/swift/Method/applicationName(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly15ApplicationInfoV15applicationNameyySSF">applicationName(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A human-friendly application name representing the application where the LaunchDarkly SDK is running.</p>
+
+<p>This can be specified as any string value as long as it only uses the following characters:
+ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
+characters will be ignored.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">mutating</span> <span class="kd">func</span> <span class="nf">applicationName</span><span class="p">(</span><span class="n">_</span> <span class="nv">applicationName</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:12LaunchDarkly15ApplicationInfoV18applicationVersionyySSF"></a>
                     <a name="//apple_ref/swift/Method/applicationVersion(_:)" class="dashAnchor"></a>
                     <a class="token" href="#/s:12LaunchDarkly15ApplicationInfoV18applicationVersionyySSF">applicationVersion(_:<wbr>)</a>
@@ -348,6 +370,38 @@ characters will be ignored.</p>
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">mutating</span> <span class="kd">func</span> <span class="nf">applicationVersion</span><span class="p">(</span><span class="n">_</span> <span class="nv">applicationVersion</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly15ApplicationInfoV22applicationVersionNameyySSF"></a>
+                    <a name="//apple_ref/swift/Method/applicationVersionName(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly15ApplicationInfoV22applicationVersionNameyySSF">applicationVersionName(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>A human-friendly name representing the version of the application where the LaunchDarkly SDK
+is running.</p>
+
+<p>This can be specified as any string value as long as it only uses the following characters:
+ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
+characters will be ignored.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">mutating</span> <span class="kd">func</span> <span class="nf">applicationVersionName</span><span class="p">(</span><span class="n">_</span> <span class="nv">applicationVersionName</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>

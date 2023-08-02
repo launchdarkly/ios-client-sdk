@@ -16,7 +16,7 @@
     <a title="CHANGELOG  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 8.2.0 Docs</a> (92% documented)</p>
+        <p><a href="index.html">LaunchDarkly 9.0.0 Docs</a> (91% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -55,9 +55,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="Structs/LDContextBuilder.html">LDContextBuilder</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/Reference.html">Reference</a>
@@ -149,9 +146,6 @@
                 <a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/ObjcLDUser.html">ObjcLDUser</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Classes/ObjcLDValue.html">ObjcLDValue</a>
               </li>
               <li class="nav-group-task">
@@ -211,17 +205,14 @@
               <li class="nav-group-task">
                 <a href="Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
               </li>
-              <li class="nav-group-task">
-                <a href="Classes/UserAttribute.html">UserAttribute</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
-              </li>
             </ul>
           </li>
           <li class="nav-group-name">
             <a href="Other%20Enums.html">Other Enumerations</a>
             <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Enums/AutoEnvAttributes.html">AutoEnvAttributes</a>
+              </li>
               <li class="nav-group-task">
                 <a href="Enums/ContextBuilderError.html">ContextBuilderError</a>
               </li>
@@ -250,6 +241,17 @@
             <h1 id='change-log' class='heading'>Change log</h1>
 
 <p>All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to <a href="http://semver.org">Semantic Versioning</a>.</p>
+<h2 id='9-0-0-2023-08-02' class='heading'>[9.0.0] - 2023-08-02</h2>
+<h3 id='added' class='heading'>Added:</h3>
+
+<ul>
+<li>Added Automatic Mobile Environment Attributes functionality which makes it simpler to target your mobile customers based on application name or version, or on device characteristics including manufacturer, model, operating system, locale, and so on. To learn more, read <a href="https://docs.launchdarkly.com/sdk/features/environment-attributes">Automatic environment attributes</a>.</li>
+</ul>
+<h3 id='removed' class='heading'>Removed</h3>
+
+<ul>
+<li>Removed LDUser and related functionality. Use LDContext instead. To learn more, read <a href="https://docs.launchdarkly.com/home/contexts">https://docs.launchdarkly.com/home/contexts</a>.</li>
+</ul>
 <h2 id='8-2-0-2023-08-02' class='heading'>[8.2.0] - 2023-08-02</h2>
 <h3 id='changed' class='heading'>Changed:</h3>
 
@@ -282,19 +284,19 @@
 
 <ul>
 <li>The type <code><a href="Structs/LDContext.html">LDContext</a></code> defines the new context model.</li>
-<li>For all SDK methods that took an <code><a href="Structs/LDUser.html">LDUser</a></code> parameter, there is now an overload that takes an <code><a href="Structs/LDContext.html">LDContext</a></code>.</li>
+<li>For all SDK methods that took an <code>LDUser</code> parameter, there is now an overload that takes an <code><a href="Structs/LDContext.html">LDContext</a></code>.</li>
 </ul>
 <h3 id='changed' class='heading'>Changed:</h3>
 
 <ul>
-<li>The <code>secondary</code> attribute which existed in <code><a href="Structs/LDUser.html">LDUser</a></code> is no longer a supported feature. If you set an attribute with that name in <code><a href="Structs/LDContext.html">LDContext</a></code>, it will simply be a custom attribute like any other.</li>
+<li>The <code>secondary</code> attribute which existed in <code>LDUser</code> is no longer a supported feature. If you set an attribute with that name in <code><a href="Structs/LDContext.html">LDContext</a></code>, it will simply be a custom attribute like any other.</li>
 <li>Analytics event data now uses a new JSON schema due to differences between the context model and the old user model.</li>
 <li>The SDK no longer adds <code>device</code> and <code>os</code> values to the user attributes. Applications that wish to use device/OS information in feature flag rules must explicitly add such information.</li>
 </ul>
 <h3 id='removed' class='heading'>Removed:</h3>
 
 <ul>
-<li>Removed the <code>secondary</code> meta-attribute in <code><a href="Structs/LDUser.html">LDUser</a></code>.</li>
+<li>Removed the <code>secondary</code> meta-attribute in <code>LDUser</code>.</li>
 <li>The <code>alias</code> method no longer exists because alias events are not needed in the new context model.</li>
 <li>The <code>autoAliasingOptOut</code> and <code>inlineUsersInEvents</code> options no longer exist because they are not relevant in the new context model.</li>
 </ul>
@@ -336,7 +338,7 @@
 <h3 id='fixed' class='heading'>Fixed</h3>
 
 <ul>
-<li>Correctly track whether the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV11isAnonymousSbvp">LDUser.isAnonymous</a></code> property was set explicitly (or by not specifying a key). The variation result for flag rules targeting the <code>anonymous</code> property can differ depending on whether the property is set explicitly.</li>
+<li>Correctly track whether the <code>LDUser.isAnonymous</code> property was set explicitly (or by not specifying a key). The variation result for flag rules targeting the <code>anonymous</code> property can differ depending on whether the property is set explicitly.</li>
 </ul>
 <h2 id='6-0-0-2022-05-04' class='heading'>[6.0.0] - 2022-05-04</h2>
 
@@ -347,7 +349,7 @@
 
 <ul>
 <li>Added the <code><a href="Enums/LDValue.html">LDValue</a></code> class to represent any data type that is allowed in JSON. This new type is used to provide more type safety when representing complex or non-statically determined data types. The SDK also provides the bridge types <code><a href="Classes/ObjcLDValue.html">ObjcLDValue</a></code> and <code><a href="Enums/ObjcLDValueType.html">ObjcLDValueType</a></code> for Objective-C interoperability.</li>
-<li>Added the <code><a href="Classes/UserAttribute.html">UserAttribute</a></code> class which provides a less error-prone way to refer to user attribute names in configuration.</li>
+<li>Added the <code>UserAttribute</code> class which provides a less error-prone way to refer to user attribute names in configuration.</li>
 <li>Added the type specific variation functions, <code>boolVariation</code>, <code>intVariation</code>, <code>doubleVariation</code>, <code>stringVariation</code>, and <code>jsonVariation</code>, to <code><a href="Classes/LDClient.html">LDClient</a></code>.</li>
 <li>Added the type specific detailed variation functions, <code>boolVariationDetail</code>, <code>intVariationDetail</code>, <code>doubleVariationDetail</code>, <code>stringVariationDetail</code>, and <code>jsonVariationDetail</code>, to <code><a href="Classes/LDClient.html">LDClient</a></code>.</li>
 <li>Added <code>jsonVariation</code> and <code>jsonVariationDetail</code> to <code><a href="Classes/ObjcLDClient.html">ObjcLDClient</a></code>. These functions allow evaluating feature flags where the provided <code>defaultValue</code> and the resulting variation can be any valid JSON data type.</li>
@@ -363,10 +365,10 @@
 <li>The type of the <code>data</code> parameter of <code>ObjcLDClient.track(key: data:)</code> and <code>ObjcLDClient.track(key: data: metricValue)</code> has changed from <code>Any?</code> to <code>ObjLDValue?</code>. In Objective-C this would be a change from <code>id _Nullable</code> to <code>LDValue * _Nullable</code>.</li>
 <li><code><a href="Classes/LDClient.html#/s:12LaunchDarkly8LDClientC8allFlagsSDySSAA7LDValueOGSgvp">LDClient.allFlags</a></code> now has the type <code>[LDFlagKey: LDValue]?</code> rather than <code>[LDFlagKey: Any]?</code>.</li>
 <li><code><a href="Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(py)allFlags">ObjcLDClient.allFlags</a></code> now has the type <code>[String: ObjcLDValue]?</code> rather than <code>[String: Any]?</code>. In Objective-C this would be a change from <code>NSDictionary&lt;NSString*, id&gt; * _Nullable</code> to <code>NSDictionary&lt;NSString*, LDValue*&gt; * _Nullable</code>.</li>
-<li>The type of the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSAA7LDValueOGvp">LDUser.custom</a></code> dictionary, and the corresponding <code>LDUser.init</code> parameter has been changed from <code>[String: Any]?</code> to <code>[String: LDValue]</code>.</li>
-<li>The type of the <code><a href="Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)custom">ObjcLDUser.custom</a></code> property has been changed from <code>[String: Any]?</code> to <code>[String: ObjcLDValue]</code>. In Objective-C this would be a change from <code>NSDictionary&lt;NSString*, id&gt; * _Nullable</code> to <code>NSDictionary&lt;NSString*, LDValue*&gt; * _Nonnull</code>.</li>
-<li>The type of the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code> property, and the corresponding <code>LDUser.init</code> parameter, have been changed from <code>[String]?</code> to <code>[UserAttribute]</code>.</li>
-<li>The type of the <code><a href="Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)privateAttributes">ObjcLDUser.privateAttributes</a></code> property has been changed from <code>[String]?</code> to <code>[String]</code>. In Objective-C this would be a change from <code>NSArray&lt;NSString*&gt; * _Nullable</code> to <code>NSArray&lt;NSString*&gt; * _Nonnull</code>.</li>
+<li>The type of the <code>LDUser.custom</code> dictionary, and the corresponding <code>LDUser.init</code> parameter has been changed from <code>[String: Any]?</code> to <code>[String: LDValue]</code>.</li>
+<li>The type of the <code>ObjcLDUser.custom</code> property has been changed from <code>[String: Any]?</code> to <code>[String: ObjcLDValue]</code>. In Objective-C this would be a change from <code>NSDictionary&lt;NSString*, id&gt; * _Nullable</code> to <code>NSDictionary&lt;NSString*, LDValue*&gt; * _Nonnull</code>.</li>
+<li>The type of the <code>LDUser.privateAttributes</code> property, and the corresponding <code>LDUser.init</code> parameter, have been changed from <code>[String]?</code> to <code>[UserAttribute]</code>.</li>
+<li>The type of the <code>ObjcLDUser.privateAttributes</code> property has been changed from <code>[String]?</code> to <code>[String]</code>. In Objective-C this would be a change from <code>NSArray&lt;NSString*&gt; * _Nullable</code> to <code>NSArray&lt;NSString*&gt; * _Nonnull</code>.</li>
 <li>The types of the properties <code><a href="Structs/LDChangedFlag.html#/s:12LaunchDarkly13LDChangedFlagV8oldValueAA7LDValueOvp">LDChangedFlag.oldValue</a></code> and <code><a href="Structs/LDChangedFlag.html#/s:12LaunchDarkly13LDChangedFlagV8newValueAA7LDValueOvp">LDChangedFlag.newValue</a></code> have been changed from <code>Any?</code> to <code><a href="Enums/LDValue.html">LDValue</a></code>.</li>
 <li>The type of the <code>LDConfig.privateUserAttributes</code> property has been changed from <code>[String]?</code> to <code>[UserAttribute]</code>.</li>
 <li><code>ObjcLDConfig.privateUserAttributes</code> now has the non-optional type <code>[String]</code> rather than <code>[String]?</code>. In Objective-C this would be a change from <code>NSArray&lt;NSString*&gt; * _Nullable</code> to <code>NSArray&lt;NSString*&gt; * _Nonnull</code>.</li>
@@ -376,8 +378,8 @@
 <h3 id='changed-behavioral' class='heading'>Changed (behavioral)</h3>
 
 <ul>
-<li>The <code>Equatable</code> instance for <code><a href="Structs/LDUser.html">LDUser</a></code> has been changed to compare all user properties, rather than just the <code>key</code> property.</li>
-<li>Using <code>&quot;custom&quot;</code> as a private attribute name in <code>LDConfig.privateUserAttributes</code> or <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code> will no longer set all <code><a href="Structs/LDUser.html">LDUser</a></code> custom attributes private.</li>
+<li>The <code>Equatable</code> instance for <code>LDUser</code> has been changed to compare all user properties, rather than just the <code>key</code> property.</li>
+<li>Using <code>&quot;custom&quot;</code> as a private attribute name in <code>LDConfig.privateUserAttributes</code> or <code>LDUser.privateAttributes</code> will no longer set all <code>LDUser</code> custom attributes private.</li>
 <li>The automatically set <code>device</code> and <code>operatingSystem</code> custom attributes can now be set private.</li>
 <li>SDK versions from 4.0.0 and less than 6.0.0 supported migration of cached flag data from any SDK version of at least 2.3.3. The 6.0.0 release only supports migration of cached flag data from SDK versions of at least 4.0.0.</li>
 </ul>
@@ -388,11 +390,11 @@
 <li>Removed the <code>LDFlagValueConvertible</code> protocol which was previously used to constrain the parameters and return types of the variation functions.</li>
 <li><code>LDErrorHandler</code> and <code>LDClient.observeError(owner: handler:)</code> have been removed. Please use <code><a href="Structs/ConnectionInformation.html">ConnectionInformation</a></code> instead.</li>
 <li>Removed the <code>LDUser.init(userDictionary: )</code> and <code>ObjcLDUser.init(userDictionary: )</code> initializers, please use the explicit initializers instead.</li>
-<li>Removed <code>LDUser.CodingKeys</code>. To refer to user attributes, please use <code><a href="Classes/UserAttribute.html">UserAttribute</a></code> instead.</li>
+<li>Removed <code>LDUser.CodingKeys</code>. To refer to user attributes, please use <code>UserAttribute</code> instead.</li>
 <li>Removed <code>LDUser.privatizableAttributes</code> and <code>ObjcLDUser.privatizableAttributes</code>.</li>
 <li>Removed <code>ObjcLDUser.attributeCustom</code>.</li>
-<li>The <code>LDUser.device</code> and <code>LDUser.operatingSystem</code> properties, and the corresponding <code>LDUser.init</code> parameters have been removed. These fields will be included in the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV6customSDySSAA7LDValueOGvp">LDUser.custom</a></code> dictionary.</li>
-<li>The <code>ObjcLDUser.device</code> and <code>ObjcLDUser.operatingSystem</code> properties have been removed. These fields will be included in the <code><a href="Classes/ObjcLDUser.html#/c:@M@LaunchDarkly@objc(cs)LDUser(py)custom">ObjcLDUser.custom</a></code> dictionary.</li>
+<li>The <code>LDUser.device</code> and <code>LDUser.operatingSystem</code> properties, and the corresponding <code>LDUser.init</code> parameters have been removed. These fields will be included in the <code>LDUser.custom</code> dictionary.</li>
+<li>The <code>ObjcLDUser.device</code> and <code>ObjcLDUser.operatingSystem</code> properties have been removed. These fields will be included in the <code>ObjcLDUser.custom</code> dictionary.</li>
 <li>The <code><a href="Classes/ObjcLDClient.html">ObjcLDClient</a></code> functions, <code>arrayVariation</code>, <code>arrayVariationDetail</code>, <code>dictionaryVariation</code>, and <code>dictionaryVariationDetail</code>, have been removed. Please use <code>ObjcLDClient.jsonVariation</code> and <code>ObjcLDClient.jsonVariationDetail</code> instead.</li>
 <li>The per-type instances of <code><a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></code> have been removed. Please use the base class <code><a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a></code>, which now provides <code>oldValue</code> and <code>newValue</code> <code><a href="Classes/ObjcLDValue.html">ObjcLDValue</a></code> properties. The removed classes are <code>ObjcLDBoolChangedFlag</code>, <code>ObjcLDIntegerChangedFlag</code>, <code>ObjcLDDoubleChangedFlag</code>, <code>ObjcLDStringChangedFlag</code>, <code>ObjcLDArrayChangedFlag</code>, and <code>ObjcLDDictionaryChangedFlag</code>.</li>
 <li>The classes <code>ObjcLDArrayEvaluationDetail</code> and <code>ObjcLDDictionaryEvaluationDetail</code> have been removed. Please use <code><a href="Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a></code> instead.</li>
@@ -467,7 +469,7 @@
 <h3 id='fixed' class='heading'>Fixed</h3>
 
 <ul>
-<li>Decoupled <code>FlagStore</code> from <code><a href="Structs/LDUser.html">LDUser</a></code> to fix a bug where multiple environments could overwrite each other&rsquo;s flag values.</li>
+<li>Decoupled <code>FlagStore</code> from <code>LDUser</code> to fix a bug where multiple environments could overwrite each other&rsquo;s flag values.</li>
 </ul>
 <h2 id='5-3-0-2020-11-06' class='heading'>[5.3.0] - 2020-11-06</h2>
 <h3 id='added' class='heading'>Added</h3>
@@ -479,12 +481,12 @@
 <h3 id='added' class='heading'>Added</h3>
 
 <ul>
-<li><code><a href="Structs/LDUser.html">LDUser</a></code> now has an optional <code>secondary</code> attribute to match other LaunchDarkly SDKs. For more on the behavior of this attribute see <a href="https://docs.launchdarkly.com/home/flags/targeting-users">the documentation on targeting users</a>.</li>
+<li><code>LDUser</code> now has an optional <code>secondary</code> attribute to match other LaunchDarkly SDKs. For more on the behavior of this attribute see <a href="https://docs.launchdarkly.com/home/flags/targeting-users">the documentation on targeting users</a>.</li>
 </ul>
 <h3 id='fixed' class='heading'>Fixed</h3>
 
 <ul>
-<li>Corrected a bug preventing private custom attribute names being recorded in events when all custom attributes are set to be private by including &ldquo;custom&rdquo; in the <code><a href="Structs/LDUser.html#/s:12LaunchDarkly6LDUserV17privateAttributesSayAA13UserAttributeCGvp">LDUser.privateAttributes</a></code> or <code>LDConfig.privateUserAttributes</code> properties.</li>
+<li>Corrected a bug preventing private custom attribute names being recorded in events when all custom attributes are set to be private by including &ldquo;custom&rdquo; in the <code>LDUser.privateAttributes</code> or <code>LDConfig.privateUserAttributes</code> properties.</li>
 <li>Update Nimble to 9.0 and Quick to 3.0 to fix tests when run with Swift 5.3.</li>
 <li>Fixes build warnings in Xcode 12.0.0.</li>
 </ul>
@@ -573,7 +575,7 @@
 <li><code>LDFlagValueSource</code> and <code>ObjcLDFlagValueSource</code> were removed in favor of using <code><a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code> and <code>ObjcLD&lt;T&gt;EvaluationDetail</code>.</li>
 <li>The Objective-C wrapper classes <code>ObjcLD&lt;T&gt;VariationValue</code> (bound in Objective-C to <code>LD&lt;T&gt;VariationValue</code>), which wrapped a flag value and its source, have been removed.</li>
 <li><code>variationAndSource</code> methods were removed from <code><a href="Classes/LDClient.html">LDClient</a></code> and its <code><a href="Classes/ObjcLDClient.html">ObjcLDClient</a></code> wrapper in favor of <code>variationDetail</code> methods.</li>
-<li><code>LDUser.init?(object: )</code> and corresponding <code><a href="Classes/ObjcLDUser.html">ObjcLDUser</a></code> failable initializers were removed.</li>
+<li><code>LDUser.init?(object: )</code> and corresponding <code>ObjcLDUser</code> failable initializers were removed.</li>
 <li><code>JSONError</code> and <code>JSONErrorDomain</code> extensions on <code>JSONSerialization</code> were removed.</li>
 <li>Removed <code>isEqual</code> extension to <code>Array</code>, this was only intended for internal SDK use.</li>
 <li>Removed <code>==</code> and <code>!=</code> extension to <code>Optional&lt;[String: Any]&gt;</code> (note that this was not declared as <code>Equatable</code> conformance). This extension was only intended for internal SDK use.</li>
@@ -749,14 +751,14 @@
 <ul>
 <li><code><a href="Classes/LDClient.html">LDClient</a></code> can now provide information about the source of a feature flag, <code>cache</code>, <code>server</code>, and <code>fallback</code>.</li>
 <li><code><a href="Structs/LDConfig.html">LDConfig</a></code> offers some new configuration properties: <code>eventCapacity</code>, <code>startOnline</code>, <code>enableBackgroundUpdates</code></li>
-<li><code><a href="Structs/LDUser.html">LDUser</a></code> replaces the builder model from v2.x. This Swift struct has all the v2.x properties, plus support for creating a user from a dictionary.</li>
+<li><code>LDUser</code> replaces the builder model from v2.x. This Swift struct has all the v2.x properties, plus support for creating a user from a dictionary.</li>
 <li><code><a href="Classes/LDClient.html">LDClient</a></code> has a new property <code>allFlagValues</code> which provides the client app with a snapshot of the feature flags available and their values</li>
 </ul>
 <h3 id='changed' class='heading'>Changed</h3>
 
 <ul>
 <li>Replaced Objective-C SDK with Swift SDK. See <a href="./MigrationGuide.md">MigrationGuide.md</a> for details on converting to v3.</li>
-<li><code><a href="Structs/LDConfig.html">LDConfig</a></code> and <code><a href="Structs/LDUser.html">LDUser</a></code> are Swift <code>struct</code>s, giving you value semantics which makes it easier to control the SDK.</li>
+<li><code><a href="Structs/LDConfig.html">LDConfig</a></code> and <code>LDUser</code> are Swift <code>struct</code>s, giving you value semantics which makes it easier to control the SDK.</li>
 <li><code><a href="Classes/LDClient.html">LDClient</a></code> controls remain similar to v2.x. Setting a <code>config</code> or <code>user</code> is possible before, during, and after start.</li>
 <li><code><a href="Classes/LDClient.html">LDClient</a></code> uses Swift generics to get feature flag values. Swift client apps use a <code>variation</code> method (without the type) to get flag values.</li>
 <li><code>LDClientDelegate</code> was removed. Observe feature flags using <code>observe</code> methods on <code><a href="Classes/LDClient.html">LDClient</a></code>. Set a closure the <code><a href="Classes/LDClient.html">LDClient</a></code> will execute when the server is unavailable.</li>
@@ -1020,7 +1022,7 @@ NOTE: See <code>LDClient.h</code> for the requirements to add <code>secondaryMob
 <li>LDPollingManager now reads the config set at the time of the startPolling message and configures polling timers accordingly.</li>
 <li>LDRequestManager now reads the config set at the time of the performRequest message to configure the API request.</li>
 <li>Removes duplicate LDEventSource libraries linked warning</li>
-<li><code>updateUser</code> now updates the <code><a href="Structs/LDUser.html">LDUser</a></code> <code>anonymous</code> property when using a default user key.</li>
+<li><code>updateUser</code> now updates the <code>LDUser</code> <code>anonymous</code> property when using a default user key.</li>
 </ul>
 <h2 id='2-8-0-2017-10-13' class='heading'>[2.8.0] - 2017-10-13</h2>
 <h3 id='added' class='heading'>Added</h3>

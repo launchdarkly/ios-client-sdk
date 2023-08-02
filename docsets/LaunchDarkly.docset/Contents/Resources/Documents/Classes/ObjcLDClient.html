@@ -17,7 +17,7 @@
     <a title="ObjcLDClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 8.2.0 Docs</a> (92% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 9.0.0 Docs</a> (91% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -56,9 +56,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/LDContextBuilder.html">LDContextBuilder</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/Reference.html">Reference</a>
@@ -150,9 +147,6 @@
                 <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/ObjcLDUser.html">ObjcLDUser</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
               </li>
               <li class="nav-group-task">
@@ -212,17 +206,14 @@
               <li class="nav-group-task">
                 <a href="../Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
               </li>
-              <li class="nav-group-task">
-                <a href="../Classes/UserAttribute.html">UserAttribute</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
-              </li>
             </ul>
           </li>
           <li class="nav-group-name">
             <a href="../Other%20Enums.html">Other Enumerations</a>
             <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/AutoEnvAttributes.html">AutoEnvAttributes</a>
+              </li>
               <li class="nav-group-task">
                 <a href="../Enums/ContextBuilderError.html">ContextBuilderError</a>
               </li>
@@ -549,37 +540,6 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)identifyWithUser:"></a>
-                    <a name="//apple_ref/swift/Method/identify(user:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)identifyWithUser:">identify(user:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Deprecated identify method which accepts a legacy LDUser instead of an LDContext.</p>
-
-<p>This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See <code>identify(context)</code> for details.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">deprecated</span><span class="p">,</span> <span class="nv">message</span><span class="p">:</span> <span class="s">"Use identify(context﹚"</span><span class="p">)</span>
-<span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">identify</span><span class="p">(</span><span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
                     <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)identifyWithContext:completion:"></a>
                     <a name="//apple_ref/swift/Method/identify(context:completion:)" class="dashAnchor"></a>
                     <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)identifyWithContext:completion:">identify(context:<wbr>completion:<wbr>)</a>
@@ -638,37 +598,6 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                             </tr>
                           </tbody>
                         </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(im)identifyWithUser:completion:"></a>
-                    <a name="//apple_ref/swift/Method/identify(user:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(im)identifyWithUser:completion:">identify(user:<wbr>completion:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Deprecated identify method which accepts a legacy LDUser instead of an LDContext.</p>
-
-<p>This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(im)identifyWithContext:completion:">identify(context:completion:)</a></code> for details.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">deprecated</span><span class="p">,</span> <span class="nv">message</span><span class="p">:</span> <span class="s">"Use identify(context:completion:﹚"</span><span class="p">)</span>
-<span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">func</span> <span class="nf">identify</span><span class="p">(</span><span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -2249,37 +2178,6 @@ Subsequent calls to this method cause the LDClient to return. Normally there sho
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(cm)startWithConfiguration:user:completion:"></a>
-                    <a name="//apple_ref/swift/Method/start(configuration:user:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(cm)startWithConfiguration:user:completion:">start(configuration:<wbr>user:<wbr>completion:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Deprecated start method which accepts a legacy LDUser instead of an LDContext.</p>
-
-<p>This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(cm)startWithConfiguration:context:completion:">start(configuration:context:completion:)</a></code> for details.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">deprecated</span><span class="p">,</span> <span class="nv">message</span><span class="p">:</span> <span class="s">"Use start(configuration:context:completion:﹚"</span><span class="p">)</span>
-<span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">configuration</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a></span><span class="p">,</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
                     <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(cm)startWithConfiguration:context:startWaitSeconds:completion:"></a>
                     <a name="//apple_ref/swift/Method/start(configuration:context:startWaitSeconds:completion:)" class="dashAnchor"></a>
                     <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(cm)startWithConfiguration:context:startWaitSeconds:completion:">start(configuration:<wbr>context:<wbr>startWaitSeconds:<wbr>completion:<wbr>)</a>
@@ -2356,37 +2254,6 @@ Subsequent calls to this method cause the LDClient to return. Normally there sho
                             </tr>
                           </tbody>
                         </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDClient(cm)startWithConfiguration:user:startWaitSeconds:completion:"></a>
-                    <a name="//apple_ref/swift/Method/start(configuration:user:startWaitSeconds:completion:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDClient(cm)startWithConfiguration:user:startWaitSeconds:completion:">start(configuration:<wbr>user:<wbr>startWaitSeconds:<wbr>completion:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Deprecated start method which accepts a legacy LDUser instead of an LDContext.</p>
-
-<p>This LDUser will be converted into an LDContext, and the context specific version of this method will be called. See <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDClient(cm)startWithConfiguration:context:startWaitSeconds:completion:">start(configuration:context:startWaitSeconds:completion:)</a></code> for details.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">deprecated</span><span class="p">,</span> <span class="nv">message</span><span class="p">:</span> <span class="s">"Use start(configuration:context:startWaitSeconds:completion:﹚"</span><span class="p">)</span>
-<span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">configuration</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a></span><span class="p">,</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></span><span class="p">,</span> <span class="nv">startWaitSeconds</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">((</span><span class="n">_</span> <span class="nv">timedOut</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>

@@ -17,7 +17,7 @@
     <a title="Other Classes  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 8.2.0 Docs</a> (92% documented)</p>
+        <p><a href="index.html">LaunchDarkly 9.0.0 Docs</a> (91% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -56,9 +56,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="Structs/LDContextBuilder.html">LDContextBuilder</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/Reference.html">Reference</a>
@@ -150,9 +147,6 @@
                 <a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/ObjcLDUser.html">ObjcLDUser</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Classes/ObjcLDValue.html">ObjcLDValue</a>
               </li>
               <li class="nav-group-task">
@@ -212,17 +206,14 @@
               <li class="nav-group-task">
                 <a href="Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
               </li>
-              <li class="nav-group-task">
-                <a href="Classes/UserAttribute.html">UserAttribute</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
-              </li>
             </ul>
           </li>
           <li class="nav-group-name">
             <a href="Other%20Enums.html">Other Enumerations</a>
             <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Enums/AutoEnvAttributes.html">AutoEnvAttributes</a>
+              </li>
               <li class="nav-group-task">
                 <a href="Enums/ContextBuilderError.html">ContextBuilderError</a>
               </li>
@@ -257,41 +248,6 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:12LaunchDarkly13UserAttributeC"></a>
-                    <a name="//apple_ref/swift/Class/UserAttribute" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly13UserAttributeC">UserAttribute</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Represents a built-in or custom attribute name supported by <code><a href="Structs/LDUser.html">LDUser</a></code>.</p>
-
-<p>This abstraction helps to distinguish attribute names from other <code>String</code> values.</p>
-
-<p>For a more complete description of user attributes and how they can be referenced in feature flag rules, see the
-reference guides <a href="https://docs.launchdarkly.com/home/users/attributes">Setting user attributes</a> and
-<a href="https://docs.launchdarkly.com/home/flags/targeting-users">Targeting users</a>.</p>
-
-                        <a href="Classes/UserAttribute.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">deprecated</span><span class="p">)</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="kt">UserAttribute</span> <span class="p">:</span> <span class="kt">Equatable</span><span class="p">,</span> <span class="kt">Hashable</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
                     <a name="/c:@M@LaunchDarkly@objc(cs)LDApplicationInfo"></a>
                     <a name="//apple_ref/swift/Class/ObjcLDApplicationInfo" class="dashAnchor"></a>
                     <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDApplicationInfo">ObjcLDApplicationInfo</a>
@@ -304,8 +260,7 @@ reference guides <a href="https://docs.launchdarkly.com/home/users/attributes">S
                       <div class="abstract">
                         <p>Use LDApplicationInfo to define application metadata.</p>
 
-<p>These properties are optional and informational. They may be used in LaunchDarkly analytics or other product features,
-but they do not affect feature flag evaluations.</p>
+<p>These properties are optional and informational. They may be used in LaunchDarkly analytics or other product features.</p>
 
                         <a href="Classes/ObjcLDApplicationInfo.html" class="slightly-smaller">See more</a>
                       </div>

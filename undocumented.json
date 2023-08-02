@@ -128,14 +128,14 @@
     },
     {
       "file": "/Users/tanderson/workspace/ld-repos/ios-client-sdk/LaunchDarkly/LaunchDarkly/Models/LDConfig.swift",
-      "line": 43,
+      "line": 65,
       "symbol": "ApplicationInfo.init()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/tanderson/workspace/ld-repos/ios-client-sdk/LaunchDarkly/LaunchDarkly/ObjectiveC/ObjcLDApplicationInfo.swift",
-      "line": 13,
+      "line": 12,
       "symbol": "ObjcLDApplicationInfo.init()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"

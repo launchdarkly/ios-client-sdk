@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>ObjcLDStringEvaluationDetail Class Reference</title>
+    <title>AutoEnvAttributes Enumeration Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Class/ObjcLDStringEvaluationDetail" class="dashAnchor"></a>
-    <a title="ObjcLDStringEvaluationDetail Class Reference"></a>
+    <a name="//apple_ref/swift/Enum/AutoEnvAttributes" class="dashAnchor"></a>
+    <a title="AutoEnvAttributes Enumeration Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html">LaunchDarkly 9.0.0 Docs</a> (91% documented)</p>
@@ -30,7 +30,7 @@
       <p id="breadcrumbs">
         <a href="../index.html">LaunchDarkly Reference</a>
         <img id="carat" src="../img/carat.png" alt=""/>
-        ObjcLDStringEvaluationDetail Class Reference
+        AutoEnvAttributes Enumeration Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -238,16 +238,26 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>ObjcLDStringEvaluationDetail</h1>
+            <h1>AutoEnvAttributes</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">@objc</span><span class="p">(</span><span class="kt">LDStringEvaluationDetail</span><span class="p">)</span>
-<span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">ObjcLDStringEvaluationDetail</span> <span class="p">:</span> <span class="kt">NSObject</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">@objc</span>
+<span class="kd">public</span> <span class="kd">enum</span> <span class="kt">AutoEnvAttributes</span> <span class="p">:</span> <span class="kt">Int</span></code></pre>
 
                 </div>
               </div>
-            <p>Structure that contains the evaluation result and additional information when evaluating a flag as a string.</p>
+            <p>Enable / disable options for Auto Environment Attributes functionality. When enabled, the SDK will automatically
+provide data about the mobile environment where the application is running. This data makes it simpler to target
+your mobile customers based on application name or version, or on device characteristics including manufacturer,
+model, operating system, locale, and so on. We recommend enabling this when you configure the SDK. To learn more,
+read <a href="https://docs.launchdarkly.com/sdk/features/environment-attributes">Automatic environment attributes</a>.</p>
+
+<p>For example, consider a “dark mode” feature being added to an app. Versions 10 through 14 contain early,
+incomplete versions of the feature. These versions are available to all customers, but the “dark mode” feature is only
+enabled for testers.  With version 15, the feature is considered complete. With Auto Environment Attributes enabled,
+you can use targeting rules to enable &ldquo;dark mode&rdquo; for all customers who are using version 15 or greater, and ensure
+that customers on previous versions don&rsquo;t use the earlier, unfinished version of the feature.</p>
 
           </section>
           <section class="section task-group-section">
@@ -256,9 +266,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDStringEvaluationDetail(py)value"></a>
-                    <a name="//apple_ref/swift/Property/value" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDStringEvaluationDetail(py)value">value</a>
+                    <a name="/c:@M@LaunchDarkly@E@AutoEnvAttributes@AutoEnvAttributesEnabled"></a>
+                    <a name="//apple_ref/swift/Element/enabled" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@E@AutoEnvAttributes@AutoEnvAttributesEnabled">enabled</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -266,15 +276,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The value of the flag for the current context.</p>
+                        <p>Enables the Auto EnvironmentAttributes functionality.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">let</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">enabled</span></code></pre>
 
                         </div>
                       </div>
@@ -284,9 +293,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDStringEvaluationDetail(py)variationIndex"></a>
-                    <a name="//apple_ref/swift/Property/variationIndex" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDStringEvaluationDetail(py)variationIndex">variationIndex</a>
+                    <a name="/c:@M@LaunchDarkly@E@AutoEnvAttributes@AutoEnvAttributesDisabled"></a>
+                    <a name="//apple_ref/swift/Element/disabled" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@E@AutoEnvAttributes@AutoEnvAttributesDisabled">disabled</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -294,43 +303,14 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>The index of the returned value within the flag&rsquo;s list of variations, or <code>-1</code> if the default was returned.</p>
+                        <p>Disables the Auto EnvironmentAttributes functionality.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">let</span> <span class="nv">variationIndex</span><span class="p">:</span> <span class="kt">Int</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@LaunchDarkly@objc(cs)LDStringEvaluationDetail(py)reason"></a>
-                    <a name="//apple_ref/swift/Property/reason" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@LaunchDarkly@objc(cs)LDStringEvaluationDetail(py)reason">reason</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>A structure representing the main factor that influenced the resultant flag evaluation value.</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="k">let</span> <span class="nv">reason</span><span class="p">:</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDValue.html">ObjcLDValue</a></span><span class="p">]?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">disabled</span></code></pre>
 
                         </div>
                       </div>

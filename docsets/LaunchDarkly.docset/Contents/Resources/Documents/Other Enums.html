@@ -17,7 +17,7 @@
     <a title="Other Enumerations  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 8.2.0 Docs</a> (92% documented)</p>
+        <p><a href="index.html">LaunchDarkly 9.0.0 Docs</a> (91% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -56,9 +56,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="Structs/LDContextBuilder.html">LDContextBuilder</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/Reference.html">Reference</a>
@@ -150,9 +147,6 @@
                 <a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/ObjcLDUser.html">ObjcLDUser</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Classes/ObjcLDValue.html">ObjcLDValue</a>
               </li>
               <li class="nav-group-task">
@@ -212,17 +206,14 @@
               <li class="nav-group-task">
                 <a href="Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
               </li>
-              <li class="nav-group-task">
-                <a href="Classes/UserAttribute.html">UserAttribute</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
-              </li>
             </ul>
           </li>
           <li class="nav-group-name">
             <a href="Other%20Enums.html">Other Enumerations</a>
             <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Enums/AutoEnvAttributes.html">AutoEnvAttributes</a>
+              </li>
               <li class="nav-group-task">
                 <a href="Enums/ContextBuilderError.html">ContextBuilderError</a>
               </li>
@@ -341,6 +332,45 @@ there is a specific Kind for each of the individual Contexts within it.</p>
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">ReferenceError</span> <span class="p">:</span> <span class="kt">Codable</span><span class="p">,</span> <span class="kt">Equatable</span><span class="p">,</span> <span class="kt">Error</span></code></pre>
 <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">ReferenceError</span><span class="p">:</span> <span class="kt">CustomStringConvertible</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@M@LaunchDarkly@E@AutoEnvAttributes"></a>
+                    <a name="//apple_ref/swift/Enum/AutoEnvAttributes" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@LaunchDarkly@E@AutoEnvAttributes">AutoEnvAttributes</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Enable / disable options for Auto Environment Attributes functionality. When enabled, the SDK will automatically
+provide data about the mobile environment where the application is running. This data makes it simpler to target
+your mobile customers based on application name or version, or on device characteristics including manufacturer,
+model, operating system, locale, and so on. We recommend enabling this when you configure the SDK. To learn more,
+read <a href="https://docs.launchdarkly.com/sdk/features/environment-attributes">Automatic environment attributes</a>.</p>
+
+<p>For example, consider a “dark mode” feature being added to an app. Versions 10 through 14 contain early,
+incomplete versions of the feature. These versions are available to all customers, but the “dark mode” feature is only
+enabled for testers.  With version 15, the feature is considered complete. With Auto Environment Attributes enabled,
+you can use targeting rules to enable &ldquo;dark mode&rdquo; for all customers who are using version 15 or greater, and ensure
+that customers on previous versions don&rsquo;t use the earlier, unfinished version of the feature.</p>
+
+                        <a href="Enums/AutoEnvAttributes.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+<span class="kd">public</span> <span class="kd">enum</span> <span class="kt">AutoEnvAttributes</span> <span class="p">:</span> <span class="kt">Int</span></code></pre>
 
                         </div>
                       </div>

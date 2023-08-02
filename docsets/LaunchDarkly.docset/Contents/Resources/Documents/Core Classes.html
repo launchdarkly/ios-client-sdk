@@ -17,7 +17,7 @@
     <a title="Core Classes  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">LaunchDarkly 8.2.0 Docs</a> (92% documented)</p>
+        <p><a href="index.html">LaunchDarkly 9.0.0 Docs</a> (91% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="search.json">
@@ -56,9 +56,6 @@
               </li>
               <li class="nav-group-task">
                 <a href="Structs/LDContextBuilder.html">LDContextBuilder</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Structs/LDUser.html">LDUser</a>
               </li>
               <li class="nav-group-task">
                 <a href="Structs/Reference.html">Reference</a>
@@ -150,9 +147,6 @@
                 <a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
               </li>
               <li class="nav-group-task">
-                <a href="Classes/ObjcLDUser.html">ObjcLDUser</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="Classes/ObjcLDValue.html">ObjcLDValue</a>
               </li>
               <li class="nav-group-task">
@@ -212,17 +206,14 @@
               <li class="nav-group-task">
                 <a href="Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
               </li>
-              <li class="nav-group-task">
-                <a href="Classes/UserAttribute.html">UserAttribute</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/UserAttribute/BuiltIn.html">– BuiltIn</a>
-              </li>
             </ul>
           </li>
           <li class="nav-group-name">
             <a href="Other%20Enums.html">Other Enumerations</a>
             <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Enums/AutoEnvAttributes.html">AutoEnvAttributes</a>
+              </li>
               <li class="nav-group-task">
                 <a href="Enums/ContextBuilderError.html">ContextBuilderError</a>
               </li>
@@ -411,38 +402,6 @@ is false, and it has no values for any other attributes.</p>
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">LDContextBuilder</span></code></pre>
-
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:12LaunchDarkly6LDUserV"></a>
-                    <a name="//apple_ref/swift/Struct/LDUser" class="dashAnchor"></a>
-                    <a class="token" href="#/s:12LaunchDarkly6LDUserV">LDUser</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>LDUser allows clients to collect information about users in order to refine the feature flag values sent to the SDK.</p>
-
-<p>The usage of LDUser is no longer recommended and is retained only to ease the adoption of the <code><a href="Structs/LDContext.html">LDContext</a></code> class. New
-code using this SDK should make use of the <code><a href="Structs/LDContextBuilder.html">LDContextBuilder</a></code> to construct an equivalent <code><a href="Enums/Kind.html#/s:12LaunchDarkly4KindO4useryA2CmF">Kind.user</a></code> kind context.</p>
-
-                        <a href="Structs/LDUser.html" class="slightly-smaller">See more</a>
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">deprecated</span><span class="p">,</span> <span class="nv">message</span><span class="p">:</span> <span class="s">"Use LDContextBuilder to construct a context of kind 'user'"</span><span class="p">)</span>
-<span class="kd">public</span> <span class="kd">struct</span> <span class="kt">LDUser</span> <span class="p">:</span> <span class="kt">Encodable</span><span class="p">,</span> <span class="kt">Equatable</span></code></pre>
 
                         </div>
                       </div>
