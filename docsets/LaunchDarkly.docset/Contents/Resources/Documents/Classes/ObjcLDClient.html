@@ -17,7 +17,7 @@
     <a title="ObjcLDClient Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">LaunchDarkly 8.1.0 Docs</a> (92% documented)</p>
+        <p><a href="../index.html">LaunchDarkly 8.2.0 Docs</a> (92% documented)</p>
         <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
         <div class="header-right">
           <form role="search" action="../search.json">
@@ -568,7 +568,8 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+                          <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">deprecated</span><span class="p">,</span> <span class="nv">message</span><span class="p">:</span> <span class="s">"Use identify(context﹚"</span><span class="p">)</span>
+<span class="kd">@objc</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="nf">identify</span><span class="p">(</span><span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></span><span class="p">)</span></code></pre>
 
                         </div>
@@ -663,7 +664,8 @@ Use <code><a href="../Classes/ObjcLDClient.html#/c:@M@LaunchDarkly@objc(cs)LDCli
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+                          <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">deprecated</span><span class="p">,</span> <span class="nv">message</span><span class="p">:</span> <span class="s">"Use identify(context:completion:﹚"</span><span class="p">)</span>
+<span class="kd">@objc</span>
 <span class="kd">public</span> <span class="kd">func</span> <span class="nf">identify</span><span class="p">(</span><span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
@@ -2266,7 +2268,8 @@ Subsequent calls to this method cause the LDClient to return. Normally there sho
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+                          <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">deprecated</span><span class="p">,</span> <span class="nv">message</span><span class="p">:</span> <span class="s">"Use start(configuration:context:completion:﹚"</span><span class="p">)</span>
+<span class="kd">@objc</span>
 <span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">configuration</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a></span><span class="p">,</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
@@ -2379,7 +2382,8 @@ Subsequent calls to this method cause the LDClient to return. Normally there sho
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+                          <pre class="highlight swift"><code><span class="kd">@available</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">deprecated</span><span class="p">,</span> <span class="nv">message</span><span class="p">:</span> <span class="s">"Use start(configuration:context:startWaitSeconds:completion:﹚"</span><span class="p">)</span>
+<span class="kd">@objc</span>
 <span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">configuration</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a></span><span class="p">,</span> <span class="nv">user</span><span class="p">:</span> <span class="kt"><a href="../Classes/ObjcLDUser.html">ObjcLDUser</a></span><span class="p">,</span> <span class="nv">startWaitSeconds</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">((</span><span class="n">_</span> <span class="nv">timedOut</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
 
                         </div>
