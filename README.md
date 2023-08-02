@@ -96,6 +96,14 @@ Testing
 
 We run integration tests for all our SDKs using a centralized test harness. This approach gives us the ability to test for consistency across SDKs, as well as test networking behavior in a long-running application. These tests cover each method in the SDK, and verify that event sending, flag evaluation, stream reconnection, and other aspects of the SDK all behave correctly.
 
+Privacy
+-------
+
+At WWDC23, Apple introduced the concept of Privacy Manifests. The privacy manifest included with the SDK describes our data usage with respect to the minimum case of data collection. If you utilize the SDK, you will have to update your own privacy manifest if you choose to collect more data in your implementation than the minimum for our SDK to function.
+
+To learn more about Privacy Manifests, please refer to [Apple Developer Documention.](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_data_use_in_privacy_manifests) 
+
+
 Contributing
 ------------
 
