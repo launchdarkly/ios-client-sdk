@@ -18,6 +18,26 @@ public enum LDStreamingMode {
     case polling
 }
 
+/**
+ Enable / disable options for Auto Environment Attributes functionality. When enabled, the SDK will automatically
+ provide data about the mobile environment where the application is running. This data makes it simpler to target
+ your mobile customers based on application name or version, or on device characteristics including manufacturer,
+ model, operating system, locale, and so on. We recommend enabling this when you configure the SDK. To learn more,
+ read [Automatic environment attributes](https://docs.launchdarkly.com/sdk/features/environment-attributes).
+
+ For example, consider a “dark mode” feature being added to an app. Versions 10 through 14 contain early,
+ incomplete versions of the feature. These versions are available to all customers, but the “dark mode” feature is only
+ enabled for testers.  With version 15, the feature is considered complete. With Auto Environment Attributes enabled,
+ you can use targeting rules to enable "dark mode" for all customers who are using version 15 or greater, and ensure
+ that customers on previous versions don't use the earlier, unfinished version of the feature.
+ */
+@objc public enum AutoEnvAttributes: Int {
+    /// Enables the Auto EnvironmentAttributes functionality.
+    case enabled
+    /// Disables the Auto EnvironmentAttributes functionality.
+    case disabled
+}
+
 typealias MobileKey = String
 
 /**
@@ -35,14 +55,18 @@ public typealias RequestHeaderTransform = (_ url: URL, _ headers: [String: Strin
 /// Defines application metadata.
 ///
 /// These properties are optional and informational. They may be used in LaunchDarkly
-/// analytics or other product features, but they do not affect feature flag evaluations.
+/// analytics or other product features.
 public struct ApplicationInfo: Equatable {
-    private var applicationId: String
-    private var applicationVersion: String
+    internal var applicationId: String
+    internal var applicationName: String
+    internal var applicationVersion: String
+    internal var applicationVersionName: String
 
     public init() {
         applicationId = ""
+        applicationName = ""
         applicationVersion = ""
+        applicationVersionName = ""
     }
 
     /// A unique identifier representing the application where the LaunchDarkly SDK is running.
@@ -57,6 +81,20 @@ public struct ApplicationInfo: Equatable {
         }
 
         self.applicationId = applicationId
+    }
+
+    /// A human-friendly application name representing the application where the LaunchDarkly SDK is running.
+    ///
+    /// This can be specified as any string value as long as it only uses the following characters:
+    /// ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
+    /// characters will be ignored.
+    public mutating func applicationName(_ applicationName: String) {
+        if let error = validate(applicationName) {
+            Log.debug("applicationName \(error)")
+            return
+        }
+
+        self.applicationName = applicationName
     }
 
     /// A unique identifier representing the version of the application where the LaunchDarkly SDK
@@ -74,6 +112,21 @@ public struct ApplicationInfo: Equatable {
         self.applicationVersion = applicationVersion
     }
 
+    /// A human-friendly name representing the version of the application where the LaunchDarkly SDK
+    /// is running.
+    ///
+    /// This can be specified as any string value as long as it only uses the following characters:
+    /// ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
+    /// characters will be ignored.
+    public mutating func applicationVersionName(_ applicationVersionName: String) {
+        if let error = validate(applicationVersionName) {
+            Log.debug("applicationVersionName \(error)")
+            return
+        }
+
+        self.applicationVersionName = applicationVersionName
+    }
+
     func buildTag() -> String {
         var tags: [String] = []
 
@@ -81,8 +134,16 @@ public struct ApplicationInfo: Equatable {
             tags.append("application-id/\(applicationId)")
         }
 
+        if (!applicationName.isEmpty) {
+            tags.append("application-name/\(applicationName)")
+        }
+
         if !applicationVersion.isEmpty {
             tags.append("application-version/\(applicationVersion)")
+        }
+
+        if !applicationVersionName.isEmpty {
+            tags.append("application-version-name/\(applicationVersionName)")
         }
 
         return tags.lazy.joined(separator: " ")
@@ -172,6 +233,9 @@ public struct LDConfig {
 
         /// a closure to allow dynamic changes of headers on connect & reconnect
         static let headerDelegate: RequestHeaderTransform? = nil
+
+        /// The default behavior for environment attributes is to not modify any provided context UNLESS the developer specifically opts-in.
+        static let autoEnvAttributes: Bool = false
     }
 
     /// Constants relevant to setting up an `LDConfig`
@@ -204,8 +268,8 @@ public struct LDConfig {
         /// The minimum time interval between sending periodic diagnostic data. (5 minutes)
         public let diagnosticRecordingInterval: TimeInterval
 
-        init(environmentReporter: EnvironmentReporting = EnvironmentReporter()) {
-            let isDebug = environmentReporter.isDebugBuild
+        init(isDebugBuild: Bool = false) {
+            let isDebug = isDebugBuild
             self.flagPollingInterval = isDebug ? Debug.flagPollingInterval : Production.flagPollingInterval
             self.backgroundFlagPollingInterval = isDebug ? Debug.backgroundFlagPollingInterval : Production.backgroundFlagPollingInterval
             self.diagnosticRecordingInterval = isDebug ? Debug.diagnosticRecordingInterval : Production.diagnosticRecordingInterval
@@ -328,13 +392,15 @@ public struct LDConfig {
     /// a closure to allow dynamic changes of headers on connect & reconnect
     public var headerDelegate: RequestHeaderTransform?
 
+    /// Set to true to opt in to automatically sending mobile environment attributes.  This data makes it simpler to target mobile customers
+    /// based on application name or version, or on device characteristics including manufacturer, model, operating system, locale, and so on.
+    public var autoEnvAttributes: Bool = Defaults.autoEnvAttributes
+
     /// LaunchDarkly defined minima for selected configurable items
     public let minima: Minima
 
     /// An NSObject wrapper for the Swift LDConfig struct. Intended for use in mixed apps when Swift code needs to pass a config into an Objective-C method.
     public var objcLdConfig: ObjcLDConfig { ObjcLDConfig(self) }
-
-    let environmentReporter: EnvironmentReporting
 
     /// A Dictionary of identifying names to unique mobile keys for all environments
     private var mobileKeys: [String: String] {
@@ -378,21 +444,33 @@ public struct LDConfig {
     private var _secondaryMobileKeys: [String: String]
 
     // Internal constructor to enable automated testing
-    init(mobileKey: String, environmentReporter: EnvironmentReporting) {
+    init(mobileKey: String, autoEnvAttributes: AutoEnvAttributes, isDebugBuild: Bool) {
         self.mobileKey = mobileKey
-        self.environmentReporter = environmentReporter
-        minima = Minima(environmentReporter: environmentReporter)
-        allowStreamingMode = environmentReporter.operatingSystem.isStreamingEnabled
-        allowBackgroundUpdates = environmentReporter.operatingSystem.isBackgroundEnabled
+        self.autoEnvAttributes = (autoEnvAttributes == .enabled) // mapping API enum to bool
+        minima = Minima(isDebugBuild: isDebugBuild)
+        allowStreamingMode = SystemCapabilities.operatingSystem.isStreamingEnabled
+        allowBackgroundUpdates = SystemCapabilities.operatingSystem.isBackgroundEnabled
         _secondaryMobileKeys = Defaults.secondaryMobileKeys
         if mobileKey.isEmpty {
             Log.debug(typeName(and: #function, appending: ": ") + "mobileKey is empty. The SDK will not operate correctly without a valid mobile key.")
         }
     }
 
-    /// LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` in order to retain previously set values.
-    public init(mobileKey: String) {
-        self.init(mobileKey: mobileKey, environmentReporter: EnvironmentReporter())
+    /**
+     LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired.
+     Note that client app developers may prefer to get the LDConfig from `LDClient.config` in order to retain previously set values.
+
+     - Parameters:
+     - mobileKey: The mobile key for the LaunchDarkly environment. This can be found on the LaunchDarkly dashboard once logged in.
+     - autoEnvAttributes: Enable / disable Auto Environment Attributes functionality. When enabled, the SDK will automatically
+     provide data about the mobile environment where the application is running. This data makes it simpler to target
+     your mobile customers based on application name or version, or on device characteristics including manufacturer,
+     model, operating system, locale, and so on. We recommend enabling this when you configure the SDK. To learn more,
+     read [Automatic environment attributes](https://docs.launchdarkly.com/sdk/features/environment-attributes).
+     for more documentation.
+     */
+    public init(mobileKey: String, autoEnvAttributes: AutoEnvAttributes) {
+        self.init(mobileKey: mobileKey, autoEnvAttributes: autoEnvAttributes, isDebugBuild: false)
     }
 
     // Determine the effective flag polling interval based on runMode, configured foreground & background polling interval, and minimum foreground & background polling interval.
@@ -437,6 +515,7 @@ extension LDConfig: Equatable {
             && lhs.wrapperName == rhs.wrapperName
             && lhs.wrapperVersion == rhs.wrapperVersion
             && lhs.additionalHeaders == rhs.additionalHeaders
+            && lhs.autoEnvAttributes == rhs.autoEnvAttributes
     }
 }
 

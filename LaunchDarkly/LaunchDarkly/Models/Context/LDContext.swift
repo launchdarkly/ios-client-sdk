@@ -26,7 +26,7 @@ public struct LDContext: Encodable, Equatable {
     static let storedIdKey: String = "ldDeviceIdentifier"
 
     internal var kind: Kind = .user
-    fileprivate var contexts: [LDContext] = []
+    internal var contexts: [LDContext] = []
 
     // Meta attributes
     fileprivate var name: String?
@@ -855,7 +855,14 @@ public struct LDMultiContextBuilder {
     ///
     /// It is invalid to add more than one context with the same Kind. This error is detected when
     /// you call `LDMultiContextBuilder.build()`.
+    ///
+    /// Adding a multi-kind context behaves the same as if each single-kind context was added individually.
     public mutating func addContext(_ context: LDContext) {
+        if context.isMulti() {
+            contexts.append(contentsOf: context.contexts)
+            return
+        }
+
         contexts.append(context)
     }
 
@@ -872,10 +879,6 @@ public struct LDMultiContextBuilder {
     public func build() -> Result<LDContext, ContextBuilderError> {
         if contexts.isEmpty {
             return Result.failure(.emptyMultiKind)
-        }
-
-        if contexts.contains(where: { $0.isMulti() }) {
-            return Result.failure(.nestedMultiKind)
         }
 
         if contexts.count == 1 {

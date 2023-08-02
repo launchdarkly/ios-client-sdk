@@ -12,10 +12,8 @@ final class ThrottlerSpec: QuickSpec {
     let dispatchQueue = DispatchQueue(label: "ThrottlerSpecQueue")
 
     func testThrottler(throttlingDisabled: Bool = false) -> Throttler {
-        let environmentReporterMock = EnvironmentReportingMock()
-        environmentReporterMock.shouldThrottleOnlineCalls = !throttlingDisabled
         return Throttler(maxDelay: Constants.maxDelay,
-                         environmentReporter: environmentReporterMock,
+                         isDebugBuild: throttlingDisabled,
                          dispatcher: { self.dispatchQueue.sync(execute: $0) })
     }
 
@@ -122,9 +120,7 @@ final class ThrottlerSpec: QuickSpec {
 
     func maxDelaySpec() {
         it("limits delay to maxDelay") {
-            let envReporter = EnvironmentReportingMock()
-            envReporter.shouldThrottleOnlineCalls = true
-            let throttler = Throttler(maxDelay: 1.0, environmentReporter: envReporter)
+            let throttler = Throttler(maxDelay: 1.0, isDebugBuild: false)
             (0..<10).forEach { _ in throttler.runThrottled { } }
             let callDate = Date()
             var runDate: Date?

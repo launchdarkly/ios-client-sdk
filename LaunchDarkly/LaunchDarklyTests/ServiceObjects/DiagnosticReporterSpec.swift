@@ -15,7 +15,7 @@ final class DiagnosticReporterSpec: XCTestCase {
 
         init() {
             service = DarklyServiceMock()
-            subject = DiagnosticReporter(service: service)
+            subject = DiagnosticReporter(service: service, environmentReporting: EnvironmentReportingMock())
 
             cachingMock.getDiagnosticIdReturnValue = diagnosticId
             service.diagnosticCache = cachingMock

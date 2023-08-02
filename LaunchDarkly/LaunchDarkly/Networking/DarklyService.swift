@@ -53,7 +53,7 @@ final class DarklyService: DarklyServiceProvider {
     private var session: URLSession
     var flagRequestEtag: String?
 
-    init(config: LDConfig, context: LDContext, serviceFactory: ClientServiceCreating) {
+  init(config: LDConfig, context: LDContext, envReporter: EnvironmentReporting, serviceFactory: ClientServiceCreating) {
         self.config = config
         self.context = context
         self.serviceFactory = serviceFactory
@@ -64,7 +64,7 @@ final class DarklyService: DarklyServiceProvider {
             self.diagnosticCache = nil
         }
 
-        self.httpHeaders = HTTPHeaders(config: config, environmentReporter: serviceFactory.makeEnvironmentReporter())
+        self.httpHeaders = HTTPHeaders(config: config, environmentReporter: envReporter)
         // URLSessionConfiguration is a class, but `.default` creates a new instance. This does not effect other session configuration.
         let sessionConfig = URLSessionConfiguration.default
 

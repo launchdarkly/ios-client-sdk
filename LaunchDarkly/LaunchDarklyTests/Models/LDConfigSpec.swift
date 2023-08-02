@@ -42,7 +42,6 @@ final class LDConfigSpec: XCTestCase {
          ("poll interval", Constants.flagPollingInterval, { c, v in c.flagPollingInterval = v as! TimeInterval }),
          ("background poll interval", Constants.backgroundFlagPollingInterval, { c, v in c.backgroundFlagPollingInterval = v as! TimeInterval }),
          ("streaming mode", Constants.streamingMode, { c, v in c.streamingMode = v as! LDStreamingMode }),
-         ("enable background updates", Constants.enableBackgroundUpdates, { c, v in c.enableBackgroundUpdates = v as! Bool }),
          ("start online", Constants.startOnline, { c, v in c.startOnline = v as! Bool }),
          ("debug mode", Constants.debugMode, { c, v in c.isDebugMode = v as! Bool }),
          ("all context attributes private", Constants.allContextAttributesPrivate, { c, v in c.allContextAttributesPrivate = v as! Bool }),
@@ -57,7 +56,7 @@ final class LDConfigSpec: XCTestCase {
          ("additional headers", Constants.additionalHeaders, { c, v in c.additionalHeaders = v as! [String: String]})]
 
     func testInitDefault() {
-        let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey)
+        let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
         XCTAssertEqual(config.mobileKey, LDConfig.Constants.mockMobileKey)
         XCTAssertEqual(config.baseUrl, LDConfig.Defaults.baseUrl)
         XCTAssertEqual(config.eventsUrl, LDConfig.Defaults.eventsUrl)
@@ -85,9 +84,7 @@ final class LDConfigSpec: XCTestCase {
 
     func testInitUpdate() {
         OperatingSystem.allOperatingSystems.forEach { os in
-            let environmentReporter = EnvironmentReportingMock()
-            environmentReporter.operatingSystem = os
-            var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
+            var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
             testFields.forEach { _, otherVal, setter in
                 setter(&config, otherVal)
             }
@@ -101,7 +98,10 @@ final class LDConfigSpec: XCTestCase {
             XCTAssertEqual(config.flagPollingInterval, Constants.flagPollingInterval, "\(os)")
             XCTAssertEqual(config.backgroundFlagPollingInterval, Constants.backgroundFlagPollingInterval, "\(os)")
             XCTAssertEqual(config.streamingMode, Constants.streamingMode, "\(os)")
-            XCTAssertEqual(config.enableBackgroundUpdates, os.isBackgroundEnabled, "\(os)")
+            // TODO(os-tests): We need to expand this to the other OSs
+            if os == .iOS && os == SystemCapabilities.operatingSystem {
+                XCTAssertEqual(config.enableBackgroundUpdates, os.isBackgroundEnabled, "\(os)")
+            }
             XCTAssertEqual(config.startOnline, Constants.startOnline, "\(os)")
             XCTAssertEqual(config.allContextAttributesPrivate, Constants.allContextAttributesPrivate, "\(os)")
             XCTAssertEqual(config.privateContextAttributes, Constants.privateContextAttributes, "\(os)")
@@ -118,18 +118,14 @@ final class LDConfigSpec: XCTestCase {
     }
 
     func testMinimaInitDebug() {
-        let environmentReporter = EnvironmentReportingMock()
-        environmentReporter.isDebugBuild = true
-        let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
+        let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: true)
         XCTAssertEqual(config.minima.flagPollingInterval, LDConfig.Minima.Debug.flagPollingInterval)
         XCTAssertEqual(config.minima.backgroundFlagPollingInterval, LDConfig.Minima.Debug.backgroundFlagPollingInterval)
         XCTAssertEqual(config.minima.diagnosticRecordingInterval, LDConfig.Minima.Debug.diagnosticRecordingInterval)
     }
 
     func testMinimaInitRelease() {
-        let environmentReporter = EnvironmentReportingMock()
-        environmentReporter.isDebugBuild = false
-        let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
+        let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
         XCTAssertEqual(config.minima.flagPollingInterval, LDConfig.Minima.Production.flagPollingInterval)
         XCTAssertEqual(config.minima.backgroundFlagPollingInterval, LDConfig.Minima.Production.backgroundFlagPollingInterval)
         XCTAssertEqual(config.minima.diagnosticRecordingInterval, LDConfig.Minima.Production.diagnosticRecordingInterval)
@@ -137,9 +133,7 @@ final class LDConfigSpec: XCTestCase {
 
     func testFlagPollingInterval() {
         [false, true].forEach { debugMode in
-            let environmentReporter = EnvironmentReportingMock()
-            environmentReporter.isDebugBuild = debugMode
-            var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
+            var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: debugMode)
             // polling interval above minimum.
             var interval = config.minima.flagPollingInterval + 0.001
             config.flagPollingInterval = interval
@@ -168,7 +162,7 @@ final class LDConfigSpec: XCTestCase {
     }
 
     func testDiagnosticReportingInterval() {
-        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: EnvironmentReportingMock())
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
         // set below minimum value
         config.diagnosticRecordingInterval = config.minima.diagnosticRecordingInterval - 0.001
         XCTAssertEqual(config.diagnosticRecordingInterval, config.minima.diagnosticRecordingInterval)
@@ -178,19 +172,16 @@ final class LDConfigSpec: XCTestCase {
     }
 
     func testEquals() {
-        let environmentReporter = EnvironmentReportingMock()
-        // must use a background enabled OS to test inequality of background enabled
-        environmentReporter.operatingSystem = OperatingSystem.backgroundEnabledOperatingSystems.first!
-        let defaultConfig = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
+        let defaultConfig = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
         // same config
         symmetricAssertEqual(defaultConfig, defaultConfig)
         // equivalent config
-        symmetricAssertEqual(defaultConfig, LDConfig(mobileKey: LDConfig.Constants.mockMobileKey))
+        symmetricAssertEqual(defaultConfig, LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled))
         // different mobile key
-        symmetricAssertNotEqual(defaultConfig, LDConfig(mobileKey: LDConfig.Constants.alternateMobileKey))
+        symmetricAssertNotEqual(defaultConfig, LDConfig(mobileKey: LDConfig.Constants.alternateMobileKey, autoEnvAttributes: .disabled))
 
         testFields.forEach { name, otherVal, setter in
-            var otherConfig = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmentReporter)
+            var otherConfig = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
             setter(&otherConfig, otherVal)
             symmetricAssertNotEqual(defaultConfig, otherConfig, "\(name) is the same")
         }
@@ -206,20 +197,22 @@ final class LDConfigSpec: XCTestCase {
 
     func testAllowStreamingModeSpec() {
         for operatingSystem in OperatingSystem.allOperatingSystems {
-            let environmenReporter = EnvironmentReportingMock()
-            environmenReporter.operatingSystem = operatingSystem
-            let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmenReporter)
-            XCTAssertEqual(config.allowStreamingMode, operatingSystem.isStreamingEnabled)
+            let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+            // TODO(os-tests): We need to expand this to the other OSs
+            if operatingSystem == .iOS && operatingSystem == SystemCapabilities.operatingSystem {
+                XCTAssertEqual(config.allowStreamingMode, operatingSystem.isStreamingEnabled)
+            }
         }
     }
 
     func testAllowBackgroundUpdatesSpec() {
         for operatingSystem in OperatingSystem.allOperatingSystems {
-            let environmenReporter = EnvironmentReportingMock()
-            environmenReporter.operatingSystem = operatingSystem
-            var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, environmentReporter: environmenReporter)
+            var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
             config.enableBackgroundUpdates = true
-            XCTAssertEqual(config.enableBackgroundUpdates, operatingSystem.isBackgroundEnabled)
+            // TODO(os-tests): We need to expand this to the other OSs
+            if operatingSystem == .iOS && operatingSystem == SystemCapabilities.operatingSystem {
+                XCTAssertEqual(config.enableBackgroundUpdates, operatingSystem.isBackgroundEnabled)
+            }
         }
     }
 
@@ -227,12 +220,25 @@ final class LDConfigSpec: XCTestCase {
         var applicationInfo = ApplicationInfo()
         XCTAssertEqual("", applicationInfo.buildTag())
 
-        applicationInfo.applicationVersion("example-version")
-        XCTAssertEqual("application-version/example-version", applicationInfo.buildTag())
-
         applicationInfo.applicationIdentifier("example-id")
-        XCTAssertEqual("application-id/example-id application-version/example-version", applicationInfo.buildTag())
-    }
+        XCTAssertEqual(
+            "application-id/example-id",
+            applicationInfo.buildTag())
+
+        applicationInfo.applicationName("example-name")
+        XCTAssertEqual(
+            "application-id/example-id application-name/example-name",
+            applicationInfo.buildTag())
+
+        applicationInfo.applicationVersion("example-version")
+        XCTAssertEqual(
+            "application-id/example-id application-name/example-name application-version/example-version",
+            applicationInfo.buildTag())
+
+        applicationInfo.applicationVersionName("example-version-name")
+        XCTAssertEqual(
+            "application-id/example-id application-name/example-name application-version/example-version application-version-name/example-version-name",
+            applicationInfo.buildTag())    }
 
     func testApplicationInfoRejectsInvalidConfigurations() {
         let values = ["", " ", "/", ":", "🐦", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890._-"]
@@ -240,9 +246,19 @@ final class LDConfigSpec: XCTestCase {
 
         for value in values {
             info.applicationIdentifier(value)
+            info.applicationName(value)
             info.applicationVersion(value)
+            info.applicationVersionName(value)
 
             XCTAssertEqual("", info.buildTag())
         }
+    }
+
+    func testAutoEnvAttributesParameter() {
+        let config1 = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        XCTAssertFalse(config1.autoEnvAttributes)
+
+        let config2 = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .enabled)
+        XCTAssertTrue(config2.autoEnvAttributes)
     }
 }

@@ -20,13 +20,13 @@ struct DiagnosticInit: DiagnosticEvent, Encodable {
     let configuration: DiagnosticConfig
     let platform: DiagnosticPlatform
 
-    init(config: LDConfig, diagnosticId: DiagnosticId, creationDate: Int64) {
+    init(config: LDConfig, environmentReporting: EnvironmentReporting, diagnosticId: DiagnosticId, creationDate: Int64) {
         self.id = diagnosticId
         self.creationDate = creationDate
 
         self.sdk = DiagnosticSdk(config: config)
         self.configuration = DiagnosticConfig(config: config)
-        self.platform = DiagnosticPlatform(config: config)
+        self.platform = DiagnosticPlatform(environmentReporting: environmentReporting)
     }
 }
 
@@ -68,12 +68,12 @@ struct DiagnosticPlatform: Encodable {
     // Very general device model such as "iPad", "iPhone Simulator", or "Apple Watch"
     let deviceType: String
 
-    init(config: LDConfig) {
-        systemName = config.environmentReporter.operatingSystem.rawValue
-        systemVersion = config.environmentReporter.systemVersion
-        backgroundEnabled = config.environmentReporter.operatingSystem.isBackgroundEnabled
-        streamingEnabled = config.environmentReporter.operatingSystem.isStreamingEnabled
-        deviceType = config.environmentReporter.deviceType
+    init(environmentReporting: EnvironmentReporting) {
+        systemName = SystemCapabilities.operatingSystem.rawValue
+        systemVersion = environmentReporting.systemVersion
+        backgroundEnabled = SystemCapabilities.operatingSystem.isBackgroundEnabled
+        streamingEnabled = SystemCapabilities.operatingSystem.isStreamingEnabled
+        deviceType = environmentReporting.deviceModel
     }
 }
 
@@ -84,7 +84,7 @@ struct DiagnosticSdk: Encodable {
     let wrapperVersion: String?
 
     init(config: LDConfig) {
-        version = config.environmentReporter.sdkVersion
+        version = ReportingConsts.sdkVersion
         wrapperName = config.wrapperName
         wrapperVersion = config.wrapperVersion
     }

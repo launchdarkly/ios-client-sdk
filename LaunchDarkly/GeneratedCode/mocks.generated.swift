@@ -110,6 +110,15 @@ final class DiagnosticReportingMock: DiagnosticReporting {
 // MARK: - EnvironmentReportingMock
 final class EnvironmentReportingMock: EnvironmentReporting {
 
+    var applicationInfoSetCount = 0
+    var setApplicationInfoCallback: (() throws -> Void)?
+    var applicationInfo: ApplicationInfo = Constants.applicationInfo {
+        didSet {
+            applicationInfoSetCount += 1
+            try! setApplicationInfoCallback?()
+        }
+    }
+
     var isDebugBuildSetCount = 0
     var setIsDebugBuildCallback: (() throws -> Void)?
     var isDebugBuild: Bool = true {
@@ -119,12 +128,12 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    var deviceTypeSetCount = 0
-    var setDeviceTypeCallback: (() throws -> Void)?
-    var deviceType: String = Constants.deviceType {
+    var deviceModelSetCount = 0
+    var setDeviceModelCallback: (() throws -> Void)?
+    var deviceModel: String = Constants.deviceModel {
         didSet {
-            deviceTypeSetCount += 1
-            try! setDeviceTypeCallback?()
+            deviceModelSetCount += 1
+            try! setDeviceModelCallback?()
         }
     }
 
@@ -137,42 +146,6 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    var systemNameSetCount = 0
-    var setSystemNameCallback: (() throws -> Void)?
-    var systemName: String = Constants.systemName {
-        didSet {
-            systemNameSetCount += 1
-            try! setSystemNameCallback?()
-        }
-    }
-
-    var operatingSystemSetCount = 0
-    var setOperatingSystemCallback: (() throws -> Void)?
-    var operatingSystem: OperatingSystem = .iOS {
-        didSet {
-            operatingSystemSetCount += 1
-            try! setOperatingSystemCallback?()
-        }
-    }
-
-    var backgroundNotificationSetCount = 0
-    var setBackgroundNotificationCallback: (() throws -> Void)?
-    var backgroundNotification: Notification.Name? = EnvironmentReporter().backgroundNotification {
-        didSet {
-            backgroundNotificationSetCount += 1
-            try! setBackgroundNotificationCallback?()
-        }
-    }
-
-    var foregroundNotificationSetCount = 0
-    var setForegroundNotificationCallback: (() throws -> Void)?
-    var foregroundNotification: Notification.Name? = EnvironmentReporter().foregroundNotification {
-        didSet {
-            foregroundNotificationSetCount += 1
-            try! setForegroundNotificationCallback?()
-        }
-    }
-
     var vendorUUIDSetCount = 0
     var setVendorUUIDCallback: (() throws -> Void)?
     var vendorUUID: String? = Constants.vendorUUID {
@@ -182,21 +155,30 @@ final class EnvironmentReportingMock: EnvironmentReporting {
         }
     }
 
-    var sdkVersionSetCount = 0
-    var setSdkVersionCallback: (() throws -> Void)?
-    var sdkVersion: String = Constants.sdkVersion {
+    var manufacturerSetCount = 0
+    var setManufacturerCallback: (() throws -> Void)?
+    var manufacturer: String = Constants.manufacturer {
         didSet {
-            sdkVersionSetCount += 1
-            try! setSdkVersionCallback?()
+            manufacturerSetCount += 1
+            try! setManufacturerCallback?()
         }
     }
 
-    var shouldThrottleOnlineCallsSetCount = 0
-    var setShouldThrottleOnlineCallsCallback: (() throws -> Void)?
-    var shouldThrottleOnlineCalls: Bool = true {
+    var localeSetCount = 0
+    var setLocaleCallback: (() throws -> Void)?
+    var locale: String = Constants.locale {
         didSet {
-            shouldThrottleOnlineCallsSetCount += 1
-            try! setShouldThrottleOnlineCallsCallback?()
+            localeSetCount += 1
+            try! setLocaleCallback?()
+        }
+    }
+
+    var osFamilySetCount = 0
+    var setOsFamilyCallback: (() throws -> Void)?
+    var osFamily: String = Constants.osFamily {
+        didSet {
+            osFamilySetCount += 1
+            try! setOsFamilyCallback?()
         }
     }
 }

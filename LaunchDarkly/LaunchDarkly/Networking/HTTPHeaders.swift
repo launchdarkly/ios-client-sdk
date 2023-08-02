@@ -30,11 +30,11 @@ struct HTTPHeaders {
     init(config: LDConfig, environmentReporter: EnvironmentReporting) {
         self.mobileKey = config.mobileKey
         self.additionalHeaders = config.additionalHeaders
-        self.userAgent = "\(environmentReporter.systemName)/\(environmentReporter.sdkVersion)"
+        self.userAgent = "\(SystemCapabilities.systemName)/\(ReportingConsts.sdkVersion)"
         self.authKey = "\(HeaderValue.apiKey) \(config.mobileKey)"
-        self.applicationTag = config.applicationInfo?.buildTag() ?? ""
+        self.applicationTag = environmentReporter.applicationInfo.buildTag()
 
-        if let wrapperName = config.wrapperName {
+      if let wrapperName = config.wrapperName {
             if let wrapperVersion = config.wrapperVersion {
                 wrapperHeaderVal = "\(wrapperName)/\(wrapperVersion)"
             } else {

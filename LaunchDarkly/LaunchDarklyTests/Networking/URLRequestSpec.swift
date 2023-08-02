@@ -8,7 +8,7 @@ final class URLRequestSpec: XCTestCase {
         var delegateArgs: (url: URL, headers: [String: String])?
 
         let url = URL(string: "https://dummy.urlRequest.com")!
-        var config = LDConfig(mobileKey: "testkey")
+        var config = LDConfig(mobileKey: "testkey", autoEnvAttributes: .disabled)
         config.connectionTimeout = 15
         config.headerDelegate = { url, headers in
             delegateArgs = (url, headers)

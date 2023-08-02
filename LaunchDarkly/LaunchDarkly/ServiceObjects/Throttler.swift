@@ -24,9 +24,9 @@ final class Throttler: Throttling {
     private (set) var workItem: DispatchWorkItem?
 
     init(maxDelay: TimeInterval = Constants.defaultDelay,
-         environmentReporter: EnvironmentReporting = EnvironmentReporter(),
+         isDebugBuild: Bool = false,
          dispatcher: ((@escaping RunClosure) -> Void)? = nil) {
-        self.throttlingEnabled = environmentReporter.shouldThrottleOnlineCalls
+        self.throttlingEnabled = !isDebugBuild
         self.maxDelay = maxDelay
         self.dispatcher = dispatcher ?? { DispatchQueue.global(qos: .userInitiated).async(execute: $0) }
     }
