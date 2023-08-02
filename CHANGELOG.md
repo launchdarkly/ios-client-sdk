@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [8.2.0] - 2023-08-02
+### Changed:
+- Deprecated LDUser and related functionality. Use LDContext instead. To learn more, read https://docs.launchdarkly.com/home/contexts.
+
 ## [8.1.0] - 2023-06-05
 ### Changed:
 - Enforce TLS v1.2 as a required minimum.
