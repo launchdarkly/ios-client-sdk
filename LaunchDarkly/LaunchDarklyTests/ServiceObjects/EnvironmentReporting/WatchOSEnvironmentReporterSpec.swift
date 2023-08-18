@@ -9,6 +9,7 @@ final class WatchOSEnvironmentReporterSpec: XCTest {
         let chain = EnvironmentReporterChainBase()
         chain.setNext(WatchOSEnvironmentReporter())
 
+        XCTAssert(!chain.applicationInfo.isEmpty())
         XCTAssertNotEqual(chain.deviceModel, "UNKNOWN")
         XCTAssertNotEqual(chain.systemVersion, "UNKNOWN")
         XCTAssertNotEqual(chain.systemName, "UNKNOWN")

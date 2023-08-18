@@ -10,6 +10,7 @@ final class IOSEnvironmentReporterSpec: XCTest {
         let chain = EnvironmentReporterChainBase()
         chain.setNext(IOSEnvironmentReporter())
 
+        XCTAssertTrue(!chain.applicationInfo.isEmpty())
         XCTAssertNotEqual(chain.deviceModel, "UNKNOWN")
         XCTAssertNotEqual(chain.systemVersion, "UNKNOWN")
 
