@@ -127,6 +127,16 @@ public struct ApplicationInfo: Equatable {
         self.applicationVersionName = applicationVersionName
     }
 
+    /**
+     - returns: true if all properties are empty or missing, false otherwise
+     */
+    func isEmpty() -> Bool {
+        applicationId.isEmpty &&
+        applicationName.isEmpty &&
+        applicationVersion.isEmpty &&
+        applicationVersionName.isEmpty
+    }
+
     func buildTag() -> String {
         var tags: [String] = []
 
