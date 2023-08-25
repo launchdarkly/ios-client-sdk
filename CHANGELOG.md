@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.0.2] - 2023-08-25
+### Fixed:
+- Updated how Auto Environment Attributes sanitizes and validates provided values to provide a more user friendly experience.
+
 ## [9.0.1] - 2023-08-18
 ### Fixed:
 - Corrected implementation of classes that retrieves ApplicationInfo from package bundle as part of Automatic Mobile Environment Attributes functionality.
