@@ -3,14 +3,13 @@ import XCTest
 
 @testable import LaunchDarkly
 
-final class SDKEnvironmentReporterSpec: XCTest {
+final class SDKEnvironmentReporterSpec: XCTestCase {
 
     func testSdkEnvironmentReporter() {
         let reporter = SDKEnvironmentReporter()
-
-        XCTAssertNotEqual(reporter.applicationInfo.applicationId, ReportingConsts.sdkName)
-        XCTAssertNotEqual(reporter.applicationInfo.applicationName, ReportingConsts.sdkName)
-        XCTAssertNotEqual(reporter.applicationInfo.applicationVersion, ReportingConsts.sdkVersion)
-        XCTAssertNotEqual(reporter.applicationInfo.applicationVersionName, ReportingConsts.sdkVersion)
+        XCTAssertEqual(reporter.applicationInfo.applicationId, ReportingConsts.sdkName)
+        XCTAssertEqual(reporter.applicationInfo.applicationName, ReportingConsts.sdkName)
+        XCTAssertEqual(reporter.applicationInfo.applicationVersion, ReportingConsts.sdkVersion)
+        XCTAssertEqual(reporter.applicationInfo.applicationVersionName, ReportingConsts.sdkVersion)
     }
 }

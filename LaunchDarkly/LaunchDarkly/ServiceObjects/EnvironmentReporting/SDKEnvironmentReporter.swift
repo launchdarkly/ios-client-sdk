@@ -14,6 +14,14 @@ class SDKEnvironmentReporter: EnvironmentReporterChainBase {
         return info
     }
 
+    override var isDebugBuild: Bool {
+      #if DEBUG
+      return true
+      #else
+      return false
+      #endif
+    }
+
     #if os(iOS)
     override var vendorUUID: String? { UIDevice.current.identifierForVendor?.uuidString }
     #elseif os(watchOS)

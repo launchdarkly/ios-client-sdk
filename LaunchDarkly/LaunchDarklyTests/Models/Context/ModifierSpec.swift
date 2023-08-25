@@ -24,10 +24,10 @@ final class ModifierSpec: XCTestCase {
         // we can use the built in context equality check in our assertions
         var appBuilder = LDContextBuilder(key: outputContext.contextKeys()["ld_application"]!)
         appBuilder.kind("ld_application")
-        appBuilder.trySetValue("id", LDValue.string(EnvironmentReportingMock.Constants.applicationInfo.applicationId))
-        appBuilder.trySetValue("version", LDValue.string(EnvironmentReportingMock.Constants.applicationInfo.applicationVersion))
-        appBuilder.trySetValue("name", LDValue.string(EnvironmentReportingMock.Constants.applicationInfo.applicationName))
-        appBuilder.trySetValue("versionName", LDValue.string(EnvironmentReportingMock.Constants.applicationInfo.applicationVersionName))
+        appBuilder.trySetValue("id", LDValue.string(EnvironmentReportingMock.Constants.applicationInfo.applicationId!))
+        appBuilder.trySetValue("version", LDValue.string(EnvironmentReportingMock.Constants.applicationInfo.applicationVersion!))
+        appBuilder.trySetValue("name", LDValue.string(EnvironmentReportingMock.Constants.applicationInfo.applicationName!))
+        appBuilder.trySetValue("versionName", LDValue.string(EnvironmentReportingMock.Constants.applicationInfo.applicationVersionName!))
         appBuilder.trySetValue("locale", LDValue.string(EnvironmentReportingMock.Constants.locale))
         appBuilder.trySetValue("envAttributesVersion", AutoEnvContextModifier.specVersion.toLDValue())
         let appContext = try appBuilder.build().get()
@@ -142,20 +142,29 @@ final class ModifierSpec: XCTestCase {
 
     func testGeneratedLdApplicationKey() throws {
         let underTest = AutoEnvContextModifier(environmentReporter: EnvironmentReportingMock())
-
         var inputBuilder = LDContextBuilder(key: "aKey")
         inputBuilder.kind("aKind")
-        inputBuilder.trySetValue("dontOverwriteMeBro", "really bro")
         let input = try inputBuilder.build().get()
         let outputContext = underTest.modifyContext(input)
         let outputKey = outputContext.contexts.first(where: { $0.kind == Kind("ld_application") })!.getValue(Reference("key"))
-
         // expected key is the hash of the concatanation of id and version
-        let expectedKey = Util.sha256base64(
-            EnvironmentReportingMock.Constants.applicationInfo.applicationId + ":" +
-            EnvironmentReportingMock.Constants.applicationInfo.applicationVersion
-        ).toLDValue()
-
+        let expectedKey = Util.sha256base64("idStub:versionStub").toLDValue()
+        XCTAssertEqual(expectedKey, outputKey)
+    }
+    
+    func testGeneratedLdApplicationKeyWithVersionMissing() throws {
+        var info = ApplicationInfo()
+        info.applicationIdentifier("myID")
+        // version is intentionally omitted
+        let reporter = ApplicationInfoEnvironmentReporter(info)
+        let underTest = AutoEnvContextModifier(environmentReporter: reporter)
+        var inputBuilder = LDContextBuilder(key: "aKey")
+        inputBuilder.kind("aKind")
+        let input = try inputBuilder.build().get()
+        let outputContext = underTest.modifyContext(input)
+        let outputKey = outputContext.contexts.first(where: { $0.kind == Kind("ld_application") })!.getValue(Reference("key"))
+        // expect version to be dropped for hashing
+        let expectedKey = Util.sha256base64("myID:").toLDValue()
         XCTAssertEqual(expectedKey, outputKey)
     }
 }

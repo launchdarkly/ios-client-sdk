@@ -7,5 +7,11 @@ class ApplicationInfoEnvironmentReporter: EnvironmentReporterChainBase {
         self.info = applicationInfo
     }
 
-    override var applicationInfo: ApplicationInfo { return info }
+    override var applicationInfo: ApplicationInfo {
+        // defer to super if applicationId is missing.
+        if info.applicationId == nil {
+            info = super.applicationInfo
+        }
+        return info
+    }
 }

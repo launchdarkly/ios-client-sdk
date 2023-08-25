@@ -46,15 +46,18 @@ class AutoEnvContextModifier {
 
     private func applicationRecipe() -> ContextRecipe {
         let keyCallable: () -> (String) = {
-            Util.sha256base64(self.environmentReporter.applicationInfo.applicationId + ":" + self.environmentReporter.applicationInfo.applicationVersion)
+            Util.sha256base64(
+                (self.environmentReporter.applicationInfo.applicationId ?? "") + ":" +
+                (self.environmentReporter.applicationInfo.applicationVersion ?? "")
+            )
         }
 
         var callables: [String : () -> LDValue] = [:]
         callables[AutoEnvContextModifier.envAttributesVersion] = { () -> LDValue in AutoEnvContextModifier.specVersion.toLDValue() }
-        callables[AutoEnvContextModifier.attrId] = { () -> LDValue in self.environmentReporter.applicationInfo.applicationId.toLDValue() }
-        callables[AutoEnvContextModifier.attrName] = { () -> LDValue in self.environmentReporter.applicationInfo.applicationName.toLDValue() }
-        callables[AutoEnvContextModifier.attrVersion] = { () -> LDValue in self.environmentReporter.applicationInfo.applicationVersion.toLDValue() }
-        callables[AutoEnvContextModifier.attrVersionName] = { () -> LDValue in self.environmentReporter.applicationInfo.applicationVersionName.toLDValue() }
+        callables[AutoEnvContextModifier.attrId] = { () -> LDValue in self.environmentReporter.applicationInfo.applicationId?.toLDValue() ?? LDValue.null }
+        callables[AutoEnvContextModifier.attrName] = { () -> LDValue in self.environmentReporter.applicationInfo.applicationName?.toLDValue() ?? LDValue.null }
+        callables[AutoEnvContextModifier.attrVersion] = { () -> LDValue in self.environmentReporter.applicationInfo.applicationVersion?.toLDValue() ?? LDValue.null }
+        callables[AutoEnvContextModifier.attrVersionName] = { () -> LDValue in self.environmentReporter.applicationInfo.applicationVersionName?.toLDValue() ?? LDValue.null }
         callables[AutoEnvContextModifier.attrLocale] = { () -> LDValue in self.environmentReporter.locale.toLDValue() }
 
         return ContextRecipe(

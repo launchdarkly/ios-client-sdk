@@ -57,30 +57,22 @@ public typealias RequestHeaderTransform = (_ url: URL, _ headers: [String: Strin
 /// These properties are optional and informational. They may be used in LaunchDarkly
 /// analytics or other product features.
 public struct ApplicationInfo: Equatable {
-    internal var applicationId: String
-    internal var applicationName: String
-    internal var applicationVersion: String
-    internal var applicationVersionName: String
+    internal var applicationId: String?
+    internal var applicationName: String?
+    internal var applicationVersion: String?
+    internal var applicationVersionName: String?
 
-    public init() {
-        applicationId = ""
-        applicationName = ""
-        applicationVersion = ""
-        applicationVersionName = ""
-    }
+    public init() {}
 
     /// A unique identifier representing the application where the LaunchDarkly SDK is running.
     ///
     /// This can be specified as any string value as long as it only uses the following characters:
     /// ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
     /// characters will be ignored.
-    public mutating func applicationIdentifier(_ applicationId: String) {
-        if let error = validate(applicationId) {
-            Log.debug("applicationIdentifier \(error)")
-            return
+    public mutating func applicationIdentifier(_ applicationId: String?) {
+        validateThenCall(inputName: "applicationId", input: applicationId) {
+            self.applicationId = $0
         }
-
-        self.applicationId = applicationId
     }
 
     /// A human-friendly application name representing the application where the LaunchDarkly SDK is running.
@@ -88,13 +80,10 @@ public struct ApplicationInfo: Equatable {
     /// This can be specified as any string value as long as it only uses the following characters:
     /// ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
     /// characters will be ignored.
-    public mutating func applicationName(_ applicationName: String) {
-        if let error = validate(applicationName) {
-            Log.debug("applicationName \(error)")
-            return
+    public mutating func applicationName(_ applicationName: String?) {
+        validateThenCall(inputName: "applicationName", input: applicationName) {
+            self.applicationName = $0
         }
-
-        self.applicationName = applicationName
     }
 
     /// A unique identifier representing the version of the application where the LaunchDarkly SDK
@@ -103,13 +92,10 @@ public struct ApplicationInfo: Equatable {
     /// This can be specified as any string value as long as it only uses the following characters:
     /// ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
     /// characters will be ignored.
-    public mutating func applicationVersion(_ applicationVersion: String) {
-        if let error = validate(applicationVersion) {
-            Log.debug("applicationVersion \(error)")
-            return
+    public mutating func applicationVersion(_ applicationVersion: String?) {
+        validateThenCall(inputName: "applicationVersion", input: applicationVersion) {
+            self.applicationVersion = $0
         }
-
-        self.applicationVersion = applicationVersion
     }
 
     /// A human-friendly name representing the version of the application where the LaunchDarkly SDK
@@ -118,55 +104,70 @@ public struct ApplicationInfo: Equatable {
     /// This can be specified as any string value as long as it only uses the following characters:
     /// ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
     /// characters will be ignored.
-    public mutating func applicationVersionName(_ applicationVersionName: String) {
-        if let error = validate(applicationVersionName) {
-            Log.debug("applicationVersionName \(error)")
-            return
+    public mutating func applicationVersionName(_ applicationVersionName: String?) {
+        validateThenCall(inputName: "applicationVersionName", input: applicationVersionName) {
+            self.applicationVersionName = $0
         }
-
-        self.applicationVersionName = applicationVersionName
-    }
-
-    /**
-     - returns: true if all properties are empty or missing, false otherwise
-     */
-    func isEmpty() -> Bool {
-        applicationId.isEmpty &&
-        applicationName.isEmpty &&
-        applicationVersion.isEmpty &&
-        applicationVersionName.isEmpty
     }
 
     func buildTag() -> String {
         var tags: [String] = []
 
-        if !applicationId.isEmpty {
+        if let applicationId = applicationId {
             tags.append("application-id/\(applicationId)")
         }
 
-        if (!applicationName.isEmpty) {
+        if let applicationName = applicationName {
             tags.append("application-name/\(applicationName)")
         }
 
-        if !applicationVersion.isEmpty {
+        if let applicationVersion = applicationVersion {
             tags.append("application-version/\(applicationVersion)")
         }
 
-        if !applicationVersionName.isEmpty {
+        if let applicationVersionName = applicationVersionName {
             tags.append("application-version-name/\(applicationVersionName)")
         }
 
         return tags.lazy.joined(separator: " ")
     }
 
-    private func validate(_ value: String) -> String? {
-        let allowed = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
-        if value.rangeOfCharacter(from: allowed.inverted) != nil {
-            return "contained invalid characters"
+    /**
+     If after sanitization the input is valid, invokes the closure with the sanitized input.  A null input is valid to permit nilling
+     out a property.  Otherwise does not invoke the closure.
+     */
+    private func validateThenCall(inputName: String, input: String?, onSuccess: (String?) -> Void) {
+        // nil input is permitted to clear the property
+        guard let unwrapped = input else {
+            onSuccess(input)
+            return
         }
 
-        if value.count > 64 {
+        let sanitized = unwrapped.replacingOccurrences(of: " ", with: "-")
+        if let error = validate(sanitized) {
+            Log.debug("Issue validating \(inputName) value \(sanitized). \(error)")
+            return
+        }
+
+        onSuccess(sanitized)
+    }
+
+    /**
+     Validates the provided string.
+     - returns: nil if valid, otherwise string describing issue
+     */
+    private func validate(_ input: String) -> String? {
+        if input.isEmpty {
+            return "empty string and was discarded"
+        }
+
+        if input.count > 64 {
             return "longer than 64 characters and was discarded"
+        }
+
+        let allowed = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
+        if input.rangeOfCharacter(from: allowed.inverted) != nil {
+            return "contained invalid characters"
         }
 
         return nil

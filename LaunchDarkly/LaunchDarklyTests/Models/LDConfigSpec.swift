@@ -241,7 +241,7 @@ final class LDConfigSpec: XCTestCase {
             applicationInfo.buildTag())    }
 
     func testApplicationInfoRejectsInvalidConfigurations() {
-        let values = ["", " ", "/", ":", "🐦", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890._-"]
+        let values = ["", "/", ":", "🐦", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890._-"]
         var info = ApplicationInfo()
 
         for value in values {
@@ -252,6 +252,20 @@ final class LDConfigSpec: XCTestCase {
 
             XCTAssertEqual("", info.buildTag())
         }
+    }
+
+    func testSanitizesValues() {
+        var info = ApplicationInfo()
+        info.applicationIdentifier("id has spaces")
+        XCTAssertEqual("id-has-spaces", info.applicationId)
+    }
+
+    func testApplicationInfoNilIsValid() {
+        var info = ApplicationInfo()
+        info.applicationIdentifier("myID")
+        XCTAssertNotNil(info.applicationId)
+        info.applicationIdentifier(nil)
+        XCTAssertNil(info.applicationId)
     }
 
     func testAutoEnvAttributesParameter() {

@@ -5,13 +5,13 @@ import WatchKit
 class WatchOSEnvironmentReporter: EnvironmentReporterChainBase {
     override var applicationInfo: ApplicationInfo {
         var info = ApplicationInfo()
-        info.applicationIdentifier(Bundle.main.object(forInfoDictionaryKey: "CFBundleIdentifier") as? String ?? "")
-        info.applicationVersion(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "")
-        info.applicationName(Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "")
-        info.applicationVersionName(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
+        info.applicationIdentifier(Bundle.main.object(forInfoDictionaryKey: "CFBundleIdentifier") as? String)
+        info.applicationVersion(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String)
+        info.applicationName(Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String)
+        info.applicationVersionName(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String)
 
-        // defer to super if empty
-        if (info.isEmpty()) {
+        // defer to super if applicationId is missing.  This logic is after the setter since the setter has built in sanitization
+        if info.applicationId == nil {
             info = super.applicationInfo
         }
         return info
