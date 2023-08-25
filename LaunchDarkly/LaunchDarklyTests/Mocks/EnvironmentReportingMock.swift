@@ -4,7 +4,14 @@ import Foundation
 
 extension EnvironmentReportingMock {
     struct Constants {
-        static let applicationInfo = LaunchDarkly.ApplicationInfo()
+        static let applicationInfo: ApplicationInfo = {
+            var applicationInfo = LaunchDarkly.ApplicationInfo()
+            applicationInfo.applicationIdentifier("idStub")
+            applicationInfo.applicationVersion("versionStub")
+            applicationInfo.applicationName("nameStub")
+            applicationInfo.applicationVersionName("versionNameStub")
+            return applicationInfo
+        }()
         static let deviceModel = "deviceModelStub"
         static let systemVersion = "systemVersionStub"
         static let systemName = "systemNameStub"
