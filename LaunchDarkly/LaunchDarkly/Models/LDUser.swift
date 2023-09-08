@@ -13,7 +13,8 @@ public struct LDUser: Encodable, Equatable {
 
     static let storedIdKey: String = "ldDeviceIdentifier"
 
-    /// Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user. The key cannot be made private.
+    /// Client app defined string that uniquely identifies the user. If the client app does not define a key, the SDK
+    /// will assign an identifier associated with the anonymous user. The key cannot be made private.
     public var key: String
     /// Client app defined name for the user. (Default: nil)
     public var name: String?
@@ -29,15 +30,21 @@ public struct LDUser: Encodable, Equatable {
     public var email: String?
     /// Client app defined avatar for the user. (Default: nil)
     public var avatar: String?
-    /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private, see `privateAttributes` for details. (Default: [:])
+    /// Client app defined dictionary for the user. The client app may declare top level dictionary items as private,
+    /// see `privateAttributes` for details. (Default: [:])
     public var custom: [String: LDValue]
-    /// Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. isAnonymous cannot be made private. (Default: false)
+    /// Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the
+    /// `key` to set this attribute. isAnonymous cannot be made private. (Default: false)
     public var isAnonymous: Bool
 
     /**
      Client app defined privateAttributes for the user.
      The SDK will not include private attribute values in analytics events, but private attribute names will be sent.
-     This attribute is ignored if `LDConfig.allUserAttributesPrivate` is true. Combined with `LDConfig.privateUserAttributes`. The SDK considers attributes appearing in either list as private. Client apps may define most built-in attributes and all top level `custom` dictionary keys here. (Default: []])
+
+     This attribute is ignored if `LDConfig.allUserAttributesPrivate` is true. Combined with
+     `LDConfig.privateUserAttributes`. The SDK considers attributes appearing in either list as private. Client apps may
+     define most built-in attributes and all top level `custom` dictionary keys here. (Default: []])
+
      See Also: `LDConfig.allUserAttributesPrivate` and `LDConfig.privateUserAttributes`.
     */
     public var privateAttributes: [UserAttribute]
@@ -45,8 +52,13 @@ public struct LDUser: Encodable, Equatable {
     var contextKind: String { isAnonymous ? "anonymousUser" : "user" }
 
     /**
-     Initializer to create a LDUser. Client configurable attributes each have an optional parameter to facilitate setting user information into the LDUser. The SDK will automatically set `key`, `device`, `operatingSystem`, and `isAnonymous` attributes if the client does not provide them. The SDK embeds `device` and `operatingSystem` into the `custom` dictionary for transmission to LaunchDarkly.
-     - parameter key: String that uniquely identifies the user. If the client app does not define a key, the SDK will assign an identifier associated with the anonymous user.
+     Initializer to create a LDUser. Client configurable attributes each have an optional parameter to facilitate
+     setting user information into the LDUser. The SDK will automatically set `key`, `device`, `operatingSystem`, and
+     `isAnonymous` attributes if the client does not provide them. The SDK embeds `device` and `operatingSystem` into
+     the `custom` dictionary for transmission to LaunchDarkly.
+
+     - parameter key: String that uniquely identifies the user. If the client app does not define a key, the SDK will
+       assign an identifier associated with the anonymous user.
      - parameter name: Client app defined name for the user. (Default: nil)
      - parameter firstName: Client app defined first name for the user. (Default: nil)
      - parameter lastName: Client app defined last name for the user. (Default: nil)
@@ -54,8 +66,11 @@ public struct LDUser: Encodable, Equatable {
      - parameter ipAddress: Client app defined ipAddress for the user. (Default: nil)
      - parameter email: Client app defined email address for the user. (Default: nil)
      - parameter avatar: Client app defined avatar for the user. (Default: nil)
-     - parameter custom: Client app defined dictionary for the user. The client app may declare top level dictionary items as private. If the client app defines custom as private, the SDK considers the dictionary private except for device & operatingSystem (which cannot be made private). See `privateAttributes` for details. (Default: nil)
-     - parameter isAnonymous: Client app defined isAnonymous for the user. If the client app does not define isAnonymous, the SDK will use the `key` to set this attribute. (Default: nil)
+     - parameter custom: Client app defined dictionary for the user. The client app may declare top level dictionary
+       items as private. If the client app defines custom as private, the SDK considers the dictionary private except for
+       device & operatingSystem (which cannot be made private). See `privateAttributes` for details. (Default: nil)
+     - parameter isAnonymous: Client app defined isAnonymous for the user. If the client app does not define
+       isAnonymous, the SDK will use the `key` to set this attribute. (Default: nil)
      - parameter privateAttributes: Client app defined privateAttributes for the user. (Default: nil)
      */
     public init(key: String? = nil,
@@ -113,7 +128,8 @@ public struct LDUser: Encodable, Equatable {
     /**
      Internal helper method to convert an LDUser to an LDContext.
 
-     Ideally we would do this as the LDUser was being built. However, the LDUser properties are publicly accessible, which makes that approach problematic.
+     Ideally we would do this as the LDUser was being built. However, the LDUser properties are publicly accessible,
+     which makes that approach problematic.
      */
     internal func toContext() -> Result<LDContext, ContextBuilderError> {
         var contextBuilder = LDContextBuilder(key: key)
@@ -200,11 +216,16 @@ public struct LDUser: Encodable, Equatable {
         }
     }
 
-    /// Default key is the LDUser.key the SDK provides when any intializer is called without defining the key. The key should be constant with respect to the client app installation on a specific device. (The key may change if the client app is uninstalled and then reinstalled on the same device.)
-    /// - parameter environmentReporter: The environmentReporter provides selected information that varies between OS regarding how it's determined
+    /// Default key is the LDUser.key the SDK provides when any intializer is called without defining the key. The key
+    /// should be constant with respect to the client app installation on a specific device. (The key may change if the
+    /// client app is uninstalled and then reinstalled on the same device.)
+    ///
+    /// - parameter environmentReporter: The environmentReporter provides selected information that varies between OS
+    ///   regarding how it's determined
     static func defaultKey(environmentReporter: EnvironmentReporting) -> String {
         // For iOS & tvOS, this should be UIDevice.current.identifierForVendor.UUIDString
-        // For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here should be always the same
+        // For macOS & watchOS, this should be a UUID that the sdk creates and stores so that the value returned here
+        // should be always the same
         if let vendorUUID = environmentReporter.vendorUUID {
             return vendorUUID
         }
