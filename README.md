@@ -60,7 +60,7 @@ To use the [CocoaPods](https://cocoapods.org) dependency manager to integrate La
 ```ruby
 use_frameworks!
 target 'YourTargetName' do
-  pod 'LaunchDarkly', '~> 9.0'
+  pod 'LaunchDarkly', '~> 9.1'
 end
 ```
 
@@ -71,7 +71,7 @@ To use the [Carthage](https://github.com/Carthage/Carthage) dependency manager t
 To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-client-sdk" ~> 9.0
+github "launchdarkly/ios-client-sdk" ~> 9.1
 ```
 
 ### Manual installation
