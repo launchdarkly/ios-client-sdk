@@ -17,6 +17,10 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Removed
 - Removed LDUser and related functionality. Use LDContext instead. To learn more, read https://docs.launchdarkly.com/home/contexts.
 
+## [8.3.0] - 2023-09-08
+### Changed:
+- Deprecated `LDValue.init(integerLiteral: Double)` as this method signature is misleading. A new `LDValue.init(integerLiteral: Int)` signature has been added for clarity.
+
 ## [8.2.0] - 2023-08-02
 ### Changed:
 - Deprecated LDUser and related functionality. Use LDContext instead. To learn more, read https://docs.launchdarkly.com/home/contexts.
