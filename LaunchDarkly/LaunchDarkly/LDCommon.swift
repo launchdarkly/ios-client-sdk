@@ -93,10 +93,25 @@ public enum LDValue: Codable,
         self = .bool(booleanLiteral)
     }
 
+    /// Create an LDValue representation from the provided Double value.
+    ///
+    /// This method DOES NOT truncate the provided Double. As JSON numeric
+    /// values are always treated as double-precision, this method will
+    /// store the given Double as it.
+    @available(*, deprecated, message: "Use LDValue.init(integerLiteral: Int) or LDValue.init(floatLiteral: Double)")
     public init(integerLiteral: Double) {
         self = .number(integerLiteral)
     }
 
+    /// Create an LDValue representation from the provided Int.
+    ///
+    /// All JSON numeric types are represented as double-precision so the
+    /// provided Int will be cast to a Double.
+    public init(integerLiteral: Int) {
+        self = .number(Double(integerLiteral))
+    }
+
+    /// Create an LDValue representation from the provided Double.
     public init(floatLiteral: Double) {
         self = .number(floatLiteral)
     }
