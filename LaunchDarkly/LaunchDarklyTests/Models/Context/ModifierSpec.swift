@@ -148,7 +148,7 @@ final class ModifierSpec: XCTestCase {
         let outputContext = underTest.modifyContext(input)
         let outputKey = outputContext.contexts.first(where: { $0.kind == Kind("ld_application") })!.getValue(Reference("key"))
         // expected key is the hash of the concatanation of id and version
-        let expectedKey = Util.sha256("idStub:versionStub").base64UrlEncodedString.toLDValue()
+        let expectedKey = Util.sha256("idStub").base64UrlEncodedString.toLDValue()
         XCTAssertEqual(expectedKey, outputKey)
     }
     
@@ -164,7 +164,7 @@ final class ModifierSpec: XCTestCase {
         let outputContext = underTest.modifyContext(input)
         let outputKey = outputContext.contexts.first(where: { $0.kind == Kind("ld_application") })!.getValue(Reference("key"))
         // expect version to be dropped for hashing
-        let expectedKey = Util.sha256("myID:").base64UrlEncodedString.toLDValue()
+        let expectedKey = Util.sha256("myID").base64UrlEncodedString.toLDValue()
         XCTAssertEqual(expectedKey, outputKey)
     }
 }
