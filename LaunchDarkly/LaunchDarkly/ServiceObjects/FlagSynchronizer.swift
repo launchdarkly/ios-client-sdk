@@ -2,6 +2,10 @@ import Foundation
 import Dispatch
 import LDSwiftEventSource
 
+#if os(Linux) || os(Windows)
+import FoundationNetworking
+#endif
+
 // sourcery: autoMockable
 protocol LDFlagSynchronizing {
     // sourcery: defaultMockValue = false
@@ -142,7 +146,9 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         else { return Log.debug(typeName(and: #function) + "aborted. Polling already active.") }
 
         Log.debug(typeName(and: #function))
-        flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, execute: processTimer)
+        flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, execute: { [weak self] in
+            self?.processTimer()
+        })
         makeFlagRequest(isOnline: true)
     }
 
@@ -155,7 +161,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         flagRequestTimer = nil
     }
 
-    @objc private func processTimer() {
+    private func processTimer() {
         makeFlagRequest(isOnline: isOnline)
     }
 

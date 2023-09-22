@@ -1,5 +1,9 @@
 import Foundation
 
+#if os(Linux) || os(Windows)
+import FoundationNetworking
+#endif
+
 extension HTTPURLResponse {
 
     struct HeaderKeys {

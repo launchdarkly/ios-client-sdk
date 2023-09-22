@@ -1,5 +1,9 @@
 import Foundation
 
+#if os(Linux) || os(Windows)
+import FoundationNetworking
+#endif
+
 // sourcery: autoMockable
 protocol DiagnosticReporting {
     func setMode(_ runMode: LDClientRunMode, online: Bool)

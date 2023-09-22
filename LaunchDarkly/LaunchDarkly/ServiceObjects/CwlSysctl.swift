@@ -1,3 +1,4 @@
+#if canImport(Darwin)
 //
 //  CwlSysctl.swift
 //  CwlUtils
@@ -78,3 +79,4 @@ struct Sysctl {
         return try! Sysctl.stringForKeys([CTL_HW, HW_MODEL])
     }
 }
+#endif // canImport(Darwin)

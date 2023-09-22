@@ -1,5 +1,9 @@
 import Foundation
 
+#if os(Linux) || os(Windows)
+import FoundationNetworking
+#endif
+
 public struct ConnectionInformation: Codable, CustomStringConvertible {
     public enum ConnectionMode: String, Codable {
         case streaming, offline, establishingStreamingConnection, polling

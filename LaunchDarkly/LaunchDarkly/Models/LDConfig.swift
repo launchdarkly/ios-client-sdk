@@ -1,5 +1,9 @@
 import Foundation
 
+#if os(Linux) || os(Windows)
+import FoundationNetworking
+#endif
+
 /// Defines the connection modes the SDK may be configured to use to retrieve feature flag data from LaunchDarkly.
 public enum LDStreamingMode {
     /**
@@ -31,12 +35,21 @@ public enum LDStreamingMode {
  you can use targeting rules to enable "dark mode" for all customers who are using version 15 or greater, and ensure
  that customers on previous versions don't use the earlier, unfinished version of the feature.
  */
+#if os(Linux) || os(Windows)
+public enum AutoEnvAttributes: Int {
+     /// Enables the Auto EnvironmentAttributes functionality.
+    case enabled
+    /// Disables the Auto EnvironmentAttributes functionality.
+    case disabled
+}
+#else
 @objc public enum AutoEnvAttributes: Int {
     /// Enables the Auto EnvironmentAttributes functionality.
     case enabled
     /// Disables the Auto EnvironmentAttributes functionality.
     case disabled
 }
+#endif
 
 typealias MobileKey = String
 
@@ -410,8 +423,10 @@ public struct LDConfig {
     /// LaunchDarkly defined minima for selected configurable items
     public let minima: Minima
 
+    #if !os(Linux) && !os(Windows)
     /// An NSObject wrapper for the Swift LDConfig struct. Intended for use in mixed apps when Swift code needs to pass a config into an Objective-C method.
     public var objcLdConfig: ObjcLDConfig { ObjcLDConfig(self) }
+    #endif
 
     /// A Dictionary of identifying names to unique mobile keys for all environments
     private var mobileKeys: [String: String] {

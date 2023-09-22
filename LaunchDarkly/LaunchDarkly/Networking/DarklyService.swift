@@ -1,6 +1,10 @@
 import Foundation
 import LDSwiftEventSource
 
+#if os(Linux) || os(Windows)
+import FoundationNetworking
+#endif
+
 typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Error?)
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void
 
@@ -68,11 +72,13 @@ final class DarklyService: DarklyServiceProvider {
         // URLSessionConfiguration is a class, but `.default` creates a new instance. This does not effect other session configuration.
         let sessionConfig = URLSessionConfiguration.default
 
+        #if !os(Linux) && !os(Windows)
         if #available(iOS 13, macOS 10.15, tvOS 13, watchOS 6, *) {
             sessionConfig.tlsMinimumSupportedProtocolVersion = .TLSv12
         } else {
             sessionConfig.tlsMinimumSupportedProtocol = .tlsProtocol12
         }
+        #endif
 
         // We always revalidate the cache which we handle manually
         sessionConfig.requestCachePolicy = .reloadIgnoringLocalCacheData

@@ -29,5 +29,15 @@ class SystemCapabilities {
     static var foregroundNotification: Notification.Name? { UIApplication.willEnterForegroundNotification }
     static var systemName: String { UIDevice.current.systemName }
     static var operatingSystem: OperatingSystem { .tvOS }
+    #elseif os(Windows)
+    static var backgroundNotification: Notification.Name? { nil }
+    static var foregroundNotification: Notification.Name? { nil }
+    static var systemName: String { "Windows" }
+    static var operatingSystem: OperatingSystem { .Windows }
+    #elseif os(Linux)
+    static var backgroundNotification: Notification.Name? { UIApplication.didEnterBackgroundNotification }
+    static var foregroundNotification: Notification.Name? { UIApplication.willEnterForegroundNotification }
+    static var systemName: String { "Linux" }
+    static var operatingSystem: OperatingSystem { .Linux }
     #endif
 }

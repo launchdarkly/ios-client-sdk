@@ -11,10 +11,10 @@ import UIKit
 #endif
 
 enum OperatingSystem: String {
-  case iOS, watchOS, macOS, tvOS, unknown
+  case iOS, watchOS, macOS, tvOS, Windows, Linux, unknown
 
   static var allOperatingSystems: [OperatingSystem] {
-    [.iOS, .watchOS, .macOS, .tvOS]
+    [.iOS, .watchOS, .macOS, .tvOS, .Windows, .Linux]
   }
 
   var isBackgroundEnabled: Bool {

@@ -20,7 +20,9 @@ final class LDTimer: TimeResponding {
         self.execute = execute
 
         // the run loop retains the timer, so the property is weak to avoid a retain cycle. Setting the timer to a strong reference is important so that the timer doesn't get nil'd before it's added to the run loop.
-        let timer = Timer(timeInterval: timeInterval, target: self, selector: #selector(timerFired), userInfo: nil, repeats: true)
+        let timer = Timer(timeInterval: timeInterval, repeats: true, block: { [weak self] timer in
+            self?.timerFired()
+        })
         self.timer = timer
         RunLoop.main.add(timer, forMode: RunLoop.Mode.default)
     }
@@ -29,7 +31,7 @@ final class LDTimer: TimeResponding {
         timer?.invalidate()
     }
 
-    @objc private func timerFired() {
+    private func timerFired() {
         fireQueue.async { [weak self] in
             guard (self?.isCancelled ?? true) == false
             else { return }

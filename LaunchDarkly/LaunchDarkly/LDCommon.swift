@@ -20,6 +20,16 @@ extension LDFlagKey {
 }
 
 /// An error thrown from APIs when an invalid argument is provided.
+#if os(Linux) || os(Windows)
+public class LDInvalidArgumentError: Error {
+    /// A description of the error.
+    public let localizedDescription: String
+
+    init(_ description: String) {
+        self.localizedDescription = description
+    }
+}
+#else
 @objc public class LDInvalidArgumentError: NSObject, Error {
     /// A description of the error.
     public let localizedDescription: String
@@ -28,6 +38,7 @@ extension LDFlagKey {
         self.localizedDescription = description
     }
 }
+#endif
 
 struct DynamicKey: CodingKey {
     let intValue: Int? = nil
