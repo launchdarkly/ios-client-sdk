@@ -8,7 +8,7 @@ class Util {
     class func sha256base64(_ str: String) -> String {
         sha256(str).base64EncodedString()
     }
-    
+
     class func sha256(_ str: String) -> Data {
         let data = Data(str.utf8)
         var digest = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))

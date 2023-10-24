@@ -11,7 +11,7 @@ final class UtilSpec: XCTestCase {
         let output = Util.sha256base64(input)
         XCTAssertEqual(output, expectedOutput)
     }
-    
+
     func testSha256base64UrlEncoding() throws {
         let input = "OhYeah?HashThis!!!" // hash is KzDwVRpvTuf//jfMK27M4OMpIRTecNcJoaffvAEi+as= and it has a + and a /
         let expectedOutput = "KzDwVRpvTuf__jfMK27M4OMpIRTecNcJoaffvAEi-as="

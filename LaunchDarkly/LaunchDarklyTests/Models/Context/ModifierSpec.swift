@@ -151,7 +151,7 @@ final class ModifierSpec: XCTestCase {
         let expectedKey = Util.sha256("idStub").base64UrlEncodedString.toLDValue()
         XCTAssertEqual(expectedKey, outputKey)
     }
-    
+
     func testGeneratedLdApplicationKeyWithVersionMissing() throws {
         var info = ApplicationInfo()
         info.applicationIdentifier("myID")

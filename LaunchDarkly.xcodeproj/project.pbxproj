@@ -64,7 +64,6 @@
 		831AAE2D20A9E4F600B46DBA /* Throttler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2B20A9E4F600B46DBA /* Throttler.swift */; };
 		831AAE2E20A9E4F600B46DBA /* Throttler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2B20A9E4F600B46DBA /* Throttler.swift */; };
 		831AAE3020A9E75D00B46DBA /* ThrottlerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */; };
-		831CE0661F853A1700A13A3A /* Match.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831CE0651F853A1700A13A3A /* Match.swift */; };
 		831D2AAF2061AAA000B4AC3C /* Thread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D2AAE2061AAA000B4AC3C /* Thread.swift */; };
 		831D8B6F1F71532300ED65E8 /* HTTPHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */; };
 		831D8B721F71D3E700ED65E8 /* DarklyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B711F71D3E700ED65E8 /* DarklyService.swift */; };
@@ -379,7 +378,6 @@
 		831425B0206B030100F2EF36 /* EnvironmentReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporter.swift; sourceTree = "<group>"; };
 		831AAE2B20A9E4F600B46DBA /* Throttler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Throttler.swift; sourceTree = "<group>"; };
 		831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottlerSpec.swift; sourceTree = "<group>"; };
-		831CE0651F853A1700A13A3A /* Match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Match.swift; sourceTree = "<group>"; };
 		831D2AAE2061AAA000B4AC3C /* Thread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thread.swift; sourceTree = "<group>"; };
 		831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeaders.swift; sourceTree = "<group>"; };
 		831D8B711F71D3E700ED65E8 /* DarklyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyService.swift; sourceTree = "<group>"; };
@@ -530,14 +528,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		831CE0671F853CB700A13A3A /* Matcher */ = {
-			isa = PBXGroup;
-			children = (
-				831CE0651F853A1700A13A3A /* Match.swift */,
-			);
-			path = Matcher;
-			sourceTree = "<group>";
-		};
 		831D8B701F71D3A600ED65E8 /* Networking */ = {
 			isa = PBXGroup;
 			children = (
@@ -660,7 +650,6 @@
 				831D8B751F72A48900ED65E8 /* ServiceObjects */,
 				83396BC71F7C3688000E256E /* Networking */,
 				83D17EA81FCDA16300B2823C /* Extensions */,
-				831CE0671F853CB700A13A3A /* Matcher */,
 				8354EFD21F22491C00C05156 /* Info.plist */,
 				B4265EB024E7390C001CFD2C /* TestUtil.swift */,
 			);
@@ -1427,7 +1416,6 @@
 				83CFE7CE1F7AD81D0010544E /* EventReporterSpec.swift in Sources */,
 				8392FFA32033565700320914 /* HTTPURLResponse.swift in Sources */,
 				83411A5F1FABDA8700E5CF39 /* mocks.generated.swift in Sources */,
-				831CE0661F853A1700A13A3A /* Match.swift in Sources */,
 				83DDBF001FA2589900E428B6 /* FlagStoreSpec.swift in Sources */,
 				B4F689142497B2FC004D3CE0 /* DiagnosticEventSpec.swift in Sources */,
 				83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */,
@@ -1584,6 +1572,7 @@
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 12.0;
 			};
 			name = Debug;
 		};
@@ -1609,6 +1598,7 @@
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 12.0;
 			};
 			name = Release;
 		};
@@ -1713,7 +1703,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Framework/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1722,7 +1712,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TVOS_DEPLOYMENT_TARGET = 11.0;
+				TVOS_DEPLOYMENT_TARGET = 12.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 				WATCHOS_DEPLOYMENT_TARGET = 4.0;
@@ -1778,7 +1768,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Framework/Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
@@ -1786,7 +1776,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TVOS_DEPLOYMENT_TARGET = 11.0;
+				TVOS_DEPLOYMENT_TARGET = 12.0;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -1805,6 +1795,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
 				MARKETING_VERSION = 9.1.1;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
@@ -1827,6 +1818,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
 				MARKETING_VERSION = 9.1.1;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";

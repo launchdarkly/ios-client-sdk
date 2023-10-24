@@ -22,16 +22,16 @@ The LaunchDarkly iOS SDK requires the following minimum build tool versions:
 
 | Tool  | Version |
 | ----- | ------- |
-| Xcode | 11.4+   |
-| Swift | 5.2+    |
+| Xcode | 12.5+   |
+| Swift | 5.3+    |
 
 And supports the following device platforms:
 
 | Platform | Version |
 | -------- | ------- |
-| iOS      | 11.0    |
+| iOS      | 12.0    |
 | watchOS  | 4.0     |
-| tvOS     | 11.0    |
+| tvOS     | 12.0    |
 | macOS    | 10.13   |
 
 Installation
