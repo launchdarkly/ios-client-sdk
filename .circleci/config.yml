@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   contract-tests:
     macos:
-      xcode: '14.2.0'
+      xcode: '15.0.0'
 
     steps:
       - checkout
@@ -32,6 +32,9 @@ jobs:
           command: make start-contract-test-service
           background: true
       - run:
+          name: wait for contract test service to be ready
+          command: sleep 5
+      - run:
           name: run contract tests
           command: TEST_HARNESS_PARAMS="-junit /tmp/test-results/contract-tests-junit.xml" make run-contract-tests
       - store_test_results:
@@ -54,7 +57,7 @@ jobs:
 
     macos:
       xcode: <<parameters.xcode-version>>
-    resource_class: macos.x86.medium.gen2
+    resource_class: macos.m1.medium.gen1
 
     steps:
     - checkout
@@ -158,6 +161,10 @@ workflows:
 
   build:
     jobs:
+      - build:
+          name: Xcode 15.0.0 - Swift 5.9
+          xcode-version: '15.0.0'
+          ios-sim: 'platform=iOS Simulator,name=iPhone 15,OS=17.0.1'
       - build:
           name: Xcode 14.0 - Swift 5.7
           xcode-version: '14.0.1'
