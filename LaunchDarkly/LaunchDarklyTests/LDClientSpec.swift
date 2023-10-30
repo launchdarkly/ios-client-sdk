@@ -612,6 +612,7 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
                 expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags) == stubFlags
             }
+
             it("when we have opted into auto environment attributes") {
                 let testContext = TestContext(startOnline: true)
                 testContext.config.autoEnvAttributes = true
@@ -627,6 +628,25 @@ final class LDClientSpec: QuickSpec {
 
                 expect(kinds.contains(AutoEnvContextModifier.ldDeviceKind)) == true
                 expect(kinds.contains(AutoEnvContextModifier.ldApplicationKind)) == true
+            }
+
+            it("only triggered if context is different") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                testContext.featureFlagCachingMock.reset()
+
+                testContext.subject.internalIdentify(newContext: testContext.context)
+                testContext.subject.internalIdentify(newContext: testContext.context)
+                testContext.subject.internalIdentify(newContext: testContext.context)
+                testContext.subject.internalIdentify(newContext: testContext.context)
+
+                expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
+                expect(testContext.makeFlagSynchronizerService?.context) == testContext.context
+
+                expect(testContext.subject.isOnline) == true
+                expect(testContext.subject.eventReporter.isOnline) == true
+                expect(testContext.subject.flagSynchronizer.isOnline) == true
+                expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
             }
         }
     }
