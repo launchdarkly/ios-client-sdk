@@ -309,7 +309,9 @@ public class LDClient {
             self.internalSetOnline(false)
 
             let cachedContextFlags = self.flagCache.retrieveFeatureFlags(contextKey: self.context.fullyQualifiedHashedKey()) ?? [:]
+            let oldItems = flagStore.storedItems.featureFlags
             flagStore.replaceStore(newStoredItems: cachedContextFlags)
+            flagChangeNotifier.notifyObservers(oldFlags: oldItems, newFlags: flagStore.storedItems.featureFlags)
             self.service.context = self.context
             self.service.clearFlagResponseCache()
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
