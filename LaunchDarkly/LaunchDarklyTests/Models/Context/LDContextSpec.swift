@@ -4,6 +4,47 @@ import XCTest
 @testable import LaunchDarkly
 
 final class LDContextSpec: XCTestCase {
+    func testContextsAreEquatable() throws {
+        var originalBuilder = LDContextBuilder(key: "context-key")
+        originalBuilder.kind("user")
+        originalBuilder.name("Example name")
+        originalBuilder.trySetValue("groups", LDValue.array(["test", "it", "here"]))
+        originalBuilder.trySetValue("address", LDValue.object(["address": "123 Easy St", "city": "Every Town"]))
+        originalBuilder.addPrivateAttribute(Reference(literal: "name"))
+
+        var duplicateBuilder = LDContextBuilder(key: "context-key")
+        duplicateBuilder.kind("user")
+        duplicateBuilder.name("Example name")
+        duplicateBuilder.trySetValue("groups", LDValue.array(["test", "it", "here"]))
+        duplicateBuilder.trySetValue("address", LDValue.object(["address": "123 Easy St", "city": "Every Town"]))
+        duplicateBuilder.addPrivateAttribute(Reference("/name"))
+
+        let original = try originalBuilder.build().get()
+        let duplicate = try duplicateBuilder.build().get()
+
+        XCTAssertEqual(original, duplicate)
+    }
+
+    func testContextsAreNotTheSame() throws {
+        let values: [String: LDValue] = [
+            "kind": "org",
+            "name": "Example name",
+            "groups": "This is a string",
+            "address": LDValue.array(["wrong type again"])
+        ]
+
+        for (name, value) in values {
+            var originalBuilder = LDContextBuilder(key: "context-key")
+            var slightlyDifferent = LDContextBuilder(key: "context-key")
+            slightlyDifferent.trySetValue(name, value)
+
+            let original = try originalBuilder.build().get()
+            let duplicate = try slightlyDifferent.build().get()
+
+            XCTAssertNotEqual(original, duplicate)
+        }
+    }
+
     func testBuildCanCreateSimpleContext() throws {
         var builder = LDContextBuilder(key: "context-key")
         builder.name("Name")

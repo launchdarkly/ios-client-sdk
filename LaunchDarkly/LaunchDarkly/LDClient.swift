@@ -303,6 +303,12 @@ public class LDClient {
 
     func internalIdentify(newContext: LDContext, completion: (() -> Void)? = nil) {
         internalIdentifyQueue.sync {
+            if self.context == newContext {
+                self.eventReporter.record(IdentifyEvent(context: self.context))
+                completion?()
+                return
+            }
+
             self.context = newContext
             Log.debug(self.typeName(and: #function) + "new context set with key: " + self.context.fullyQualifiedKey() )
             let wasOnline = self.isOnline
