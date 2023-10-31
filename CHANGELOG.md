@@ -35,6 +35,13 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Removed
 - Removed LDUser and related functionality. Use LDContext instead. To learn more, read https://docs.launchdarkly.com/home/contexts.
 
+## [8.3.1] - 2023-10-31
+### Changed:
+- Calling `identify()` with the current context is now more efficient and no longer results in re-establishing a connection.
+
+### Fixed:
+- Fixed issue where flag change listeners were not being triggered when `identify()` was called.
+
 ## [8.3.0] - 2023-09-08
 ### Changed:
 - Deprecated `LDValue.init(integerLiteral: Double)` as this method signature is misleading. A new `LDValue.init(integerLiteral: Int)` signature has been added for clarity.
