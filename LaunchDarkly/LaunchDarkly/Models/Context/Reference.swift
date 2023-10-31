@@ -87,7 +87,7 @@ extension ReferenceError: CustomStringConvertible {
 /// - Reference("name") or Reference("/name") would refer to the value "xyz"
 /// - Reference("/address/street") would refer to the value "99 Main St."
 /// - Reference("a/b") or Reference("/a~1b") would refer to the value "ok"
-public struct Reference: Codable, Equatable, Hashable {
+public struct Reference: Codable, Hashable {
     private var error: ReferenceError?
     private var rawPath: String
     private var components: [String] = []
@@ -228,5 +228,11 @@ public struct Reference: Codable, Equatable, Hashable {
         }
 
         return self.components[index]
+    }
+}
+
+extension Reference: Equatable {
+    public static func == (lhs: Reference, rhs: Reference) -> Bool {
+        return lhs.error == rhs.error && lhs.components == rhs.components
     }
 }

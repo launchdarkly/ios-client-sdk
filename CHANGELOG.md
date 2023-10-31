@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.2.1] - 2023-10-31
+### Changed:
+- Calling `identify()` with the current context is now more efficient and no longer results in re-establishing a connection.
+
+### Fixed:
+- Fixed issue where flag change listeners were not being triggered when `identify()` was called.
+
 ## [9.2.0] - 2023-10-24
 ### Changed:
 - Updated swift-tools-version from 5.2 to 5.3.
@@ -34,6 +41,13 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 
 ### Removed
 - Removed LDUser and related functionality. Use LDContext instead. To learn more, read https://docs.launchdarkly.com/home/contexts.
+
+## [8.3.1] - 2023-10-31
+### Changed:
+- Calling `identify()` with the current context is now more efficient and no longer results in re-establishing a connection.
+
+### Fixed:
+- Fixed issue where flag change listeners were not being triggered when `identify()` was called.
 
 ## [8.3.0] - 2023-09-08
 ### Changed:

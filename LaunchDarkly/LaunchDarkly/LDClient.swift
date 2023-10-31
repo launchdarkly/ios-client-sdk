@@ -293,13 +293,21 @@ public class LDClient {
         }
 
         internalIdentifyQueue.sync {
+            if self.context == updatedContext {
+                self.eventReporter.record(IdentifyEvent(context: self.context))
+                completion?()
+                return
+            }
+
             self.context = updatedContext
             Log.debug(self.typeName(and: #function) + "new context set with key: " + self.context.fullyQualifiedKey() )
             let wasOnline = self.isOnline
             self.internalSetOnline(false)
 
             let cachedContextFlags = self.flagCache.retrieveFeatureFlags(contextKey: self.context.fullyQualifiedHashedKey()) ?? [:]
+            let oldItems = flagStore.storedItems.featureFlags
             flagStore.replaceStore(newStoredItems: cachedContextFlags)
+            flagChangeNotifier.notifyObservers(oldFlags: oldItems, newFlags: flagStore.storedItems.featureFlags)
             self.service.context = self.context
             self.service.clearFlagResponseCache()
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),

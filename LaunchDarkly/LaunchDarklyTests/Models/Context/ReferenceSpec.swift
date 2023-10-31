@@ -4,6 +4,24 @@ import XCTest
 @testable import LaunchDarkly
 
 final class ReferenceSpec: XCTestCase {
+    func testVerifyEquality() {
+        let tests: [(Reference, Reference, Bool)] = [
+            (Reference("name"), Reference("name"), true),
+            (Reference("name"), Reference("/name"), true),
+            (Reference("/first/name"), Reference("/first/name"), true),
+            (Reference(literal: "/name"), Reference(literal: "/name"), true),
+            (Reference(literal: "/name"), Reference("/~1name"), true),
+            (Reference(literal: "~name"), Reference("/~0name"), true),
+
+            (Reference("different"), Reference("values"), false),
+            (Reference("name/"), Reference("/name"), false),
+            (Reference("/first/name"), Reference("/first//name"), false)
+        ]
+
+        for (lhs, rhs, expected) in tests {
+            XCTAssertEqual(lhs == rhs, expected)
+        }
+    }
     func testFailsWithCorrectError() {
         let tests: [(String, ReferenceError)] = [
             ("", .empty),
