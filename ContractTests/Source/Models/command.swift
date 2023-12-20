@@ -6,6 +6,7 @@ enum CommandResponse: Content, Encodable {
     case evaluateAll(EvaluateAllFlagsResponse)
     case contextBuild(ContextBuildResponse)
     case contextConvert(ContextBuildResponse)
+    case contextComparison(ContextComparisonResponse)
     case ok
 
     func encode(to encoder: Encoder) throws {
@@ -24,6 +25,9 @@ enum CommandResponse: Content, Encodable {
         case .contextConvert(let response):
             try container.encode(response)
             return
+        case .contextComparison(let response):
+            try container.encode(response)
+            return
         case .ok:
             try container.encode(true)
             return
@@ -39,6 +43,7 @@ struct CommandParameters: Content {
     var identifyEvent: IdentifyEventParameters?
     var contextBuild: ContextBuildParameters?
     var contextConvert: ContextConvertParameters?
+    var contextComparison: ContextComparisonPairParameters?
 }
 
 struct EvaluateFlagParameters: Content {
@@ -98,4 +103,35 @@ struct ContextBuildResponse: Content, Encodable {
 
 struct ContextConvertParameters: Content, Decodable {
     var input: String
+}
+
+struct ContextComparisonPairParameters: Content, Decodable {
+    var context1: ContextComparisonParameters
+    var context2: ContextComparisonParameters
+}
+
+struct ContextComparisonParameters: Content, Decodable {
+    var single: ContextComparisonSingleParams?
+    var multi: [ContextComparisonSingleParams]?
+}
+
+struct ContextComparisonSingleParams: Content, Decodable {
+    var kind: String
+    var key: String
+    var attributes: [AttributeDefinition]?
+    var privateAttributes: [PrivateAttribute]?
+}
+
+struct AttributeDefinition: Content, Decodable {
+    var name: String
+    var value: LDValue
+}
+
+struct PrivateAttribute: Content, Decodable {
+    var value: String
+    var literal: Bool
+}
+
+struct ContextComparisonResponse: Content, Encodable {
+    var equals: Bool
 }
