@@ -31,7 +31,7 @@ public struct LDContext: Encodable, Equatable {
     // Meta attributes
     fileprivate var name: String?
     fileprivate var anonymous: Bool = false
-    internal var privateAttributes: [Reference] = []
+    internal var privateAttributes: Set<Reference> = []
 
     fileprivate var key: String?
     fileprivate var canonicalizedKey: String
@@ -46,7 +46,7 @@ public struct LDContext: Encodable, Equatable {
     }
 
     struct Meta: Codable {
-        var privateAttributes: [Reference]?
+        var privateAttributes: Set<Reference>?
         var redactedAttributes: [String]?
 
         enum CodingKeys: CodingKey {
@@ -58,7 +58,7 @@ public struct LDContext: Encodable, Equatable {
             && (redactedAttributes?.isEmpty ?? true)
         }
 
-        init(privateAttributes: [Reference]?, redactedAttributes: [String]?) {
+        init(privateAttributes: Set<Reference>?, redactedAttributes: [String]?) {
             self.privateAttributes = privateAttributes
             self.redactedAttributes = redactedAttributes
         }
@@ -66,7 +66,7 @@ public struct LDContext: Encodable, Equatable {
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
 
-            let privateAttributes = try container.decodeIfPresent([Reference].self, forKey: .privateAttributes)
+            let privateAttributes = try container.decodeIfPresent(Set<Reference>.self, forKey: .privateAttributes)
 
             self.privateAttributes = privateAttributes
             self.redactedAttributes = []
@@ -593,7 +593,7 @@ public struct LDContextBuilder {
     // Meta attributes
     private var name: String?
     private var anonymous: Bool = false
-    private var privateAttributes: [Reference] = []
+    private var privateAttributes: Set<Reference> = []
 
     private var key: LDContextBuilderKey
     private var attributes: [String: LDValue] = [:]
@@ -782,13 +782,13 @@ public struct LDContextBuilder {
     /// If an attribute's actual name starts with a '/' character, you must use the same escaping syntax as
     /// JSON Pointer: replace "~" with "~0", and "/" with "~1".
     public mutating func addPrivateAttribute(_ reference: Reference) {
-        self.privateAttributes.append(reference)
+        self.privateAttributes.insert(reference)
     }
 
     /// Remove any reference provided through `addPrivateAttribute(_:)`. If the reference was
     /// added more than once, this method will remove all instances of it.
     public mutating func removePrivateAttribute(_ reference: Reference) {
-        self.privateAttributes.removeAll { $0 == reference }
+        self.privateAttributes.remove(reference)
     }
 
     /// Creates a LDContext from the current LDContextBuilder properties.
