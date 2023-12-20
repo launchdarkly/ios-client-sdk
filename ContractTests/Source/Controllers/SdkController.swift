@@ -22,7 +22,8 @@ final class SdkController: RouteCollection {
             "service-endpoints",
             "strongly-typed",
             "tags",
-            "user-type"
+            "user-type",
+            "context-comparison"
         ]
 
         return StatusResponse(
@@ -220,11 +221,56 @@ final class SdkController: RouteCollection {
                 let response = ContextBuildResponse(output: nil, error: error.localizedDescription)
                 return CommandResponse.contextBuild(response)
             }
+        case "contextComparison":
+            let params = commandParameters.contextComparison!
+            let context1 = try SdkController.buildContextForComparison(params.context1)
+            let context2 = try SdkController.buildContextForComparison(params.context2)
+
+            let response = ContextComparisonResponse(equals: context1 == context2)
+            return CommandResponse.contextComparison(response)
         default:
             throw Abort(.badRequest)
         }
 
         return CommandResponse.ok
+    }
+
+    static func buildContextForComparison(_ params: ContextComparisonParameters) throws -> LDContext {
+        if let single = params.single {
+            return try buildSingleKindContextForComparison(single)
+        } else if let multi = params.multi {
+            var builder = LDMultiContextBuilder()
+            for param in multi {
+                builder.addContext(try buildSingleKindContextForComparison(param))
+            }
+
+            return try builder.build().get()
+        }
+
+        throw Abort(.badRequest)
+    }
+
+    static func buildSingleKindContextForComparison(_ params: ContextComparisonSingleParams) throws -> LDContext {
+        var builder = LDContextBuilder(key: params.key)
+        builder.kind(params.kind)
+
+        if let attributes = params.attributes {
+            for attribute in attributes {
+                builder.trySetValue(attribute.name, attribute.value)
+            }
+        }
+
+        if let attributes = params.privateAttributes {
+            for attribute in attributes {
+                if attribute.literal {
+                    builder.addPrivateAttribute(Reference(literal: attribute.value))
+                } else {
+                    builder.addPrivateAttribute(Reference(attribute.value))
+                }
+            }
+        }
+
+        return try builder.build().get()
     }
 
     static func buildSingleContextFromParams(_ params: SingleContextParameters) throws -> LDContext {

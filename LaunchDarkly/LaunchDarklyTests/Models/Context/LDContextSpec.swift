@@ -4,25 +4,75 @@ import XCTest
 @testable import LaunchDarkly
 
 final class LDContextSpec: XCTestCase {
-    func testContextsAreEquatable() throws {
+    func testSingleKindContextsAreEqual() throws {
         var originalBuilder = LDContextBuilder(key: "context-key")
         originalBuilder.kind("user")
         originalBuilder.name("Example name")
         originalBuilder.trySetValue("groups", LDValue.array(["test", "it", "here"]))
         originalBuilder.trySetValue("address", LDValue.object(["address": "123 Easy St", "city": "Every Town"]))
         originalBuilder.addPrivateAttribute(Reference(literal: "name"))
+        originalBuilder.addPrivateAttribute(Reference("out of order attribute"))
 
         var duplicateBuilder = LDContextBuilder(key: "context-key")
         duplicateBuilder.kind("user")
         duplicateBuilder.name("Example name")
         duplicateBuilder.trySetValue("groups", LDValue.array(["test", "it", "here"]))
         duplicateBuilder.trySetValue("address", LDValue.object(["address": "123 Easy St", "city": "Every Town"]))
+        duplicateBuilder.addPrivateAttribute(Reference("out of order attribute"))
         duplicateBuilder.addPrivateAttribute(Reference("/name"))
 
         let original = try originalBuilder.build().get()
         let duplicate = try duplicateBuilder.build().get()
 
         XCTAssertEqual(original, duplicate)
+    }
+
+    func testMultiKindContextsAreEqual() throws {
+        var orgBuilder = LDContextBuilder(key: "org-key")
+        orgBuilder.kind("org")
+
+        var userBuilder = LDContextBuilder(key: "user-key")
+        userBuilder.kind("user")
+
+        var deviceBuilder = LDContextBuilder(key: "device-key")
+        deviceBuilder.kind("device")
+
+        var originalMultiBuilder = LDMultiContextBuilder()
+        originalMultiBuilder.addContext(try orgBuilder.build().get())
+        originalMultiBuilder.addContext(try userBuilder.build().get())
+
+        var duplicateMultiBuilder = LDMultiContextBuilder()
+        duplicateMultiBuilder.addContext(try userBuilder.build().get())
+        duplicateMultiBuilder.addContext(try orgBuilder.build().get())
+
+        let original = try originalMultiBuilder.build().get()
+        let duplicate = try duplicateMultiBuilder.build().get()
+
+        XCTAssertEqual(original, duplicate)
+
+        duplicateMultiBuilder.addContext(try deviceBuilder.build().get())
+        let updatedDuplicate = try duplicateMultiBuilder.build().get()
+
+        XCTAssertNotEqual(original, updatedDuplicate)
+    }
+
+    func testMultiAndSingleAreNotEqual() throws {
+        var orgBuilder = LDContextBuilder(key: "org-key")
+        orgBuilder.kind("org")
+
+        var userBuilder = LDContextBuilder(key: "user-key")
+        userBuilder.kind("user")
+
+        var multiBuilder = LDMultiContextBuilder()
+        multiBuilder.addContext(try orgBuilder.build().get())
+
+        // These should be the same as a single kind multi-context gets flattened
+        let multi = try multiBuilder.build().get()
+        XCTAssertEqual(multi, try orgBuilder.build().get())
+
+        multiBuilder.addContext(try userBuilder.build().get())
+        let updatedMulti = try multiBuilder.build().get()
+        XCTAssertNotEqual(updatedMulti, try orgBuilder.build().get())
     }
 
     func testContextsAreNotTheSame() throws {
