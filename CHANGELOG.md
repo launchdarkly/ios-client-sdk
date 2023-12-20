@@ -4,7 +4,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 
 ## [9.2.1] - 2023-10-31
 ### Changed:
-- Calling `identify()` with the current context is now more efficient and no longer results in re-establishing a connection.
+- Calling `identify()` with a context that is identical to the SDK's current context is now more efficient, and no longer results in re-establishing a connection.
 
 ### Fixed:
 - Fixed issue where flag change listeners were not being triggered when `identify()` was called.
@@ -44,7 +44,7 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 
 ## [8.3.1] - 2023-10-31
 ### Changed:
-- Calling `identify()` with the current context is now more efficient and no longer results in re-establishing a connection.
+- Calling `identify()` with a context that is identical to the SDK's current context is now more efficient, and no longer results in re-establishing a connection.
 
 ### Fixed:
 - Fixed issue where flag change listeners were not being triggered when `identify()` was called.
