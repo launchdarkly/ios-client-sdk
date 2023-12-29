@@ -1,7 +1,7 @@
 import Foundation
 import LDSwiftEventSource
 
-typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Error?)
+typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Error?, etag: String?)
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void
 
 // sourcery: autoMockable
@@ -18,7 +18,7 @@ protocol DarklyServiceProvider: AnyObject {
     var diagnosticCache: DiagnosticCaching? { get }
 
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?)
-    func clearFlagResponseCache()
+    func resetFlagResponseCache(etag: String?)
     func createEventSource(useReport: Bool, handler: EventHandler, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?)
     func publishDiagnostic<T: DiagnosticEvent & Encodable>(diagnosticEvent: T, completion: ServiceCompletionHandler?)
@@ -82,14 +82,15 @@ final class DarklyService: DarklyServiceProvider {
 
     // MARK: Feature Flags
 
-    func clearFlagResponseCache() {
-        flagRequestEtag = nil
+    func resetFlagResponseCache(etag: String?) {
+        flagRequestEtag = etag
     }
 
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
         guard hasMobileKey(#function) else { return }
         let encoder = JSONEncoder()
         encoder.userInfo[LDContext.UserInfoKeys.includePrivateAttributes] = true
+        encoder.userInfo[LDContext.UserInfoKeys.redactAttributes] = false
         encoder.outputFormatting = [.sortedKeys]
 
         guard let contextJsonData = try? encoder.encode(context)
@@ -112,8 +113,8 @@ final class DarklyService: DarklyServiceProvider {
 
         self.session.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
-                self?.processEtag(from: (data, response, error))
-                completion?((data, response, error))
+                self?.processEtag(from: (data: data, urlResponse: response, error: error, etag: self?.flagRequestEtag))
+                completion?((data: data, urlResponse: response, error: error, etag: self?.flagRequestEtag))
             }
         }.resume()
     }
@@ -140,8 +141,8 @@ final class DarklyService: DarklyServiceProvider {
 
     private func processEtag(from serviceResponse: ServiceResponse) {
         guard serviceResponse.error == nil,
-            serviceResponse.urlResponse?.httpStatusCode == HTTPURLResponse.StatusCodes.ok,
-            serviceResponse.data?.jsonDictionary != nil
+              serviceResponse.urlResponse?.httpStatusCode == HTTPURLResponse.StatusCodes.ok,
+              serviceResponse.data?.jsonDictionary != nil
         else {
             if serviceResponse.urlResponse?.httpStatusCode != HTTPURLResponse.StatusCodes.notModified {
                 flagRequestEtag = nil
@@ -158,7 +159,9 @@ final class DarklyService: DarklyServiceProvider {
                            errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         let encoder = JSONEncoder()
         encoder.userInfo[LDContext.UserInfoKeys.includePrivateAttributes] = true
+        encoder.userInfo[LDContext.UserInfoKeys.redactAttributes] = false
         encoder.outputFormatting = [.sortedKeys]
+
         let contextJsonData = try? encoder.encode(context)
 
         var streamRequestUrl = config.streamUrl.appendingPathComponent(StreamRequestPath.meval)
@@ -205,7 +208,7 @@ final class DarklyService: DarklyServiceProvider {
         request.httpBody = body
 
         session.dataTask(with: request) { data, response, error in
-            completion?((data, response, error))
+            completion?((data: data, urlResponse: response, error: error, etag: nil))
         }.resume()
     }
 

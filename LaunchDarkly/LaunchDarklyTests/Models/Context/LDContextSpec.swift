@@ -378,4 +378,98 @@ final class LDContextSpec: XCTestCase {
             XCTAssertEqual(context.getValue(reference), expectedValue)
         }
     }
+
+    func testAttributeOrderDefinitionDoesNotAffectContextHash() {
+        var builder1 = LDContextBuilder(key: "context-key")
+        builder1.kind("org")
+        builder1.trySetValue("example-attribute", LDValue(stringLiteral: "Hi there"))
+        builder1.name("Example name")
+
+        guard case .success(let context1) = builder1.build()
+        else {
+            XCTFail("builder1.build should not have failed")
+            return
+        }
+
+        var builder2 = LDContextBuilder(key: "context-key")
+        builder2.trySetValue("example-attribute", LDValue(stringLiteral: "Hi there"))
+        builder2.name("Example name")
+        builder2.kind("org")
+
+        guard case .success(let context2) = builder2.build()
+        else {
+            XCTFail("builder1.build should not have failed")
+            return
+        }
+
+        XCTAssertEqual(context1.contextHash(), context2.contextHash())
+    }
+
+    func testContextHashIgnoresPrivateAttributes() {
+        var builder1 = LDContextBuilder(key: "context-key")
+        builder1.name("Example name")
+        builder1.trySetValue("example-attribute", LDValue(stringLiteral: "Hi there"))
+        builder1.addPrivateAttribute(Reference("name"))
+
+        guard case .success(let context1) = builder1.build()
+        else {
+            XCTFail("builder1.build should not have failed")
+            return
+        }
+
+        var builder2 = LDContextBuilder(key: "context-key")
+        builder2.name("Example name")
+        builder2.trySetValue("example-attribute", LDValue(stringLiteral: "Hi there"))
+        builder2.addPrivateAttribute(Reference("name"))
+        builder2.addPrivateAttribute(Reference("example-attribute"))
+
+        guard case .success(let context2) = builder2.build()
+        else {
+            XCTFail("builder1.build should not have failed")
+            return
+        }
+
+        XCTAssertEqual(context1.contextHash(), context2.contextHash())
+    }
+
+    func testContextHashIsEquivalentForMultiContexts() throws {
+        var multiBuilder1 = LDMultiContextBuilder()
+        var multiBuilder2 = LDMultiContextBuilder()
+
+        var userBuilder = LDContextBuilder(key: "user-key")
+        userBuilder.kind("user")
+        userBuilder.name("Example name")
+        userBuilder.addPrivateAttribute(Reference("name"))
+
+        var orgBuilder = LDContextBuilder(key: "org-key")
+        orgBuilder.kind("org")
+        orgBuilder.name("Example name")
+        orgBuilder.trySetValue("department", LDValue(stringLiteral: "marketing"))
+        orgBuilder.addPrivateAttribute(Reference("department"))
+
+        var deviceBuilder = LDContextBuilder(key: "device-key")
+        deviceBuilder.kind("device")
+        deviceBuilder.name("Example name")
+        deviceBuilder.trySetValue("model", "X1234Z")
+        orgBuilder.addPrivateAttribute(Reference("model"))
+
+        let userContext = try userBuilder.build().get()
+        let orgContext = try orgBuilder.build().get()
+        let deviceContext = try deviceBuilder.build().get()
+
+        multiBuilder1.addContext(userContext)
+        multiBuilder1.addContext(orgContext)
+
+        multiBuilder2.addContext(orgContext)
+        multiBuilder2.addContext(userContext)
+
+        let multi1 = try multiBuilder1.build().get()
+        let multi2 = try multiBuilder2.build().get()
+
+        multiBuilder2.addContext(deviceContext)
+        let multi3 = try multiBuilder2.build().get()
+
+        XCTAssertEqual(multi1.contextHash(), multi2.contextHash())
+        XCTAssertNotEqual(multi1.contextHash(), multi3.contextHash())
+    }
 }

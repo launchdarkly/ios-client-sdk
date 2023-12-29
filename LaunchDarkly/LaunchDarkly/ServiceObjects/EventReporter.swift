@@ -146,13 +146,13 @@ class EventReporter: EventReporting {
             completion?()
             return
         }
-        self.service.publishEventData(eventData, payloadId) { _, urlResponse, error in
-            let shouldRetry = self.processEventResponse(sentEvents: events.count, response: urlResponse as? HTTPURLResponse, error: error, isRetry: false)
+        self.service.publishEventData(eventData, payloadId) { response in
+            let shouldRetry = self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: false)
             if shouldRetry {
                 Log.debug("Retrying event post after delay.")
                 DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.0) {
-                    self.service.publishEventData(eventData, payloadId) { _, urlResponse, error in
-                        _ = self.processEventResponse(sentEvents: events.count, response: urlResponse as? HTTPURLResponse, error: error, isRetry: true)
+                    self.service.publishEventData(eventData, payloadId) { response in
+                        _ = self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: true)
                         completion?()
                     }
                 }

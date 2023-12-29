@@ -23,7 +23,8 @@ final class SdkController: RouteCollection {
             "strongly-typed",
             "tags",
             "user-type",
-            "context-comparison"
+            "context-comparison",
+            "etag-caching"
         ]
 
         return StatusResponse(
