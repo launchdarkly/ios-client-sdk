@@ -304,12 +304,13 @@ public class LDClient {
             let wasOnline = self.isOnline
             self.internalSetOnline(false)
 
-            let cachedContextFlags = self.flagCache.retrieveFeatureFlags(contextKey: self.context.fullyQualifiedHashedKey()) ?? [:]
+            let cachedData = self.flagCache.getCachedData(cacheKey: self.context.contextHash())
+            let cachedContextFlags = cachedData.items ?? [:]
             let oldItems = flagStore.storedItems.featureFlags
             flagStore.replaceStore(newStoredItems: cachedContextFlags)
             flagChangeNotifier.notifyObservers(oldFlags: oldItems, newFlags: flagStore.storedItems.featureFlags)
             self.service.context = self.context
-            self.service.clearFlagResponseCache()
+            self.service.resetFlagResponseCache(etag: cachedData.etag)
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
@@ -482,21 +483,21 @@ public class LDClient {
     private func onFlagSyncComplete(result: FlagSyncResult) {
         Log.debug(typeName(and: #function) + "result: \(result)")
         switch result {
-        case let .flagCollection(flagCollection):
+        case let .flagCollection((flagCollection, etag)):
             let oldStoredItems = flagStore.storedItems
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.replaceStore(newStoredItems: StoredItems(items: flagCollection.flags))
-            self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems)
+            self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: etag)
         case let .patch(featureFlag):
             let oldStoredItems = flagStore.storedItems
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.updateStore(updatedFlag: featureFlag)
-            self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems)
+            self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: nil)
         case let .delete(deleteResponse):
             let oldStoredItems = flagStore.storedItems
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.deleteFlag(deleteResponse: deleteResponse)
-            self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems)
+            self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: nil)
         case .upToDate:
             connectionInformation.lastKnownFlagValidity = Date()
             flagChangeNotifier.notifyUnchanged()
@@ -514,8 +515,8 @@ public class LDClient {
     }
 
     private func updateCacheAndReportChanges(context: LDContext,
-                                             oldStoredItems: StoredItems) {
-        flagCache.storeFeatureFlags(flagStore.storedItems, contextKey: context.fullyQualifiedHashedKey(), lastUpdated: Date())
+                                             oldStoredItems: StoredItems, etag: String?) {
+        flagCache.saveCachedData(flagStore.storedItems, cacheKey: context.contextHash(), lastUpdated: Date(), etag: etag)
         flagChangeNotifier.notifyObservers(oldFlags: oldStoredItems.featureFlags, newFlags: flagStore.storedItems.featureFlags)
     }
 
@@ -740,6 +741,8 @@ public class LDClient {
         NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
 
         eventReporter = self.serviceFactory.makeEventReporter(service: service, onSyncComplete: onEventSyncComplete)
+        let cachedData = flagCache.getCachedData(cacheKey: context.contextHash())
+        service.resetFlagResponseCache(etag: cachedData.etag)
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,
@@ -747,7 +750,7 @@ public class LDClient {
                                                                     onSyncComplete: onFlagSyncComplete)
 
         Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
-        if let cachedFlags = flagCache.retrieveFeatureFlags(contextKey: context.fullyQualifiedHashedKey()), !cachedFlags.isEmpty {
+        if let cachedFlags = cachedData.items, !cachedFlags.isEmpty {
             flagStore.replaceStore(newStoredItems: cachedFlags)
         }
 

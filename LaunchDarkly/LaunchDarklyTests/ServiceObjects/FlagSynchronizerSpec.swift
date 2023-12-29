@@ -226,7 +226,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                     expect(testContext.serviceMock.createdEventSource?.startCallCount) == 1
                     expect(testContext.serviceMock.createdEventSource?.stopCallCount) == 0
 
-                    guard case let .flagCollection(flagCollection) = syncResult
+                    guard case let .flagCollection((flagCollection, _)) = syncResult
                     else { return fail("Expected flag collection sync result") }
                     expect(flagCollection.flags) == DarklyServiceMock.Constants.stubFeatureFlags()
                 }
@@ -345,7 +345,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                     expect(testContext.serviceMock.createdEventSource?.startCallCount) == 1
                     expect(testContext.serviceMock.createdEventSource?.stopCallCount) == 0
 
-                    guard case let .flagCollection(flagCollection) = syncResult
+                    guard case let .flagCollection((flagCollection, _)) = syncResult
                     else { return fail("Expected flag collection sync result") }
                     expect(flagCollection.flags.count) == 1
                     expect(flagCollection.flags["flagKey"]) == FeatureFlag(flagKey: "flagKey", value: 123)
@@ -839,7 +839,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 it("makes a flag request and calls onSyncComplete with no streaming event") {
                     expect(testContext.serviceMock.getFeatureFlagsCallCount) == 2
-                    guard case let .flagCollection(flagCollection) = syncResult
+                    guard case let .flagCollection((flagCollection, _)) = syncResult
                     else { return fail("Expected flag collection sync result") }
                     expect(flagCollection.flags) == DarklyServiceMock.Constants.stubFeatureFlags()
                 }

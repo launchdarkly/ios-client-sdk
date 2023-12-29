@@ -35,7 +35,7 @@ enum SynchronizingError: Error {
 }
 
 enum FlagSyncResult {
-    case flagCollection(FeatureFlagCollection)
+    case flagCollection((FeatureFlagCollection, String?))
     case patch(FeatureFlag)
     case delete(DeleteResponse)
     case upToDate
@@ -211,7 +211,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             reportDataError(serviceResponse.data)
             return
         }
-        reportSyncComplete(.flagCollection(flagCollection))
+        reportSyncComplete(.flagCollection((flagCollection, serviceResponse.etag)))
     }
 
     private func reportDataError(_ data: Data?) {
@@ -305,7 +305,10 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
                 reportDataError(messageEvent.data.data(using: .utf8))
                 return
             }
-            reportSyncComplete(.flagCollection(flagCollection))
+            // NOTE: If you are adding e-tag support through the streaming
+            // connection, make sure you read the documentation on the
+            // FeatureFlagCaching.saveCachedData method.
+            reportSyncComplete(.flagCollection((flagCollection, nil)))
         case "patch":
             guard let data = messageEvent.data.data(using: .utf8),
                   let flag = try? JSONDecoder().decode(FeatureFlag.self, from: data)

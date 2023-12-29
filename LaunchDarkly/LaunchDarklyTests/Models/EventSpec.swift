@@ -245,7 +245,7 @@ final class EventSpec: XCTestCase {
 
 extension Event: Equatable {
     public static func == (_ lhs: Event, _ rhs: Event) -> Bool {
-        let config = [LDContext.UserInfoKeys.includePrivateAttributes: true]
+        let config = [LDContext.UserInfoKeys.includePrivateAttributes: true, LDContext.UserInfoKeys.redactAttributes: false]
         return encodeToLDValue(lhs, userInfo: config) == encodeToLDValue(rhs, userInfo: config)
     }
 }

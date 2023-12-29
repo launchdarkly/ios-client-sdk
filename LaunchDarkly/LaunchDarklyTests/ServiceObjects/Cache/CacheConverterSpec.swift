@@ -19,7 +19,8 @@ final class CacheConverterSpec: XCTestCase {
 
     func testNoKeysGiven() {
         CacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: [], maxCachedContexts: 0)
-        XCTAssertEqual(serviceFactory.makeKeyedValueCacheCallCount, 0)
+        // We always make one call to try and clean up old v5 data.
+        XCTAssertEqual(serviceFactory.makeKeyedValueCacheCallCount, 1)
         XCTAssertEqual(serviceFactory.makeFeatureFlagCacheCallCount, 0)
     }
 

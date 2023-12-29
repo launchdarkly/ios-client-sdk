@@ -46,7 +46,7 @@ final class LDContextCodableSpec: XCTestCase {
             let context = try JSONDecoder().decode(LDContext.self, from: Data(json.utf8))
             let jsonEncoder = JSONEncoder()
             jsonEncoder.outputFormatting = [.sortedKeys]
-            jsonEncoder.userInfo = [LDContext.UserInfoKeys.includePrivateAttributes: true]
+            jsonEncoder.userInfo = [LDContext.UserInfoKeys.includePrivateAttributes:true,LDContext.UserInfoKeys.redactAttributes:false]
             let output = try jsonEncoder.encode(context)
             let outputJson = String(data: output, encoding: .utf8)
 
