@@ -57,3 +57,8 @@ jobs:
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           dry_run: false
+
+      - uses: ./.github/actions/publish-docs
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
