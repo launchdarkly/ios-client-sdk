@@ -110,11 +110,11 @@ final class DarklyServiceMock: DarklyServiceProvider {
     func getFeatureFlags(useReport: Bool, completion: ServiceCompletionHandler?) {
         getFeatureFlagsCallCount += 1
         getFeatureFlagsUseReportCalledValue.append(useReport)
-        completion?(stubbedFlagResponse ?? (nil, nil, nil))
+        completion?(stubbedFlagResponse ?? (nil, nil, nil, nil))
     }
 
     var clearFlagResponseCacheCallCount = 0
-    func clearFlagResponseCache() {
+    func resetFlagResponseCache(etag: String?) {
         clearFlagResponseCacheCallCount += 1
     }
 
@@ -139,7 +139,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
     func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?) {
         publishEventDataCallCount += 1
         publishedEventData = eventData
-        completion?(stubbedEventResponse ?? (nil, nil, nil))
+        completion?(stubbedEventResponse ?? (nil, nil, nil, nil))
     }
 
     var stubbedDiagnosticResponse: ServiceResponse?
@@ -150,7 +150,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         publishDiagnosticCallCount += 1
         publishedDiagnostic = diagnosticEvent
         publishDiagnosticCallback?()
-        completion?(stubbedDiagnosticResponse ?? (nil, nil, nil))
+        completion?(stubbedDiagnosticResponse ?? (nil, nil, nil, nil))
     }
 }
 
@@ -199,19 +199,19 @@ extension DarklyServiceMock {
         let response = HTTPURLResponse(url: config.baseUrl, statusCode: statusCode, httpVersion: Constants.httpVersion, headerFields: HTTPURLResponse.dateHeader(from: responseDate))
         if statusCode == HTTPURLResponse.StatusCodes.ok {
             let flagData = try? JSONEncoder().encode(Constants.stubFeatureFlags())
-            stubbedFlagResponse = (flagData, response, nil)
+            stubbedFlagResponse = (flagData, response, nil, nil)
             if badData {
-                stubbedFlagResponse = (Constants.errorData, response, nil)
+                stubbedFlagResponse = (Constants.errorData, response, nil, nil)
             }
             return
         }
 
         if responseOnly {
-            stubbedFlagResponse = (nil, response, nil)
+            stubbedFlagResponse = (nil, response, nil, nil)
         } else if errorOnly {
-            stubbedFlagResponse = (nil, nil, Constants.error)
+            stubbedFlagResponse = (nil, nil, Constants.error, nil)
         } else {
-            stubbedFlagResponse = (nil, response, Constants.error)
+            stubbedFlagResponse = (nil, response, Constants.error, nil)
         }
     }
 
@@ -247,16 +247,16 @@ extension DarklyServiceMock {
                                            statusCode: HTTPURLResponse.StatusCodes.accepted,
                                            httpVersion: Constants.httpVersion,
                                            headerFields: HTTPURLResponse.dateHeader(from: responseDate))
-            stubbedEventResponse = (nil, response, nil)
+            stubbedEventResponse = (nil, response, nil, nil)
             return
         }
 
         if responseOnly {
-            stubbedEventResponse = (nil, errorEventHTTPURLResponse, nil)
+            stubbedEventResponse = (nil, errorEventHTTPURLResponse, nil, nil)
         } else if errorOnly {
-            stubbedEventResponse = (nil, nil, Constants.error)
+            stubbedEventResponse = (nil, nil, Constants.error, nil)
         } else {
-            stubbedEventResponse = (nil, errorEventHTTPURLResponse, Constants.error)
+            stubbedEventResponse = (nil, errorEventHTTPURLResponse, Constants.error, nil)
         }
     }
     var errorEventHTTPURLResponse: HTTPURLResponse! {
