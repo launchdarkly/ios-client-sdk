@@ -8,7 +8,7 @@
       "include-component-in-tag": false,
       "extra-files": [
         "LaunchDarkly.podspec",
-        "LaunchDarkly/LaunchDarkly/ServiceObjects/EnvironmentReporter.swift",
+        "LaunchDarkly/LaunchDarkly/ServiceObjects/EnvironmentReporting/ReportingConsts.swift",
         "README.md"
       ]
     }

@@ -23,7 +23,6 @@ final class SdkController: RouteCollection {
             "strongly-typed",
             "tags",
             "auto-env-attributes",
-            "user-type",
             "context-comparison",
             "etag-caching"
         ]

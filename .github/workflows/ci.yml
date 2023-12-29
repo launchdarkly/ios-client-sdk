@@ -1,11 +1,11 @@
 name: Run CI
 on:
   push:
-    branches: [ v8 ]
+    branches: [ v9 ]
     paths-ignore:
       - '**.md' # Do not need to run CI for markdown changes.
   pull_request:
-    branches: [ v8 ]
+    branches: [ v9 ]
     paths-ignore:
       - '**.md'
 
@@ -16,6 +16,9 @@ jobs:
     strategy:
       matrix:
         include:
+          - xcode-version: 15.0.1
+            ios-sim: 'platform=iOS Simulator,name=iPhone 15,OS=17.2'
+            os: macos-13
           - xcode-version: 14.3.1
             ios-sim: 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
             os: macos-13
