@@ -24,7 +24,7 @@ This SDK is built with [Xcode](https://developer.apple.com/xcode/). This version
 
 ### Building
 
-The exact command used to build the SDK depends on where you want to use it (for example -- iOS, watchOS, etc.). Refer to the `xcodebuild` commands in the SDK's [continuous integration build configuration](.circleci/config.yml) for examples on how to build for the different platforms.
+The exact command used to build the SDK depends on where you want to use it (for example -- iOS, watchOS, etc.). Refer to the `xcodebuild` commands in the SDK's [continuous integration build configuration](.github/workflows/ci.yml) for examples on how to build for the different platforms.
 
 If you wish to clean your working directory between builds, include the `clean` goal in your `xcodebuild` command(s).
 

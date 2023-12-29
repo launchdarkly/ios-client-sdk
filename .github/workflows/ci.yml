@@ -1,0 +1,36 @@
+name: Run CI
+on:
+  push:
+    branches: [ v8 ]
+    paths-ignore:
+      - '**.md' # Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [ v8 ]
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  macos-build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        include:
+          - xcode-version: 14.3.1
+            ios-sim: 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
+            os: macos-13
+          - xcode-version: 13.4.1
+            ios-sim: 'platform=iOS Simulator,name=iPhone 11,OS=15.5'
+            os: macos-12
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # If you only need the current version keep this.
+
+      - uses: ./.github/actions/ci
+        with:
+          xcode-version: ${{ matrix.xcode-version }}
+          ios-sim: ${{ matrix.ios-sim }}
+
+      - uses: ./.github/actions/build-docs
