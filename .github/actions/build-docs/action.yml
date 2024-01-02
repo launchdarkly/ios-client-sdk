@@ -1,0 +1,13 @@
+name: Build Documentation
+description: 'Build Documentation.'
+
+runs:
+  using: composite
+  steps:
+    - name: Install jazzy gem
+      shell: bash
+      run: gem install jazzy
+
+    - name: Build Documentation
+      shell: bash
+      run: jazzy -o docs

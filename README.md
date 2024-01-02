@@ -1,7 +1,7 @@
 LaunchDarkly SDK for iOS
 ========================
 
-[![CircleCI](https://circleci.com/gh/launchdarkly/ios-client-sdk/tree/v6.svg?style=shield)](https://circleci.com/gh/launchdarkly/ios-client-sdk)
+[![Run CI](https://github.com/launchdarkly/ios-client-sdk/actions/workflows/ci.yml/badge.svg?branch=v9)](https://github.com/launchdarkly/ios-client-sdk/actions/workflows/ci.yml)
 [![SwiftPM compatible](https://img.shields.io/badge/SwiftPM-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
 [![CocoaPods compatible](https://img.shields.io/cocoapods/v/LaunchDarkly.svg)](https://cocoapods.org/pods/LaunchDarkly)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
@@ -47,11 +47,13 @@ To integrate LaunchDarkly into an Xcode project, go to the project editor, and s
 
 To include LaunchDarkly in a Swift package, simply add it to the dependencies section of your `Package.swift` file. And add the product "LaunchDarkly" as a dependency for your targets.
 
+<!-- x-release-please-start-version -->
 ```swift
 dependencies: [
-    .package(url: "https://github.com/launchdarkly/ios-client-sdk.git", .upToNextMinor(from: "9.2.0"))
+    .package(url: "https://github.com/launchdarkly/ios-client-sdk.git", .upToNextMajor(from: "9.2.1"))
 ]
 ```
+<!-- x-release-please-end -->
 
 ### CocoaPods
 

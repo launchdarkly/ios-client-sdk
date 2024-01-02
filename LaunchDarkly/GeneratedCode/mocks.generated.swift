@@ -244,24 +244,24 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
         }
     }
 
-    var retrieveFeatureFlagsCallCount = 0
-    var retrieveFeatureFlagsCallback: (() throws -> Void)?
-    var retrieveFeatureFlagsReceivedContextKey: String?
-    var retrieveFeatureFlagsReturnValue: StoredItems?
-    func retrieveFeatureFlags(contextKey: String) -> StoredItems? {
-        retrieveFeatureFlagsCallCount += 1
-        retrieveFeatureFlagsReceivedContextKey = contextKey
-        try! retrieveFeatureFlagsCallback?()
-        return retrieveFeatureFlagsReturnValue
+    var getCachedDataCallCount = 0
+    var getCachedDataCallback: (() throws -> Void)?
+    var getCachedDataReceivedCacheKey: String?
+    var getCachedDataReturnValue: (items: StoredItems?, etag: String?)!
+    func getCachedData(cacheKey: String) -> (items: StoredItems?, etag: String?) {
+        getCachedDataCallCount += 1
+        getCachedDataReceivedCacheKey = cacheKey
+        try! getCachedDataCallback?()
+        return getCachedDataReturnValue
     }
 
-    var storeFeatureFlagsCallCount = 0
-    var storeFeatureFlagsCallback: (() throws -> Void)?
-    var storeFeatureFlagsReceivedArguments: (storedItems: StoredItems, contextKey: String, lastUpdated: Date)?
-    func storeFeatureFlags(_ storedItems: StoredItems, contextKey: String, lastUpdated: Date) {
-        storeFeatureFlagsCallCount += 1
-        storeFeatureFlagsReceivedArguments = (storedItems: storedItems, contextKey: contextKey, lastUpdated: lastUpdated)
-        try! storeFeatureFlagsCallback?()
+    var saveCachedDataCallCount = 0
+    var saveCachedDataCallback: (() throws -> Void)?
+    var saveCachedDataReceivedArguments: (storedItems: StoredItems, cacheKey: String, lastUpdated: Date, etag: String?)?
+    func saveCachedData(_ storedItems: StoredItems, cacheKey: String, lastUpdated: Date, etag: String?) {
+        saveCachedDataCallCount += 1
+        saveCachedDataReceivedArguments = (storedItems: storedItems, cacheKey: cacheKey, lastUpdated: lastUpdated, etag: etag)
+        try! saveCachedDataCallback?()
     }
 }
 

@@ -65,11 +65,11 @@ class DiagnosticReporter: DiagnosticReporting {
 
     private func sendDiagnosticEventSync<T: DiagnosticEvent & Encodable>(diagnosticEvent: T) {
         Log.debug(typeName + ": Sending diagnostic event: \(String(describing: diagnosticEvent))")
-        self.service.publishDiagnostic(diagnosticEvent: diagnosticEvent) { _, urlResponse, error in
-            let shouldRetry = self.processSendResponse(response: urlResponse as? HTTPURLResponse, error: error, isRetry: false)
+        self.service.publishDiagnostic(diagnosticEvent: diagnosticEvent) { response in
+            let shouldRetry = self.processSendResponse(response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: false)
             if shouldRetry {
-                self.service.publishDiagnostic(diagnosticEvent: diagnosticEvent) { _, urlResponse, error in
-                    _ = self.processSendResponse(response: urlResponse as? HTTPURLResponse, error: error, isRetry: true)
+                self.service.publishDiagnostic(diagnosticEvent: diagnosticEvent) { response in
+                    _ = self.processSendResponse(response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: true)
                 }
             }
         }
