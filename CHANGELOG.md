@@ -2,6 +2,20 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.3.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.2.1...9.3.0) (2024-01-02)
+
+
+### Features
+
+* Store and use e-tag header between SDK initializations ([#268](https://github.com/launchdarkly/ios-client-sdk/issues/268)) ([701aaa8](https://github.com/launchdarkly/ios-client-sdk/commit/701aaa8c7e1a910e5bf7cbd0a5b03b94683cc665))
+
+
+### Bug Fixes
+
+* LDContext equality is no longer order dependent ([#265](https://github.com/launchdarkly/ios-client-sdk/issues/265)) ([683e0c3](https://github.com/launchdarkly/ios-client-sdk/commit/683e0c3b189b10c1a14eddd13d19c79783aa6e64))
+* LDContext equality is no longer order dependent ([#266](https://github.com/launchdarkly/ios-client-sdk/issues/266)) ([3b0cf06](https://github.com/launchdarkly/ios-client-sdk/commit/3b0cf069bf426013bacbb310e002d63157cfc0d4))
+* Use stable encoding format to increase cache hits ([#267](https://github.com/launchdarkly/ios-client-sdk/issues/267)) ([40a5d01](https://github.com/launchdarkly/ios-client-sdk/commit/40a5d0114ccbc4f699e58dddbe8b3dc8f842f72b))
+
 ## [9.2.1] - 2023-10-31
 ### Changed:
 - Calling `identify()` with a context that is identical to the SDK's current context is now more efficient, and no longer results in re-establishing a connection.
