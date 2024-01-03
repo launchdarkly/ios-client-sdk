@@ -13,7 +13,6 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 ### Bug Fixes
 
 * LDContext equality is no longer order dependent ([#265](https://github.com/launchdarkly/ios-client-sdk/issues/265)) ([683e0c3](https://github.com/launchdarkly/ios-client-sdk/commit/683e0c3b189b10c1a14eddd13d19c79783aa6e64))
-* LDContext equality is no longer order dependent ([#266](https://github.com/launchdarkly/ios-client-sdk/issues/266)) ([3b0cf06](https://github.com/launchdarkly/ios-client-sdk/commit/3b0cf069bf426013bacbb310e002d63157cfc0d4))
 * Use stable encoding format to increase cache hits ([#267](https://github.com/launchdarkly/ios-client-sdk/issues/267)) ([40a5d01](https://github.com/launchdarkly/ios-client-sdk/commit/40a5d0114ccbc4f699e58dddbe8b3dc8f842f72b))
 
 ## [9.2.1] - 2023-10-31
