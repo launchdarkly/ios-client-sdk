@@ -37,8 +37,26 @@ public struct LDContext: Encodable, Equatable {
     fileprivate var canonicalizedKey: String
     internal var attributes: [String: LDValue] = [:]
 
+    // Internal property used to control encoding.
+    //
+    // Normally we would control this encoding mechanism through the use of userKeys.
+    // However, the anonymous redaction mechanism has to vary on a per event basis,
+    // and so we cannot affect the entire JSON encoder in this way.
+    internal var redactAnonymousAttributes: Bool = false
+
     fileprivate init(canonicalizedKey: String) {
         self.canonicalizedKey = canonicalizedKey
+    }
+
+    internal init(copyFrom: LDContext) {
+        kind = copyFrom.kind
+        contexts = copyFrom.contexts.map { c in LDContext(copyFrom: c) }
+        name = copyFrom.name
+        anonymous = copyFrom.anonymous
+        privateAttributes = copyFrom.privateAttributes
+        key = copyFrom.key
+        canonicalizedKey = copyFrom.canonicalizedKey
+        attributes = copyFrom.attributes
     }
 
     init() {
@@ -100,7 +118,7 @@ public struct LDContext: Encodable, Equatable {
         }
     }
 
-    static private func encodeSingleContext(container: inout KeyedEncodingContainer<DynamicCodingKeys>, context: LDContext, discardKind: Bool, redactAttributes: Bool, allAttributesPrivate: Bool, globalPrivateAttributes: SharedDictionary<String, PrivateAttributeLookupNode>) throws {
+    static private func encodeSingleContext(container: inout KeyedEncodingContainer<DynamicCodingKeys>, context: LDContext, discardKind: Bool, redactAttributes: Bool, allAttributesPrivate: Bool, globalPrivateAttributes: SharedDictionary<String, PrivateAttributeLookupNode>, redactAnonymousAttributes: Bool) throws {
         if !discardKind {
             try container.encodeIfPresent(context.kind.description, forKey: DynamicCodingKeys(string: "kind"))
         }
@@ -111,10 +129,12 @@ public struct LDContext: Encodable, Equatable {
         var redactedAttributes: [String] = []
         redactedAttributes.reserveCapacity(20)
 
+        let redactAll = allAttributesPrivate || (context.anonymous && redactAnonymousAttributes)
+
         for key in optionalAttributeNames {
             let reference = Reference(key)
             if let value = context.getValue(reference) {
-                if allAttributesPrivate {
+                if redactAll {
                     redactedAttributes.append(reference.raw())
                     continue
                 }
@@ -251,10 +271,10 @@ public struct LDContext: Encodable, Equatable {
 
             for context in contexts {
                 var contextContainer = container.nestedContainer(keyedBy: DynamicCodingKeys.self, forKey: DynamicCodingKeys(string: context.kind.description))
-                try LDContext.encodeSingleContext(container: &contextContainer, context: context, discardKind: true, redactAttributes: redactAttributes, allAttributesPrivate: allPrivate, globalPrivateAttributes: globalDictionary)
+                try LDContext.encodeSingleContext(container: &contextContainer, context: context, discardKind: true, redactAttributes: redactAttributes, allAttributesPrivate: allPrivate, globalPrivateAttributes: globalDictionary, redactAnonymousAttributes: redactAnonymousAttributes)
             }
         } else {
-            try LDContext.encodeSingleContext(container: &container, context: self, discardKind: false, redactAttributes: redactAttributes, allAttributesPrivate: allPrivate, globalPrivateAttributes: globalDictionary)
+            try LDContext.encodeSingleContext(container: &container, context: self, discardKind: false, redactAttributes: redactAttributes, allAttributesPrivate: allPrivate, globalPrivateAttributes: globalDictionary, redactAnonymousAttributes: redactAnonymousAttributes)
         }
     }
 
