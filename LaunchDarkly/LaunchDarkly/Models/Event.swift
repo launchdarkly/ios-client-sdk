@@ -79,10 +79,18 @@ class FeatureEvent: Event, SubEvent {
         self.value = value
         self.defaultValue = defaultValue
         self.featureFlag = featureFlag
-        self.context = context
         self.includeReason = includeReason
         self.creationDate = creationDate
-        super.init(kind: isDebug ? .debug : .feature)
+
+        if isDebug {
+            self.context = context
+            super.init(kind: .debug)
+        } else {
+            var newContext = LDContext(copyFrom: context)
+            newContext.redactAnonymousAttributes = true
+            self.context = newContext
+            super.init(kind: .feature)
+        }
     }
 
     fileprivate func encode(to encoder: Encoder, container: KeyedEncodingContainer<Event.CodingKeys>) throws {
