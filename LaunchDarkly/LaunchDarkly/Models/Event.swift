@@ -88,11 +88,7 @@ class FeatureEvent: Event, SubEvent {
     fileprivate func encode(to encoder: Encoder, container: KeyedEncodingContainer<Event.CodingKeys>) throws {
         var container = container
         try container.encode(key, forKey: .key)
-        if kind == .debug {
-            try container.encode(context, forKey: .context)
-        } else {
-            try container.encode(context.contextKeys(), forKey: .contextKeys)
-        }
+        try container.encode(context, forKey: .context)
         try container.encodeIfPresent(featureFlag?.variation, forKey: .variation)
         try container.encodeIfPresent(featureFlag?.versionForEvents, forKey: .version)
         try container.encode(value, forKey: .value)

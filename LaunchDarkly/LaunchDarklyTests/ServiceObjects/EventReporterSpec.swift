@@ -506,7 +506,7 @@ final class EventReporterSpec: QuickSpec {
                 expect(reporter.eventStore.count) == 1
                 expect((reporter.eventStore[0] as? FeatureEvent)?.kind) == .feature
                 expect((reporter.eventStore[0] as? FeatureEvent)?.key) == "flag-key"
-                expect((reporter.eventStore[0] as? FeatureEvent)?.context) == context
+                expect((reporter.eventStore[0] as? FeatureEvent)?.context.contextHash()) == context.contextHash()
                 expect((reporter.eventStore[0] as? FeatureEvent)?.value) == "a"
                 expect((reporter.eventStore[0] as? FeatureEvent)?.defaultValue) == "b"
                 expect((reporter.eventStore[0] as? FeatureEvent)?.featureFlag) == flag
@@ -568,7 +568,7 @@ final class EventReporterSpec: QuickSpec {
                 let debugEvent = reporter.eventStore.first { $0.kind == .debug } as? FeatureEvent
                 expect(featureEvent?.kind) == .feature
                 expect(featureEvent?.key) == "flag-key"
-                expect(featureEvent?.context) == context
+                expect(featureEvent?.context.contextHash()) == context.contextHash()
                 expect(featureEvent?.value) == "a"
                 expect(featureEvent?.defaultValue) == "b"
                 expect(featureEvent?.featureFlag) == flag
