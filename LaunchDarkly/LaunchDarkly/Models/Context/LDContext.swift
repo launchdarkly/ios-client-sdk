@@ -337,7 +337,7 @@ public struct LDContext: Encodable, Equatable {
         return Util.sha256base64(fullyQualifiedKey()) + "$"
     }
 
-    func contextHash() -> String {
+    internal func contextHash() -> String {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
         encoder.userInfo[UserInfoKeys.redactAttributes] = false

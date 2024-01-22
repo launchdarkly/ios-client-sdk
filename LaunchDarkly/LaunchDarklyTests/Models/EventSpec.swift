@@ -12,7 +12,7 @@ final class EventSpec: XCTestCase {
         let event = FeatureEvent(key: "abc", context: context, value: true, defaultValue: false, featureFlag: featureFlag, includeReason: true, isDebug: false, creationDate: testDate)
         XCTAssertEqual(event.kind, Event.Kind.feature)
         XCTAssertEqual(event.key, "abc")
-        XCTAssertEqual(event.context, context)
+        XCTAssertTrue(event.context.contextHash() == context.contextHash())
         XCTAssertEqual(event.value, true)
         XCTAssertEqual(event.defaultValue, false)
         XCTAssertEqual(event.featureFlag, featureFlag)
@@ -119,11 +119,7 @@ final class EventSpec: XCTestCase {
                 XCTAssertEqual(dict["default"], false)
                 XCTAssertEqual(dict["variation"], 2)
                 XCTAssertEqual(dict["version"], 3)
-                if isDebug {
-                    XCTAssertEqual(dict["context"], encodeToLDValue(context))
-                } else {
-                    XCTAssertEqual(dict["contextKeys"], .object(["user": .string(context.fullyQualifiedKey())]))
-                }
+                XCTAssertEqual(dict["context"], encodeToLDValue(context))
                 XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
             }
         }
@@ -143,11 +139,7 @@ final class EventSpec: XCTestCase {
                 XCTAssertEqual(dict["variation"], 2)
                 XCTAssertEqual(dict["version"], 3)
                 XCTAssertEqual(dict["reason"], ["kind": "OFF"])
-                if isDebug {
-                    XCTAssertEqual(dict["context"], encodeToLDValue(context))
-                } else {
-                    XCTAssertEqual(dict["contextKeys"], .object(["user": .string(context.fullyQualifiedKey())]))
-                }
+                XCTAssertEqual(dict["context"], encodeToLDValue(context))
                 XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
             }
         }
@@ -165,11 +157,7 @@ final class EventSpec: XCTestCase {
                 XCTAssertEqual(dict["value"], .null)
                 XCTAssertEqual(dict["default"], .null)
                 XCTAssertEqual(dict["reason"], ["kind": "OFF"])
-                if isDebug {
-                    XCTAssertEqual(dict["context"], encodeToLDValue(context))
-                } else {
-                    XCTAssertEqual(dict["contextKeys"], .object(["user": .string(context.fullyQualifiedKey())]))
-                }
+                XCTAssertEqual(dict["context"], encodeToLDValue(context))
                 XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
             }
         }
@@ -185,11 +173,7 @@ final class EventSpec: XCTestCase {
                 XCTAssertEqual(dict["key"], "event-key")
                 XCTAssertEqual(dict["value"], true)
                 XCTAssertEqual(dict["default"], false)
-                if isDebug {
-                    XCTAssertEqual(dict["context"], encodeToLDValue(context))
-                } else {
-                    XCTAssertEqual(dict["contextKeys"], .object(["user": .string(context.fullyQualifiedKey())]))
-                }
+                XCTAssertEqual(dict["context"], encodeToLDValue(context))
                 XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
             }
         }
