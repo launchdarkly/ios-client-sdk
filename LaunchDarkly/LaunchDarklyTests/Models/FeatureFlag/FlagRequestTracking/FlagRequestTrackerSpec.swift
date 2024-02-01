@@ -1,11 +1,12 @@
 import Foundation
+import OSLog
 import XCTest
 
 @testable import LaunchDarkly
 
 final class FlagRequestTrackerSpec: XCTestCase {
     func testInit() {
-        let flagRequestTracker = FlagRequestTracker()
+        let flagRequestTracker = FlagRequestTracker(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         XCTAssertEqual(flagRequestTracker.flagCounters, [:])
         XCTAssertFalse(flagRequestTracker.hasLoggedRequests)
         let now = Date()
@@ -15,7 +16,7 @@ final class FlagRequestTrackerSpec: XCTestCase {
 
     func testTrackRequestInitial() {
         let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
-        var flagRequestTracker = FlagRequestTracker()
+        var flagRequestTracker = FlagRequestTracker(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters.count, 1)
         let counter = FlagCounter()
@@ -25,7 +26,7 @@ final class FlagRequestTrackerSpec: XCTestCase {
 
     func testTrackRequestSameFlagKey() {
         let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
-        var flagRequestTracker = FlagRequestTracker()
+        var flagRequestTracker = FlagRequestTracker(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters.count, 1)
@@ -38,7 +39,7 @@ final class FlagRequestTrackerSpec: XCTestCase {
     func testTrackRequestDifferentFlagKey() {
         let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
         let secondFlag = FeatureFlag(flagKey: "alt-flag", variation: 2, version: 6, flagVersion: 3)
-        var flagRequestTracker = FlagRequestTracker()
+        var flagRequestTracker = FlagRequestTracker(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         flagRequestTracker.trackRequest(flagKey: "alt-flag", reportedValue: true, featureFlag: secondFlag, defaultValue: false, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters.count, 2)
@@ -51,7 +52,7 @@ final class FlagRequestTrackerSpec: XCTestCase {
     }
 
     func testHasLoggedRequests() {
-        var flagRequestTracker = FlagRequestTracker()
+        var flagRequestTracker = FlagRequestTracker(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         flagRequestTracker.trackRequest(flagKey: "test-key", reportedValue: nil, featureFlag: FeatureFlag(flagKey: "test-key"), defaultValue: nil, context: LDContext.stub())
         XCTAssert(flagRequestTracker.hasLoggedRequests)
     }
@@ -59,7 +60,7 @@ final class FlagRequestTrackerSpec: XCTestCase {
 
 extension FlagRequestTracker {
     static func stub() -> FlagRequestTracker {
-        var tracker = FlagRequestTracker()
+        var tracker = FlagRequestTracker(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         DarklyServiceMock.FlagKeys.knownFlags.forEach { flagKey in
             tracker.flagCounters[flagKey] = FlagCounter.stub(flagKey: flagKey)
         }

@@ -1,6 +1,7 @@
 import Foundation
 import Dispatch
 import LDSwiftEventSource
+import OSLog
 
 // sourcery: autoMockable
 protocol LDFlagSynchronizing {
@@ -68,7 +69,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         set {
             isOnlineQueue.sync {
                 _isOnline = newValue
-                Log.debug(typeName(and: #function, appending: ": ") + "\(_isOnline)")
+                os_log("%s %{bool}d", log: service.config.logger, type: .debug, typeName(and: #function), _isOnline)
                 configureCommunications(isOnline: _isOnline)
             }
         }
@@ -87,12 +88,12 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
          useReport: Bool,
          service: DarklyServiceProvider,
          onSyncComplete: FlagSyncCompleteClosure?) {
-        Log.debug(FlagSynchronizer.typeName(and: #function) + "streamingMode: \(streamingMode), " + "pollingInterval: \(pollingInterval), " + "useReport: \(useReport)")
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
         self.useReport = useReport
         self.service = service
         self.onSyncComplete = onSyncComplete
+        os_log("%s streamingMode: %s pollingInterval: %s useReport: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: streamingMode), String(describing: pollingInterval), useReport.description)
     }
 
     private func configureCommunications(isOnline: Bool) {
@@ -115,9 +116,12 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     private func startEventSource() {
         guard eventSource == nil
-        else { return Log.debug(typeName(and: #function) + "aborted. Clientstream already connected.") }
+        else {
+            os_log("%s aborted. Clientstream already connected.", log: service.config.logger, type: .debug, typeName(and: #function))
+            return
+        }
 
-        Log.debug(typeName(and: #function))
+        os_log("%s", log: service.config.logger, type: .debug, typeName(and: #function))
         eventSourceStarted = Date()
         // The LDConfig.connectionTimeout should NOT be set here. Heartbeat is sent every 3m. ES default timeout is 5m. This is an async operation.
         // LDEventSource reacts to connection errors by closing the connection and establishing a new one after an exponentially increasing wait. That makes it self healing.
@@ -128,9 +132,12 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     private func stopEventSource() {
         guard eventSource != nil
-        else { return Log.debug(typeName(and: #function) + "aborted. Clientstream is not connected.") }
+        else {
+            os_log("%s aborted. Clientstream is not connected.", log: service.config.logger, type: .debug, typeName(and: #function))
+            return
+        }
 
-        Log.debug(typeName(and: #function))
+        os_log("%s", log: service.config.logger, type: .debug, typeName(and: #function))
         eventSource?.stop()
         eventSource = nil
     }
@@ -139,18 +146,24 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     private func startPolling() {
         guard flagRequestTimer == nil
-        else { return Log.debug(typeName(and: #function) + "aborted. Polling already active.") }
+        else {
+            os_log("%s aborted. Polling already active.", log: service.config.logger, type: .debug, typeName(and: #function))
+            return
+        }
 
-        Log.debug(typeName(and: #function))
+        os_log("%s", log: service.config.logger, type: .debug, typeName(and: #function))
         flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, execute: processTimer)
         makeFlagRequest(isOnline: true)
     }
 
     private func stopPolling() {
         guard flagRequestTimer != nil
-        else { return Log.debug(typeName(and: #function) + "aborted. Polling already inactive.") }
+        else {
+            os_log("%s aborted. Polling already inactive.", log: service.config.logger, type: .debug, typeName(and: #function))
+            return
+        }
 
-        Log.debug(typeName(and: #function))
+        os_log("%s", log: service.config.logger, type: .debug, typeName(and: #function))
         flagRequestTimer?.cancel()
         flagRequestTimer = nil
     }
@@ -164,18 +177,20 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     private func makeFlagRequest(isOnline: Bool) {
         guard isOnline
         else {
-            Log.debug(typeName(and: #function) + "aborted. Flag Synchronizer is offline.")
+            os_log("%s aborted. Flag Synchronizer is offline.", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(.error(.isOffline))
             return
         }
-        Log.debug(typeName(and: #function, appending: " - ") + "starting")
+        os_log("%s starting", log: service.config.logger, type: .debug, typeName(and: #function))
         let context = (useReport: useReport,
-                       logPrefix: typeName(and: #function, appending: " - "))
+                       logPrefix: typeName(and: #function))
         service.getFeatureFlags(useReport: useReport) { [weak self] serviceResponse in
             if FlagSynchronizer.shouldRetryFlagRequest(useReport: context.useReport, statusCode: (serviceResponse.urlResponse as? HTTPURLResponse)?.statusCode) {
-                Log.debug(context.logPrefix + "retrying via GET")
-                self?.service.getFeatureFlags(useReport: false) { retryServiceResponse in
-                    self?.processFlagResponse(serviceResponse: retryServiceResponse)
+                if let myself = self {
+                    os_log("%s retrying via GET", log: myself.service.config.logger, type: .debug, context.logPrefix)
+                    myself.service.getFeatureFlags(useReport: false) { retryServiceResponse in
+                        myself.processFlagResponse(serviceResponse: retryServiceResponse)
+                    }
                 }
             } else {
                 self?.processFlagResponse(serviceResponse: serviceResponse)
@@ -191,7 +206,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     private func processFlagResponse(serviceResponse: ServiceResponse) {
         if let serviceResponseError = serviceResponse.error {
-            Log.debug(typeName(and: #function) + "error: \(serviceResponseError)")
+            os_log("%s error: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: serviceResponseError))
             reportSyncComplete(.error(.request(serviceResponseError)))
             return
         }
@@ -201,7 +216,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         }
         guard serviceResponse.urlResponse?.httpStatusCode == HTTPURLResponse.StatusCodes.ok
         else {
-            Log.debug(typeName(and: #function) + "response: \(String(describing: serviceResponse.urlResponse))")
+            os_log("%s response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: serviceResponse.urlResponse))
             reportSyncComplete(.error(.response(serviceResponse.urlResponse)))
             return
         }
@@ -215,7 +230,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     private func reportDataError(_ data: Data?) {
-        Log.debug(typeName(and: #function) + "data: \(String(describing: data))")
+        os_log("%s data: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: data))
         reportSyncComplete(.error(.data(data)))
     }
 
@@ -259,18 +274,18 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     func shouldAbortStreamUpdate() -> Bool {
         // Because this method is called asynchronously by the LDEventSource, need to check these conditions prior to processing the event.
         if !isOnline {
-            Log.debug(typeName(and: #function) + "aborted. " + "Flag Synchronizer is offline.")
+            os_log("%s aborted. Flag Synchronizer is offline.", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(.error(.isOffline))
             return true
         }
         if streamingMode == .polling {
-            Log.debug(typeName(and: #function) + "aborted. " + "Flag Synchronizer is in polling mode.")
+            os_log("%s aborted. Flag Synchronizer is in polling mode.", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(.error(.streamEventWhilePolling))
             return true
         }
         if eventSource == nil {
             // Since eventSource.close() is async, this prevents responding to events after .close() is called, but before it's actually closed
-            Log.debug(typeName(and: #function) + "aborted. " + "Clientstream is not active.")
+            os_log("%s aborted. Clientstream is not active", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(.error(.isOffline))
             return true
         }
@@ -279,7 +294,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     // MARK: EventHandler methods
     public func onOpened() {
-        Log.debug(self.typeName(and: #function) + "EventSource opened")
+        os_log("%s EventSource opened", log: service.config.logger, type: .debug, typeName(and: #function))
         if let startedAt = eventSourceStarted?.millisSince1970 {
             let now = Date().millisSince1970
             let streamInit = DiagnosticStreamInit(timestamp: now, durationMillis: Int(now - startedAt), failed: false)
@@ -288,7 +303,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     public func onClosed() {
-        Log.debug(self.typeName(and: #function) + "EventSource closed")
+        os_log("%s EventSource closed", log: service.config.logger, type: .debug, typeName(and: #function))
         NotificationCenter.default.post(name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
     }
 
@@ -326,7 +341,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             }
             reportSyncComplete(.delete(deleteResponse))
         default:
-            Log.debug(typeName(and: #function) + "aborted. Unknown event type.")
+            os_log("%s aborted. Unknown event type", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(.error(.unknownEventType(eventType)))
             return
         }
@@ -339,7 +354,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         guard !shouldAbortStreamUpdate()
         else { return }
 
-        Log.debug(typeName(and: #function) + "aborted. Streaming event reported an error. error: \(error)")
+        os_log("%s aborted. Streaming event reported an error. error: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error))
         reportSyncComplete(.error(.streamError(error)))
     }
 }

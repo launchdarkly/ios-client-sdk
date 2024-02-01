@@ -1,5 +1,6 @@
 import Foundation
 import LDSwiftEventSource
+import OSLog
 
 typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Error?, etag: String?)
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void
@@ -95,7 +96,7 @@ final class DarklyService: DarklyServiceProvider {
 
         guard let contextJsonData = try? encoder.encode(context)
         else {
-            Log.debug(typeName(and: #function, appending: ": ") + "Aborting. Unable to create flagRequest.")
+            os_log("%s Aborting. Unable to create flag request.", log: config.logger, type: .debug, typeName(and: #function))
             return
         }
 
@@ -214,7 +215,7 @@ final class DarklyService: DarklyServiceProvider {
 
     private func hasMobileKey(_ location: String) -> Bool {
         if config.mobileKey.isEmpty {
-            Log.debug(typeName(and: location, appending: ": ") + "Aborting. No mobile key.")
+            os_log("%s Aborting. No mobile key.", log: config.logger, type: .debug, typeName(and: #function))
         }
         return !config.mobileKey.isEmpty
     }

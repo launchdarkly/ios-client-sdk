@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 typealias RunClosure = () -> Void
 
@@ -19,20 +20,26 @@ final class Throttler: Throttling {
     let dispatcher: ((@escaping RunClosure) -> Void)
     let throttlingEnabled: Bool
     let maxDelay: TimeInterval
+    private let logger: OSLog
 
     private (set) var runAttempts = -1
     private (set) var workItem: DispatchWorkItem?
 
-    init(maxDelay: TimeInterval = Constants.defaultDelay,
-         isDebugBuild: Bool = false,
-         dispatcher: ((@escaping RunClosure) -> Void)? = nil) {
+    init(
+        logger: OSLog,
+        maxDelay: TimeInterval = Constants.defaultDelay,
+        isDebugBuild: Bool = false,
+        dispatcher: ((@escaping RunClosure) -> Void)? = nil) {
+        self.logger = logger
         self.throttlingEnabled = !isDebugBuild
         self.maxDelay = maxDelay
         self.dispatcher = dispatcher ?? { DispatchQueue.global(qos: .userInitiated).async(execute: $0) }
     }
 
     func runThrottled(_ runClosure: @escaping RunClosure) {
-        if let logMsg = runThrottledSync(runClosure) { Log.debug(logMsg) }
+        if let logMsg = runThrottledSync(runClosure) {
+            os_log("%s", log: self.logger, type: .debug, typeName(and: #function), logMsg)
+        }
     }
 
     func runThrottledSync(_ runClosure: @escaping RunClosure) -> String? {

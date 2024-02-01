@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 // sourcery: autoMockable
 protocol FlagChangeNotifying {
@@ -19,25 +20,30 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     private var flagChangeQueue = DispatchQueue(label: "com.launchdarkly.FlagChangeNotifier.FlagChangeQueue")
     private var flagsUnchangedQueue = DispatchQueue(label: "com.launchdarkly.FlagChangeNotifier.FlagsUnchangedQueue")
     private var connectionModeChangedQueue = DispatchQueue(label: "com.launchdarkly.FlagChangeNotifier.ConnectionModeChangedQueue")
+    private let logger: OSLog
+
+    init(logger: OSLog) {
+        self.logger = logger
+    }
 
     func addFlagChangeObserver(_ observer: FlagChangeObserver) {
-        Log.debug(typeName(and: #function) + "observer: \(observer)")
+        os_log("%s observer: %s", log: logger, type: .debug, typeName(and: #function), String(describing: observer))
         flagChangeQueue.sync { flagChangeObservers.append(observer) }
     }
 
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver) {
-        Log.debug(typeName(and: #function) + "observer: \(observer)")
+        os_log("%s observer: %s", log: logger, type: .debug, typeName(and: #function), String(describing: observer))
         flagsUnchangedQueue.sync { flagsUnchangedObservers.append(observer) }
     }
 
     func addConnectionModeChangedObserver(_ observer: ConnectionModeChangedObserver) {
-        Log.debug(typeName(and: #function) + "observer: \(observer)")
+        os_log("%s observer: %s", log: logger, type: .debug, typeName(and: #function), String(describing: observer))
         connectionModeChangedQueue.sync { connectionModeChangedObservers.append(observer) }
     }
 
     /// Removes all change handling closures from owner
     func removeObserver(owner: LDObserverOwner) {
-        Log.debug(typeName(and: #function) + "owner: \(owner)")
+        os_log("%s owner: %s", log: logger, type: .debug, typeName(and: #function), String(describing: owner))
         flagChangeQueue.sync { flagChangeObservers.removeAll { $0.owner === owner } }
         flagsUnchangedQueue.sync { flagsUnchangedObservers.removeAll { $0.owner === owner } }
         connectionModeChangedQueue.sync { connectionModeChangedObservers.removeAll { $0.owner === owner } }
@@ -58,9 +64,9 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         removeOldObservers()
 
         if flagsUnchangedObservers.isEmpty {
-            Log.debug(typeName(and: #function) + "aborted. Flags unchanged and no flagsUnchanged observers set.")
+            os_log("%s aborted. Flags unchanged and no flagsUnchanged observers set.", log: logger, type: .debug, typeName(and: #function))
         } else {
-            Log.debug(typeName(and: #function) + "notifying observers that flags are unchanged.")
+            os_log("%s notifying observers that flags are unchanged.", log: logger, type: .debug, typeName(and: #function))
         }
         flagsUnchangedQueue.sync {
             flagsUnchangedObservers.forEach { flagsUnchangedObserver in
@@ -85,14 +91,14 @@ final class FlagChangeNotifier: FlagChangeNotifying {
         }
         guard !selectedObservers.isEmpty
         else {
-            Log.debug(typeName(and: #function) + "aborted. No observers watching changed flags.")
+            os_log("%s aborted. No observers watching changed flags.", log: logger, type: .debug, typeName(and: #function))
             return
         }
 
         let changedFlags = [LDFlagKey: LDChangedFlag](uniqueKeysWithValues: changedFlagKeys.map {
             ($0, LDChangedFlag(key: $0, oldValue: oldFlags[$0]?.value ?? .null, newValue: newFlags[$0]?.value ?? .null))
         })
-        Log.debug(typeName(and: #function) + "notifying observers for changes to flags: \(changedFlags.keys.joined(separator: ", ")).")
+        os_log("%s notifying observers for changes to flags: %s.", log: logger, type: .debug, typeName(and: #function), changedFlags.keys.joined(separator: ", "))
         selectedObservers.forEach { observer in
             let filteredChangedFlags = changedFlags.filter { flagKey, _ -> Bool in
                 observer.flagKeys == LDFlagKey.anyKey || observer.flagKeys.contains(flagKey)
@@ -107,7 +113,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     }
 
     private func removeOldObservers() {
-        Log.debug(typeName(and: #function))
+        os_log("%s", log: logger, type: .debug, typeName(and: #function))
         flagChangeQueue.sync { flagChangeObservers.removeAll { $0.owner == nil } }
         flagsUnchangedQueue.sync { flagsUnchangedObservers.removeAll { $0.owner == nil } }
     }

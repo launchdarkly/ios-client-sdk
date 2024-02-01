@@ -20,7 +20,7 @@ final class DarklyServiceSpec: QuickSpec {
         var config: LDConfig!
         var envReporterMock = EnvironmentReportingMock()
         var serviceMock: DarklyServiceMock!
-        var serviceFactoryMock: ClientServiceMockFactory = ClientServiceMockFactory()
+        var serviceFactoryMock: ClientServiceMockFactory
         var service: DarklyService!
         var httpHeaders: HTTPHeaders
         let stubFlags = FlagMaintainingMock.stubStoredItems()
@@ -32,6 +32,7 @@ final class DarklyServiceSpec: QuickSpec {
             config = LDConfig.stub(mobileKey: mobileKey, autoEnvAttributes: .disabled, isDebugBuild: true)
             config.useReport = useReport
             config.diagnosticOptOut = diagnosticOptOut
+            self.serviceFactoryMock = ClientServiceMockFactory(config: config)
             serviceMock = DarklyServiceMock(config: config)
             service = DarklyService(config: config, context: context, envReporter: envReporterMock, serviceFactory: serviceFactoryMock)
             httpHeaders = HTTPHeaders(config: config, environmentReporter: envReporterMock)

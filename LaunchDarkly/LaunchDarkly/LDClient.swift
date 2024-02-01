@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 enum LDClientRunMode {
     case foreground, background
@@ -163,7 +164,10 @@ public class LDClient {
             }
         }
         isOnline = goOnline
-        Log.debug(typeName(and: "setOnline", appending: ": ") + (reasonOnlineUnavailable.isEmpty ? "\(self.isOnline)." : "true aborted.") + reasonOnlineUnavailable)
+        os_log("%s %s. %s", log: config.logger, type: .debug,
+            typeName(and: "setOnline"),
+            reasonOnlineUnavailable.isEmpty ? self.isOnline.description : "true aborted",
+            reasonOnlineUnavailable)
     }
 
     private var canGoOnline: Bool {
@@ -194,10 +198,9 @@ public class LDClient {
         didSet {
             guard runMode != oldValue
             else {
-                Log.debug(typeName(and: #function) + " aborted. Old runMode equals new runMode.")
+                os_log("%s runMode aborted. Old runMode equals new runMode", log: config.logger, type: .debug, typeName(and: #function))
                 return
             }
-            Log.debug(typeName(and: #function, appending: ": ") + "\(runMode)")
 
             let willSetSynchronizerOnline = isOnline && isInSupportedRunMode
             flagSynchronizer.isOnline = false
@@ -216,7 +219,7 @@ public class LDClient {
     // Stores ConnectionInformation in UserDefaults on change
     var connectionInformation: ConnectionInformation {
         didSet {
-            Log.debug(connectionInformation.description)
+            os_log("%s", log: config.logger, type: .debug, connectionInformation.description)
             ConnectionInformationStore.storeConnectionInformation(connectionInformation: connectionInformation)
             if connectionInformation.currentConnectionMode != oldValue.currentConnectionMode {
                 flagChangeNotifier.notifyConnectionModeChangedObservers(connectionMode: connectionInformation.currentConnectionMode)
@@ -238,22 +241,22 @@ public class LDClient {
     }
 
     private func internalClose() {
-        Log.debug(typeName(and: #function, appending: "- ") + "stopping")
+        os_log("%s stopping", log: config.logger, type: .debug, typeName(and: #function))
         internalFlush()
         internalSetOnline(false)
         hasStarted = false
-        Log.debug(typeName(and: #function, appending: "- ") + "stopped")
+        os_log("%s stopped", log: config.logger, type: .debug, typeName(and: #function))
     }
 
     @objc private func didEnterBackground() {
-        Log.debug(typeName(and: #function))
+        os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
         Thread.performOnMain {
             runMode = .background
         }
     }
 
     @objc private func willEnterForeground() {
-        Log.debug(typeName(and: #function))
+        os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
         Thread.performOnMain {
             runMode = .foreground
         }
@@ -289,7 +292,7 @@ public class LDClient {
     func internalIdentify(newContext: LDContext, completion: (() -> Void)? = nil) {
         var updatedContext = newContext
         if config.autoEnvAttributes {
-            updatedContext = AutoEnvContextModifier(environmentReporter: environmentReporter).modifyContext(updatedContext)
+            updatedContext = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(updatedContext)
         }
 
         internalIdentifyQueue.sync {
@@ -300,7 +303,7 @@ public class LDClient {
             }
 
             self.context = updatedContext
-            Log.debug(self.typeName(and: #function) + "new context set with key: " + self.context.fullyQualifiedKey() )
+            os_log("%s new context set with key: %s", log: config.logger, type: .debug, typeName(and: #function), self.context.fullyQualifiedKey())
             let wasOnline = self.isOnline
             self.internalSetOnline(false)
 
@@ -358,7 +361,7 @@ public class LDClient {
      - parameter handler: The closure the SDK will execute when the feature flag changes.
     */
     public func observe(key: LDFlagKey, owner: LDObserverOwner, handler: @escaping LDFlagChangeHandler) {
-        Log.debug(typeName(and: #function) + "flagKey: \(key), owner: \(String(describing: owner))")
+        os_log("%s flagKey: %s owner: %s", log: config.logger, type: .debug, typeName(and: #function), key, String(describing: owner))
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(key: key, owner: owner, flagChangeHandler: handler))
     }
 
@@ -386,7 +389,7 @@ public class LDClient {
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
      */
     public func observe(keys: [LDFlagKey], owner: LDObserverOwner, handler: @escaping LDFlagCollectionChangeHandler) {
-        Log.debug(typeName(and: #function) + "flagKeys: \(keys), owner: \(String(describing: owner))")
+        os_log("%s flagKeys: %s owner: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: keys), String(describing: owner))
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: keys, owner: owner, flagCollectionChangeHandler: handler))
     }
 
@@ -413,7 +416,7 @@ public class LDClient {
      - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
      */
     public func observeAll(owner: LDObserverOwner, handler: @escaping LDFlagCollectionChangeHandler) {
-        Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
+        os_log("%s owner: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: owner))
         flagChangeNotifier.addFlagChangeObserver(FlagChangeObserver(keys: LDFlagKey.anyKey, owner: owner, flagCollectionChangeHandler: handler))
     }
 
@@ -440,7 +443,7 @@ public class LDClient {
      - parameter handler: The LDFlagsUnchangedHandler the SDK will execute 1 time when a flag request completes with no flags changed.
      */
     public func observeFlagsUnchanged(owner: LDObserverOwner, handler: @escaping LDFlagsUnchangedHandler) {
-        Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
+        os_log("%s owner: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: owner))
         flagChangeNotifier.addFlagsUnchangedObserver(FlagsUnchangedObserver(owner: owner, flagsUnchangedHandler: handler))
     }
 
@@ -464,7 +467,7 @@ public class LDClient {
      - parameter handler: The LDConnectionModeChangedHandler the SDK will execute 1 time when ConnectionInformation.currentConnectionMode is changed.
      */
     public func observeCurrentConnectionMode(owner: LDObserverOwner, handler: @escaping LDConnectionModeChangedHandler) {
-        Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
+        os_log("%s owner: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: owner))
         flagChangeNotifier.addConnectionModeChangedObserver(ConnectionModeChangedObserver(owner: owner, connectionModeChangedHandler: handler))
     }
 
@@ -476,12 +479,12 @@ public class LDClient {
      - parameter owner: The LDFlagChangeOwner owning the handlers to remove, whether a flag change handler or flags unchanged handler.
     */
     public func stopObserving(owner: LDObserverOwner) {
-        Log.debug(typeName(and: #function) + " owner: \(String(describing: owner))")
+        os_log("%s owner: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: owner))
         flagChangeNotifier.removeObserver(owner: owner)
     }
 
     private func onFlagSyncComplete(result: FlagSyncResult) {
-        Log.debug(typeName(and: #function) + "result: \(result)")
+        os_log("%s result: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: result))
         switch result {
         case let .flagCollection((flagCollection, etag)):
             let oldStoredItems = flagStore.storedItems
@@ -502,13 +505,13 @@ public class LDClient {
             connectionInformation.lastKnownFlagValidity = Date()
             flagChangeNotifier.notifyUnchanged()
         case .error(let synchronizingError):
-            process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
+            process(synchronizingError, logPrefix: typeName(and: #function))
         }
     }
 
     private func process(_ synchronizingError: SynchronizingError, logPrefix: String) {
         if synchronizingError.isClientUnauthorized {
-            Log.debug(logPrefix + "LDClient is unauthorized")
+            os_log("%s LDClient is unauthorized", log: config.logger, type: .debug, logPrefix)
             internalSetOnline(false)
         }
         connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
@@ -542,11 +545,15 @@ public class LDClient {
     public func track(key: String, data: LDValue? = nil, metricValue: Double? = nil) {
         guard hasStarted
         else {
-            Log.debug(typeName(and: #function) + "aborted. LDClient not started")
+            os_log("%s aborted. LDClient not started", log: config.logger, type: .debug, typeName(and: #function))
             return
         }
         let event = CustomEvent(key: key, context: context, data: data ?? .null, metricValue: metricValue)
-        Log.debug(typeName(and: #function) + "key: \(key), data: \(String(describing: data)), metricValue: \(String(describing: metricValue))")
+        os_log("%s key: %s data: %s, metricValue: %s", log: config.logger, type: .debug,
+            typeName(and: #function),
+            key,
+            String(describing: data),
+            String(describing: metricValue))
         eventReporter.record(event)
     }
 
@@ -567,15 +574,15 @@ public class LDClient {
 
     private func onEventSyncComplete(result: SynchronizingError?) {
         if let synchronizingError = result {
-            Log.debug(typeName(and: #function) + "result: \(synchronizingError)")
-            process(synchronizingError, logPrefix: typeName(and: #function, appending: ": "))
+            os_log("%s result: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: synchronizingError))
+            process(synchronizingError, logPrefix: typeName(and: #function))
         } else {
-            Log.debug(typeName(and: #function) + "result: success")
+            os_log("%s result: success", log: config.logger, type: .debug, typeName(and: #function))
         }
     }
 
     @objc private func didCloseEventSource() {
-        Log.debug(typeName(and: #function))
+        os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
         self.connectionInformation = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: self.connectionInformation)
     }
 
@@ -597,16 +604,16 @@ public class LDClient {
     }
 
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
-        Log.debug("LDClient starting")
+        os_log("%s LDClient starting", log: config.logger, type: .debug, typeName(and: #function))
         if serviceFactory != nil {
             get()?.close()
         }
         if instances != nil {
-            Log.debug("LDClient.start() was called more than once!")
+            os_log("%s LDClient.start() was called more than once!", log: config.logger, type: .debug, typeName(and: #function))
             return
         }
 
-        let serviceFactory = serviceFactory ?? ClientServiceFactory()
+        let serviceFactory = serviceFactory ?? ClientServiceFactory(config: config)
         var keys = [config.mobileKey]
         keys.append(contentsOf: config.getSecondaryMobileKeys().values)
         serviceFactory.makeCacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: keys, maxCachedContexts: config.maxCachedContexts)
@@ -617,7 +624,7 @@ public class LDClient {
         let completionCheck = {
             internalCount += 1
             if internalCount > mobileKeys.count {
-                Log.debug("All LDClients finished starting")
+                os_log("%s All LDClients finished starting", log: config.logger, type: .debug, typeName(and: #function))
                 completion?()
             }
         }
@@ -675,7 +682,6 @@ public class LDClient {
      */
     public static func get(environment: String = LDConfig.Constants.primaryEnvironmentName) -> LDClient? {
         guard let internalInstances = LDClient.instances else {
-            Log.debug("LDClient.get() was called before init()!")
             return nil
         }
         return internalInstances[environment]
@@ -708,7 +714,7 @@ public class LDClient {
 
     private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
         self.serviceFactory = serviceFactory
-        environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
+        environmentReporter = self.serviceFactory.makeEnvironmentReporter()
         flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
@@ -719,10 +725,10 @@ public class LDClient {
         context = startContext ?? anonymousContext
 
         if config.autoEnvAttributes {
-            context = AutoEnvContextModifier(environmentReporter: environmentReporter).modifyContext(context)
+            context = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(context)
         }
 
-        service = self.serviceFactory.makeDarklyServiceProvider(config: config, context: context, envReporter: environmentReporter)
+        service = self.serviceFactory.makeDarklyServiceProvider(context: context, envReporter: environmentReporter)
         diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service, environmentReporter: environmentReporter)
         eventReporter = self.serviceFactory.makeEventReporter(service: service)
         connectionInformation = self.serviceFactory.makeConnectionInformation()
@@ -749,7 +755,6 @@ public class LDClient {
                                                                     service: service,
                                                                     onSyncComplete: onFlagSyncComplete)
 
-        Log.level = environmentReporter.isDebugBuild && config.isDebugMode ? .debug : .noLogging
         if let cachedFlags = cachedData.items, !cachedFlags.isEmpty {
             flagStore.replaceStore(newStoredItems: cachedFlags)
         }
@@ -758,7 +763,7 @@ public class LDClient {
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
         internalSetOnline(configuration.startOnline) {
-            Log.debug("LDClient started")
+            os_log("%s LDClient started", log: configuration.logger, type: .debug, self.typeName(and: #function))
             completion?()
         }
     }

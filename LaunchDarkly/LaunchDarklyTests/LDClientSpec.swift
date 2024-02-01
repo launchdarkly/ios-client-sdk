@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import Quick
 import Nimble
 import LDSwiftEventSource
@@ -25,7 +26,7 @@ final class LDClientSpec: QuickSpec {
         var config: LDConfig!
         var context: LDContext!
         var subject: LDClient!
-        let serviceFactoryMock = ClientServiceMockFactory()
+        let serviceFactoryMock: ClientServiceMockFactory
         // mock getters based on setting up the context & subject
         var serviceMock: DarklyServiceMock! {
             subject.service as? DarklyServiceMock
@@ -73,7 +74,16 @@ final class LDClientSpec: QuickSpec {
              startOnline: Bool = false,
              streamingMode: LDStreamingMode = .streaming,
              enableBackgroundUpdates: Bool = true) {
-            serviceFactoryMock.makeFlagChangeNotifierReturnValue = FlagChangeNotifier()
+            config = newConfig ?? LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: false)
+            config.startOnline = startOnline
+            config.streamingMode = streamingMode
+            config.enableBackgroundUpdates = enableBackgroundUpdates
+            config.eventFlushInterval = 300.0   // 5 min...don't want this to trigger
+
+            context = LDContext.stub()
+
+            serviceFactoryMock = ClientServiceMockFactory(config: config)
+            serviceFactoryMock.makeFlagChangeNotifierReturnValue = FlagChangeNotifier(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
 
             serviceFactoryMock.makeFeatureFlagCacheCallback = {
                 let mobileKey = self.serviceFactoryMock.makeFeatureFlagCacheReceivedParameters!.mobileKey
@@ -83,14 +93,6 @@ final class LDClientSpec: QuickSpec {
                 }
                 self.serviceFactoryMock.makeFeatureFlagCacheReturnValue = mockCache
             }
-
-            config = newConfig ?? LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: false)
-            config.startOnline = startOnline
-            config.streamingMode = streamingMode
-            config.enableBackgroundUpdates = enableBackgroundUpdates
-            config.eventFlushInterval = 300.0   // 5 min...don't want this to trigger
-
-            context = LDContext.stub()
         }
 
         func withContext(_ context: LDContext?) -> TestContext {
@@ -923,7 +925,7 @@ final class LDClientSpec: QuickSpec {
     private func onSyncCompleteSuccessReplacingFlagsSpec() {
         let testContext = TestContext(startOnline: true)
         testContext.start()
-        testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
+        testContext.subject.flagChangeNotifier = ClientServiceMockFactory(config: testContext.config).makeFlagChangeNotifier()
 
         let newStoredItems = ["flag1": StorageItem.item(FeatureFlag(flagKey: "flag1"))]
         var updateDate: Date!
@@ -950,7 +952,7 @@ final class LDClientSpec: QuickSpec {
         let stubFlags = FlagMaintainingMock.stubStoredItems()
         let testContext = TestContext(startOnline: true).withCached(flags: stubFlags.featureFlags)
         testContext.start()
-        testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
+        testContext.subject.flagChangeNotifier = ClientServiceMockFactory(config: testContext.config).makeFlagChangeNotifier()
         let updateFlag = FeatureFlag(flagKey: "abc")
 
         var updateDate: Date!
@@ -977,7 +979,7 @@ final class LDClientSpec: QuickSpec {
         let stubFlags = FlagMaintainingMock.stubStoredItems()
         let testContext = TestContext(startOnline: true).withCached(flags: stubFlags.featureFlags)
         testContext.start()
-        testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
+        testContext.subject.flagChangeNotifier = ClientServiceMockFactory(config: testContext.config).makeFlagChangeNotifier()
         let deleteResponse = DeleteResponse(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1)
 
         var updateDate: Date!
@@ -1007,7 +1009,7 @@ final class LDClientSpec: QuickSpec {
             it(ctx) {
                 let testContext = TestContext(startOnline: true)
                 testContext.start()
-                testContext.subject.flagChangeNotifier = ClientServiceMockFactory().makeFlagChangeNotifier()
+                testContext.subject.flagChangeNotifier = ClientServiceMockFactory(config: testContext.config).makeFlagChangeNotifier()
                 testContext.onSyncComplete?(.error(err))
 
                 expect(testContext.subject.isOnline) == !err.isClientUnauthorized

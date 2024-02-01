@@ -23,10 +23,8 @@ private extension UserDefaults {
     func retrieve<T: Decodable>(object type: T.Type, fromKey key: String) -> T? {
         guard let data = self.data(forKey: key),
             let object = try? JSONDecoder().decode(type, from: data)
-        else {
-            Log.debug("Couldnt decode object: \(key)")
-            return nil
-        }
+        else { return nil }
+
         return object
     }
 }

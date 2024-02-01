@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import XCTest
 
 @testable import LaunchDarkly
@@ -11,7 +12,7 @@ final class ModifierSpec: XCTestCase {
      * Requirement 1.2.2.7 - Adding all context kinds
      */
     func testAdheresToSchema() throws {
-        let underTest = AutoEnvContextModifier(environmentReporter: EnvironmentReportingMock())
+        let underTest = AutoEnvContextModifier(environmentReporter: EnvironmentReportingMock(), logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
 
         var inputBuilder = LDContextBuilder(key: "aKey")
         inputBuilder.kind("aKind")
@@ -62,7 +63,7 @@ final class ModifierSpec: XCTestCase {
      *  Requirement 1.2.7.1 - Log warning when kind already exists
      */
     func testDoesNotOverwriteCustomerData() throws {
-        let underTest = AutoEnvContextModifier(environmentReporter: EnvironmentReportingMock())
+        let underTest = AutoEnvContextModifier(environmentReporter: EnvironmentReportingMock(), logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
 
         var inputBuilder = LDContextBuilder(key: "aKey")
         inputBuilder.kind("ld_application")
@@ -98,7 +99,7 @@ final class ModifierSpec: XCTestCase {
      *  Requirement 1.2.5.1 - Doesn't change customer provided data
      */
     func testDoesNotOverwriteCustomerDataMultiContext() throws {
-        let underTest = AutoEnvContextModifier(environmentReporter: EnvironmentReportingMock())
+        let underTest = AutoEnvContextModifier(environmentReporter: EnvironmentReportingMock(), logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
 
         var inputBuilder1 = LDContextBuilder(key: "aKey")
         inputBuilder1.kind("ld_application")
@@ -127,7 +128,7 @@ final class ModifierSpec: XCTestCase {
      * Requirement 1.2.6.3 - Generated keys are consistent
      */
     func testGeneratesConsistentContextAcrossMultipleCalls() throws {
-        let underTest = AutoEnvContextModifier(environmentReporter: EnvironmentReportingMock())
+        let underTest = AutoEnvContextModifier(environmentReporter: EnvironmentReportingMock(), logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
 
         var inputBuilder = LDContextBuilder(key: "aKey")
         inputBuilder.kind("aKind")
@@ -141,7 +142,7 @@ final class ModifierSpec: XCTestCase {
     }
 
     func testGeneratedLdApplicationKey() throws {
-        let underTest = AutoEnvContextModifier(environmentReporter: EnvironmentReportingMock())
+        let underTest = AutoEnvContextModifier(environmentReporter: EnvironmentReportingMock(), logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         var inputBuilder = LDContextBuilder(key: "aKey")
         inputBuilder.kind("aKind")
         let input = try inputBuilder.build().get()
@@ -157,7 +158,7 @@ final class ModifierSpec: XCTestCase {
         info.applicationIdentifier("myID")
         // version is intentionally omitted
         let reporter = ApplicationInfoEnvironmentReporter(info)
-        let underTest = AutoEnvContextModifier(environmentReporter: reporter)
+        let underTest = AutoEnvContextModifier(environmentReporter: reporter, logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         var inputBuilder = LDContextBuilder(key: "aKey")
         inputBuilder.kind("aKind")
         let input = try inputBuilder.build().get()

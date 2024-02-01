@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 enum StorageItem: Codable {
     case item(FeatureFlag)
@@ -79,15 +80,20 @@ final class FlagStore: FlagMaintaining {
     // Used with .barrier as reader writer lock on _featureFlags
     private var flagQueue = DispatchQueue(label: Constants.flagQueueLabel, attributes: .concurrent)
 
-    init() { }
+    private let logger: OSLog
 
-    init(storedItems: StoredItems) {
-        Log.debug(typeName(and: #function) + "storedItems: \(String(describing: storedItems))")
+    init(logger: OSLog) {
+        self.logger = logger
+    }
+
+    init(logger: OSLog, storedItems: StoredItems) {
+        self.logger = logger
         self._storedItems = storedItems
+        os_log("%s storedItems:", log: logger, type: .debug, typeName(and: #function), String(describing: storedItems))
     }
 
     func replaceStore(newStoredItems: StoredItems) {
-        Log.debug(typeName(and: #function) + "newFlags: \(String(describing: newStoredItems))")
+        os_log("%s newFlags: ", log: logger, type: .debug, typeName(and: #function), String(describing: newStoredItems))
         flagQueue.sync(flags: .barrier) {
             self._storedItems = newStoredItems
         }
@@ -97,13 +103,11 @@ final class FlagStore: FlagMaintaining {
         flagQueue.sync(flags: .barrier) {
             guard self.isValidVersion(for: updatedFlag.flagKey, newVersion: updatedFlag.version)
             else {
-                Log.debug(self.typeName(and: #function) + "aborted. Invalid version. updateDictionary: \(updatedFlag) "
-                          + "existing flag: \(String(describing: self._storedItems[updatedFlag.flagKey]))")
+                os_log("%s aborted. Invalid version. updateDictionary: %s existing flag: %s", log: logger, type: .debug, typeName(and: #function), String(describing: updatedFlag), String(describing: self._storedItems[updatedFlag.flagKey]))
                 return
             }
 
-            Log.debug(self.typeName(and: #function) + "succeeded. new flag: \(updatedFlag), " +
-                      "prior flag: \(String(describing: self._storedItems[updatedFlag.flagKey]))")
+            os_log("%s succeeded. new flag: %s prior flag: %s", log: logger, type: .debug, typeName(and: #function), String(describing: updatedFlag), String(describing: self._storedItems[updatedFlag.flagKey]))
             self._storedItems.updateValue(StorageItem.item(updatedFlag), forKey: updatedFlag.flagKey)
         }
     }
@@ -112,12 +116,11 @@ final class FlagStore: FlagMaintaining {
         flagQueue.sync(flags: .barrier) {
             guard self.isValidVersion(for: deleteResponse.key, newVersion: deleteResponse.version)
             else {
-                Log.debug(self.typeName(and: #function) + "aborted. Invalid version. deleteResponse: \(deleteResponse) "
-                          + "existing flag: \(String(describing: self._storedItems[deleteResponse.key]))")
+                os_log("%s aborted. Invalid version. deleteResponse: %s existing flag: %s", log: logger, type: .debug, typeName(and: #function), String(describing: deleteResponse), String(describing: self._storedItems[deleteResponse.key]))
                 return
             }
 
-            Log.debug(self.typeName(and: #function) + "deleted flag with key: " + deleteResponse.key)
+            os_log("%s deleted flag with key: %s", log: logger, type: .debug, typeName(and: #function), deleteResponse.key)
             self._storedItems.updateValue(StorageItem.tombstone(deleteResponse.version ?? 0), forKey: deleteResponse.key)
         }
     }

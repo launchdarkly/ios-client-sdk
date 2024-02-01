@@ -394,7 +394,6 @@ public struct LDContext: Encodable, Equatable {
                 return .string(String(kind))
             }
 
-            Log.debug(typeName(and: #function) + ": Cannot get non-kind attribute from multi-context")
             return nil
         }
 
@@ -703,7 +702,6 @@ public struct LDContextBuilder {
     public mutating func trySetValue(_ name: String, _ value: LDValue) -> Bool {
         switch (name, value) {
         case ("", _):
-            Log.debug(typeName(and: #function) + ": Provided attribute is empty. Ignoring.")
             return false
         case ("kind", .string(let val)):
             self.kind(val)

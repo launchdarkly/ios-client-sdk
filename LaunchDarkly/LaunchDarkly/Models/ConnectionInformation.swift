@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 public struct ConnectionInformation: Codable, CustomStringConvertible {
     public enum ConnectionMode: String, Codable {
@@ -127,13 +128,13 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
         var reason = ""
         let streamingMode: LDStreamingMode = ldClient.isInSupportedRunMode && config.streamingMode == .streaming && config.allowStreamingMode ? .streaming : .polling
         if config.streamingMode == .streaming && !ldClient.isInSupportedRunMode {
-            reason = " LDClient is in background mode with background updates disabled."
+            reason = "LDClient is in background mode with background updates disabled."
         }
         if reason.isEmpty && config.streamingMode == .streaming && !config.allowStreamingMode {
-            reason = " LDConfig disallowed streaming mode. "
+            reason = "LDConfig disallowed streaming mode. "
             reason += !SystemCapabilities.operatingSystem.isStreamingEnabled ? "Streaming is not allowed on \(SystemCapabilities.operatingSystem)." : "Unknown reason."
         }
-        Log.debug(ldClient.typeName(and: #function, appending: ": ") + "\(streamingMode)\(reason)")
+        os_log("%s %s %s", log: config.logger, type: .debug, ldClient.typeName(and: #function), String(describing: streamingMode), reason)
         return streamingMode
     }
 

@@ -14,7 +14,7 @@ final class CacheConverterSpec: XCTestCase {
     }
 
     override func setUp() {
-        serviceFactory = ClientServiceMockFactory()
+        serviceFactory = ClientServiceMockFactory(config: LDConfig(mobileKey: "sdk-key", autoEnvAttributes: .disabled))
     }
 
     func testNoKeysGiven() {
