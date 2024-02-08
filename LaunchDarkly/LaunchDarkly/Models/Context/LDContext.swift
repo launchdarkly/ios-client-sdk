@@ -43,6 +43,7 @@ public struct LDContext: Encodable, Equatable {
 
     init() {
         self.init(canonicalizedKey: LDContext.defaultKey(kind: Kind.user))
+        self.key = self.canonicalizedKey
     }
 
     struct Meta: Codable {
