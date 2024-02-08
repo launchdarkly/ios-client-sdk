@@ -30,7 +30,7 @@ runs:
 
     - name: Lint the podspec
       shell: bash
-      run: pod spec lint LaunchDarkly.podspec
+      run: pod lib lint LaunchDarkly.podspec
 
     - name: Run swiftlint
       shell: bash
