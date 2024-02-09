@@ -82,4 +82,4 @@ runs:
       shell: bash
       # Add a brief sleep here to ensure the test service is ready to receive
       # requests
-      run: sleep 5 && make run-contract-tests
+      run: make run-contract-tests
