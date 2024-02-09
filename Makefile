@@ -12,7 +12,7 @@ start-contract-test-service-bg:
 
 run-contract-tests:
 	@curl -s https://raw.githubusercontent.com/launchdarkly/sdk-test-harness/master/downloader/run.sh \
-      | VERSION=v2 PARAMS="-url http://localhost:8080 -debug -stop-service-at-end -skip-from ./ContractTests/testharness-suppressions.txt $(TEST_HARNESS_PARAMS)" sh
+      | VERSION=v2 PARAMS="-url http://localhost:8080 -debug -status-timeout 15 -stop-service-at-end -skip-from ./ContractTests/testharness-suppressions.txt $(TEST_HARNESS_PARAMS)" sh
 
 contract-tests: start-contract-test-service-bg run-contract-tests
 
