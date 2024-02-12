@@ -286,6 +286,38 @@ public class LDClient {
         }
     }
 
+    /**
+     The LDContext set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the context. See `LDContext` for details about what information can be retained.
+
+     Normally, the client app should create and set the LDContext and pass that into `start(config: context: completion:)`.
+
+     The client app can change the active `context` by calling identify with a new or updated LDContext. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
+
+     When a new context is set, the LDClient goes offline and sets the new context. If the client was online when the new context was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready.
+
+     If the identify operation completes within the specified `timeOut` interval, the `completion` parameter will be called with a value of `false`; otherwise, it will be called with `true` upon time out.
+
+     - parameter context: The LDContext set with the desired context.
+     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
+    */
+    public func identify(context: LDContext, timeOut: TimeInterval, completion: @escaping ((_ timedOut: Bool) -> Void)) {
+        var cancel = false
+
+        DispatchQueue.global().asyncAfter(deadline: .now() + timeOut) {
+            guard !cancel else { return }
+
+            cancel = true
+            completion(true)
+        }
+
+        identify(context: context) {
+            guard !cancel else { return }
+
+            cancel = true
+            completion(false)
+        }
+    }
+
     func internalIdentify(newContext: LDContext, completion: (() -> Void)? = nil) {
         var updatedContext = newContext
         if config.autoEnvAttributes {
