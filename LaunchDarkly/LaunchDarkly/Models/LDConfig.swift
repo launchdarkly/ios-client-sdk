@@ -145,7 +145,7 @@ public struct ApplicationInfo: Equatable {
         }
 
         let sanitized = unwrapped.replacingOccurrences(of: " ", with: "-")
-        if let error = validate(sanitized) {
+        if validate(sanitized) != nil {
             return
         }
 
