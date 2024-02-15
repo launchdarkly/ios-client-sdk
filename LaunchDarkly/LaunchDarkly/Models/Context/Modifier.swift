@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 protocol ContextModifier {
     func modifyContext(_ context: LDContext) -> LDContext
@@ -7,9 +8,11 @@ protocol ContextModifier {
 class AutoEnvContextModifier {
     static let specVersion = "1.0"
     private let environmentReporter: EnvironmentReporting
+    private let logger: OSLog
 
-    init(environmentReporter: EnvironmentReporting) {
+    init(environmentReporter: EnvironmentReporting, logger: OSLog) {
         self.environmentReporter = environmentReporter
+        self.logger = logger
     }
 
     private func makeRecipeList() -> [ContextRecipe] {
@@ -27,7 +30,7 @@ class AutoEnvContextModifier {
         recipe.attributeCallables.forEach { (key, callable) in
             let succeess = builder.trySetValue(key, callable())
             if !succeess {
-                Log.debug(self.typeName(and: #function) + " Failed setting value for key \(key)")
+                os_log("%s Failed setting value for key %s", log: logger, type: .debug, typeName(and: #function), key)
             }
         }
 
@@ -109,7 +112,7 @@ extension AutoEnvContextModifier: ContextModifier {
         let contextKeys = context.contextKeys()
         for recipe in makeRecipeList() {
             if contextKeys[recipe.kind.description] != nil {
-                Log.debug(self.typeName(and: #function) + " Unable to automatically add environment attributes for kind \(recipe.kind). It already exists.")
+                os_log("%s Unable to automatically add environment attributes for kind %s. It already exists.", log: logger, type: .debug, typeName(and: #function), recipe.kind.description)
                 continue
             }
 
@@ -117,7 +120,7 @@ extension AutoEnvContextModifier: ContextModifier {
             case .success(let ctx):
                 builder.addContext(ctx)
             case .failure(let err):
-                Log.debug(self.typeName(and: #function) + " Failed adding context of kind \(recipe.kind) with error \(err)")
+                os_log("%s Failed adding context of kind %s with error %s", log: logger, type: .debug, typeName(and: #function), recipe.kind.description, String(describing: err))
             }
         }
 
@@ -125,7 +128,7 @@ extension AutoEnvContextModifier: ContextModifier {
         case .success(let newContext):
             return newContext
         case .failure(let err):
-                Log.debug(self.typeName(and: #function) + " Failed adding telemetry context information with error \(err). Using customer context instead.")
+            os_log("%s Failed adding telemetry context information with error %s. Using customer context instead.", log: logger, type: .debug, typeName(and: #function), String(describing: err))
             return context
         }
     }

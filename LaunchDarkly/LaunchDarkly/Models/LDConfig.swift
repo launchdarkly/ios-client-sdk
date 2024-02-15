@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 /// Defines the connection modes the SDK may be configured to use to retrieve feature flag data from LaunchDarkly.
 public enum LDStreamingMode {
@@ -145,7 +146,6 @@ public struct ApplicationInfo: Equatable {
 
         let sanitized = unwrapped.replacingOccurrences(of: " ", with: "-")
         if let error = validate(sanitized) {
-            Log.debug("Issue validating \(inputName) value \(sanitized). \(error)")
             return
         }
 
@@ -247,6 +247,9 @@ public struct LDConfig {
 
         /// The default behavior for environment attributes is to not modify any provided context UNLESS the developer specifically opts-in.
         static let autoEnvAttributes: Bool = false
+
+        /// The default logger for the SDK. Can be overridden to provide customization.
+        static let logger: OSLog = OSLog(subsystem: "com.launchdarkly", category: "ios-client-sdk")
     }
 
     /// Constants relevant to setting up an `LDConfig`
@@ -407,6 +410,9 @@ public struct LDConfig {
     /// based on application name or version, or on device characteristics including manufacturer, model, operating system, locale, and so on.
     public var autoEnvAttributes: Bool = Defaults.autoEnvAttributes
 
+    /// Configure the logger that will be used by the rest of the SDK.
+    public var logger: OSLog = Defaults.logger
+
     /// LaunchDarkly defined minima for selected configurable items
     public let minima: Minima
 
@@ -463,7 +469,7 @@ public struct LDConfig {
         allowBackgroundUpdates = SystemCapabilities.operatingSystem.isBackgroundEnabled
         _secondaryMobileKeys = Defaults.secondaryMobileKeys
         if mobileKey.isEmpty {
-            Log.debug(typeName(and: #function, appending: ": ") + "mobileKey is empty. The SDK will not operate correctly without a valid mobile key.")
+            os_log("%s mobileKey is empty. The SDK will not operate correctly without a valid mobile key.", log: logger, type: .debug, typeName(and: #function))
         }
     }
 
@@ -486,16 +492,12 @@ public struct LDConfig {
 
     // Determine the effective flag polling interval based on runMode, configured foreground & background polling interval, and minimum foreground & background polling interval.
     func flagPollingInterval(runMode: LDClientRunMode) -> TimeInterval {
-        let pollingInterval = runMode == .foreground ? max(flagPollingInterval, minima.flagPollingInterval) : max(backgroundFlagPollingInterval, minima.backgroundFlagPollingInterval)
-        Log.debug(typeName(and: #function, appending: ": ") + "\(pollingInterval)")
-        return pollingInterval
+        return runMode == .foreground ? max(flagPollingInterval, minima.flagPollingInterval) : max(backgroundFlagPollingInterval, minima.backgroundFlagPollingInterval)
     }
 
     // Determines if the status code is a code that should cause the SDK to retry a failed HTTP Request that used the REPORT method. Retried requests will use the GET method.
     static func isReportRetryStatusCode(_ statusCode: Int) -> Bool {
-        let isRetryStatusCode = LDConfig.flagRetryStatusCodes.contains(statusCode)
-        Log.debug(LDConfig.typeName(and: #function, appending: ": ") + "\(isRetryStatusCode)")
-        return isRetryStatusCode
+        return LDConfig.flagRetryStatusCodes.contains(statusCode)
     }
 }
 

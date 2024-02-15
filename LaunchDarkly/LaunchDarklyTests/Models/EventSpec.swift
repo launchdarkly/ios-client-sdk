@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import XCTest
 
 @testable import LaunchDarkly
@@ -223,7 +224,7 @@ final class EventSpec: XCTestCase {
 
     func testSummaryEventEncoding() {
         let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
-        var flagRequestTracker = FlagRequestTracker()
+        var flagRequestTracker = FlagRequestTracker(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         let event = SummaryEvent(flagRequestTracker: flagRequestTracker, endDate: Date())

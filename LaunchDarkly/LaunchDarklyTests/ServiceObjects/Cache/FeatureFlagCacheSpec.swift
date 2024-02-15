@@ -11,7 +11,7 @@ final class FeatureFlagCacheSpec: XCTestCase {
     private var mockValueCache: KeyedValueCachingMock { serviceFactory.makeKeyedValueCacheReturnValue }
 
     override func setUp() {
-        serviceFactory = ClientServiceMockFactory()
+        serviceFactory = ClientServiceMockFactory(config: LDConfig(mobileKey: "sdk-key", autoEnvAttributes: .disabled))
     }
 
     func testInit() {

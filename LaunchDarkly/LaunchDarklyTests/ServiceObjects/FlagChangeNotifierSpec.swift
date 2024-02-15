@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import Quick
 import Nimble
 @testable import LaunchDarkly
@@ -88,7 +89,7 @@ private class MockConnectionModeChangedObserver {
 
 final class FlagChangeNotifierSpec: QuickSpec {
     struct TestContext {
-        let subject: FlagChangeNotifier = FlagChangeNotifier()
+        let subject: FlagChangeNotifier = FlagChangeNotifier(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         fileprivate var flagChangeObservers: [LDFlagKey: MockFlagChangeObserver] = [:]
         fileprivate var flagCollectionChangeObservers: [MockFlagCollectionChangeObserver] = []
         fileprivate var flagsUnchangedObservers: [MockFlagsUnchangedObserver] = []
@@ -136,7 +137,7 @@ final class FlagChangeNotifierSpec: QuickSpec {
     override func spec() {
         describe("init") {
             it("no initial observers") {
-                let notifier = FlagChangeNotifier()
+                let notifier = FlagChangeNotifier(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
                 expect(notifier.flagChangeObservers).to(beEmpty())
                 expect(notifier.flagsUnchangedObservers).to(beEmpty())
                 expect(notifier.connectionModeChangedObservers).to(beEmpty())

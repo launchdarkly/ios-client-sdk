@@ -1,8 +1,14 @@
 import Foundation
+import OSLog
 
 struct FlagRequestTracker {
     let startDate = Date()
     var flagCounters: [LDFlagKey: FlagCounter] = [:]
+    let logger: OSLog
+
+    init(logger: OSLog) {
+        self.logger = logger
+    }
 
     mutating func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue, context: LDContext) {
         if flagCounters[flagKey] == nil {
@@ -12,11 +18,13 @@ struct FlagRequestTracker {
         else { return }
         flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
 
-        Log.debug(typeName(and: #function) + "\n\tflagKey: \(flagKey)"
-            + "\n\treportedValue: \(reportedValue), "
-            + "\n\tvariation: \(String(describing: featureFlag?.variation)), "
-            + "\n\tversion: \(String(describing: featureFlag?.flagVersion ?? featureFlag?.version)), "
-            + "\n\tdefaultValue: \(defaultValue)\n")
+        os_log("%s \n\tflagKey: %s\n\treportedValue: %s\n\tvariation: %s\n\tversion: %s\n\tdefaultValue: %s", log: logger, type: .debug,
+            typeName(and: #function),
+            flagKey,
+            String(describing: reportedValue),
+            String(describing: featureFlag?.variation),
+            String(describing: featureFlag?.flagVersion ?? featureFlag?.version),
+            String(describing: defaultValue))
     }
 
     var hasLoggedRequests: Bool { !flagCounters.isEmpty }

@@ -3,6 +3,12 @@ import LDSwiftEventSource
 @testable import LaunchDarkly
 
 final class ClientServiceMockFactory: ClientServiceCreating {
+    private let config: LDConfig
+
+    init(config: LDConfig) {
+        self.config = config
+    }
+
     var makeKeyedValueCacheReturnValue = KeyedValueCachingMock()
     var makeKeyedValueCacheCallCount = 0
     var makeKeyedValueCacheReceivedCacheKey: String? = nil
@@ -28,7 +34,7 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         return makeCacheConverterReturnValue
     }
 
-    func makeDarklyServiceProvider(config: LDConfig, context: LDContext, envReporter: EnvironmentReporting) -> DarklyServiceProvider {
+    func makeDarklyServiceProvider(context: LDContext, envReporter: EnvironmentReporting) -> DarklyServiceProvider {
         DarklyServiceMock(config: config, context: context)
     }
 
@@ -105,7 +111,7 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     var makeEnvironmentReporterReturnValue: EnvironmentReportingMock = EnvironmentReportingMock()
-    func makeEnvironmentReporter(config: LDConfig) -> EnvironmentReporting {
+    func makeEnvironmentReporter() -> EnvironmentReporting {
         return makeEnvironmentReporterReturnValue
     }
 

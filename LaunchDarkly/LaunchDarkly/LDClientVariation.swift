@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 extension LDClient {
     // MARK: Flag variation methods
@@ -130,7 +131,7 @@ extension LDClient {
                 result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "WRONG_TYPE"])
             }
         } else {
-            Log.debug(typeName(and: #function) + " Unknown feature flag \(flagKey); returning default value")
+            os_log("%s Unknown feature flag %s; returning default value", log: config.logger, type: .debug, typeName(and: #function), flagKey.description)
             result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "FLAG_NOT_FOUND"])
         }
         eventReporter.recordFlagEvaluationEvents(flagKey: flagKey,

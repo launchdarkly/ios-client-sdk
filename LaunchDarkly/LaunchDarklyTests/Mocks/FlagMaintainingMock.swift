@@ -1,15 +1,16 @@
 import Foundation
+import OSLog
 @testable import LaunchDarkly
 
 final class FlagMaintainingMock: FlagMaintaining {
     let innerStore: FlagStore
 
     init() {
-        innerStore = FlagStore()
+        innerStore = FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
     }
 
     init(storedItems: StoredItems) {
-        innerStore = FlagStore(storedItems: storedItems)
+        innerStore = FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"), storedItems: storedItems)
     }
 
     var storedItems: StoredItems {
