@@ -119,16 +119,44 @@ extension LDClient {
         variationDetailInternal(flagKey, defaultValue, needsReason: true)
     }
 
-    private func variationDetailInternal<T: LDValueConvertible>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool) -> LDEvaluationDetail<T> {
+    /**
+     Returns the value of a feature flag for a given flag key, converting the raw JSON value into a type of your specification.
+
+     - parameter forKey: the unique feature key for the feature flag.
+     - parameter defaultValue: the default value for if the flag value is unavailable.
+     - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
+     */
+    public func variation<T>(forKey flagKey: LDFlagKey, defaultValue: T) -> T where T: LDValueConvertible, T: Decodable {
+        return variationDetailInternal(flagKey, defaultValue, needsReason: false).value
+    }
+
+    /**
+     Returns the value of a feature flag for a given flag key, converting the raw JSON value into a type
+     of your specifification, and including it in an object that also describes the way the value was
+     determined.
+
+     - parameter forKey: the unique feature key for the feature flag.
+     - parameter defaultValue: the default value for if the flag value is unavailable.
+     - returns: an `LDEvaluationDetail` object
+     */
+    public func variationDetail<T>(forKey flagKey: LDFlagKey, defaultValue: T) -> LDEvaluationDetail<T> where T: LDValueConvertible, T: Decodable {
+        return variationDetailInternal(flagKey, defaultValue, needsReason: true)
+    }
+
+    private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
         var result: LDEvaluationDetail<T>
         let featureFlag = flagStore.featureFlag(for: flagKey)
         if let featureFlag = featureFlag {
             if featureFlag.value == .null {
                 result = LDEvaluationDetail(value: defaultValue, variationIndex: featureFlag.variation, reason: featureFlag.reason)
-            } else if let convertedValue = T(fromLDValue: featureFlag.value) {
-                result = LDEvaluationDetail(value: convertedValue, variationIndex: featureFlag.variation, reason: featureFlag.reason)
             } else {
-                result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "WRONG_TYPE"])
+                do {
+                    let convertedValue = try LDValueDecoder().decode(T.self, from: featureFlag.value)
+                    result = LDEvaluationDetail(value: convertedValue, variationIndex: featureFlag.variation, reason: featureFlag.reason)
+                } catch let error {
+                    os_log("%s type conversion error %s: failed converting %s to type %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: featureFlag.value), String(describing: T.self))
+                    result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "WRONG_TYPE"])
+                }
             }
         } else {
             os_log("%s Unknown feature flag %s; returning default value", log: config.logger, type: .debug, typeName(and: #function), flagKey.description)
@@ -144,65 +172,48 @@ extension LDClient {
     }
 }
 
-private protocol LDValueConvertible {
-    init?(fromLDValue: LDValue)
+/**
+ Protocol indicting a type can be converted into an LDValue.
+
+ Types used with the `LDClient.variation(forKey: defaultValue:)` or `LDClient.variationDetail(forKey: detailValue:)`
+ methods are required to implement this protocol. This protocol has already been implemented for Bool, Int, Double, String,
+ and LDValue types.
+
+ This allows custom types as evaluation result types while retaining the LDValue type throughout the event processing system.
+ */
+public protocol LDValueConvertible {
+    /**
+     Return an LDValue representation of this instance.
+     */
     func toLDValue() -> LDValue
 }
 
 extension Bool: LDValueConvertible {
-    init?(fromLDValue value: LDValue) {
-        guard case .bool(let value) = value
-        else { return nil }
-        self = value
-    }
-
-    func toLDValue() -> LDValue {
+    public func toLDValue() -> LDValue {
         return .bool(self)
     }
 }
 
 extension Int: LDValueConvertible {
-    init?(fromLDValue value: LDValue) {
-        guard case .number(let value) = value, let intValue = Int(exactly: value.rounded())
-        else { return nil }
-        self = intValue
-    }
-
-    func toLDValue() -> LDValue {
+    public func toLDValue() -> LDValue {
         return .number(Double(self))
     }
 }
 
 extension Double: LDValueConvertible {
-    init?(fromLDValue value: LDValue) {
-        guard case .number(let value) = value
-        else { return nil }
-        self = value
-    }
-
-    func toLDValue() -> LDValue {
+    public func toLDValue() -> LDValue {
         return .number(self)
     }
 }
 
 extension String: LDValueConvertible {
-    init?(fromLDValue value: LDValue) {
-        guard case .string(let value) = value
-        else { return nil }
-        self = value
-    }
-
-    func toLDValue() -> LDValue {
+    public func toLDValue() -> LDValue {
         return .string(self)
     }
 }
 
 extension LDValue: LDValueConvertible {
-    init?(fromLDValue value: LDValue) {
-        self = value
-    }
-
-    func toLDValue() -> LDValue {
+    public func toLDValue() -> LDValue {
         return self
     }
 }
