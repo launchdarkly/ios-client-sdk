@@ -13,9 +13,13 @@ public enum IdentifyResult {
      */
     case error
     /**
-     The identify request has been replaced with a subsequent request. See `LDClient.identify(context: completion:)` for more details.
+     The identify request has been replaced with a subsequent request. Read `LDClient.identify(context: completion:)` for more details.
      */
     case shed
+    /**
+     The identify request exceeded some time out parameter. Read `LDClient.identify(context: timeout: completion)` for more details.
+     */
+    case timeout
 
     init(from: TaskResult) {
         switch from {

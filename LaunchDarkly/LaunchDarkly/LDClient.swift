@@ -321,10 +321,40 @@ public class LDClient {
         }
 
         let identifyTask = Task(work: work, sheddable: sheddable) { [self] result in
-            os_log("%s identity completion with result %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: result))
+            os_log("%s identify completed with result %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: result))
             completion(IdentifyResult(from: result))
         }
         identifyQueue.enqueue(request: identifyTask)
+    }
+
+    /**
+     Sets the LDContext into the LDClient inline with the behavior detailed on `LDClient.identify(context: completion:)`. Additionally,
+     this method will ensure the `completion` parameter will be called within the specified time interval.
+
+     Note that the `completion` method being invoked does not mean that the identify request has been cancelled. The identify request will
+     continue attempting to complete as it would with `LDClient.identify(context: completion:)`. Subsequent identify requests queued behind
+     a timed out request will remain blocked (or shed) until the in flight request completes.
+
+     - parameter context: The LDContext set with the desired context.
+     - parameter timeout: The upper time limit before the `completion` callback will be invoked.
+     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
+     */
+    public func identify(context: LDContext, timeout: TimeInterval, completion: @escaping ((_ result: IdentifyResult) -> Void)) {
+        var cancel = false
+
+        DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
+            guard !cancel else { return }
+
+            cancel = true
+            completion(.timeout)
+        }
+
+        identify(context: context) { result in
+            guard !cancel else { return }
+
+            cancel = true
+            completion(result)
+        }
     }
 
     func internalIdentify(newContext: LDContext, completion: (() -> Void)? = nil) {
