@@ -278,15 +278,53 @@ public class LDClient {
      - parameter context: The LDContext set with the desired context.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
     */
+    @available(*, deprecated, message: "Use LDClient.identify(context: completion:) with non-optional completion parameter")
     public func identify(context: LDContext, completion: (() -> Void)? = nil) {
-        let dispatch = DispatchGroup()
-        LDClient.instances?.forEach { _, instance in
-            dispatch.enter()
-            instance.internalIdentify(newContext: context, completion: dispatch.leave)
+        _identify(context: context, sheddable: false) { _ in
+            if let completion = completion {
+                completion()
+            }
         }
-        if let completion = completion {
-            dispatch.notify(queue: DispatchQueue.global(), execute: completion)
+    }
+
+    /**
+     The LDContext set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the context. See `LDContext` for details about what information can be retained.
+
+     Normally, the client app should create and set the LDContext and pass that into `start(config: context: completion:)`.
+
+     The client app can change the active `context` by calling identify with a new or updated LDContext. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
+
+     When a new context is set, the LDClient goes offline and sets the new context. If the client was online when the new context was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready.
+
+     While only a single identify request can be active at a time, consumers of this SDK can call this method multiple times. To prevent unnecessary network traffic, these requests are placed
+     into a sheddable queue. Identify requests will be shed if 1) an existing identify request is in flight, and 2) a third identify has been requested which can be replace the one being shed.
+
+     - parameter context: The LDContext set with the desired context.
+     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
+     */
+    public func identify(context: LDContext, completion: @escaping (_ result: IdentifyResult) -> Void) {
+        _identify(context: context, sheddable: true, completion: completion)
+    }
+
+    // Temporary helper method to allow code sharing between the sheddable and unsheddable identify methods. In the next major release, we will remove the deprecated identify method and inline
+    // this implementation in the other one.
+    private func _identify(context: LDContext, sheddable: Bool, completion: @escaping (_ result: IdentifyResult) -> Void) {
+        let work: TaskHandler = { taskCompletion in
+            let dispatch = DispatchGroup()
+
+            LDClient.instances?.forEach { _, instance in
+                dispatch.enter()
+                instance.internalIdentify(newContext: context, completion: dispatch.leave)
+            }
+
+            dispatch.notify(queue: DispatchQueue.global(), execute: taskCompletion)
         }
+
+        let identifyTask = Task(work: work, sheddable: sheddable) { [self] result in
+            os_log("%s identity completion with result %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: result))
+            completion(IdentifyResult(from: result))
+        }
+        identifyQueue.enqueue(request: identifyTask)
     }
 
     func internalIdentify(newContext: LDContext, completion: (() -> Void)? = nil) {
@@ -711,6 +749,7 @@ public class LDClient {
     }
     private var _initialized = false
     private var initializedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.initializedQueue")
+    private var identifyQueue = SheddingQueue()
 
     private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
         self.serviceFactory = serviceFactory

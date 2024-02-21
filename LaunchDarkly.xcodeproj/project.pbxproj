@@ -260,6 +260,15 @@
 		A380B09A2B60178D00AB64A6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A380B0982B60178D00AB64A6 /* PrivacyInfo.xcprivacy */; };
 		A380B09B2B60178D00AB64A6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A380B0982B60178D00AB64A6 /* PrivacyInfo.xcprivacy */; };
 		A380B09C2B60178D00AB64A6 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A380B0982B60178D00AB64A6 /* PrivacyInfo.xcprivacy */; };
+		A3A8BCD22B7EAA89009A77E4 /* SheddingQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */; };
+		A3A8BCD32B7EAA89009A77E4 /* SheddingQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */; };
+		A3A8BCD42B7EAA89009A77E4 /* SheddingQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */; };
+		A3A8BCD52B7EAA89009A77E4 /* SheddingQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */; };
+		A3C6F7622B7FA803005B3B61 /* SheddingQueueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */; };
+		A3C6F7642B84EF0C005B3B61 /* IdentifyResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */; };
+		A3C6F7652B84EF0C005B3B61 /* IdentifyResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */; };
+		A3C6F7662B84EF0C005B3B61 /* IdentifyResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */; };
+		A3C6F7672B84EF0C005B3B61 /* IdentifyResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */; };
 		A3FFE1132B7D4BA2009EF93F /* LDValueDecoderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
@@ -476,6 +485,9 @@
 		A36EDFCC2853C50B00D91B05 /* ObjcLDContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDContext.swift; sourceTree = "<group>"; };
 		A3799D4429033665008D4A8E /* ObjcLDApplicationInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDApplicationInfo.swift; sourceTree = "<group>"; };
 		A380B0982B60178D00AB64A6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SheddingQueue.swift; sourceTree = "<group>"; };
+		A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheddingQueueSpec.swift; sourceTree = "<group>"; };
+		A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentifyResult.swift; sourceTree = "<group>"; };
 		A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueDecoderSpec.swift; sourceTree = "<group>"; };
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
@@ -565,6 +577,7 @@
 				837406D321F760640087B22B /* LDTimerSpec.swift */,
 				831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */,
 				8354AC75224316C700CDE602 /* Cache */,
+				A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */,
 			);
 			path = ServiceObjects;
 			sourceTree = "<group>";
@@ -681,6 +694,7 @@
 				8354EFDE1F26380700C05156 /* Event.swift */,
 				83EBCB9D20D9A0A1003A7142 /* FeatureFlag */,
 				8354EFDD1F26380700C05156 /* LDConfig.swift */,
+				A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -806,6 +820,7 @@
 		83FEF8D91F2666BF001CF12C /* ServiceObjects */ = {
 			isa = PBXGroup;
 			children = (
+				A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */,
 				A358D6CF2A4DD45000270C60 /* EnvironmentReporting */,
 				8354AC742243168800CDE602 /* Cache */,
 				838F96771FBA504A009CFC45 /* ClientServiceFactory.swift */,
@@ -1256,6 +1271,7 @@
 				A3470C3A2B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
 				831188592113AE1200D77CB5 /* FlagStore.swift in Sources */,
+				A3A8BCD52B7EAA89009A77E4 /* SheddingQueue.swift in Sources */,
 				C443A40D2315AA4D00145710 /* NetworkReporter.swift in Sources */,
 				A358D6EF2A4DE9A600270C60 /* TVOSEnvironmentReporter.swift in Sources */,
 				29FE129B280413D4008CC918 /* Util.swift in Sources */,
@@ -1274,6 +1290,7 @@
 				B4C9D43B2489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
 				C443A40523145FBF00145710 /* ConnectionInformation.swift in Sources */,
 				B468E71324B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
+				A3C6F7672B84EF0C005B3B61 /* IdentifyResult.swift in Sources */,
 				8354AC732243166900CDE602 /* FeatureFlagCache.swift in Sources */,
 				8311885B2113AE1D00D77CB5 /* Throttler.swift in Sources */,
 				8311884E2113ADE500D77CB5 /* Event.swift in Sources */,
@@ -1301,6 +1318,7 @@
 				B468E71224B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
 				A36EDFCF2853C50B00D91B05 /* ObjcLDContext.swift in Sources */,
 				831EF34320655E730001C643 /* LDCommon.swift in Sources */,
+				A3C6F7662B84EF0C005B3B61 /* IdentifyResult.swift in Sources */,
 				831EF34420655E730001C643 /* LDConfig.swift in Sources */,
 				A31088212837DC0400184942 /* LDContext.swift in Sources */,
 				831EF34520655E730001C643 /* LDClient.swift in Sources */,
@@ -1357,6 +1375,7 @@
 				83B1D7C92073F354006D1B1C /* CwlSysctl.swift in Sources */,
 				831EF36620655E730001C643 /* ObjcLDClient.swift in Sources */,
 				831EF36720655E730001C643 /* ObjcLDConfig.swift in Sources */,
+				A3A8BCD42B7EAA89009A77E4 /* SheddingQueue.swift in Sources */,
 				B4C9D43A2489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
 				831EF36A20655E730001C643 /* ObjcLDChangedFlag.swift in Sources */,
 			);
@@ -1391,6 +1410,7 @@
 				A3470C372B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C43C37E1236BA050003C1624 /* LDEvaluationDetail.swift in Sources */,
 				831AAE2C20A9E4F600B46DBA /* Throttler.swift in Sources */,
+				A3A8BCD22B7EAA89009A77E4 /* SheddingQueue.swift in Sources */,
 				8354EFE11F26380700C05156 /* LDConfig.swift in Sources */,
 				29FE1298280413D4008CC918 /* Util.swift in Sources */,
 				C443A40F23186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
@@ -1409,6 +1429,7 @@
 				83B6C4B61F4DE7630055351C /* LDCommon.swift in Sources */,
 				B4C9D4382489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
 				8347BB0C21F147E100E56BCD /* LDTimer.swift in Sources */,
+				A3C6F7642B84EF0C005B3B61 /* IdentifyResult.swift in Sources */,
 				B468E71024B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
 				8354AC702243166900CDE602 /* FeatureFlagCache.swift in Sources */,
 				A36EDFC82853883400D91B05 /* ObjcLDReference.swift in Sources */,
@@ -1456,6 +1477,7 @@
 				83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */,
 				83CFE7D11F7AD8DC0010544E /* DarklyServiceMock.swift in Sources */,
 				832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */,
+				A3C6F7622B7FA803005B3B61 /* SheddingQueueSpec.swift in Sources */,
 				A33A5F7A28466D04000C29C7 /* LDContextStub.swift in Sources */,
 				8354AC77224316F800CDE602 /* FeatureFlagCacheSpec.swift in Sources */,
 				A3047D652A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift in Sources */,
@@ -1509,6 +1531,7 @@
 				A3470C382B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C43C37E6238DF22B003C1624 /* LDEvaluationDetail.swift in Sources */,
 				83D9EC872062DEAB004D7FA6 /* FlagSynchronizer.swift in Sources */,
+				A3A8BCD32B7EAA89009A77E4 /* SheddingQueue.swift in Sources */,
 				C443A41023186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
 				29FE1299280413D4008CC918 /* Util.swift in Sources */,
 				83D9EC882062DEAB004D7FA6 /* FlagChangeNotifier.swift in Sources */,
@@ -1527,6 +1550,7 @@
 				83D9EC922062DEAB004D7FA6 /* Data.swift in Sources */,
 				8347BB0D21F147E100E56BCD /* LDTimer.swift in Sources */,
 				8354AC712243166900CDE602 /* FeatureFlagCache.swift in Sources */,
+				A3C6F7652B84EF0C005B3B61 /* IdentifyResult.swift in Sources */,
 				C443A40323145FB700145710 /* ConnectionInformation.swift in Sources */,
 				B4C9D4392489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
 				B468E71124B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
