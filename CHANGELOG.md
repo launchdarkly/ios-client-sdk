@@ -2,6 +2,22 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.4.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.3.0...9.4.0) (2024-02-21)
+
+
+### Features
+
+* Add new identify method with time out support ([#344](https://github.com/launchdarkly/ios-client-sdk/issues/344)) ([34ba8ab](https://github.com/launchdarkly/ios-client-sdk/commit/34ba8ab380dfc56aa21d2e13fadb634da0a01bdb))
+* Implement shedding identity queue ([#343](https://github.com/launchdarkly/ios-client-sdk/issues/343)) ([393a28c](https://github.com/launchdarkly/ios-client-sdk/commit/393a28c73cdcece4edfba373aa9ec9e5c4ae4080))
+* Introduce variation method with generic return types ([#342](https://github.com/launchdarkly/ios-client-sdk/issues/342)) ([7ff2ffb](https://github.com/launchdarkly/ios-client-sdk/commit/7ff2ffbc9e651114356c8972546ef177b73d0aeb))
+
+
+### Bug Fixes
+
+* Add privacy manifest  ([#334](https://github.com/launchdarkly/ios-client-sdk/issues/334)) ([154fde7](https://github.com/launchdarkly/ios-client-sdk/commit/154fde7e1cae7ed5474f5adf89525f7f1448befc))
+* Ensure anonymous context is valid ([#338](https://github.com/launchdarkly/ios-client-sdk/issues/338)) ([65406cc](https://github.com/launchdarkly/ios-client-sdk/commit/65406cc68b52cc50726d671e19fb804bb52f2a20))
+* Replace simple logger with os_log statements ([#340](https://github.com/launchdarkly/ios-client-sdk/issues/340)) ([7ba4397](https://github.com/launchdarkly/ios-client-sdk/commit/7ba43973e379ce5b057baad5860ed313a016c34b))
+
 ## [9.3.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.2.1...9.3.0) (2024-01-02)
 
 
