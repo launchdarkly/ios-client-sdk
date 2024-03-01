@@ -681,7 +681,7 @@ public class LDClient {
             return
         }
 
-        let serviceFactory = serviceFactory ?? ClientServiceFactory(config: config)
+        let serviceFactory = serviceFactory ?? ClientServiceFactory(logger: config.logger)
         var keys = [config.mobileKey]
         keys.append(contentsOf: config.getSecondaryMobileKeys().values)
         serviceFactory.makeCacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: keys, maxCachedContexts: config.maxCachedContexts)
@@ -783,7 +783,7 @@ public class LDClient {
 
     private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
         self.serviceFactory = serviceFactory
-        environmentReporter = self.serviceFactory.makeEnvironmentReporter()
+        environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
         flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
@@ -797,7 +797,7 @@ public class LDClient {
             context = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(context)
         }
 
-        service = self.serviceFactory.makeDarklyServiceProvider(context: context, envReporter: environmentReporter)
+        service = self.serviceFactory.makeDarklyServiceProvider(config: config, context: context, envReporter: environmentReporter)
         diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service, environmentReporter: environmentReporter)
         eventReporter = self.serviceFactory.makeEventReporter(service: service)
         connectionInformation = self.serviceFactory.makeConnectionInformation()

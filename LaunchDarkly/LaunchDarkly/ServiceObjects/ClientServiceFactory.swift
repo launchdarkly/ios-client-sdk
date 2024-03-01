@@ -1,11 +1,12 @@
 import Foundation
 import LDSwiftEventSource
+import OSLog
 
 protocol ClientServiceCreating {
     func makeKeyedValueCache(cacheKey: String?) -> KeyedValueCaching
     func makeFeatureFlagCache(mobileKey: String, maxCachedContexts: Int) -> FeatureFlagCaching
     func makeCacheConverter() -> CacheConverting
-    func makeDarklyServiceProvider(context: LDContext, envReporter: EnvironmentReporting) -> DarklyServiceProvider
+    func makeDarklyServiceProvider(config: LDConfig, context: LDContext, envReporter: EnvironmentReporting) -> DarklyServiceProvider
     func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing
     func makeFlagSynchronizer(streamingMode: LDStreamingMode,
                               pollingInterval: TimeInterval,
@@ -16,7 +17,7 @@ protocol ClientServiceCreating {
     func makeEventReporter(service: DarklyServiceProvider) -> EventReporting
     func makeEventReporter(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting
     func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
-    func makeEnvironmentReporter() -> EnvironmentReporting
+    func makeEnvironmentReporter(config: LDConfig) -> EnvironmentReporting
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling
     func makeConnectionInformation() -> ConnectionInformation
     func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching
@@ -25,10 +26,10 @@ protocol ClientServiceCreating {
 }
 
 final class ClientServiceFactory: ClientServiceCreating {
-    private let config: LDConfig
+    private let logger: OSLog
 
-    init(config: LDConfig) {
-        self.config = config
+    init(logger: OSLog) {
+        self.logger = logger
     }
 
     func makeKeyedValueCache(cacheKey: String?) -> KeyedValueCaching {
@@ -43,7 +44,7 @@ final class ClientServiceFactory: ClientServiceCreating {
         CacheConverter()
     }
 
-    func makeDarklyServiceProvider(context: LDContext, envReporter: EnvironmentReporting) -> DarklyServiceProvider {
+    func makeDarklyServiceProvider(config: LDConfig, context: LDContext, envReporter: EnvironmentReporting) -> DarklyServiceProvider {
       DarklyService(config: config, context: context, envReporter: envReporter, serviceFactory: self)
     }
 
@@ -60,7 +61,7 @@ final class ClientServiceFactory: ClientServiceCreating {
     }
 
     func makeFlagChangeNotifier() -> FlagChangeNotifying {
-        FlagChangeNotifier(logger: config.logger)
+        FlagChangeNotifier(logger: logger)
     }
 
     func makeEventReporter(service: DarklyServiceProvider) -> EventReporting {
@@ -91,7 +92,7 @@ final class ClientServiceFactory: ClientServiceCreating {
         return EventSource(config: config)
     }
 
-    func makeEnvironmentReporter() -> EnvironmentReporting {
+    func makeEnvironmentReporter(config: LDConfig) -> EnvironmentReporting {
         let builder = EnvironmentReporterBuilder()
 
         if let info = config.applicationInfo {
@@ -106,7 +107,7 @@ final class ClientServiceFactory: ClientServiceCreating {
     }
 
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling {
-        Throttler(logger: config.logger)
+        Throttler(logger: logger)
     }
 
     func makeConnectionInformation() -> ConnectionInformation {
@@ -122,6 +123,6 @@ final class ClientServiceFactory: ClientServiceCreating {
     }
 
     func makeFlagStore() -> FlagMaintaining {
-        FlagStore(logger: config.logger)
+        FlagStore(logger: logger)
     }
 }

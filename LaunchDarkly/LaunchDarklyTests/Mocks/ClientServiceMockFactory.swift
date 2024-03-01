@@ -34,7 +34,7 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         return makeCacheConverterReturnValue
     }
 
-    func makeDarklyServiceProvider(context: LDContext, envReporter: EnvironmentReporting) -> DarklyServiceProvider {
+    func makeDarklyServiceProvider(config: LDConfig, context: LDContext, envReporter: EnvironmentReporting) -> DarklyServiceProvider {
         DarklyServiceMock(config: config, context: context)
     }
 
@@ -111,7 +111,7 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     var makeEnvironmentReporterReturnValue: EnvironmentReportingMock = EnvironmentReportingMock()
-    func makeEnvironmentReporter() -> EnvironmentReporting {
+    func makeEnvironmentReporter(config: LDConfig) -> EnvironmentReporting {
         return makeEnvironmentReporterReturnValue
     }
 
