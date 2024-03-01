@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.4.1](https://github.com/launchdarkly/ios-client-sdk/compare/9.4.0...9.4.1) (2024-03-01)
+
+
+### Bug Fixes
+
+* Ensure secondary environments use correct mobile key ([#347](https://github.com/launchdarkly/ios-client-sdk/issues/347)) ([e92054c](https://github.com/launchdarkly/ios-client-sdk/commit/e92054c6c3c0b6a5bb04706a8466b92dd433b4e4))
+
 ## [9.4.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.3.0...9.4.0) (2024-02-21)
 
 
