@@ -79,6 +79,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     private var isOnlineQueue = DispatchQueue(label: "com.launchdarkly.FlagSynchronizer.isOnlineQueue")
     let pollingInterval: TimeInterval
     let useReport: Bool
+    private var lastCachedRequestedTime: Date?
 
     private var syncQueue = DispatchQueue(label: Constants.queueName, qos: .utility)
     private var eventSourceStarted: Date?
@@ -86,11 +87,13 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     init(streamingMode: LDStreamingMode,
          pollingInterval: TimeInterval,
          useReport: Bool,
+         lastUpdated: Date?,
          service: DarklyServiceProvider,
          onSyncComplete: FlagSyncCompleteClosure?) {
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
         self.useReport = useReport
+        self.lastCachedRequestedTime = lastUpdated
         self.service = service
         self.onSyncComplete = onSyncComplete
         os_log("%s streamingMode: %s pollingInterval: %s useReport: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: streamingMode), String(describing: pollingInterval), useReport.description)
@@ -151,9 +154,15 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             return
         }
 
+        if let lastTime = self.lastCachedRequestedTime {
+            let fireAt = lastTime.addingTimeInterval(pollingInterval)
+            flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, fireAt: fireAt, execute: processTimer)
+            syncQueue.async { [self] in reportSyncComplete(.upToDate) }
+        } else {
+            flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, execute: processTimer)
+            makeFlagRequest(isOnline: true)
+        }
         os_log("%s", log: service.config.logger, type: .debug, typeName(and: #function))
-        flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, execute: processTimer)
-        makeFlagRequest(isOnline: true)
     }
 
     private func stopPolling() {
@@ -184,6 +193,9 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         os_log("%s starting", log: service.config.logger, type: .debug, typeName(and: #function))
         let context = (useReport: useReport,
                        logPrefix: typeName(and: #function))
+        // We blank this value here so that future `startPolling` requests do
+        // not prematurely trigger the sync completion.
+        self.lastCachedRequestedTime = nil
         service.getFeatureFlags(useReport: useReport) { [weak self] serviceResponse in
             if FlagSynchronizer.shouldRetryFlagRequest(useReport: context.useReport, statusCode: (serviceResponse.urlResponse as? HTTPURLResponse)?.statusCode) {
                 if let myself = self {

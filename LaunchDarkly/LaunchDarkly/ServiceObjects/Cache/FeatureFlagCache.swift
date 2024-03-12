@@ -5,7 +5,7 @@ protocol FeatureFlagCaching {
     // sourcery: defaultMockValue = KeyedValueCachingMock()
     var keyedValueCache: KeyedValueCaching { get }
 
-    func getCachedData(cacheKey: String) -> (items: StoredItems?, etag: String?)
+    func getCachedData(cacheKey: String) -> (items: StoredItems?, etag: String?, lastUpdated: Date?)
 
     // When we update the cache, we save the flag data and if we have it, an
     // etag. For polling, we should always have the flag data and an etag
@@ -42,16 +42,24 @@ final class FeatureFlagCache: FeatureFlagCaching {
         self.maxCachedContexts = maxCachedContexts
     }
 
-    func getCachedData(cacheKey: String) -> (items: StoredItems?, etag: String?) {
+    func getCachedData(cacheKey: String) -> (items: StoredItems?, etag: String?, lastUpdated: Date?) {
         guard let cachedFlagsData = keyedValueCache.data(forKey: "flags-\(cacheKey)"),
               let cachedFlags = try? JSONDecoder().decode(StoredItemCollection.self, from: cachedFlagsData)
-        else { return (items: nil, etag: nil) }
+        else { return (items: nil, etag: nil, lastUpdated: nil) }
 
         guard let cachedETagData = keyedValueCache.data(forKey: "etag-\(cacheKey)"),
               let etag = try? JSONDecoder().decode(String.self, from: cachedETagData)
-        else { return (items: cachedFlags.flags, etag: nil) }
+        else { return (items: cachedFlags.flags, etag: nil, lastUpdated: nil) }
 
-        return (items: cachedFlags.flags, etag: etag)
+        var cachedContexts: [String: Int64] = [:]
+        if let cacheMetadata = keyedValueCache.data(forKey: "cached-contexts") {
+            cachedContexts = (try? JSONDecoder().decode([String: Int64].self, from: cacheMetadata)) ?? [:]
+        }
+
+        guard let lastUpdated = cachedContexts[cacheKey]
+        else { return (items: cachedFlags.flags, etag: etag, lastUpdated: nil) }
+
+        return (items: cachedFlags.flags, etag: etag, lastUpdated: Date(timeIntervalSince1970: TimeInterval(lastUpdated / 1_000)))
     }
 
     func saveCachedData(_ storedItems: StoredItems, cacheKey: String, lastUpdated: Date, etag: String?) {

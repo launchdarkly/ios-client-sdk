@@ -202,6 +202,8 @@ public class LDClient {
                 return
             }
 
+            let cachedData = self.flagCache.getCachedData(cacheKey: self.context.contextHash())
+
             let willSetSynchronizerOnline = isOnline && isInSupportedRunMode
             flagSynchronizer.isOnline = false
             let streamingModeVar = ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self)
@@ -209,6 +211,7 @@ public class LDClient {
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: streamingModeVar,
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
+                                                                   lastUpdated: cachedData.lastUpdated,
                                                                    service: service,
                                                                    onSyncComplete: onFlagSyncComplete)
             flagSynchronizer.isOnline = willSetSynchronizerOnline
@@ -404,6 +407,7 @@ public class LDClient {
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
+                                                                   lastUpdated: cachedData.lastUpdated,
                                                                    service: self.service,
                                                                    onSyncComplete: self.onFlagSyncComplete)
 
@@ -591,6 +595,10 @@ public class LDClient {
         case .upToDate:
             connectionInformation.lastKnownFlagValidity = Date()
             flagChangeNotifier.notifyUnchanged()
+            // If a polling request receives a 304 not modified, we still need
+            // to update the "last updated" field of the cache so subsequent
+            // restarts will honor the appropriate polling delay.
+            self.updateCacheFreshness(context: self.context)
         case .error(let synchronizingError):
             process(synchronizingError, logPrefix: typeName(and: #function))
         }
@@ -608,6 +616,17 @@ public class LDClient {
                                              oldStoredItems: StoredItems, etag: String?) {
         flagCache.saveCachedData(flagStore.storedItems, cacheKey: context.contextHash(), lastUpdated: Date(), etag: etag)
         flagChangeNotifier.notifyObservers(oldFlags: oldStoredItems.featureFlags, newFlags: flagStore.storedItems.featureFlags)
+    }
+
+    /**
+     This method will update the lastUpdated timestamp on the cache with the current time.
+
+     When a polling request returns a 304 not modified, we need to update this value so subsequent restarts still honor the appropriate polling interval delay.
+
+     In other words, if we get confirmation our cache is still fresh, then we shouldn't poll again for another <pollingInterval> seconds. If we didn't update this, we would poll immediately on restart.
+    */
+    private func updateCacheFreshness(context: LDContext) {
+        flagCache.saveCachedData(flagStore.storedItems, cacheKey: context.contextHash(), lastUpdated: Date(), etag: nil)
     }
 
     // MARK: Events
@@ -820,9 +839,11 @@ public class LDClient {
         diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service, environmentReporter: environmentReporter)
         eventReporter = self.serviceFactory.makeEventReporter(service: service)
         connectionInformation = self.serviceFactory.makeConnectionInformation()
+        let cachedData = flagCache.getCachedData(cacheKey: context.contextHash())
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,
+                                                                    lastUpdated: cachedData.lastUpdated,
                                                                     service: service)
 
         if let backgroundNotification = SystemCapabilities.backgroundNotification {
@@ -835,11 +856,11 @@ public class LDClient {
         NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
 
         eventReporter = self.serviceFactory.makeEventReporter(service: service, onSyncComplete: onEventSyncComplete)
-        let cachedData = flagCache.getCachedData(cacheKey: context.contextHash())
         service.resetFlagResponseCache(etag: cachedData.etag)
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,
+                                                                    lastUpdated: cachedData.lastUpdated,
                                                                     service: service,
                                                                     onSyncComplete: onFlagSyncComplete)
 

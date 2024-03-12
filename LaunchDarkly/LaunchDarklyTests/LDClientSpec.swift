@@ -89,7 +89,7 @@ final class LDClientSpec: QuickSpec {
                 let mobileKey = self.serviceFactoryMock.makeFeatureFlagCacheReceivedParameters!.mobileKey
                 let mockCache = FeatureFlagCachingMock()
                 mockCache.getCachedDataCallback = {
-                    mockCache.getCachedDataReturnValue = (items: StoredItems(items: self.cachedFlags[mobileKey]?[mockCache.getCachedDataReceivedCacheKey!] ?? [:]), etag: nil)
+                    mockCache.getCachedDataReturnValue = (items: StoredItems(items: self.cachedFlags[mobileKey]?[mockCache.getCachedDataReceivedCacheKey!] ?? [:]), etag: nil, lastUpdated: nil)
                 }
                 self.serviceFactoryMock.makeFeatureFlagCacheReturnValue = mockCache
             }
@@ -503,7 +503,7 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.context) == testContext.context
                         }
                         it("uncaches the new contexts flags") {
-                            expect(testContext.featureFlagCachingMock.getCachedDataCallCount) == 1
+                            expect(testContext.featureFlagCachingMock.getCachedDataCallCount) == 2
                             expect(testContext.featureFlagCachingMock.getCachedDataReceivedCacheKey) == testContext.context.contextHash()
                         }
                         it("records an identify event") {
@@ -542,7 +542,7 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.context) == testContext.context
                         }
                         it("uncaches the new contexts flags") {
-                            expect(testContext.featureFlagCachingMock.getCachedDataCallCount) == 1
+                            expect(testContext.featureFlagCachingMock.getCachedDataCallCount) == 2
                             expect(testContext.featureFlagCachingMock.getCachedDataReceivedCacheKey) == testContext.context.contextHash()
                         }
                         it("records an identify event") {

@@ -28,6 +28,7 @@ final class FlagSynchronizerSpec: QuickSpec {
             flagSynchronizer = FlagSynchronizer(streamingMode: streamingMode,
                                                 pollingInterval: Constants.pollingInterval,
                                                 useReport: useReport,
+                                                lastUpdated: nil,
                                                 service: serviceMock,
                                                 onSyncComplete: onSyncComplete)
         }

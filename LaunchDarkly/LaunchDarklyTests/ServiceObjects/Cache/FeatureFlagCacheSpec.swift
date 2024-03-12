@@ -27,10 +27,11 @@ final class FeatureFlagCacheSpec: XCTestCase {
 
     func testRetrieveNoData() {
         let flagCache = FeatureFlagCache(serviceFactory: serviceFactory, mobileKey: "abc", maxCachedContexts: 0)
-        let (items, etag) = flagCache.getCachedData(cacheKey: "context1")
+        let (items, etag, lastUpdated) = flagCache.getCachedData(cacheKey: "context1")
 
         XCTAssertNil(items)
         XCTAssertNil(etag)
+        XCTAssertNil(lastUpdated)
         XCTAssertEqual(mockValueCache.dataCallCount, 1)
         XCTAssertEqual(mockValueCache.dataReceivedForKey, "flags-context1")
     }
@@ -38,10 +39,11 @@ final class FeatureFlagCacheSpec: XCTestCase {
     func testRetrieveInvalidData() {
         mockValueCache.dataReturnValue = Data("invalid".utf8)
         let flagCache = FeatureFlagCache(serviceFactory: serviceFactory, mobileKey: "abc", maxCachedContexts: 1)
-        let (items, etag) = flagCache.getCachedData(cacheKey: "context1")
+        let (items, etag, lastUpdated) = flagCache.getCachedData(cacheKey: "context1")
 
         XCTAssertNil(items)
         XCTAssertNil(etag)
+        XCTAssertNil(lastUpdated)
     }
 
     func testRetrieveEmptyData() throws {

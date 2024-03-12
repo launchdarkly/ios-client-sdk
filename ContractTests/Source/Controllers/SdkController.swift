@@ -1,5 +1,5 @@
 import Vapor
-import LaunchDarkly
+@testable import LaunchDarkly
 
 final class SdkController: RouteCollection {
     private var clients: [Int: LDClient] = [:]
@@ -50,6 +50,8 @@ final class SdkController: RouteCollection {
             // TODO(mmk) Need to hook up initialRetryDelayMs
         } else if let polling = createInstance.configuration.polling {
             config.streamingMode = .polling
+            config.ignorePollingMinimum = true
+            config.flagPollingInterval = 0.5
             if let baseUri = polling.baseUri {
                 config.baseUrl = URL(string: baseUri)!
             }

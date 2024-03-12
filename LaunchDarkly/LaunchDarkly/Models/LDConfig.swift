@@ -371,6 +371,10 @@ public struct LDConfig {
     /// Enables logging for debugging. (Default: false)
     public var isDebugMode: Bool = Defaults.debugMode
 
+    /// Used by the contract tests to override the default 5 minute polling interval. This should never be used outside
+    /// of the contract tests.
+    internal var ignorePollingMinimum: Bool = false
+
     /// Enables requesting evaluation reasons for all flags. (Default: false)
     public var evaluationReasons: Bool = Defaults.evaluationReasons
 
@@ -492,6 +496,10 @@ public struct LDConfig {
 
     // Determine the effective flag polling interval based on runMode, configured foreground & background polling interval, and minimum foreground & background polling interval.
     func flagPollingInterval(runMode: LDClientRunMode) -> TimeInterval {
+        if ignorePollingMinimum {
+            return runMode == .foreground ? flagPollingInterval : backgroundFlagPollingInterval
+        }
+
         return runMode == .foreground ? max(flagPollingInterval, minima.flagPollingInterval) : max(backgroundFlagPollingInterval, minima.backgroundFlagPollingInterval)
     }
 
