@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.5.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.4.1...9.5.0) (2024-03-14)
+
+
+### Features
+
+* Inline contexts for all evaluation events ([#332](https://github.com/launchdarkly/ios-client-sdk/issues/332)) ([a0f795b](https://github.com/launchdarkly/ios-client-sdk/commit/a0f795b8b089233917af5fcfd1d7a4d83ffb6767))
+* Redact anonymous attributes within feature events ([#333](https://github.com/launchdarkly/ios-client-sdk/issues/333)) ([0fd5dbd](https://github.com/launchdarkly/ios-client-sdk/commit/0fd5dbd382f80547508d0f8828f2b522ca033c73))
+
 ## [9.4.1](https://github.com/launchdarkly/ios-client-sdk/compare/9.4.0...9.4.1) (2024-03-01)
 
 
