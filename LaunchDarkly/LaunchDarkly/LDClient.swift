@@ -317,8 +317,27 @@ public class LDClient {
             let cachedData = self.flagCache.getCachedData(cacheKey: self.context.contextHash())
             let cachedContextFlags = cachedData.items ?? [:]
             let oldItems = flagStore.storedItems.featureFlags
+
+            // Here we prime the store with the last known values from the
+            // cache.
+            //
+            // Once the flag sync. process finishes, the new payload is
+            // compared to this, and if they are different, change listeners
+            // will be notified; otherwise, they aren't.
+            //
+            // This is problematic since the flag values really did change. So
+            // we should trigger the change listener when we set these cache
+            // values.
+            //
+            // However, if there are no cached values, we don't want to inform
+            // customers that we set their store to nothing. In that case, we
+            // will not trigger the change listener and instead relay on the
+            // payload comparsion to do that when the request has completed.
             flagStore.replaceStore(newStoredItems: cachedContextFlags)
-            flagChangeNotifier.notifyObservers(oldFlags: oldItems, newFlags: flagStore.storedItems.featureFlags)
+            if !cachedContextFlags.featureFlags.isEmpty {
+                flagChangeNotifier.notifyObservers(oldFlags: oldItems, newFlags: flagStore.storedItems.featureFlags)
+            }
+
             self.service.context = self.context
             self.service.resetFlagResponseCache(etag: cachedData.etag)
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
