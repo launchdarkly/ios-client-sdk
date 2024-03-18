@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>LaunchDarkly  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+    <script src="js/lunr.min.js" defer></script>
+    <script src="js/typeahead.jquery.js" defer></script>
+    <script src="js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a title="LaunchDarkly  Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="index.html">LaunchDarkly 9.5.1 Docs</a> (92% documented)</p>
+        <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="img/gh.png" alt="GitHub"/>View on GitHub</a></p>
+        <div class="header-right">
+          <form role="search" action="search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </div>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="index.html">LaunchDarkly Reference</a>
+        <img id="carat" src="img/carat.png" alt=""/>
+        LaunchDarkly  Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="Core%20Classes.html">Core Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/LDClient.html">LDClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/LDConfig.html">LDConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/LDConfig/Constants.html">– Constants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/LDConfig/Minima.html">– Minima</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/LDContext.html">LDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/LDContextBuilder.html">LDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/Reference.html">Reference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/LDValue.html">LDValue</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Flag%20Change%20Observers.html">Flag Change Observers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/LDChangedFlag.html">LDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Flag%20Change%20Observers.html#/s:12LaunchDarkly19LDFlagChangeHandlera">LDFlagChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Flag%20Change%20Observers.html#/s:12LaunchDarkly29LDFlagCollectionChangeHandlera">LDFlagCollectionChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Flag%20Change%20Observers.html#/s:12LaunchDarkly23LDFlagsUnchangedHandlera">LDFlagsUnchangedHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Connection%20Information.html">Connection Information</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Structs/ConnectionInformation.html">ConnectionInformation</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/ConnectionInformation/ConnectionMode.html">– ConnectionMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/ConnectionInformation/LastConnectionFailureReason.html">– LastConnectionFailureReason</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/ConnectionInformation.html#/s:12LaunchDarkly21ConnectionInformationV9ConstantsV">– Constants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Connection%20Information.html#/s:12LaunchDarkly30LDConnectionModeChangedHandlera">LDConnectionModeChangedHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Other%20Types.html">Other Types</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Enums/LDStreamingMode.html">LDStreamingMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Objective-C%20Core%20Interfaces.html">Objective-C Core Interfaces</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDClient.html">ObjcLDClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDConfig.html">ObjcLDConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDReference.html">ObjcLDReference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDContext.html">ObjcLDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/ObjcLDValueType.html">ObjcLDValueType</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Objective-C%20EvaluationDetail%20Wrappers.html">Objective-C EvaluationDetail Wrappers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDBoolEvaluationDetail.html">ObjcLDBoolEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDIntegerEvaluationDetail.html">ObjcLDIntegerEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDDoubleEvaluationDetail.html">ObjcLDDoubleEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Other%20Guides.html">Other Guides</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="changelog.html">CHANGELOG</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="contributing.html">CONTRIBUTING</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="licensetxt.html">LICENSE.txt</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Other%20Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/ContextBuilderResult.html">ContextBuilderResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDApplicationInfo.html">ObjcLDApplicationInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDContextBuilder.html">ObjcLDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDMultiContextBuilder.html">ObjcLDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Other%20Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Enums/AutoEnvAttributes.html">AutoEnvAttributes</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/ContextBuilderError.html">ContextBuilderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/IdentifyResult.html">IdentifyResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/Kind.html">Kind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/ReferenceError.html">ReferenceError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Other%20Extensions.html">Other Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Extensions/Bool.html">Bool</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Double.html">Double</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Int.html">Int</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/String.html">String</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Other%20Protocols.html">Other Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Protocols/LDValueConvertible.html">LDValueConvertible</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Other%20Structs.html">Other Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Structs/ApplicationInfo.html">ApplicationInfo</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            
+            <h1 id='launchdarkly-sdk-for-ios' class='heading'>LaunchDarkly SDK for iOS</h1>
+
+<p><a href="https://github.com/launchdarkly/ios-client-sdk/actions/workflows/ci.yml"><img src="https://github.com/launchdarkly/ios-client-sdk/actions/workflows/ci.yml/badge.svg?branch=v9" alt="Run CI"></a>
+<a href="https://swift.org/package-manager/"><img src="https://img.shields.io/badge/SwiftPM-compatible-4BC51D.svg?style=flat" alt="SwiftPM compatible"></a>
+<a href="https://cocoapods.org/pods/LaunchDarkly"><img src="https://img.shields.io/cocoapods/v/LaunchDarkly.svg" alt="CocoaPods compatible"></a>
+<a href="https://github.com/Carthage/Carthage"><img src="https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat" alt="Carthage compatible"></a>
+<a href="https://docs.launchdarkly.com/sdk/client-side/ios"><img src="https://img.shields.io/cocoapods/p/LaunchDarkly.svg?style=flat" alt="Platform"></a></p>
+<h2 id='launchdarkly-overview' class='heading'>LaunchDarkly overview</h2>
+
+<p><a href="https://www.launchdarkly.com">LaunchDarkly</a> is a feature management platform that serves trillions of feature flags daily to help teams build better software, faster. <a href="https://docs.launchdarkly.com/home/getting-started">Get started</a> using LaunchDarkly today!</p>
+
+<p><a href="https://twitter.com/intent/follow?screen_name=launchdarkly"><img src="https://img.shields.io/twitter/follow/launchdarkly.svg?style=social&label=Follow&maxAge=2592000" alt="Twitter Follow"></a></p>
+<h2 id='supported-ios-and-xcode-versions' class='heading'>Supported iOS and Xcode versions</h2>
+
+<p>This version of the LaunchDarkly SDK has been tested across iOS, macOS, watchOS, and tvOS devices.</p>
+
+<p>The LaunchDarkly iOS SDK requires the following minimum build tool versions:</p>
+
+<table><thead>
+<tr>
+<th>Tool</th>
+<th>Version</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Xcode</td>
+<td>12.5+</td>
+</tr>
+<tr>
+<td>Swift</td>
+<td>5.3+</td>
+</tr>
+</tbody></table>
+
+<p>And supports the following device platforms:</p>
+
+<table><thead>
+<tr>
+<th>Platform</th>
+<th>Version</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>iOS</td>
+<td>12.0</td>
+</tr>
+<tr>
+<td>watchOS</td>
+<td>4.0</td>
+</tr>
+<tr>
+<td>tvOS</td>
+<td>12.0</td>
+</tr>
+<tr>
+<td>macOS</td>
+<td>10.13</td>
+</tr>
+</tbody></table>
+<h2 id='installation' class='heading'>Installation</h2>
+
+<p>LaunchDarkly supports multiple methods for installing the library in a project. Once installed, head over to the <a href="https://docs.launchdarkly.com/sdk/client-side/ios#getting-started">SDK documentation</a> for complete instructions on getting started with using the SDK.</p>
+<h3 id='swift-package-manager' class='heading'>Swift Package Manager</h3>
+
+<p>The <a href="https://swift.org/package-manager/">Swift Package Manager</a> is a dependency manager integrated into the <code>swift</code> compiler and Xcode.</p>
+
+<p>To integrate LaunchDarkly into an Xcode project, go to the project editor, and select <code>Swift Packages</code>. From here hit the <code>+</code> button and follow the prompts using  <code>https://github.com/launchdarkly/ios-client-sdk.git</code> as the URL.</p>
+
+<p>To include LaunchDarkly in a Swift package, simply add it to the dependencies section of your <code>Package.swift</code> file. And add the product &ldquo;LaunchDarkly&rdquo; as a dependency for your targets.</p>
+
+<!-- x-release-please-start-version -->
+<pre class="highlight swift"><code><span class="nv">dependencies</span><span class="p">:</span> <span class="p">[</span>
+    <span class="o">.</span><span class="nf">package</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="s">"https://github.com/launchdarkly/ios-client-sdk.git"</span><span class="p">,</span> <span class="o">.</span><span class="nf">upToNextMajor</span><span class="p">(</span><span class="nv">from</span><span class="p">:</span> <span class="s">"9.5.1"</span><span class="p">))</span>
+<span class="p">]</span>
+</code></pre>
+
+<!-- x-release-please-end -->
+<h3 id='cocoapods' class='heading'>CocoaPods</h3>
+
+<p>To use the <a href="https://cocoapods.org">CocoaPods</a> dependency manager to integrate LaunchDarkly into your Xcode project, specify it in your <code>Podfile</code>:</p>
+<pre class="highlight ruby"><code><span class="n">use_frameworks!</span>
+<span class="n">target</span> <span class="s1">'YourTargetName'</span> <span class="k">do</span>
+  <span class="n">pod</span> <span class="s1">'LaunchDarkly'</span><span class="p">,</span> <span class="s1">'~&gt; 9.5'</span>
+<span class="k">end</span>
+</code></pre>
+<h3 id='carthage' class='heading'>Carthage</h3>
+
+<p>To use the <a href="https://github.com/Carthage/Carthage">Carthage</a> dependency manager to integrate LaunchDarkly into your Xcode project, specify it in your <code>Cartfile</code>:</p>
+
+<p>To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your <code>Cartfile</code>:</p>
+<pre class="highlight plaintext"><code>github "launchdarkly/ios-client-sdk" ~&gt; 9.5
+</code></pre>
+<h3 id='manual-installation' class='heading'>Manual installation</h3>
+
+<p>If you prefer not to use the aforementioned dependency managers, it is possible to integrate the SDK manually.</p>
+
+<ol>
+<li>On the root folder of the project retreive the SDK by either:
+
+<ul>
+<li>Adding the SDK as a git submodule with <code>git submodule add https://github.com/launchdarkly/ios-client-sdk.git</code>.</li>
+<li>OR cloning the SDK with <code>git clone https://github.com/launchdarkly/ios-client-sdk.git</code>.</li>
+</ul></li>
+<li>Open the new <code>ios-client-sdk</code> folder and drag <code>LaunchDarkly.xcodeproj</code> into the project navigator of your application&rsquo;s Xcode project. It should appear nested within your application&rsquo;s blue project icon.</li>
+<li>Select your application project in the project navigator (blue icon) and select your application target under the &ldquo;Targets&rdquo; heading in the sidebar. If you have multiple targets, perform the following steps for each target.</li>
+<li>Select the &ldquo;General&rdquo; tab, and if necessary expand the subsection &ldquo;Frameworks, Libraries, and Embedded Content&rdquo;.</li>
+<li>Click the &ldquo;+&rdquo; button in the expanded subsection. Under &ldquo;LaunchDarkly&rdquo; within the dialog you will see 4 frameworks, select <code>LaunchDarkly.framework</code> for iOS, or <code>LaunchDarkly_&lt;platform&gt;</code> for other platforms.</li>
+</ol>
+<h2 id='learn-more' class='heading'>Learn more</h2>
+
+<p>Read our <a href="https://docs.launchdarkly.com">documentation</a> for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the <a href="https://docs.launchdarkly.com/sdk/client-side/ios">complete reference guide for this SDK</a>.</p>
+<h2 id='testing' class='heading'>Testing</h2>
+
+<p>We run integration tests for all our SDKs using a centralized test harness. This approach gives us the ability to test for consistency across SDKs, as well as test networking behavior in a long-running application. These tests cover each method in the SDK, and verify that event sending, flag evaluation, stream reconnection, and other aspects of the SDK all behave correctly.</p>
+<h2 id='privacy' class='heading'>Privacy</h2>
+
+<p>At WWDC23, Apple introduced the concept of Privacy Manifests. The privacy manifest included with the SDK describes our data usage with respect to the minimum case of data collection. If you utilize the SDK, you will have to update your own privacy manifest if you choose to collect more data in your implementation than the minimum for our SDK to function.</p>
+
+<p>To learn more about Privacy Manifests, please refer to <a href="https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_data_use_in_privacy_manifests">Apple Developer Documention.</a></p>
+<h2 id='contributing' class='heading'>Contributing</h2>
+
+<p>We encourage pull requests and other contributions from the community. Check out our <a href="CONTRIBUTING.md">contributing guidelines</a> for instructions on how to contribute to this SDK.</p>
+<h2 id='about-launchdarkly' class='heading'>About LaunchDarkly</h2>
+
+<ul>
+<li>LaunchDarkly is a continuous delivery platform that provides feature flags as a service and allows developers to iterate quickly and safely. We allow you to easily flag your features and manage them from the LaunchDarkly dashboard.  With LaunchDarkly, you can:
+
+<ul>
+<li>Roll out a new feature to a subset of your users (like a group of users who opt-in to a beta tester group), gathering feedback and bug reports from real-world use cases.</li>
+<li>Gradually roll out a feature to an increasing percentage of users, and track the effect that the feature has on key metrics (for instance, how likely is a user to complete a purchase if they have feature A versus feature B?).</li>
+<li>Turn off a feature that you realize is causing performance problems in production, without needing to re-deploy, or even restart the application with a changed configuration file.</li>
+<li>Grant access to certain features based on user attributes, like payment plan (eg: users on the ‘gold’ plan get access to more features than users in the ‘silver’ plan). Disable parts of your application to facilitate maintenance, without taking everything offline.</li>
+</ul></li>
+<li>LaunchDarkly provides feature flag SDKs for a wide variety of languages and technologies. Read <a href="https://docs.launchdarkly.com/sdk">our documentation</a> for a complete list.</li>
+<li>Explore LaunchDarkly
+
+<ul>
+<li><a href="https://www.launchdarkly.com/" title="LaunchDarkly Main Website">launchdarkly.com</a> for more information</li>
+<li><a href="https://docs.launchdarkly.com/" title="LaunchDarkly Documentation">docs.launchdarkly.com</a> for our documentation and SDK reference guides</li>
+<li><a href="https://apidocs.launchdarkly.com/" title="LaunchDarkly API Documentation">apidocs.launchdarkly.com</a> for our API documentation</li>
+<li><a href="https://blog.launchdarkly.com/" title="LaunchDarkly Blog Documentation">blog.launchdarkly.com</a> for the latest product updates</li>
+</ul></li>
+</ul>
+
+          </section>
+        </section>
+        <section id="footer">
+          <p>Copyright © 2019 Catamorphic Co.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.4</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</html>

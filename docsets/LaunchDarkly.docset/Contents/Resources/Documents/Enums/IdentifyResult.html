@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>IdentifyResult Enumeration Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Enum/IdentifyResult" class="dashAnchor"></a>
+    <a title="IdentifyResult Enumeration Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">LaunchDarkly 9.5.1 Docs</a> (92% documented)</p>
+        <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
+        <div class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </div>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">LaunchDarkly Reference</a>
+        <img id="carat" src="../img/carat.png" alt=""/>
+        IdentifyResult Enumeration Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Core%20Classes.html">Core Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/LDClient.html">LDClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDConfig.html">LDConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDConfig/Constants.html">– Constants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDConfig/Minima.html">– Minima</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDContext.html">LDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDContextBuilder.html">LDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/Reference.html">Reference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/LDValue.html">LDValue</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Flag%20Change%20Observers.html">Flag Change Observers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDChangedFlag.html">LDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly19LDFlagChangeHandlera">LDFlagChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly29LDFlagCollectionChangeHandlera">LDFlagCollectionChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly23LDFlagsUnchangedHandlera">LDFlagsUnchangedHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Connection%20Information.html">Connection Information</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation.html">ConnectionInformation</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation/ConnectionMode.html">– ConnectionMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation/LastConnectionFailureReason.html">– LastConnectionFailureReason</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation.html#/s:12LaunchDarkly21ConnectionInformationV9ConstantsV">– Constants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Connection%20Information.html#/s:12LaunchDarkly30LDConnectionModeChangedHandlera">LDConnectionModeChangedHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Types.html">Other Types</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Objective-C%20Core%20Interfaces.html">Objective-C Core Interfaces</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDClient.html">ObjcLDClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDReference.html">ObjcLDReference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContext.html">ObjcLDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ObjcLDValueType.html">ObjcLDValueType</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Objective-C%20EvaluationDetail%20Wrappers.html">Objective-C EvaluationDetail Wrappers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDBoolEvaluationDetail.html">ObjcLDBoolEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDIntegerEvaluationDetail.html">ObjcLDIntegerEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDDoubleEvaluationDetail.html">ObjcLDDoubleEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Guides.html">Other Guides</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../changelog.html">CHANGELOG</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../contributing.html">CONTRIBUTING</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../licensetxt.html">LICENSE.txt</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ContextBuilderResult.html">ContextBuilderResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDApplicationInfo.html">ObjcLDApplicationInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContextBuilder.html">ObjcLDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDMultiContextBuilder.html">ObjcLDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/AutoEnvAttributes.html">AutoEnvAttributes</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ContextBuilderError.html">ContextBuilderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/IdentifyResult.html">IdentifyResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Kind.html">Kind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ReferenceError.html">ReferenceError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Extensions.html">Other Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Bool.html">Bool</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Double.html">Double</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Int.html">Int</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Protocols.html">Other Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/LDValueConvertible.html">LDValueConvertible</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Structs.html">Other Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/ApplicationInfo.html">ApplicationInfo</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>IdentifyResult</h1>
+              <div class="declaration">
+                <div class="language">
+                  
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">IdentifyResult</span></code></pre>
+
+                </div>
+              </div>
+            <p>Denotes the result of an identify request made through the <code>LDClient.identify(context: completion:)</code> method.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly14IdentifyResultO8completeyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/complete" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly14IdentifyResultO8completeyA2CmF">complete</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The identify request has completed successfully.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">complete</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly14IdentifyResultO5erroryA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/error" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly14IdentifyResultO5erroryA2CmF">error</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The identify request has received an unrecoverable failure.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">error</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly14IdentifyResultO4shedyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/shed" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly14IdentifyResultO4shedyA2CmF">shed</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The identify request has been replaced with a subsequent request. Read <code>LDClient.identify(context: completion:)</code> for more details.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">shed</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly14IdentifyResultO7timeoutyA2CmF"></a>
+                    <a name="//apple_ref/swift/Element/timeout" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly14IdentifyResultO7timeoutyA2CmF">timeout</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The identify request exceeded some time out parameter. Read <code>LDClient.identify(context: timeout: completion)</code> for more details.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">case</span> <span class="n">timeout</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>Copyright © 2019 Catamorphic Co.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.4</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</html>
