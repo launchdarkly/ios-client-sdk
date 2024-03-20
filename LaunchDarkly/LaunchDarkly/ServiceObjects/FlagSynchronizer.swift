@@ -154,14 +154,16 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             return
         }
 
+        // We should fire right away, unless we know how fresh the cache is and can
+        // adjust accordingly.
+        var fireAt = Date.distantPast
         if let lastTime = self.lastCachedRequestedTime {
-            let fireAt = lastTime.addingTimeInterval(pollingInterval)
-            flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, fireAt: fireAt, execute: processTimer)
+            fireAt = lastTime.addingTimeInterval(pollingInterval)
+            // If we do consider the cached values already fresh enough, we should 
+            // signal completion immediately
             syncQueue.async { [self] in reportSyncComplete(.upToDate) }
-        } else {
-            flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, execute: processTimer)
-            makeFlagRequest(isOnline: true)
         }
+        flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, fireAt: fireAt, execute: processTimer)
         os_log("%s", log: service.config.logger, type: .debug, typeName(and: #function))
     }
 

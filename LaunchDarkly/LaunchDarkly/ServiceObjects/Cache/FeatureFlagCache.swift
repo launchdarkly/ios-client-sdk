@@ -5,6 +5,17 @@ protocol FeatureFlagCaching {
     // sourcery: defaultMockValue = KeyedValueCachingMock()
     var keyedValueCache: KeyedValueCaching { get }
 
+    /// Retrieve all cached data for the given cache key.
+    ///
+    /// - parameter cacheKey: The unique key into the local cache store.
+    /// - returns: Returns a tuple of cached value information.
+    ///     items: This is the associated flag evaluation results associated with this context.
+    ///     etag: The last known e-tag value from a polling request (see saveCachedData
+    ///           comments) for more informmation.
+    ///     lastUpdated: The date the cache was last considered up-to-date. If there are no cached
+    ///            values, this should return nil.
+    ///
+    ///
     func getCachedData(cacheKey: String) -> (items: StoredItems?, etag: String?, lastUpdated: Date?)
 
     // When we update the cache, we save the flag data and if we have it, an
