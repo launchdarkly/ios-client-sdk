@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.6.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.5.1...9.6.0) (2024-03-20)
+
+
+### Features
+
+* Honor polling interval between restarts ([#355](https://github.com/launchdarkly/ios-client-sdk/issues/355)) ([bd58864](https://github.com/launchdarkly/ios-client-sdk/commit/bd58864e940f8be24b11da14df5c483dac858a0f))
+
 ## [9.5.1](https://github.com/launchdarkly/ios-client-sdk/compare/9.5.0...9.5.1) (2024-03-15)
 
 
