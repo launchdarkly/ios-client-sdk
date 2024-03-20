@@ -159,7 +159,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         var fireAt = Date.distantPast
         if let lastTime = self.lastCachedRequestedTime {
             fireAt = lastTime.addingTimeInterval(pollingInterval)
-            // If we do consider the cached values already fresh enough, we should 
+            // If we do consider the cached values already fresh enough, we should
             // signal completion immediately
             syncQueue.async { [self] in reportSyncComplete(.upToDate) }
         }

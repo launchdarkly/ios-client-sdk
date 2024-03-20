@@ -118,7 +118,6 @@ final class FlagSynchronizerSpec: QuickSpec {
                             semaphore.signal()
                         }
                         testContext.flagSynchronizer.isOnline = true
-                        testContext.flagSynchronizer.isOnline = false
                     }
 
                     let runLoop = RunLoop.current
@@ -126,6 +125,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                     while semaphore.wait(timeout: .now()) == .timedOut {
                         runLoop.run(mode: .default, before: .distantFuture)
                     }
+                    testContext.flagSynchronizer.isOnline = false
 
                     expect(testContext.flagSynchronizer.isOnline) == false
                     expect(testContext.flagSynchronizer.streamingMode) == .polling
