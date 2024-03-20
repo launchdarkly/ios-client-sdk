@@ -39,15 +39,16 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     var makeFlagSynchronizerCallCount = 0
-    var makeFlagSynchronizerReceivedParameters: (streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider)? = nil
+    var makeFlagSynchronizerReceivedParameters: (streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, lastUpdated: Date?, service: DarklyServiceProvider)? = nil
     var onFlagSyncComplete: FlagSyncCompleteClosure? = nil
     func makeFlagSynchronizer(streamingMode: LDStreamingMode,
                               pollingInterval: TimeInterval,
                               useReport: Bool,
+                              lastUpdated: Date?,
                               service: DarklyServiceProvider,
                               onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing {
         makeFlagSynchronizerCallCount += 1
-        makeFlagSynchronizerReceivedParameters = (streamingMode, pollingInterval, useReport, service)
+        makeFlagSynchronizerReceivedParameters = (streamingMode, pollingInterval, useReport, lastUpdated, service)
         onFlagSyncComplete = onSyncComplete
 
         let flagSynchronizingMock = LDFlagSynchronizingMock()
@@ -56,8 +57,8 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         return flagSynchronizingMock
     }
 
-    func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, service: DarklyServiceProvider) -> LDFlagSynchronizing {
-        makeFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, service: service, onSyncComplete: nil)
+    func makeFlagSynchronizer(streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, lastUpdated: Date?, service: DarklyServiceProvider) -> LDFlagSynchronizing {
+        makeFlagSynchronizer(streamingMode: streamingMode, pollingInterval: pollingInterval, useReport: useReport, lastUpdated: lastUpdated, service: service, onSyncComplete: nil)
     }
 
     var makeFlagChangeNotifierReturnValue: FlagChangeNotifying = FlagChangeNotifyingMock()
