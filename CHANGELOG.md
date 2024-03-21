@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [8.4.2](https://github.com/launchdarkly/ios-client-sdk/compare/8.4.1...8.4.2) (2024-03-15)
+
+
+### Bug Fixes
+
+* Prevent null value changes to observe listeners ([#354](https://github.com/launchdarkly/ios-client-sdk/issues/354)) ([efcabc2](https://github.com/launchdarkly/ios-client-sdk/commit/efcabc29019d2b1996f823b569dae71f8f211ca3))
+
 ## [8.4.1](https://github.com/launchdarkly/ios-client-sdk/compare/8.4.0...8.4.1) (2024-02-09)
 
 
