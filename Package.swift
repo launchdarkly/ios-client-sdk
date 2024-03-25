@@ -1,4 +1,4 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.8
 
 import PackageDescription
 
@@ -16,16 +16,16 @@ let package = Package(
             targets: ["LaunchDarkly"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/AliSoftware/OHHTTPStubs.git", .exact("9.1.0")),
-        .package(url: "https://github.com/Quick/Quick.git", .exact("4.0.0")),
-        .package(url: "https://github.com/Quick/Nimble.git", .exact("9.2.1")),
-        .package(name: "LDSwiftEventSource", url: "https://github.com/LaunchDarkly/swift-eventsource.git", .exact("3.1.1"))
+        .package(url: "https://github.com/AliSoftware/OHHTTPStubs.git", exact: "9.1.0"),
+        .package(url: "https://github.com/Quick/Quick.git", exact: "4.0.0"),
+        .package(url: "https://github.com/Quick/Nimble.git", exact: "9.2.1"),
+        .package(url: "https://github.com/LaunchDarkly/swift-eventsource.git", exact: "3.1.1")
     ],
     targets: [
         .target(
             name: "LaunchDarkly",
             dependencies: [
-                .product(name: "LDSwiftEventSource", package: "LDSwiftEventSource")
+                .product(name: "LDSwiftEventSource", package: "swift-eventsource")
             ],
             path: "LaunchDarkly/LaunchDarkly",
             exclude: ["Support"]),
