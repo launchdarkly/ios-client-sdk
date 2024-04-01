@@ -28,7 +28,10 @@ let package = Package(
                 .product(name: "LDSwiftEventSource", package: "LDSwiftEventSource")
             ],
             path: "LaunchDarkly/LaunchDarkly",
-            exclude: ["Support"]),
+            exclude: ["Support"],
+            resources: [
+                .process("PrivacyInfo.xcprivacy")
+            ]),
         .testTarget(
             name: "LaunchDarklyTests",
             dependencies: [
