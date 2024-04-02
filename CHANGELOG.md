@@ -2,6 +2,17 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.6.1](https://github.com/launchdarkly/ios-client-sdk/compare/9.6.0...9.6.1) (2024-04-02)
+
+
+### Bug Fixes
+
+* Add missing privacy manifest resource for SPM ([#360](https://github.com/launchdarkly/ios-client-sdk/issues/360)) ([48f06cf](https://github.com/launchdarkly/ios-client-sdk/commit/48f06cf6025283e00b8375e874c464f9f0cf9d91))
+* Add missing privacy tracking fields in manifest ([#362](https://github.com/launchdarkly/ios-client-sdk/issues/362)) ([7439997](https://github.com/launchdarkly/ios-client-sdk/commit/743999791137c4dbab9d2668035fc034bc6a12ce))
+* Add objective-c binding for `LDConfig.logger` ([#365](https://github.com/launchdarkly/ios-client-sdk/issues/365)) ([eae8d78](https://github.com/launchdarkly/ios-client-sdk/commit/eae8d78cfaad27b5910d1f00e3f9acfc173d1c7d))
+* Deprecate calling `start` without a timeout parameter ([#364](https://github.com/launchdarkly/ios-client-sdk/issues/364)) ([65d88a4](https://github.com/launchdarkly/ios-client-sdk/commit/65d88a451550831feeb882f8a608e9fad2734c8d))
+* Use resource_bundle for privacy manifest in podspec ([#361](https://github.com/launchdarkly/ios-client-sdk/issues/361)) ([971a4c4](https://github.com/launchdarkly/ios-client-sdk/commit/971a4c4abb6144c80af5af3b71f4336dde917f20))
+
 ## [9.6.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.5.1...9.6.0) (2024-03-20)
 
 
