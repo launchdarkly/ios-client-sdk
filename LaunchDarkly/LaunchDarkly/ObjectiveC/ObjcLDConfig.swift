@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 /**
  Use LDConfig to configure the LDClient. When initialized, a LDConfig contains the default values which can be changed as needed.
@@ -167,6 +168,11 @@ public final class ObjcLDConfig: NSObject {
     @objc public var wrapperVersion: String? {
         get { config.wrapperVersion }
         set { config.wrapperVersion = newValue }
+    }
+
+    @objc public var logger: OSLog {
+        get { config.logger }
+        set { config.logger = newValue }
     }
 
     /**
