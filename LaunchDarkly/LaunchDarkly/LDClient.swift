@@ -42,6 +42,9 @@ public class LDClient {
 
     private static var instances: [String: LDClient]?
 
+    // If the SDK is provided a timeout value that exceeds this value, a warning will be logged.
+    private static let longTimeoutInterval: TimeInterval = 15
+
     /**
      Reports the online/offline state of the LDClient.
 
@@ -343,6 +346,10 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, timeout: TimeInterval, completion: @escaping ((_ result: IdentifyResult) -> Void)) {
+        if timeout > LDClient.longTimeoutInterval {
+            os_log("%s LDClient.identify called with high timeout parameter %s", log: config.logger, type: .debug, self.typeName(and: #function))
+        }
+
         var cancel = false
 
         DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
@@ -705,6 +712,7 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnline` call completes. (Optional)
     */
     /// - Tag: start
+    @available(*, deprecated, message: "Use LDClient.start(config: context: startWithSeconds: completion:) to initialize the SDK with a defined timeout")
     public static func start(config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
         start(serviceFactory: nil, config: config, context: context, completion: completion)
     }
@@ -749,10 +757,14 @@ public class LDClient {
 
     - parameter configuration: The LDConfig that contains the desired configuration. (Required)
     - parameter context: The LDContext set with the desired context. If omitted, LDClient sets a default context. (Optional)
-    - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network.
+    - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network. If you use a large TimeInterval and wait for the timeout, then any network delays will cause your application to wait a long time before continuing execution.
     - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
     */
     public static func start(config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        if startWaitSeconds > LDClient.longTimeoutInterval {
+            os_log("%s LDClient.start called with high timeout parameter %s", log: config.logger, type: .debug, self.typeName(and: #function))
+        }
+
         start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, completion: completion)
     }
 

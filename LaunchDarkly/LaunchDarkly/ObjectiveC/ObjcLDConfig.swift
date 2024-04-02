@@ -170,6 +170,7 @@ public final class ObjcLDConfig: NSObject {
         set { config.wrapperVersion = newValue }
     }
 
+    /// Configure the logger that will be used by the rest of the SDK.
     @objc public var logger: OSLog {
         get { config.logger }
         set { config.logger = newValue }
