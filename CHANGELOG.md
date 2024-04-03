@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.6.2](https://github.com/launchdarkly/ios-client-sdk/compare/9.6.1...9.6.2) (2024-04-03)
+
+
+### Bug Fixes
+
+* Mark  NSPrivacyCollectedDataTypeTracking as false in privacy manifest ([#366](https://github.com/launchdarkly/ios-client-sdk/issues/366)) ([fac9030](https://github.com/launchdarkly/ios-client-sdk/commit/fac9030e9f9a327d1e914102a2c982f8008fe5ae))
+
 ## [9.6.1](https://github.com/launchdarkly/ios-client-sdk/compare/9.6.0...9.6.1) (2024-04-02)
 
 
