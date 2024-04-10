@@ -5,7 +5,7 @@
       "name": "iOS SDK",
       "type": "client-side",
       "languages": [
-        "Swift"
+        "Swift", "Objective-C"
       ]
     }
   }
