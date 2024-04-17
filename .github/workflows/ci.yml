@@ -1,11 +1,11 @@
 name: Run CI
 on:
   push:
-    branches: [ v9 ]
+    branches: [ v9, 'feat/**' ]
     paths-ignore:
       - '**.md' # Do not need to run CI for markdown changes.
   pull_request:
-    branches: [ v9 ]
+    branches: [ v9, 'feat/**' ]
     paths-ignore:
       - '**.md'
 
