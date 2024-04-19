@@ -270,6 +270,7 @@ public class LDClient {
 
     let config: LDConfig
     let service: DarklyServiceProvider
+    let hooks: [Hook]
     private(set) var context: LDContext
 
     /**
@@ -833,6 +834,7 @@ public class LDClient {
 
     private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
         self.serviceFactory = serviceFactory
+        self.hooks = configuration.hooks
         environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
         flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()

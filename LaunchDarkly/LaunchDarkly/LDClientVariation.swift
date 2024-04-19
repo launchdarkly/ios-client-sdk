@@ -143,32 +143,59 @@ extension LDClient {
         return variationDetailInternal(flagKey, defaultValue, needsReason: true)
     }
 
-    private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
-        var result: LDEvaluationDetail<T>
-        let featureFlag = flagStore.featureFlag(for: flagKey)
-        if let featureFlag = featureFlag {
-            if featureFlag.value == .null {
-                result = LDEvaluationDetail(value: defaultValue, variationIndex: featureFlag.variation, reason: featureFlag.reason)
-            } else {
-                do {
-                    let convertedValue = try LDValueDecoder().decode(T.self, from: featureFlag.value)
-                    result = LDEvaluationDetail(value: convertedValue, variationIndex: featureFlag.variation, reason: featureFlag.reason)
-                } catch let error {
-                    os_log("%s type conversion error %s: failed converting %s to type %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: featureFlag.value), String(describing: T.self))
-                    result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "WRONG_TYPE"])
-                }
-            }
-        } else {
-            os_log("%s Unknown feature flag %s; returning default value", log: config.logger, type: .debug, typeName(and: #function), flagKey.description)
-            result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "FLAG_NOT_FOUND"])
+    private func evaluateWithHooks<D>(flagKey: LDFlagKey, defaultValue: D, methodName: String, evaluation: () -> LDEvaluationDetail<D>) -> LDEvaluationDetail<D> where D: LDValueConvertible, D: Decodable {
+        if self.hooks.isEmpty {
+            return evaluation()
         }
-        eventReporter.recordFlagEvaluationEvents(flagKey: flagKey,
-                                                 value: result.value.toLDValue(),
-                                                 defaultValue: defaultValue.toLDValue(),
-                                                 featureFlag: featureFlag,
-                                                 context: context,
-                                                 includeReason: needsReason)
-        return result
+
+        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName)
+        let hookData = self.execute_before_evaluation(seriesContext: seriesContext)
+        let evaluationResult = evaluation()
+        _ = self.execute_after_evaluation(seriesContext: seriesContext, hookData: hookData, evaluationDetail: evaluationResult.map { value in return value.toLDValue()})
+
+        return evaluationResult
+    }
+
+    private func execute_before_evaluation(seriesContext: EvaluationSeriesContext) -> [EvaluationSeriesData] {
+        return self.hooks.map { hook in
+            hook.beforeEvaluation(seriesContext: seriesContext, seriesData: EvaluationSeriesData())
+        }
+    }
+
+    private func execute_after_evaluation(seriesContext: EvaluationSeriesContext, hookData: [EvaluationSeriesData], evaluationDetail: LDEvaluationDetail<LDValue>) -> [EvaluationSeriesData] {
+        return zip(self.hooks, hookData).reversed().map { (hook, data) in
+            return hook.afterEvaluation(seriesContext: seriesContext, seriesData: data, evaluationDetail: evaluationDetail)
+        }
+    }
+
+    private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
+        return evaluateWithHooks(flagKey: flagKey, defaultValue: defaultValue, methodName: "variationDetailInternal") {
+            var result: LDEvaluationDetail<T>
+            let featureFlag = flagStore.featureFlag(for: flagKey)
+            if let featureFlag = featureFlag {
+                if featureFlag.value == .null {
+                    result = LDEvaluationDetail(value: defaultValue, variationIndex: featureFlag.variation, reason: featureFlag.reason)
+                } else {
+                    do {
+                        let convertedValue = try LDValueDecoder().decode(T.self, from: featureFlag.value)
+                        result = LDEvaluationDetail(value: convertedValue, variationIndex: featureFlag.variation, reason: featureFlag.reason)
+                    } catch let error {
+                        os_log("%s type conversion error %s: failed converting %s to type %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: featureFlag.value), String(describing: T.self))
+                        result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "WRONG_TYPE"])
+                    }
+                }
+            } else {
+                os_log("%s Unknown feature flag %s; returning default value", log: config.logger, type: .debug, typeName(and: #function), flagKey.description)
+                result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "FLAG_NOT_FOUND"])
+            }
+            eventReporter.recordFlagEvaluationEvents(flagKey: flagKey,
+                                                     value: result.value.toLDValue(),
+                                                     defaultValue: defaultValue.toLDValue(),
+                                                     featureFlag: featureFlag,
+                                                     context: context,
+                                                     includeReason: needsReason)
+            return result
+        }
     }
 }
 
