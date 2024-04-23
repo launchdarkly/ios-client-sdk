@@ -334,6 +334,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
                 reportDataError(messageEvent.data.data(using: .utf8))
                 return
             }
+
             // NOTE: If you are adding e-tag support through the streaming
             // connection, make sure you read the documentation on the
             // FeatureFlagCaching.saveCachedData method.

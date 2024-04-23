@@ -1,4 +1,5 @@
 import Vapor
+import Foundation
 @testable import LaunchDarkly
 
 final class SdkController: RouteCollection {
@@ -26,7 +27,8 @@ final class SdkController: RouteCollection {
             "context-comparison",
             "etag-caching",
             "inline-context",
-            "anonymous-redaction"
+            "anonymous-redaction",
+            "evaluation-hooks"
         ]
 
         return StatusResponse(
@@ -102,6 +104,14 @@ final class SdkController: RouteCollection {
             }
 
             config.applicationInfo = applicationInfo
+        }
+
+        if let hooksConfig = createInstance.configuration.hooks {
+            let hooks = hooksConfig.hooks.map { hookParameter in
+                let url = URL(string: hookParameter.callbackUri)!
+                return TestHook(name: hookParameter.name, callbackUrl: url, data: hookParameter.data ?? [:], errors: hookParameter.errors ?? [:])
+            }
+            config.hooks = hooks
         }
 
         let clientSide = createInstance.configuration.clientSide
