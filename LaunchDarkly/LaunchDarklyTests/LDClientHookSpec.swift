@@ -7,13 +7,6 @@ import XCTest
 @testable import LaunchDarkly
 
 final class LDClientHookSpec: XCTestCase {
-//    final class LDContextSpec: XCTestCase {
-//    override func spec() {
-//        registrationSpec()
-//        evaluationOrderSpec()
-//        dataPassingSpec()
-//    }
-
     func testRegistration() {
         var count = 0
         let hook = MockHook(before: { _, data in count += 1; return data }, after: { _, data, _ in count += 2; return data })
