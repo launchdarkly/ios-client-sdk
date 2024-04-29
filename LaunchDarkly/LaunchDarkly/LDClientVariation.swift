@@ -12,7 +12,7 @@ extension LDClient {
      - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
     public func boolVariation(forKey flagKey: LDFlagKey, defaultValue: Bool) -> Bool {
-        variationDetailInternal(flagKey, defaultValue, needsReason: false).value
+        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "boolVariation").value
     }
 
     /**
@@ -24,7 +24,7 @@ extension LDClient {
      - returns: an `LDEvaluationDetail` object
      */
     public func boolVariationDetail(forKey flagKey: LDFlagKey, defaultValue: Bool) -> LDEvaluationDetail<Bool> {
-        variationDetailInternal(flagKey, defaultValue, needsReason: true)
+        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "boolVariationDetail")
     }
 
     /**
@@ -35,7 +35,7 @@ extension LDClient {
      - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
     public func intVariation(forKey flagKey: LDFlagKey, defaultValue: Int) -> Int {
-        variationDetailInternal(flagKey, defaultValue, needsReason: false).value
+        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "intVariation").value
     }
 
     /**
@@ -47,7 +47,7 @@ extension LDClient {
      - returns: an `LDEvaluationDetail` object
      */
     public func intVariationDetail(forKey flagKey: LDFlagKey, defaultValue: Int) -> LDEvaluationDetail<Int> {
-        variationDetailInternal(flagKey, defaultValue, needsReason: true)
+        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "intVariationDetail")
     }
 
     /**
@@ -58,7 +58,7 @@ extension LDClient {
      - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
     public func doubleVariation(forKey flagKey: LDFlagKey, defaultValue: Double) -> Double {
-        variationDetailInternal(flagKey, defaultValue, needsReason: false).value
+        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "doubleVariation").value
     }
 
     /**
@@ -70,7 +70,7 @@ extension LDClient {
      - returns: an `LDEvaluationDetail` object
      */
     public func doubleVariationDetail(forKey flagKey: LDFlagKey, defaultValue: Double) -> LDEvaluationDetail<Double> {
-        variationDetailInternal(flagKey, defaultValue, needsReason: true)
+        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "doubleVariationDetail")
     }
 
     /**
@@ -81,7 +81,7 @@ extension LDClient {
      - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
     public func stringVariation(forKey flagKey: LDFlagKey, defaultValue: String) -> String {
-        variationDetailInternal(flagKey, defaultValue, needsReason: false).value
+        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "stringVariation").value
     }
 
     /**
@@ -93,7 +93,7 @@ extension LDClient {
      - returns: an `LDEvaluationDetail` object
      */
     public func stringVariationDetail(forKey flagKey: LDFlagKey, defaultValue: String) -> LDEvaluationDetail<String> {
-        variationDetailInternal(flagKey, defaultValue, needsReason: true)
+        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "stringVariationDetail")
     }
 
     /**
@@ -104,7 +104,7 @@ extension LDClient {
      - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
     public func jsonVariation(forKey flagKey: LDFlagKey, defaultValue: LDValue) -> LDValue {
-        variationDetailInternal(flagKey, defaultValue, needsReason: false).value
+        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "jsonVariation").value
     }
 
     /**
@@ -116,7 +116,7 @@ extension LDClient {
      - returns: an `LDEvaluationDetail` object
      */
     public func jsonVariationDetail(forKey flagKey: LDFlagKey, defaultValue: LDValue) -> LDEvaluationDetail<LDValue> {
-        variationDetailInternal(flagKey, defaultValue, needsReason: true)
+        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "jsonVariationDetail")
     }
 
     /**
@@ -127,7 +127,7 @@ extension LDClient {
      - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
     public func variation<T>(forKey flagKey: LDFlagKey, defaultValue: T) -> T where T: LDValueConvertible, T: Decodable {
-        return variationDetailInternal(flagKey, defaultValue, needsReason: false).value
+        return variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "variation").value
     }
 
     /**
@@ -140,7 +140,7 @@ extension LDClient {
      - returns: an `LDEvaluationDetail` object
      */
     public func variationDetail<T>(forKey flagKey: LDFlagKey, defaultValue: T) -> LDEvaluationDetail<T> where T: LDValueConvertible, T: Decodable {
-        return variationDetailInternal(flagKey, defaultValue, needsReason: true)
+        return variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "variationDetail")
     }
 
     private func evaluateWithHooks<D>(flagKey: LDFlagKey, defaultValue: D, methodName: String, evaluation: () -> LDEvaluationDetail<D>) -> LDEvaluationDetail<D> where D: LDValueConvertible, D: Decodable {
@@ -168,8 +168,8 @@ extension LDClient {
         }
     }
 
-    private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
-        return evaluateWithHooks(flagKey: flagKey, defaultValue: defaultValue, methodName: "variationDetailInternal") {
+    private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool, methodName: String) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
+        return evaluateWithHooks(flagKey: flagKey, defaultValue: defaultValue, methodName: methodName) {
             var result: LDEvaluationDetail<T>
             let featureFlag = flagStore.featureFlag(for: flagKey)
             if let featureFlag = featureFlag {
