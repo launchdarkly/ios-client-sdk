@@ -17,4 +17,13 @@ public final class LDEvaluationDetail<T> {
         self.variationIndex = variationIndex
         self.reason = reason
     }
+
+    /// Apply the `transform` function to the detail's inner value property, converting an
+    /// `LDEvaluationDetail<T>` to an `LDEvaluationDetail<U>`.
+    public func map<U>(transform: ((_: T) -> U)) -> LDEvaluationDetail<U> {
+        return LDEvaluationDetail<U>(
+            value: transform(self.value),
+            variationIndex: self.variationIndex,
+            reason: self.reason)
+    }
 }
