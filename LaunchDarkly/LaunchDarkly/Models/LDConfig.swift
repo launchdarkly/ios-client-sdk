@@ -248,6 +248,8 @@ public struct LDConfig {
         /// The default behavior for environment attributes is to not modify any provided context UNLESS the developer specifically opts-in.
         static let autoEnvAttributes: Bool = false
 
+        static let hooks: [Hook] = []
+
         /// The default logger for the SDK. Can be overridden to provide customization.
         static let logger: OSLog = OSLog(subsystem: "com.launchdarkly", category: "ios-client-sdk")
     }
@@ -422,6 +424,11 @@ public struct LDConfig {
 
     /// An NSObject wrapper for the Swift LDConfig struct. Intended for use in mixed apps when Swift code needs to pass a config into an Objective-C method.
     public var objcLdConfig: ObjcLDConfig { ObjcLDConfig(self) }
+
+    /// Initial set of hooks for the client.
+    ///
+    /// Hooks provide entry points which allow for observation of SDK functions.
+    public var hooks: [Hook] = Defaults.hooks
 
     /// A Dictionary of identifying names to unique mobile keys for all environments
     private var mobileKeys: [String: String] {
