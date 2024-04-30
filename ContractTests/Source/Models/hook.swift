@@ -31,6 +31,7 @@ class TestHook: Hook {
 
         let payload = EvaluationPayload(evaluationSeriesContext: seriesContext, evaluationSeriesData: seriesData, stage: stage, evaluationDetail: evaluationDetail)
 
+        // swiftlint:disable:next force_try
         let data = try! JSONEncoder().encode(payload)
 
         var request = URLRequest(url: self.callbackUrl)
@@ -38,7 +39,7 @@ class TestHook: Hook {
         request.httpBody = data
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        URLSession.shared.dataTask(with: request) { (data, response, error) in
+        URLSession.shared.dataTask(with: request) { (_, _, _) in
         }.resume()
 
         var updatedData = seriesData
@@ -85,7 +86,6 @@ struct EvaluationPayload: Encodable {
         }
     }
 
-
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
@@ -95,7 +95,7 @@ struct EvaluationPayload: Encodable {
         try container.encodeIfPresent(evaluationDetail, forKey: .evaluationDetail)
 
         var nested = container.nestedContainer(keyedBy: DynamicKey.self, forKey: .evaluationSeriesData)
-        try evaluationSeriesData.forEach { (key, value) in
+        try evaluationSeriesData.forEach { (_, _) in
             try evaluationSeriesData.forEach { try nested.encode($1, forKey: DynamicKey(stringValue: $0)!) }
         }
     }
@@ -118,7 +118,7 @@ extension EvaluationSeriesContext: Encodable {
     }
 }
 
-extension LDEvaluationDetail<LDValue>: Encodable {
+extension LDEvaluationDetail: Encodable where T == LDValue {
     private enum CodingKeys: String, CodingKey {
         case value
         case variationIndex
