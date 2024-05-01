@@ -20,12 +20,15 @@ jobs:
           - xcode-version: 15.0.1
             ios-sim: 'platform=iOS Simulator,name=iPhone 15,OS=17.2'
             os: macos-13
+            run-contract-tests: true
           - xcode-version: 14.3.1
             ios-sim: 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
             os: macos-13
+            run-contract-tests: true
           - xcode-version: 13.4.1
             ios-sim: 'platform=iOS Simulator,name=iPhone 11,OS=15.5'
             os: macos-12
+            run-contract-tests: false
 
     steps:
       - uses: actions/checkout@v4
@@ -36,5 +39,6 @@ jobs:
         with:
           xcode-version: ${{ matrix.xcode-version }}
           ios-sim: ${{ matrix.ios-sim }}
+          run-contract-tests: ${{ matrix.run-contract-tests }}
 
       - uses: ./.github/actions/build-docs

@@ -10,6 +10,9 @@ inputs:
   ios-sim:
     description: 'iOS Simulator to use for testing'
     required: true
+  run-contract-tests:
+    description: 'Should the contract tests be run?'
+    required: true
 
 runs:
   using: composite
@@ -71,14 +74,17 @@ runs:
       run: swift test -v
 
     - name: Build contract tests
+      if: ${{ inputs.run-contract-tests == 'true' }}
       shell: bash
       run: make build-contract-tests
 
     - name: Start contract tests in background
+      if: ${{ inputs.run-contract-tests == 'true' }}
       shell: bash
       run: make start-contract-test-service-bg
 
     - name: Run contract tests
+      if: ${{ inputs.run-contract-tests == 'true' }}
       shell: bash
       # Add a brief sleep here to ensure the test service is ready to receive
       # requests
