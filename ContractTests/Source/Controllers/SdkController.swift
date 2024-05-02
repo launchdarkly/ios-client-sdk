@@ -1,6 +1,8 @@
 import Vapor
+import Foundation
 @testable import LaunchDarkly
 
+// swiftlint:disable:next type_body_length
 final class SdkController: RouteCollection {
     private var clients: [Int: LDClient] = [:]
     private var clientCounter = 0
@@ -26,7 +28,8 @@ final class SdkController: RouteCollection {
             "context-comparison",
             "etag-caching",
             "inline-context",
-            "anonymous-redaction"
+            "anonymous-redaction",
+            "evaluation-hooks"
         ]
 
         return StatusResponse(
@@ -34,6 +37,7 @@ final class SdkController: RouteCollection {
             capabilities: capabilities)
     }
 
+    // swiftlint:disable:next function_body_length
     func createClient(_ req: Request) throws -> Response {
         let createInstance = try req.content.decode(CreateInstance.self)
         let mobileKey = createInstance.configuration.credential
@@ -104,6 +108,14 @@ final class SdkController: RouteCollection {
             config.applicationInfo = applicationInfo
         }
 
+        if let hooksConfig = createInstance.configuration.hooks {
+            let hooks: [Hook] = hooksConfig.hooks.map { hookParameter in
+                let url = URL(string: hookParameter.callbackUri)!
+                return TestHook(name: hookParameter.name, callbackUrl: url, data: hookParameter.data ?? [:], errors: hookParameter.errors ?? [:])
+            }
+            config.hooks = hooks
+        }
+
         let clientSide = createInstance.configuration.clientSide
 
         if let evaluationReasons = clientSide.evaluationReasons {
@@ -151,6 +163,7 @@ final class SdkController: RouteCollection {
         return HTTPStatus.accepted
     }
 
+    // swiftlint:disable:next function_body_length
     func executeCommand(_ req: Request) throws -> CommandResponse {
         guard let id = req.parameters.get("id", as: Int.self)
         else { throw Abort(.badRequest) }
