@@ -4,7 +4,8 @@ import Foundation
 public class Metadata {
     private let name: String
 
-    init(name: String) {
+    /// Initialize a new Metadata instance with the provided name.
+    public init(name: String) {
         self.name = name
     }
 }
