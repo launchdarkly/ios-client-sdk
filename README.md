@@ -50,7 +50,7 @@ To include LaunchDarkly in a Swift package, simply add it to the dependencies se
 <!-- x-release-please-start-version -->
 ```swift
 dependencies: [
-    .package(url: "https://github.com/launchdarkly/ios-client-sdk.git", .upToNextMajor(from: "9.6.2"))
+    .package(url: "https://github.com/launchdarkly/ios-client-sdk.git", .upToNextMajor(from: "9.7.0"))
 ]
 ```
 <!-- x-release-please-end -->
