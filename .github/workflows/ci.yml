@@ -40,5 +40,6 @@ jobs:
           xcode-version: ${{ matrix.xcode-version }}
           ios-sim: ${{ matrix.ios-sim }}
           run-contract-tests: ${{ matrix.run-contract-tests }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: ./.github/actions/build-docs
