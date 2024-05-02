@@ -13,6 +13,9 @@ inputs:
   run-contract-tests:
     description: 'Should the contract tests be run?'
     required: true
+  token:
+    description: 'GH token used to download SDK test harness.'
+    required: true
 
 runs:
   using: composite
@@ -83,9 +86,9 @@ runs:
       shell: bash
       run: make start-contract-test-service-bg
 
-    - name: Run contract tests
+    - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.0.1
       if: ${{ inputs.run-contract-tests == 'true' }}
-      shell: bash
-      # Add a brief sleep here to ensure the test service is ready to receive
-      # requests
-      run: make run-contract-tests
+      with:
+        test_service_port: 8080
+        token: ${{ inputs.token }}
+        extra_params: "-status-timeout 120 -skip-from ./ContractTests/testharness-suppressions.txt"
