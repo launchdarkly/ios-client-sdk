@@ -86,7 +86,7 @@ runs:
       shell: bash
       run: make start-contract-test-service-bg
 
-    - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.0.1
+    - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.0.2
       if: ${{ inputs.run-contract-tests == 'true' }}
       with:
         test_service_port: 8080
