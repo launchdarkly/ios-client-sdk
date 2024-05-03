@@ -28,7 +28,7 @@ enum LDClientRunMode {
 ### Observing Feature Flags
  You might need to know when a feature flag value changes. This is not required, you can check the flag's value when you need it.
 
- If you want to know when a feature flag value changes, you can check the flag's value. You can also use one of several `observe` methods to have the LDClient notify you when a change occurs. There are several options--you can set up notificiations based on when a specific flag changes, when any flag in a collection changes, or when a flag doesn't change.
+ If you want to know when a feature flag value changes, you can check the flag's value. You can also use one of several `observe` methods to have the LDClient notify you when a change occurs. There are several options--you can set up notificiations based on when a specific flag changes, when any flag in a collection changes, or when a flag doesn't change. The flag change listener may be invoked multiple times per invocation of LDClient.identify as the SDK fetches up to date flag data from multiple sources (e.g. local cache, cloud services). In certain error cases, the SDK may not be able to retrieve flag data during an identify (e.g. no network connectivity). In those cases, the flag change listener may not be invoked.
  ```
  LDClient.get()?.observe("flag-key", owner: self, observer: { [weak self] (changedFlag) in
     self?.updateFlag(key: "flag-key", changedFlag: changedFlag)
