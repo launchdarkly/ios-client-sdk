@@ -283,6 +283,9 @@
 		A3C6F7652B84EF0C005B3B61 /* IdentifyResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */; };
 		A3C6F7662B84EF0C005B3B61 /* IdentifyResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */; };
 		A3C6F7672B84EF0C005B3B61 /* IdentifyResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */; };
+		A3D748122BF3CED10025824F /* GZIP in Frameworks */ = {isa = PBXBuildFile; productRef = A3D748112BF3CED10025824F /* GZIP */; };
+		A3D748162BF3CEF10025824F /* GZIP in Frameworks */ = {isa = PBXBuildFile; productRef = A3D748152BF3CEF10025824F /* GZIP */; };
+		A3D748182BF3CEF50025824F /* GZIP in Frameworks */ = {isa = PBXBuildFile; productRef = A3D748172BF3CEF50025824F /* GZIP */; };
 		A3FFE1132B7D4BA2009EF93F /* LDValueDecoderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
@@ -529,6 +532,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A3D748182BF3CEF50025824F /* GZIP in Frameworks */,
 				A30EF4F328C24AB600CD220E /* LDSwiftEventSource in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -537,6 +541,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A3D748162BF3CEF10025824F /* GZIP in Frameworks */,
 				A30EF4F128C24AAD00CD220E /* LDSwiftEventSource in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -545,6 +550,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A3D748122BF3CED10025824F /* GZIP in Frameworks */,
 				A30EF4ED28C24A9A00CD220E /* LDSwiftEventSource in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -981,11 +987,13 @@
 			buildRules = (
 			);
 			dependencies = (
+				A3D748202BF3CF160025824F /* PBXTargetDependency */,
 				B445A6FB24C0D237000BAD6D /* PBXTargetDependency */,
 			);
 			name = LaunchDarkly_tvOS;
 			packageProductDependencies = (
 				A30EF4F228C24AB600CD220E /* LDSwiftEventSource */,
+				A3D748172BF3CEF50025824F /* GZIP */,
 			);
 			productName = Darkly_tvOS;
 			productReference = 831188382113A16900D77CB5 /* LaunchDarkly_tvOS.framework */;
@@ -1005,11 +1013,13 @@
 			buildRules = (
 			);
 			dependencies = (
+				A3D7481E2BF3CF100025824F /* PBXTargetDependency */,
 				B445A6F924C0D232000BAD6D /* PBXTargetDependency */,
 			);
 			name = LaunchDarkly_macOS;
 			packageProductDependencies = (
 				A30EF4F028C24AAD00CD220E /* LDSwiftEventSource */,
+				A3D748152BF3CEF10025824F /* GZIP */,
 			);
 			productName = Darkly_macOS;
 			productReference = 831EF33B20655D700001C643 /* LaunchDarkly_macOS.framework */;
@@ -1029,11 +1039,13 @@
 			buildRules = (
 			);
 			dependencies = (
+				A3D7481A2BF3CF060025824F /* PBXTargetDependency */,
 				B445A6E424C0D1E3000BAD6D /* PBXTargetDependency */,
 			);
 			name = LaunchDarkly_iOS;
 			packageProductDependencies = (
 				A30EF4EC28C24A9A00CD220E /* LDSwiftEventSource */,
+				A3D748112BF3CED10025824F /* GZIP */,
 			);
 			productName = Darkly;
 			productReference = 8354EFC21F22491C00C05156 /* LaunchDarkly.framework */;
@@ -1100,17 +1112,17 @@
 				TargetAttributes = {
 					831188372113A16900D77CB5 = {
 						CreatedOnToolsVersion = 9.2;
-						LastSwiftMigration = 1020;
+						LastSwiftMigration = 1540;
 						ProvisioningStyle = Automatic;
 					};
 					831EF33A20655D700001C643 = {
 						CreatedOnToolsVersion = 9.2;
-						LastSwiftMigration = 1020;
+						LastSwiftMigration = 1540;
 						ProvisioningStyle = Automatic;
 					};
 					8354EFC11F22491C00C05156 = {
 						CreatedOnToolsVersion = 8.3.3;
-						LastSwiftMigration = 1020;
+						LastSwiftMigration = 1540;
 						ProvisioningStyle = Automatic;
 					};
 					8354EFCA1F22491C00C05156 = {
@@ -1120,7 +1132,7 @@
 					};
 					83D9EC6A2062DBB7004D7FA6 = {
 						CreatedOnToolsVersion = 9.2;
-						LastSwiftMigration = 1020;
+						LastSwiftMigration = 1540;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -1139,6 +1151,7 @@
 				B4903D9924BD61D000F087C4 /* XCRemoteSwiftPackageReference "Nimble" */,
 				B4903D9C24BD61EF00F087C4 /* XCRemoteSwiftPackageReference "Quick" */,
 				B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */,
+				A3D748102BF3CED10025824F /* XCRemoteSwiftPackageReference "GZIP" */,
 			);
 			productRefGroup = 8354EFC31F22491C00C05156 /* Products */;
 			projectDirPath = "";
@@ -1625,6 +1638,18 @@
 			target = 8354EFC11F22491C00C05156 /* LaunchDarkly_iOS */;
 			targetProxy = 8354EFCD1F22491C00C05156 /* PBXContainerItemProxy */;
 		};
+		A3D7481A2BF3CF060025824F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A3D748192BF3CF060025824F /* GZIP */;
+		};
+		A3D7481E2BF3CF100025824F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A3D7481D2BF3CF100025824F /* GZIP */;
+		};
+		A3D748202BF3CF160025824F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A3D7481F2BF3CF160025824F /* GZIP */;
+		};
 		B445A6E424C0D1E3000BAD6D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = B445A6E324C0D1E3000BAD6D /* LDSwiftEventSource */;
@@ -2051,6 +2076,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		A3D748102BF3CED10025824F /* XCRemoteSwiftPackageReference "GZIP" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/nicklockwood/GZIP";
+			requirement = {
+				kind = exactVersion;
+				version = 1.3.2;
+			};
+		};
 		B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/LaunchDarkly/swift-eventsource.git";
@@ -2105,6 +2138,36 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
 			productName = LDSwiftEventSource;
+		};
+		A3D748112BF3CED10025824F /* GZIP */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3D748102BF3CED10025824F /* XCRemoteSwiftPackageReference "GZIP" */;
+			productName = GZIP;
+		};
+		A3D748152BF3CEF10025824F /* GZIP */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3D748102BF3CED10025824F /* XCRemoteSwiftPackageReference "GZIP" */;
+			productName = GZIP;
+		};
+		A3D748172BF3CEF50025824F /* GZIP */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3D748102BF3CED10025824F /* XCRemoteSwiftPackageReference "GZIP" */;
+			productName = GZIP;
+		};
+		A3D748192BF3CF060025824F /* GZIP */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3D748102BF3CED10025824F /* XCRemoteSwiftPackageReference "GZIP" */;
+			productName = GZIP;
+		};
+		A3D7481D2BF3CF100025824F /* GZIP */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3D748102BF3CED10025824F /* XCRemoteSwiftPackageReference "GZIP" */;
+			productName = GZIP;
+		};
+		A3D7481F2BF3CF160025824F /* GZIP */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3D748102BF3CED10025824F /* XCRemoteSwiftPackageReference "GZIP" */;
+			productName = GZIP;
 		};
 		B445A6E324C0D1E3000BAD6D /* LDSwiftEventSource */ = {
 			isa = XCSwiftPackageProductDependency;

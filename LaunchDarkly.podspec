@@ -39,5 +39,8 @@ Pod::Spec.new do |ld|
 
   ld.subspec 'Core' do |es|
     es.dependency 'LDSwiftEventSource', '3.1.1'
+    es.ios.dependency 'GZIP', '1.3.2'
+    es.macos.dependency 'GZIP', '1.3.2'
+    es.tvos.dependency 'GZIP', '1.3.2'
   end
 end

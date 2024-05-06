@@ -1,6 +1,9 @@
 import Foundation
 import LDSwiftEventSource
 import OSLog
+#if !os(watchOS)
+import GZIP
+#endif
 
 typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Error?, etag: String?)
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void
@@ -204,9 +207,19 @@ final class DarklyService: DarklyServiceProvider {
     }
 
     private func doPublish(url: URL, headers: [String: String], body: Data, completion: ServiceCompletionHandler?) {
+        var headers = headers
+
+        var httpBody = body
+        #if !os(watchOS)
+        if let compressedData = NSData(data: body).gzipped() {
+            httpBody = compressedData
+            headers.updateValue("gzip", forKey: "Content-Encoding")
+        }
+        #endif
+
         var request = URLRequest(url: url, ldHeaders: headers, ldConfig: config)
         request.httpMethod = URLRequest.HTTPMethods.post
-        request.httpBody = body
+        request.httpBody = httpBody
 
         session.dataTask(with: request) { data, response, error in
             completion?((data: data, urlResponse: response, error: error, etag: nil))

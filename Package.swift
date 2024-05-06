@@ -19,12 +19,14 @@ let package = Package(
         .package(url: "https://github.com/AliSoftware/OHHTTPStubs.git", .exact("9.1.0")),
         .package(url: "https://github.com/Quick/Quick.git", .exact("4.0.0")),
         .package(url: "https://github.com/Quick/Nimble.git", .exact("9.2.1")),
-        .package(name: "LDSwiftEventSource", url: "https://github.com/LaunchDarkly/swift-eventsource.git", .exact("3.1.1"))
+        .package(name: "LDSwiftEventSource", url: "https://github.com/LaunchDarkly/swift-eventsource.git", .exact("3.1.1")),
+        .package(name: "GZIP", url: "https://github.com/nicklockwood/GZIP", .exact("1.3.2"))
     ],
     targets: [
         .target(
             name: "LaunchDarkly",
             dependencies: [
+                .product(name: "GZIP", package: "GZIP", condition: .when(platforms: [.iOS, .macOS, .tvOS])),
                 .product(name: "LDSwiftEventSource", package: "LDSwiftEventSource")
             ],
             path: "LaunchDarkly/LaunchDarkly",

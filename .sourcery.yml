@@ -9,3 +9,4 @@ args:
   imports:
   - Foundation
   - LDSwiftEventSource
+  - GZIP

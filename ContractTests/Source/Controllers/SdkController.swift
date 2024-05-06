@@ -29,7 +29,8 @@ final class SdkController: RouteCollection {
             "etag-caching",
             "inline-context",
             "anonymous-redaction",
-            "evaluation-hooks"
+            "evaluation-hooks",
+            "event-gzip"
         ]
 
         return StatusResponse(
