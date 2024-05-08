@@ -348,7 +348,7 @@ public class LDClient {
      */
     public func identify(context: LDContext, timeout: TimeInterval, completion: @escaping ((_ result: IdentifyResult) -> Void)) {
         if timeout > LDClient.longTimeoutInterval {
-            os_log("%s LDClient.identify called with high timeout parameter %s", log: config.logger, type: .debug, self.typeName(and: #function))
+            os_log("%s LDClient.identify was called with a timeout greater than %d seconds. We recommend a timeout of less than %s seconds.", log: config.logger, type: .debug, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
 
         var cancel = false
@@ -763,7 +763,7 @@ public class LDClient {
     */
     public static func start(config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         if startWaitSeconds > LDClient.longTimeoutInterval {
-            os_log("%s LDClient.start called with high timeout parameter %s", log: config.logger, type: .debug, self.typeName(and: #function))
+            os_log("%s LDClient.start was called with a timeout greater than %d seconds. We recommend a timeout of less than %s seconds.", log: config.logger, type: .debug, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
 
         start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, completion: completion)
