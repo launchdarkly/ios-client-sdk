@@ -29,7 +29,9 @@ final class SdkController: RouteCollection {
             "etag-caching",
             "inline-context",
             "anonymous-redaction",
-            "evaluation-hooks"
+            "evaluation-hooks",
+            "event-gzip",
+            "optional-event-gzip"
         ]
 
         return StatusResponse(
@@ -84,6 +86,10 @@ final class SdkController: RouteCollection {
 
             if let flushIntervalMs = events.flushIntervalMs {
                 config.eventFlushInterval =  flushIntervalMs
+            }
+
+            if let enableCompression = events.enableGzip {
+                config.enableCompression = enableCompression
             }
         }
 

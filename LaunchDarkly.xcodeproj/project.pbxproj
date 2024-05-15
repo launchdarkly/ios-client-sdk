@@ -244,6 +244,10 @@
 		A35AD4612A619E45005A8DCB /* SystemCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35AD45F2A619E45005A8DCB /* SystemCapabilities.swift */; };
 		A35AD4622A619E45005A8DCB /* SystemCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35AD45F2A619E45005A8DCB /* SystemCapabilities.swift */; };
 		A35AD4632A619E45005A8DCB /* SystemCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35AD45F2A619E45005A8DCB /* SystemCapabilities.swift */; };
+		A3647AA52C5BF6EF00902D0C /* DataCompression in Frameworks */ = {isa = PBXBuildFile; productRef = A3647AA42C5BF6EF00902D0C /* DataCompression */; };
+		A3647AA92C5BF70300902D0C /* DataCompression in Frameworks */ = {isa = PBXBuildFile; productRef = A3647AA82C5BF70300902D0C /* DataCompression */; };
+		A3647AAD2C5BF71100902D0C /* DataCompression in Frameworks */ = {isa = PBXBuildFile; productRef = A3647AAC2C5BF71100902D0C /* DataCompression */; };
+		A3647AB12C5BF72000902D0C /* DataCompression in Frameworks */ = {isa = PBXBuildFile; productRef = A3647AB02C5BF72000902D0C /* DataCompression */; };
 		A36EDFC82853883400D91B05 /* ObjcLDReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFC72853883400D91B05 /* ObjcLDReference.swift */; };
 		A36EDFC92853883400D91B05 /* ObjcLDReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFC72853883400D91B05 /* ObjcLDReference.swift */; };
 		A36EDFCA2853883400D91B05 /* ObjcLDReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = A36EDFC72853883400D91B05 /* ObjcLDReference.swift */; };
@@ -530,6 +534,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A30EF4F328C24AB600CD220E /* LDSwiftEventSource in Frameworks */,
+				A3647AB12C5BF72000902D0C /* DataCompression in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -538,6 +543,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A30EF4F128C24AAD00CD220E /* LDSwiftEventSource in Frameworks */,
+				A3647AAD2C5BF71100902D0C /* DataCompression in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -546,6 +552,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A30EF4ED28C24A9A00CD220E /* LDSwiftEventSource in Frameworks */,
+				A3647AA52C5BF6EF00902D0C /* DataCompression in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -565,6 +572,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A30EF4EF28C24AA400CD220E /* LDSwiftEventSource in Frameworks */,
+				A3647AA92C5BF70300902D0C /* DataCompression in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -981,11 +989,13 @@
 			buildRules = (
 			);
 			dependencies = (
+				A3647AAF2C5BF71800902D0C /* PBXTargetDependency */,
 				B445A6FB24C0D237000BAD6D /* PBXTargetDependency */,
 			);
 			name = LaunchDarkly_tvOS;
 			packageProductDependencies = (
 				A30EF4F228C24AB600CD220E /* LDSwiftEventSource */,
+				A3647AB02C5BF72000902D0C /* DataCompression */,
 			);
 			productName = Darkly_tvOS;
 			productReference = 831188382113A16900D77CB5 /* LaunchDarkly_tvOS.framework */;
@@ -995,7 +1005,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 831EF34220655D700001C643 /* Build configuration list for PBXNativeTarget "LaunchDarkly_macOS" */;
 			buildPhases = (
-				830C2AC2207416A5001D645D /* ShellScript */,
+				830C2AC2207416A5001D645D /* Run Script */,
 				831EF33620655D700001C643 /* Sources */,
 				831EF33720655D700001C643 /* Frameworks */,
 				831EF33820655D700001C643 /* Headers */,
@@ -1005,11 +1015,13 @@
 			buildRules = (
 			);
 			dependencies = (
+				A3647AAB2C5BF70C00902D0C /* PBXTargetDependency */,
 				B445A6F924C0D232000BAD6D /* PBXTargetDependency */,
 			);
 			name = LaunchDarkly_macOS;
 			packageProductDependencies = (
 				A30EF4F028C24AAD00CD220E /* LDSwiftEventSource */,
+				A3647AAC2C5BF71100902D0C /* DataCompression */,
 			);
 			productName = Darkly_macOS;
 			productReference = 831EF33B20655D700001C643 /* LaunchDarkly_macOS.framework */;
@@ -1029,11 +1041,13 @@
 			buildRules = (
 			);
 			dependencies = (
+				A3647AA32C5BF6E700902D0C /* PBXTargetDependency */,
 				B445A6E424C0D1E3000BAD6D /* PBXTargetDependency */,
 			);
 			name = LaunchDarkly_iOS;
 			packageProductDependencies = (
 				A30EF4EC28C24A9A00CD220E /* LDSwiftEventSource */,
+				A3647AA42C5BF6EF00902D0C /* DataCompression */,
 			);
 			productName = Darkly;
 			productReference = 8354EFC21F22491C00C05156 /* LaunchDarkly.framework */;
@@ -1078,11 +1092,13 @@
 			buildRules = (
 			);
 			dependencies = (
+				A3647AA72C5BF6FF00902D0C /* PBXTargetDependency */,
 				B445A6F324C0D21E000BAD6D /* PBXTargetDependency */,
 			);
 			name = LaunchDarkly_watchOS;
 			packageProductDependencies = (
 				A30EF4EE28C24AA400CD220E /* LDSwiftEventSource */,
+				A3647AA82C5BF70300902D0C /* DataCompression */,
 			);
 			productName = "Darkly-watchOS";
 			productReference = 83D9EC6B2062DBB7004D7FA6 /* LaunchDarkly_watchOS.framework */;
@@ -1100,17 +1116,17 @@
 				TargetAttributes = {
 					831188372113A16900D77CB5 = {
 						CreatedOnToolsVersion = 9.2;
-						LastSwiftMigration = 1020;
+						LastSwiftMigration = 1540;
 						ProvisioningStyle = Automatic;
 					};
 					831EF33A20655D700001C643 = {
 						CreatedOnToolsVersion = 9.2;
-						LastSwiftMigration = 1020;
+						LastSwiftMigration = 1540;
 						ProvisioningStyle = Automatic;
 					};
 					8354EFC11F22491C00C05156 = {
 						CreatedOnToolsVersion = 8.3.3;
-						LastSwiftMigration = 1020;
+						LastSwiftMigration = 1540;
 						ProvisioningStyle = Automatic;
 					};
 					8354EFCA1F22491C00C05156 = {
@@ -1120,7 +1136,7 @@
 					};
 					83D9EC6A2062DBB7004D7FA6 = {
 						CreatedOnToolsVersion = 9.2;
-						LastSwiftMigration = 1020;
+						LastSwiftMigration = 1540;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -1139,6 +1155,7 @@
 				B4903D9924BD61D000F087C4 /* XCRemoteSwiftPackageReference "Nimble" */,
 				B4903D9C24BD61EF00F087C4 /* XCRemoteSwiftPackageReference "Quick" */,
 				B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */,
+				A3647AA12C5BF6DD00902D0C /* XCRemoteSwiftPackageReference "DataCompression" */,
 			);
 			productRefGroup = 8354EFC31F22491C00C05156 /* Products */;
 			projectDirPath = "";
@@ -1210,7 +1227,7 @@
 			shellPath = /bin/sh;
 			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\nif which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
 		};
-		830C2AC2207416A5001D645D /* ShellScript */ = {
+		830C2AC2207416A5001D645D /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -1218,6 +1235,7 @@
 			);
 			inputPaths = (
 			);
+			name = "Run Script";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1624,6 +1642,22 @@
 			isa = PBXTargetDependency;
 			target = 8354EFC11F22491C00C05156 /* LaunchDarkly_iOS */;
 			targetProxy = 8354EFCD1F22491C00C05156 /* PBXContainerItemProxy */;
+		};
+		A3647AA32C5BF6E700902D0C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A3647AA22C5BF6E700902D0C /* DataCompression */;
+		};
+		A3647AA72C5BF6FF00902D0C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A3647AA62C5BF6FF00902D0C /* DataCompression */;
+		};
+		A3647AAB2C5BF70C00902D0C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A3647AAA2C5BF70C00902D0C /* DataCompression */;
+		};
+		A3647AAF2C5BF71800902D0C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = A3647AAE2C5BF71800902D0C /* DataCompression */;
 		};
 		B445A6E424C0D1E3000BAD6D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2051,6 +2085,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		A3647AA12C5BF6DD00902D0C /* XCRemoteSwiftPackageReference "DataCompression" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mw99/DataCompression";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.8.0;
+			};
+		};
 		B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/LaunchDarkly/swift-eventsource.git";
@@ -2105,6 +2147,46 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
 			productName = LDSwiftEventSource;
+		};
+		A3647AA22C5BF6E700902D0C /* DataCompression */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3647AA12C5BF6DD00902D0C /* XCRemoteSwiftPackageReference "DataCompression" */;
+			productName = DataCompression;
+		};
+		A3647AA42C5BF6EF00902D0C /* DataCompression */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3647AA12C5BF6DD00902D0C /* XCRemoteSwiftPackageReference "DataCompression" */;
+			productName = DataCompression;
+		};
+		A3647AA62C5BF6FF00902D0C /* DataCompression */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3647AA12C5BF6DD00902D0C /* XCRemoteSwiftPackageReference "DataCompression" */;
+			productName = DataCompression;
+		};
+		A3647AA82C5BF70300902D0C /* DataCompression */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3647AA12C5BF6DD00902D0C /* XCRemoteSwiftPackageReference "DataCompression" */;
+			productName = DataCompression;
+		};
+		A3647AAA2C5BF70C00902D0C /* DataCompression */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3647AA12C5BF6DD00902D0C /* XCRemoteSwiftPackageReference "DataCompression" */;
+			productName = DataCompression;
+		};
+		A3647AAC2C5BF71100902D0C /* DataCompression */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3647AA12C5BF6DD00902D0C /* XCRemoteSwiftPackageReference "DataCompression" */;
+			productName = DataCompression;
+		};
+		A3647AAE2C5BF71800902D0C /* DataCompression */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3647AA12C5BF6DD00902D0C /* XCRemoteSwiftPackageReference "DataCompression" */;
+			productName = DataCompression;
+		};
+		A3647AB02C5BF72000902D0C /* DataCompression */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3647AA12C5BF6DD00902D0C /* XCRemoteSwiftPackageReference "DataCompression" */;
+			productName = DataCompression;
 		};
 		B445A6E324C0D1E3000BAD6D /* LDSwiftEventSource */ = {
 			isa = XCSwiftPackageProductDependency;

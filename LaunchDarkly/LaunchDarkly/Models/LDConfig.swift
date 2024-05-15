@@ -252,6 +252,9 @@ public struct LDConfig {
 
         /// The default logger for the SDK. Can be overridden to provide customization.
         static let logger: OSLog = OSLog(subsystem: "com.launchdarkly", category: "ios-client-sdk")
+
+        /// The default behavior for event payload compression.
+        static let enableCompression: Bool = false
     }
 
     /// Constants relevant to setting up an `LDConfig`
@@ -407,6 +410,11 @@ public struct LDConfig {
 
     /// Additional headers that should be added to all HTTP requests from SDK components to LaunchDarkly services
     public var additionalHeaders: [String: String] = [:]
+
+    /// Should the event payload sent to LaunchDarkly use gzip compression. By default this is false to prevent backward breaking compatibility issues with older versions of the relay proxy.
+    ///
+    /// Customers not using the relay proxy are strongly encouraged to enable this feature to reduce egress bandwidth cost.
+    public var enableCompression: Bool = Defaults.enableCompression
 
     /* TODO: find a way to make delegates equatable */
     /// a closure to allow dynamic changes of headers on connect & reconnect

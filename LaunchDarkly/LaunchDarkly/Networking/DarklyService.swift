@@ -1,6 +1,7 @@
 import Foundation
 import LDSwiftEventSource
 import OSLog
+import DataCompression
 
 typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Error?, etag: String?)
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void
@@ -204,9 +205,19 @@ final class DarklyService: DarklyServiceProvider {
     }
 
     private func doPublish(url: URL, headers: [String: String], body: Data, completion: ServiceCompletionHandler?) {
+        var headers = headers
+
+        var httpBody = body
+        if config.enableCompression {
+            if let compressed = body.gzip() {
+                httpBody = compressed
+                headers.updateValue("gzip", forKey: "Content-Encoding")
+            }
+        }
+
         var request = URLRequest(url: url, ldHeaders: headers, ldConfig: config)
         request.httpMethod = URLRequest.HTTPMethods.post
-        request.httpBody = body
+        request.httpBody = httpBody
 
         session.dataTask(with: request) { data, response, error in
             completion?((data: data, urlResponse: response, error: error, etag: nil))

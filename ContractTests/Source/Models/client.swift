@@ -36,6 +36,7 @@ struct EventParameters: Content {
     var allAttributesPrivate: Bool?
     var globalPrivateAttributes: [String]?
     var flushIntervalMs: Double?
+    var enableGzip: Bool?
 }
 
 struct TagParameters: Content {
