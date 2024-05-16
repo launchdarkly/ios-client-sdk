@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.7.1](https://github.com/launchdarkly/ios-client-sdk/compare/9.7.0...9.7.1) (2024-05-16)
+
+
+### Bug Fixes
+
+* adds multithread protections for LDClient.start(...) ([#382](https://github.com/launchdarkly/ios-client-sdk/issues/382)) ([8fd47e4](https://github.com/launchdarkly/ios-client-sdk/commit/8fd47e49290c4fe640b52a84c64b4ef6c7d28afb))
+
 ## [9.7.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.6.2...9.7.0) (2024-05-02)
 
 
