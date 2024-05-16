@@ -41,6 +41,7 @@ public class LDClient {
     // MARK: - State Controls and Indicators
 
     private static var instances: [String: LDClient]?
+    private static let instancesQueue = DispatchQueue(label: "com.launchdarkly.LDClient.instancesQueue")
 
     // If the SDK is provided a timeout value that exceeds this value, a warning will be logged.
     private static let longTimeoutInterval: TimeInterval = 15
@@ -108,9 +109,11 @@ public class LDClient {
      */
     public func setOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
         let dispatch = DispatchGroup()
-        LDClient.instances?.forEach { _, instance in
-            dispatch.enter()
-            instance.internalSetOnline(goOnline, completion: dispatch.leave)
+        LDClient.instancesQueue.sync(flags: .barrier) {
+            LDClient.instances?.forEach { _, instance in
+                dispatch.enter()
+                instance.internalSetOnline(goOnline, completion: dispatch.leave)
+            }
         }
         if let completion = completion {
             dispatch.notify(queue: DispatchQueue.global(), execute: completion)
@@ -242,8 +245,10 @@ public class LDClient {
      There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.
     */
     public func close() {
-        LDClient.instances?.forEach { $1.internalClose() }
-        LDClient.instances = nil
+        LDClient.instancesQueue.sync(flags: .barrier) {
+            LDClient.instances?.forEach { $1.internalClose() }
+            LDClient.instances = nil
+        }
     }
 
     private func internalClose() {
@@ -319,9 +324,11 @@ public class LDClient {
         let work: TaskHandler = { taskCompletion in
             let dispatch = DispatchGroup()
 
-            LDClient.instances?.forEach { _, instance in
-                dispatch.enter()
-                instance.internalIdentify(newContext: context, completion: dispatch.leave)
+            LDClient.instancesQueue.sync(flags: .barrier) {
+                LDClient.instances?.forEach { _, instance in
+                    dispatch.enter()
+                    instance.internalIdentify(newContext: context, completion: dispatch.leave)
+                }
             }
 
             dispatch.notify(queue: DispatchQueue.global(), execute: taskCompletion)
@@ -679,7 +686,9 @@ public class LDClient {
      sent, it only triggers a background task to send events immediately.
      */
     public func flush() {
-        LDClient.instances?.forEach { $1.internalFlush() }
+        LDClient.instancesQueue.sync(flags: .barrier) {
+            LDClient.instances?.forEach { $1.internalFlush() }
+        }
     }
 
     private func internalFlush() {
@@ -719,21 +728,34 @@ public class LDClient {
     }
 
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
-        os_log("%s LDClient starting", log: config.logger, type: .debug, typeName(and: #function))
+        
         if serviceFactory != nil {
             get()?.close()
         }
-        if instances != nil {
-            os_log("%s LDClient.start() was called more than once!", log: config.logger, type: .debug, typeName(and: #function))
+        
+        var shouldCreateInstances = false;
+        instancesQueue.sync(flags: .barrier) {
+            if instances != nil {
+                os_log("%s LDClient.start() was called more than once!", log: config.logger, type: .debug, typeName(and: #function))
+                shouldCreateInstances = false
+            } else {
+                // initializing instances to empty list acts as a initialization in progress flag to avoid other threads
+                // entering this function again
+                LDClient.instances = [:]
+                shouldCreateInstances = true
+            }
+        }
+        
+        if !shouldCreateInstances {
             return
         }
+
+        os_log("%s LDClient starting", log: config.logger, type: .debug, typeName(and: #function))
 
         let serviceFactory = serviceFactory ?? ClientServiceFactory(logger: config.logger)
         var keys = [config.mobileKey]
         keys.append(contentsOf: config.getSecondaryMobileKeys().values)
         serviceFactory.makeCacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: keys, maxCachedContexts: config.maxCachedContexts)
-
-        LDClient.instances = [:]
         var mobileKeys = config.getSecondaryMobileKeys()
         var internalCount = 0
         let completionCheck = {
@@ -743,13 +765,17 @@ public class LDClient {
                 completion?()
             }
         }
+
         mobileKeys[LDConfig.Constants.primaryEnvironmentName] = config.mobileKey
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
             let instance = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context, completion: completionCheck)
-            LDClient.instances?[name] = instance
+            instancesQueue.sync(flags: .barrier) {
+                LDClient.instances?[name] = instance
+            }
         }
+        
         completionCheck()
     }
 
@@ -800,10 +826,12 @@ public class LDClient {
      - returns: The requested LDClient instance.
      */
     public static func get(environment: String = LDConfig.Constants.primaryEnvironmentName) -> LDClient? {
-        guard let internalInstances = LDClient.instances else {
-            return nil
+        LDClient.instancesQueue.sync(flags: .barrier) {
+            guard let internalInstances = LDClient.instances else {
+                return nil
+            }
+            return internalInstances[environment]
         }
-        return internalInstances[environment]
     }
 
     // MARK: - Private
