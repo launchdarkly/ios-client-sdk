@@ -1,0 +1,2329 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>LDClient Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Class/LDClient" class="dashAnchor"></a>
+    <a title="LDClient Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">LaunchDarkly 9.7.1 Docs</a> (92% documented)</p>
+        <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
+        <div class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </div>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">LaunchDarkly</a>
+        <img id="carat" src="../img/carat.png" alt=""/>
+        <a href="../Core%20Classes.html">Core Classes</a>
+        <img id="carat" src="../img/carat.png" alt=""/>
+        LDClient Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Core%20Classes.html">Core Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/LDClient.html">LDClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDConfig.html">LDConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDConfig/Constants.html">– Constants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDConfig/Minima.html">– Minima</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDContext.html">LDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDContextBuilder.html">LDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/Reference.html">Reference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/LDValue.html">LDValue</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Flag%20Change%20Observers.html">Flag Change Observers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDChangedFlag.html">LDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly19LDFlagChangeHandlera">LDFlagChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly29LDFlagCollectionChangeHandlera">LDFlagCollectionChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly23LDFlagsUnchangedHandlera">LDFlagsUnchangedHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Connection%20Information.html">Connection Information</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation.html">ConnectionInformation</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation/ConnectionMode.html">– ConnectionMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation/LastConnectionFailureReason.html">– LastConnectionFailureReason</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation.html#/s:12LaunchDarkly21ConnectionInformationV9ConstantsV">– Constants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Connection%20Information.html#/s:12LaunchDarkly30LDConnectionModeChangedHandlera">LDConnectionModeChangedHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Types.html">Other Types</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Objective-C%20Core%20Interfaces.html">Objective-C Core Interfaces</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDClient.html">ObjcLDClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDReference.html">ObjcLDReference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContext.html">ObjcLDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ObjcLDValueType.html">ObjcLDValueType</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Objective-C%20EvaluationDetail%20Wrappers.html">Objective-C EvaluationDetail Wrappers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDBoolEvaluationDetail.html">ObjcLDBoolEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDIntegerEvaluationDetail.html">ObjcLDIntegerEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDDoubleEvaluationDetail.html">ObjcLDDoubleEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Guides.html">Other Guides</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../changelog.html">CHANGELOG</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../contributing.html">CONTRIBUTING</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../licensetxt.html">LICENSE.txt</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ContextBuilderResult.html">ContextBuilderResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/EvaluationSeriesContext.html">EvaluationSeriesContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Metadata.html">Metadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDApplicationInfo.html">ObjcLDApplicationInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContextBuilder.html">ObjcLDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDMultiContextBuilder.html">ObjcLDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/AutoEnvAttributes.html">AutoEnvAttributes</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ContextBuilderError.html">ContextBuilderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/IdentifyResult.html">IdentifyResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Kind.html">Kind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ReferenceError.html">ReferenceError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Extensions.html">Other Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Bool.html">Bool</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Double.html">Double</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Int.html">Int</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Protocols.html">Other Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/Hook.html">Hook</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/LDValueConvertible.html">LDValueConvertible</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Structs.html">Other Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/ApplicationInfo.html">ApplicationInfo</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Typealiases.html">Other Type Aliases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Other%20Typealiases.html#/s:12LaunchDarkly20EvaluationSeriesDataa">EvaluationSeriesData</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>LDClient</h1>
+              <div class="declaration">
+                <div class="language">
+                  
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">LDClient</span></code></pre>
+
+                </div>
+              </div>
+            <p>The LDClient is the heart of the SDK, providing client apps running iOS, watchOS, macOS, or tvOS access to LaunchDarkly services. This singleton provides the ability to set a configuration (LDConfig) that controls how the LDClient talks to LaunchDarkly servers, and a contexts (LDContext) that provides finer control on the feature flag values delivered to LDClient. Once the LDClient has started, it connects to LaunchDarkly&rsquo;s servers to get the feature flag values you set in the Dashboard.</p>
+<h2 id='usage' class='heading'>Usage</h2>
+<h3 id='startup' class='heading'>Startup</h3>
+
+<ol>
+<li>To customize, configure a <code><a href="../Structs/LDConfig.html">LDConfig</a></code> and <code><a href="../Structs/LDContext.html">LDContext</a></code>. The <code>config</code> is required, the <code>context</code> is optional. Both give you additional control over the feature flags delivered to the LDClient. See <code><a href="../Structs/LDConfig.html">LDConfig</a></code> &amp; <code><a href="../Structs/LDContext.html">LDContext</a></code> for more details.
+
+<ul>
+<li>The mobileKey set into the <code><a href="../Structs/LDConfig.html">LDConfig</a></code> comes from your LaunchDarkly Account settings. If you have multiple projects be sure to choose the correct Mobile key.</li>
+</ul></li>
+<li>Call <code>LDClient.start(config: context: completion:)</code>
+
+<ul>
+<li>If you do not pass in a LDContext, LDClient will create a default for you.</li>
+<li>The optional completion closure allows the LDClient to notify your app when it received flag values.</li>
+</ul></li>
+<li>Because LDClient instances are stored statically, you do not have to keep a reference to it in your code. Get the primary instances with <code>LDClient.get()</code></li>
+</ol>
+<h3 id='getting-feature-flags' class='heading'>Getting Feature Flags</h3>
+
+<p>Once the LDClient has started, it makes your feature flags available using the <code>variation</code> and <code>variationDetail</code> methods. A <code>variation</code> is a specific flag value. For example a boolean feature flag has 2 variations, <code>true</code> and <code>false</code>. You can create feature flags with more than 2 variations using other feature flag types.</p>
+<pre class="highlight swift"><code> <span class="k">let</span> <span class="nv">boolFlag</span> <span class="o">=</span> <span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()?</span><span class="o">.</span><span class="nf">boolVariation</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"my-bool-flag"</span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kc">false</span><span class="p">)</span>
+</code></pre>
+
+<p>If you need to know more information about why a given value is returned, use <code>variationDetail</code>.</p>
+
+<p>See <code>boolVariation(forKey: defaultValue:)</code> or <code>boolVariationDetail(forKey: defaultValue:)</code> for details</p>
+<h3 id='observing-feature-flags' class='heading'>Observing Feature Flags</h3>
+
+<p>You might need to know when a feature flag value changes. This is not required, you can check the flag&rsquo;s value when you need it.</p>
+
+<p>If you want to know when a feature flag value changes, you can check the flag&rsquo;s value. You can also use one of several <code>observe</code> methods to have the LDClient notify you when a change occurs. There are several options&ndash;you can set up notificiations based on when a specific flag changes, when any flag in a collection changes, or when a flag doesn&rsquo;t change. The flag change listener may be invoked multiple times per invocation of LDClient.identify as the SDK fetches up to date flag data from multiple sources (e.g. local cache, cloud services). In certain error cases, the SDK may not be able to retrieve flag data during an identify (e.g. no network connectivity). In those cases, the flag change listener may not be invoked.</p>
+<pre class="highlight swift"><code> <span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()?</span><span class="o">.</span><span class="nf">observe</span><span class="p">(</span><span class="s">"flag-key"</span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">,</span> <span class="nv">observer</span><span class="p">:</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="p">(</span><span class="n">changedFlag</span><span class="p">)</span> <span class="k">in</span>
+    <span class="k">self</span><span class="p">?</span><span class="o">.</span><span class="nf">updateFlag</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="s">"flag-key"</span><span class="p">,</span> <span class="nv">changedFlag</span><span class="p">:</span> <span class="n">changedFlag</span><span class="p">)</span>
+ <span class="p">}</span>
+</code></pre>
+
+<p>The <code>changedFlag</code> passed in to the closure contains the old and new value of the flag.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/State%20Controls%20and%20Indicators"></a>
+                <a name="//apple_ref/swift/Section/State Controls and Indicators" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/State%20Controls%20and%20Indicators"></a>
+                  <h3 class="section-name"><span>State Controls and Indicators</span>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC8isOnlineSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isOnline" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC8isOnlineSbvp">isOnline</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reports the online/offline state of the LDClient.</p>
+
+<p>When online, the SDK communicates with LaunchDarkly servers for feature flag values and event reporting.</p>
+
+<p>When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.</p>
+
+<p>Use <code>setOnline(_: completion:)</code> to change the online/offline state.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">private(set)</span> <span class="k">var</span> <span class="nv">isOnline</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC13isInitializedSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isInitialized" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC13isInitializedSbvp">isInitialized</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reports the initialization state of the LDClient.</p>
+
+<p>When true, the SDK has either communicated with LaunchDarkly servers for feature flag values or the SDK has been set offline.</p>
+
+<p>When false, the SDK has not been able to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers but flags might not exist or be stale.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isInitialized</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC9setOnline_10completionySb_yycSgtF"></a>
+                    <a name="//apple_ref/swift/Method/setOnline(_:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC9setOnline_10completionySb_yycSgtF">setOnline(_:<wbr>completion:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Set the LDClient online/offline.</p>
+
+<p>When online, the SDK communicates with LaunchDarkly servers for feature flag values and event reporting.</p>
+
+<p>When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.</p>
+
+<p>The SDK protects itself from multiple rapid calls to setOnline(true) by enforcing an increasing delay (called <em>throttling</em>) each time setOnline(true) is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the <code>setOnline(true)</code> will proceed, assuming that the client app has not called <code>setOnline(false)</code> during the delay. Therefore a call to setOnline(true) may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid setOnline(true) calls. Calls to setOnline(false) are not throttled. Note that calls to <code>start(config: context: completion:)</code>, and setting the <code>config</code> or <code>context</code> can also call <code>setOnline(true)</code> under certain conditions. After the delay, the SDK resets and the client app can make a susequent call to setOnline(true) without being throttled.</p>
+
+<p>Client apps can set a completion closure called when the setOnline call completes. For unthrottled <code>setOnline(true)</code> and all <code>setOnline(false)</code> calls, the SDK will call the closure immediately on completion of this method. For throttled <code>setOnline(true)</code> calls, the SDK will call the closure after the throttling delay at the completion of the setOnline method.</p>
+
+<p>The SDK will not go online if the client has not been started, or the <code>mobileKey</code> is empty. For macOS, the SDK will not go online in the background unless <code>enableBackgroundUpdates</code> is true.</p>
+
+<p>Use <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC8isOnlineSbvp">isOnline</a></code> to get the online/offline state.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">setOnline</span><span class="p">(</span><span class="n">_</span> <span class="nv">goOnline</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>goOnline</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Desired online/offline mode for the LDClient</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Completion closure called when setOnline completes (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC24getConnectionInformationAA0eF0VyF"></a>
+                    <a name="//apple_ref/swift/Method/getConnectionInformation()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC24getConnectionInformationAA0eF0VyF">getConnectionInformation()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns an object containing information about successful and/or failed polling or streaming connections to LaunchDarkly</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getConnectionInformation</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Structs/ConnectionInformation.html">ConnectionInformation</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC5closeyyF"></a>
+                    <a name="//apple_ref/swift/Method/close()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5closeyyF">close()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning default values.</p>
+
+<p>There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">close</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC8identify7context10completionyAA9LDContextV_yycSgtF"></a>
+                    <a name="//apple_ref/swift/Method/identify(context:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC8identify7context10completionyAA9LDContextV_yycSgtF">identify(context:<wbr>completion:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The LDContext set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the context. See <code><a href="../Structs/LDContext.html">LDContext</a></code> for details about what information can be retained.</p>
+
+<p>Normally, the client app should create and set the LDContext and pass that into <code>start(config: context: completion:)</code>.</p>
+
+<p>The client app can change the active <code>context</code> by calling identify with a new or updated LDContext. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
+
+<p>When a new context is set, the LDClient goes offline and sets the new context. If the client was online when the new context was set, it goes online again, subject to a throttling delay if in force (see <code>setOnline(_: completion:)</code> for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@available(*, deprecated, message: "Use LDClient.identify(context: completion:﹚ with non-optional completion parameter")</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">identify</span><span class="p">(</span><span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDContext.html">LDContext</a></span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDContext set with the desired context.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Closure called when the embedded <code>setOnlineIdentify</code> call completes, subject to throttling delays. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC8identify7context10completionyAA9LDContextV_yAA14IdentifyResultOctF"></a>
+                    <a name="//apple_ref/swift/Method/identify(context:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC8identify7context10completionyAA9LDContextV_yAA14IdentifyResultOctF">identify(context:<wbr>completion:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The LDContext set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the context. See <code><a href="../Structs/LDContext.html">LDContext</a></code> for details about what information can be retained.</p>
+
+<p>Normally, the client app should create and set the LDContext and pass that into <code>start(config: context: completion:)</code>.</p>
+
+<p>The client app can change the active <code>context</code> by calling identify with a new or updated LDContext. Client apps should follow <a href="apple.com/legal/privacy">Apple&rsquo;s Privacy Policy</a> when collecting user information.</p>
+
+<p>When a new context is set, the LDClient goes offline and sets the new context. If the client was online when the new context was set, it goes online again, subject to a throttling delay if in force (see <code>setOnline(_: completion:)</code> for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready.</p>
+
+<p>While only a single identify request can be active at a time, consumers of this SDK can call this method multiple times. To prevent unnecessary network traffic, these requests are placed
+into a sheddable queue. Identify requests will be shed if 1) an existing identify request is in flight, and 2) a third identify has been requested which can be replace the one being shed.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">identify</span><span class="p">(</span><span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDContext.html">LDContext</a></span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="n">_</span> <span class="nv">result</span><span class="p">:</span> <span class="kt"><a href="../Enums/IdentifyResult.html">IdentifyResult</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDContext set with the desired context.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Closure called when the embedded <code>setOnlineIdentify</code> call completes, subject to throttling delays.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC8identify7context7timeout10completionyAA9LDContextV_SdyAA14IdentifyResultOctF"></a>
+                    <a name="//apple_ref/swift/Method/identify(context:timeout:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC8identify7context7timeout10completionyAA9LDContextV_SdyAA14IdentifyResultOctF">identify(context:<wbr>timeout:<wbr>completion:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the LDContext into the LDClient inline with the behavior detailed on <code>LDClient.identify(context: completion:)</code>. Additionally,
+this method will ensure the <code>completion</code> parameter will be called within the specified time interval.</p>
+
+<p>Note that the <code>completion</code> method being invoked does not mean that the identify request has been cancelled. The identify request will
+continue attempting to complete as it would with <code>LDClient.identify(context: completion:)</code>. Subsequent identify requests queued behind
+a timed out request will remain blocked (or shed) until the in flight request completes.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">identify</span><span class="p">(</span><span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDContext.html">LDContext</a></span><span class="p">,</span> <span class="nv">timeout</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">((</span><span class="n">_</span> <span class="nv">result</span><span class="p">:</span> <span class="kt"><a href="../Enums/IdentifyResult.html">IdentifyResult</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">))</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDContext set with the desired context.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>timeout</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The upper time limit before the <code>completion</code> callback will be invoked.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Closure called when the embedded <code>setOnlineIdentify</code> call completes, subject to throttling delays.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC8allFlagsSDySSAA7LDValueOGSgvp"></a>
+                    <a name="//apple_ref/swift/Property/allFlags" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC8allFlagsSDySSAA7LDValueOGSgvp">allFlags</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns a dictionary with the flag keys and their values. If the <code>LDClient</code> is not started, returns <code>nil</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">allFlags</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span> <span class="p">:</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span><span class="p">]?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Observing%20Updates"></a>
+                <a name="//apple_ref/swift/Section/Observing Updates" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Observing%20Updates"></a>
+                  <h3 class="section-name"><span>Observing Updates</span>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC7observe3key5owner7handlerySS_yXlyAA13LDChangedFlagVctF"></a>
+                    <a name="//apple_ref/swift/Method/observe(key:owner:handler:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC7observe3key5owner7handlerySS_yXlyAA13LDChangedFlagVctF">observe(key:<wbr>owner:<wbr>handler:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets a handler for the specified flag key executed on the specified owner. If the flag&rsquo;s value changes, executes the handler, passing in the <code>changedFlag</code> containing the old and new flag values. See <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> for details.</p>
+
+<p>The SDK retains only weak references to the owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObserving5owneryyXl_tF">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()?</span><span class="o">.</span><span class="nf">observe</span><span class="p">(</span><span class="s">"flag-key"</span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="p">(</span><span class="n">changedFlag</span><span class="p">)</span> <span class="k">in</span>
+   <span class="k">if</span> <span class="kd">let</span> <span class="o">.</span><span class="nf">bool</span><span class="p">(</span><span class="n">newValue</span><span class="p">)</span> <span class="o">=</span> <span class="n">changedFlag</span><span class="o">.</span><span class="n">newValue</span> <span class="p">{</span>
+       <span class="c1">// do something with the newValue</span>
+   <span class="p">}</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observe</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly19LDFlagChangeHandlera">LDFlagChangeHandler</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagKey for the flag to observe.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The closure the SDK will execute when the feature flag changes.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC7observe4keys5owner7handlerySaySSG_yXlySDySSAA13LDChangedFlagVGctF"></a>
+                    <a name="//apple_ref/swift/Method/observe(keys:owner:handler:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC7observe4keys5owner7handlerySaySSG_yXlySDySSAA13LDChangedFlagVGctF">observe(keys:<wbr>owner:<wbr>handler:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets a handler for the specified flag keys executed on the specified owner. If any observed flag&rsquo;s value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values. See <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> for details.</p>
+
+<p>The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObserving5owneryyXl_tF">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()?</span><span class="o">.</span><span class="nf">observe</span><span class="p">(</span><span class="n">flagKeys</span><span class="p">,</span> <span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="p">(</span><span class="n">changedFlags</span><span class="p">)</span> <span class="k">in</span>     <span class="c1">// changedFlags is a [LDFlagKey: LDChangedFlag]</span>
+   <span class="c1">//There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.</span>
+   <span class="k">if</span> <span class="k">let</span> <span class="nv">someChangedFlag</span> <span class="o">=</span> <span class="n">changedFlags</span><span class="p">[</span><span class="s">"some-flag-key"</span><span class="p">]</span> <span class="p">{</span>    <span class="c1">// someChangedFlag is a LDChangedFlag</span>
+       <span class="c1">//do something with someChangedFlag</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observe</span><span class="p">(</span><span class="nv">keys</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">],</span> <span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly29LDFlagCollectionChangeHandlera">LDFlagCollectionChangeHandler</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>keys</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>An array of LDFlagKeys for the flags to observe.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC10observeAll5owner7handleryyXl_ySDySSAA13LDChangedFlagVGctF"></a>
+                    <a name="//apple_ref/swift/Method/observeAll(owner:handler:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC10observeAll5owner7handleryyXl_ySDySSAA13LDChangedFlagVGctF">observeAll(owner:<wbr>handler:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets a handler for all flag keys executed on the specified owner. If any flag&rsquo;s value changes, executes the handler 1 time, passing in a dictionary of [LDFlagKey: LDChangedFlag] containing the old and new flag values. See <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> for details.</p>
+
+<p>The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Structs/LDChangedFlag.html">LDChangedFlag</a></code> and <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObserving5owneryyXl_tF">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()?</span><span class="o">.</span><span class="nf">observeAll</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="p">(</span><span class="n">changedFlags</span><span class="p">)</span> <span class="k">in</span>     <span class="c1">// changedFlags is a [LDFlagKey: LDChangedFlag]</span>
+   <span class="c1">//There will be an LDChangedFlag entry in changedFlags for each changed flag. The closure will only be called once regardless of how many flags changed.</span>
+   <span class="k">if</span> <span class="k">let</span> <span class="nv">someChangedFlag</span> <span class="o">=</span> <span class="n">changedFlags</span><span class="p">[</span><span class="s">"some-flag-key"</span><span class="p">]</span> <span class="p">{</span>    <span class="c1">// someChangedFlag is a LDChangedFlag</span>
+       <span class="c1">//do something with someChangedFlag</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeAll</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly29LDFlagCollectionChangeHandlera">LDFlagCollectionChangeHandler</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC21observeFlagsUnchanged5owner7handleryyXl_yyctF"></a>
+                    <a name="//apple_ref/swift/Method/observeFlagsUnchanged(owner:handler:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC21observeFlagsUnchanged5owner7handleryyXl_yyctF">observeFlagsUnchanged(owner:<wbr>handler:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets a handler executed when a flag update leaves the flags unchanged from their previous values.</p>
+
+<p>This handler can only ever be called when the LDClient is polling.</p>
+
+<p>The SDK retains only weak references to owner, which allows the client app to freely destroy observer owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObserving5owneryyXl_tF">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()?</span><span class="o">.</span><span class="nf">observeFlagsUnchanged</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="k">in</span>
+    <span class="c1">// Do something after an update was received that did not update any flag values.</span>
+    <span class="c1">//The closure will be called once on the main thread after the update.</span>
+<span class="p">}</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeFlagsUnchanged</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly23LDFlagsUnchangedHandlera">LDFlagsUnchangedHandler</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagsUnchangedHandler the SDK will execute 1 time when a flag request completes with no flags changed.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC28observeCurrentConnectionMode5owner7handleryyXl_yAA0F11InformationV0fG0OctF"></a>
+                    <a name="//apple_ref/swift/Method/observeCurrentConnectionMode(owner:handler:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC28observeCurrentConnectionMode5owner7handleryyXl_yAA0F11InformationV0fG0OctF">observeCurrentConnectionMode(owner:<wbr>handler:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets a handler executed when ConnectionInformation.currentConnectionMode changes.</p>
+
+<p>The SDK retains only weak references to owner, which allows the client app to freely destroy change owners without issues. Client apps should use a capture list specifying <code>[weak self]</code> inside handlers to avoid retain cycles causing a memory leak.</p>
+
+<p>The SDK executes handlers on the main thread.</p>
+
+<p>SeeAlso: <code><a href="../Classes/LDClient.html#/s:12LaunchDarkly8LDClientC13stopObserving5owneryyXl_tF">stopObserving(owner:)</a></code></p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="kt">LDClient</span><span class="o">.</span><span class="nf">get</span><span class="p">()?</span><span class="o">.</span><span class="nf">observeCurrentConnectionMode</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="k">self</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="k">in</span>
+   <span class="c1">//do something after ConnectionMode was updated.</span>
+<span class="p">}</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">observeCurrentConnectionMode</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">,</span> <span class="nv">handler</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="kt"><a href="../Connection%20Information.html#/s:12LaunchDarkly30LDConnectionModeChangedHandlera">LDConnectionModeChangedHandler</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>handler</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDConnectionModeChangedHandler the SDK will execute 1 time when ConnectionInformation.currentConnectionMode is changed.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC13stopObserving5owneryyXl_tF"></a>
+                    <a name="//apple_ref/swift/Method/stopObserving(owner:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC13stopObserving5owneryyXl_tF">stopObserving(owner:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Removes all observers for the given owner, including the flagsUnchangedObserver</p>
+
+<p>The client app does not have to call this method. If the client app deinits a LDFlagChangeOwner, the SDK will automatically remove its handlers without ever calling them again.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">stopObserving</span><span class="p">(</span><span class="nv">owner</span><span class="p">:</span> <span class="kt"><a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>owner</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDFlagChangeOwner owning the handlers to remove, whether a flag change handler or flags unchanged handler.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Events"></a>
+                <a name="//apple_ref/swift/Section/Events" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Events"></a>
+                  <h3 class="section-name"><span>Events</span>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC5track3key4data11metricValueySS_AA7LDValueOSgSdSgtF"></a>
+                    <a name="//apple_ref/swift/Method/track(key:data:metricValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5track3key4data11metricValueySS_AA7LDValueOSgSdSgtF">track(key:<wbr>data:<wbr>metricValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Adds a custom event to the LDClient event store. A client app can set a tracking event to allow client customized data analysis. Once an app has called <code>track</code>, the app cannot remove the event from the event store.</p>
+
+<p>LDClient periodically transmits events to LaunchDarkly based on the frequency set in <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV18eventFlushIntervalSdvp">LDConfig.eventFlushInterval</a></code>. The LDClient must be started and online. Ths SDK stores events tracked while the LDClient is offline, but started.</p>
+
+<p>Once the SDK&rsquo;s event store is full, the SDK discards events until they can be reported to LaunchDarkly. Configure the size of the event store using <code>eventCapacity</code> on the <code>config</code>. See <code><a href="../Structs/LDConfig.html">LDConfig</a></code> for details.</p>
+<h3 id='usage' class='heading'>Usage</h3>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">appEventData</span><span class="p">:</span> <span class="kt">LDValue</span> <span class="o">=</span> <span class="p">[</span><span class="s">"some-custom-key: "</span><span class="n">some</span><span class="o">-</span><span class="n">custom</span><span class="o">-</span><span class="n">value</span><span class="s">", "</span><span class="n">another</span><span class="o">-</span><span class="n">custom</span><span class="o">-</span><span class="n">key</span><span class="s">": 7]
+LDClient.get()?.track(key: "</span><span class="n">app</span><span class="o">-</span><span class="n">event</span><span class="o">-</span><span class="n">key</span><span class="s">", data: appEventData)
+</span></code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">track</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">data</span><span class="p">:</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">metricValue</span><span class="p">:</span> <span class="kt">Double</span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The key for the event.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>data</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The data for the event. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>metricValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field will also be returned as part of the custom event for Data Export. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC5flushyyF"></a>
+                    <a name="//apple_ref/swift/Method/flush()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5flushyyF">flush()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Tells the SDK to immediately send any currently queued events to LaunchDarkly.</p>
+
+<p>There should not normally be a need to call this function. While online, the LDClient automatically reports events
+on an interval defined by <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV18eventFlushIntervalSdvp">LDConfig.eventFlushInterval</a></code>. Note that this function does not block until events are
+sent, it only triggers a background task to send events immediately.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">flush</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Initializing%20and%20Accessing"></a>
+                <a name="//apple_ref/swift/Section/Initializing and Accessing" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Initializing%20and%20Accessing"></a>
+                  <h3 class="section-name"><span>Initializing and Accessing</span>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC5start6config7context10completionyAA8LDConfigV_AA9LDContextVSgyycSgtFZ"></a>
+                    <a name="//apple_ref/swift/Method/start(config:context:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5start6config7context10completionyAA8LDConfigV_AA9LDContextVSgyycSgtFZ">start(config:<wbr>context:<wbr>completion:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Starts the LDClient using the passed in <code>config</code> &amp; <code>context</code>. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
+Starting the LDClient means setting the <code>config</code> &amp; <code>context</code>, setting the client online if <code>config.startOnline</code> is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call <code>start</code>, no methods will work.
+If the <code>start</code> call omits the <code>context</code>, the LDClient uses a default <code><a href="../Structs/LDContext.html">LDContext</a></code>.
+If the<code>start</code> call includes the optional <code>completion</code> closure, LDClient calls the <code>completion</code> closure when <code>setOnline(_: completion:)</code> embedded in the <code>init</code> method completes. This method listens for flag updates so the completion will only return once an update has occurred. The <code>start</code> call is subject to throttling delays, therefore the <code>completion</code> closure call may be delayed.
+Subsequent calls to this method cause the LDClient to return. Normally there should only be one call to start. To change <code>context</code>, use <code>identify</code>.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@available(*, deprecated, message: "Use LDClient.start(config: context: startWithSeconds: completion:﹚ to initialize the SDK with a defined timeout")</span>
+<span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">config</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDConfig.html">LDConfig</a></span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDContext.html">LDContext</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">(()</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>configuration</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDConfig that contains the desired configuration. (Required)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDContext set with the desired context. If omitted, LDClient sets a default context. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Closure called when the embedded <code>setOnline</code> call completes. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC5start6config7context0D11WaitSeconds10completionyAA8LDConfigV_AA9LDContextVSgSdySbcSgtFZ"></a>
+                    <a name="//apple_ref/swift/Method/start(config:context:startWaitSeconds:completion:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC5start6config7context0D11WaitSeconds10completionyAA8LDConfigV_AA9LDContextVSgSdySbcSgtFZ">start(config:<wbr>context:<wbr>startWaitSeconds:<wbr>completion:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>See <a href="x-source-tag://start">start</a> for more information on starting the SDK.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">(</span><span class="nv">config</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDConfig.html">LDConfig</a></span><span class="p">,</span> <span class="nv">context</span><span class="p">:</span> <span class="kt"><a href="../Structs/LDContext.html">LDContext</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">,</span> <span class="nv">startWaitSeconds</span><span class="p">:</span> <span class="kt">TimeInterval</span><span class="p">,</span> <span class="nv">completion</span><span class="p">:</span> <span class="p">((</span><span class="n">_</span> <span class="nv">timedOut</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>configuration</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDConfig that contains the desired configuration. (Required)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>context</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The LDContext set with the desired context. If omitted, LDClient sets a default context. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>startWaitSeconds</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A TimeInterval that determines when the completion will return if no flags have been returned from the network. If you use a large TimeInterval and wait for the timeout, then any network delays will cause your application to wait a long time before continuing execution.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>completion</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Closure called when the embedded <code>setOnline</code> call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC3get11environmentACSgSS_tFZ"></a>
+                    <a name="//apple_ref/swift/Method/get(environment:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC3get11environmentACSgSS_tFZ">get(environment:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the LDClient instance for a given environment.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">get</span><span class="p">(</span><span class="nv">environment</span><span class="p">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="kt"><a href="../Structs/LDConfig.html">LDConfig</a></span><span class="o">.</span><span class="kt">Constants</span><span class="o">.</span><span class="n">primaryEnvironmentName</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">LDClient</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>environment</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The name of an environment provided in LDConfig.secondaryMobileKeys, defaults to <code><a href="../Structs/LDConfig/Constants.html#/s:12LaunchDarkly8LDConfigV9ConstantsV22primaryEnvironmentNameSSvpZ">LDConfig.Constants.primaryEnvironmentName</a></code> which is always associated with the <code><a href="../Structs/LDConfig.html#/s:12LaunchDarkly8LDConfigV9mobileKeySSvp">LDConfig.mobileKey</a></code> environment.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>The requested LDClient instance.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Flag%20variation%20methods"></a>
+                <a name="//apple_ref/swift/Section/Flag variation methods" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Flag%20variation%20methods"></a>
+                  <h3 class="section-name"><span>Flag variation methods</span>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC13boolVariation6forKey12defaultValueSbSS_SbtF"></a>
+                    <a name="//apple_ref/swift/Method/boolVariation(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC13boolVariation6forKey12defaultValueSbSS_SbtF">boolVariation(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the boolean value of a feature flag for a given flag key.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">boolVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>the variation for the selected context, or <code>defaultValue</code> if the flag is not available.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC19boolVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySbGSS_SbtF"></a>
+                    <a name="//apple_ref/swift/Method/boolVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC19boolVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySbGSS_SbtF">boolVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the boolean value of a feature flag for a given flag key, in an object that also describes the way the
+value was determined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">boolVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt">Bool</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an <code><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code> object</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC12intVariation6forKey12defaultValueSiSS_SitF"></a>
+                    <a name="//apple_ref/swift/Method/intVariation(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC12intVariation6forKey12defaultValueSiSS_SitF">intVariation(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the integer value of a feature flag for a given flag key.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">intVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>the variation for the selected context, or <code>defaultValue</code> if the flag is not available.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC18intVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySiGSS_SitF"></a>
+                    <a name="//apple_ref/swift/Method/intVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC18intVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySiGSS_SitF">intVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the integer value of a feature flag for a given flag key, in an object that also describes the way the
+value was determined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">intVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt">Int</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an <code><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code> object</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC15doubleVariation6forKey12defaultValueSdSS_SdtF"></a>
+                    <a name="//apple_ref/swift/Method/doubleVariation(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC15doubleVariation6forKey12defaultValueSdSS_SdtF">doubleVariation(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the double-precision floating-point value of a feature flag for a given flag key.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">doubleVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">Double</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Double</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>the variation for the selected context, or <code>defaultValue</code> if the flag is not available.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC21doubleVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySdGSS_SdtF"></a>
+                    <a name="//apple_ref/swift/Method/doubleVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC21doubleVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySdGSS_SdtF">doubleVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the double-precision floating-point value of a feature flag for a given flag key, in an object that also
+describes the way the value was determined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">doubleVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">Double</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt">Double</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an <code><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code> object</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC15stringVariation6forKey12defaultValueS2S_SStF"></a>
+                    <a name="//apple_ref/swift/Method/stringVariation(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC15stringVariation6forKey12defaultValueS2S_SStF">stringVariation(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the string value of a feature flag for a given flag key.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">stringVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>the variation for the selected context, or <code>defaultValue</code> if the flag is not available.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC21stringVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySSGSS_SStF"></a>
+                    <a name="//apple_ref/swift/Method/stringVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC21stringVariationDetail6forKey12defaultValueAA012LDEvaluationF0CySSGSS_SStF">stringVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the string value of a feature flag for a given flag key, in an object that also describes the way the
+value was determined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">stringVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt">String</span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an <code><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code> object</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC13jsonVariation6forKey12defaultValueAA7LDValueOSS_AHtF"></a>
+                    <a name="//apple_ref/swift/Method/jsonVariation(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC13jsonVariation6forKey12defaultValueAA7LDValueOSS_AHtF">jsonVariation(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the JSON value of a feature flag for a given flag key.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">jsonVariation</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>the variation for the selected context, or <code>defaultValue</code> if the flag is not available.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC19jsonVariationDetail6forKey12defaultValueAA012LDEvaluationF0CyAA7LDValueOGSS_AJtF"></a>
+                    <a name="//apple_ref/swift/Method/jsonVariationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC19jsonVariationDetail6forKey12defaultValueAA012LDEvaluationF0CyAA7LDValueOGSS_AJtF">jsonVariationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the JSON value of a feature flag for a given flag key, in an object that also describes the way the
+value was determined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">jsonVariationDetail</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt"><a href="../Enums/LDValue.html">LDValue</a></span><span class="o">&gt;</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an <code><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code> object</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC9variation6forKey12defaultValuexSS_xtAA18LDValueConvertibleRzSeRzlF"></a>
+                    <a name="//apple_ref/swift/Method/variation(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC9variation6forKey12defaultValuexSS_xtAA18LDValueConvertibleRzSeRzlF">variation(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the value of a feature flag for a given flag key, converting the raw JSON value into a type of your specification.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">variation</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">T</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/LDValueConvertible.html">LDValueConvertible</a></span><span class="p">,</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">Decodable</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>the variation for the selected context, or <code>defaultValue</code> if the flag is not available.</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly8LDClientC15variationDetail6forKey12defaultValueAA012LDEvaluationE0CyxGSS_xtAA18LDValueConvertibleRzSeRzlF"></a>
+                    <a name="//apple_ref/swift/Method/variationDetail(forKey:defaultValue:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly8LDClientC15variationDetail6forKey12defaultValueAA012LDEvaluationE0CyxGSS_xtAA18LDValueConvertibleRzSeRzlF">variationDetail(forKey:<wbr>defaultValue:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the value of a feature flag for a given flag key, converting the raw JSON value into a type
+of your specifification, and including it in an object that also describes the way the value was
+determined.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="n">variationDetail</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="n">forKey</span> <span class="nv">flagKey</span><span class="p">:</span> <span class="kt"><a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a></span><span class="p">,</span> <span class="n">defaultValue</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/LDValueConvertible.html">LDValueConvertible</a></span><span class="p">,</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">Decodable</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>forKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the unique feature key for the feature flag.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>defaultValue</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the default value for if the flag value is unavailable.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an <code><a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a></code> object</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>Copyright © 2019 Catamorphic Co.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.15.0</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</html>
