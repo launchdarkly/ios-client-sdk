@@ -24,11 +24,11 @@ runs:
       with:
         xcode-version: ${{ inputs.xcode-version }}
 
-    - name: Install mint and swiftlint
+    - name: Install mint
       shell: bash
       run: |
         brew tap mint-lang/mint-lang
-        brew install mint-lang swiftlint libressl
+        brew install mint-lang libressl
 
     - name: Install cocoapods
       shell: bash
