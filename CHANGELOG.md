@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.7.2](https://github.com/launchdarkly/ios-client-sdk/compare/9.7.1...9.7.2) (2024-05-20)
+
+
+### Bug Fixes
+
+* Add default implementation for hook methods ([#384](https://github.com/launchdarkly/ios-client-sdk/issues/384)) ([4461043](https://github.com/launchdarkly/ios-client-sdk/commit/446104318048e49b420e4d26f3b50b79007b66a9))
+
 ## [9.7.1](https://github.com/launchdarkly/ios-client-sdk/compare/9.7.0...9.7.1) (2024-05-16)
 
 
