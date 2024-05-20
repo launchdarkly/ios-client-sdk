@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.8.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.7.2...9.8.0) (2024-05-20)
+
+
+### Features
+
+* adds LD_OBJC_EXCLUDE_PURE_SWIFT_APIS compiler flag. ([#386](https://github.com/launchdarkly/ios-client-sdk/issues/386)) ([fef65f5](https://github.com/launchdarkly/ios-client-sdk/commit/fef65f588151aab1a8fdbd423d64d91dde7ffb3d))
+
 ## [9.7.2](https://github.com/launchdarkly/ios-client-sdk/compare/9.7.1...9.7.2) (2024-05-20)
 
 
