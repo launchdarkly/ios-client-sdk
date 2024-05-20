@@ -16,3 +16,17 @@ public protocol Hook {
     /// determined. The method is executed synchronously.
     func afterEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>) -> EvaluationSeriesData
 }
+
+public extension Hook {
+    func metadata() -> Metadata {
+        return Metadata(name: "UNDEFINED")
+    }
+
+    func beforeEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData) -> EvaluationSeriesData {
+        return seriesData
+    }
+
+    func afterEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>) -> EvaluationSeriesData {
+        return seriesData
+    }
+}
