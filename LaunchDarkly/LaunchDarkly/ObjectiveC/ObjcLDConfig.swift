@@ -1,5 +1,8 @@
 import Foundation
+
+#if !(LD_OBJC_EXCLUDE_PURE_SWIFT_APIS)
 import OSLog
+#endif
 
 /**
  Use LDConfig to configure the LDClient. When initialized, a LDConfig contains the default values which can be changed as needed.
@@ -164,17 +167,20 @@ public final class ObjcLDConfig: NSObject {
         set { config.wrapperName = newValue }
     }
 
+
     /// For use by wrapper libraries to report the version of the library in use. If the `wrapperName` has not been set this field will be ignored. Otherwise the verison strill will be included with the `wrapperName` in the "X-LaunchDarkly-Wrapper" header on requests to the LaunchDarkly servers.
     @objc public var wrapperVersion: String? {
         get { config.wrapperVersion }
         set { config.wrapperVersion = newValue }
     }
 
+#if !(LD_OBJC_EXCLUDE_PURE_SWIFT_APIS)
     /// Configure the logger that will be used by the rest of the SDK.
     @objc public var logger: OSLog {
         get { config.logger }
         set { config.logger = newValue }
     }
+#endif
 
     /**
      Returns a Dictionary of identifying names to unique mobile keys to access secondary environments.
