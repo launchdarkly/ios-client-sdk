@@ -38,6 +38,6 @@ Pod::Spec.new do |ld|
   ld.swift_version = '5.0'
 
   ld.subspec 'Core' do |es|
-    es.dependency 'LDSwiftEventSource', '3.1.1'
+    es.dependency 'LDSwiftEventSource', '3.3.0'
   end
 end

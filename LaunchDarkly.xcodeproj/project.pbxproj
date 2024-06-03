@@ -2056,7 +2056,7 @@
 			repositoryURL = "https://github.com/LaunchDarkly/swift-eventsource.git";
 			requirement = {
 				kind = exactVersion;
-				version = 3.1.1;
+				version = 3.3.0;
 			};
 		};
 		B4903D9624BD61B200F087C4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */ = {
