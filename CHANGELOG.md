@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.8.1](https://github.com/launchdarkly/ios-client-sdk/compare/9.8.0...9.8.1) (2024-06-03)
+
+
+### Bug Fixes
+
+* configured logger is now also used for logging LDEventSource log messages ([#390](https://github.com/launchdarkly/ios-client-sdk/issues/390)) ([7a3e67a](https://github.com/launchdarkly/ios-client-sdk/commit/7a3e67a628a4a6f5185571704754ade14ba9eac5))
+
 ## [9.8.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.7.2...9.8.0) (2024-05-20)
 
 
