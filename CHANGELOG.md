@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.8.2](https://github.com/launchdarkly/ios-client-sdk/compare/9.8.1...9.8.2) (2024-06-10)
+
+
+### Bug Fixes
+
+* start time warning log now uses float wildcard for string interpolation of time interval ([#393](https://github.com/launchdarkly/ios-client-sdk/issues/393)) ([573c99b](https://github.com/launchdarkly/ios-client-sdk/commit/573c99bafbe95b22cad0b48b395fa9610e463327))
+
 ## [9.8.1](https://github.com/launchdarkly/ios-client-sdk/compare/9.8.0...9.8.1) (2024-06-03)
 
 
