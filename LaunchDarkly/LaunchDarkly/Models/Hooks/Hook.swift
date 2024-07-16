@@ -18,14 +18,19 @@ public protocol Hook {
 }
 
 public extension Hook {
+    /// Get metadata about the hook implementation.
     func metadata() -> Metadata {
         return Metadata(name: "UNDEFINED")
     }
 
+    /// The before method is called during the execution of a variation method before the flag value has been
+    /// determined. The method is executed synchronously.
     func beforeEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData) -> EvaluationSeriesData {
         return seriesData
     }
 
+    /// The after method is called during the execution of the variation method after the flag value has been
+    /// determined. The method is executed synchronously.
     func afterEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>) -> EvaluationSeriesData {
         return seriesData
     }

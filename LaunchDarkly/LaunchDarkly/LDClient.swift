@@ -728,12 +728,12 @@ public class LDClient {
     }
 
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
-        
+
         if serviceFactory != nil {
             get()?.close()
         }
-        
-        var shouldCreateInstances = false;
+
+        var shouldCreateInstances = false
         instancesQueue.sync(flags: .barrier) {
             if instances != nil {
                 os_log("%s LDClient.start() was called more than once!", log: config.logger, type: .debug, typeName(and: #function))
@@ -745,7 +745,7 @@ public class LDClient {
                 shouldCreateInstances = true
             }
         }
-        
+
         if !shouldCreateInstances {
             return
         }
@@ -775,7 +775,7 @@ public class LDClient {
                 LDClient.instances?[name] = instance
             }
         }
-        
+
         completionCheck()
     }
 
