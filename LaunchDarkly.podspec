@@ -39,5 +39,6 @@ Pod::Spec.new do |ld|
 
   ld.subspec 'Core' do |es|
     es.dependency 'LDSwiftEventSource', '3.3.0'
+    es.dependency 'DataCompression', '3.8.0'
   end
 end

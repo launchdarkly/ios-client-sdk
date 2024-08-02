@@ -19,13 +19,15 @@ let package = Package(
         .package(url: "https://github.com/AliSoftware/OHHTTPStubs.git", .exact("9.1.0")),
         .package(url: "https://github.com/Quick/Quick.git", .exact("4.0.0")),
         .package(url: "https://github.com/Quick/Nimble.git", .exact("9.2.1")),
-        .package(name: "LDSwiftEventSource", url: "https://github.com/LaunchDarkly/swift-eventsource.git", .exact("3.3.0"))
+        .package(name: "LDSwiftEventSource", url: "https://github.com/LaunchDarkly/swift-eventsource.git", .exact("3.3.0")),
+        .package(name: "DataCompression", url: "https://github.com/mw99/DataCompression", .exact("3.8.0"))
     ],
     targets: [
         .target(
             name: "LaunchDarkly",
             dependencies: [
-                .product(name: "LDSwiftEventSource", package: "LDSwiftEventSource")
+                .product(name: "LDSwiftEventSource", package: "LDSwiftEventSource"),
+                .product(name: "DataCompression", package: "DataCompression")
             ],
             path: "LaunchDarkly/LaunchDarkly",
             exclude: ["Support"],
