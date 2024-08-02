@@ -4,6 +4,13 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 
 ## [9.9.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.8.2...9.9.0) (2024-08-02)
 
+This release introduces the ability to enable compression of event payloads. When enabled, the SDK will compress events before sending them to the LaunchDarkly servers. This can reduce the bandwidth required to send events, which can be useful in high-traffic environments to reduce egress traffic costs.
+
+> [!IMPORTANT]
+> Relay Proxy users **MUST** upgrade to version 8.9 or higher prior to enabling this option to prevent loss of event data.
+>
+> However, enabling this feature is **NOT** required when using the Relay Proxy as it will manage compression automatically.
+
 
 ### Features
 
