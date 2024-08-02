@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.9.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.8.2...9.9.0) (2024-08-02)
+
+
+### Features
+
+* Add option to enable compression of event payloads ([#399](https://github.com/launchdarkly/ios-client-sdk/issues/399)) ([ae4131f](https://github.com/launchdarkly/ios-client-sdk/commit/ae4131ff961507fc6e52823e26a20c7b2b7962c4))
+
 ## [9.8.2](https://github.com/launchdarkly/ios-client-sdk/compare/9.8.1...9.8.2) (2024-06-10)
 
 
