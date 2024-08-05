@@ -97,7 +97,8 @@ public struct LDContext: Encodable, Equatable {
             let includePrivateAttributes = encoder.userInfo[UserInfoKeys.includePrivateAttributes] as? Bool ?? false
 
             if let privateAttributes = privateAttributes, !privateAttributes.isEmpty, includePrivateAttributes {
-                try container.encodeIfPresent(privateAttributes, forKey: .privateAttributes)
+                let sorted = privateAttributes.sorted { $0.raw() < $1.raw() }
+                try container.encodeIfPresent(sorted, forKey: .privateAttributes)
             }
 
             if let redactedAttributes = redactedAttributes, !redactedAttributes.isEmpty {
