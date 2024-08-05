@@ -386,11 +386,14 @@ final class LDContextSpec: XCTestCase {
         }
     }
 
-    func testAttributeOrderDefinitionDoesNotAffectContextHash() {
+    func testAttributeOrderDefinitionDoesNotAffectJsonEncoding() {
         var builder1 = LDContextBuilder(key: "context-key")
         builder1.kind("org")
         builder1.trySetValue("example-attribute", LDValue(stringLiteral: "Hi there"))
         builder1.name("Example name")
+        builder1.addPrivateAttribute(Reference.init(literal: "first"))
+        builder1.addPrivateAttribute(Reference.init(literal: "second"))
+        builder1.addPrivateAttribute(Reference.init(literal: "third"))
 
         guard case .success(let context1) = builder1.build()
         else {
@@ -402,6 +405,58 @@ final class LDContextSpec: XCTestCase {
         builder2.trySetValue("example-attribute", LDValue(stringLiteral: "Hi there"))
         builder2.name("Example name")
         builder2.kind("org")
+        builder2.addPrivateAttribute(Reference.init(literal: "second"))
+        builder2.addPrivateAttribute(Reference.init(literal: "third"))
+        builder2.addPrivateAttribute(Reference.init(literal: "first"))
+
+        guard case .success(let context2) = builder2.build()
+        else {
+            XCTFail("builder1.build should not have failed")
+            return
+        }
+
+        let encoder = JSONEncoder()
+        encoder.userInfo[LDContext.UserInfoKeys.includePrivateAttributes] = true
+        encoder.userInfo[LDContext.UserInfoKeys.redactAttributes] = false
+        encoder.outputFormatting = [.sortedKeys]
+
+        guard let context1JsonData = try? encoder.encode(context1)
+        else {
+            XCTFail("failed to encode context1")
+            return
+        }
+
+        guard let context2JsonData = try? encoder.encode(context2)
+        else {
+            XCTFail("failed to encode context2")
+            return
+        }
+
+        XCTAssertEqual(context1JsonData, context2JsonData)
+    }
+
+    func testAttributeOrderDefinitionDoesNotAffectContextHash() {
+        var builder1 = LDContextBuilder(key: "context-key")
+        builder1.kind("org")
+        builder1.trySetValue("example-attribute", LDValue(stringLiteral: "Hi there"))
+        builder1.name("Example name")
+        builder1.addPrivateAttribute(Reference.init(literal: "first"))
+        builder1.addPrivateAttribute(Reference.init(literal: "second"))
+        builder1.addPrivateAttribute(Reference.init(literal: "third"))
+
+        guard case .success(let context1) = builder1.build()
+        else {
+            XCTFail("builder1.build should not have failed")
+            return
+        }
+
+        var builder2 = LDContextBuilder(key: "context-key")
+        builder2.trySetValue("example-attribute", LDValue(stringLiteral: "Hi there"))
+        builder2.name("Example name")
+        builder2.kind("org")
+        builder2.addPrivateAttribute(Reference.init(literal: "second"))
+        builder2.addPrivateAttribute(Reference.init(literal: "third"))
+        builder2.addPrivateAttribute(Reference.init(literal: "first"))
 
         guard case .success(let context2) = builder2.build()
         else {
