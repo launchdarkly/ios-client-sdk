@@ -2,6 +2,18 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.10.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.9.0...9.10.0) (2024-08-07)
+
+
+### Features
+
+* Update caching strategy to allow for greater cache use ([#404](https://github.com/launchdarkly/ios-client-sdk/issues/404)) ([62587ad](https://github.com/launchdarkly/ios-client-sdk/commit/62587ad565fefbc79cd6c0293257744c4ce54d5e))
+
+
+### Bug Fixes
+
+* Sort private attributes for improved stable encoding ([#401](https://github.com/launchdarkly/ios-client-sdk/issues/401)) ([90bf896](https://github.com/launchdarkly/ios-client-sdk/commit/90bf89624687f8e01cdbcfc9c108df23b4c71c02))
+
 ## [9.9.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.8.2...9.9.0) (2024-08-02)
 
 This release introduces the ability to enable compression of event payloads. When enabled, the SDK will compress events before sending them to the LaunchDarkly servers. This can reduce the bandwidth required to send events, which can be useful in high-traffic environments to reduce egress traffic costs.
