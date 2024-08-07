@@ -364,12 +364,12 @@ public struct LDContext: Encodable, Equatable {
         encoder.userInfo[UserInfoKeys.redactAttributes] = false
 
         guard let json = try? encoder.encode(self)
-        else { return fullyQualifiedKey() }
+        else { return fullyQualifiedHashedKey() }
 
         if let jsonStr = String(data: json, encoding: .utf8) {
             return Util.sha256base64(jsonStr)
         }
-        return fullyQualifiedKey()
+        return fullyQualifiedHashedKey()
     }
 
     /// - Returns: true if the `LDContext` is a multi-context; false otherwise.
