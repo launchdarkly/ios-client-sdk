@@ -208,7 +208,7 @@ public class LDClient {
                 return
             }
 
-            let cachedData = self.flagCache.getCachedData(cacheKey: self.context.contextHash())
+            let cachedData = self.flagCache.getCachedData(cacheKey: self.context.fullyQualifiedHashedKey(), contextHash: self.context.contextHash())
 
             let willSetSynchronizerOnline = isOnline && isInSupportedRunMode
             flagSynchronizer.isOnline = false
@@ -393,7 +393,7 @@ public class LDClient {
             let wasOnline = self.isOnline
             self.internalSetOnline(false)
 
-            let cachedData = self.flagCache.getCachedData(cacheKey: self.context.contextHash())
+            let cachedData = self.flagCache.getCachedData(cacheKey: self.context.fullyQualifiedHashedKey(), contextHash: self.context.contextHash())
             let cachedContextFlags = cachedData.items ?? [:]
             let oldItems = flagStore.storedItems.featureFlags
 
@@ -629,7 +629,7 @@ public class LDClient {
 
     private func updateCacheAndReportChanges(context: LDContext,
                                              oldStoredItems: StoredItems, etag: String?) {
-        flagCache.saveCachedData(flagStore.storedItems, cacheKey: context.contextHash(), lastUpdated: Date(), etag: etag)
+        flagCache.saveCachedData(flagStore.storedItems, cacheKey: context.fullyQualifiedHashedKey(), contextHash: context.contextHash(), lastUpdated: Date(), etag: etag)
         flagChangeNotifier.notifyObservers(oldFlags: oldStoredItems.featureFlags, newFlags: flagStore.storedItems.featureFlags)
     }
 
@@ -641,7 +641,7 @@ public class LDClient {
      In other words, if we get confirmation our cache is still fresh, then we shouldn't poll again for another <pollingInterval> seconds. If we didn't update this, we would poll immediately on restart.
     */
     private func updateCacheFreshness(context: LDContext) {
-        flagCache.saveCachedData(flagStore.storedItems, cacheKey: context.contextHash(), lastUpdated: Date(), etag: nil)
+        flagCache.saveCachedData(flagStore.storedItems, cacheKey: context.fullyQualifiedHashedKey(), contextHash: context.contextHash(), lastUpdated: Date(), etag: nil)
     }
 
     // MARK: Events
@@ -881,7 +881,7 @@ public class LDClient {
         diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service, environmentReporter: environmentReporter)
         eventReporter = self.serviceFactory.makeEventReporter(service: service)
         connectionInformation = self.serviceFactory.makeConnectionInformation()
-        let cachedData = flagCache.getCachedData(cacheKey: context.contextHash())
+        let cachedData = flagCache.getCachedData(cacheKey: context.fullyQualifiedHashedKey(), contextHash: context.contextHash())
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                     useReport: config.useReport,

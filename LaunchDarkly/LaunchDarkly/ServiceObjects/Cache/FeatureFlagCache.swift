@@ -7,7 +7,22 @@ protocol FeatureFlagCaching {
 
     /// Retrieve all cached data for the given cache key.
     ///
-    /// - parameter cacheKey: The unique key into the local cache store.
+    /// The cache key is used as the index into the cache. Values retrieved
+    /// using this cache key should be loaded into the store and favored over
+    /// the default values.
+    ///
+    /// The context hash value is used to determine if the cache is considered
+    /// out of date. If the hash saved alongside the cached value does not
+    /// match, then the cache's etag and lastUpdated responses should be nil as
+    /// they are invalid.
+    ///
+    /// If the hash hasn't changed, then the cache is still considered accurate
+    /// and the associated etag and last updated values are meaningful and can
+    /// be returned.
+    ///
+    /// - parameter cacheKey: The index key into the local cache store.
+    /// - parameter contextHash: A hash value representing a fully unique context.
+    ///
     /// - returns: Returns a tuple of cached value information.
     ///     items: This is the associated flag evaluation results associated with this context.
     ///     etag: The last known e-tag value from a polling request (see saveCachedData
@@ -16,7 +31,7 @@ protocol FeatureFlagCaching {
     ///            values, this should return nil.
     ///
     ///
-    func getCachedData(cacheKey: String) -> (items: StoredItems?, etag: String?, lastUpdated: Date?)
+    func getCachedData(cacheKey: String, contextHash: String) -> (items: StoredItems?, etag: String?, lastUpdated: Date?)
 
     // When we update the cache, we save the flag data and if we have it, an
     // etag. For polling, we should always have the flag data and an etag
@@ -35,7 +50,11 @@ protocol FeatureFlagCaching {
     //
     // 2. Updates have been made at which point the e-tag will be ignored
     //    upstream and we will still receive updated information as expected.
-    func saveCachedData(_ storedItems: StoredItems, cacheKey: String, lastUpdated: Date, etag: String?)
+    //
+    // The context hash is stored alongside the stored items. This is used as a
+    // marker to determine when the values are useful but not potentially
+    // accurate.
+    func saveCachedData(_ storedItems: StoredItems, cacheKey: String, contextHash: String, lastUpdated: Date, etag: String?)
 }
 
 final class FeatureFlagCache: FeatureFlagCaching {
@@ -53,10 +72,18 @@ final class FeatureFlagCache: FeatureFlagCaching {
         self.maxCachedContexts = maxCachedContexts
     }
 
-    func getCachedData(cacheKey: String) -> (items: StoredItems?, etag: String?, lastUpdated: Date?) {
+    func getCachedData(cacheKey: String, contextHash: String) -> (items: StoredItems?, etag: String?, lastUpdated: Date?) {
+
         guard let cachedFlagsData = keyedValueCache.data(forKey: "flags-\(cacheKey)"),
               let cachedFlags = try? JSONDecoder().decode(StoredItemCollection.self, from: cachedFlagsData)
         else { return (items: nil, etag: nil, lastUpdated: nil) }
+
+        guard let cachedContextHashData = keyedValueCache.data(forKey: "fingerprint-\(cacheKey)"),
+              let cachedContextHash = try? JSONDecoder().decode(String.self, from: cachedContextHashData)
+        else { return (items: cachedFlags.flags, etag: nil, lastUpdated: nil) }
+
+        guard cachedContextHash == contextHash
+        else { return (items: cachedFlags.flags, etag: nil, lastUpdated: nil) }
 
         guard let cachedETagData = keyedValueCache.data(forKey: "etag-\(cacheKey)"),
               let etag = try? JSONDecoder().decode(String.self, from: cachedETagData)
@@ -73,14 +100,19 @@ final class FeatureFlagCache: FeatureFlagCaching {
         return (items: cachedFlags.flags, etag: etag, lastUpdated: Date(timeIntervalSince1970: TimeInterval(lastUpdated / 1_000)))
     }
 
-    func saveCachedData(_ storedItems: StoredItems, cacheKey: String, lastUpdated: Date, etag: String?) {
+    func saveCachedData(_ storedItems: StoredItems, cacheKey: String, contextHash: String, lastUpdated: Date, etag: String?) {
+
         guard self.maxCachedContexts != 0, let encoded = try? JSONEncoder().encode(StoredItemCollection(storedItems))
         else { return }
 
         self.keyedValueCache.set(encoded, forKey: "flags-\(cacheKey)")
 
-        if let tag = etag, let encodedCachedData = try? JSONEncoder().encode(tag) {
-            self.keyedValueCache.set(encodedCachedData, forKey: "etag-\(cacheKey)")
+        if let encodedContextHashData = try? JSONEncoder().encode(contextHash) {
+            self.keyedValueCache.set(encodedContextHashData, forKey: "fingerprint-\(cacheKey)")
+
+            if let tag = etag, let encodedCachedData = try? JSONEncoder().encode(tag) {
+                self.keyedValueCache.set(encodedCachedData, forKey: "etag-\(cacheKey)")
+            }
         }
 
         var cachedContexts: [String: Int64] = [:]
@@ -94,6 +126,7 @@ final class FeatureFlagCache: FeatureFlagCaching {
                 cachedContexts.removeValue(forKey: sha)
                 self.keyedValueCache.removeObject(forKey: "flags-\(sha)")
                 self.keyedValueCache.removeObject(forKey: "etag-\(sha)")
+                self.keyedValueCache.removeObject(forKey: "fingerprint-\(sha)")
             }
         }
         if let encoded = try? JSONEncoder().encode(cachedContexts) {

@@ -246,21 +246,21 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
 
     var getCachedDataCallCount = 0
     var getCachedDataCallback: (() throws -> Void)?
-    var getCachedDataReceivedCacheKey: String?
+    var getCachedDataReceivedArguments: (cacheKey: String, contextHash: String)?
     var getCachedDataReturnValue: (items: StoredItems?, etag: String?, lastUpdated: Date?)!
-    func getCachedData(cacheKey: String) -> (items: StoredItems?, etag: String?, lastUpdated: Date?) {
+    func getCachedData(cacheKey: String, contextHash: String) -> (items: StoredItems?, etag: String?, lastUpdated: Date?) {
         getCachedDataCallCount += 1
-        getCachedDataReceivedCacheKey = cacheKey
+        getCachedDataReceivedArguments = (cacheKey: cacheKey, contextHash: contextHash)
         try! getCachedDataCallback?()
         return getCachedDataReturnValue
     }
 
     var saveCachedDataCallCount = 0
     var saveCachedDataCallback: (() throws -> Void)?
-    var saveCachedDataReceivedArguments: (storedItems: StoredItems, cacheKey: String, lastUpdated: Date, etag: String?)?
-    func saveCachedData(_ storedItems: StoredItems, cacheKey: String, lastUpdated: Date, etag: String?) {
+    var saveCachedDataReceivedArguments: (storedItems: StoredItems, cacheKey: String, contextHash: String, lastUpdated: Date, etag: String?)?
+    func saveCachedData(_ storedItems: StoredItems, cacheKey: String, contextHash: String, lastUpdated: Date, etag: String?) {
         saveCachedDataCallCount += 1
-        saveCachedDataReceivedArguments = (storedItems: storedItems, cacheKey: cacheKey, lastUpdated: lastUpdated, etag: etag)
+        saveCachedDataReceivedArguments = (storedItems: storedItems, cacheKey: cacheKey, contextHash: contextHash, lastUpdated: lastUpdated, etag: etag)
         try! saveCachedDataCallback?()
     }
 }
