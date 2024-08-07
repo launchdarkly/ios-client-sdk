@@ -69,7 +69,10 @@ class TestContext {
             let mobileKey = self.serviceFactoryMock.makeFeatureFlagCacheReceivedParameters!.mobileKey
             let mockCache = FeatureFlagCachingMock()
             mockCache.getCachedDataCallback = {
-                mockCache.getCachedDataReturnValue = (items: StoredItems(items: self.cachedFlags[mobileKey]?[mockCache.getCachedDataReceivedCacheKey!] ?? [:]), etag: nil, lastUpdated: nil)
+                let arguments = mockCache.getCachedDataReceivedArguments
+                let cacheKey = arguments?.cacheKey
+                let flags = cacheKey.map { self.cachedFlags[mobileKey]?[$0] ?? [:] } ?? [:]
+                mockCache.getCachedDataReturnValue = (items: StoredItems(items: flags), etag: nil, lastUpdated: nil)
             }
             self.serviceFactoryMock.makeFeatureFlagCacheReturnValue = mockCache
         }
@@ -81,7 +84,7 @@ class TestContext {
     }
 
     func withCached(flags: [LDFlagKey: FeatureFlag]?) -> TestContext {
-        withCached(contextKey: context.contextHash(), flags: flags)
+        withCached(contextKey: context.fullyQualifiedHashedKey(), flags: flags)
     }
 
     func withCached(contextKey: String, flags: [LDFlagKey: FeatureFlag]?) -> TestContext {
