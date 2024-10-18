@@ -37,24 +37,25 @@ public enum IdentifyResult {
  When a new `LDContext` is being identified, the SDK has a few choices it can make on how to handle intermediate flag evaluations
  until fresh values have been retrieved from the LaunchDarkly APIs.
  */
-public enum IdentifyCacheHandling {
+public enum IdentifyCacheUsage {
     /**
-     `keep` will maintain the current in memory store of any previously known flag values from the last identified context.
+     `no` will not load any flag values from the cache. Instead it will maintain the current in memory state from the previously identified context.
 
-     This method will ensure the greatest continuity of experience while the identify network communication resolves.
+     This method ensures the greatest continuity of experience until the identify network communication resolves.
      */
-    case keep
-
-    /**
-     `keepOnMiss` will only maintain the current in memory store if there are no previously cached values for the new `LDContext`.
-     If cached values exist, the memory store will be replaced with those values.
-     */
-    case keepOnMiss
+    case no
 
     /**
-     `discard` will clear the in memory store of any previously known flag values from the last identified context.
-
-     The SDK will load any previously cached values for this context, or load an empty memory store on a cache miss.
+     `yes` will clear the in memory state of any previously known flag values. The SDK will attempt to load cached flag values for the newly identified
+     context. If no cache is found, the state remains empty until the network request resolves.
      */
-    case discard
+    case yes
+
+    /**
+     `ifAvailable` will attempt to load cached flag values for the newly identified context. If cached values are found, the in memory state is fully
+     replaced with those values.
+
+     If no cached values are found, the existing in memory state is retained until the network request resolves.
+     */
+    case ifAvailable
 }
