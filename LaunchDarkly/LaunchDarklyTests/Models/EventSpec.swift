@@ -219,9 +219,9 @@ final class EventSpec: XCTestCase {
             XCTAssertEqual(dict["endDate"], .number(Double(event.endDate.millisSince1970)))
             valueIsObject(dict["features"]) { features in
                 XCTAssertEqual(features.count, 1)
-                let counter = FlagCounter()
-                counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
-                counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
+                let counter = FlagCounter(defaultValue: true)
+                counter.trackRequest(reportedValue: false, featureFlag: flag, context: LDContext.stub())
+                counter.trackRequest(reportedValue: false, featureFlag: flag, context: LDContext.stub())
                 XCTAssertEqual(features["bool-flag"], encodeToLDValue(counter))
             }
         }
