@@ -292,7 +292,7 @@ public class LDClient {
     */
     @available(*, deprecated, message: "Use LDClient.identify(context: completion:) with non-optional completion parameter")
     public func identify(context: LDContext, completion: (() -> Void)? = nil) {
-        _identify(context: context, sheddable: false) { _ in
+        _identify(context: context, sheddable: false, useCache: .yes) { _ in
             if let completion = completion {
                 completion()
             }
@@ -315,19 +315,33 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        _identify(context: context, sheddable: true, completion: completion)
+        _identify(context: context, sheddable: true, useCache: .yes, completion: completion)
+    }
+
+    /**
+     Sets the LDContext into the LDClient inline with the behavior detailed on `LDClient.identify(context: completion:)`. Additionally,
+     this method allows specifying how the flag cache should be handled when transitioning between contexts through the `useCache` parameter.
+
+     To learn more about these cache transitions, refer to the `IdentifyCacheUsage` documentation.
+
+     - parameter context: The LDContext set with the desired context.
+     - parameter useCache: How to handle flag caches during identify transition.
+     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
+     */
+    public func identify(context: LDContext, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
+        _identify(context: context, sheddable: true, useCache: useCache, completion: completion)
     }
 
     // Temporary helper method to allow code sharing between the sheddable and unsheddable identify methods. In the next major release, we will remove the deprecated identify method and inline
     // this implementation in the other one.
-    private func _identify(context: LDContext, sheddable: Bool, completion: @escaping (_ result: IdentifyResult) -> Void) {
+    private func _identify(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
         let work: TaskHandler = { taskCompletion in
             let dispatch = DispatchGroup()
 
             LDClient.instancesQueue.sync(flags: .barrier) {
                 LDClient.instances?.forEach { _, instance in
                     dispatch.enter()
-                    instance.internalIdentify(newContext: context, completion: dispatch.leave)
+                    instance.internalIdentify(newContext: context, useCache: useCache, completion: dispatch.leave)
                 }
             }
 
@@ -354,6 +368,21 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, timeout: TimeInterval, completion: @escaping ((_ result: IdentifyResult) -> Void)) {
+        identify(context: context, timeout: timeout, useCache: .yes, completion: completion)
+    }
+
+    /**
+     Sets the LDContext into the LDClient inline with the behavior detailed on `LDClient.identify(context: timeout: completion:)`. Additionally,
+     this method allows specifying how the flag cache should be handled when transitioning between contexts through the `useCache` parameter.
+
+     To learn more about these cache transitions, refer to the `IdentifyCacheUsage` documentation.
+
+     - parameter context: The LDContext set with the desired context.
+     - parameter timeout: The upper time limit before the `completion` callback will be invoked.
+     - parameter useCache: How to handle flag caches during identify transition.
+     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
+     */
+    public func identify(context: LDContext, timeout: TimeInterval, useCache: IdentifyCacheUsage, completion: @escaping ((_ result: IdentifyResult) -> Void)) {
         if timeout > LDClient.longTimeoutInterval {
             os_log("%s LDClient.identify was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
@@ -367,7 +396,7 @@ public class LDClient {
             completion(.timeout)
         }
 
-        identify(context: context) { result in
+        identify(context: context, useCache: useCache) { result in
             guard !cancel else { return }
 
             cancel = true
@@ -375,7 +404,7 @@ public class LDClient {
         }
     }
 
-    func internalIdentify(newContext: LDContext, completion: (() -> Void)? = nil) {
+    func internalIdentify(newContext: LDContext, useCache: IdentifyCacheUsage, completion: (() -> Void)? = nil) {
         var updatedContext = newContext
         if config.autoEnvAttributes {
             updatedContext = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(updatedContext)
@@ -394,27 +423,31 @@ public class LDClient {
             self.internalSetOnline(false)
 
             let cachedData = self.flagCache.getCachedData(cacheKey: self.context.fullyQualifiedHashedKey(), contextHash: self.context.contextHash())
-            let cachedContextFlags = cachedData.items ?? [:]
-            let oldItems = flagStore.storedItems.featureFlags
 
-            // Here we prime the store with the last known values from the
-            // cache.
-            //
-            // Once the flag sync. process finishes, the new payload is
-            // compared to this, and if they are different, change listeners
-            // will be notified; otherwise, they aren't.
-            //
-            // This is problematic since the flag values really did change. So
-            // we should trigger the change listener when we set these cache
-            // values.
-            //
-            // However, if there are no cached values, we don't want to inform
-            // customers that we set their store to nothing. In that case, we
-            // will not trigger the change listener and instead relay on the
-            // payload comparsion to do that when the request has completed.
-            flagStore.replaceStore(newStoredItems: cachedContextFlags)
-            if !cachedContextFlags.featureFlags.isEmpty {
-                flagChangeNotifier.notifyObservers(oldFlags: oldItems, newFlags: flagStore.storedItems.featureFlags)
+            if useCache != .no {
+                let oldItems = flagStore.storedItems
+                let fallback = useCache == .yes ? [:] : oldItems
+                let cachedContextFlags = cachedData.items ?? fallback
+
+                // Here we prime the store with the last known values from the
+                // cache.
+                //
+                // Once the flag sync. process finishes, the new payload is
+                // compared to this, and if they are different, change listeners
+                // will be notified; otherwise, they aren't.
+                //
+                // This is problematic since the flag values really did change. So
+                // we should trigger the change listener when we set these cache
+                // values.
+                //
+                // However, if there are no cached values, we don't want to inform
+                // customers that we set their store to nothing. In that case, we
+                // will not trigger the change listener and instead relay on the
+                // payload comparsion to do that when the request has completed.
+                flagStore.replaceStore(newStoredItems: cachedContextFlags)
+                if !cachedContextFlags.featureFlags.isEmpty {
+                    flagChangeNotifier.notifyObservers(oldFlags: oldItems.featureFlags, newFlags: flagStore.storedItems.featureFlags)
+                }
             }
 
             self.service.context = self.context

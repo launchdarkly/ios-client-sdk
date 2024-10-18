@@ -283,10 +283,11 @@
 		A3BA7D022BD192240000DB28 /* LDClientHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7D012BD192240000DB28 /* LDClientHookSpec.swift */; };
 		A3BA7D042BD2BD620000DB28 /* TestContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7D032BD2BD620000DB28 /* TestContext.swift */; };
 		A3C6F7622B7FA803005B3B61 /* SheddingQueueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */; };
-		A3C6F7642B84EF0C005B3B61 /* IdentifyResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */; };
-		A3C6F7652B84EF0C005B3B61 /* IdentifyResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */; };
-		A3C6F7662B84EF0C005B3B61 /* IdentifyResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */; };
-		A3C6F7672B84EF0C005B3B61 /* IdentifyResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */; };
+		A3C6F7642B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
+		A3C6F7652B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
+		A3C6F7662B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
+		A3C6F7672B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
+		A3F4A4812CC2F640006EF480 /* CwlPreconditionTesting in Frameworks */ = {isa = PBXBuildFile; productRef = A3F4A4802CC2F640006EF480 /* CwlPreconditionTesting */; };
 		A3FFE1132B7D4BA2009EF93F /* LDValueDecoderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
@@ -510,7 +511,7 @@
 		A3BA7D012BD192240000DB28 /* LDClientHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientHookSpec.swift; sourceTree = "<group>"; };
 		A3BA7D032BD2BD620000DB28 /* TestContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestContext.swift; sourceTree = "<group>"; };
 		A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheddingQueueSpec.swift; sourceTree = "<group>"; };
-		A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentifyResult.swift; sourceTree = "<group>"; };
+		A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentifyTypes.swift; sourceTree = "<group>"; };
 		A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueDecoderSpec.swift; sourceTree = "<group>"; };
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
@@ -725,7 +726,7 @@
 				8354EFDE1F26380700C05156 /* Event.swift */,
 				83EBCB9D20D9A0A1003A7142 /* FeatureFlag */,
 				8354EFDD1F26380700C05156 /* LDConfig.swift */,
-				A3C6F7632B84EF0C005B3B61 /* IdentifyResult.swift */,
+				A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1345,7 +1346,7 @@
 				B4C9D43B2489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
 				C443A40523145FBF00145710 /* ConnectionInformation.swift in Sources */,
 				B468E71324B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
-				A3C6F7672B84EF0C005B3B61 /* IdentifyResult.swift in Sources */,
+				A3C6F7672B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */,
 				8354AC732243166900CDE602 /* FeatureFlagCache.swift in Sources */,
 				8311885B2113AE1D00D77CB5 /* Throttler.swift in Sources */,
 				8311884E2113ADE500D77CB5 /* Event.swift in Sources */,
@@ -1374,7 +1375,7 @@
 				B468E71224B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
 				A36EDFCF2853C50B00D91B05 /* ObjcLDContext.swift in Sources */,
 				831EF34320655E730001C643 /* LDCommon.swift in Sources */,
-				A3C6F7662B84EF0C005B3B61 /* IdentifyResult.swift in Sources */,
+				A3C6F7662B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */,
 				831EF34420655E730001C643 /* LDConfig.swift in Sources */,
 				A31088212837DC0400184942 /* LDContext.swift in Sources */,
 				831EF34520655E730001C643 /* LDClient.swift in Sources */,
@@ -1490,7 +1491,7 @@
 				83B6C4B61F4DE7630055351C /* LDCommon.swift in Sources */,
 				B4C9D4382489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
 				8347BB0C21F147E100E56BCD /* LDTimer.swift in Sources */,
-				A3C6F7642B84EF0C005B3B61 /* IdentifyResult.swift in Sources */,
+				A3C6F7642B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */,
 				B468E71024B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
 				8354AC702243166900CDE602 /* FeatureFlagCache.swift in Sources */,
 				A36EDFC82853883400D91B05 /* ObjcLDReference.swift in Sources */,
@@ -1616,7 +1617,7 @@
 				83D9EC922062DEAB004D7FA6 /* Data.swift in Sources */,
 				8347BB0D21F147E100E56BCD /* LDTimer.swift in Sources */,
 				8354AC712243166900CDE602 /* FeatureFlagCache.swift in Sources */,
-				A3C6F7652B84EF0C005B3B61 /* IdentifyResult.swift in Sources */,
+				A3C6F7652B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */,
 				C443A40323145FB700145710 /* ConnectionInformation.swift in Sources */,
 				B4C9D4392489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
 				B468E71124B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
