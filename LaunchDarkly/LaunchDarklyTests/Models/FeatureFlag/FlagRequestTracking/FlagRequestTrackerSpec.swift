@@ -57,7 +57,7 @@ final class FlagRequestTrackerSpec: XCTestCase {
         XCTAssertEqual(flagRequestTracker.flagCounters.count, 2)
         let counter1 = FlagCounter(defaultValue: true)
         counter1.trackRequest(reportedValue: false, featureFlag: flag, context: LDContext.stub())
-        let counter2 = FlagCounter(defaultValue: true)
+        let counter2 = FlagCounter(defaultValue: false)
         counter2.trackRequest(reportedValue: true, featureFlag: secondFlag, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters["bool-flag"], counter1)
         XCTAssertEqual(flagRequestTracker.flagCounters["alt-flag"], counter2)
