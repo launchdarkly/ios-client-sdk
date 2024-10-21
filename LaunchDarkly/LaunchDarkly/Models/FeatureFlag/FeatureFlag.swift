@@ -3,7 +3,7 @@ import Foundation
 struct FeatureFlag: Codable {
 
     enum CodingKeys: String, CodingKey, CaseIterable {
-        case flagKey = "key", value, variation, version, flagVersion, trackEvents, debugEventsUntilDate, reason, trackReason
+        case flagKey = "key", value, variation, version, flagVersion, trackEvents, debugEventsUntilDate, reason, trackReason, prerequisites
     }
 
     let flagKey: LDFlagKey
@@ -17,6 +17,7 @@ struct FeatureFlag: Codable {
     let debugEventsUntilDate: Date?
     let reason: [String: LDValue]?
     let trackReason: Bool
+    let prerequisites: [String]?
 
     var versionForEvents: Int? { flagVersion ?? version }
 
@@ -28,7 +29,8 @@ struct FeatureFlag: Codable {
          trackEvents: Bool = false,
          debugEventsUntilDate: Date? = nil,
          reason: [String: LDValue]? = nil,
-         trackReason: Bool = false) {
+         trackReason: Bool = false,
+         prerequisites: [String]? = nil) {
         self.flagKey = flagKey
         self.value = value
         self.variation = variation
@@ -38,6 +40,7 @@ struct FeatureFlag: Codable {
         self.debugEventsUntilDate = debugEventsUntilDate
         self.reason = reason
         self.trackReason = trackReason
+        self.prerequisites = prerequisites
     }
 
     init(from decoder: Decoder) throws {
@@ -61,6 +64,7 @@ struct FeatureFlag: Codable {
         self.debugEventsUntilDate = Date(millisSince1970: try container.decodeIfPresent(Int64.self, forKey: .debugEventsUntilDate))
         self.reason = try container.decodeIfPresent([String: LDValue].self, forKey: .reason)
         self.trackReason = (try container.decodeIfPresent(Bool.self, forKey: .trackReason)) ?? false
+        self.prerequisites = (try container.decodeIfPresent([String].self, forKey: .prerequisites))
     }
 
     func encode(to encoder: Encoder) throws {
@@ -76,6 +80,9 @@ struct FeatureFlag: Codable {
         }
         if reason != nil { try container.encode(reason, forKey: .reason) }
         if trackReason { try container.encode(true, forKey: .trackReason) }
+        if let prerequisites = prerequisites, !prerequisites.isEmpty {
+            try container.encodeIfPresent(prerequisites, forKey: .prerequisites)
+        }
     }
 
     func shouldCreateDebugEvents(lastEventReportResponseTime: Date?) -> Bool {

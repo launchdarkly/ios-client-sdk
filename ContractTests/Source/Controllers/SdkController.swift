@@ -31,7 +31,8 @@ final class SdkController: RouteCollection {
             "anonymous-redaction",
             "evaluation-hooks",
             "event-gzip",
-            "optional-event-gzip"
+            "optional-event-gzip",
+            "client-prereq-events"
         ]
 
         return StatusResponse(

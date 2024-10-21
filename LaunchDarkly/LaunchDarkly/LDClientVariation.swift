@@ -173,6 +173,11 @@ extension LDClient {
             var result: LDEvaluationDetail<T>
             let featureFlag = flagStore.featureFlag(for: flagKey)
             if let featureFlag = featureFlag {
+                featureFlag.prerequisites?.forEach{ prereqFlagKey in
+                    // recurse on prerequisites to emulate prereq evaluations occurring with desirable side effects such as events for prereqs
+                    _ = variationDetailInternal(prereqFlagKey, LDValue.null, needsReason: needsReason, methodName: methodName)
+                }
+                
                 if featureFlag.value == .null {
                     result = LDEvaluationDetail(value: defaultValue, variationIndex: featureFlag.variation, reason: featureFlag.reason)
                 } else {
@@ -188,6 +193,7 @@ extension LDClient {
                 os_log("%s Unknown feature flag %s; returning default value", log: config.logger, type: .debug, typeName(and: #function), flagKey.description)
                 result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "FLAG_NOT_FOUND"])
             }
+            
             eventReporter.recordFlagEvaluationEvents(flagKey: flagKey,
                                                      value: result.value.toLDValue(),
                                                      defaultValue: defaultValue.toLDValue(),

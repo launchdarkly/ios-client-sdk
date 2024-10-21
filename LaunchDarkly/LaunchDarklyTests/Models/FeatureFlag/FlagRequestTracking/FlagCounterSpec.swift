@@ -8,15 +8,15 @@ final class FlagCounterSpec: XCTestCase {
     private let testValue: LDValue = 5.5
 
     func testInit() {
-        let flagCounter = FlagCounter()
-        XCTAssertEqual(flagCounter.defaultValue, .null)
+        let flagCounter = FlagCounter(defaultValue: true)
+        XCTAssertEqual(flagCounter.defaultValue, true)
         XCTAssert(flagCounter.flagValueCounters.isEmpty)
     }
 
     func testTrackRequestInitialKnown() {
         let featureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 2, flagVersion: 3)
-        let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, defaultValue: testDefaultValue, context: LDContext.stub())
+        let flagCounter = FlagCounter(defaultValue: testDefaultValue)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, context: LDContext.stub())
         XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
         XCTAssertEqual(flagCounter.flagValueCounters.count, 1)
         let counter = flagCounter.flagValueCounters.first!
@@ -29,10 +29,10 @@ final class FlagCounterSpec: XCTestCase {
     func testTrackRequestKnownMatching() {
         let featureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 5, flagVersion: 3)
         let secondFeatureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 7, flagVersion: 3)
-        let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, defaultValue: "e", context: LDContext.stub())
-        flagCounter.trackRequest(reportedValue: "b", featureFlag: secondFeatureFlag, defaultValue: testDefaultValue, context: LDContext.stub())
-        XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
+        let flagCounter = FlagCounter(defaultValue: "e")
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, context: LDContext.stub())
+        flagCounter.trackRequest(reportedValue: "b", featureFlag: secondFeatureFlag, context: LDContext.stub())
+        XCTAssertEqual(flagCounter.defaultValue, "e")
         XCTAssertEqual(flagCounter.flagValueCounters.count, 1)
         let counter = flagCounter.flagValueCounters.first!
         XCTAssertEqual(counter.key.version, 3)
@@ -44,9 +44,9 @@ final class FlagCounterSpec: XCTestCase {
     func testTrackRequestKnownDifferentVariations() {
         let featureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 10, flagVersion: 5)
         let secondFeatureFlag = FeatureFlag(flagKey: "test-key", variation: 3, version: 10, flagVersion: 5)
-        let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, defaultValue: testDefaultValue, context: LDContext.stub())
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: secondFeatureFlag, defaultValue: testDefaultValue, context: LDContext.stub())
+        let flagCounter = FlagCounter(defaultValue: testDefaultValue)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, context: LDContext.stub())
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: secondFeatureFlag, context: LDContext.stub())
         XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
         XCTAssertEqual(flagCounter.flagValueCounters.count, 2)
         let counter1 = flagCounter.flagValueCounters.first { key, _ in key.variation == 2 }!
@@ -62,9 +62,9 @@ final class FlagCounterSpec: XCTestCase {
     func testTrackRequestKnownDifferentFlagVersions() {
         let featureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 10, flagVersion: 3)
         let secondFeatureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 10, flagVersion: 5)
-        let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, defaultValue: testDefaultValue, context: LDContext.stub())
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: secondFeatureFlag, defaultValue: testDefaultValue, context: LDContext.stub())
+        let flagCounter = FlagCounter(defaultValue: testDefaultValue)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, context: LDContext.stub())
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: secondFeatureFlag, context: LDContext.stub())
         XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
         XCTAssertEqual(flagCounter.flagValueCounters.count, 2)
         let counter1 = flagCounter.flagValueCounters.first { key, _ in key.version == 3 }!
@@ -80,9 +80,9 @@ final class FlagCounterSpec: XCTestCase {
     func testTrackRequestKnownMissingFlagVersionMatchingVersions() {
         let featureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 10)
         let secondFeatureFlag = FeatureFlag(flagKey: "test-key", variation: 2, version: 5, flagVersion: 10)
-        let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, defaultValue: testDefaultValue, context: LDContext.stub())
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: secondFeatureFlag, defaultValue: testDefaultValue, context: LDContext.stub())
+        let flagCounter = FlagCounter(defaultValue: testDefaultValue)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: featureFlag, context: LDContext.stub())
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: secondFeatureFlag, context: LDContext.stub())
         XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
         XCTAssertEqual(flagCounter.flagValueCounters.count, 1)
         let counter = flagCounter.flagValueCounters.first!
@@ -93,8 +93,8 @@ final class FlagCounterSpec: XCTestCase {
     }
 
     func testTrackRequestInitialUnknown() {
-        let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: nil, defaultValue: testDefaultValue, context: LDContext.stub())
+        let flagCounter = FlagCounter(defaultValue: testDefaultValue)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: nil, context: LDContext.stub())
         XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
         XCTAssertEqual(flagCounter.flagValueCounters.count, 1)
         let counter = flagCounter.flagValueCounters.first!
@@ -105,9 +105,9 @@ final class FlagCounterSpec: XCTestCase {
     }
 
     func testTrackRequestSecondUnknown() {
-        let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: nil, defaultValue: testDefaultValue, context: LDContext.stub())
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: nil, defaultValue: testDefaultValue, context: LDContext.stub())
+        let flagCounter = FlagCounter(defaultValue: testDefaultValue)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: nil, context: LDContext.stub())
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: nil, context: LDContext.stub())
         XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
         XCTAssertEqual(flagCounter.flagValueCounters.count, 1)
         let counter = flagCounter.flagValueCounters.first!
@@ -120,9 +120,9 @@ final class FlagCounterSpec: XCTestCase {
     func testTrackRequestSecondUnknownWithDifferentVariations() {
         let unknownFlag1 = FeatureFlag(flagKey: "unused", variation: 1)
         let unknownFlag2 = FeatureFlag(flagKey: "unused", variation: 2)
-        let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: unknownFlag1, defaultValue: testDefaultValue, context: LDContext.stub())
-        flagCounter.trackRequest(reportedValue: testValue, featureFlag: unknownFlag2, defaultValue: testDefaultValue, context: LDContext.stub())
+        let flagCounter = FlagCounter(defaultValue: testDefaultValue)
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: unknownFlag1, context: LDContext.stub())
+        flagCounter.trackRequest(reportedValue: testValue, featureFlag: unknownFlag2, context: LDContext.stub())
         XCTAssertEqual(flagCounter.defaultValue, testDefaultValue)
         XCTAssertEqual(flagCounter.flagValueCounters.count, 2)
         let counter1 = flagCounter.flagValueCounters.first { key, _ in key.variation == 1 }!
@@ -139,9 +139,9 @@ final class FlagCounterSpec: XCTestCase {
 
     func testEncoding() {
         let featureFlag = FeatureFlag(flagKey: "unused", variation: 3, version: 2, flagVersion: 5)
-        let flagCounter = FlagCounter()
-        flagCounter.trackRequest(reportedValue: "a", featureFlag: featureFlag, defaultValue: "b", context: LDContext.stub())
-        flagCounter.trackRequest(reportedValue: "a", featureFlag: featureFlag, defaultValue: "b", context: LDContext.stub())
+        let flagCounter = FlagCounter(defaultValue: "b")
+        flagCounter.trackRequest(reportedValue: "a", featureFlag: featureFlag, context: LDContext.stub())
+        flagCounter.trackRequest(reportedValue: "a", featureFlag: featureFlag, context: LDContext.stub())
         encodesToObject(flagCounter) { dict in
             XCTAssertEqual(dict.count, 3)
             XCTAssertEqual(dict["default"], "b")
@@ -158,11 +158,11 @@ final class FlagCounterSpec: XCTestCase {
             }
         }
 
-        let flagCounterNulls = FlagCounter()
-        flagCounterNulls.trackRequest(reportedValue: nil, featureFlag: nil, defaultValue: nil, context: LDContext.stub())
+        let flagCounterNulls = FlagCounter(defaultValue: nil)
+        flagCounterNulls.trackRequest(reportedValue: nil, featureFlag: nil, context: LDContext.stub())
         encodesToObject(flagCounterNulls) { dict in
-            XCTAssertEqual(dict.count, 3)
-            XCTAssertEqual(dict["default"], .null)
+            XCTAssertEqual(dict.count, 2)
+            XCTAssertEqual(dict["default"], nil)
             XCTAssertEqual(dict["contextKinds"], ["user"])
             valueIsArray(dict["counters"]) { counters in
                 XCTAssertEqual(counters.count, 1)
@@ -183,19 +183,20 @@ extension FlagCounter {
     }
 
     class func stub(flagKey: LDFlagKey) -> FlagCounter {
-        let flagCounter = FlagCounter()
         var featureFlag: FeatureFlag? = nil
         if flagKey.isKnown {
             featureFlag = DarklyServiceMock.Constants.stubFeatureFlag(for: flagKey)
+            let flagCounter = FlagCounter(defaultValue: featureFlag?.value ?? .null)
             for _ in 0..<Constants.requestCount {
-                flagCounter.trackRequest(reportedValue: featureFlag?.value ?? .null, featureFlag: featureFlag, defaultValue: featureFlag?.value ?? .null, context: LDContext.stub())
+                flagCounter.trackRequest(reportedValue: featureFlag?.value ?? .null, featureFlag: featureFlag, context: LDContext.stub())
             }
+            return flagCounter
         } else {
+            let flagCounter = FlagCounter(defaultValue: false)
             for _ in 0..<Constants.requestCount {
-                flagCounter.trackRequest(reportedValue: false, featureFlag: nil, defaultValue: false, context: LDContext.stub())
+                flagCounter.trackRequest(reportedValue: false, featureFlag: nil, context: LDContext.stub())
             }
+            return flagCounter
         }
-
-        return flagCounter
     }
 }
