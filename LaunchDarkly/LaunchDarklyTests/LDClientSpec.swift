@@ -714,6 +714,32 @@ final class LDClientSpec: QuickSpec {
                     }
                 }
             }
+            context("flag store contains flags with prerequisites") {
+                it("records evaluation events for the prerequisites that exist") {
+                    let flagA = FeatureFlag(flagKey: "flagA", value: LDValue.bool(true), trackEvents: false, trackReason: false)
+                    let flagAB = FeatureFlag(flagKey: "flagAB", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagA"])
+                    let flagAC = FeatureFlag(flagKey: "flagAC", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagA"])
+                    let flagABD = FeatureFlag(flagKey: "flagABD", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagAB"])
+                    let flags: [LDFlagKey: FeatureFlag] = ["flagA": flagA, "flagAB": flagAB, "flagAC": flagAC, "flagABD": flagABD]
+                    var storedItems = StoredItems(items: flags)
+                    testContext.flagStoreMock.replaceStore(newStoredItems: storedItems)
+                    var events = [FeatureEvent]()
+                    testContext.eventReporterMock.recordFlagEvaluationEventsCallback = { events.append($0) }
+                    _ = testContext.subject.boolVariation(forKey: "flagA", defaultValue: DefaultFlagValues.bool)
+                    _ = testContext.subject.boolVariation(forKey: "flagAB", defaultValue: DefaultFlagValues.bool)
+                    _ = testContext.subject.boolVariation(forKey: "flagAC", defaultValue: DefaultFlagValues.bool)
+                    _ = testContext.subject.boolVariation(forKey: "flagABD", defaultValue: DefaultFlagValues.bool)
+                    expect(events.count) == 8
+                    expect(events[0].key) == "flagA"
+                    expect(events[1].key) == "flagA"
+                    expect(events[2].key) == "flagAB"
+                    expect(events[3].key) == "flagA"
+                    expect(events[4].key) == "flagAC"
+                    expect(events[5].key) == "flagA"
+                    expect(events[6].key) == "flagAB"
+                    expect(events[7].key) == "flagABD"
+                }
+            }
         }
     }
 

@@ -19,8 +19,8 @@ final class FlagRequestTrackerSpec: XCTestCase {
         var flagRequestTracker = FlagRequestTracker(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters.count, 1)
-        let counter = FlagCounter()
-        counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
+        let counter = FlagCounter(defaultValue: true)
+        counter.trackRequest(reportedValue: false, featureFlag: flag, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters["bool-flag"], counter)
     }
 
@@ -30,9 +30,21 @@ final class FlagRequestTrackerSpec: XCTestCase {
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters.count, 1)
-        let counter = FlagCounter()
-        counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
-        counter.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
+        let counter = FlagCounter(defaultValue: true)
+        counter.trackRequest(reportedValue: false, featureFlag: flag, context: LDContext.stub())
+        counter.trackRequest(reportedValue: false, featureFlag: flag, context: LDContext.stub())
+        XCTAssertEqual(flagRequestTracker.flagCounters["bool-flag"], counter)
+    }
+    
+    func testTrackRequestSameFlagKeyDifferentDefault() {
+        let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
+        var flagRequestTracker = FlagRequestTracker(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
+        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
+        flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: false, context: LDContext.stub())
+        XCTAssertEqual(flagRequestTracker.flagCounters.count, 1)
+        let counter = FlagCounter(defaultValue: true)
+        counter.trackRequest(reportedValue: false, featureFlag: flag, context: LDContext.stub())
+        counter.trackRequest(reportedValue: false, featureFlag: flag, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters["bool-flag"], counter)
     }
 
@@ -43,10 +55,10 @@ final class FlagRequestTrackerSpec: XCTestCase {
         flagRequestTracker.trackRequest(flagKey: "bool-flag", reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
         flagRequestTracker.trackRequest(flagKey: "alt-flag", reportedValue: true, featureFlag: secondFlag, defaultValue: false, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters.count, 2)
-        let counter1 = FlagCounter()
-        counter1.trackRequest(reportedValue: false, featureFlag: flag, defaultValue: true, context: LDContext.stub())
-        let counter2 = FlagCounter()
-        counter2.trackRequest(reportedValue: true, featureFlag: secondFlag, defaultValue: false, context: LDContext.stub())
+        let counter1 = FlagCounter(defaultValue: true)
+        counter1.trackRequest(reportedValue: false, featureFlag: flag, context: LDContext.stub())
+        let counter2 = FlagCounter(defaultValue: false)
+        counter2.trackRequest(reportedValue: true, featureFlag: secondFlag, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters["bool-flag"], counter1)
         XCTAssertEqual(flagRequestTracker.flagCounters["alt-flag"], counter2)
     }
