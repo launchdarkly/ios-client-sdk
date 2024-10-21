@@ -563,6 +563,7 @@
 				B4903D9E24BD61EF00F087C4 /* Quick in Frameworks */,
 				B4903D9B24BD61D000F087C4 /* Nimble in Frameworks */,
 				B4903D9824BD61B200F087C4 /* OHHTTPStubsSwift in Frameworks */,
+				A3F4A4812CC2F640006EF480 /* CwlPreconditionTesting in Frameworks */,
 				8354EFCC1F22491C00C05156 /* LaunchDarkly.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1073,6 +1074,7 @@
 				B4903D9724BD61B200F087C4 /* OHHTTPStubsSwift */,
 				B4903D9A24BD61D000F087C4 /* Nimble */,
 				B4903D9D24BD61EF00F087C4 /* Quick */,
+				A3F4A4802CC2F640006EF480 /* CwlPreconditionTesting */,
 			);
 			productName = DarklyTests;
 			productReference = 8354EFCB1F22491C00C05156 /* LaunchDarklyTests.xctest */;
@@ -1156,6 +1158,7 @@
 				B4903D9C24BD61EF00F087C4 /* XCRemoteSwiftPackageReference "Quick" */,
 				B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */,
 				A3647AA12C5BF6DD00902D0C /* XCRemoteSwiftPackageReference "DataCompression" */,
+				A3F4A47F2CC2F625006EF480 /* XCRemoteSwiftPackageReference "CwlPreconditionTesting" */,
 			);
 			productRefGroup = 8354EFC31F22491C00C05156 /* Products */;
 			projectDirPath = "";
@@ -2093,6 +2096,14 @@
 				minimumVersion = 3.8.0;
 			};
 		};
+		A3F4A47F2CC2F625006EF480 /* XCRemoteSwiftPackageReference "CwlPreconditionTesting" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mattgallagher/CwlPreconditionTesting";
+			requirement = {
+				kind = exactVersion;
+				version = 2.1.2;
+			};
+		};
 		B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/LaunchDarkly/swift-eventsource.git";
@@ -2187,6 +2198,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A3647AA12C5BF6DD00902D0C /* XCRemoteSwiftPackageReference "DataCompression" */;
 			productName = DataCompression;
+		};
+		A3F4A4802CC2F640006EF480 /* CwlPreconditionTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A3F4A47F2CC2F625006EF480 /* XCRemoteSwiftPackageReference "CwlPreconditionTesting" */;
+			productName = CwlPreconditionTesting;
 		};
 		B445A6E324C0D1E3000BAD6D /* LDSwiftEventSource */ = {
 			isa = XCSwiftPackageProductDependency;
