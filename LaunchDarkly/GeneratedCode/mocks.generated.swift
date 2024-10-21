@@ -214,12 +214,12 @@ final class EventReportingMock: EventReporting {
     }
 
     var recordFlagEvaluationEventsCallCount = 0
-    var recordFlagEvaluationEventsCallback: (() throws -> Void)?
+    var recordFlagEvaluationEventsCallback: ((_ event: FeatureEvent) throws -> Void)?
     var recordFlagEvaluationEventsReceivedArguments: (flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)?
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool) {
         recordFlagEvaluationEventsCallCount += 1
         recordFlagEvaluationEventsReceivedArguments = (flagKey: flagKey, value: value, defaultValue: defaultValue, featureFlag: featureFlag, context: context, includeReason: includeReason)
-        try! recordFlagEvaluationEventsCallback?()
+        try! recordFlagEvaluationEventsCallback?(FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false))
     }
 
     var flushCallCount = 0
