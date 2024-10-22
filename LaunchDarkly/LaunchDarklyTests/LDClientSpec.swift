@@ -158,7 +158,7 @@ final class LDClientSpec: QuickSpec {
                     withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
 
                     testContext.context = LDContext.stub()
-                    testContext.subject.internalIdentify(newContext: testContext.context)
+                    testContext.subject.internalIdentify(newContext: testContext.context, useCache: .yes)
                 }
                 it("saves the config") {
                     expect(testContext.subject.config) == testContext.config
@@ -442,7 +442,7 @@ final class LDClientSpec: QuickSpec {
                 testContext.featureFlagCachingMock.reset()
 
                 let newContext = LDContext.stub()
-                testContext.subject.internalIdentify(newContext: newContext)
+                testContext.subject.internalIdentify(newContext: newContext, useCache: .yes)
 
                 expect(testContext.subject.context) == newContext
                 expect(testContext.subject.service.context) == newContext
@@ -464,7 +464,7 @@ final class LDClientSpec: QuickSpec {
                 testContext.featureFlagCachingMock.reset()
 
                 let newContext = LDContext.stub()
-                testContext.subject.internalIdentify(newContext: newContext)
+                testContext.subject.internalIdentify(newContext: newContext, useCache: .yes)
 
                 expect(testContext.subject.context) == newContext
                 expect(testContext.subject.service.context) == newContext
@@ -487,7 +487,7 @@ final class LDClientSpec: QuickSpec {
                 testContext.start()
                 testContext.featureFlagCachingMock.reset()
 
-                testContext.subject.internalIdentify(newContext: newContext)
+                testContext.subject.internalIdentify(newContext: newContext, useCache: .yes)
 
                 expect(testContext.subject.context) == newContext
                 expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
@@ -501,7 +501,7 @@ final class LDClientSpec: QuickSpec {
                 testContext.featureFlagCachingMock.reset()
 
                 let newContext = LDContext.stub()
-                testContext.subject.internalIdentify(newContext: newContext)
+                testContext.subject.internalIdentify(newContext: newContext, useCache: .yes)
 
                 expect(newContext.contextKeys().count) < testContext.subject.service.context.contextKeys().count
 
@@ -516,10 +516,10 @@ final class LDClientSpec: QuickSpec {
                 testContext.start()
                 testContext.featureFlagCachingMock.reset()
 
-                testContext.subject.internalIdentify(newContext: testContext.context)
-                testContext.subject.internalIdentify(newContext: testContext.context)
-                testContext.subject.internalIdentify(newContext: testContext.context)
-                testContext.subject.internalIdentify(newContext: testContext.context)
+                testContext.subject.internalIdentify(newContext: testContext.context, useCache: .yes)
+                testContext.subject.internalIdentify(newContext: testContext.context, useCache: .yes)
+                testContext.subject.internalIdentify(newContext: testContext.context, useCache: .yes)
+                testContext.subject.internalIdentify(newContext: testContext.context, useCache: .yes)
 
                 expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
                 expect(testContext.makeFlagSynchronizerService?.context) == testContext.context
@@ -528,6 +528,52 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.subject.eventReporter.isOnline) == true
                 expect(testContext.subject.flagSynchronizer.isOnline) == true
                 expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
+            }
+
+            it("no cache requires no store interaction") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                testContext.featureFlagCachingMock.reset()
+
+                testContext.subject.internalIdentify(newContext: testContext.context, useCache: .no)
+
+                expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
+                expect(testContext.makeFlagSynchronizerService?.context) == testContext.context
+
+                expect(testContext.subject.isOnline) == true
+                expect(testContext.subject.eventReporter.isOnline) == true
+                expect(testContext.subject.flagSynchronizer.isOnline) == true
+                expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
+            }
+
+            it("ifAvailable requires no store information on cache miss") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                testContext.featureFlagCachingMock.reset()
+
+                testContext.subject.internalIdentify(newContext: testContext.context, useCache: .ifAvailable)
+
+                expect(testContext.flagStoreMock.replaceStoreCallCount) == 0
+                expect(testContext.makeFlagSynchronizerService?.context) == testContext.context
+
+                expect(testContext.subject.isOnline) == true
+                expect(testContext.subject.eventReporter.isOnline) == true
+                expect(testContext.subject.flagSynchronizer.isOnline) == true
+                expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
+            }
+
+            it("ifAvailable updates store when cache is present") {
+                let stubFlags = FlagMaintainingMock.stubStoredItems()
+                let newContext = LDContext.stub()
+                let testContext = TestContext().withCached(contextKey: newContext.fullyQualifiedHashedKey(), flags: stubFlags.featureFlags)
+                testContext.start()
+                testContext.featureFlagCachingMock.reset()
+
+                testContext.subject.internalIdentify(newContext: newContext, useCache: .ifAvailable)
+
+                expect(testContext.subject.context) == newContext
+                expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
+                expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags) == stubFlags
             }
         }
     }
