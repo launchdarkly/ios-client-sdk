@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.11.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.10.0...9.11.0) (2024-10-21)
+
+
+### Features
+
+* Adds support for client-side prerequisite events ([#409](https://github.com/launchdarkly/ios-client-sdk/issues/409)) ([d4ad59c](https://github.com/launchdarkly/ios-client-sdk/commit/d4ad59c0614fa8acb5b30ed0d7c3e507c3e264d1))
+
 ## [9.10.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.9.0...9.10.0) (2024-08-07)
 
 
