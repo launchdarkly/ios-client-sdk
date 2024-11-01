@@ -15,14 +15,14 @@ protocol ClientServiceCreating {
                               service: DarklyServiceProvider,
                               onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing
     func makeFlagChangeNotifier() -> FlagChangeNotifying
-    func makeEventReporter(service: DarklyServiceProvider) -> EventReporting
-    func makeEventReporter(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting
     func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func makeEnvironmentReporter(config: LDConfig) -> EnvironmentReporting
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling
     func makeConnectionInformation() -> ConnectionInformation
     func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching
-    func makeDiagnosticReporter(service: DarklyServiceProvider, environmentReporter: EnvironmentReporting) -> DiagnosticReporting
+    func makeDiagnosticReporter(config: LDConfig, service: DarklyServiceProvider, environmentReporter: EnvironmentReporting) -> DiagnosticReporting
     func makeFlagStore() -> FlagMaintaining
 }
 
@@ -66,12 +66,16 @@ final class ClientServiceFactory: ClientServiceCreating {
         FlagChangeNotifier(logger: logger)
     }
 
-    func makeEventReporter(service: DarklyServiceProvider) -> EventReporting {
-        makeEventReporter(service: service, onSyncComplete: nil)
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting {
+        makeEventReporter(config: config, service: service, onSyncComplete: nil)
     }
 
-    func makeEventReporter(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure? = nil) -> EventReporting {
-        EventReporter(service: service, onSyncComplete: onSyncComplete)
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure? = nil) -> EventReporting {
+        if config.sendEvents {
+            EventReporter(service: service, onSyncComplete: onSyncComplete)
+        } else {
+            NullEventReporter()
+        }
     }
 
     func makeStreamingProvider(url: URL,
@@ -121,8 +125,12 @@ final class ClientServiceFactory: ClientServiceCreating {
         DiagnosticCache(sdkKey: sdkKey)
     }
 
-    func makeDiagnosticReporter(service: DarklyServiceProvider, environmentReporter: EnvironmentReporting) -> DiagnosticReporting {
-        DiagnosticReporter(service: service, environmentReporting: environmentReporter)
+    func makeDiagnosticReporter(config: LDConfig, service: DarklyServiceProvider, environmentReporter: EnvironmentReporting) -> DiagnosticReporting {
+        if config.sendEvents && !config.diagnosticOptOut {
+            DiagnosticReporter(service: service, environmentReporting: environmentReporter)
+        } else {
+            NullDiagnosticReporter()
+        }
     }
 
     func makeFlagStore() -> FlagMaintaining {

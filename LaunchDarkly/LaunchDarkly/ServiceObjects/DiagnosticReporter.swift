@@ -6,6 +6,11 @@ protocol DiagnosticReporting {
     func setMode(_ runMode: LDClientRunMode, online: Bool)
 }
 
+class NullDiagnosticReporter: DiagnosticReporting {
+    func setMode(_ runMode: LDClientRunMode, online: Bool) {
+    }
+}
+
 class DiagnosticReporter: DiagnosticReporting {
     private let service: DarklyServiceProvider
     private let environmentReporting: EnvironmentReporting

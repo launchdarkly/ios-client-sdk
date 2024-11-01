@@ -15,6 +15,21 @@ protocol EventReporting {
     func flush(completion: CompletionClosure?)
 }
 
+class NullEventReporter: EventReporting {
+    var isOnline: Bool = true
+    var lastEventResponseDate: Date = Date()
+
+    func record(_ event: Event) {
+    }
+
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool) {
+    }
+
+    func flush(completion: CompletionClosure?) {
+        completion?()
+    }
+}
+
 class EventReporter: EventReporting {
     var isOnline: Bool {
         get { timerQueue.sync { eventReportTimer != nil } }

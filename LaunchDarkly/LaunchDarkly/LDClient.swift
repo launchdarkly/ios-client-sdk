@@ -878,8 +878,8 @@ public class LDClient {
         }
 
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, context: context, envReporter: environmentReporter)
-        diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(service: service, environmentReporter: environmentReporter)
-        eventReporter = self.serviceFactory.makeEventReporter(service: service)
+        diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(config: config, service: service, environmentReporter: environmentReporter)
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
         connectionInformation = self.serviceFactory.makeConnectionInformation()
         let cachedData = flagCache.getCachedData(cacheKey: context.fullyQualifiedHashedKey(), contextHash: context.contextHash())
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
@@ -897,7 +897,7 @@ public class LDClient {
 
         NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
 
-        eventReporter = self.serviceFactory.makeEventReporter(service: service, onSyncComplete: onEventSyncComplete)
+        eventReporter = self.serviceFactory.makeEventReporter(config: configuration, service: service, onSyncComplete: onEventSyncComplete)
         service.resetFlagResponseCache(etag: cachedData.etag)
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),

@@ -44,7 +44,7 @@ final class FlagCounter: Encodable {
     private(set) var defaultValue: LDValue
     private(set) var flagValueCounters: [CounterKey: CounterValue] = [:]
     private(set) var contextKinds: Set<String> = Set()
-    
+
     init(defaultValue: LDValue) {
         // default value follows a "first one wins" approach where the first evaluation for a flag key sets the default value for the summary events
         self.defaultValue = defaultValue

@@ -188,6 +188,9 @@ public struct LDConfig {
         /// The default base url for connecting to streaming service
         static let streamUrl = URL(string: "https://clientstream.launchdarkly.com")!
 
+        /// The default behavior for the SDK is to send events.
+        static let sendEvents = true
+
         /// The default maximum number of events the LDClient can store
         static let eventCapacity = 100
 
@@ -304,6 +307,10 @@ public struct LDConfig {
     public var eventsUrl: URL = Defaults.eventsUrl
     /// The base url for connecting to the streaming service. Do not change unless instructed by LaunchDarkly.
     public var streamUrl: URL = Defaults.streamUrl
+
+    /// Whether to send events back to LaunchDarkly. This differs from {#offline?} in that it affects
+    /// only the sending of client-side events, not streaming or polling for events from the server.
+    public var sendEvents: Bool = Defaults.sendEvents
 
     /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)
     public var eventCapacity: Int = Defaults.eventCapacity
@@ -532,6 +539,7 @@ extension LDConfig: Equatable {
             && lhs.eventsUrl == rhs.eventsUrl
             && lhs.streamUrl == rhs.streamUrl
             && lhs.eventCapacity == rhs.eventCapacity
+            && lhs.sendEvents == rhs.sendEvents
             && lhs.connectionTimeout == rhs.connectionTimeout
             && lhs.eventFlushInterval == rhs.eventFlushInterval
             && lhs.flagPollingInterval == rhs.flagPollingInterval

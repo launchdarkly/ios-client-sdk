@@ -649,6 +649,15 @@ final class LDClientSpec: QuickSpec {
                 expect(receivedEvent?.data) == "abc"
                 expect(receivedEvent?.metricValue) == 5.0
             }
+            context("does not record when events are turned off") {
+                var config = LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: false)
+                config.sendEvents = false
+                let testContext = TestContext(newConfig: config)
+                testContext.start()
+                let priorRecordedEvents = testContext.eventReporterMock.recordCallCount
+                testContext.subject.track(key: "customEvent", data: "abc", metricValue: 5.0)
+                expect(testContext.eventReporterMock.recordCallCount) == priorRecordedEvents
+            }
             context("does not record when client was stopped") {
                 let testContext = TestContext()
                 testContext.start()

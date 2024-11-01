@@ -240,6 +240,7 @@
 		A3599E892A4B4AD400DB5C67 /* Modifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3599E872A4B4AD400DB5C67 /* Modifier.swift */; };
 		A3599E8A2A4B4AD400DB5C67 /* Modifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3599E872A4B4AD400DB5C67 /* Modifier.swift */; };
 		A3599E8B2A4B4AD400DB5C67 /* Modifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3599E872A4B4AD400DB5C67 /* Modifier.swift */; };
+		A35AC5572CD559DE00875751 /* CwlPreconditionTesting in Frameworks */ = {isa = PBXBuildFile; productRef = A3F4A4802CC2F640006EF480 /* CwlPreconditionTesting */; };
 		A35AD4602A619E45005A8DCB /* SystemCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35AD45F2A619E45005A8DCB /* SystemCapabilities.swift */; };
 		A35AD4612A619E45005A8DCB /* SystemCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35AD45F2A619E45005A8DCB /* SystemCapabilities.swift */; };
 		A35AD4622A619E45005A8DCB /* SystemCapabilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35AD45F2A619E45005A8DCB /* SystemCapabilities.swift */; };
@@ -560,10 +561,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A35AC5572CD559DE00875751 /* CwlPreconditionTesting in Frameworks */,
 				B4903D9E24BD61EF00F087C4 /* Quick in Frameworks */,
 				B4903D9B24BD61D000F087C4 /* Nimble in Frameworks */,
 				B4903D9824BD61B200F087C4 /* OHHTTPStubsSwift in Frameworks */,
-				A3F4A4812CC2F640006EF480 /* CwlPreconditionTesting in Frameworks */,
 				8354EFCC1F22491C00C05156 /* LaunchDarkly.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

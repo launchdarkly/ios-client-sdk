@@ -51,6 +51,11 @@ public final class ObjcLDConfig: NSObject {
         get { config.eventFlushInterval }
         set { config.eventFlushInterval = newValue }
     }
+    // Whether or not the SDK should send events
+    @objc public var sendEvents: Bool {
+        get { config.sendEvents }
+        set { config.sendEvents = newValue }
+    }
     /// The interval between feature flag requests. Used only for polling mode. (Default: 5 minutes)
     @objc public var flagPollingInterval: TimeInterval {
         get { config.flagPollingInterval }

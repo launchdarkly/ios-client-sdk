@@ -92,6 +92,8 @@ final class SdkController: RouteCollection {
             if let enableCompression = events.enableGzip {
                 config.enableCompression = enableCompression
             }
+        } else {
+            config.sendEvents = false
         }
 
         if let tags = createInstance.configuration.tags {

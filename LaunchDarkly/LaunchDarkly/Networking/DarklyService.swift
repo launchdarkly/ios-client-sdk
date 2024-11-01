@@ -60,7 +60,7 @@ final class DarklyService: DarklyServiceProvider {
         self.context = context
         self.serviceFactory = serviceFactory
 
-        if !config.mobileKey.isEmpty && !config.diagnosticOptOut {
+        if !config.mobileKey.isEmpty && !config.diagnosticOptOut && config.sendEvents {
             self.diagnosticCache = serviceFactory.makeDiagnosticCache(sdkKey: config.mobileKey)
         } else {
             self.diagnosticCache = nil

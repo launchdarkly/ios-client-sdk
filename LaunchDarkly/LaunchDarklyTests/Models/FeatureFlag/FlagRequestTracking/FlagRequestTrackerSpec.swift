@@ -35,7 +35,7 @@ final class FlagRequestTrackerSpec: XCTestCase {
         counter.trackRequest(reportedValue: false, featureFlag: flag, context: LDContext.stub())
         XCTAssertEqual(flagRequestTracker.flagCounters["bool-flag"], counter)
     }
-    
+
     func testTrackRequestSameFlagKeyDifferentDefault() {
         let flag = FeatureFlag(flagKey: "bool-flag", variation: 1, version: 5, flagVersion: 2)
         var flagRequestTracker = FlagRequestTracker(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))

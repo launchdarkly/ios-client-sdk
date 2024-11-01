@@ -67,18 +67,20 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     var makeEventReporterCallCount = 0
+    var makeEventReporterReceivedConfig: LDConfig? = nil
     var makeEventReporterReceivedService: DarklyServiceProvider? = nil
     var onEventSyncComplete: EventSyncCompleteClosure? = nil
-    func makeEventReporter(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting {
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting {
         makeEventReporterCallCount += 1
+        makeEventReporterReceivedConfig = config
         makeEventReporterReceivedService = service
         onEventSyncComplete = onSyncComplete
 
         return EventReportingMock()
     }
 
-    func makeEventReporter(service: DarklyServiceProvider) -> EventReporting {
-        return makeEventReporter(service: service, onSyncComplete: nil)
+    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting {
+        return makeEventReporter(config: config, service: service, onSyncComplete: nil)
     }
 
     var makeStreamingProviderCallCount = 0
@@ -105,9 +107,11 @@ final class ClientServiceMockFactory: ClientServiceCreating {
 
     var makeDiagnosticReporterCallCount = 0
     var makeDiagnosticReporterReceivedService: DarklyServiceProvider? = nil
-    func makeDiagnosticReporter(service: DarklyServiceProvider, environmentReporter: EnvironmentReporting) -> DiagnosticReporting {
+    var makeDiagnosticReporterReceivedConfig: LDConfig? = nil
+    func makeDiagnosticReporter(config: LDConfig, service: DarklyServiceProvider, environmentReporter: EnvironmentReporting) -> DiagnosticReporting {
         makeDiagnosticReporterCallCount += 1
         makeDiagnosticReporterReceivedService = service
+        makeDiagnosticReporterReceivedConfig = config
         return DiagnosticReportingMock()
     }
 
