@@ -721,10 +721,14 @@ final class LDClientSpec: QuickSpec {
                     let flagAC = FeatureFlag(flagKey: "flagAC", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagA"])
                     let flagABD = FeatureFlag(flagKey: "flagABD", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagAB"])
                     let flags: [LDFlagKey: FeatureFlag] = ["flagA": flagA, "flagAB": flagAB, "flagAC": flagAC, "flagABD": flagABD]
-                    var storedItems = StoredItems(items: flags)
+                    let storedItems = StoredItems(items: flags)
                     testContext.flagStoreMock.replaceStore(newStoredItems: storedItems)
                     var events = [FeatureEvent]()
-                    testContext.eventReporterMock.recordFlagEvaluationEventsCallback = { events.append($0) }
+                    testContext.eventReporterMock.recordFlagEvaluationEventsCallback = {
+                        let args = testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments!
+                        let event = FeatureEvent(key: args.flagKey, context: args.context, value: args.value, defaultValue: args.defaultValue, featureFlag: args.featureFlag, includeReason: args.includeReason, isDebug: false)
+                        events.append(event)
+                    }
                     _ = testContext.subject.boolVariation(forKey: "flagA", defaultValue: DefaultFlagValues.bool)
                     _ = testContext.subject.boolVariation(forKey: "flagAB", defaultValue: DefaultFlagValues.bool)
                     _ = testContext.subject.boolVariation(forKey: "flagAC", defaultValue: DefaultFlagValues.bool)
