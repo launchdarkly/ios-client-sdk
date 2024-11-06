@@ -2,6 +2,14 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.12.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.11.0...9.12.0) (2024-11-06)
+
+
+### Features
+
+* Add `LDConfig.sendEvents` option to disable all events ([#414](https://github.com/launchdarkly/ios-client-sdk/issues/414)) ([9a51844](https://github.com/launchdarkly/ios-client-sdk/commit/9a5184436ed76edd1cecfc81963888196157b1be))
+* Add cache usage option for identify calls ([#408](https://github.com/launchdarkly/ios-client-sdk/issues/408)) ([b928345](https://github.com/launchdarkly/ios-client-sdk/commit/b928345cabcdc66e2dffc7e260c2764fc18d07b2))
+
 ## [9.11.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.10.0...9.11.0) (2024-10-21)
 
 
