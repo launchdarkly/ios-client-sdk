@@ -72,9 +72,9 @@ final class ClientServiceFactory: ClientServiceCreating {
 
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure? = nil) -> EventReporting {
         if config.sendEvents {
-            EventReporter(service: service, onSyncComplete: onSyncComplete)
+            return EventReporter(service: service, onSyncComplete: onSyncComplete)
         } else {
-            NullEventReporter()
+            return NullEventReporter()
         }
     }
 
@@ -127,9 +127,9 @@ final class ClientServiceFactory: ClientServiceCreating {
 
     func makeDiagnosticReporter(config: LDConfig, service: DarklyServiceProvider, environmentReporter: EnvironmentReporting) -> DiagnosticReporting {
         if config.sendEvents && !config.diagnosticOptOut {
-            DiagnosticReporter(service: service, environmentReporting: environmentReporter)
+            return DiagnosticReporter(service: service, environmentReporting: environmentReporter)
         } else {
-            NullDiagnosticReporter()
+            return NullDiagnosticReporter()
         }
     }
 

@@ -51,7 +51,7 @@ final class DarklyService: DarklyServiceProvider {
     var context: LDContext
     let httpHeaders: HTTPHeaders
     let diagnosticCache: DiagnosticCaching?
-    private (set) var serviceFactory: ClientServiceCreating
+    private(set) var serviceFactory: ClientServiceCreating
     private var session: URLSession
     var flagRequestEtag: String?
 
