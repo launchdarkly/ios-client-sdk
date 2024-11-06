@@ -27,8 +27,7 @@ runs:
     - name: Install mint
       shell: bash
       run: |
-        brew tap mint-lang/mint-lang
-        brew install mint-lang libressl
+        brew install mint
 
     - name: Install cocoapods
       shell: bash
