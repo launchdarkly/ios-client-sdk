@@ -25,10 +25,6 @@ jobs:
             ios-sim: 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
             os: macos-13
             run-contract-tests: true
-          - xcode-version: 13.4.1
-            ios-sim: 'platform=iOS Simulator,name=iPhone 11,OS=15.5'
-            os: macos-12
-            run-contract-tests: false
 
     steps:
       - uses: actions/checkout@v4
