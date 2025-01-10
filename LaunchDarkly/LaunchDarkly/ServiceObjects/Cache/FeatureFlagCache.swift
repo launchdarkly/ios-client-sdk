@@ -32,6 +32,15 @@ protocol FeatureFlagCaching {
     ///
     ///
     func getCachedData(cacheKey: String, contextHash: String) -> (items: StoredItems?, etag: String?, lastUpdated: Date?)
+    
+    /// Retrieve the date the cache for the given key was last updated. See getCachedData for more information.
+    ///
+    /// - parameter cacheKey: The index key into the local cache store.
+    /// - parameter contextHash: A hash value representing a fully unique context.
+    ///
+    /// - returns: The date the cache was last considered up-to-date. If there are no cached
+    ///            values, this should return nil.
+    func getCachedDataLastUpdatedDate(cacheKey: String, contextHash: String) -> Date?
 
     // When we update the cache, we save the flag data and if we have it, an
     // etag. For polling, we should always have the flag data and an etag
@@ -98,6 +107,19 @@ final class FeatureFlagCache: FeatureFlagCaching {
         else { return (items: cachedFlags.flags, etag: etag, lastUpdated: nil) }
 
         return (items: cachedFlags.flags, etag: etag, lastUpdated: Date(timeIntervalSince1970: TimeInterval(lastUpdated / 1_000)))
+    }
+    
+    func getCachedDataLastUpdatedDate(cacheKey: String, contextHash: String) -> Date? {
+
+        var cachedContexts: [String: Int64] = [:]
+        if let cacheMetadata = keyedValueCache.data(forKey: "cached-contexts") {
+            cachedContexts = (try? JSONDecoder().decode([String: Int64].self, from: cacheMetadata)) ?? [:]
+        }
+
+        guard let lastUpdated = cachedContexts[cacheKey]
+        else { return nil }
+
+        return Date(timeIntervalSince1970: TimeInterval(lastUpdated / 1_000))
     }
 
     func saveCachedData(_ storedItems: StoredItems, cacheKey: String, contextHash: String, lastUpdated: Date, etag: String?) {

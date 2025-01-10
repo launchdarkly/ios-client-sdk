@@ -207,9 +207,7 @@ public class LDClient {
                 os_log("%s runMode aborted. Old runMode equals new runMode", log: config.logger, type: .debug, typeName(and: #function))
                 return
             }
-
-            let cachedData = self.flagCache.getCachedData(cacheKey: self.context.fullyQualifiedHashedKey(), contextHash: self.context.contextHash())
-
+            let lastUpdated = self.flagCache.getCachedDataLastUpdatedDate(cacheKey: self.context.fullyQualifiedHashedKey(), contextHash: self.context.contextHash())
             let willSetSynchronizerOnline = isOnline && isInSupportedRunMode
             flagSynchronizer.isOnline = false
             let streamingModeVar = ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self)
@@ -217,7 +215,7 @@ public class LDClient {
             flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: streamingModeVar,
                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
                                                                    useReport: config.useReport,
-                                                                   lastUpdated: cachedData.lastUpdated,
+                                                                   lastUpdated: lastUpdated,
                                                                    service: service,
                                                                    onSyncComplete: onFlagSyncComplete)
             flagSynchronizer.isOnline = willSetSynchronizerOnline

@@ -178,4 +178,22 @@ final class FeatureFlagCacheSpec: XCTestCase {
         let setMetadata = try JSONDecoder().decode([String: Int64].self, from: mockValueCache.setReceivedArguments!.value)
         XCTAssertEqual(setMetadata, [hashedContextKey: now.millisSince1970])
     }
+    
+    func testGetCachedDataLastUpdatedDate() {
+        let now = Date()
+        let flagCache = FeatureFlagCache(serviceFactory: ClientServiceFactory(logger: .disabled), mobileKey: "abc", maxCachedContexts: 5)
+        flagCache.saveCachedData(testFlagCollection.flags, cacheKey: "key", contextHash: "hash", lastUpdated: now, etag: "example-etag")
+
+        let lastUpdated = flagCache.getCachedDataLastUpdatedDate(cacheKey: "key", contextHash: "hash")
+        XCTAssertEqual(lastUpdated!.millisSince1970, now.millisSince1970, accuracy: 1_000)
+    }
+    
+    func testGetCachedDataLastUpdatedDateKeyDoesntExist() {
+        let now = Date()
+        let flagCache = FeatureFlagCache(serviceFactory: ClientServiceFactory(logger: .disabled), mobileKey: "abc", maxCachedContexts: 5)
+        flagCache.saveCachedData(testFlagCollection.flags, cacheKey: "key", contextHash: "hash", lastUpdated: now, etag: "example-etag")
+
+        let lastUpdated = flagCache.getCachedDataLastUpdatedDate(cacheKey: "bogus", contextHash: "bogusHash")
+        XCTAssertEqual(lastUpdated, nil)
+    }
 }
