@@ -142,7 +142,7 @@ final class FeatureFlagSpec: XCTestCase {
         ]
         let encoded = try JSONEncoder().encode(testData)
         let storedItemCollection = try JSONDecoder().decode(StoredItemCollection.self, from: encoded)
-        XCTAssertEqual(storedItemCollection.flags.count, 2)
+        XCTAssertEqual(storedItemCollection.flags.items.count, 2)
         XCTAssertEqual(storedItemCollection.flags.featureFlags["key1"]?.flagKey, "key1")
         XCTAssertNil(storedItemCollection.flags.featureFlags["key2"])
     }

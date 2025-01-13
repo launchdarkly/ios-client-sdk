@@ -224,14 +224,14 @@ final class LDClientSpec: QuickSpec {
             }
         }
         it("when called with cached flags for the context and environment") {
-            let cachedFlags = ["test-flag": StorageItem.item(FeatureFlag(flagKey: "test-flag"))]
+            let cachedFlags: StoredItems = ["test-flag": StorageItem.item(FeatureFlag(flagKey: "test-flag"))]
             let testContext = TestContext().withCached(flags: cachedFlags.featureFlags)
             withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
 
             expect(testContext.featureFlagCachingMock.getCachedDataCallCount) == 1
             expect(testContext.featureFlagCachingMock.getCachedDataReceivedArguments?.cacheKey) == testContext.context.fullyQualifiedHashedKey()
 
-            expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags) == cachedFlags
+            expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags?.items) == cachedFlags.items
 
             expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataCallCount) == 1
             expect(testContext.serviceFactoryMock.makeCacheConverterReturnValue.convertCacheDataReceivedArguments?.maxCachedContexts) == testContext.config.maxCachedContexts
@@ -491,7 +491,7 @@ final class LDClientSpec: QuickSpec {
 
                 expect(testContext.subject.context) == newContext
                 expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
-                expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags) == stubFlags
+                expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags?.items) == stubFlags.items
             }
 
             it("when we have opted into auto environment attributes") {
@@ -573,7 +573,7 @@ final class LDClientSpec: QuickSpec {
 
                 expect(testContext.subject.context) == newContext
                 expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
-                expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags) == stubFlags
+                expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags?.items) == stubFlags.items
             }
         }
     }
@@ -896,14 +896,14 @@ final class LDClientSpec: QuickSpec {
         waitUntil { done in
             testContext.changeNotifierMock.notifyObserversCallback = done
             updateDate = Date()
-            testContext.onSyncComplete?(.flagCollection((FeatureFlagCollection(newStoredItems.featureFlags), nil)))
+            testContext.onSyncComplete?(.flagCollection((FeatureFlagCollection(StoredItems(items: newStoredItems).featureFlags), nil)))
         }
 
         expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
-        expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags) == newStoredItems
+        expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags?.items) == newStoredItems
 
         expect(testContext.featureFlagCachingMock.saveCachedDataCallCount) == 1
-        expect(testContext.featureFlagCachingMock.saveCachedDataReceivedArguments?.storedItems) == newStoredItems
+        expect(testContext.featureFlagCachingMock.saveCachedDataReceivedArguments?.storedItems.items) == newStoredItems
         expect(testContext.featureFlagCachingMock.saveCachedDataReceivedArguments?.cacheKey) == testContext.context.fullyQualifiedHashedKey()
         expect(testContext.featureFlagCachingMock.saveCachedDataReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
 
@@ -930,7 +930,7 @@ final class LDClientSpec: QuickSpec {
         expect(testContext.flagStoreMock.updateStoreReceivedUpdatedFlag) == updateFlag
 
         expect(testContext.featureFlagCachingMock.saveCachedDataCallCount) == 1
-        expect(testContext.featureFlagCachingMock.saveCachedDataReceivedArguments?.storedItems) == testContext.flagStoreMock.storedItems
+        expect(testContext.featureFlagCachingMock.saveCachedDataReceivedArguments?.storedItems.items) == testContext.flagStoreMock.storedItems.items
         expect(testContext.featureFlagCachingMock.saveCachedDataReceivedArguments?.cacheKey) == testContext.context.fullyQualifiedHashedKey()
         expect(testContext.featureFlagCachingMock.saveCachedDataReceivedArguments?.lastUpdated).to(beCloseTo(updateDate, within: Constants.updateThreshold))
 

@@ -49,14 +49,14 @@ final class FeatureFlagCacheSpec: XCTestCase {
     func testRetrieveEmptyData() throws {
         mockValueCache.dataReturnValue = try JSONEncoder().encode(StoredItemCollection([:]))
         let flagCache = FeatureFlagCache(serviceFactory: serviceFactory, mobileKey: "abc", maxCachedContexts: 2)
-        XCTAssertEqual(flagCache.getCachedData(cacheKey: "context1", contextHash: "context").items?.count, 0)
+        XCTAssertEqual(flagCache.getCachedData(cacheKey: "context1", contextHash: "context").items?.items.count, 0)
     }
 
     func testRetrieveValidData() throws {
         mockValueCache.dataReturnValue = try JSONEncoder().encode(testFlagCollection)
         let flagCache = FeatureFlagCache(serviceFactory: serviceFactory, mobileKey: "abc", maxCachedContexts: 1)
         let retrieved = flagCache.getCachedData(cacheKey: "context1", contextHash: "contextHash")
-        XCTAssertEqual(retrieved.items, testFlagCollection.flags)
+        XCTAssertEqual(retrieved.items?.items, testFlagCollection.flags.items)
         XCTAssertEqual(mockValueCache.dataCallCount, 2)
         XCTAssertEqual(mockValueCache.dataReceivedForKey, "fingerprint-context1")
     }
@@ -75,7 +75,7 @@ final class FeatureFlagCacheSpec: XCTestCase {
         flagCache.saveCachedData(testFlagCollection.flags, cacheKey: "key", contextHash: "hash", lastUpdated: now, etag: "example-etag")
 
         let results = flagCache.getCachedData(cacheKey: "key", contextHash: "hash")
-        XCTAssertEqual(results.items, testFlagCollection.flags)
+        XCTAssertEqual(results.items?.items, testFlagCollection.flags.items)
         XCTAssertEqual(results.etag, "example-etag")
         XCTAssertEqual(results.lastUpdated!.millisSince1970, now.millisSince1970, accuracy: 1_000)
     }
@@ -86,7 +86,7 @@ final class FeatureFlagCacheSpec: XCTestCase {
         flagCache.saveCachedData(testFlagCollection.flags, cacheKey: "key", contextHash: "hash", lastUpdated: now, etag: "example-etag")
 
         let results = flagCache.getCachedData(cacheKey: "key", contextHash: "changed-hash")
-        XCTAssertEqual(results.items, testFlagCollection.flags)
+        XCTAssertEqual(results.items?.items, testFlagCollection.flags.items)
         XCTAssertEqual(results.etag, nil)
         XCTAssertEqual(results.lastUpdated, nil)
     }
@@ -97,7 +97,7 @@ final class FeatureFlagCacheSpec: XCTestCase {
         flagCache.saveCachedData(testFlagCollection.flags, cacheKey: "key", contextHash: "hash", lastUpdated: now, etag: "example-etag")
 
         let results = flagCache.getCachedData(cacheKey: "changed-key", contextHash: "hash")
-        XCTAssertEqual(results.items, nil)
+        XCTAssertEqual(results.items?.items, nil)
         XCTAssertEqual(results.etag, nil)
         XCTAssertEqual(results.lastUpdated, nil)
     }

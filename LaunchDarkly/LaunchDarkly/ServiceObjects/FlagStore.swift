@@ -46,17 +46,59 @@ enum StorageItem: Codable {
     }
 }
 
-typealias StoredItems = [LDFlagKey: StorageItem]
-extension StoredItems {
+struct StoredItems {
+    var items: [LDFlagKey: StorageItem]
+
     var featureFlags: [LDFlagKey: FeatureFlag] {
-        self.compactMapValues {
+        items.compactMapValues {
             guard case .item(let flag) = $0 else { return nil }
             return flag
         }
     }
 
+    var isEmpty: Bool {
+        items.isEmpty
+    }
+
+    subscript (key: LDFlagKey) -> StorageItem? {
+        get { items[key] }
+        set { items[key] = newValue }
+    }
+
+    mutating func updateValue(_ newValue: StorageItem, forKey key: LDFlagKey) {
+        items.updateValue(newValue, forKey: key)
+    }
+}
+
+extension StoredItems {
     init(items: [LDFlagKey: FeatureFlag]) {
-        self = items.mapValues { .item($0) }
+        self.items = items.mapValues { .item($0) }
+    }
+}
+
+extension StoredItems: ExpressibleByDictionaryLiteral {
+    init(dictionaryLiteral elements: (LDFlagKey, StorageItem)...) {
+        self.items = Dictionary(uniqueKeysWithValues: elements)
+    }
+}
+
+extension StoredItems: Decodable {
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.items = try container.decode([LDFlagKey: StorageItem].self)
+    }
+}
+
+extension StoredItems: Encodable {
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(items)
+    }
+}
+
+extension StoredItems: CustomStringConvertible {
+    var description: String {
+        String(data: (try? JSONEncoder().encode(items)) ?? Data(), encoding: .utf8) ?? ""
     }
 }
 

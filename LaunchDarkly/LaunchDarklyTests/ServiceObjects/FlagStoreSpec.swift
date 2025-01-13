@@ -8,7 +8,7 @@ final class FlagStoreSpec: XCTestCase {
     let stubFlags = DarklyServiceMock.Constants.stubFeatureFlags()
 
     func testInit() {
-        XCTAssertEqual(FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests")).storedItems, [:])
+        XCTAssertEqual(FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests")).storedItems.items, [:])
         XCTAssertEqual(FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"), storedItems: StoredItems(items: self.stubFlags)).storedItems.featureFlags, self.stubFlags)
     }
 
@@ -16,14 +16,14 @@ final class FlagStoreSpec: XCTestCase {
         let featureFlags = StoredItems(items: DarklyServiceMock.Constants.stubFeatureFlags())
         let flagStore = FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         flagStore.replaceStore(newStoredItems: featureFlags)
-        XCTAssertEqual(flagStore.storedItems, featureFlags)
+        XCTAssertEqual(flagStore.storedItems.items, featureFlags.items)
     }
 
     func testUpdateStoreNewFlag() {
         let flagStore = FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"), storedItems: StoredItems(items: stubFlags))
         let flagUpdate = FeatureFlag(flagKey: "new-int-flag", value: "abc", version: 0)
         flagStore.updateStore(updatedFlag: flagUpdate)
-        XCTAssertEqual(flagStore.storedItems.count, stubFlags.count + 1)
+        XCTAssertEqual(flagStore.storedItems.items.count, stubFlags.count + 1)
         XCTAssertEqual(flagStore.storedItems.featureFlags["new-int-flag"], flagUpdate)
     }
 
@@ -31,7 +31,7 @@ final class FlagStoreSpec: XCTestCase {
         let flagStore = FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"), storedItems: StoredItems(items: stubFlags))
         let flagUpdate = DarklyServiceMock.Constants.stubFeatureFlag(for: DarklyServiceMock.FlagKeys.int, useAlternateVersion: true)
         flagStore.updateStore(updatedFlag: flagUpdate)
-        XCTAssertEqual(flagStore.storedItems.count, stubFlags.count)
+        XCTAssertEqual(flagStore.storedItems.items.count, stubFlags.count)
         XCTAssertEqual(flagStore.storedItems.featureFlags[DarklyServiceMock.FlagKeys.int], flagUpdate)
     }
 
@@ -39,7 +39,7 @@ final class FlagStoreSpec: XCTestCase {
         let flagStore = FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"), storedItems: StoredItems(items: stubFlags))
         let flagUpdate = FeatureFlag(flagKey: DarklyServiceMock.FlagKeys.int, value: "abc", version: nil)
         flagStore.updateStore(updatedFlag: flagUpdate)
-        XCTAssertEqual(flagStore.storedItems.count, stubFlags.count)
+        XCTAssertEqual(flagStore.storedItems.items.count, stubFlags.count)
         XCTAssertEqual(flagStore.storedItems.featureFlags[DarklyServiceMock.FlagKeys.int], flagUpdate)
     }
 
@@ -57,7 +57,7 @@ final class FlagStoreSpec: XCTestCase {
     func testDeleteFlagNewerVersion() {
         let flagStore = FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"), storedItems: StoredItems(items: stubFlags))
         flagStore.deleteFlag(deleteResponse: DeleteResponse(key: DarklyServiceMock.FlagKeys.int, version: DarklyServiceMock.Constants.version + 1))
-        XCTAssertEqual(flagStore.storedItems.count, self.stubFlags.count)
+        XCTAssertEqual(flagStore.storedItems.items.count, self.stubFlags.count)
         XCTAssertEqual(flagStore.storedItems.featureFlags.count, self.stubFlags.count - 1)
         XCTAssertEqual(StorageItem.tombstone(5), flagStore.storedItems[DarklyServiceMock.FlagKeys.int])
     }
@@ -65,7 +65,7 @@ final class FlagStoreSpec: XCTestCase {
     func testDeleteFlagMissingVersion() {
         let flagStore = FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"), storedItems: StoredItems(items: stubFlags))
         flagStore.deleteFlag(deleteResponse: DeleteResponse(key: DarklyServiceMock.FlagKeys.int, version: nil))
-        XCTAssertEqual(flagStore.storedItems.count, self.stubFlags.count)
+        XCTAssertEqual(flagStore.storedItems.items.count, self.stubFlags.count)
         XCTAssertEqual(flagStore.storedItems.featureFlags.count, self.stubFlags.count - 1)
         XCTAssertEqual(StorageItem.tombstone(0), flagStore.storedItems[DarklyServiceMock.FlagKeys.int])
     }
@@ -82,21 +82,21 @@ final class FlagStoreSpec: XCTestCase {
         let flagStore = FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"), storedItems: StoredItems(items: stubFlags))
         let flagUpdate = FeatureFlag(flagKey: "new-int-flag", value: "abc", version: 0)
         flagStore.updateStore(updatedFlag: flagUpdate)
-        XCTAssertEqual(stubFlags.count + 1, flagStore.storedItems.count)
+        XCTAssertEqual(stubFlags.count + 1, flagStore.storedItems.items.count)
         XCTAssertEqual(stubFlags.count + 1, flagStore.storedItems.featureFlags.count)
 
         flagStore.deleteFlag(deleteResponse: DeleteResponse(key: "new-int-flag", version: 1))
-        XCTAssertEqual(stubFlags.count + 1, flagStore.storedItems.count)
+        XCTAssertEqual(stubFlags.count + 1, flagStore.storedItems.items.count)
         XCTAssertEqual(stubFlags.count, flagStore.storedItems.featureFlags.count)
 
         flagStore.updateStore(updatedFlag: flagUpdate)
-        XCTAssertEqual(stubFlags.count + 1, flagStore.storedItems.count)
+        XCTAssertEqual(stubFlags.count + 1, flagStore.storedItems.items.count)
         XCTAssertEqual(stubFlags.count, flagStore.storedItems.featureFlags.count)
     }
 
     func testFeatureFlag() {
         let flagStore = FlagStore(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"), storedItems: StoredItems(items: stubFlags))
-        flagStore.storedItems.forEach { flagKey, featureFlag in
+        flagStore.storedItems.items.forEach { flagKey, featureFlag in
             guard case .item(let flag) = featureFlag
             else {
                 XCTAssertNil(flagStore.featureFlag(for: flagKey))

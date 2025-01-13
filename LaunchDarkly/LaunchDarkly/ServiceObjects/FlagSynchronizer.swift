@@ -43,6 +43,23 @@ enum FlagSyncResult {
     case error(SynchronizingError)
 }
 
+extension FlagSyncResult: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .flagCollection(let flags, let lastUpdated):
+            return "flagCollection(\(String(data: (try? JSONEncoder().encode(flags.flags)) ?? Data(), encoding: .utf8) ?? ""), \(lastUpdated.flatMap(\.description) ?? ""))"
+        case .patch(let flag):
+            return "patch(\(flag))"
+        case .delete(let deleteResponse):
+            return "delete(\(deleteResponse))"
+        case .upToDate:
+            return "upToDate"
+        case .error(let error):
+            return "error(\(error))"
+        }
+    }
+}
+
 struct DeleteResponse: Decodable {
     let key: String
     let version: Int?
