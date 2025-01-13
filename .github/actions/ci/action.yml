@@ -24,15 +24,11 @@ runs:
       with:
         xcode-version: ${{ inputs.xcode-version }}
 
-    - name: Install mint
+    - name: Test swiftlint
       shell: bash
       run: |
-        brew install mint
-
-    - name: Install swiftlint
-      shell: bash
-      run: |
-        brew install swiftlint
+        cd ./ContractTests
+        swiftlint lint
 
     - name: Install cocoapods
       shell: bash
