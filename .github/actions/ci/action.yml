@@ -24,6 +24,11 @@ runs:
       with:
         xcode-version: ${{ inputs.xcode-version }}
 
+    - name: Install swiftlint
+      shell: bash
+      run: |
+        brew install swiftlint
+
     - name: Test swiftlint
       shell: bash
       run: |
