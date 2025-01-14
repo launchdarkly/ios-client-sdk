@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.12.1](https://github.com/launchdarkly/ios-client-sdk/compare/9.12.0...9.12.1) (2025-01-14)
+
+
+### Bug Fixes
+
+* improving performance of FlagSynchronizer creation ([#420](https://github.com/launchdarkly/ios-client-sdk/issues/420)) ([e9575a0](https://github.com/launchdarkly/ios-client-sdk/commit/e9575a0ff998c916c0a61ed226a032bd2b82f578))
+
 ## [9.12.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.11.0...9.12.0) (2024-11-06)
 
 
