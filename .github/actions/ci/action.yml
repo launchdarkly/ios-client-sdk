@@ -43,6 +43,13 @@ runs:
         cd ./ContractTests
         swiftlint lint
 
+    - name: Run which
+      shell: bash
+      run: |
+        which swiftlint
+        which mint
+        which SwiftLint
+
     - name: Build for macOS
       shell: bash
       run: xcodebuild build -scheme 'LaunchDarkly_macOS' -sdk macosx -destination 'platform=macOS' | xcpretty
