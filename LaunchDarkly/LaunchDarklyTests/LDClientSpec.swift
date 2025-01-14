@@ -382,7 +382,7 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.context) == testContext.context
                         }
                         it("uncaches the new contexts flags") {
-                            expect(testContext.featureFlagCachingMock.getCachedDataCallCount) == 2
+                            expect(testContext.featureFlagCachingMock.getCachedDataCallCount) == 1
                             expect(testContext.featureFlagCachingMock.getCachedDataReceivedArguments?.cacheKey) == testContext.context.fullyQualifiedHashedKey()
                         }
                         it("records an identify event") {
@@ -421,7 +421,7 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.serviceFactoryMock.makeEventReporterReceivedService?.context) == testContext.context
                         }
                         it("uncaches the new contexts flags") {
-                            expect(testContext.featureFlagCachingMock.getCachedDataCallCount) == 2
+                            expect(testContext.featureFlagCachingMock.getCachedDataCallCount) == 1
                             expect(testContext.featureFlagCachingMock.getCachedDataReceivedArguments?.cacheKey) == testContext.context.fullyQualifiedHashedKey()
                         }
                         it("records an identify event") {
