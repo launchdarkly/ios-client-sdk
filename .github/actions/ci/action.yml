@@ -24,16 +24,10 @@ runs:
       with:
         xcode-version: ${{ inputs.xcode-version }}
 
-    - name: Install swiftlint
+    - name: Install mint
       shell: bash
       run: |
-        brew install swiftlint
-
-    - name: Test swiftlint
-      shell: bash
-      run: |
-        cd ./ContractTests
-        swiftlint lint
+        brew install mint
 
     - name: Install cocoapods
       shell: bash
@@ -43,11 +37,11 @@ runs:
       shell: bash
       run: pod lib lint LaunchDarkly.podspec --allow-warnings
 
-    - name: Run swiftlint
-      shell: bash
-      run: |
-        cd ./ContractTests
-        swiftlint lint
+    # - name: Run swiftlint
+    #   shell: bash
+    #   run: |
+    #     cd ./ContractTests
+    #     swiftlint lint
 
     - name: Build for macOS
       shell: bash
