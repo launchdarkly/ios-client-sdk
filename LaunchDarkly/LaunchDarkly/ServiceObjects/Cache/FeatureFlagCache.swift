@@ -32,7 +32,7 @@ protocol FeatureFlagCaching {
     ///
     ///
     func getCachedData(cacheKey: String, contextHash: String) -> (items: StoredItems?, etag: String?, lastUpdated: Date?)
-    
+
     /// Retrieve the date the cache for the given key was last updated. See getCachedData for more information.
     ///
     /// - parameter cacheKey: The index key into the local cache store.
@@ -108,7 +108,7 @@ final class FeatureFlagCache: FeatureFlagCaching {
 
         return (items: cachedFlags.flags, etag: etag, lastUpdated: Date(timeIntervalSince1970: TimeInterval(lastUpdated / 1_000)))
     }
-    
+
     func getCachedDataLastUpdatedDate(cacheKey: String, contextHash: String) -> Date? {
 
         var cachedContexts: [String: Int64] = [:]
