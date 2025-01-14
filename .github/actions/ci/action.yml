@@ -33,22 +33,20 @@ runs:
       shell: bash
       run: gem install cocoapods
 
-    - name: Lint the podspec
+    - name: Run swiftlint contract tests
       shell: bash
-      run: pod lib lint LaunchDarkly.podspec --allow-warnings
+      run: |
+        swiftlint lint
 
-    - name: Run swiftlint
+    - name: Run swiftlint contract tests
       shell: bash
       run: |
         cd ./ContractTests
         swiftlint lint
 
-    - name: Run which
+    - name: Lint the podspec
       shell: bash
-      run: |
-        which swiftlint
-        which mint
-        which SwiftLint
+      run: pod lib lint LaunchDarkly.podspec --allow-warnings
 
     - name: Build for macOS
       shell: bash
