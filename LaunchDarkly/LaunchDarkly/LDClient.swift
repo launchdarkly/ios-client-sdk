@@ -621,9 +621,9 @@ public class LDClient {
     }
 
     private func onFlagSyncComplete(result: FlagSyncResult) {
-        os_log("%s result: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: result))
         switch result {
         case let .flagCollection((flagCollection, etag)):
+            os_log("%s: got flag collection with %d flags.", log: config.logger, type: .debug, typeName(and: #function), flagCollection.flags.count)
             let oldStoredItems = flagStore.storedItems
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.replaceStore(newStoredItems: StoredItems(items: flagCollection.flags))
