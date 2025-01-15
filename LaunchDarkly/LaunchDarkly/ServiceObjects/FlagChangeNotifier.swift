@@ -27,23 +27,23 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     }
 
     func addFlagChangeObserver(_ observer: FlagChangeObserver) {
-        os_log("%s observer: %s", log: logger, type: .debug, typeName(and: #function), String(describing: observer))
+        os_log("%s called for keys %s", log: logger, type: .debug, typeName(and: #function), String(describing: observer.flagKeys))
         flagChangeQueue.sync { flagChangeObservers.append(observer) }
     }
 
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver) {
-        os_log("%s observer: %s", log: logger, type: .debug, typeName(and: #function), String(describing: observer))
+        os_log("%s called.", log: logger, type: .debug, typeName(and: #function), String(describing: observer))
         flagsUnchangedQueue.sync { flagsUnchangedObservers.append(observer) }
     }
 
     func addConnectionModeChangedObserver(_ observer: ConnectionModeChangedObserver) {
-        os_log("%s observer: %s", log: logger, type: .debug, typeName(and: #function), String(describing: observer))
+        os_log("%s called.", log: logger, type: .debug, typeName(and: #function))
         connectionModeChangedQueue.sync { connectionModeChangedObservers.append(observer) }
     }
 
     /// Removes all change handling closures from owner
     func removeObserver(owner: LDObserverOwner) {
-        os_log("%s owner: %s", log: logger, type: .debug, typeName(and: #function), String(describing: owner))
+        os_log("%s called.", log: logger, type: .debug, typeName(and: #function))
         flagChangeQueue.sync { flagChangeObservers.removeAll { $0.owner === owner } }
         flagsUnchangedQueue.sync { flagsUnchangedObservers.removeAll { $0.owner === owner } }
         connectionModeChangedQueue.sync { connectionModeChangedObservers.removeAll { $0.owner === owner } }

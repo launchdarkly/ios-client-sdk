@@ -89,11 +89,11 @@ final class FlagStore: FlagMaintaining {
     init(logger: OSLog, storedItems: StoredItems) {
         self.logger = logger
         self._storedItems = storedItems
-        os_log("%s storedItems:", log: logger, type: .debug, typeName(and: #function), String(describing: storedItems))
+        os_log("%s with %d items", log: logger, type: .debug, typeName(and: #function), storedItems.count)
     }
 
     func replaceStore(newStoredItems: StoredItems) {
-        os_log("%s newFlags: ", log: logger, type: .debug, typeName(and: #function), String(describing: newStoredItems))
+        os_log("%s replacing %d items", log: logger, type: .debug, typeName(and: #function), newStoredItems.count)
         flagQueue.sync(flags: .barrier) {
             self._storedItems = newStoredItems
         }
@@ -107,7 +107,7 @@ final class FlagStore: FlagMaintaining {
                 return
             }
 
-            os_log("%s succeeded. new flag: %s prior flag: %s", log: logger, type: .debug, typeName(and: #function), String(describing: updatedFlag), String(describing: self._storedItems[updatedFlag.flagKey]))
+            os_log("%s updated flag %s", log: logger, type: .debug, typeName(and: #function), updatedFlag.flagKey)
             self._storedItems.updateValue(StorageItem.item(updatedFlag), forKey: updatedFlag.flagKey)
         }
     }
@@ -120,7 +120,7 @@ final class FlagStore: FlagMaintaining {
                 return
             }
 
-            os_log("%s deleted flag with key: %s", log: logger, type: .debug, typeName(and: #function), deleteResponse.key)
+            os_log("%s deleted flag %s", log: logger, type: .debug, typeName(and: #function), deleteResponse.key)
             self._storedItems.updateValue(StorageItem.tombstone(deleteResponse.version ?? 0), forKey: deleteResponse.key)
         }
     }

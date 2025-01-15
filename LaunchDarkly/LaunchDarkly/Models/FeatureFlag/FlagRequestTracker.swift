@@ -18,13 +18,11 @@ struct FlagRequestTracker {
         else { return }
         flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, context: context)
 
-        os_log("%s \n\tflagKey: %s\n\treportedValue: %s\n\tvariation: %s\n\tversion: %s\n\tdefaultValue: %s", log: logger, type: .debug,
+        os_log("%s \n\tflagKey: %s\n\tvariation: %s\n\tversion: %s", log: logger, type: .debug,
             typeName(and: #function),
             flagKey,
-            String(describing: reportedValue),
             String(describing: featureFlag?.variation),
-            String(describing: featureFlag?.flagVersion ?? featureFlag?.version),
-            String(describing: defaultValue))
+            String(describing: featureFlag?.flagVersion ?? featureFlag?.version))
     }
 
     var hasLoggedRequests: Bool { !flagCounters.isEmpty }
