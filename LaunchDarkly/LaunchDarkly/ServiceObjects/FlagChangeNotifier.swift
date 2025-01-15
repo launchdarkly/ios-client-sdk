@@ -32,7 +32,7 @@ final class FlagChangeNotifier: FlagChangeNotifying {
     }
 
     func addFlagsUnchangedObserver(_ observer: FlagsUnchangedObserver) {
-        os_log("%s called.", log: logger, type: .debug, typeName(and: #function), String(describing: observer))
+        os_log("%s called.", log: logger, type: .debug, typeName(and: #function))
         flagsUnchangedQueue.sync { flagsUnchangedObservers.append(observer) }
     }
 
