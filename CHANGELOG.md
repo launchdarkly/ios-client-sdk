@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.12.3](https://github.com/launchdarkly/ios-client-sdk/compare/9.12.2...9.12.3) (2025-02-12)
+
+
+### Bug Fixes
+
+* fixes race condition that could lead to multiple start completion invocations ([#429](https://github.com/launchdarkly/ios-client-sdk/issues/429)) ([17d1ad4](https://github.com/launchdarkly/ios-client-sdk/commit/17d1ad4971d17d04c03a1ce0fa268ec4ff424e92))
+
 ## [9.12.2](https://github.com/launchdarkly/ios-client-sdk/compare/9.12.1...9.12.2) (2025-01-15)
 
 
