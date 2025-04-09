@@ -27,7 +27,7 @@ final class SdkController: RouteCollection {
             "auto-env-attributes",
             "context-comparison",
             "etag-caching",
-            "inline-context",
+            "inline-context-all",
             "anonymous-redaction",
             "evaluation-hooks",
             "event-gzip",

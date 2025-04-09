@@ -55,7 +55,7 @@ class CustomEvent: Event, SubEvent {
     fileprivate func encode(to encoder: Encoder, container: KeyedEncodingContainer<Event.CodingKeys>) throws {
         var container = container
         try container.encode(key, forKey: .key)
-        try container.encode(context.contextKeys(), forKey: .contextKeys)
+        try container.encode(context, forKey: .context)
 
         if data != .null {
             try container.encode(data, forKey: .data)

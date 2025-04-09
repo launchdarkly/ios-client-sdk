@@ -75,7 +75,7 @@ final class EventSpec: XCTestCase {
             XCTAssertEqual(dict["key"], "event-key")
             XCTAssertEqual(dict["data"], ["abc", 12])
             XCTAssertEqual(dict["metricValue"], 0.5)
-            XCTAssertEqual(dict["contextKeys"], .object(["user": .string(context.fullyQualifiedKey())]))
+            XCTAssertEqual(dict["context"], encodeToLDValue(context))
             XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
         }
     }
@@ -88,7 +88,7 @@ final class EventSpec: XCTestCase {
             XCTAssertEqual(dict["kind"], "custom")
             XCTAssertEqual(dict["key"], "event-key")
             XCTAssertEqual(dict["data"], ["key": "val"])
-            XCTAssertEqual(dict["contextKeys"], .object(["user": .string(context.fullyQualifiedKey())]))
+            XCTAssertEqual(dict["context"], encodeToLDValue(context))
             XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
         }
     }
@@ -101,7 +101,7 @@ final class EventSpec: XCTestCase {
             XCTAssertEqual(dict["kind"], "custom")
             XCTAssertEqual(dict["key"], "event-key")
             XCTAssertEqual(dict["metricValue"], 2.5)
-            XCTAssertEqual(dict["contextKeys"], .object(["user": .string(context.fullyQualifiedKey())]))
+            XCTAssertEqual(dict["context"], encodeToLDValue(context))
             XCTAssertEqual(dict["creationDate"], .number(Double(event.creationDate.millisSince1970)))
         }
     }
