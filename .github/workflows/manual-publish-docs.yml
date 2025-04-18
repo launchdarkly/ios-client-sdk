@@ -16,8 +16,8 @@ jobs:
       - name: Build and Test
         uses: ./.github/actions/ci
         with:
-          xcode-version: 14.3.1
-          ios-sim: 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
+          xcode-version: 15.0.1
+          ios-sim: 'platform=iOS Simulator,name=iPhone 15,OS=17.2'
           run-contract-tests: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
