@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.13.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.12.3...9.13.0) (2025-04-21)
+
+
+### Features
+
+* Inline context for custom events ([26fa397](https://github.com/launchdarkly/ios-client-sdk/commit/26fa3972f21e7aebc10ce2726ffca28575ac7e8c))
+
 ## [9.12.3](https://github.com/launchdarkly/ios-client-sdk/compare/9.12.2...9.12.3) (2025-02-12)
 
 
