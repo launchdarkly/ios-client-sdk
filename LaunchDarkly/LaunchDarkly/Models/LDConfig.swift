@@ -253,6 +253,8 @@ public struct LDConfig {
 
         static let hooks: [Hook] = []
 
+        static let plugins: [Plugin] = []
+
         /// The default logger for the SDK. Can be overridden to provide customization.
         static let logger: OSLog = OSLog(subsystem: "com.launchdarkly", category: "ios-client-sdk")
 
@@ -444,6 +446,11 @@ public struct LDConfig {
     ///
     /// Hooks provide entry points which allow for observation of SDK functions.
     public var hooks: [Hook] = Defaults.hooks
+
+    /// Initial set of plugins for the client.
+    ///
+    /// Plugins provide extensibility points which allow for observation and modification of SDK functions.
+    public var plugins: [Plugin] = Defaults.plugins
 
     /// A Dictionary of identifying names to unique mobile keys for all environments
     private var mobileKeys: [String: String] {
