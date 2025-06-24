@@ -449,7 +449,11 @@ public struct LDConfig {
 
     /// Initial set of plugins for the client.
     ///
-    /// Plugins provide extensibility points which allow for observation and modification of SDK functions.
+    /// Plugins provide a way to extend the functionality of the LaunchDarkly SDK. Each plugin can register hooks
+    ///
+    ///
+    /// ```swift
+    /// ```
     public var plugins: [Plugin] = Defaults.plugins
 
     /// A Dictionary of identifying names to unique mobile keys for all environments
