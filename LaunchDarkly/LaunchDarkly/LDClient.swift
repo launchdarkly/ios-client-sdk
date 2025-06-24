@@ -801,28 +801,26 @@ public class LDClient {
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
-            let instance = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context, completion: completionCheck)
+            let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context, completion: completionCheck)
             instancesQueue.sync(flags: .barrier) {
                 LDClient.instances?[name] = instance
             }
-        }
 
-        for (name, mobileKey) in mobileKeys {
-            if let instance = LDClient.instances?[name] {
-                let sdkMetadata = SdkMetadata(name: ReportingConsts.sdkName, version: ReportingConsts.sdkVersion)
-                let environmentMetadata = EnvironmentMetadata(
-                    applicationInfo: instance.environmentReporter.applicationInfo,
-                    sdkMetadata: sdkMetadata,
-                    credential: mobileKey
-                )
-                
-                for plugin in config.plugins {
-                    let pluginHooks = plugin.getHooks(metadata: environmentMetadata)
+            let sdkMetadata = SdkMetadata(name: SystemCapabilities.systemName, version: ReportingConsts.sdkVersion)
+            let environmentMetadata = EnvironmentMetadata(
+                applicationInfo: instance.environmentReporter.applicationInfo,
+                sdkMetadata: sdkMetadata,
+                credential: mobileKey
+            )
+            
+            for plugin in config.plugins {
+                // Catch to protect against any runtime exceptions from plugin
+                do {
+                    let pluginHooks = try plugin.getHooks(metadata: environmentMetadata)
                     instance.hooks.append(contentsOf: pluginHooks)
-                }
-                
-                for plugin in config.plugins {
                     plugin.register(client: instance, metadata: environmentMetadata)
+                } catch {
+                    os_log("Exception thrown getting hooks for plugin %@. Unable to get hooks, plugin will not be registered.", log: config.logger, type: .error, plugin.getMetadata().getName())
                 }
             }
         }
