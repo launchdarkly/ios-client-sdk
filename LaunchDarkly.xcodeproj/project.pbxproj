@@ -284,6 +284,23 @@
 		A3BA7D022BD192240000DB28 /* LDClientHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7D012BD192240000DB28 /* LDClientHookSpec.swift */; };
 		A3BA7D042BD2BD620000DB28 /* TestContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7D032BD2BD620000DB28 /* TestContext.swift */; };
 		A3C6F7622B7FA803005B3B61 /* SheddingQueueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */; };
+		A3D1E1012C1A000000000001 /* LDClientPluginsSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1002C1A000000000001 /* LDClientPluginsSpec.swift */; };
+		A3D1E1032C1A000000000002 /* EnvironmentMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1022C1A000000000002 /* EnvironmentMetadata.swift */; };
+		A3D1E1042C1A000000000002 /* EnvironmentMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1022C1A000000000002 /* EnvironmentMetadata.swift */; };
+		A3D1E1052C1A000000000002 /* EnvironmentMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1022C1A000000000002 /* EnvironmentMetadata.swift */; };
+		A3D1E1062C1A000000000002 /* EnvironmentMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1022C1A000000000002 /* EnvironmentMetadata.swift */; };
+		A3D1E1082C1A000000000003 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1072C1A000000000003 /* Plugin.swift */; };
+		A3D1E1092C1A000000000003 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1072C1A000000000003 /* Plugin.swift */; };
+		A3D1E10A2C1A000000000003 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1072C1A000000000003 /* Plugin.swift */; };
+		A3D1E10B2C1A000000000003 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1072C1A000000000003 /* Plugin.swift */; };
+		A3D1E10D2C1A000000000004 /* PluginMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E10C2C1A000000000004 /* PluginMetadata.swift */; };
+		A3D1E10E2C1A000000000004 /* PluginMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E10C2C1A000000000004 /* PluginMetadata.swift */; };
+		A3D1E10F2C1A000000000004 /* PluginMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E10C2C1A000000000004 /* PluginMetadata.swift */; };
+		A3D1E1102C1A000000000004 /* PluginMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E10C2C1A000000000004 /* PluginMetadata.swift */; };
+		A3D1E1122C1A000000000005 /* SdkMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1112C1A000000000005 /* SdkMetadata.swift */; };
+		A3D1E1132C1A000000000005 /* SdkMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1112C1A000000000005 /* SdkMetadata.swift */; };
+		A3D1E1142C1A000000000005 /* SdkMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1112C1A000000000005 /* SdkMetadata.swift */; };
+		A3D1E1152C1A000000000005 /* SdkMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D1E1112C1A000000000005 /* SdkMetadata.swift */; };
 		A3C6F7642B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
 		A3C6F7652B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
 		A3C6F7662B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
@@ -513,6 +530,22 @@
 		A3BA7D032BD2BD620000DB28 /* TestContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestContext.swift; sourceTree = "<group>"; };
 		A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheddingQueueSpec.swift; sourceTree = "<group>"; };
 		A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentifyTypes.swift; sourceTree = "<group>"; };
+		A3D1E1002C1A000000000001 /* LDClientPluginsSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientPluginsSpec.swift; sourceTree = "<group>"; };
+		A3D1E1022C1A000000000002 /* EnvironmentMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentMetadata.swift; sourceTree = "<group>"; };
+		A3D1E1072C1A000000000003 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
+		A3D1E10C2C1A000000000004 /* PluginMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginMetadata.swift; sourceTree = "<group>"; };
+		A3D1E1112C1A000000000005 /* SdkMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SdkMetadata.swift; sourceTree = "<group>"; };
+		A3D1E1162C1A000000000006 /* Plugins */ = {
+			isa = PBXGroup;
+			children = (
+				A3D1E1022C1A000000000002 /* EnvironmentMetadata.swift */,
+				A3D1E1072C1A000000000003 /* Plugin.swift */,
+				A3D1E10C2C1A000000000004 /* PluginMetadata.swift */,
+				A3D1E1112C1A000000000005 /* SdkMetadata.swift */,
+			);
+			path = Plugins;
+			sourceTree = "<group>";
+		};
 		A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueDecoderSpec.swift; sourceTree = "<group>"; };
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
@@ -701,6 +734,7 @@
 			isa = PBXGroup;
 			children = (
 				A3BA7D012BD192240000DB28 /* LDClientHookSpec.swift */,
+				A3D1E1002C1A000000000001 /* LDClientPluginsSpec.swift */,
 				838F96731FB9F024009CFC45 /* LDClientSpec.swift */,
 				3D9A12572A73236800698B8D /* UtilSpec.swift */,
 				83EF67911F9945CE00403126 /* Models */,
@@ -842,6 +876,7 @@
 			isa = PBXGroup;
 			children = (
 				A31088232837DCA900184942 /* Context */,
+				A3D1E1162C1A000000000006 /* Plugins */,
 				83F0A5631FB5F33800550A95 /* LDConfigSpec.swift */,
 				83EBCBA720D9A251003A7142 /* FeatureFlag */,
 				83EF67921F9945E800403126 /* EventSpec.swift */,
@@ -1325,6 +1360,10 @@
 				C43C37E8238DF22D003C1624 /* LDEvaluationDetail.swift in Sources */,
 				8311884C2113ADDE00D77CB5 /* FlagChangeObserver.swift in Sources */,
 				A3BA7CF62BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
+				A3D1E1062C1A000000000002 /* EnvironmentMetadata.swift in Sources */,
+				A3D1E10B2C1A000000000003 /* Plugin.swift in Sources */,
+				A3D1E1102C1A000000000004 /* PluginMetadata.swift in Sources */,
+				A3D1E1152C1A000000000005 /* SdkMetadata.swift in Sources */,
 				A3470C3A2B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
 				831188592113AE1200D77CB5 /* FlagStore.swift in Sources */,
@@ -1408,6 +1447,10 @@
 				A358D6F42A4DEB4C00270C60 /* EnvironmentReporterBuilder.swift in Sources */,
 				B4C9D4302489B5FF004A9B03 /* DiagnosticEvent.swift in Sources */,
 				A3BA7CF52BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
+				A3D1E1052C1A000000000002 /* EnvironmentMetadata.swift in Sources */,
+				A3D1E10A2C1A000000000003 /* Plugin.swift in Sources */,
+				A3D1E10F2C1A000000000004 /* PluginMetadata.swift in Sources */,
+				A3D1E1142C1A000000000005 /* SdkMetadata.swift in Sources */,
 				831EF35620655E730001C643 /* FlagChangeNotifier.swift in Sources */,
 				A358D6D92A4DE6A500270C60 /* ApplicationInfoEnvironmentReporter.swift in Sources */,
 				831EF35720655E730001C643 /* EventReporter.swift in Sources */,
@@ -1470,6 +1513,10 @@
 				8358F25E1F474E5900ECE1AF /* LDChangedFlag.swift in Sources */,
 				83D559741FD87CC9002D10C8 /* KeyedValueCache.swift in Sources */,
 				A3BA7CF32BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
+				A3D1E1032C1A000000000002 /* EnvironmentMetadata.swift in Sources */,
+				A3D1E1082C1A000000000003 /* Plugin.swift in Sources */,
+				A3D1E10D2C1A000000000004 /* PluginMetadata.swift in Sources */,
+				A3D1E1122C1A000000000005 /* SdkMetadata.swift in Sources */,
 				A3470C372B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C43C37E1236BA050003C1624 /* LDEvaluationDetail.swift in Sources */,
 				831AAE2C20A9E4F600B46DBA /* Throttler.swift in Sources */,
@@ -1562,6 +1609,7 @@
 				837406D421F760640087B22B /* LDTimerSpec.swift in Sources */,
 				832307A61F7D8D720029815A /* URLRequestSpec.swift in Sources */,
 				A3BA7D022BD192240000DB28 /* LDClientHookSpec.swift in Sources */,
+				A3D1E1012C1A000000000001 /* LDClientPluginsSpec.swift in Sources */,
 				832307A81F7DA61B0029815A /* LDEventSourceMock.swift in Sources */,
 				838F967A1FBA551A009CFC45 /* ClientServiceMockFactory.swift in Sources */,
 				A31088292837DCA900184942 /* KindSpec.swift in Sources */,
@@ -1596,6 +1644,10 @@
 				A358D6F02A4DE9EB00270C60 /* WatchOSEnvironmentReporter.swift in Sources */,
 				831AAE2D20A9E4F600B46DBA /* Throttler.swift in Sources */,
 				A3BA7CF42BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
+				A3D1E1042C1A000000000002 /* EnvironmentMetadata.swift in Sources */,
+				A3D1E1092C1A000000000003 /* Plugin.swift in Sources */,
+				A3D1E10E2C1A000000000004 /* PluginMetadata.swift in Sources */,
+				A3D1E1132C1A000000000005 /* SdkMetadata.swift in Sources */,
 				A3470C382B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C43C37E6238DF22B003C1624 /* LDEvaluationDetail.swift in Sources */,
 				83D9EC872062DEAB004D7FA6 /* FlagSynchronizer.swift in Sources */,
