@@ -14,16 +14,16 @@ import Foundation
 ///     func getMetadata() -> PluginMetadata {
 ///         return PluginMetadata(name: "MyPlugin")
 ///     }
-///     
+///
 ///     func register(client: LDClient, metadata: EnvironmentMetadata) {
 ///         // Perform plugin initialization
 ///     }
-///     
+///
 ///     func getHooks(metadata: EnvironmentMetadata) -> [Hook] {
 ///         return [MyHook()]
 ///     }
 /// }
-/// 
+///
 /// let config = LDConfig.Builder(mobileKey: "your-mobile-key")
 ///     .plugins([MyPlugin()])
 ///     .build()
@@ -33,7 +33,7 @@ public protocol Plugin {
     ///
     /// - Returns: The plugin metadata containing identifying information about the plugin.
     func getMetadata() -> PluginMetadata
-    
+
     /// Register the plugin with a client instance.
     ///
     /// This method is called once for each client instance when the SDK is initialized. If
@@ -44,7 +44,7 @@ public protocol Plugin {
     ///   - client: The client instance for the plugin to use
     ///   - metadata: Metadata about the environment where the plugin is running
     func register(client: LDClient, metadata: EnvironmentMetadata)
-    
+
     /// Get hooks that should be registered with the SDK.
     ///
     /// This method is called during SDK initialization to collect hooks from all plugins. If

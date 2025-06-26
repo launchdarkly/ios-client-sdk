@@ -7,14 +7,14 @@ import Foundation
 public class PluginMetadata {
     /// The name of the plugin.
     private let name: String
-    
+
     /// Initialize plugin metadata.
     ///
     /// - Parameter name: The name of the plugin for identification purposes
     public init(name: String) {
         self.name = name
     }
-    
+
     /// Get the name of the plugin.
     ///
     /// - Returns: The name of the plugin for identification purposes

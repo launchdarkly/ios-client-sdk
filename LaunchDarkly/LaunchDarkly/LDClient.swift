@@ -812,7 +812,7 @@ public class LDClient {
                 sdkMetadata: sdkMetadata,
                 credential: mobileKey
             )
-            
+
             for plugin in config.plugins {
                 // Catch to protect against any runtime exceptions from plugin
                 do {

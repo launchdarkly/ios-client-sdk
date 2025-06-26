@@ -7,10 +7,10 @@ import Foundation
 public class SdkMetadata {
     /// Name of the SDK for informational purposes such as logging.
     public let name: String
-    
+
     /// Version of the SDK for informational purposes such as logging.
     public let version: String
-    
+
     /// Initialize SDK metadata.
     ///
     /// - Parameters:

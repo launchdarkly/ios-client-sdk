@@ -255,6 +255,17 @@ final class FeatureFlagCachingMock: FeatureFlagCaching {
         return getCachedDataReturnValue
     }
 
+    var getCachedDataLastUpdatedDateCallCount = 0
+    var getCachedDataLastUpdatedDateCallback: (() throws -> Void)?
+    var getCachedDataLastUpdatedDateReceivedArguments: (cacheKey: String, contextHash: String)?
+    var getCachedDataLastUpdatedDateReturnValue: Date?
+    func getCachedDataLastUpdatedDate(cacheKey: String, contextHash: String) -> Date? {
+        getCachedDataLastUpdatedDateCallCount += 1
+        getCachedDataLastUpdatedDateReceivedArguments = (cacheKey: cacheKey, contextHash: contextHash)
+        try! getCachedDataLastUpdatedDateCallback?()
+        return getCachedDataLastUpdatedDateReturnValue
+    }
+
     var saveCachedDataCallCount = 0
     var saveCachedDataCallback: (() throws -> Void)?
     var saveCachedDataReceivedArguments: (storedItems: StoredItems, cacheKey: String, contextHash: String, lastUpdated: Date, etag: String?)?

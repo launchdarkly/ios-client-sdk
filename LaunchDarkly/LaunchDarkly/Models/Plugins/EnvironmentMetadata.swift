@@ -7,13 +7,13 @@ import Foundation
 public class EnvironmentMetadata {
     /// Application information for the application this SDK is used in.
     public let applicationInfo: ApplicationInfo?
-    
+
     /// SDK metadata for the LaunchDarkly SDK.
     public let sdkMetadata: SdkMetadata
-    
+
     /// Credential for authentication to LaunchDarkly endpoints for this environment.
     public let credential: String
-    
+
     /// Initialize environment metadata.
     ///
     /// - Parameters:
