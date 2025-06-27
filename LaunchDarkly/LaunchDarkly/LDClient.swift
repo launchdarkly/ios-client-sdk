@@ -813,14 +813,23 @@ public class LDClient {
                 credential: mobileKey
             )
 
+            // add all the plugin hooks
             for plugin in config.plugins {
                 // Catch to protect against any runtime exceptions from plugin
                 do {
                     let pluginHooks = try plugin.getHooks(metadata: environmentMetadata)
                     instance.hooks.append(contentsOf: pluginHooks)
-                    plugin.register(client: instance, metadata: environmentMetadata)
                 } catch {
                     os_log("Exception thrown getting hooks for plugin %@. Unable to get hooks, plugin will not be registered.", log: config.logger, type: .error, plugin.getMetadata().getName())
+                }
+            }
+
+            // now register the client with all the plugins
+            for plugin in config.plugins {
+                do {
+                    plugin.register(client: instance, metadata: environmentMetadata)
+                } catch {
+                    os_log("Exception thrown registering plugin %@.", log: config.logger, type: .error, plugin.getMetadata().getName())
                 }
             }
         }
