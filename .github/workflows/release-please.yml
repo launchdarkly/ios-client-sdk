@@ -1,6 +1,7 @@
 name: Run Release Please
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - v9
