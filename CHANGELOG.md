@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.14.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.13.0...9.14.0) (2025-08-11)
+
+
+### Features
+
+* Adds experimental plugin functionality. ([41c8ad5](https://github.com/launchdarkly/ios-client-sdk/commit/41c8ad5bdcd7bfc0efc28e20ddb94f6287417826))
+
 ## [9.13.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.12.3...9.13.0) (2025-04-21)
 
 
