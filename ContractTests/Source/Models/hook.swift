@@ -96,7 +96,10 @@ struct EvaluationPayload: Encodable {
 
         var nested = container.nestedContainer(keyedBy: DynamicKey.self, forKey: .evaluationSeriesData)
         try evaluationSeriesData.forEach { (_, _) in
-            try evaluationSeriesData.forEach { try nested.encode($1, forKey: DynamicKey(stringValue: $0)!) }
+            for (key, value) in evaluationSeriesData {
+                guard let encodable = value as? Encodable, let dynamicKey = DynamicKey(stringValue: key) else { continue }
+                try nested.encode(encodable, forKey: dynamicKey)
+            }
         }
     }
 }

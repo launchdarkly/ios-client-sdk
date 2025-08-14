@@ -3,7 +3,7 @@ import Foundation
 /// Implementation specific hook data for evaluation stages.
 ///
 /// Hook implementations can use this to store data needed between stages.
-public typealias EvaluationSeriesData = [String: Encodable]
+public typealias EvaluationSeriesData = [String: Any]
 
 /// Protocol for extending SDK functionality via hooks.
 public protocol Hook {
