@@ -2,7 +2,7 @@
 Pod::Spec.new do |ld|
 
   ld.name         = "LaunchDarkly"
-  ld.version      = "9.15.0" # x-release-please-version
+  ld.version      = "9.16.0" # x-release-please-version
   ld.summary      = "iOS SDK for LaunchDarkly"
 
   ld.description  = <<-DESC
@@ -21,10 +21,10 @@ Pod::Spec.new do |ld|
 
   ld.author       = { "LaunchDarkly" => "sdks@launchdarkly.com" }
 
-  ld.ios.deployment_target     = "12.0"
-  ld.watchos.deployment_target = "4.0"
-  ld.tvos.deployment_target    = "12.0"
-  ld.osx.deployment_target     = "10.13"
+  ld.ios.deployment_target     = "13.0"
+  ld.watchos.deployment_target = "6.0"
+  ld.tvos.deployment_target    = "13.0"
+  ld.osx.deployment_target     = "10.15"
 
   ld.source       = { :git => ld.homepage + '.git', :tag => ld.version}
 

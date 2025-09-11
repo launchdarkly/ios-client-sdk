@@ -2,6 +2,17 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.16.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.15.0...9.16.0) (2025-09-11)
+
+
+### Features
+* bumps supported versions of platforms:
+- iOS "12.0" -> "13.0"
+- watchOS "4.0" -> "6.0"
+- tvOS "12.0" -> "13.0"
+- masOS "10.13" -> "10.15"
+
+
 ## [9.15.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.14.0...9.15.0) (2025-08-15)
 
 
