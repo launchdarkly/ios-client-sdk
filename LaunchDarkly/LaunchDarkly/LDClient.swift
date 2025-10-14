@@ -845,21 +845,28 @@ public class LDClient {
     - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network. If you use a large TimeInterval and wait for the timeout, then any network delays will cause your application to wait a long time before continuing execution.
     - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
     */
-    public static func start(config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+    public static func start(config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, on queue: DispatchQueue? = nil, completion: (@Sendable(_ timedOut: Bool) -> Void)? = nil) {
         if startWaitSeconds > LDClient.longTimeoutInterval {
             os_log("%s LDClient.start was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
 
-        start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, completion: completion)
+        start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, on: queue, completion: completion)
     }
 
-    static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+    static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, on queue: DispatchQueue?, completion: (@Sendable(_ timedOut: Bool) -> Void)? = nil) {
         var completed = false
-        let internalCompletedQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
         if !config.startOnline {
             start(serviceFactory: serviceFactory, config: config, context: context)
-            completion?(true) // offline is considered a short circuited timed out case
+            if let queen = queue {
+                queen.async {
+                    completion?(true) 
+                }
+            } else {
+                // Calling completion on the caller thread for backward compability
+                completion?(true) // offline is considered a short circuited timed out case
+            }
         } else {
+            let internalCompletedQueue: DispatchQueue = queue ?? DispatchQueue(label: "TimeOutQueue")
             let startTime = Date().timeIntervalSince1970
             start(serviceFactory: serviceFactory, config: config, context: context) {
                 internalCompletedQueue.async {
