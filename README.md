@@ -88,6 +88,11 @@ If you prefer not to use the aforementioned dependency managers, it is possible 
 4. Select the "General" tab, and if necessary expand the subsection "Frameworks, Libraries, and Embedded Content".
 5. Click the "+" button in the expanded subsection. Under "LaunchDarkly" within the dialog you will see 4 frameworks, select `LaunchDarkly.framework` for iOS, or `LaunchDarkly_<platform>` for other platforms.
 
+Note: To resolve Swift6 compilation issues use @preconcurrency attribure
+```
+@preconcurrency import LaunchDarkly
+```
+
 Learn more
 -----------
 
