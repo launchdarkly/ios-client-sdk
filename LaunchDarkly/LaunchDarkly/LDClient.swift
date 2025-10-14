@@ -107,7 +107,7 @@ public class LDClient {
      - parameter goOnline:    Desired online/offline mode for the LDClient
      - parameter completion:  Completion closure called when setOnline completes (Optional)
      */
-    public func setOnline(_ goOnline: Bool, completion: (() -> Void)? = nil) {
+    public func setOnline(_ goOnline: Bool, completion: (@Sendable() -> Void)? = nil) {
         let dispatch = DispatchGroup()
         LDClient.instancesQueue.sync(flags: .barrier) {
             LDClient.instances?.forEach { _, instance in
@@ -289,7 +289,7 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
     */
     @available(*, deprecated, message: "Use LDClient.identify(context: completion:) with non-optional completion parameter")
-    public func identify(context: LDContext, completion: (() -> Void)? = nil) {
+    public func identify(context: LDContext, completion: (@Sendable () -> Void)? = nil) {
         _identify(context: context, sheddable: false, useCache: .yes) { _ in
             if let completion = completion {
                 completion()
@@ -312,7 +312,7 @@ public class LDClient {
      - parameter context: The LDContext set with the desired context.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
-    public func identify(context: LDContext, completion: @escaping (_ result: IdentifyResult) -> Void) {
+    public func identify(context: LDContext, completion: @escaping @Sendable (_ result: IdentifyResult) -> Void) {
         _identify(context: context, sheddable: true, useCache: .yes, completion: completion)
     }
 
@@ -326,7 +326,7 @@ public class LDClient {
      - parameter useCache: How to handle flag caches during identify transition.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
-    public func identify(context: LDContext, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
+    public func identify(context: LDContext, useCache: IdentifyCacheUsage, completion: @escaping @Sendable(_ result: IdentifyResult) -> Void) {
         _identify(context: context, sheddable: true, useCache: useCache, completion: completion)
     }
 
@@ -365,7 +365,7 @@ public class LDClient {
      - parameter timeout: The upper time limit before the `completion` callback will be invoked.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
-    public func identify(context: LDContext, timeout: TimeInterval, completion: @escaping ((_ result: IdentifyResult) -> Void)) {
+    public func identify(context: LDContext, timeout: TimeInterval, completion: @escaping (@Sendable (_ result: IdentifyResult) -> Void)) {
         identify(context: context, timeout: timeout, useCache: .yes, completion: completion)
     }
 
@@ -380,7 +380,7 @@ public class LDClient {
      - parameter useCache: How to handle flag caches during identify transition.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
-    public func identify(context: LDContext, timeout: TimeInterval, useCache: IdentifyCacheUsage, completion: @escaping ((_ result: IdentifyResult) -> Void)) {
+    public func identify(context: LDContext, timeout: TimeInterval, useCache: IdentifyCacheUsage, completion: @escaping (@Sendable (_ result: IdentifyResult) -> Void)) {
         if timeout > LDClient.longTimeoutInterval {
             os_log("%s LDClient.identify was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
@@ -495,7 +495,7 @@ public class LDClient {
 
      - parameter key: The LDFlagKey for the flag to observe.
      - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
-     - parameter handler: The closure the SDK will execute when the feature flag changes.
+     - parameter handler: The closure the SDK will execute when the feature flag changes. It executed on the main thread
     */
     public func observe(key: LDFlagKey, owner: LDObserverOwner, handler: @escaping LDFlagChangeHandler) {
         os_log("%s called for flagKey: %s", log: config.logger, type: .debug, typeName(and: #function), key)
@@ -523,7 +523,7 @@ public class LDClient {
 
      - parameter keys: An array of LDFlagKeys for the flags to observe.
      - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
-     - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
+     - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change. It executed on the main thread
      */
     public func observe(keys: [LDFlagKey], owner: LDObserverOwner, handler: @escaping LDFlagCollectionChangeHandler) {
         os_log("%s called for flagKeys: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: keys))
@@ -550,7 +550,7 @@ public class LDClient {
      ```
 
      - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
-     - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change.
+     - parameter handler: The LDFlagCollectionChangeHandler the SDK will execute 1 time when any of the observed feature flags change. It executed on the main thread
      */
     public func observeAll(owner: LDObserverOwner, handler: @escaping LDFlagCollectionChangeHandler) {
         os_log("%s called.", log: config.logger, type: .debug, typeName(and: #function))
@@ -577,7 +577,7 @@ public class LDClient {
      ```
 
      - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
-     - parameter handler: The LDFlagsUnchangedHandler the SDK will execute 1 time when a flag request completes with no flags changed.
+     - parameter handler: The LDFlagsUnchangedHandler the SDK will execute 1 time when a flag request completes with no flags changed. It executed on the main thread
      */
     public func observeFlagsUnchanged(owner: LDObserverOwner, handler: @escaping LDFlagsUnchangedHandler) {
         os_log("%s owner: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: owner))
@@ -601,7 +601,7 @@ public class LDClient {
      ```
 
      - parameter owner: The LDObserverOwner which will execute the handler. The SDK retains a weak reference to the owner.
-     - parameter handler: The LDConnectionModeChangedHandler the SDK will execute 1 time when ConnectionInformation.currentConnectionMode is changed.
+     - parameter handler: The LDConnectionModeChangedHandler the SDK will execute 1 time when ConnectionInformation.currentConnectionMode is changed. It executed on the main thread
      */
     public func observeCurrentConnectionMode(owner: LDObserverOwner, handler: @escaping LDConnectionModeChangedHandler) {
         os_log("%s owner: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: owner))
@@ -754,7 +754,7 @@ public class LDClient {
     */
     /// - Tag: start
     @available(*, deprecated, message: "Use LDClient.start(config: context: startWithSeconds: completion:) to initialize the SDK with a defined timeout")
-    public static func start(config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
+    public static func start(config: LDConfig, context: LDContext? = nil, completion: (@Sendable() -> Void)? = nil) {
         start(serviceFactory: nil, config: config, context: context, completion: completion)
     }
 
@@ -845,28 +845,21 @@ public class LDClient {
     - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network. If you use a large TimeInterval and wait for the timeout, then any network delays will cause your application to wait a long time before continuing execution.
     - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
     */
-    public static func start(config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, on queue: DispatchQueue? = nil, completion: (@Sendable(_ timedOut: Bool) -> Void)? = nil) {
+    public static func start(config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: (@Sendable(_ timedOut: Bool) -> Void)? = nil) {
         if startWaitSeconds > LDClient.longTimeoutInterval {
             os_log("%s LDClient.start was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
 
-        start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, on: queue, completion: completion)
+        start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, completion: completion)
     }
 
-    static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, on queue: DispatchQueue?, completion: (@Sendable(_ timedOut: Bool) -> Void)? = nil) {
+    static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         var completed = false
+        let internalCompletedQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
         if !config.startOnline {
             start(serviceFactory: serviceFactory, config: config, context: context)
-            if let queen = queue {
-                queen.async {
-                    completion?(true) 
-                }
-            } else {
-                // Calling completion on the caller thread for backward compability
-                completion?(true) // offline is considered a short circuited timed out case
-            }
+            completion?(true) // offline is considered a short circuited timed out case
         } else {
-            let internalCompletedQueue: DispatchQueue = queue ?? DispatchQueue(label: "TimeOutQueue")
             let startTime = Date().timeIntervalSince1970
             start(serviceFactory: serviceFactory, config: config, context: context) {
                 internalCompletedQueue.async {
