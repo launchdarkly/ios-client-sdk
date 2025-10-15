@@ -384,7 +384,7 @@ public class LDClient {
         if timeout > LDClient.longTimeoutInterval {
             os_log("%s LDClient.identify was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
-
+        // not precise run once logic
         var cancel = false
 
         DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
