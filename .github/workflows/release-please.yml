@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - v9
+      - v10
 
 jobs:
   release-package:
