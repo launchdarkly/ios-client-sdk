@@ -333,23 +333,35 @@ public class LDClient {
     // Temporary helper method to allow code sharing between the sheddable and unsheddable identify methods. In the next major release, we will remove the deprecated identify method and inline
     // this implementation in the other one.
     private func _identify(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        let work: TaskHandler = { taskCompletion in
-            let dispatch = DispatchGroup()
+        let work: TaskHandler = { [weak self] taskCompletion in
+            guard let self = self else {
+                taskCompletion()
+                return
+            }
+            self.executeWithIdentifyHooks(context: context) { hooksCompletion in
+                let dispatch = DispatchGroup()
+                            
+                LDClient.instancesQueue.sync() {
+                    LDClient.instances?.forEach { _, instance in
+                        dispatch.enter()
+                        instance.internalIdentify(newContext: context, useCache: useCache, completion: dispatch.leave)
+                    }
+                }
 
-            LDClient.instancesQueue.sync(flags: .barrier) {
-                LDClient.instances?.forEach { _, instance in
-                    dispatch.enter()
-                    instance.internalIdentify(newContext: context, useCache: useCache, completion: dispatch.leave)
+                dispatch.notify(queue: DispatchQueue.global()) {
+                    hooksCompletion()
+                    taskCompletion()
                 }
             }
-
-            dispatch.notify(queue: DispatchQueue.global(), execute: taskCompletion)
         }
-
-        let identifyTask = Task(work: work, sheddable: sheddable) { [self] result in
-            os_log("%s identify completed with result %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: result))
+        
+        let identifyTask = Task(work: work, sheddable: sheddable) { [weak self] result in
+            if let self = self {
+                os_log("%s identify completed with result %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: result))
+            }
             completion(IdentifyResult(from: result))
         }
+        
         identifyQueue.enqueue(request: identifyTask)
     }
 
