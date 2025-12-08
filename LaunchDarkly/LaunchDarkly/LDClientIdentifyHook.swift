@@ -7,7 +7,7 @@ extension LDClient {
         let hooksSnapshot: [Hook]
     }
     
-    func executeWithIdentifyHooks(context: LDContext, work: @escaping ((@escaping (IdentifyResult) -> Void)) -> Void) {
+    private func executeWithIdentifyHooks(context: LDContext, work: @escaping ((@escaping (IdentifyResult) -> Void)) -> Void) {
         let state = executeBeforeIdentifyHooks(context: context)
         work() { [weak self] result in
             guard let state else {

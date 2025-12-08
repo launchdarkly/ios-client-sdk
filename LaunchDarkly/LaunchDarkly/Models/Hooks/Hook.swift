@@ -4,6 +4,7 @@ import Foundation
 ///
 /// Hook implementations can use this to store data needed between stages.
 public typealias EvaluationSeriesData = [String: Any]
+public typealias IdentifySeriesData = [String: Any]
 
 /// Protocol for extending SDK functionality via hooks.
 public protocol Hook {
@@ -49,7 +50,7 @@ public protocol Hook {
     ///   - seriesContext: Contains information about the identify operation being performed. This is not mutable.
     ///   - seriesData: A record associated with each stage of hook invocations. Each stage is called with the data of the previous stage for a series. The input record should not be modified.
     /// - Returns: A dictionary containing custom data that will be carried through to the next stage of the series.
-    func beforeIdentify(seriesContext: IdentifySeriesContext, seriesData: EvaluationSeriesData) -> EvaluationSeriesData
+    func beforeIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData) -> IdentifySeriesData
     
     /// Called during the execution of the identify process, after the operation completes.
     ///
@@ -61,7 +62,7 @@ public protocol Hook {
     ///   - seriesData: A record associated with each stage of hook invocations. Each stage is called with the data of the previous stage for a series. The input record should not be modified.
     ///   - result: The result of the identify operation.
     /// - Returns: A dictionary containing custom data that will be carried through to the next stage of the series (if added in the future).
-    func afterIdentify(seriesContext: IdentifySeriesContext, seriesData: EvaluationSeriesData, result: IdentifyResult) -> EvaluationSeriesData
+    func afterIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData, result: IdentifyResult) -> IdentifySeriesData
 }
 
 public extension Hook {
@@ -86,14 +87,14 @@ public extension Hook {
     /// but after any context modifications are performed.
     ///
     /// Default implementation is a no-op that returns `seriesData` unchanged.
-    func beforeIdentify(seriesContext: IdentifySeriesContext, seriesData: EvaluationSeriesData) -> EvaluationSeriesData {
+    func beforeIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData) -> IdentifySeriesData {
         return seriesData
     }
 
     /// Called during the execution of the identify process, after the operation completes.
     ///
     /// Default implementation is a no-op that returns `seriesData` unchanged.
-    func afterIdentify(seriesContext: IdentifySeriesContext, seriesData: EvaluationSeriesData, result: IdentifyResult) -> EvaluationSeriesData {
+    func afterIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData, result: IdentifyResult) -> IdentifySeriesData {
         return seriesData
     }
 }
