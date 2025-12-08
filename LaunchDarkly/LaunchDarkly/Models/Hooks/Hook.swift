@@ -40,9 +40,6 @@ public protocol Hook {
     /// - Returns: A dictionary containing custom data that will be carried through to the next stage of the series (if added in the future).
     func afterEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>) -> EvaluationSeriesData
     
-    /// Called during the execution of the identify process before the operation completes,
-    /// but after any context modifications are performed.
-    ///
     /// To provide custom data to the series which will be given back to your Hook at the next stage of the series,
     /// return a dictionary containing the custom data. You should initialize this dictionary from the `seriesData`.
     ///
