@@ -3,7 +3,7 @@ import Foundation
 extension LDClient {
     private struct IdentifyHookState {
         let seriesContext: IdentifySeriesContext
-        let seriesData: [EvaluationSeriesData]
+        let seriesData: [IdentifySeriesData]
         let hooksSnapshot: [Hook]
     }
     
