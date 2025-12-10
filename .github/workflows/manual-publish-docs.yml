@@ -4,7 +4,7 @@ on:
 name: Publish Documentation
 jobs:
   build-publish:
-    runs-on: macos-13
+    runs-on: macos-14
 
     permissions:
       id-token: write # Needed if using OIDC to get release secrets.
