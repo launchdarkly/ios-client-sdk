@@ -115,8 +115,13 @@ public class LDClient {
                 instance.internalSetOnline(goOnline, completion: dispatch.leave)
             }
         }
-        if let completion = completion {
-            dispatch.notify(queue: DispatchQueue.global(), execute: completion)
+        
+        if let completion {
+            dispatch.notify(queue: DispatchQueue.global()) {
+                DispatchQueue.main.async {
+                    completion()
+                }
+            }
         }
     }
 
@@ -290,7 +295,7 @@ public class LDClient {
     */
     @available(*, deprecated, message: "Use LDClient.identify(context: completion:) with non-optional completion parameter")
     public func identify(context: LDContext, completion: (() -> Void)? = nil) {
-        _identifyHooked(context: context, sheddable: false, useCache: .yes, timeout: 0) { _ in
+        _identifyMain(context: context, sheddable: false, useCache: .yes, timeout: 0) { _ in
             if let completion = completion {
                 completion()
             }
@@ -313,7 +318,7 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        _identifyHooked(context: context, sheddable: true, useCache: .yes, timeout: 0, completion: completion)
+        _identifyMain(context: context, sheddable: true, useCache: .yes, timeout: 0, completion: completion)
     }
 
     /**
@@ -327,7 +332,15 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        _identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: 0, completion: completion)
+        _identifyMain(context: context, sheddable: true, useCache: useCache, timeout: 0, completion: completion)
+    }
+    
+    private func _identifyMain(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, timeout: TimeInterval, completion: @escaping (_ result: IdentifyResult) -> Void) {
+        _identifyHooked(context: context, sheddable: sheddable, useCache: useCache, timeout: timeout) { result in
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
     }
 
     // Temporary helper method to allow code sharing between the sheddable and unsheddable identify methods. In the next major release, we will remove the deprecated identify method and inline
@@ -385,7 +398,7 @@ public class LDClient {
             os_log("%s LDClient.identify was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
         
-        self._identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: timeout, completion: completion)
+        self._identifyMain(context: context, sheddable: true, useCache: useCache, timeout: timeout, completion: completion)
     }
 
     func internalIdentify(newContext: LDContext, useCache: IdentifyCacheUsage, completion: (() -> Void)? = nil) {
@@ -741,7 +754,13 @@ public class LDClient {
     /// - Tag: start
     @available(*, deprecated, message: "Use LDClient.start(config: context: startWithSeconds: completion:) to initialize the SDK with a defined timeout")
     public static func start(config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
-        start(serviceFactory: nil, config: config, context: context, completion: completion)
+        start(serviceFactory: nil, config: config, context: context) {
+            if let completion {
+                DispatchQueue.main.async {
+                    completion()
+                }
+            }
+        }
     }
 
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
@@ -836,7 +855,13 @@ public class LDClient {
             os_log("%s LDClient.start was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
 
-        start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, completion: completion)
+        start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds) { timedOut in
+            if let completion {
+                DispatchQueue.main.async {
+                    completion(timedOut)
+                }
+            }
+        }
     }
 
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
