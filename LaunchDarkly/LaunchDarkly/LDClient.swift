@@ -115,9 +115,10 @@ public class LDClient {
                 instance.internalSetOnline(goOnline, completion: dispatch.leave)
             }
         }
-        
-        dispatch.notify(queue: .main) {
-            completion?()
+        if let completion {
+            dispatch.notify(queue: .main) {
+                completion()
+            }
         }
     }
 
