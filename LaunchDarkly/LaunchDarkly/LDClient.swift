@@ -116,12 +116,8 @@ public class LDClient {
             }
         }
         
-        if let completion {
-            dispatch.notify(queue: DispatchQueue.global()) {
-                DispatchQueue.main.async {
-                    completion()
-                }
-            }
+        dispatch.notify(queue: .main) {
+            completion?()
         }
     }
 
@@ -295,9 +291,11 @@ public class LDClient {
     */
     @available(*, deprecated, message: "Use LDClient.identify(context: completion:) with non-optional completion parameter")
     public func identify(context: LDContext, completion: (() -> Void)? = nil) {
-        _identifyMain(context: context, sheddable: false, useCache: .yes, timeout: 0) { _ in
+        _identifyHooked(context: context, sheddable: false, useCache: .yes, timeout: 0) { _ in
             if let completion = completion {
-                completion()
+                DispatchQueue.main.async {
+                    completion()
+                }
             }
         }
     }
@@ -318,7 +316,11 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        _identifyMain(context: context, sheddable: true, useCache: .yes, timeout: 0, completion: completion)
+        _identifyHooked(context: context, sheddable: true, useCache: .yes, timeout: 0) { result in
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
     }
 
     /**
@@ -332,11 +334,7 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        _identifyMain(context: context, sheddable: true, useCache: useCache, timeout: 0, completion: completion)
-    }
-    
-    private func _identifyMain(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, timeout: TimeInterval, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        _identifyHooked(context: context, sheddable: sheddable, useCache: useCache, timeout: timeout) { result in
+        _identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: 0) { result in
             DispatchQueue.main.async {
                 completion(result)
             }
@@ -398,7 +396,11 @@ public class LDClient {
             os_log("%s LDClient.identify was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
         
-        self._identifyMain(context: context, sheddable: true, useCache: useCache, timeout: timeout, completion: completion)
+        self._identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: timeout) { result in
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
     }
 
     func internalIdentify(newContext: LDContext, useCache: IdentifyCacheUsage, completion: (() -> Void)? = nil) {
