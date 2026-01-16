@@ -38,6 +38,11 @@ runs:
       shell: bash
       run: gem install cocoapods
 
+    - name: Install xcpretty
+      shell: bash
+      run: |
+        gem install xcpretty
+
     - name: Lint the podspec
       shell: bash
       run: pod lib lint LaunchDarkly.podspec --allow-warnings
