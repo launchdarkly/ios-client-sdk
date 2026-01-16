@@ -57,6 +57,18 @@ runs:
       shell: bash
       run: xcodebuild build -scheme 'LaunchDarkly_macOS' -sdk macosx -destination 'platform=macOS' | xcpretty
 
+    - name: Display SwiftLint output (if build failed)
+      shell: bash
+      if: failure()
+      run: |
+        if [ -f swiftlint_build_output.log ]; then
+          echo "=== SwiftLint Build Script Output ==="
+          cat swiftlint_build_output.log
+          echo "=== End SwiftLint Output ==="
+        else
+          echo "No SwiftLint log file found"
+        fi
+
     - name: Build Tests for iOS device
       shell: bash
       run: xcodebuild build-for-testing -scheme 'LaunchDarkly_iOS' -sdk iphoneos CODE_SIGN_IDENTITY= | xcpretty
