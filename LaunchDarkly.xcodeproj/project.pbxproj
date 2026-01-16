@@ -1288,7 +1288,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\nif which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
+			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\necho \"[SwiftLint] Starting SwiftLint check...\"\necho \"[SwiftLint] PATH: $PATH\"\necho \"[SwiftLint] Working directory: $(pwd)\"\n\nif which mint >/dev/null; then\n  echo \"[SwiftLint] Found mint at: $(which mint)\"\n  echo \"[SwiftLint] Running: /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\"\n  set +e\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\n  SWIFTLINT_EXIT_CODE=$?\n  set -e\n  echo \"[SwiftLint] Exit code: $SWIFTLINT_EXIT_CODE\"\n  if [ $SWIFTLINT_EXIT_CODE -ne 0 ]; then\n    echo \"[SwiftLint] ERROR: SwiftLint found violations (exit code: $SWIFTLINT_EXIT_CODE)\"\n    echo \"[SwiftLint] Build will fail due to SwiftLint errors.\"\n  else\n    echo \"[SwiftLint] SUCCESS: SwiftLint passed with no violations.\"\n  fi\n  exit $SWIFTLINT_EXIT_CODE\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
 		};
 		830C2AC2207416A5001D645D /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1303,7 +1303,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\nif which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
+			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\necho \"[SwiftLint] Starting SwiftLint check...\"\necho \"[SwiftLint] PATH: $PATH\"\necho \"[SwiftLint] Working directory: $(pwd)\"\n\nif which mint >/dev/null; then\n  echo \"[SwiftLint] Found mint at: $(which mint)\"\n  echo \"[SwiftLint] Running: /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\"\n  set +e\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\n  SWIFTLINT_EXIT_CODE=$?\n  set -e\n  echo \"[SwiftLint] Exit code: $SWIFTLINT_EXIT_CODE\"\n  if [ $SWIFTLINT_EXIT_CODE -ne 0 ]; then\n    echo \"[SwiftLint] ERROR: SwiftLint found violations (exit code: $SWIFTLINT_EXIT_CODE)\"\n    echo \"[SwiftLint] Build will fail due to SwiftLint errors.\"\n  else\n    echo \"[SwiftLint] SUCCESS: SwiftLint passed with no violations.\"\n  fi\n  exit $SWIFTLINT_EXIT_CODE\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
 		};
 		833FD9F821C01333001F80EB /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1321,7 +1321,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\nif which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
+			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\necho \"[SwiftLint] Starting SwiftLint check...\"\necho \"[SwiftLint] PATH: $PATH\"\necho \"[SwiftLint] Working directory: $(pwd)\"\n\nif which mint >/dev/null; then\n  echo \"[SwiftLint] Found mint at: $(which mint)\"\n  echo \"[SwiftLint] Running: /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\"\n  set +e\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\n  SWIFTLINT_EXIT_CODE=$?\n  set -e\n  echo \"[SwiftLint] Exit code: $SWIFTLINT_EXIT_CODE\"\n  if [ $SWIFTLINT_EXIT_CODE -ne 0 ]; then\n    echo \"[SwiftLint] ERROR: SwiftLint found violations (exit code: $SWIFTLINT_EXIT_CODE)\"\n    echo \"[SwiftLint] Build will fail due to SwiftLint errors.\"\n  else\n    echo \"[SwiftLint] SUCCESS: SwiftLint passed with no violations.\"\n  fi\n  exit $SWIFTLINT_EXIT_CODE\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
 		};
 		83411A561FABCA2200E5CF39 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1350,7 +1350,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\nif which mint >/dev/null; then\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
+			shellScript = "# Adds support for Apple Silicon brew directory\nexport PATH=\"$PATH:/opt/homebrew/bin\"\n\necho \"[SwiftLint] Starting SwiftLint check...\"\necho \"[SwiftLint] PATH: $PATH\"\necho \"[SwiftLint] Working directory: $(pwd)\"\n\nif which mint >/dev/null; then\n  echo \"[SwiftLint] Found mint at: $(which mint)\"\n  echo \"[SwiftLint] Running: /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\"\n  set +e\n  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint\n  SWIFTLINT_EXIT_CODE=$?\n  set -e\n  echo \"[SwiftLint] Exit code: $SWIFTLINT_EXIT_CODE\"\n  if [ $SWIFTLINT_EXIT_CODE -ne 0 ]; then\n    echo \"[SwiftLint] ERROR: SwiftLint found violations (exit code: $SWIFTLINT_EXIT_CODE)\"\n    echo \"[SwiftLint] Build will fail due to SwiftLint errors.\"\n  else\n    echo \"[SwiftLint] SUCCESS: SwiftLint passed with no violations.\"\n  fi\n  exit $SWIFTLINT_EXIT_CODE\nelse\n  echo \"warning: mint not installed, available from https://github.com/yonaskolb/Mint\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
