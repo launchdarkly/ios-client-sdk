@@ -290,7 +290,7 @@ public class LDClient {
     */
     @available(*, deprecated, message: "Use LDClient.identify(context: completion:) with non-optional completion parameter")
     public func identify(context: LDContext, completion: (() -> Void)? = nil) {
-        _identify(context: context, sheddable: false, useCache: .yes) { _ in
+        _identifyHooked(context: context, sheddable: false, useCache: .yes, timeout: 0) { _ in
             if let completion = completion {
                 completion()
             }
@@ -313,7 +313,7 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        _identify(context: context, sheddable: true, useCache: .yes, completion: completion)
+        _identifyHooked(context: context, sheddable: true, useCache: .yes, timeout: 0, completion: completion)
     }
 
     /**
@@ -327,12 +327,12 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        _identify(context: context, sheddable: true, useCache: useCache, completion: completion)
+        _identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: 0, completion: completion)
     }
 
     // Temporary helper method to allow code sharing between the sheddable and unsheddable identify methods. In the next major release, we will remove the deprecated identify method and inline
     // this implementation in the other one.
-    private func _identify(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
+    func _identify(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
         let work: TaskHandler = { taskCompletion in
             let dispatch = DispatchGroup()
 
@@ -352,7 +352,7 @@ public class LDClient {
         }
         identifyQueue.enqueue(request: identifyTask)
     }
-
+    
     /**
      Sets the LDContext into the LDClient inline with the behavior detailed on `LDClient.identify(context: completion:)`. Additionally,
      this method will ensure the `completion` parameter will be called within the specified time interval.
@@ -385,17 +385,7 @@ public class LDClient {
             os_log("%s LDClient.identify was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
         
-        TimeoutExecutor.run(
-            timeout: timeout,
-            queue: .global(),
-            operation: { done in
-                self.identify(context: context, useCache: useCache) { result in
-                    done(result)
-                }
-            },
-            timeoutValue: .timeout,
-            completion: completion
-        )
+        self._identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: timeout, completion: completion)
     }
 
     func internalIdentify(newContext: LDContext, useCache: IdentifyCacheUsage, completion: (() -> Void)? = nil) {
