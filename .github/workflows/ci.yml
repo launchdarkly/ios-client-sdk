@@ -17,9 +17,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - xcode-version: 16.2.0
+          - xcode-version: 16.4.0
             ios-sim: 'platform=iOS Simulator,name=iPhone 16'
-            os: macos-14
+            os: macos-15
             run-contract-tests: true
           - xcode-version: 15.4.0
             ios-sim: 'platform=iOS Simulator,name=iPhone 15'
