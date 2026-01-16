@@ -39,7 +39,7 @@ final class TimeoutExecutor {
             }
             return
         }
-        
+
         let lockQueue = DispatchQueue(label: "launchdarkly.timeout.executor.lock")
         var finished = false
 
@@ -52,7 +52,7 @@ final class TimeoutExecutor {
                     shouldCall = true
                 }
             }
-            
+
             if shouldCall {
                 queue.async { completion(value) }
             }
@@ -67,7 +67,7 @@ final class TimeoutExecutor {
                     shouldCall = true
                 }
             }
-            
+
             if shouldCall {
                 completion(timeoutValue())
             }

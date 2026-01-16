@@ -332,6 +332,7 @@ public class LDClient {
 
     // Temporary helper method to allow code sharing between the sheddable and unsheddable identify methods. In the next major release, we will remove the deprecated identify method and inline
     // this implementation in the other one.
+    // swiftlint:disable:next identifier_name
     func _identify(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
         let work: TaskHandler = { taskCompletion in
             let dispatch = DispatchGroup()
@@ -352,7 +353,7 @@ public class LDClient {
         }
         identifyQueue.enqueue(request: identifyTask)
     }
-    
+
     /**
      Sets the LDContext into the LDClient inline with the behavior detailed on `LDClient.identify(context: completion:)`. Additionally,
      this method will ensure the `completion` parameter will be called within the specified time interval.
@@ -384,7 +385,7 @@ public class LDClient {
         if timeout > LDClient.longTimeoutInterval {
             os_log("%s LDClient.identify was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
-        
+
         self._identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: timeout, completion: completion)
     }
 
