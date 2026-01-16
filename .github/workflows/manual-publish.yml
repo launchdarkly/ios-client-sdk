@@ -27,7 +27,7 @@ jobs:
 
       - uses: ./.github/actions/ci
         with:
-          xcode-version: 15.0.1
+          xcode-version: 16.2.0
           ios-sim: 'platform=iOS Simulator,name=iPhone 15,OS=17.2'
           run-contract-tests: true
           token: ${{ secrets.GITHUB_TOKEN }}
