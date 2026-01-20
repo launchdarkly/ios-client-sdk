@@ -111,7 +111,9 @@ final class HTTPHeadersSpec: XCTestCase {
                                httpHeaders.eventRequestHeaders,
                                httpHeaders.diagnosticRequestHeaders]
         allRequestTypes.forEach { headers in
-            XCTAssertEqual(headers["X-LaunchDarkly-Tags"], Optional("application-id/example-id application-name/example-name application-version/example-version application-version-name/example-version-name"))
+            XCTAssertEqual(headers["X-LaunchDarkly-Tags"],
+                           Optional("application-id/example-id application-name/example-name " +
+                                    "application-version/example-version application-version-name/example-version-name"))
         }
     }
 }

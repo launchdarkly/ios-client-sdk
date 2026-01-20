@@ -91,7 +91,13 @@ final class ClientServiceMockFactory: ClientServiceCreating {
                                                  handler: EventHandler,
                                                  delegate: RequestHeaderTransform?,
                                                  errorHandler: ConnectionErrorHandler?)?
-    func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
+    func makeStreamingProvider(url: URL,
+                               httpHeaders: [String: String],
+                               connectMethod: String,
+                               connectBody: Data?,
+                               handler: EventHandler,
+                               delegate: RequestHeaderTransform?,
+                               errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider {
         makeStreamingProviderCallCount += 1
         makeStreamingProviderReceivedArguments = (url, httpHeaders, connectMethod, connectBody, handler, delegate, errorHandler)
         return DarklyStreamingProviderMock()

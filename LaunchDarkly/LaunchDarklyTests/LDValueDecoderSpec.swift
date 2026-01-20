@@ -89,17 +89,25 @@ final class LDValueDecoderSpec: XCTestCase {
             let container = try decoder.container(keyedBy: DynamicCodingKeys.self)
 
             guard case .some(let bio) = try container.decodeIfPresent([String: String].self, forKey: DynamicCodingKeys(string: "bio")) else {
-                throw DecodingError.valueNotFound([String: String].self, DecodingError.Context(codingPath: [DynamicCodingKeys(string: "bio")], debugDescription: "bio must be present and a dictionary of strings"))
+                throw DecodingError.valueNotFound([String: String].self,
+                                                  DecodingError.Context(codingPath: [DynamicCodingKeys(string: "bio")],
+                                                                        debugDescription: "bio must be present and a dictionary of strings"))
             }
 
             guard let firstName = bio["firstName"] else {
-                throw DecodingError.valueNotFound(String.self, DecodingError.Context(codingPath: [DynamicCodingKeys(string: "bio"), DynamicCodingKeys(string: "firstName")], debugDescription: "bio must contain first name"))
+                throw DecodingError.valueNotFound(String.self,
+                                                  DecodingError.Context(codingPath: [DynamicCodingKeys(string: "bio"),
+                                                                                      DynamicCodingKeys(string: "firstName")],
+                                                                        debugDescription: "bio must contain first name"))
             }
 
             self.firstName = firstName
 
             guard let lastName = bio["lastName"] else {
-                throw DecodingError.valueNotFound(String.self, DecodingError.Context(codingPath: [DynamicCodingKeys(string: "bio"), DynamicCodingKeys(string: "lastName")], debugDescription: "bio must contain last name"))
+                throw DecodingError.valueNotFound(String.self,
+                                                  DecodingError.Context(codingPath: [DynamicCodingKeys(string: "bio"),
+                                                                                      DynamicCodingKeys(string: "lastName")],
+                                                                        debugDescription: "bio must contain last name"))
             }
 
             self.lastName = lastName

@@ -996,7 +996,10 @@ final class FlagSynchronizerSpec: QuickSpec {
         }
         describe("makeFlagRequest") {
             var testContext: TestContext!
-            // This test completes the test suite on makeFlagRequest by validating the method bails out if it's called and the synchronizer is offline. While that shouldn't happen, there are 2 code paths that don't directly verify the SDK is online before calling the method, so it seems a wise precaution to validate that the method does bailout. Other tests exercise the rest of the method.
+            // This test completes the test suite on makeFlagRequest by validating the method bails out if it's called
+            // and the synchronizer is offline. While that shouldn't happen, there are 2 code paths that don't directly
+            // verify the SDK is online before calling the method, so it seems a wise precaution to validate that the
+            // method does bailout. Other tests exercise the rest of the method.
             context("offline") {
                 var synchronizingError: SynchronizingError?
                 it("does not request flags and calls onSyncComplete with an isOffline error") {

@@ -117,7 +117,9 @@ final class LDClientEvaluationHookSpec: XCTestCase {
             return self.before(seriesContext, seriesData)
         }
 
-        func afterEvaluation(seriesContext: LaunchDarkly.EvaluationSeriesContext, seriesData: LaunchDarkly.EvaluationSeriesData, evaluationDetail: LaunchDarkly.LDEvaluationDetail<LaunchDarkly.LDValue>) -> LaunchDarkly.EvaluationSeriesData {
+        func afterEvaluation(seriesContext: LaunchDarkly.EvaluationSeriesContext,
+                              seriesData: LaunchDarkly.EvaluationSeriesData,
+                              evaluationDetail: LaunchDarkly.LDEvaluationDetail<LaunchDarkly.LDValue>) -> LaunchDarkly.EvaluationSeriesData {
             return self.after(seriesContext, seriesData, evaluationDetail)
         }
     }

@@ -112,7 +112,9 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
-                                let expectedContext = encodeToLDValue(testContext.context, userInfo: [LDContext.UserInfoKeys.includePrivateAttributes: true, LDContext.UserInfoKeys.redactAttributes: false])
+                                let expectedContext = encodeToLDValue(testContext.context,
+                                                                     userInfo: [LDContext.UserInfoKeys.includePrivateAttributes: true,
+                                                                                LDContext.UserInfoKeys.redactAttributes: false])
                                 expect(urlRequest?.url?.lastPathComponent.jsonValue) == expectedContext
                             } else {
                                 fail("request path is missing")
@@ -165,7 +167,9 @@ final class DarklyServiceSpec: QuickSpec {
                             expect(urlRequest?.url?.host) == testContext.config.baseUrl.host
                             if let path = urlRequest?.url?.path {
                                 expect(path.hasPrefix("/\(DarklyService.FlagRequestPath.get)")).to(beTrue())
-                                let expectedContext = encodeToLDValue(testContext.context, userInfo: [LDContext.UserInfoKeys.includePrivateAttributes: true, LDContext.UserInfoKeys.redactAttributes: false])
+                                let expectedContext = encodeToLDValue(testContext.context,
+                                                                     userInfo: [LDContext.UserInfoKeys.includePrivateAttributes: true,
+                                                                                LDContext.UserInfoKeys.redactAttributes: false])
                                 expect(urlRequest?.url?.lastPathComponent.jsonValue) == expectedContext
                             } else {
                                 fail("request path is missing")
@@ -665,7 +669,12 @@ final class DarklyServiceSpec: QuickSpec {
     }
 
     private func stubDiagnostic() -> DiagnosticStats {
-        DiagnosticStats(id: DiagnosticId(diagnosticId: "test-id", sdkKey: LDConfig.Constants.mockMobileKey), creationDate: 1000, dataSinceDate: 100, droppedEvents: 0, eventsInLastBatch: 0, streamInits: [])
+        DiagnosticStats(id: DiagnosticId(diagnosticId: "test-id", sdkKey: LDConfig.Constants.mockMobileKey),
+                       creationDate: 1000,
+                       dataSinceDate: 100,
+                       droppedEvents: 0,
+                       eventsInLastBatch: 0,
+                       streamInits: [])
     }
 
     private func publishDiagnosticSpec() {

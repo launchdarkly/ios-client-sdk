@@ -742,9 +742,12 @@ final class LDClientSpec: QuickSpec {
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount) == 1
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.flagKey) == DarklyServiceMock.FlagKeys.bool
                         expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.value) == DarklyServiceMock.FlagValues.bool
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue) == .bool(DefaultFlagValues.bool)
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) == testContext.flagStoreMock.storedItems.featureFlags[DarklyServiceMock.FlagKeys.bool]
-                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.context) == testContext.context
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.defaultValue) ==
+                            .bool(DefaultFlagValues.bool)
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.featureFlag) ==
+                            testContext.flagStoreMock.storedItems.featureFlags[DarklyServiceMock.FlagKeys.bool]
+                        expect(testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments?.context) ==
+                            testContext.context
                     }
                 }
             }
@@ -781,7 +784,13 @@ final class LDClientSpec: QuickSpec {
                     var events = [FeatureEvent]()
                     testContext.eventReporterMock.recordFlagEvaluationEventsCallback = {
                         let args = testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments!
-                        let event = FeatureEvent(key: args.flagKey, context: args.context, value: args.value, defaultValue: args.defaultValue, featureFlag: args.featureFlag, includeReason: args.includeReason, isDebug: false)
+                        let event = FeatureEvent(key: args.flagKey,
+                                                  context: args.context,
+                                                  value: args.value,
+                                                  defaultValue: args.defaultValue,
+                                                  featureFlag: args.featureFlag,
+                                                  includeReason: args.includeReason,
+                                                  isDebug: false)
                         events.append(event)
                     }
                     _ = testContext.subject.boolVariation(forKey: "flagA", defaultValue: DefaultFlagValues.bool)
