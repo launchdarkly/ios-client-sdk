@@ -3,6 +3,7 @@ import LDSwiftEventSource
 import OSLog
 import DataCompression
 
+// swiftlint:disable:next large_tuple
 typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Error?, etag: String?)
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void
 

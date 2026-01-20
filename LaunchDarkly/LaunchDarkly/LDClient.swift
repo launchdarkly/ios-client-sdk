@@ -36,6 +36,7 @@ enum LDClientRunMode {
  ```
  The `changedFlag` passed in to the closure contains the old and new value of the flag.
  */
+// swiftlint:disable:next type_body_length
 public class LDClient {
 
     // MARK: - State Controls and Indicators
