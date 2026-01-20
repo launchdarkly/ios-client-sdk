@@ -29,6 +29,11 @@ runs:
       run: |
         brew install mint
 
+    - name: Install swiftlint
+      shell: bash
+      run: |
+        brew install swiftlint
+
     - name: Install cocoapods
       shell: bash
       run: gem install cocoapods
