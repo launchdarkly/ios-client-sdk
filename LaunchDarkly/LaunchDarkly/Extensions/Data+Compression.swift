@@ -30,7 +30,7 @@
 import Foundation
 import Compression
 
-extension Data {
+public extension Data {
     @inline(__always)
     func ld_gzip() -> Data? {
         gzip()
