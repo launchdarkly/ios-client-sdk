@@ -36,7 +36,7 @@ enum LDClientRunMode {
  ```
  The `changedFlag` passed in to the closure contains the old and new value of the flag.
  */
-public class LDClient {
+public class LDClient: AnyObject {
 
     // MARK: - State Controls and Indicators
 
