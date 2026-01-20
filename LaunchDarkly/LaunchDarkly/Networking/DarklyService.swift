@@ -1,7 +1,6 @@
 import Foundation
 import LDSwiftEventSource
 import OSLog
-import DataCompression
 
 typealias ServiceResponse = (data: Data?, urlResponse: URLResponse?, error: Error?, etag: String?)
 typealias ServiceCompletionHandler = (ServiceResponse) -> Void
@@ -209,7 +208,7 @@ final class DarklyService: DarklyServiceProvider {
 
         var httpBody = body
         if config.enableCompression {
-            if let compressed = body.gzip() {
+            if let compressed = body.ld_gzip() {
                 httpBody = compressed
                 headers.updateValue("gzip", forKey: "Content-Encoding")
             }
