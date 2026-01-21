@@ -467,9 +467,8 @@ fileprivate func perform(_ config: Config, source: UnsafePointer<UInt8>, sourceS
 {
     guard config.operation == COMPRESSION_STREAM_ENCODE || sourceSize > 0 else { return nil }
     
-    let streamBase = UnsafeMutablePointer<compression_stream>.allocate(capacity: 1)
-    defer { streamBase.deallocate() }
-    var stream = streamBase.pointee
+    let mutableSource = UnsafeMutablePointer(mutating: source)
+    var stream = compression_stream(dst_ptr: mutableSource, dst_size: 0, src_ptr: source, src_size: sourceSize, state: mutableSource)
     
     let status = compression_stream_init(&stream, config.operation, config.algorithm)
     guard status != COMPRESSION_STATUS_ERROR else { return nil }
