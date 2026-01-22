@@ -608,11 +608,17 @@ final class DarklyServiceSpec: QuickSpec {
             context("failure") {
                 var responses: ServiceResponses!
                 beforeEach {
+                    // Set up stub before waitUntil to ensure it's registered before the request is made.
+                    // On macOS 15/Xcode 16, OHHTTPStubs error responses may not immediately trigger
+                    // the completion handler, so we ensure the stub is ready first.
+                    testContext.serviceMock.stubEventRequest(success: false) { eventRequest = $0 }
                     waitUntil { done in
-                        testContext.serviceMock.stubEventRequest(success: false) { eventRequest = $0 }
                         testContext.service.publishEventData(testData, UUID().uuidString) { response in
                             responses = (response.data, response.urlResponse, response.error)
-                            done()
+                            // Ensure done() is called on the main queue, as waitUntil may require it
+                            DispatchQueue.main.async {
+                                done()
+                            }
                         }
                     }
                 }
@@ -721,11 +727,17 @@ final class DarklyServiceSpec: QuickSpec {
             context("failure") {
                 var responses: ServiceResponses!
                 beforeEach {
+                    // Set up stub before waitUntil to ensure it's registered before the request is made.
+                    // On macOS 15/Xcode 16, OHHTTPStubs error responses may not immediately trigger
+                    // the completion handler, so we ensure the stub is ready first.
+                    testContext.serviceMock.stubEventRequest(success: false) { diagnosticRequest = $0 }
                     waitUntil { done in
-                        testContext.serviceMock.stubEventRequest(success: false) { diagnosticRequest = $0 }
                         testContext.service.publishDiagnostic(diagnosticEvent: self.stubDiagnostic()) { response in
                             responses = (response.data, response.urlResponse, response.error)
-                            done()
+                            // Ensure done() is called on the main queue, as waitUntil may require it
+                            DispatchQueue.main.async {
+                                done()
+                            }
                         }
                     }
                 }
