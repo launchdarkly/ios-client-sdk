@@ -610,15 +610,13 @@ final class DarklyServiceSpec: QuickSpec {
                 beforeEach {
                     // Set up stub before waitUntil to ensure it's registered before the request is made.
                     // On macOS 15/Xcode 16, OHHTTPStubs error responses may not immediately trigger
-                    // the completion handler, so we ensure the stub is ready first.
+                    // the completion handler, so we ensure the stub is ready first and use responseTime(0).
                     testContext.serviceMock.stubEventRequest(success: false) { eventRequest = $0 }
                     waitUntil { done in
                         testContext.service.publishEventData(testData, UUID().uuidString) { response in
                             responses = (response.data, response.urlResponse, response.error)
-                            // Ensure done() is called on the main queue, as waitUntil may require it
-                            DispatchQueue.main.async {
-                                done()
-                            }
+                            // Call done() directly - it's thread-safe and waitUntil already manages the main runloop
+                            done()
                         }
                     }
                 }
@@ -734,10 +732,8 @@ final class DarklyServiceSpec: QuickSpec {
                     waitUntil { done in
                         testContext.service.publishDiagnostic(diagnosticEvent: self.stubDiagnostic()) { response in
                             responses = (response.data, response.urlResponse, response.error)
-                            // Ensure done() is called on the main queue, as waitUntil may require it
-                            DispatchQueue.main.async {
-                                done()
-                            }
+                            // Call done() directly - it's thread-safe and waitUntil already manages the main runloop
+                            done()
                         }
                     }
                 }

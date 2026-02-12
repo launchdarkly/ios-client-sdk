@@ -233,7 +233,7 @@ extension DarklyServiceMock {
         let stubResponse: HTTPStubsResponseBlock = success ? { _ in
             HTTPStubsResponse(data: Data(), statusCode: Int32(HTTPURLResponse.StatusCodes.accepted), headers: nil)
         } : { _ in
-            HTTPStubsResponse(error: Constants.error)
+            HTTPStubsResponse(error: Constants.error).responseTime(0)
         }
         stubRequest(passingTest: eventRequestStubTest, stub: stubResponse, name: "Event report stub") { request, _, _ in
             activate?(request)
