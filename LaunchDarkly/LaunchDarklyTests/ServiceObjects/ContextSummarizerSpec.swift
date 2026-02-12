@@ -1,6 +1,7 @@
 import Foundation
 import Quick
 import Nimble
+import OSLog
 @testable import LaunchDarkly
 
 final class ContextSummarizerSpec: QuickSpec {
@@ -10,14 +11,17 @@ final class ContextSummarizerSpec: QuickSpec {
             var logger: OSLog!
             var context1: LDContext!
             var context2: LDContext!
-            var featureFlag: FeatureFlag!
+            var featureFlag: FeatureFlag?
 
             beforeEach {
                 logger = OSLog(subsystem: "com.launchdarkly.test", category: "test")
                 summarizer = ContextSummarizer(logger: logger)
+                // Create two different contexts for testing
                 context1 = LDContext.stub()
-                context2 = LDContext(key: "user-key-2", kind: "user", name: "Test User 2")
-                featureFlag = FeatureFlag.stub()
+                var builder2 = LDContextBuilder(key: "user-key-2")
+                builder2.name("Test User 2")
+                context2 = try! builder2.build().get()
+                featureFlag = FeatureFlag(flagKey: "test-flag", value: .bool(true), variation: 1, flagVersion: 1, trackEvents: false)
             }
 
             describe("trackRequest") {
@@ -113,8 +117,9 @@ final class ContextSummarizerSpec: QuickSpec {
 
                 context("context privacy") {
                     it("stores filtered context with redactAnonymousAttributes flag") {
-                        var anonymousContext = LDContext(key: "anon-key", kind: "user")
-                        anonymousContext.anonymous = true
+                        var builder = LDContextBuilder(key: "anon-key")
+                        builder.anonymous(true)
+                        let anonymousContext = try! builder.build().get()
 
                         summarizer.trackRequest(
                             flagKey: "flag1",
@@ -251,10 +256,18 @@ final class ContextSummarizerSpec: QuickSpec {
 
             describe("multi-context support") {
                 it("handles multi-kind contexts correctly") {
-                    let multiContext = try! LDContext.createMulti(contexts: [
-                        LDContext(key: "user-1", kind: "user"),
-                        LDContext(key: "org-1", kind: "org")
-                    ])
+                    var userBuilder = LDContextBuilder(key: "user-1")
+                    userBuilder.kind("user")
+                    let userContext = try! userBuilder.build().get()
+
+                    var orgBuilder = LDContextBuilder(key: "org-1")
+                    orgBuilder.kind("org")
+                    let orgContext = try! orgBuilder.build().get()
+
+                    var multiBuilder = LDMultiContextBuilder()
+                    multiBuilder.addContext(userContext)
+                    multiBuilder.addContext(orgContext)
+                    let multiContext = try! multiBuilder.build().get()
 
                     summarizer.trackRequest(
                         flagKey: "flag1",
@@ -270,14 +283,31 @@ final class ContextSummarizerSpec: QuickSpec {
                 }
 
                 it("treats different multi-contexts as separate") {
-                    let multiContext1 = try! LDContext.createMulti(contexts: [
-                        LDContext(key: "user-1", kind: "user"),
-                        LDContext(key: "org-1", kind: "org")
-                    ])
-                    let multiContext2 = try! LDContext.createMulti(contexts: [
-                        LDContext(key: "user-2", kind: "user"),
-                        LDContext(key: "org-2", kind: "org")
-                    ])
+                    var user1Builder = LDContextBuilder(key: "user-1")
+                    user1Builder.kind("user")
+                    let user1Context = try! user1Builder.build().get()
+
+                    var org1Builder = LDContextBuilder(key: "org-1")
+                    org1Builder.kind("org")
+                    let org1Context = try! org1Builder.build().get()
+
+                    var multi1Builder = LDMultiContextBuilder()
+                    multi1Builder.addContext(user1Context)
+                    multi1Builder.addContext(org1Context)
+                    let multiContext1 = try! multi1Builder.build().get()
+
+                    var user2Builder = LDContextBuilder(key: "user-2")
+                    user2Builder.kind("user")
+                    let user2Context = try! user2Builder.build().get()
+
+                    var org2Builder = LDContextBuilder(key: "org-2")
+                    org2Builder.kind("org")
+                    let org2Context = try! org2Builder.build().get()
+
+                    var multi2Builder = LDMultiContextBuilder()
+                    multi2Builder.addContext(user2Context)
+                    multi2Builder.addContext(org2Context)
+                    let multiContext2 = try! multi2Builder.build().get()
 
                     summarizer.trackRequest(
                         flagKey: "flag1",
