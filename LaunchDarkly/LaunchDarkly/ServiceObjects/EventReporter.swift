@@ -233,9 +233,5 @@ extension EventReporter: TypeIdentifying { }
         func setLastEventResponseDate(_ date: Date) {
             lastEventResponseDate = date
         }
-
-        func setContextSummarizer(_ summarizer: ContextSummarizer) {
-            contextSummarizer = summarizer
-        }
     }
 #endif
