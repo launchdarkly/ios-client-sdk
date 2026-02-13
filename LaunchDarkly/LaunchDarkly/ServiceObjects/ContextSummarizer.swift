@@ -20,17 +20,7 @@ class ContextSummarizer {
     /// Creates a new tracker for the context if one doesn't exist, or reuses the existing one.
     func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue, context: LDContext) {
         let contextHashKey = context.contextHash()
-
-        if trackers[contextHashKey] == nil {
-            // Create filtered context for privacy
-            var filteredContext = LDContext(copyFrom: context)
-            filteredContext.redactAnonymousAttributes = true
-
-            trackers[contextHashKey] = TrackerWithContext(
-                tracker: FlagRequestTracker(logger: logger),
-                context: filteredContext
-            )
-        }
+        ensureTrackerExists(for: context, hashKey: contextHashKey)
 
         trackers[contextHashKey]?.tracker.trackRequest(
             flagKey: flagKey,
@@ -38,6 +28,20 @@ class ContextSummarizer {
             featureFlag: featureFlag,
             defaultValue: defaultValue,
             context: context
+        )
+    }
+
+    /// Ensures a tracker exists for the context hash, creating one if needed.
+    private func ensureTrackerExists(for context: LDContext, hashKey: String) {
+        guard trackers[hashKey] == nil else { return }
+
+        // Create filtered context for privacy
+        var filteredContext = LDContext(copyFrom: context)
+        filteredContext.redactAnonymousAttributes = true
+
+        trackers[hashKey] = TrackerWithContext(
+            tracker: FlagRequestTracker(logger: logger),
+            context: filteredContext
         )
     }
 
