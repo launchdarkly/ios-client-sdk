@@ -43,7 +43,7 @@ class EventReporter: EventReporting {
     private let eventQueue = DispatchQueue(label: "com.launchdarkly.eventSyncQueue", qos: .userInitiated)
     // These fields should only be used synchronized on the eventQueue
     private(set) var eventStore: [Event] = []
-    private(set) var flagRequestTracker: FlagRequestTracker
+    private(set) var contextSummarizer: ContextSummarizer
 
     private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
     private var eventReportTimer: TimeResponding?
@@ -55,7 +55,7 @@ class EventReporter: EventReporting {
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.lastEventResponseDate = Date()
-        self.flagRequestTracker = FlagRequestTracker(logger: service.config.logger)
+        self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
     }
 
     func record(_ event: Event) {
@@ -78,7 +78,7 @@ class EventReporter: EventReporting {
         let recordingDebugEvent = featureFlag?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
 
         eventQueue.sync {
-            flagRequestTracker.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
+            contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
             if recordingFeatureEvent {
                 let featureEvent = FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false)
                 recordNoSync(featureEvent)
@@ -120,10 +120,13 @@ class EventReporter: EventReporting {
             return
         }
 
-        if flagRequestTracker.hasLoggedRequests {
-            let summaryEvent = SummaryEvent(flagRequestTracker: flagRequestTracker)
-            self.eventStore.append(summaryEvent)
-            flagRequestTracker = FlagRequestTracker(logger: service.config.logger)
+        if contextSummarizer.hasLoggedRequests {
+            let summaries = contextSummarizer.getSummaries()
+            for summary in summaries {
+                let summaryEvent = SummaryEvent(flagRequestTracker: summary.tracker, context: summary.context)
+                self.eventStore.append(summaryEvent)
+            }
+            contextSummarizer.clear()
         }
 
         guard !eventStore.isEmpty
@@ -229,10 +232,6 @@ extension EventReporter: TypeIdentifying { }
     extension EventReporter {
         func setLastEventResponseDate(_ date: Date) {
             lastEventResponseDate = date
-        }
-
-        func setFlagRequestTracker(_ tracker: FlagRequestTracker) {
-            flagRequestTracker = tracker
         }
     }
 #endif

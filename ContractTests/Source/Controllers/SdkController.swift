@@ -34,7 +34,8 @@ final class SdkController: RouteCollection {
             "event-gzip",
             "optional-event-gzip",
             "client-prereq-events",
-            "polling-gzip"
+            "polling-gzip",
+            "client-per-context-summaries"
         ]
 
         return StatusResponse(
