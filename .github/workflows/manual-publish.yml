@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-publish:
-    runs-on: macos-13
+    runs-on: macos-14
 
     # Needed to get tokens during publishing.
     permissions:

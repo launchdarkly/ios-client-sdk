@@ -100,9 +100,11 @@ public class LDClient {
 
      Client apps can set a completion closure called when the setOnline call completes. For unthrottled `setOnline(true)` and all `setOnline(false)` calls, the SDK will call the closure immediately on completion of this method. For throttled `setOnline(true)` calls, the SDK will call the closure after the throttling delay at the completion of the setOnline method.
 
-     The SDK will not go online if the client has not been started, or the `mobileKey` is empty. For macOS, the SDK will not go online in the background unless `enableBackgroundUpdates` is true.
+    The SDK will not go online if the client has not been started, or the `mobileKey` is empty. For macOS, the SDK will not go online in the background unless `enableBackgroundUpdates` is true.
 
-     Use `isOnline` to get the online/offline state.
+    Note: The `completion` closure is invoked on the main thread.
+
+    Use `isOnline` to get the online/offline state.
 
      - parameter goOnline:    Desired online/offline mode for the LDClient
      - parameter completion:  Completion closure called when setOnline completes (Optional)
@@ -115,8 +117,10 @@ public class LDClient {
                 instance.internalSetOnline(goOnline, completion: dispatch.leave)
             }
         }
-        if let completion = completion {
-            dispatch.notify(queue: DispatchQueue.global(), execute: completion)
+        if let completion {
+            dispatch.notify(queue: .main) {
+                completion()
+            }
         }
     }
 
@@ -283,16 +287,20 @@ public class LDClient {
 
      The client app can change the active `context` by calling identify with a new or updated LDContext. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
 
-     When a new context is set, the LDClient goes offline and sets the new context. If the client was online when the new context was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready.
+    When a new context is set, the LDClient goes offline and sets the new context. If the client was online when the new context was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready.
 
-     - parameter context: The LDContext set with the desired context.
+    Note: The `completion` closure is invoked on the main thread.
+
+    - parameter context: The LDContext set with the desired context.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
     */
     @available(*, deprecated, message: "Use LDClient.identify(context: completion:) with non-optional completion parameter")
     public func identify(context: LDContext, completion: (() -> Void)? = nil) {
-        _identify(context: context, sheddable: false, useCache: .yes) { _ in
+        _identifyHooked(context: context, sheddable: false, useCache: .yes, timeout: 0) { _ in
             if let completion = completion {
-                completion()
+                DispatchQueue.main.async {
+                    completion()
+                }
             }
         }
     }
@@ -306,33 +314,45 @@ public class LDClient {
 
      When a new context is set, the LDClient goes offline and sets the new context. If the client was online when the new context was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready.
 
-     While only a single identify request can be active at a time, consumers of this SDK can call this method multiple times. To prevent unnecessary network traffic, these requests are placed
-     into a sheddable queue. Identify requests will be shed if 1) an existing identify request is in flight, and 2) a third identify has been requested which can be replace the one being shed.
+    While only a single identify request can be active at a time, consumers of this SDK can call this method multiple times. To prevent unnecessary network traffic, these requests are placed
+    into a sheddable queue. Identify requests will be shed if 1) an existing identify request is in flight, and 2) a third identify has been requested which can be replace the one being shed.
 
-     - parameter context: The LDContext set with the desired context.
+    Note: The `completion` closure is invoked on the main thread.
+
+    - parameter context: The LDContext set with the desired context.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        _identify(context: context, sheddable: true, useCache: .yes, completion: completion)
+        _identifyHooked(context: context, sheddable: true, useCache: .yes, timeout: 0) { result in
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
     }
 
     /**
      Sets the LDContext into the LDClient inline with the behavior detailed on `LDClient.identify(context: completion:)`. Additionally,
      this method allows specifying how the flag cache should be handled when transitioning between contexts through the `useCache` parameter.
 
-     To learn more about these cache transitions, refer to the `IdentifyCacheUsage` documentation.
+    To learn more about these cache transitions, refer to the `IdentifyCacheUsage` documentation.
 
-     - parameter context: The LDContext set with the desired context.
+    Note: The `completion` closure is invoked on the main thread.
+
+    - parameter context: The LDContext set with the desired context.
      - parameter useCache: How to handle flag caches during identify transition.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        _identify(context: context, sheddable: true, useCache: useCache, completion: completion)
+        _identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: 0) { result in
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
     }
 
     // Temporary helper method to allow code sharing between the sheddable and unsheddable identify methods. In the next major release, we will remove the deprecated identify method and inline
     // this implementation in the other one.
-    private func _identify(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
+    func _identify(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
         let work: TaskHandler = { taskCompletion in
             let dispatch = DispatchGroup()
 
@@ -352,16 +372,18 @@ public class LDClient {
         }
         identifyQueue.enqueue(request: identifyTask)
     }
-
+    
     /**
      Sets the LDContext into the LDClient inline with the behavior detailed on `LDClient.identify(context: completion:)`. Additionally,
      this method will ensure the `completion` parameter will be called within the specified time interval.
 
      Note that the `completion` method being invoked does not mean that the identify request has been cancelled. The identify request will
-     continue attempting to complete as it would with `LDClient.identify(context: completion:)`. Subsequent identify requests queued behind
-     a timed out request will remain blocked (or shed) until the in flight request completes.
+    continue attempting to complete as it would with `LDClient.identify(context: completion:)`. Subsequent identify requests queued behind
+    a timed out request will remain blocked (or shed) until the in flight request completes.
 
-     - parameter context: The LDContext set with the desired context.
+    Note: The `completion` closure is invoked on the main thread.
+
+    - parameter context: The LDContext set with the desired context.
      - parameter timeout: The upper time limit before the `completion` callback will be invoked.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
@@ -373,9 +395,11 @@ public class LDClient {
      Sets the LDContext into the LDClient inline with the behavior detailed on `LDClient.identify(context: timeout: completion:)`. Additionally,
      this method allows specifying how the flag cache should be handled when transitioning between contexts through the `useCache` parameter.
 
-     To learn more about these cache transitions, refer to the `IdentifyCacheUsage` documentation.
+    To learn more about these cache transitions, refer to the `IdentifyCacheUsage` documentation.
 
-     - parameter context: The LDContext set with the desired context.
+    Note: The `completion` closure is invoked on the main thread.
+
+    - parameter context: The LDContext set with the desired context.
      - parameter timeout: The upper time limit before the `completion` callback will be invoked.
      - parameter useCache: How to handle flag caches during identify transition.
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
@@ -384,21 +408,11 @@ public class LDClient {
         if timeout > LDClient.longTimeoutInterval {
             os_log("%s LDClient.identify was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
-
-        var cancel = false
-
-        DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
-            guard !cancel else { return }
-
-            cancel = true
-            completion(.timeout)
-        }
-
-        identify(context: context, useCache: useCache) { result in
-            guard !cancel else { return }
-
-            cancel = true
-            completion(result)
+        
+        self._identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: timeout) { result in
+            DispatchQueue.main.async {
+                completion(result)
+            }
         }
     }
 
@@ -747,15 +761,24 @@ public class LDClient {
      Starting the LDClient means setting the `config` & `context`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.
      If the `start` call omits the `context`, the LDClient uses a default `LDContext`.
      If the` start` call includes the optional `completion` closure, LDClient calls the `completion` closure when `setOnline(_: completion:)` embedded in the `init` method completes. This method listens for flag updates so the completion will only return once an update has occurred. The `start` call is subject to throttling delays, therefore the `completion` closure call may be delayed.
-     Subsequent calls to this method cause the LDClient to return. Normally there should only be one call to start. To change `context`, use `identify`.
-     - parameter configuration: The LDConfig that contains the desired configuration. (Required)
+    Subsequent calls to this method cause the LDClient to return. Normally there should only be one call to start. To change `context`, use `identify`.
+
+    Note: The `completion` closure is invoked on the main thread.
+
+    - parameter configuration: The LDConfig that contains the desired configuration. (Required)
      - parameter context: The LDContext set with the desired context. If omitted, LDClient sets a default context. (Optional)
      - parameter completion: Closure called when the embedded `setOnline` call completes. (Optional)
     */
     /// - Tag: start
     @available(*, deprecated, message: "Use LDClient.start(config: context: startWithSeconds: completion:) to initialize the SDK with a defined timeout")
     public static func start(config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
-        start(serviceFactory: nil, config: config, context: context, completion: completion)
+        start(serviceFactory: nil, config: config, context: context) {
+            if let completion {
+                DispatchQueue.main.async {
+                    completion()
+                }
+            }
+        }
     }
 
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
@@ -844,37 +867,40 @@ public class LDClient {
     - parameter context: The LDContext set with the desired context. If omitted, LDClient sets a default context. (Optional)
     - parameter startWaitSeconds: A TimeInterval that determines when the completion will return if no flags have been returned from the network. If you use a large TimeInterval and wait for the timeout, then any network delays will cause your application to wait a long time before continuing execution.
     - parameter completion: Closure called when the embedded `setOnline` call completes. Takes a Bool that indicates whether the completion timedout as a parameter. (Optional)
+    Note: The `completion` closure is invoked on the main thread.
     */
     public static func start(config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
         if startWaitSeconds > LDClient.longTimeoutInterval {
             os_log("%s LDClient.start was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
 
-        start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds, completion: completion)
+        start(serviceFactory: nil, config: config, context: context, startWaitSeconds: startWaitSeconds) { timedOut in
+            if let completion {
+                DispatchQueue.main.async {
+                    completion(timedOut)
+                }
+            }
+        }
     }
 
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
-        var completed = false
         let internalCompletedQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
         if !config.startOnline {
             start(serviceFactory: serviceFactory, config: config, context: context)
+            // Consider to wrap this into internalCompletedQueue to make completion return always consistent
             completion?(true) // offline is considered a short circuited timed out case
         } else {
-            let startTime = Date().timeIntervalSince1970
-            start(serviceFactory: serviceFactory, config: config, context: context) {
-                internalCompletedQueue.async {
-                    if startTime + startWaitSeconds > Date().timeIntervalSince1970 && !completed {
-                        completed = true
-                        completion?(false) // false for not timedOut
+             TimeoutExecutor.run(
+                timeout: startWaitSeconds,
+                queue: internalCompletedQueue,
+                operation: { done in
+                    start(serviceFactory: serviceFactory, config: config, context: context) {
+                        done(false)
                     }
-                }
-            }
-            internalCompletedQueue.asyncAfter(deadline: .now() + startWaitSeconds) {
-                if !completed {
-                    completed = true
-                    completion?(true) // true for timedOut
-                }
-            }
+                },
+                timeoutValue: true,
+                completion: completion
+            )
         }
     }
 

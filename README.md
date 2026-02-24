@@ -29,10 +29,10 @@ And supports the following device platforms:
 
 | Platform | Version |
 | -------- | ------- |
-| iOS      | 12.0    |
-| watchOS  | 4.0     |
-| tvOS     | 12.0    |
-| macOS    | 10.13   |
+| iOS      | 13.0    |
+| watchOS  | 6.0     |
+| tvOS     | 13.0    |
+| macOS    | 12.00   |
 
 Installation
 -----------
@@ -50,7 +50,7 @@ To include LaunchDarkly in a Swift package, simply add it to the dependencies se
 <!-- x-release-please-start-version -->
 ```swift
 dependencies: [
-    .package(url: "https://github.com/launchdarkly/ios-client-sdk.git", .upToNextMajor(from: "9.15.0"))
+    .package(url: "https://github.com/launchdarkly/ios-client-sdk.git", .upToNextMajor(from: "11.1.0"))
 ]
 ```
 <!-- x-release-please-end -->
@@ -62,7 +62,7 @@ To use the [CocoaPods](https://cocoapods.org) dependency manager to integrate La
 ```ruby
 use_frameworks!
 target 'YourTargetName' do
-  pod 'LaunchDarkly', '~> 9.15'
+  pod 'LaunchDarkly', '~> 11.1'
 end
 ```
 
@@ -73,7 +73,7 @@ To use the [Carthage](https://github.com/Carthage/Carthage) dependency manager t
 To integrate LaunchDarkly into your Xcode project using Carthage, specify it in your `Cartfile`:
 
 ```ogdl
-github "launchdarkly/ios-client-sdk" ~> 9.15
+github "launchdarkly/ios-client-sdk" ~> 11.1
 ```
 
 ### Manual installation
