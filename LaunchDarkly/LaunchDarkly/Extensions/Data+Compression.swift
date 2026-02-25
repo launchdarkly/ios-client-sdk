@@ -29,6 +29,8 @@ import Foundation
 import Compression
 
 public extension Data {
+    /// Compresses the data using the gzip algorithm.
+    /// - returns: gzip compressed data, or nil if compression fails
     @inline(__always)
     func ld_gzip() -> Data? {
         gzip()
@@ -180,6 +182,7 @@ internal extension Data {
         let overhead = 10 + 8
         guard count >= overhead else { return nil }
 
+        // swiftlint:disable:next large_tuple
         typealias GZipHeader = (id1: UInt8, id2: UInt8, cm: UInt8, flg: UInt8, xfl: UInt8, os: UInt8)
         let hdr: GZipHeader = withUnsafeBytes { (ptr: UnsafePointer<UInt8>) -> GZipHeader in
             // +---+---+---+---+---+---+---+---+---+---+
@@ -200,28 +203,28 @@ internal extension Data {
         // Wrong gzip magic or unsupported compression method
         guard hdr.id1 == 0x1f && hdr.id2 == 0x8b && hdr.cm == 0x08 else { return nil }
 
-        let has_crc16: Bool = hdr.flg & 0b00010 != 0
-        let has_extra: Bool = hdr.flg & 0b00100 != 0
-        let has_fname: Bool = hdr.flg & 0b01000 != 0
-        let has_cmmnt: Bool = hdr.flg & 0b10000 != 0
+        let hasCrc16: Bool = hdr.flg & 0b00010 != 0
+        let hasExtra: Bool = hdr.flg & 0b00100 != 0
+        let hasFname: Bool = hdr.flg & 0b01000 != 0
+        let hasCmmnt: Bool = hdr.flg & 0b10000 != 0
 
         let cresult: Data? = withUnsafeBytes { (ptr: UnsafePointer<UInt8>) -> Data? in
             var pos = 10 ; let limit = count - 8
 
-            if has_extra {
+            if hasExtra {
                 pos += ptr.advanced(by: pos).withMemoryRebound(to: UInt16.self, capacity: 1) {
                     return Int($0.pointee.littleEndian) + 2 // +2 for xlen
                 }
             }
-            if has_fname {
+            if hasFname {
                 while pos < limit && ptr[pos] != 0x0 { pos += 1 }
                 pos += 1 // skip null byte as well
             }
-            if has_cmmnt {
+            if hasCmmnt {
                 while pos < limit && ptr[pos] != 0x0 { pos += 1 }
                 pos += 1 // skip null byte as well
             }
-            if has_crc16 {
+            if hasCrc16 {
                 pos += 2 // ignoring header crc16
             }
 

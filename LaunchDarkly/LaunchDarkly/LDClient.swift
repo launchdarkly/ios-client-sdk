@@ -296,7 +296,7 @@ public class LDClient {
     */
     @available(*, deprecated, message: "Use LDClient.identify(context: completion:) with non-optional completion parameter")
     public func identify(context: LDContext, completion: (() -> Void)? = nil) {
-        _identifyHooked(context: context, sheddable: false, useCache: .yes, timeout: 0) { _ in
+        identifyHooked(context: context, sheddable: false, useCache: .yes, timeout: 0) { _ in
             if let completion = completion {
                 DispatchQueue.main.async {
                     completion()
@@ -323,7 +323,7 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        _identifyHooked(context: context, sheddable: true, useCache: .yes, timeout: 0) { result in
+        identifyHooked(context: context, sheddable: true, useCache: .yes, timeout: 0) { result in
             DispatchQueue.main.async {
                 completion(result)
             }
@@ -343,7 +343,7 @@ public class LDClient {
      - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
      */
     public func identify(context: LDContext, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
-        _identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: 0) { result in
+        identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: 0) { result in
             DispatchQueue.main.async {
                 completion(result)
             }
@@ -352,7 +352,7 @@ public class LDClient {
 
     // Temporary helper method to allow code sharing between the sheddable and unsheddable identify methods. In the next major release, we will remove the deprecated identify method and inline
     // this implementation in the other one.
-    func _identify(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
+    func identifyImpl(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
         let work: TaskHandler = { taskCompletion in
             let dispatch = DispatchGroup()
 
@@ -409,7 +409,7 @@ public class LDClient {
             os_log("%s LDClient.identify was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
 
-        self._identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: timeout) { result in
+        self.identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: timeout) { result in
             DispatchQueue.main.async {
                 completion(result)
             }

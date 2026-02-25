@@ -4,6 +4,10 @@ import Foundation
 ///
 /// Hook implementations can use this to store data needed between stages.
 public typealias EvaluationSeriesData = [String: Any]
+
+/// Implementation specific hook data for identify stages.
+///
+/// Hook implementations can use this to store data needed between stages.
 public typealias IdentifySeriesData = [String: Any]
 
 /// Protocol for extending SDK functionality via hooks.

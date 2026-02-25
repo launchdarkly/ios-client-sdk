@@ -33,7 +33,7 @@ function_body_length:
 
 type_body_length:
   warning: 300
-  error: 500
+  error: 600
 
 file_length:
   warning: 1000

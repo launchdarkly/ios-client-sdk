@@ -41,14 +41,14 @@ extension LDClient {
         }
     }
 
-    func _identifyHooked(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, timeout: TimeInterval, completion: @escaping (_ result: IdentifyResult) -> Void) {
+    func identifyHooked(context: LDContext, sheddable: Bool, useCache: IdentifyCacheUsage, timeout: TimeInterval, completion: @escaping (_ result: IdentifyResult) -> Void) {
         if timeout > 0 {
             executeWithIdentifyHooks(context: context) { hooksCompletion in
                 TimeoutExecutor.run(
                     timeout: timeout,
                     queue: .global(),
                     operation: { [weak self] done in
-                        self?._identify(context: context, sheddable: sheddable, useCache: useCache) { result in
+                        self?.identifyImpl(context: context, sheddable: sheddable, useCache: useCache) { result in
                             done(result)
                         }
                     },
@@ -60,7 +60,7 @@ extension LDClient {
             }
         } else {
             executeWithIdentifyHooks(context: context) { [weak self] hooksCompletion in
-                self?._identify(context: context, sheddable: sheddable, useCache: useCache) { result in
+                self?.identifyImpl(context: context, sheddable: sheddable, useCache: useCache) { result in
                     completion(result)
                     hooksCompletion(result)
                 }
