@@ -27,8 +27,8 @@ jobs:
 
       - uses: ./.github/actions/ci
         with:
-          xcode-version: 26.3
-          ios-sim: "platform=iOS Simulator,name=iPhone 26"
+          xcode-version: 16.4.0
+          ios-sim: "platform=iOS Simulator,name=iPhone 16"
           run-contract-tests: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
