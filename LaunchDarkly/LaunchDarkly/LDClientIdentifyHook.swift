@@ -53,7 +53,7 @@ extension LDClient {
                         }
                     },
                     timeoutValue: .timeout
-                )                    { result in
+                ) { result in
                         completion(result)
                         hooksCompletion(result)
                     }
