@@ -28,6 +28,10 @@ runs:
       shell: bash
       run: brew install mint
 
+    - name: Install swift lint
+      shell: bash
+      run: brew install swiftlint
+
     - name: Bootstrap mint packages
       shell: bash
       run: mint bootstrap
