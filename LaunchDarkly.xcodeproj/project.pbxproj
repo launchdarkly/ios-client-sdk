@@ -237,6 +237,18 @@
 		A3470C382B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3470C362B7C1ACE00951CEE /* LDValueDecoder.swift */; };
 		A3470C392B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3470C362B7C1ACE00951CEE /* LDValueDecoder.swift */; };
 		A3470C3A2B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3470C362B7C1ACE00951CEE /* LDValueDecoder.swift */; };
+		A350386D2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */; };
+		A350386E2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */; };
+		A350386F2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */; };
+		A35038702F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */; };
+		A35038772F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
+		A35038782F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
+		A35038792F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
+		A350387A2F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
+		A350387C2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
+		A350387D2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
+		A350387E2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
+		A350387F2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
 		A3570F5A28527B8200CF241A /* LDContextCodableSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */; };
 		A358D6D12A4DD48600270C60 /* EnvironmentReporterChainBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A358D6D02A4DD48600270C60 /* EnvironmentReporterChainBase.swift */; };
 		A358D6D22A4DD48600270C60 /* EnvironmentReporterChainBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A358D6D02A4DD48600270C60 /* EnvironmentReporterChainBase.swift */; };
@@ -518,6 +530,9 @@
 		A31088262837DCA900184942 /* KindSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KindSpec.swift; sourceTree = "<group>"; };
 		A33A5F7928466D04000C29C7 /* LDContextStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDContextStub.swift; sourceTree = "<group>"; };
 		A3470C362B7C1ACE00951CEE /* LDValueDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueDecoder.swift; sourceTree = "<group>"; };
+		A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentifySeriesContext.swift; sourceTree = "<group>"; };
+		A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientIdentifyHook.swift; sourceTree = "<group>"; };
+		A350387B2F4F5A380032BA9F /* Data+Compression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+Compression.swift"; sourceTree = "<group>"; };
 		A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDContextCodableSpec.swift; sourceTree = "<group>"; };
 		A358D6D02A4DD48600270C60 /* EnvironmentReporterChainBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporterChainBase.swift; sourceTree = "<group>"; };
 		A358D6D62A4DE6A500270C60 /* ApplicationInfoEnvironmentReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationInfoEnvironmentReporter.swift; sourceTree = "<group>"; };
@@ -720,6 +735,7 @@
 		8354EFC41F22491C00C05156 /* LaunchDarkly */ = {
 			isa = PBXGroup;
 			children = (
+				A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */,
 				A380B0982B60178D00AB64A6 /* PrivacyInfo.xcprivacy */,
 				83B6C4B51F4DE7630055351C /* LDCommon.swift */,
 				8354EFDC1F26380700C05156 /* LDClient.swift */,
@@ -823,6 +839,7 @@
 		83E2E2071F9FF9A0007514E9 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				A350387B2F4F5A380032BA9F /* Data+Compression.swift */,
 				83DDBEF51FA24A7E00E428B6 /* Data.swift */,
 				83DDBEFD1FA24F9600E428B6 /* Date.swift */,
 				831D2AAE2061AAA000B4AC3C /* Thread.swift */,
@@ -969,6 +986,7 @@
 		A3BA7CE72BD056780000DB28 /* Hooks */ = {
 			isa = PBXGroup;
 			children = (
+				A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */,
 				A3BA7CE82BD056920000DB28 /* Hook.swift */,
 				A3BA7CED2BD059180000DB28 /* Metadata.swift */,
 				A3BA7CF22BD05A280000DB28 /* EvaluationSeriesContext.swift */,
@@ -1365,6 +1383,7 @@
 				831188522113ADF700D77CB5 /* KeyedValueCache.swift in Sources */,
 				831188582113AE0F00D77CB5 /* EventReporter.swift in Sources */,
 				50EE85C42EA0487F007CC662 /* TimeoutExecutor.swift in Sources */,
+				A350386E2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */,
 				A358D6F52A4DEB4C00270C60 /* EnvironmentReporterBuilder.swift in Sources */,
 				8311885D2113AE2500D77CB5 /* DarklyService.swift in Sources */,
 				831188692113AE5900D77CB5 /* ObjcLDConfig.swift in Sources */,
@@ -1372,6 +1391,8 @@
 				8311886C2113AE6400D77CB5 /* ObjcLDChangedFlag.swift in Sources */,
 				C43C37E8238DF22D003C1624 /* LDEvaluationDetail.swift in Sources */,
 				8311884C2113ADDE00D77CB5 /* FlagChangeObserver.swift in Sources */,
+				A35038772F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */,
+				A350387C2F4F5A380032BA9F /* Data+Compression.swift in Sources */,
 				A3BA7CF62BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
 				A3470C3A2B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
@@ -1463,11 +1484,13 @@
 				831EF35620655E730001C643 /* FlagChangeNotifier.swift in Sources */,
 				A358D6D92A4DE6A500270C60 /* ApplicationInfoEnvironmentReporter.swift in Sources */,
 				831EF35720655E730001C643 /* EventReporter.swift in Sources */,
+				A350386F2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */,
 				831EF35820655E730001C643 /* FlagStore.swift in Sources */,
 				831EF35920655E730001C643 /* Log.swift in Sources */,
 				A358D6E42A4DE98300270C60 /* MacOSEnvironmentReporter.swift in Sources */,
 				831EF35A20655E730001C643 /* HTTPHeaders.swift in Sources */,
 				831EF35B20655E730001C643 /* DarklyService.swift in Sources */,
+				A350387F2F4F5A380032BA9F /* Data+Compression.swift in Sources */,
 				831EF35C20655E730001C643 /* HTTPURLResponse.swift in Sources */,
 				C443A40723145FEE00145710 /* ConnectionInformationStore.swift in Sources */,
 				29FE129A280413D4008CC918 /* Util.swift in Sources */,
@@ -1490,6 +1513,7 @@
 				831EF36720655E730001C643 /* ObjcLDConfig.swift in Sources */,
 				A3A8BCD42B7EAA89009A77E4 /* SheddingQueue.swift in Sources */,
 				B4C9D43A2489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
+				A35038792F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */,
 				831EF36A20655E730001C643 /* ObjcLDChangedFlag.swift in Sources */,
 				50EE85C22EA0487F007CC662 /* TimeoutExecutor.swift in Sources */,
 			);
@@ -1520,6 +1544,7 @@
 				A31088172837DC0400184942 /* Reference.swift in Sources */,
 				8354EFE21F26380700C05156 /* Event.swift in Sources */,
 				50EE85C52EA0487F007CC662 /* TimeoutExecutor.swift in Sources */,
+				A35038702F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */,
 				A358D6F22A4DEB4C00270C60 /* EnvironmentReporterBuilder.swift in Sources */,
 				C408884923033B7500420721 /* ConnectionInformation.swift in Sources */,
 				831D8B721F71D3E700ED65E8 /* DarklyService.swift in Sources */,
@@ -1527,6 +1552,8 @@
 				835E1D431F685AC900184DB4 /* ObjcLDChangedFlag.swift in Sources */,
 				8358F25E1F474E5900ECE1AF /* LDChangedFlag.swift in Sources */,
 				83D559741FD87CC9002D10C8 /* KeyedValueCache.swift in Sources */,
+				A35038782F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */,
+				A350387D2F4F5A380032BA9F /* Data+Compression.swift in Sources */,
 				A3BA7CF32BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
 				A3470C372B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C43C37E1236BA050003C1624 /* LDEvaluationDetail.swift in Sources */,
@@ -1653,6 +1680,7 @@
 				83D9EC7E2062DEAB004D7FA6 /* FlagChangeObserver.swift in Sources */,
 				83D9EC7F2062DEAB004D7FA6 /* FlagsUnchangedObserver.swift in Sources */,
 				50EE85C32EA0487F007CC662 /* TimeoutExecutor.swift in Sources */,
+				A350386D2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */,
 				A358D6F32A4DEB4C00270C60 /* EnvironmentReporterBuilder.swift in Sources */,
 				83D9EC802062DEAB004D7FA6 /* Event.swift in Sources */,
 				83D9EC822062DEAB004D7FA6 /* ClientServiceFactory.swift in Sources */,
@@ -1660,6 +1688,8 @@
 				83D9EC832062DEAB004D7FA6 /* KeyedValueCache.swift in Sources */,
 				A358D6F02A4DE9EB00270C60 /* WatchOSEnvironmentReporter.swift in Sources */,
 				831AAE2D20A9E4F600B46DBA /* Throttler.swift in Sources */,
+				A350387A2F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */,
+				A350387E2F4F5A380032BA9F /* Data+Compression.swift in Sources */,
 				A3BA7CF42BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
 				A3470C382B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C43C37E6238DF22B003C1624 /* LDEvaluationDetail.swift in Sources */,
@@ -1815,8 +1845,8 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 11.1.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = 11.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = LaunchDarkly_macOS;
 				SDKROOT = macosx;
@@ -1839,8 +1869,8 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 11.1.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = 11.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = LaunchDarkly_macOS;
 				SDKROOT = macosx;
