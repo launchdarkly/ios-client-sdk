@@ -7,7 +7,6 @@
 ///  Created by Markus Wanke, 2016/12/05
 ///
 
-
 ///
 ///                Apache License, Version 2.0
 ///
@@ -26,7 +25,6 @@
 ///  limitations under the License.
 ///
 
-
 import Foundation
 import Compression
 
@@ -38,161 +36,150 @@ public extension Data {
 }
 
 // equal to .package(name: "DataCompression", url: "https://github.com/mw99/DataCompression", .exact("3.9.0")) with removed publics
-internal extension Data
-{
+internal extension Data {
     /// Compresses the data.
     /// - parameter withAlgorithm: Compression algorithm to use. See the `CompressionAlgorithm` type
     /// - returns: compressed data
-    func compress(withAlgorithm algo: CompressionAlgorithm) -> Data?
-    {
+    func compress(withAlgorithm algo: CompressionAlgorithm) -> Data? {
         return self.withUnsafeBytes { (sourcePtr: UnsafePointer<UInt8>) -> Data? in
             let config = (operation: COMPRESSION_STREAM_ENCODE, algorithm: algo.lowLevelType)
             return perform(config, source: sourcePtr, sourceSize: count)
         }
     }
-    
+
     /// Decompresses the data.
     /// - parameter withAlgorithm: Compression algorithm to use. See the `CompressionAlgorithm` type
     /// - returns: decompressed data
-    func decompress(withAlgorithm algo: CompressionAlgorithm) -> Data?
-    {
+    func decompress(withAlgorithm algo: CompressionAlgorithm) -> Data? {
         return self.withUnsafeBytes { (sourcePtr: UnsafePointer<UInt8>) -> Data? in
             let config = (operation: COMPRESSION_STREAM_DECODE, algorithm: algo.lowLevelType)
             return perform(config, source: sourcePtr, sourceSize: count)
         }
     }
-    
+
     /// Please consider the [libcompression documentation](https://developer.apple.com/reference/compression/1665429-data_compression)
     /// for further details. Short info:
     /// zlib  : Aka deflate. Fast with a good compression rate. Proved itself over time and is supported everywhere.
     /// lzfse : Apples custom Lempel-Ziv style compression algorithm. Claims to compress as good as zlib but 2 to 3 times faster.
     /// lzma  : Horribly slow. Compression as well as decompression. Compresses better than zlib though.
     /// lz4   : Fast, but compression rate is very bad. Apples lz4 implementation often to not compress at all.
-    enum CompressionAlgorithm
-    {
+    enum CompressionAlgorithm {
         case zlib
         case lzfse
         case lzma
         case lz4
     }
-    
+
     /// Compresses the data using the zlib deflate algorithm.
     /// - returns: raw deflated data according to [RFC-1951](https://tools.ietf.org/html/rfc1951).
     /// - note: Fixed at compression level 5 (best trade off between speed and time)
-    func deflate() -> Data?
-    {
+    func deflate() -> Data? {
         return self.withUnsafeBytes { (sourcePtr: UnsafePointer<UInt8>) -> Data? in
             let config = (operation: COMPRESSION_STREAM_ENCODE, algorithm: COMPRESSION_ZLIB)
             return perform(config, source: sourcePtr, sourceSize: count)
         }
     }
-    
+
     /// Decompresses the data using the zlib deflate algorithm. Self is expected to be a raw deflate
     /// stream according to [RFC-1951](https://tools.ietf.org/html/rfc1951).
     /// - returns: uncompressed data
-    func inflate() -> Data?
-    {
+    func inflate() -> Data? {
         return self.withUnsafeBytes { (sourcePtr: UnsafePointer<UInt8>) -> Data? in
             let config = (operation: COMPRESSION_STREAM_DECODE, algorithm: COMPRESSION_ZLIB)
             return perform(config, source: sourcePtr, sourceSize: count)
         }
     }
-    
+
     /// Compresses the data using the deflate algorithm and makes it comply to the zlib format.
     /// - returns: deflated data in zlib format [RFC-1950](https://tools.ietf.org/html/rfc1950)
     /// - note: Fixed at compression level 5 (best trade off between speed and time)
-    func zip() -> Data?
-    {
+    func zip() -> Data? {
         let header = Data([0x78, 0x5e])
-        
+
         let deflated = self.withUnsafeBytes { (sourcePtr: UnsafePointer<UInt8>) -> Data? in
             let config = (operation: COMPRESSION_STREAM_ENCODE, algorithm: COMPRESSION_ZLIB)
             return perform(config, source: sourcePtr, sourceSize: count, preload: header)
         }
-        
+
         guard var result = deflated else { return nil }
-        
+
         var adler = self.adler32().checksum.bigEndian
         result.append(Data(bytes: &adler, count: MemoryLayout<UInt32>.size))
-        
+
         return result
     }
-    
+
     /// Decompresses the data using the zlib deflate algorithm. Self is expected to be a zlib deflate
     /// stream according to [RFC-1950](https://tools.ietf.org/html/rfc1950).
     /// - returns: uncompressed data
-    func unzip(skipCheckSumValidation: Bool = true) -> Data?
-    {
+    func unzip(skipCheckSumValidation: Bool = true) -> Data? {
         // 2 byte header + 4 byte adler32 checksum
         let overhead = 6
         guard count > overhead else { return nil }
-        
+
         let header: UInt16 = withUnsafeBytes { (ptr: UnsafePointer<UInt16>) -> UInt16 in
             return ptr.pointee.bigEndian
         }
-        
+
         // check for the deflate stream bit
         guard header >> 8 & 0b1111 == 0b1000 else { return nil }
         // check the header checksum
         guard header % 31 == 0 else { return nil }
-        
+
         let cresult: Data? = withUnsafeBytes { (ptr: UnsafePointer<UInt8>) -> Data? in
             let source = ptr.advanced(by: 2)
             let config = (operation: COMPRESSION_STREAM_DECODE, algorithm: COMPRESSION_ZLIB)
             return perform(config, source: source, sourceSize: count - overhead)
         }
-        
+
         guard let inflated = cresult else { return nil }
-        
+
         if skipCheckSumValidation { return inflated }
-        
+
         let cksum = Data(self.suffix(from: count - 4)).withUnsafeBytes { rawPtr in
             return rawPtr.load(as: UInt32.self).bigEndian
         }
-        
+
         return cksum == inflated.adler32().checksum ? inflated : nil
     }
-    
+
     /// Compresses the data using the deflate algorithm and makes it comply to the gzip stream format.
     /// - returns: deflated data in gzip format [RFC-1952](https://tools.ietf.org/html/rfc1952)
     /// - note: Fixed at compression level 5 (best trade off between speed and time)
-    func gzip() -> Data?
-    {
+    func gzip() -> Data? {
         var header = Data([0x1f, 0x8b, 0x08, 0x00]) // magic, magic, deflate, noflags
-        
+
         var unixtime = UInt32(Date().timeIntervalSince1970).littleEndian
         header.append(Data(bytes: &unixtime, count: MemoryLayout<UInt32>.size))
-        
+
         header.append(contentsOf: [0x00, 0x03])  // normal compression level, unix file type
-        
+
         let deflated = self.withUnsafeBytes { (sourcePtr: UnsafePointer<UInt8>) -> Data? in
             let config = (operation: COMPRESSION_STREAM_ENCODE, algorithm: COMPRESSION_ZLIB)
             return perform(config, source: sourcePtr, sourceSize: count, preload: header)
         }
-        
+
         guard var result = deflated else { return nil }
-        
+
         // append checksum
         var crc32: UInt32 = self.crc32().checksum.littleEndian
         result.append(Data(bytes: &crc32, count: MemoryLayout<UInt32>.size))
-        
+
         // append size of original data
         var isize: UInt32 = UInt32(truncatingIfNeeded: count).littleEndian
         result.append(Data(bytes: &isize, count: MemoryLayout<UInt32>.size))
-        
+
         return result
     }
-    
+
     /// Decompresses the data using the gzip deflate algorithm. Self is expected to be a gzip deflate
     /// stream according to [RFC-1952](https://tools.ietf.org/html/rfc1952).
     /// - returns: uncompressed data
-    func gunzip() -> Data?
-    {
+    func gunzip() -> Data? {
         // 10 byte header + data + 8 byte footer. See https://tools.ietf.org/html/rfc1952#section-2
         let overhead = 10 + 8
         guard count >= overhead else { return nil }
-        
-        
+
         typealias GZipHeader = (id1: UInt8, id2: UInt8, cm: UInt8, flg: UInt8, xfl: UInt8, os: UInt8)
         let hdr: GZipHeader = withUnsafeBytes { (ptr: UnsafePointer<UInt8>) -> GZipHeader in
             // +---+---+---+---+---+---+---+---+---+---+
@@ -200,7 +187,7 @@ internal extension Data
             // +---+---+---+---+---+---+---+---+---+---+
             return (id1: ptr[0], id2: ptr[1], cm: ptr[2], flg: ptr[3], xfl: ptr[8], os: ptr[9])
         }
-        
+
         typealias GZipFooter = (crc32: UInt32, isize: UInt32)
         let alignedFtr = Data(self.suffix(from: count - 8))
         let ftr: GZipFooter = alignedFtr.withUnsafeBytes { (ptr: UnsafePointer<UInt32>) -> GZipFooter in
@@ -209,18 +196,18 @@ internal extension Data
             // +---+---+---+---+---+---+---+---+
             return (ptr[0].littleEndian, ptr[1].littleEndian)
         }
-        
+
         // Wrong gzip magic or unsupported compression method
         guard hdr.id1 == 0x1f && hdr.id2 == 0x8b && hdr.cm == 0x08 else { return nil }
-        
+
         let has_crc16: Bool = hdr.flg & 0b00010 != 0
         let has_extra: Bool = hdr.flg & 0b00100 != 0
         let has_fname: Bool = hdr.flg & 0b01000 != 0
         let has_cmmnt: Bool = hdr.flg & 0b10000 != 0
-        
+
         let cresult: Data? = withUnsafeBytes { (ptr: UnsafePointer<UInt8>) -> Data? in
             var pos = 10 ; let limit = count - 8
-            
+
             if has_extra {
                 pos += ptr.advanced(by: pos).withMemoryRebound(to: UInt16.self, capacity: 1) {
                     return Int($0.pointee.littleEndian) + 2 // +2 for xlen
@@ -237,97 +224,86 @@ internal extension Data
             if has_crc16 {
                 pos += 2 // ignoring header crc16
             }
-            
+
             guard pos < limit else { return nil }
             let config = (operation: COMPRESSION_STREAM_DECODE, algorithm: COMPRESSION_ZLIB)
             return perform(config, source: ptr.advanced(by: pos), sourceSize: limit - pos)
         }
-        
+
         guard let inflated = cresult                                   else { return nil }
         guard ftr.isize == UInt32(truncatingIfNeeded: inflated.count)  else { return nil }
         guard ftr.crc32 == inflated.crc32().checksum                   else { return nil }
         return inflated
     }
-    
+
     /// Calculate the Adler32 checksum of the data.
     /// - returns: Adler32 checksum type. Can still be further advanced.
-    func adler32() -> Adler32
-    {
+    func adler32() -> Adler32 {
         var res = Adler32()
         res.advance(withChunk: self)
         return res
     }
-    
+
     /// Calculate the Crc32 checksum of the data.
     /// - returns: Crc32 checksum type. Can still be further advanced.
-    func crc32() -> Crc32
-    {
+    func crc32() -> Crc32 {
         var res = Crc32()
         res.advance(withChunk: self)
         return res
     }
 }
 
-
-
-
 /// Struct based type representing a Crc32 checksum.
-struct Crc32: CustomStringConvertible
-{
+struct Crc32: CustomStringConvertible {
     private static let zLibCrc32: ZLibCrc32FuncPtr? = loadCrc32fromZLib()
-    
+
     init() {}
-    
+
     // C convention function pointer type matching the signature of `libz::crc32`
     private typealias ZLibCrc32FuncPtr = @convention(c) (
-        _ cks:  UInt32,
-        _ buf:  UnsafePointer<UInt8>,
-        _ len:  UInt32
+        _ cks: UInt32,
+        _ buf: UnsafePointer<UInt8>,
+        _ len: UInt32
     ) -> UInt32
-    
+
     /// Raw checksum. Updated after a every call to `advance(withChunk:)`
     var checksum: UInt32 = 0
-    
+
     /// Advance the current checksum with a chunk of data. Designed t be called multiple times.
     /// - parameter chunk: data to advance the checksum
-    mutating func advance(withChunk chunk: Data)
-    {
+    mutating func advance(withChunk chunk: Data) {
         if let fastCrc32 = Crc32.zLibCrc32 {
-            checksum = chunk.withUnsafeBytes({ (ptr: UnsafePointer<UInt8>) -> UInt32 in
+            checksum = chunk.withUnsafeBytes { (ptr: UnsafePointer<UInt8>) -> UInt32 in
                 return fastCrc32(checksum, ptr, UInt32(chunk.count))
-            })
-        }
-        else {
+            }
+        } else {
             checksum = slowCrc32(start: checksum, data: chunk)
         }
     }
-    
+
     /// Formatted checksum.
-    var description: String
-    {
+    var description: String {
         return String(format: "%08x", checksum)
     }
-    
+
     /// Load `crc32()` from '/usr/lib/libz.dylib' if libz is installed.
     /// - returns: A function pointer to crc32() of zlib or nil if zlib can't be found
-    private static func loadCrc32fromZLib() -> ZLibCrc32FuncPtr?
-    {
+    private static func loadCrc32fromZLib() -> ZLibCrc32FuncPtr? {
         guard let libz = dlopen("/usr/lib/libz.dylib", RTLD_NOW) else { return nil }
         guard let fptr = dlsym(libz, "crc32") else { return nil }
         return unsafeBitCast(fptr, to: ZLibCrc32FuncPtr.self)
     }
-    
+
     /// Rudimentary fallback implementation of the crc32 checksum. This is only a backup used
     /// when zlib can't be found under '/usr/lib/libz.dylib'.
     /// - returns: crc32 checksum (4 byte)
-    private func slowCrc32(start: UInt32, data: Data) -> UInt32
-    {
+    private func slowCrc32(start: UInt32, data: Data) -> UInt32 {
         return ~data.reduce(~start) { (crc: UInt32, next: UInt8) -> UInt32 in
             let tableOffset = (crc ^ UInt32(next)) & 0xff
             return lookUpTable[Int(tableOffset)] ^ crc >> 8
         }
     }
-    
+
     /// Lookup table for faster crc32 calculation.
     /// table source: http://web.mit.edu/freebsd/head/sys/libkern/crc32.c
     private let lookUpTable: [UInt32] = [
@@ -362,69 +338,59 @@ struct Crc32: CustomStringConvertible
         0xa00ae278, 0xd70dd2ee, 0x4e048354, 0x3903b3c2, 0xa7672661, 0xd06016f7, 0x4969474d, 0x3e6e77db,
         0xaed16a4a, 0xd9d65adc, 0x40df0b66, 0x37d83bf0, 0xa9bcae53, 0xdebb9ec5, 0x47b2cf7f, 0x30b5ffe9,
         0xbdbdf21c, 0xcabac28a, 0x53b39330, 0x24b4a3a6, 0xbad03605, 0xcdd70693, 0x54de5729, 0x23d967bf,
-        0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94, 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d,
+        0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94, 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
     ]
 }
 
-
-
-
-
 /// Struct based type representing a Adler32 checksum.
-struct Adler32: CustomStringConvertible
-{
+struct Adler32: CustomStringConvertible {
     private static let zLibAdler32: ZLibAdler32FuncPtr? = loadAdler32fromZLib()
-    
+
     init() {}
-    
+
     // C convention function pointer type matching the signature of `libz::adler32`
     private typealias ZLibAdler32FuncPtr = @convention(c) (
-        _ cks:  UInt32,
-        _ buf:  UnsafePointer<UInt8>,
-        _ len:  UInt32
+        _ cks: UInt32,
+        _ buf: UnsafePointer<UInt8>,
+        _ len: UInt32
     ) -> UInt32
-    
+
     /// Raw checksum. Updated after a every call to `advance(withChunk:)`
     var checksum: UInt32 = 1
-    
+
     /// Advance the current checksum with a chunk of data. Designed t be called multiple times.
     /// - parameter chunk: data to advance the checksum
-    mutating func advance(withChunk chunk: Data)
-    {
+    mutating func advance(withChunk chunk: Data) {
         if let fastAdler32 = Adler32.zLibAdler32 {
-            checksum = chunk.withUnsafeBytes({ (ptr: UnsafePointer<UInt8>) -> UInt32 in
+            checksum = chunk.withUnsafeBytes { (ptr: UnsafePointer<UInt8>) -> UInt32 in
                 return fastAdler32(checksum, ptr, UInt32(chunk.count))
-            })
-        }
-        else {
+            }
+        } else {
             checksum = slowAdler32(start: checksum, data: chunk)
         }
     }
-    
+
     /// Formatted checksum.
-    var description: String
-    {
+    var description: String {
         return String(format: "%08x", checksum)
     }
-    
+
     /// Load `adler32()` from '/usr/lib/libz.dylib' if libz is installed.
     /// - returns: A function pointer to adler32() of zlib or nil if zlib can't be found
-    private static func loadAdler32fromZLib() -> ZLibAdler32FuncPtr?
-    {
+    private static func loadAdler32fromZLib() -> ZLibAdler32FuncPtr? {
         guard let libz = dlopen("/usr/lib/libz.dylib", RTLD_NOW) else { return nil }
         guard let fptr = dlsym(libz, "adler32") else { return nil }
         return unsafeBitCast(fptr, to: ZLibAdler32FuncPtr.self)
     }
-    
+
     /// Rudimentary fallback implementation of the adler32 checksum. This is only a backup used
     /// when zlib can't be found under '/usr/lib/libz.dylib'.
     /// - returns: adler32 checksum (4 byte)
-    private func slowAdler32(start: UInt32, data: Data) -> UInt32
-    {
+    private func slowAdler32(start: UInt32, data: Data) -> UInt32 {
         var s1: UInt32 = start & 0xffff
         var s2: UInt32 = (start >> 16) & 0xffff
         let prime: UInt32 = 65521
-        
+
         for byte in data {
             s1 += UInt32(byte)
             if s1 >= prime { s1 = s1 % prime }
@@ -435,67 +401,59 @@ struct Adler32: CustomStringConvertible
     }
 }
 
-
-
-fileprivate extension Data
-{
-    func withUnsafeBytes<ResultType, ContentType>(_ body: (UnsafePointer<ContentType>) throws -> ResultType) rethrows -> ResultType
-    {
-        return try self.withUnsafeBytes({ (rawBufferPointer: UnsafeRawBufferPointer) -> ResultType in
+fileprivate extension Data {
+    func withUnsafeBytes<ResultType, ContentType>(_ body: (UnsafePointer<ContentType>) throws -> ResultType) rethrows -> ResultType {
+        return try self.withUnsafeBytes { (rawBufferPointer: UnsafeRawBufferPointer) -> ResultType in
             return try body(rawBufferPointer.bindMemory(to: ContentType.self).baseAddress!)
-        })
-    }
-}
-
-fileprivate extension Data.CompressionAlgorithm
-{
-    var lowLevelType: compression_algorithm {
-        switch self {
-        case .zlib    : return COMPRESSION_ZLIB
-        case .lzfse   : return COMPRESSION_LZFSE
-        case .lz4     : return COMPRESSION_LZ4
-        case .lzma    : return COMPRESSION_LZMA
         }
     }
 }
 
+fileprivate extension Data.CompressionAlgorithm {
+    var lowLevelType: compression_algorithm {
+        switch self {
+        case .zlib: return COMPRESSION_ZLIB
+        case .lzfse: return COMPRESSION_LZFSE
+        case .lz4: return COMPRESSION_LZ4
+        case .lzma: return COMPRESSION_LZMA
+        }
+    }
+}
 
-fileprivate typealias Config = (operation: compression_stream_operation, algorithm: compression_algorithm)
+private typealias Config = (operation: compression_stream_operation, algorithm: compression_algorithm)
 
-
-fileprivate func perform(_ config: Config, source: UnsafePointer<UInt8>, sourceSize: Int, preload: Data = Data()) -> Data?
-{
+private func perform(_ config: Config, source: UnsafePointer<UInt8>, sourceSize: Int, preload: Data = Data()) -> Data? {
     guard config.operation == COMPRESSION_STREAM_ENCODE || sourceSize > 0 else { return nil }
-    
+
     let mutableSource = UnsafeMutablePointer(mutating: source)
     var stream = compression_stream(dst_ptr: mutableSource, dst_size: 0, src_ptr: source, src_size: sourceSize, state: mutableSource)
-    
+
     let status = compression_stream_init(&stream, config.operation, config.algorithm)
     guard status != COMPRESSION_STATUS_ERROR else { return nil }
     defer { compression_stream_destroy(&stream) }
-    
+
     var result = preload
     var flags: Int32 = Int32(COMPRESSION_STREAM_FINALIZE.rawValue)
     let blockLimit = 64 * 1024
     var bufferSize = Swift.max(sourceSize, 64)
-    
+
     if sourceSize > blockLimit {
         bufferSize = blockLimit
-        if config.algorithm == COMPRESSION_LZFSE && config.operation != COMPRESSION_STREAM_ENCODE   {
+        if config.algorithm == COMPRESSION_LZFSE && config.operation != COMPRESSION_STREAM_ENCODE {
             // This fixes a bug in Apples lzfse decompressor. it will sometimes fail randomly when the input gets
             // splitted into multiple chunks and the flag is not 0. Even though it should always work with FINALIZE...
             flags = 0
         }
     }
-    
+
     let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
     defer { buffer.deallocate() }
-    
+
     stream.dst_ptr  = buffer
     stream.dst_size = bufferSize
     stream.src_ptr  = source
     stream.src_size = sourceSize
-    
+
     while true {
         switch compression_stream_process(&stream, flags) {
         case COMPRESSION_STATUS_OK:
@@ -503,15 +461,15 @@ fileprivate func perform(_ config: Config, source: UnsafePointer<UInt8>, sourceS
             result.append(buffer, count: stream.dst_ptr - buffer)
             stream.dst_ptr = buffer
             stream.dst_size = bufferSize
-            
+
             if flags == 0 && stream.src_size == 0 { // part of the lzfse bugfix above
                 flags = Int32(COMPRESSION_STREAM_FINALIZE.rawValue)
             }
-            
+
         case COMPRESSION_STATUS_END:
             result.append(buffer, count: stream.dst_ptr - buffer)
             return result
-            
+
         default:
             return nil
         }

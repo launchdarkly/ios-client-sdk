@@ -54,7 +54,7 @@ class AutoEnvContextModifier {
             ).base64UrlEncodedString
         }
 
-        var callables: [String : () -> LDValue] = [:]
+        var callables: [String: () -> LDValue] = [:]
         callables[AutoEnvContextModifier.envAttributesVersion] = { () -> LDValue in AutoEnvContextModifier.specVersion.toLDValue() }
         callables[AutoEnvContextModifier.attrId] = { () -> LDValue in self.environmentReporter.applicationInfo.applicationId?.toLDValue() ?? LDValue.null }
         callables[AutoEnvContextModifier.attrName] = { () -> LDValue in self.environmentReporter.applicationInfo.applicationName?.toLDValue() ?? LDValue.null }
@@ -84,7 +84,7 @@ class AutoEnvContextModifier {
             LDContext.defaultKey(kind: Kind(AutoEnvContextModifier.ldDeviceKind)!)
         }
 
-        var callables: [String : () -> LDValue] = [:]
+        var callables: [String: () -> LDValue] = [:]
         callables[AutoEnvContextModifier.envAttributesVersion] = { () -> LDValue in AutoEnvContextModifier.specVersion.toLDValue() }
         callables[AutoEnvContextModifier.attrManufacturer] = { () -> LDValue in self.environmentReporter.manufacturer.toLDValue() }
         callables[AutoEnvContextModifier.attrModel] = { () -> LDValue in self.environmentReporter.deviceModel.toLDValue() }
@@ -142,7 +142,7 @@ final class ContextRecipe {
     fileprivate let keyCallable: () -> String
     fileprivate let attributeCallables: [String: () -> LDValue]
 
-    init(kind: String, keyCallable: @escaping () -> String, attributeCallables: [String : () -> LDValue]) {
+    init(kind: String, keyCallable: @escaping () -> String, attributeCallables: [String: () -> LDValue]) {
         self.kind = kind
         self.keyCallable = keyCallable
         self.attributeCallables = attributeCallables

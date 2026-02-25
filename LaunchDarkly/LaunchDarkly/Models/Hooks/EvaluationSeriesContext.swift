@@ -1,6 +1,5 @@
 import Foundation
 
-
 /// Contextual information that will be provided to handlers during evaluation series.
 public class EvaluationSeriesContext {
     /// The key of the flag being evaluated.

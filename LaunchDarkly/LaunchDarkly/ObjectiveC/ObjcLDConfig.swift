@@ -172,7 +172,6 @@ public final class ObjcLDConfig: NSObject {
         set { config.wrapperName = newValue }
     }
 
-
     /// For use by wrapper libraries to report the version of the library in use. If the `wrapperName` has not been set this field will be ignored. Otherwise the verison strill will be included with the `wrapperName` in the "X-LaunchDarkly-Wrapper" header on requests to the LaunchDarkly servers.
     @objc public var wrapperVersion: String? {
         get { config.wrapperVersion }

@@ -53,7 +53,7 @@ class SheddingQueue {
 
         guard let request = nextTask else { return }
 
-        request.work() { [self] in
+        request.work { [self] in
             request.completion(.complete)
 
             stateQueue.sync {

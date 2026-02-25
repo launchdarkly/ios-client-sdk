@@ -11,7 +11,7 @@ import Foundation
  modifications were required as part of the updates.
  */
 
-//===----------------------------------------------------------------------===//
+// ===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift.org open source project
 //
@@ -21,7 +21,7 @@ import Foundation
 // See https://swift.org/LICENSE.txt for license information
 // See https://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 //
-//===----------------------------------------------------------------------===//
+// ===----------------------------------------------------------------------===//
 
 // Taken from https://github.com/apple/swift-corelibs-foundation/blob/dbca8c7ddcfd19f7f6f6e1b60fd3ee3f748e263c/Sources/Foundation/JSONEncoder.swift#L1186
 
@@ -58,7 +58,7 @@ internal struct LDValueKey: CodingKey {
 /// The marker protocol also provides access to the type of the `Decodable` values,
 /// which is needed for the implementation of the key conversion strategy exemption.
 ///
-fileprivate protocol _JSONStringDictionaryDecodableMarker {
+private protocol _JSONStringDictionaryDecodableMarker {
     static var elementType: Decodable.Type { get }
 }
 
@@ -68,9 +68,9 @@ extension Dictionary: _JSONStringDictionaryDecodableMarker where Key == String, 
 
 // Taken from https://github.com/apple/swift-corelibs-foundation/blob/dbca8c7ddcfd19f7f6f6e1b60fd3ee3f748e263c/Sources/Foundation/JSONDecoder.swift
 
-//===----------------------------------------------------------------------===//
+// ===----------------------------------------------------------------------===//
 // JSON Decoder
-//===----------------------------------------------------------------------===//
+// ===----------------------------------------------------------------------===//
 
 /// `LDValueDecoder` facilitates the decoding of LDValue into semantic `Decodable` types.
 class LDValueDecoder {
@@ -108,7 +108,7 @@ class LDValueDecoder {
 
 // MARK: - _LDValueDecoder
 
-fileprivate struct LDValueDecoderImpl {
+private struct LDValueDecoderImpl {
     let codingPath: [CodingKey]
     let userInfo: [CodingUserInfoKey: Any]
 
@@ -245,8 +245,7 @@ extension LDValueDecoderImpl: Decoder {
     private func unwrapFloatingPoint<T: LosslessStringConvertible & BinaryFloatingPoint>(
         from value: LDValue,
         for additionalKey: CodingKey? = nil,
-        as type: T.Type) throws -> T
-    {
+        as type: T.Type) throws -> T {
         if case .number(let number) = value {
             return T(number)
         }
@@ -257,8 +256,7 @@ extension LDValueDecoderImpl: Decoder {
     private func unwrapFixedWidthInteger<T: FixedWidthInteger>(
         from value: LDValue,
         for additionalKey: CodingKey? = nil,
-        as type: T.Type) throws -> T
-    {
+        as type: T.Type) throws -> T {
         guard case .number(let number) = value else {
             throw self.createTypeMismatchError(type: T.self, for: additionalKey, value: value)
         }
@@ -491,8 +489,7 @@ extension LDValueDecoderImpl {
         }
 
         func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: K) throws
-            -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey
-        {
+            -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
             try decoderForKey(key).container(keyedBy: type)
         }
 
@@ -678,8 +675,7 @@ extension LDValueDecoderImpl {
         }
 
         mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws
-            -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey
-        {
+            -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
             let decoder = try decoderForNextElement(ofType: KeyedDecodingContainer<NestedKey>.self)
             let container = try decoder.container(keyedBy: type)
 

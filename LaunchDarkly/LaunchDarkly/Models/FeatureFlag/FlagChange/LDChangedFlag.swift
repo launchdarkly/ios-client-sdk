@@ -14,10 +14,4 @@ public struct LDChangedFlag {
     public let oldValue: LDValue
     /// The feature flag's value after the change.
     public let newValue: LDValue
-
-    init(key: LDFlagKey, oldValue: LDValue, newValue: LDValue) {
-        self.key = key
-        self.oldValue = oldValue
-        self.newValue = newValue
-    }
 }
