@@ -1,0 +1,13 @@
+name: Build tvOS
+description: 'Build for tvOS device and simulator.'
+
+runs:
+  using: composite
+  steps:
+    - name: Build for tvOS device
+      shell: bash
+      run: xcodebuild build -scheme 'LaunchDarkly_tvOS' -sdk appletvos CODE_SIGN_IDENTITY= | xcpretty
+
+    - name: Build for tvOS Simulator
+      shell: bash
+      run: xcodebuild build -scheme 'LaunchDarkly_tvOS' -sdk appletvsimulator -destination 'platform=tvOS Simulator,name=Apple TV' | xcpretty

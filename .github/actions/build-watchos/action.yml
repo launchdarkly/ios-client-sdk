@@ -1,0 +1,13 @@
+name: Build watchOS
+description: 'Build for watchOS device and simulator.'
+
+runs:
+  using: composite
+  steps:
+    - name: Build for watchOS simulator
+      shell: bash
+      run: xcodebuild build -scheme 'LaunchDarkly_watchOS' -sdk watchsimulator | xcpretty
+
+    - name: Build for watchOS device
+      shell: bash
+      run: xcodebuild build -scheme 'LaunchDarkly_watchOS' -sdk watchos | xcpretty

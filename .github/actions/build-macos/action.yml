@@ -1,0 +1,9 @@
+name: Build macOS
+description: 'Build for macOS.'
+
+runs:
+  using: composite
+  steps:
+    - name: Build for macOS
+      shell: bash
+      run: xcodebuild build -scheme 'LaunchDarkly_macOS' -sdk macosx -destination 'platform=macOS' | xcpretty

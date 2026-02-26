@@ -1,0 +1,23 @@
+name: Contract Tests
+description: 'Build and run SDK contract tests.'
+inputs:
+  token:
+    description: 'GH token used to download SDK test harness.'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Build contract tests
+      shell: bash
+      run: make build-contract-tests
+
+    - name: Start contract tests in background
+      shell: bash
+      run: make start-contract-test-service-bg
+
+    - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.0.2
+      with:
+        test_service_port: 8080
+        token: ${{ inputs.token }}
+        extra_params: "-status-timeout 120 -skip-from ./ContractTests/testharness-suppressions.txt"
