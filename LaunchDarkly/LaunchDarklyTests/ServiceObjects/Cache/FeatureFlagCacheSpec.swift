@@ -126,7 +126,8 @@ final class FeatureFlagCacheSpec: XCTestCase {
     func testStoreValidData() throws {
         mockValueCache.setCallback = {
             if let received = self.mockValueCache.setReceivedArguments, received.forKey.starts(with: "flags-") {
-                XCTAssertEqual(received.value, try JSONEncoder().encode(self.testFlagCollection))
+                let decoded = try JSONDecoder().decode(StoredItemCollection.self, from: received.value)
+                XCTAssertEqual(decoded.flags, self.testFlagCollection.flags)
             }
         }
         let flagCache = FeatureFlagCache(serviceFactory: serviceFactory, mobileKey: "abc", maxCachedContexts: 1)
