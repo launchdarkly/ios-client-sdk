@@ -8,6 +8,13 @@ inputs:
 runs:
   using: composite
   steps:
+    # Workaround for intermittent macos-15 runner issue where simulator
+    # runtimes aren't loaded. Listing devices forces the simulator service
+    # to initialize. See https://github.com/actions/runner-images/issues/12948
+    - name: Prepare iOS Simulator runtime
+      shell: bash
+      run: xcrun simctl list devices available
+
     - name: Build Tests for iOS device
       shell: bash
       run: xcodebuild build-for-testing -scheme 'LaunchDarkly_iOS' -sdk iphoneos CODE_SIGN_IDENTITY= | xcpretty

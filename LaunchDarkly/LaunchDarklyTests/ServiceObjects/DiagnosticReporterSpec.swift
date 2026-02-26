@@ -58,6 +58,10 @@ final class DiagnosticReporterSpec: XCTestCase {
             XCTAssertEqual(awaiter.wait(timeout: DispatchTime.now() + 0.1), .timedOut)
             XCTAssertTrue(receivedEvents.isEmpty)
         }
+
+        func stop() {
+            subject.setMode(.background, online: false)
+        }
     }
 
     func testInitEvent() {
@@ -77,6 +81,7 @@ final class DiagnosticReporterSpec: XCTestCase {
         tst.subject.setMode(.foreground, online: true)
 
         tst.expectNoEvent()
+        tst.stop()
     }
 
     func testInitInBackground() {
@@ -95,6 +100,7 @@ final class DiagnosticReporterSpec: XCTestCase {
         XCTAssertEqual(published.id.diagnosticId, tst.diagnosticId.diagnosticId)
         XCTAssertEqual(published.id.sdkKeySuffix, tst.diagnosticId.sdkKeySuffix)
         XCTAssertTrue(published is DiagnosticInit)
+        tst.stop()
     }
 
     func testLastStatsSent() {
@@ -121,6 +127,7 @@ final class DiagnosticReporterSpec: XCTestCase {
         XCTAssertTrue(published is DiagnosticInit)
 
         tst.expectNoEvent()
+        tst.stop()
     }
 
     func testRetries() {
@@ -135,5 +142,6 @@ final class DiagnosticReporterSpec: XCTestCase {
         XCTAssertEqual(published.kind, .diagnosticInit)
 
         tst.expectNoEvent()
+        tst.stop()
     }
 }

@@ -10,7 +10,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "# Adds support for Apple Silicon brew directory&#10;export PATH=&quot;$PATH:/opt/homebrew/bin&quot;&#10;&#10;if which mint &gt;/dev/null; then&#10;  /usr/bin/xcrun --sdk macosx mint run realm/SwiftLint&#10;else&#10;  echo &quot;warning: mint not installed, available from https://github.com/yonaskolb/Mint&quot;&#10;fi&#10;">
+               scriptText = "# Adds support for Apple Silicon brew directory&#10;export PATH=&quot;$PATH:/opt/homebrew/bin&quot;&#10;&#10;if which swiftlint &gt;/dev/null; then&#10;  swiftlint&#10;else&#10;  echo &quot;warning: swiftlint not installed, install with brew install swiftlint&quot;&#10;fi&#10;">
             </ActionContent>
          </ExecutionAction>
       </PostActions>
