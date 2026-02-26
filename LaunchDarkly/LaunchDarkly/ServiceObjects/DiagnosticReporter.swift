@@ -16,8 +16,8 @@ class DiagnosticReporter: DiagnosticReporting {
     private let environmentReporting: EnvironmentReporting
     private var timer: TimeResponding?
     private var sentInit: Bool
-    private let stateQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.state", qos: .background)
-    private let workQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.work", qos: .background)
+    private let stateQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.state", qos: .utility)
+    private let workQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.work", qos: .utility)
 
     init(service: DarklyServiceProvider, environmentReporting: EnvironmentReporting) {
         self.service = service
