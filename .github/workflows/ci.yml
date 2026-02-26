@@ -132,7 +132,6 @@ jobs:
       - uses: ./.github/actions/test-swiftpm
 
   contract-tests:
-    needs: build-ios
     runs-on: macos-15
 
     steps:
