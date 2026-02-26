@@ -40,7 +40,7 @@ final class DarklyServiceSpec: QuickSpec {
 
         func runStubbedGet(statusCode: Int, featureFlags: [LDFlagKey: FeatureFlag]? = nil, flagResponseEtag: String? = nil) {
             serviceMock.stubFlagRequest(statusCode: statusCode, useReport: config.useReport, flagResponseEtag: flagResponseEtag)
-            waitUntil { done in
+            waitUntil(timeout: .seconds(5)) { done in
                 self.service.getFeatureFlags(useReport: Constants.useGetMethod, completion: { _ in
                     done()
                 })
@@ -83,7 +83,7 @@ final class DarklyServiceSpec: QuickSpec {
                 context("success") {
                     context("without flag request etag") {
                         beforeEach {
-                            waitUntil { done in
+                            waitUntil(timeout: .seconds(5)) { done in
                                 testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
                                                                         featureFlags: testContext.stubFlags.featureFlags,
                                                                         useReport: Constants.useReportMethod,
@@ -136,7 +136,7 @@ final class DarklyServiceSpec: QuickSpec {
                         beforeEach {
                             testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useGetMethod)
                             testContext.service.flagRequestEtag = requestEtag
-                            waitUntil { done in
+                            waitUntil(timeout: .seconds(5)) { done in
                                 testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
                                                                         featureFlags: testContext.stubFlags.featureFlags,
                                                                         useReport: Constants.useReportMethod,
@@ -190,7 +190,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 context("failure") {
                     beforeEach {
-                        waitUntil { done in
+                        waitUntil(timeout: .seconds(5)) { done in
                             testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError,
                                                                     useReport: Constants.useReportMethod,
                                                                     onActivation: { _ in
@@ -250,7 +250,7 @@ final class DarklyServiceSpec: QuickSpec {
                 context("success") {
                     context("without a flag request etag") {
                         beforeEach {
-                            waitUntil { done in
+                            waitUntil(timeout: .seconds(5)) { done in
                                 testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
                                                                         featureFlags: testContext.stubFlags.featureFlags,
                                                                         useReport: Constants.useGetMethod,
@@ -302,7 +302,7 @@ final class DarklyServiceSpec: QuickSpec {
                         beforeEach {
                             testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey, useReport: Constants.useReportMethod)
                             testContext.service.flagRequestEtag = requestEtag
-                            waitUntil { done in
+                            waitUntil(timeout: .seconds(5)) { done in
                                 testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
                                                                         featureFlags: testContext.stubFlags.featureFlags,
                                                                         useReport: Constants.useGetMethod,
@@ -354,7 +354,7 @@ final class DarklyServiceSpec: QuickSpec {
                 }
                 context("failure") {
                     beforeEach {
-                        waitUntil { done in
+                        waitUntil(timeout: .seconds(5)) { done in
                             testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.internalServerError,
                                                                     useReport: Constants.useReportMethod,
                                                                     onActivation: { _ in
@@ -582,7 +582,7 @@ final class DarklyServiceSpec: QuickSpec {
             context("success") {
                 var responses: ServiceResponses!
                 beforeEach {
-                    waitUntil { done in
+                    waitUntil(timeout: .seconds(5)) { done in
                         testContext.serviceMock.stubEventRequest(success: true) { eventRequest = $0 }
                         testContext.service.publishEventData(testData, UUID().uuidString) { response in
                             responses = (response.data, response.urlResponse, response.error)
@@ -604,7 +604,7 @@ final class DarklyServiceSpec: QuickSpec {
             context("failure") {
                 var responses: ServiceResponses!
                 beforeEach {
-                    waitUntil { done in
+                    waitUntil(timeout: .seconds(5)) { done in
                         testContext.serviceMock.stubEventRequest(success: false) { eventRequest = $0 }
                         testContext.service.publishEventData(testData, UUID().uuidString) { response in
                             responses = (response.data, response.urlResponse, response.error)
@@ -681,7 +681,7 @@ final class DarklyServiceSpec: QuickSpec {
             context("success") {
                 var responses: ServiceResponses!
                 beforeEach {
-                    waitUntil { done in
+                    waitUntil(timeout: .seconds(5)) { done in
                         testContext.serviceMock.stubDiagnosticRequest(success: true) { request, _, _ in
                             diagnosticRequest = request
                         }
