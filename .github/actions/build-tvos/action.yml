@@ -4,6 +4,13 @@ description: 'Build for tvOS device and simulator.'
 runs:
   using: composite
   steps:
+    # Workaround for intermittent macos-15 runner issue where simulator
+    # runtimes aren't loaded. Listing devices forces the simulator service
+    # to initialize. See https://github.com/actions/runner-images/issues/12948
+    - name: Prepare tvOS Simulator runtime
+      shell: bash
+      run: xcrun simctl list devices available
+
     - name: Build for tvOS device
       shell: bash
       run: xcodebuild build -scheme 'LaunchDarkly_tvOS' -sdk appletvos CODE_SIGN_IDENTITY= | xcpretty

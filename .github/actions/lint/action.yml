@@ -21,7 +21,11 @@ runs:
       # --quick skips building since dedicated build jobs already compile all platforms
       run: pod lib lint LaunchDarkly.podspec --allow-warnings --quick
 
-    - name: Run swiftlint
+    - name: Run swiftlint on SDK
+      shell: bash
+      run: swiftlint lint
+
+    - name: Run swiftlint on ContractTests
       shell: bash
       run: |
         cd ./ContractTests
