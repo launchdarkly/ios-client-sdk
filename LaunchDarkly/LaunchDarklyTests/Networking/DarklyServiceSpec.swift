@@ -712,7 +712,7 @@ final class DarklyServiceSpec: QuickSpec {
             context("failure") {
                 var responses: ServiceResponses!
                 beforeEach {
-                    waitUntil { done in
+                    waitUntil(timeout: .seconds(5)) { done in
                         testContext.serviceMock.stubEventRequest(success: false) { diagnosticRequest = $0 }
                         testContext.service.publishDiagnostic(diagnosticEvent: self.stubDiagnostic()) { response in
                             responses = (response.data, response.urlResponse, response.error)
