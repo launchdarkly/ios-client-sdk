@@ -7,7 +7,7 @@ public class IdentifySeriesContext {
     /// A string identifying the name of the method called.
     public let methodName: String
 
-    init(context: LDContext, methodName: String) {
+    public init(context: LDContext, methodName: String) {
         self.context = context
         self.methodName = methodName
     }

@@ -11,7 +11,7 @@ public class EvaluationSeriesContext {
     /// A string identifing the name of the method called.
     public let methodName: String
 
-    init(flagKey: String, context: LDContext, defaultValue: LDValue, methodName: String) {
+    public init(flagKey: String, context: LDContext, defaultValue: LDValue, methodName: String) {
         self.flagKey = flagKey
         self.context = context
         self.defaultValue = defaultValue
