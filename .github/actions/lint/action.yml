@@ -18,7 +18,8 @@ runs:
 
     - name: Lint the podspec
       shell: bash
-      run: pod lib lint LaunchDarkly.podspec --allow-warnings
+      # Only validate iOS since the other platforms are covered by dedicated build jobs
+      run: pod lib lint LaunchDarkly.podspec --allow-warnings --platforms=ios
 
     - name: Run swiftlint
       shell: bash
