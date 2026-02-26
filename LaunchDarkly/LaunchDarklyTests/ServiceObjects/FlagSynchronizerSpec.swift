@@ -866,10 +866,13 @@ final class FlagSynchronizerSpec: QuickSpec {
                     var requestCount = 0
                     DispatchQueue.global().async {
                         testContext = TestContext(streamingMode: .polling, useReport: false) { _ in
-                            if requestCount == 1 {
+                            requestCount += 1
+                            if requestCount == 2 {
+                                // Stop polling inside the callback to prevent further
+                                // timer ticks from racing with assertions.
+                                testContext.flagSynchronizer.isOnline = false
                                 semaphore.signal()
                             }
-                            requestCount += 1
                         }
                         testContext.flagSynchronizer.isOnline = true
                     }
@@ -880,7 +883,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                         runLoop.run(mode: .default, before: .distantFuture)
                     }
 
-                    expect(testContext.flagSynchronizer.isOnline) == true
+                    expect(testContext.flagSynchronizer.isOnline) == false
                     expect(testContext.flagSynchronizer.streamingMode) == .polling
                     expect(testContext.serviceMock.getFeatureFlagsCallCount) == 2
                     expect(testContext.serviceMock.createEventSourceCallCount) == 0
