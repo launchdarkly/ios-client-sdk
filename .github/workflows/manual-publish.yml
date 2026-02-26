@@ -3,13 +3,13 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Is this a dry run. If so no package will be published.'
+        description: "Is this a dry run. If so no package will be published."
         type: boolean
         required: true
 
 jobs:
   build-publish:
-    runs-on: macos-14
+    runs-on: macos-15
 
     # Needed to get tokens during publishing.
     permissions:
@@ -20,10 +20,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
-        name: 'Get Cocoapods token'
+        name: "Get Cocoapods token"
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          ssm_parameter_pairs: '/production/common/releasing/cocoapods/token = COCOAPODS_TRUNK_TOKEN'
+          ssm_parameter_pairs: "/production/common/releasing/cocoapods/token = COCOAPODS_TRUNK_TOKEN"
 
       - uses: ./.github/actions/ci
         with:
