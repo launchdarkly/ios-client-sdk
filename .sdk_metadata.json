@@ -15,7 +15,7 @@
         "bigSegments": { "introduced": "1.0" },
         "contexts": { "introduced": "8.0" },
         "eventCompression": { "introduced": "9.9.0" },
-        "experimentation": { "introduced": "1.0" },
+        "experimentation": { "introduced": "4.3.0" },
         "flagChanges": { "introduced": "1.0" },
         "hooks": { "introduced": "9.7.0" },
         "inlineContextCustomEvents": { "introduced": "9.13" },
