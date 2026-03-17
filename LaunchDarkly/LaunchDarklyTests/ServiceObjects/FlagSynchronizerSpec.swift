@@ -115,6 +115,9 @@ final class FlagSynchronizerSpec: QuickSpec {
 
                     DispatchQueue.global().async {
                         testContext = TestContext(streamingMode: .polling, useReport: false) { _ in
+                            // Stop polling inside the callback to prevent further
+                            // timer ticks from racing with assertions.
+                            testContext.flagSynchronizer.isOnline = false
                             semaphore.signal()
                         }
                         testContext.flagSynchronizer.isOnline = true
@@ -125,7 +128,6 @@ final class FlagSynchronizerSpec: QuickSpec {
                     while semaphore.wait(timeout: .now()) == .timedOut {
                         runLoop.run(mode: .default, before: .distantFuture)
                     }
-                    testContext.flagSynchronizer.isOnline = false
 
                     expect(testContext.flagSynchronizer.isOnline) == false
                     expect(testContext.flagSynchronizer.streamingMode) == .polling
