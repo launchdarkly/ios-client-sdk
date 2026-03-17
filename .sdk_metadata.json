@@ -9,7 +9,7 @@
       ],
       "userAgents": ["iOS", "macOS", "tvOS", "watchOS"],
       "features": {
-        "allFlags": { "introduced": "1.0" },
+        "allFlags": { "introduced": "4.0" },
         "appMetadata": { "introduced": "6.2.0" },
         "autoEnvAttrs": { "introduced": "9.0" },
         "bigSegments": { "introduced": "1.0" },
