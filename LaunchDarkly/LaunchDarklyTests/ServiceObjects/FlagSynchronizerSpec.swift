@@ -809,7 +809,7 @@ final class FlagSynchronizerSpec: QuickSpec {
         }
         context("event reported while polling") {
             it("reports an event error") {
-                waitUntil { done in
+                waitUntil(timeout: .seconds(5)) { done in
                     testContext = TestContext(streamingMode: .polling, useReport: false) { _ in done() }
                     testContext.flagSynchronizer.isOnline = true
                 }
