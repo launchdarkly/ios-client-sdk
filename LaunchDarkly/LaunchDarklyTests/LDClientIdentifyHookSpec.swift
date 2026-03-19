@@ -96,8 +96,41 @@ final class LDClientIdentifyHookSpec: XCTestCase {
         expect(seriesData?["before"] as? String).toEventually(equal("was called"))
     }
 
+    func testPluginHooksFireDuringInit() {
+        var count = 0
+        let hook = MockHook(before: { _, data in count += 1; return data }, after: { _, data, _ in count += 2; return data })
+        let plugin = MockPlugin(hooks: [hook])
+        var config = LDConfig(mobileKey: "mobile-key", autoEnvAttributes: .disabled)
+        config.plugins = [plugin]
+        var testContext: TestContext!
+        waitUntil { done in
+            testContext = TestContext(newConfig: config)
+            testContext.start(completion: done)
+        }
+        // before=1, after=2 from init identify; no explicit identify call
+        expect(count).toEventually(equal(3))
+    }
+
     typealias BeforeHook = (_: IdentifySeriesContext, _: IdentifySeriesData) -> IdentifySeriesData
     typealias AfterHook = (_: IdentifySeriesContext, _: IdentifySeriesData, _: IdentifyResult) -> IdentifySeriesData
+
+    class MockPlugin: Plugin {
+        let hooks: [Hook]
+
+        init(hooks: [Hook]) {
+            self.hooks = hooks
+        }
+
+        func getMetadata() -> LaunchDarkly.PluginMetadata {
+            return PluginMetadata(name: "mock-plugin")
+        }
+
+        func register(client: LaunchDarkly.LDClient, metadata: LaunchDarkly.EnvironmentMetadata) {}
+
+        func getHooks(metadata: LaunchDarkly.EnvironmentMetadata) -> [LaunchDarkly.Hook] {
+            return hooks
+        }
+    }
 
     class MockHook: Hook {
         let before: BeforeHook

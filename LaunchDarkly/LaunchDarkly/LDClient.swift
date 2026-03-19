@@ -836,17 +836,6 @@ public class LDClient {
                 credential: mobileKey
             )
 
-            // add all the plugin hooks
-            for plugin in config.plugins {
-                // Catch to protect against any runtime exceptions from plugin
-                do {
-                    let pluginHooks = try plugin.getHooks(metadata: environmentMetadata)
-                    instance.hooks.append(contentsOf: pluginHooks)
-                } catch {
-                    os_log("Exception thrown getting hooks for plugin %@. Unable to get hooks, plugin will not be registered.", log: config.logger, type: .error, plugin.getMetadata().getName())
-                }
-            }
-
             // now register the client with all the plugins
             for plugin in config.plugins {
                 do {
@@ -949,6 +938,24 @@ public class LDClient {
         self.serviceFactory = serviceFactory
         self.hooks = Array(configuration.hooks)
         environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
+
+        // Collect plugin hooks before executeBeforeIdentifyHooks so plugin hooks
+        // participate in the init identify lifecycle.
+        let initSdkMetadata = SdkMetadata(name: SystemCapabilities.systemName, version: ReportingConsts.sdkVersion)
+        let initEnvironmentMetadata = EnvironmentMetadata(
+            applicationInfo: environmentReporter.applicationInfo,
+            sdkMetadata: initSdkMetadata,
+            credential: configuration.mobileKey
+        )
+        for plugin in configuration.plugins {
+            do {
+                let pluginHooks = try plugin.getHooks(metadata: initEnvironmentMetadata)
+                self.hooks.append(contentsOf: pluginHooks)
+            } catch {
+                os_log("Exception thrown getting hooks for plugin %@. Unable to get hooks, plugin will not be registered.", log: configuration.logger, type: .error, plugin.getMetadata().getName())
+            }
+        }
+
         flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
