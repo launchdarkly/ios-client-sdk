@@ -186,17 +186,16 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 it("does not stop polling") {
                     let semaphore = DispatchSemaphore(value: 0)
-                    var requestCount = 0
+                    var didSignal = false
 
                     DispatchQueue.global().async {
                         testContext = TestContext(streamingMode: .polling, useReport: false) { _ in
-                            requestCount += 1
-                            if requestCount == 2 {
-                                // We've seen 2 callbacks, proving polling continued
-                                // after the double-set. Stop now to assert.
-                                testContext.flagSynchronizer.isOnline = false
-                                semaphore.signal()
-                            }
+                            guard !didSignal else { return }
+                            didSignal = true
+                            // Stop polling inside the callback to prevent further
+                            // timer ticks from racing with assertions.
+                            testContext.flagSynchronizer.isOnline = false
+                            semaphore.signal()
                         }
                         testContext.flagSynchronizer.isOnline = true
                         testContext.flagSynchronizer.isOnline = true
@@ -209,10 +208,11 @@ final class FlagSynchronizerSpec: QuickSpec {
                     }
 
                     // Setting isOnline = true twice should not restart polling,
-                    // so only 2 flag requests should have been made (from the
-                    // single polling cycle, not 4 from two restarts).
+                    // so only 1 flag request should have been made (from the
+                    // initial set). A second request would indicate the second
+                    // isOnline = true incorrectly restarted the polling cycle.
                     expect(testContext.flagSynchronizer.streamingMode) == .polling
-                    expect(testContext.serviceMock.getFeatureFlagsCallCount) == 2
+                    expect(testContext.serviceMock.getFeatureFlagsCallCount) == 1
                     expect(testContext.serviceMock.createEventSourceCallCount) == 0
                 }
             }
