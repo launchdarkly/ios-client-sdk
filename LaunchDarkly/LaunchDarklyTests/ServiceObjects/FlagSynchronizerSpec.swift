@@ -132,8 +132,13 @@ final class FlagSynchronizerSpec: QuickSpec {
 
                     expect(testContext.flagSynchronizer.isOnline) == false
                     expect(testContext.flagSynchronizer.streamingMode) == .polling
-                    expect(testContext.serviceMock.getFeatureFlagsCallCount) >= 1
+                    let countAfterStop = testContext.serviceMock.getFeatureFlagsCallCount
+                    expect(countAfterStop) >= 1
                     expect(testContext.serviceMock.createEventSourceCallCount) == 0
+
+                    // Wait briefly to confirm no further polling occurs.
+                    Thread.sleep(forTimeInterval: 1.5)
+                    expect(testContext.serviceMock.getFeatureFlagsCallCount) == countAfterStop
                 }
             }
             context("offline to online") {
