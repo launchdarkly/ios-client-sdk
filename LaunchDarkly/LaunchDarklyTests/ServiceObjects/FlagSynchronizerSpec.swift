@@ -112,9 +112,12 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 it("stops polling") {
                     let semaphore = DispatchSemaphore(value: 0)
+                    var didSignal = false
 
                     DispatchQueue.global().async {
                         testContext = TestContext(streamingMode: .polling, useReport: false) { _ in
+                            guard !didSignal else { return }
+                            didSignal = true
                             // Stop polling inside the callback to prevent further
                             // timer ticks from racing with assertions.
                             testContext.flagSynchronizer.isOnline = false
@@ -149,9 +152,12 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
                 it("starts polling") {
                     let semaphore = DispatchSemaphore(value: 0)
+                    var didSignal = false
 
                     DispatchQueue.global().async {
                         testContext = TestContext(streamingMode: .polling, useReport: false) { _ in
+                            guard !didSignal else { return }
+                            didSignal = true
                             // Stop polling inside the callback to prevent further
                             // timer ticks from racing with assertions.
                             testContext.flagSynchronizer.isOnline = false
