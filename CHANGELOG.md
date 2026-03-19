@@ -6,6 +6,14 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 * bumping swift-tools-version:5.5 and macosx to be compatible with otel
 - masOS "10.13" -> "12.00"
 
+## [11.1.2](https://github.com/launchdarkly/ios-client-sdk/compare/11.1.1...11.1.2) (2026-03-19)
+
+
+### Bug Fixes
+
+* Ensure done() is called only once in LDTimerSpec ([#485](https://github.com/launchdarkly/ios-client-sdk/issues/485)) ([1d1bc02](https://github.com/launchdarkly/ios-client-sdk/commit/1d1bc02183504640d52f3231a91bb2bf4c69c484))
+* Fix flaky FlagSynchronizerSpec tests (SDK-2042) ([#483](https://github.com/launchdarkly/ios-client-sdk/issues/483)) ([cd38c0f](https://github.com/launchdarkly/ios-client-sdk/commit/cd38c0f9fd0873155de0e59ad7e5fecc2effb3cb))
+
 ## [11.1.1](https://github.com/launchdarkly/ios-client-sdk/compare/11.1.0...11.1.1) (2026-02-27)
 
 
