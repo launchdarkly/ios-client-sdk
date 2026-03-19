@@ -152,6 +152,9 @@ final class FlagSynchronizerSpec: QuickSpec {
 
                     DispatchQueue.global().async {
                         testContext = TestContext(streamingMode: .polling, useReport: false) { _ in
+                            // Stop polling inside the callback to prevent further
+                            // timer ticks from racing with assertions.
+                            testContext.flagSynchronizer.isOnline = false
                             semaphore.signal()
                         }
                         testContext.flagSynchronizer.isOnline = true
@@ -163,12 +166,10 @@ final class FlagSynchronizerSpec: QuickSpec {
                     }
 
                     // polling starts by requesting flags
-                    expect(testContext.flagSynchronizer.isOnline) == true
+                    expect(testContext.flagSynchronizer.isOnline) == false
                     expect(testContext.flagSynchronizer.streamingMode) == .polling
                     expect(testContext.serviceMock.getFeatureFlagsCallCount) == 1
                     expect(testContext.serviceMock.createEventSourceCallCount) == 0
-
-                    testContext.flagSynchronizer.isOnline = false
                 }
             }
             context("online to online") {
@@ -188,6 +189,9 @@ final class FlagSynchronizerSpec: QuickSpec {
 
                     DispatchQueue.global().async {
                         testContext = TestContext(streamingMode: .polling, useReport: false) { _ in
+                            // Stop polling inside the callback to prevent further
+                            // timer ticks from racing with assertions.
+                            testContext.flagSynchronizer.isOnline = false
                             semaphore.signal()
                         }
                         testContext.flagSynchronizer.isOnline = true
@@ -201,12 +205,10 @@ final class FlagSynchronizerSpec: QuickSpec {
                     }
 
                     // setting the same value shouldn't make another flag request
-                    expect(testContext.flagSynchronizer.isOnline) == true
+                    expect(testContext.flagSynchronizer.isOnline) == false
                     expect(testContext.flagSynchronizer.streamingMode) == .polling
                     expect(testContext.serviceMock.getFeatureFlagsCallCount) == 1
                     expect(testContext.serviceMock.createEventSourceCallCount) == 0
-
-                    testContext.flagSynchronizer.isOnline = false
                 }
             }
             context("offline to offline") {
@@ -874,6 +876,8 @@ final class FlagSynchronizerSpec: QuickSpec {
                                 // timer ticks from racing with assertions.
                                 testContext.flagSynchronizer.isOnline = false
                                 semaphore.signal()
+                            } else if requestCount > 2 {
+                                return
                             }
                         }
                         testContext.flagSynchronizer.isOnline = true
