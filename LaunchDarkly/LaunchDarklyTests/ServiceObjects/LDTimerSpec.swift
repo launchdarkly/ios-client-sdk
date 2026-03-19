@@ -42,6 +42,7 @@ final class LDTimerSpec: QuickSpec {
         describe("timerFired") {
             it("calls execute on the fireQueue multiple times") {
                 var fireCount = 0
+                var didCallDone = false
                 var testContext: TestContext!
                 waitUntil { done in
                     // timeInterval is arbitrary here. "Fast" so the test doesn't take a long time.
@@ -49,7 +50,8 @@ final class LDTimerSpec: QuickSpec {
                         dispatchPrecondition(condition: .onQueue(testContext.fireQueue))
                         if fireCount < 2 {
                             fireCount += 1  // If the timer fires again before the test is done, that's ok. This just measures an arbitrary point in time.
-                        } else {
+                        } else if !didCallDone {
+                            didCallDone = true
                             done()
                         }
                     })
