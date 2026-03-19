@@ -816,10 +816,23 @@ final class FlagSynchronizerSpec: QuickSpec {
         }
         context("event reported while polling") {
             it("reports an event error") {
-                waitUntil(timeout: .seconds(5)) { done in
-                    testContext = TestContext(streamingMode: .polling, useReport: false) { _ in done() }
+                let semaphore = DispatchSemaphore(value: 0)
+                var didSignal = false
+
+                DispatchQueue.global().async {
+                    testContext = TestContext(streamingMode: .polling, useReport: false) { _ in
+                        guard !didSignal else { return }
+                        didSignal = true
+                        semaphore.signal()
+                    }
                     testContext.flagSynchronizer.isOnline = true
                 }
+
+                let runLoop = RunLoop.current
+                while semaphore.wait(timeout: .now()) == .timedOut {
+                    runLoop.run(mode: .default, before: .distantFuture)
+                }
+
                 waitUntil { done in
                     testContext.flagSynchronizer.onSyncComplete = { result in
                         if case .error(let errorResult) = result {
