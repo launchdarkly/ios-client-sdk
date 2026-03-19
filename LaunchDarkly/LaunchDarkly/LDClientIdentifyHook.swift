@@ -1,7 +1,7 @@
 import Foundation
 
 extension LDClient {
-    private struct IdentifyHookState {
+    internal struct IdentifyHookState {
         let seriesContext: IdentifySeriesContext
         let seriesData: [IdentifySeriesData]
         let hooksSnapshot: [Hook]
@@ -17,7 +17,7 @@ extension LDClient {
         }
     }
 
-    private func executeBeforeIdentifyHooks(context: LDContext) -> IdentifyHookState? {
+    internal func executeBeforeIdentifyHooks(context: LDContext) -> IdentifyHookState? {
         guard !hooks.isEmpty else {
             return nil
         }
@@ -30,7 +30,7 @@ extension LDClient {
         return IdentifyHookState(seriesContext: seriesContext, seriesData: seriesData, hooksSnapshot: hooksSnapshot)
     }
 
-    private func executeAfterIdentifyHooks(state: IdentifyHookState, result: IdentifyResult) {
+    internal func executeAfterIdentifyHooks(state: IdentifyHookState, result: IdentifyResult) {
         guard !state.hooksSnapshot.isEmpty else {
             return
         }

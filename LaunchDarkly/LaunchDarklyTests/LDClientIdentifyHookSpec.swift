@@ -18,7 +18,7 @@ final class LDClientIdentifyHookSpec: XCTestCase {
             testContext.start(completion: done)
         }
         testContext.subject.identify(context: LDContext.stub()) { _ in }
-        expect(count).toEventually(equal(3))
+        expect(count).toEventually(equal(6))
     }
 
     func testRegistrationWithTimeout() {
@@ -32,13 +32,13 @@ final class LDClientIdentifyHookSpec: XCTestCase {
             testContext.start(completion: done)
         }
         testContext.subject.identify(context: LDContext.stub(), timeout: 30.0) { _ in }
-        expect(count).toEventually(equal(3))
+        expect(count).toEventually(equal(6))
     }
 
     func testIdentifyOrder() {
         var callRecord: [String] = []
-        let firstHook = MockHook(before: { _, data in callRecord.append("first before"); return data }, after: { _, data, _ in callRecord.append("first after"); return data })
-        let secondHook = MockHook(before: { _, data in callRecord.append("second before"); return data }, after: { _, data, _ in callRecord.append("second after"); return data })
+        let firstHook = MockHook(before: { sc, data in callRecord.append("first before \(sc.context.fullyQualifiedKey())"); return data }, after: { sc, data, _ in callRecord.append("first after \(sc.context.fullyQualifiedKey())"); return data })
+        let secondHook = MockHook(before: { sc, data in callRecord.append("second before \(sc.context.fullyQualifiedKey())"); return data }, after: { sc, data, _ in callRecord.append("second after \(sc.context.fullyQualifiedKey())"); return data })
         var config = LDConfig(mobileKey: "mobile-key", autoEnvAttributes: .disabled)
         config.hooks = [firstHook, secondHook]
 
@@ -48,8 +48,12 @@ final class LDClientIdentifyHookSpec: XCTestCase {
             testContext.start(completion: done)
         }
 
-        testContext.subject.identify(context: LDContext.stub()) { _ in }
-        expect(callRecord).toEventually(equal(["first before", "second before", "second after", "first after"]))
+        let initKey = testContext.subject.context.fullyQualifiedKey()
+        testContext.subject.identify(context: LDContext.stub(key: "explicit-context")) { _ in }
+        expect(callRecord).toEventually(equal([
+            "first before \(initKey)", "second before \(initKey)", "second after \(initKey)", "first after \(initKey)",
+            "first before explicit-context", "second before explicit-context", "second after explicit-context", "first after explicit-context"
+        ]))
     }
 
     func testIdentifyResultIsCaptured() {

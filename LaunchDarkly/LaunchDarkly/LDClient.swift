@@ -995,12 +995,16 @@ public class LDClient {
             flagStore.replaceStore(newStoredItems: cachedFlags)
         }
 
+        let hookState = executeBeforeIdentifyHooks(context: context)
         eventReporter.record(IdentifyEvent(context: context))
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
         internalSetOnline(configuration.startOnline) {
             os_log("%s LDClient started", log: configuration.logger, type: .debug, self.typeName(and: #function))
             completion?()
+            if let state = hookState {
+                self.executeAfterIdentifyHooks(state: state, result: .complete)
+            }
         }
     }
 }
