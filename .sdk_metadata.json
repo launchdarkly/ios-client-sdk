@@ -7,7 +7,27 @@
       "languages": [
         "Swift", "Objective-C"
       ],
-      "userAgents": ["iOS", "macOS", "tvOS", "watchOS"]
+      "userAgents": ["iOS", "macOS", "tvOS", "watchOS"],
+      "features": {
+        "allFlags": { "introduced": "4.0" },
+        "appMetadata": { "introduced": "6.2.0" },
+        "autoEnvAttrs": { "introduced": "9.0" },
+        "bigSegments": { "introduced": "1.0" },
+        "contexts": { "introduced": "8.0" },
+        "eventCompression": { "introduced": "9.9.0" },
+        "experimentation": { "introduced": "4.3.0" },
+        "flagChanges": { "introduced": "1.0" },
+        "hooks": { "introduced": "9.7.0" },
+        "inlineContextCustomEvents": { "introduced": "9.13" },
+        "multiEnv": { "introduced": "5.0" },
+        "offlineMode": { "introduced": "1.0" },
+        "perContextSummaryEvents": { "introduced": "10.2.0" },
+        "pluginSupport": { "introduced": "9.14" },
+        "privateAttrs": { "introduced": "2.10" },
+        "relayProxyProxy": { "introduced": "1.0" },
+        "track": { "introduced": "1.0" },
+        "variationDetail": { "introduced": "4.3" }
+      }
     }
   }
 }
