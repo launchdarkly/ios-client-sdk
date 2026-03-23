@@ -939,8 +939,7 @@ public class LDClient {
         self.hooks = Array(configuration.hooks)
         environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
 
-        // Collect plugin hooks before executeBeforeIdentifyHooks so plugin hooks
-        // participate in the init identify lifecycle.
+        // Collect plugin hooks before calling beforeIdentify, so plugin hooks participate in the init identify lifecycle.
         let initSdkMetadata = SdkMetadata(name: SystemCapabilities.systemName, version: ReportingConsts.sdkVersion)
         let initEnvironmentMetadata = EnvironmentMetadata(
             applicationInfo: environmentReporter.applicationInfo,
@@ -969,10 +968,20 @@ public class LDClient {
             context = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(context)
         }
 
+        var hookState: IdentifyHookState? = nil
+        if !hooks.isEmpty {
+            let seriesContext = IdentifySeriesContext(context: context, methodName: "identify")
+            let seriesData = hooks.map { hook in
+                hook.beforeIdentify(seriesContext: seriesContext, seriesData: EvaluationSeriesData())
+            }
+            hookState = IdentifyHookState(seriesContext: seriesContext, seriesData: seriesData, hooksSnapshot: hooks)
+        }
+
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, context: context, envReporter: environmentReporter)
         diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(config: config, service: service, environmentReporter: environmentReporter)
         eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
         connectionInformation = self.serviceFactory.makeConnectionInformation()
+
         let cachedData = flagCache.getCachedData(cacheKey: context.fullyQualifiedHashedKey(), contextHash: context.contextHash())
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
@@ -1002,7 +1011,6 @@ public class LDClient {
             flagStore.replaceStore(newStoredItems: cachedFlags)
         }
 
-        let hookState = executeBeforeIdentifyHooks(context: context)
         eventReporter.record(IdentifyEvent(context: context))
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
