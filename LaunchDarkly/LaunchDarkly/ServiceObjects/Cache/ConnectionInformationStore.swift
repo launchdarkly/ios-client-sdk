@@ -5,14 +5,12 @@ final class ConnectionInformationStore {
     private static let storeQueue = DispatchQueue(label: "com.launchDarkly.ConnectionInformationStore.storeQueue")
 
     static func retrieveStoredConnectionInformation() -> ConnectionInformation? {
-        storeQueue.sync {
-            UserDefaults.standard.retrieve(object: ConnectionInformation.self, fromKey: ConnectionInformationStore.connectionInformationKey)
-        }
+        UserDefaults.standard.retrieve(object: ConnectionInformation.self, fromKey: connectionInformationKey)
     }
 
     static func storeConnectionInformation(connectionInformation: ConnectionInformation) {
         storeQueue.async {
-            UserDefaults.standard.save(customObject: connectionInformation, forKey: ConnectionInformationStore.connectionInformationKey)
+            UserDefaults.standard.save(customObject: connectionInformation, forKey: connectionInformationKey)
         }
     }
 }
