@@ -970,10 +970,8 @@ public class LDClient {
 
         var hookState: IdentifyHookState? = nil
         if !hooks.isEmpty {
-            let seriesContext = IdentifySeriesContext(context: context, methodName: "identify")
-            let seriesData = hooks.map { hook in
-                hook.beforeIdentify(seriesContext: seriesContext, seriesData: EvaluationSeriesData())
-            }
+            let seriesContext = IdentifySeriesContext(context: context, methodName: "init")
+            let seriesData = hooks.map { hook in hook.beforeIdentify(seriesContext: seriesContext, seriesData: EvaluationSeriesData()) }
             hookState = IdentifyHookState(seriesContext: seriesContext, seriesData: seriesData, hooksSnapshot: hooks)
         }
 
