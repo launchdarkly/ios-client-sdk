@@ -6,6 +6,13 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 * bumping swift-tools-version:5.5 and macosx to be compatible with otel
 - masOS "10.13" -> "12.00"
 
+## [10.2.1](https://github.com/launchdarkly/ios-client-sdk/compare/10.2.0...10.2.1) (2026-03-26)
+
+
+### Bug Fixes
+
+* backport [#489](https://github.com/launchdarkly/ios-client-sdk/issues/489) - app hang in didEnterBackground by making ConnectionInformationStore writes async (v10) ([#493](https://github.com/launchdarkly/ios-client-sdk/issues/493)) ([7f63164](https://github.com/launchdarkly/ios-client-sdk/commit/7f63164074751b6e474105d861d918df2c1ef7ee))
+
 ## [10.2.0](https://github.com/launchdarkly/ios-client-sdk/compare/10.1.0...10.2.0) (2026-02-17)
 
 
