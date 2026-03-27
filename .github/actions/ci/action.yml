@@ -29,11 +29,6 @@ runs:
       run: |
         brew install mint
 
-    - name: Install swiftlint
-      shell: bash
-      run: |
-        brew install swiftlint
-
     - name: Install cocoapods
       shell: bash
       run: gem install cocoapods
@@ -51,7 +46,7 @@ runs:
       shell: bash
       run: |
         cd ./ContractTests
-        swiftlint lint
+        mint run realm/SwiftLint lint
 
     - name: Build for macOS
       shell: bash
