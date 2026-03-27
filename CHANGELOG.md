@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly iOS SDK will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.15.1](https://github.com/launchdarkly/ios-client-sdk/compare/9.15.0...9.15.1) (2026-03-27)
+
+
+### Bug Fixes
+
+* backport [#489](https://github.com/launchdarkly/ios-client-sdk/issues/489) - app hang in didEnterBackground by making ConnectionInformationStore writes async (v9) ([#492](https://github.com/launchdarkly/ios-client-sdk/issues/492)) ([bf10913](https://github.com/launchdarkly/ios-client-sdk/commit/bf10913d4401b494bde36446bdf114e00b4bd194))
+
 ## [9.15.0](https://github.com/launchdarkly/ios-client-sdk/compare/9.14.0...9.15.0) (2025-08-15)
 
 
