@@ -384,22 +384,18 @@ public class LDClient {
         if timeout > LDClient.longTimeoutInterval {
             os_log("%s LDClient.identify was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
-
-        var cancel = false
-
-        DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
-            guard !cancel else { return }
-
-            cancel = true
-            completion(.timeout)
-        }
-
-        identify(context: context, useCache: useCache) { result in
-            guard !cancel else { return }
-
-            cancel = true
-            completion(result)
-        }
+        
+        TimeoutExecutor.run(
+            timeout: timeout,
+            queue: .global(),
+            operation: { done in
+                self.identify(context: context, useCache: useCache) { result in
+                    done(result)
+                }
+            },
+            timeoutValue: .timeout,
+            completion: completion
+        )
     }
 
     func internalIdentify(newContext: LDContext, useCache: IdentifyCacheUsage, completion: (() -> Void)? = nil) {
@@ -854,27 +850,23 @@ public class LDClient {
     }
 
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
-        var completed = false
         let internalCompletedQueue: DispatchQueue = DispatchQueue(label: "TimeOutQueue")
         if !config.startOnline {
             start(serviceFactory: serviceFactory, config: config, context: context)
+            // Consider to wrap this into internalCompletedQueue to make completion return always consistent
             completion?(true) // offline is considered a short circuited timed out case
         } else {
-            let startTime = Date().timeIntervalSince1970
-            start(serviceFactory: serviceFactory, config: config, context: context) {
-                internalCompletedQueue.async {
-                    if startTime + startWaitSeconds > Date().timeIntervalSince1970 && !completed {
-                        completed = true
-                        completion?(false) // false for not timedOut
+             TimeoutExecutor.run(
+                timeout: startWaitSeconds,
+                queue: internalCompletedQueue,
+                operation: { done in
+                    start(serviceFactory: serviceFactory, config: config, context: context) {
+                        done(false)
                     }
-                }
-            }
-            internalCompletedQueue.asyncAfter(deadline: .now() + startWaitSeconds) {
-                if !completed {
-                    completed = true
-                    completion?(true) // true for timedOut
-                }
-            }
+                },
+                timeoutValue: true,
+                completion: completion
+            )
         }
     }
 
