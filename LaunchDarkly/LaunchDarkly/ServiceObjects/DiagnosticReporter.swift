@@ -39,9 +39,6 @@ class DiagnosticReporter: DiagnosticReporting {
             if let cache = self.service.diagnosticCache {
                 if !sentInit {
                     sentInit = true
-                    if let lastStats = cache.lastStats {
-                        sendDiagnosticEventAsync(diagnosticEvent: lastStats)
-                    }
                     let initEvent = DiagnosticInit(config: service.config,
                                                    environmentReporting: environmentReporting,
                                                    diagnosticId: cache.getDiagnosticId(),

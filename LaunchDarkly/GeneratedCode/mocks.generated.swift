@@ -41,15 +41,6 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
 // MARK: - DiagnosticCachingMock
 final class DiagnosticCachingMock: DiagnosticCaching {
 
-    var lastStatsSetCount = 0
-    var setLastStatsCallback: (() throws -> Void)?
-    var lastStats: DiagnosticStats? = nil {
-        didSet {
-            lastStatsSetCount += 1
-            try! setLastStatsCallback?()
-        }
-    }
-
     var getDiagnosticIdCallCount = 0
     var getDiagnosticIdCallback: (() throws -> Void)?
     var getDiagnosticIdReturnValue: DiagnosticId!
