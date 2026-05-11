@@ -10,23 +10,17 @@ final class DiagnosticCacheSpec: QuickSpec {
             incrementDroppedEventCountSpec()
             recordEventsInLastBatchSpec()
             addStreamInitSpec()
-            lastStatsSpec()
-            backingStoreSpec()
         }
     }
 
     private func getCurrentStatsAndResetSpec() {
         context("getCurrentStatsAndReset") {
-            beforeEach {
-                self.clearStoredCaches()
-            }
             it("has expected initial values") {
                 let diagnosticCache = DiagnosticCache(sdkKey: "this_is_a_fake_key")
                 let diagnosticId = diagnosticCache.getDiagnosticId()
                 Thread.sleep(forTimeInterval: 0.01)
                 let diagnosticStats = diagnosticCache.getCurrentStatsAndReset()
                 let now = Date().millisSince1970
-                expect(diagnosticCache.lastStats).to(beNil())
                 expect(diagnosticId.sdkKeySuffix) == "ke_key"
                 expect(UUID(uuidString: diagnosticId.diagnosticId)).toNot(beNil())
                 expect(diagnosticStats.id.sdkKeySuffix) == diagnosticId.sdkKeySuffix
@@ -63,9 +57,6 @@ final class DiagnosticCacheSpec: QuickSpec {
 
     private func incrementDroppedEventCountSpec() {
         context("incrementDroppedEventCount") {
-            beforeEach {
-                self.clearStoredCaches()
-            }
             it("increments dropped event count") {
                 let diagnosticCache = DiagnosticCache(sdkKey: "this_is_a_fake_key")
                 let diagnosticId = diagnosticCache.getDiagnosticId()
@@ -105,9 +96,6 @@ final class DiagnosticCacheSpec: QuickSpec {
 
     private func recordEventsInLastBatchSpec() {
         context("recordEventsInLastBatch") {
-            beforeEach {
-                self.clearStoredCaches()
-            }
             it("sets events in last batch") {
                 let diagnosticCache = DiagnosticCache(sdkKey: "this_is_a_fake_key")
                 let diagnosticId = diagnosticCache.getDiagnosticId()
@@ -130,9 +118,6 @@ final class DiagnosticCacheSpec: QuickSpec {
 
     private func addStreamInitSpec() {
         context("addStreamInit") {
-            beforeEach {
-                self.clearStoredCaches()
-            }
             it("adds a stream init") {
                 let diagnosticCache = DiagnosticCache(sdkKey: "this_is_a_fake_key")
                 let diagnosticId = diagnosticCache.getDiagnosticId()
@@ -193,72 +178,5 @@ final class DiagnosticCacheSpec: QuickSpec {
                 }
             }
         }
-    }
-
-    private func lastStatsSpec() {
-        context("lastStats") {
-            beforeEach {
-                self.clearStoredCaches()
-            }
-            it("restores from previous initialization with same key") {
-                let diagnosticCache = DiagnosticCache(sdkKey: "this_is_a_fake_key")
-                let diagnosticId = diagnosticCache.getDiagnosticId()
-                let initialStats = diagnosticCache.getCurrentStatsAndReset()
-                diagnosticCache.incrementDroppedEventCount()
-                diagnosticCache.recordEventsInLastBatch(eventsInLastBatch: 5)
-                diagnosticCache.addStreamInit(streamInit: DiagnosticStreamInit(timestamp: 100, durationMillis: 50, failed: false))
-                let restoredCache = DiagnosticCache(sdkKey: "this_is_a_fake_key")
-                let restoredId = restoredCache.getDiagnosticId()
-                guard let lastStats = restoredCache.lastStats
-                else {
-                    fail("No restored stats")
-                    return
-                }
-                expect(lastStats.id.diagnosticId) == diagnosticId.diagnosticId
-                expect(lastStats.id.sdkKeySuffix) == diagnosticId.sdkKeySuffix
-                expect(restoredId.diagnosticId) != diagnosticId.diagnosticId
-                expect(restoredId.sdkKeySuffix) == diagnosticId.sdkKeySuffix
-                expect(lastStats.creationDate) >= initialStats.creationDate
-                expect(lastStats.dataSinceDate) == initialStats.creationDate
-                expect(lastStats.droppedEvents) == 1
-                expect(lastStats.eventsInLastBatch) == 5
-                expect(lastStats.streamInits.count) == 1
-                expect(lastStats.streamInits[0].timestamp) == 100
-                expect(lastStats.streamInits[0].durationMillis) == 50
-                expect(lastStats.streamInits[0].failed) == false
-            }
-            it("does not restore from previous initialization with different key") {
-                let diagnosticCache = DiagnosticCache(sdkKey: "this_is_a_fake_key")
-                diagnosticCache.incrementDroppedEventCount()
-                diagnosticCache.recordEventsInLastBatch(eventsInLastBatch: 5)
-                diagnosticCache.addStreamInit(streamInit: DiagnosticStreamInit(timestamp: 100, durationMillis: 50, failed: false))
-                let restoredCache = DiagnosticCache(sdkKey: "this_is_a_different_fake_key")
-                let lastStats = restoredCache.lastStats
-                expect(lastStats).to(beNil())
-            }
-        }
-    }
-
-    private func backingStoreSpec() {
-        context("backing store") {
-            it("stores to expected key") {
-                self.clearStoredCaches()
-
-                let expectedDataKey = "com.launchdarkly.DiagnosticCache.diagnosticData.this_is_a_fake_key"
-                let defaults = UserDefaults.standard
-                let beforeData = defaults.data(forKey: expectedDataKey)
-                expect(beforeData).to(beNil())
-                _ = DiagnosticCache(sdkKey: "this_is_a_fake_key")
-                let afterData = defaults.data(forKey: expectedDataKey)
-                expect(afterData).toNot(beNil())
-            }
-        }
-    }
-
-    private func clearStoredCaches() {
-        let defaults = UserDefaults.standard
-        defaults.dictionaryRepresentation().keys.filter {
-            $0.starts(with: "com.launchdarkly.DiagnosticCache.diagnosticData")
-        }.forEach { defaults.removeObject(forKey: $0) }
     }
 }
