@@ -6,6 +6,13 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 * bumping swift-tools-version:5.5 and macosx to be compatible with otel
 - masOS "10.13" -> "12.00"
 
+## [10.2.2](https://github.com/launchdarkly/ios-client-sdk/compare/10.2.1...10.2.2) (2026-05-11)
+
+
+### Bug Fixes
+
+* updates diagnostic cache to be memory only to remove concurrency bug ([#499](https://github.com/launchdarkly/ios-client-sdk/issues/499)) ([7d7f858](https://github.com/launchdarkly/ios-client-sdk/commit/7d7f85826ab58c06f2aa7b17190919977916f110))
+
 ## [10.2.1](https://github.com/launchdarkly/ios-client-sdk/compare/10.2.0...10.2.1) (2026-03-26)
 
 
