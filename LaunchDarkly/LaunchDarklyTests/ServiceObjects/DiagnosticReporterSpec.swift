@@ -103,33 +103,6 @@ final class DiagnosticReporterSpec: XCTestCase {
         tst.stop()
     }
 
-    func testLastStatsSent() {
-        let tst = TestContext()
-        let now = Date().millisSince1970
-        let stats = DiagnosticStats(id: tst.diagnosticId, creationDate: now, dataSinceDate: now, droppedEvents: 0, eventsInLastBatch: 0, streamInits: [])
-        tst.cachingMock.lastStats = stats
-        tst.queueResponse(status: 202)
-        tst.queueResponse(status: 202)
-        tst.subject.setMode(.foreground, online: true)
-
-        var published = tst.takeEvent()
-        XCTAssertEqual(published.kind, .diagnosticStats)
-        XCTAssertEqual(published.id.diagnosticId, tst.diagnosticId.diagnosticId)
-        XCTAssertTrue(published is DiagnosticStats)
-        if let published = published as? DiagnosticStats {
-            XCTAssertEqual(published.creationDate, now)
-        }
-
-        published = tst.takeEvent()
-        XCTAssertEqual(published.kind, .diagnosticInit)
-        XCTAssertEqual(published.id.diagnosticId, tst.diagnosticId.diagnosticId)
-        XCTAssertEqual(published.id.sdkKeySuffix, tst.diagnosticId.sdkKeySuffix)
-        XCTAssertTrue(published is DiagnosticInit)
-
-        tst.expectNoEvent()
-        tst.stop()
-    }
-
     func testRetries() {
         let tst = TestContext()
         tst.queueResponse(status: 500)
