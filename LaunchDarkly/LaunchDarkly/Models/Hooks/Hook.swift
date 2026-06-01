@@ -64,6 +64,12 @@ public protocol Hook {
     ///   - result: The result of the identify operation.
     /// - Returns: A dictionary containing custom data that will be carried through to the next stage of the series (if added in the future).
     func afterIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData, result: IdentifyResult) -> IdentifySeriesData
+
+    /// Executed by the SDK during the execution of the track process, after the event has been enqueued.
+    ///
+    /// - Parameters:
+    ///   - seriesContext: Contains information about the track operation being performed. This is not mutable.
+    func afterTrack(seriesContext: TrackSeriesContext)
 }
 
 public extension Hook {
@@ -97,5 +103,11 @@ public extension Hook {
     /// Default implementation is a no-op that returns `seriesData` unchanged.
     func afterIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData, result: IdentifyResult) -> IdentifySeriesData {
         return seriesData
+    }
+
+    /// Called during the execution of the track process, after the event has been enqueued.
+    ///
+    /// Default implementation is a no-op.
+    func afterTrack(seriesContext: TrackSeriesContext) {
     }
 }

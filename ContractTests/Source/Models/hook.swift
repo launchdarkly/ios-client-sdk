@@ -26,6 +26,23 @@ class TestHook: Hook {
         return processHook(seriesContext: seriesContext, seriesData: seriesData, evaluationDetail: evaluationDetail, stage: "afterEvaluation")
     }
 
+    func afterTrack(seriesContext: TrackSeriesContext) {
+        guard self.errors["afterTrack"] == nil else { return }
+
+        let payload = TrackPayload(trackSeriesContext: seriesContext, stage: "afterTrack")
+
+        // swiftlint:disable:next force_try
+        let data = try! JSONEncoder().encode(payload)
+
+        var request = URLRequest(url: self.callbackUrl)
+        request.httpMethod = "POST"
+        request.httpBody = data
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        URLSession.shared.dataTask(with: request) { (_, _, _) in
+        }.resume()
+    }
+
     private func processHook(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>?, stage: String) -> EvaluationSeriesData {
         guard self.errors[stage] == nil else { return seriesData }
 
@@ -118,6 +135,38 @@ extension EvaluationSeriesContext: Encodable {
         try container.encode(context, forKey: .context)
         try container.encode(defaultValue, forKey: .defaultValue)
         try container.encode(methodName, forKey: .method)
+    }
+}
+
+struct TrackPayload: Encodable {
+    var trackSeriesContext: TrackSeriesContext
+    var stage: String
+
+    init(trackSeriesContext: TrackSeriesContext, stage: String) {
+        self.trackSeriesContext = trackSeriesContext
+        self.stage = stage
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case trackSeriesContext
+        case stage
+    }
+}
+
+extension TrackSeriesContext: Encodable {
+    private enum CodingKeys: String, CodingKey {
+        case key
+        case context
+        case data
+        case metricValue
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(key, forKey: .key)
+        try container.encode(context, forKey: .context)
+        try container.encodeIfPresent(data, forKey: .data)
+        try container.encodeIfPresent(metricValue, forKey: .metricValue)
     }
 }
 

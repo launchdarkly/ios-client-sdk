@@ -721,6 +721,20 @@ public class LDClient {
             String(describing: data),
             String(describing: metricValue))
         eventReporter.record(event)
+
+        executeAfterTrackHooks(key: key, data: data, metricValue: metricValue)
+    }
+
+    private func executeAfterTrackHooks(key: String, data: LDValue?, metricValue: Double?) {
+        guard !hooks.isEmpty else {
+            return
+        }
+
+        let seriesContext = TrackSeriesContext(key: key, context: context, data: data, metricValue: metricValue)
+        // Invoke hooks in reverse order, mirroring the after-stage ordering of the other hook series.
+        hooks.reversed().forEach { hook in
+            hook.afterTrack(seriesContext: seriesContext)
+        }
     }
 
     /**

@@ -30,6 +30,7 @@ final class SdkController: RouteCollection {
             "inline-context-all",
             "anonymous-redaction",
             "evaluation-hooks",
+            "track-hooks",
             "event-gzip",
             "optional-event-gzip",
             "client-prereq-events",

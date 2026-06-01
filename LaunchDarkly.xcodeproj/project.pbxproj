@@ -241,6 +241,10 @@
 		A350386E2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */; };
 		A350386F2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */; };
 		A35038702F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */; };
+		FED0000000000000000000C1 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
+		FED0000000000000000000C2 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
+		FED0000000000000000000C3 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
+		FED0000000000000000000C4 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
 		A35038772F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
 		A35038782F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
 		A35038792F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
@@ -250,6 +254,7 @@
 		A350387E2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
 		A350387F2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
 		A35038812F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift */; };
+		FED0000000000000000000D1 /* LDClientTrackHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000D0 /* LDClientTrackHookSpec.swift */; };
 		A35038832F4F96680032BA9F /* LDClientEvaluationHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038822F4F96680032BA9F /* LDClientEvaluationHookSpec.swift */; };
 		A35038852F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038842F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift */; };
 		A3570F5A28527B8200CF241A /* LDContextCodableSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */; };
@@ -533,9 +538,11 @@
 		A33A5F7928466D04000C29C7 /* LDContextStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDContextStub.swift; sourceTree = "<group>"; };
 		A3470C362B7C1ACE00951CEE /* LDValueDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueDecoder.swift; sourceTree = "<group>"; };
 		A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentifySeriesContext.swift; sourceTree = "<group>"; };
+		FED0000000000000000000C0 /* TrackSeriesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackSeriesContext.swift; sourceTree = "<group>"; };
 		A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientIdentifyHook.swift; sourceTree = "<group>"; };
 		A350387B2F4F5A380032BA9F /* Data+Compression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+Compression.swift"; sourceTree = "<group>"; };
 		A35038802F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientIdentifyHookSpec.swift; sourceTree = "<group>"; };
+		FED0000000000000000000D0 /* LDClientTrackHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientTrackHookSpec.swift; sourceTree = "<group>"; };
 		A35038822F4F96680032BA9F /* LDClientEvaluationHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientEvaluationHookSpec.swift; sourceTree = "<group>"; };
 		A35038842F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchOSEnvironmentReporterSpec.swift; sourceTree = "<group>"; };
 		A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDContextCodableSpec.swift; sourceTree = "<group>"; };
@@ -762,6 +769,7 @@
 			children = (
 				A35038822F4F96680032BA9F /* LDClientEvaluationHookSpec.swift */,
 				A35038802F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift */,
+				FED0000000000000000000D0 /* LDClientTrackHookSpec.swift */,
 				3D2406242E0D90EA00F91253 /* LDClientPluginsSpec.swift */,
 				838F96731FB9F024009CFC45 /* LDClientSpec.swift */,
 				3D9A12572A73236800698B8D /* UtilSpec.swift */,
@@ -993,6 +1001,7 @@
 			isa = PBXGroup;
 			children = (
 				A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */,
+				FED0000000000000000000C0 /* TrackSeriesContext.swift */,
 				A3BA7CE82BD056920000DB28 /* Hook.swift */,
 				A3BA7CED2BD059180000DB28 /* Metadata.swift */,
 				A3BA7CF22BD05A280000DB28 /* EvaluationSeriesContext.swift */,
@@ -1390,6 +1399,7 @@
 				831188582113AE0F00D77CB5 /* EventReporter.swift in Sources */,
 				50EE85C42EA0487F007CC662 /* TimeoutExecutor.swift in Sources */,
 				A350386E2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */,
+				FED0000000000000000000C1 /* TrackSeriesContext.swift in Sources */,
 				A358D6F52A4DEB4C00270C60 /* EnvironmentReporterBuilder.swift in Sources */,
 				8311885D2113AE2500D77CB5 /* DarklyService.swift in Sources */,
 				831188692113AE5900D77CB5 /* ObjcLDConfig.swift in Sources */,
@@ -1491,6 +1501,7 @@
 				A358D6D92A4DE6A500270C60 /* ApplicationInfoEnvironmentReporter.swift in Sources */,
 				831EF35720655E730001C643 /* EventReporter.swift in Sources */,
 				A350386F2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */,
+				FED0000000000000000000C2 /* TrackSeriesContext.swift in Sources */,
 				831EF35820655E730001C643 /* FlagStore.swift in Sources */,
 				831EF35920655E730001C643 /* Log.swift in Sources */,
 				A358D6E42A4DE98300270C60 /* MacOSEnvironmentReporter.swift in Sources */,
@@ -1551,6 +1562,7 @@
 				8354EFE21F26380700C05156 /* Event.swift in Sources */,
 				50EE85C52EA0487F007CC662 /* TimeoutExecutor.swift in Sources */,
 				A35038702F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */,
+				FED0000000000000000000C3 /* TrackSeriesContext.swift in Sources */,
 				A358D6F22A4DEB4C00270C60 /* EnvironmentReporterBuilder.swift in Sources */,
 				C408884923033B7500420721 /* ConnectionInformation.swift in Sources */,
 				831D8B721F71D3E700ED65E8 /* DarklyService.swift in Sources */,
@@ -1648,6 +1660,7 @@
 				3D3AB9482A570F3A003AECF1 /* ModifierSpec.swift in Sources */,
 				83383A5120460DD30024D975 /* SynchronizingErrorSpec.swift in Sources */,
 				A35038812F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift in Sources */,
+				FED0000000000000000000D1 /* LDClientTrackHookSpec.swift in Sources */,
 				83B9A080204F56F4000C3F17 /* FlagChangeObserverSpec.swift in Sources */,
 				830DB3AC22380A3E00D65D25 /* HTTPHeadersSpec.swift in Sources */,
 				831425AF206ABB5300F2EF36 /* EnvironmentReportingMock.swift in Sources */,
@@ -1689,6 +1702,7 @@
 				83D9EC7F2062DEAB004D7FA6 /* FlagsUnchangedObserver.swift in Sources */,
 				50EE85C32EA0487F007CC662 /* TimeoutExecutor.swift in Sources */,
 				A350386D2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */,
+				FED0000000000000000000C4 /* TrackSeriesContext.swift in Sources */,
 				A358D6F32A4DEB4C00270C60 /* EnvironmentReporterBuilder.swift in Sources */,
 				83D9EC802062DEAB004D7FA6 /* Event.swift in Sources */,
 				83D9EC822062DEAB004D7FA6 /* ClientServiceFactory.swift in Sources */,
