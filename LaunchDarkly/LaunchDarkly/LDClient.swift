@@ -731,8 +731,9 @@ public class LDClient {
         }
 
         let seriesContext = TrackSeriesContext(key: key, context: context, data: data, metricValue: metricValue)
-        // Invoke hooks in reverse order, matching the after-stage ordering of the other hook series.
-        hooks.reversed().forEach { hook in
+        // The track series has only an "after" stage, so hooks run in registration order, as required by
+        // the shared SDK contract tests (unlike the evaluation/identify after-stages, which run in reverse).
+        hooks.forEach { hook in
             hook.afterTrack(seriesContext: seriesContext)
         }
     }

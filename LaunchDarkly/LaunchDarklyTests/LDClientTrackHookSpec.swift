@@ -57,8 +57,9 @@ final class LDClientTrackHookSpec: XCTestCase {
         }
 
         testContext.subject.track(key: "event-key")
-        // After stages run in reverse order of configuration, matching the Android SDK.
-        expect(callRecord).toEventually(equal(["second afterTrack", "first afterTrack"]))
+        // The track series has only an after stage, so hooks run in registration order
+        // (as required by the shared SDK contract tests).
+        expect(callRecord).toEventually(equal(["first afterTrack", "second afterTrack"]))
     }
 
     typealias AfterTrackHook = (_: TrackSeriesContext) -> Void
