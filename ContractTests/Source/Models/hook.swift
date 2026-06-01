@@ -33,14 +33,7 @@ class TestHook: Hook {
 
         // swiftlint:disable:next force_try
         let data = try! JSONEncoder().encode(payload)
-
-        var request = URLRequest(url: self.callbackUrl)
-        request.httpMethod = "POST"
-        request.httpBody = data
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        URLSession.shared.dataTask(with: request) { (_, _, _) in
-        }.resume()
+        post(data)
     }
 
     private func processHook(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>?, stage: String) -> EvaluationSeriesData {
@@ -50,14 +43,7 @@ class TestHook: Hook {
 
         // swiftlint:disable:next force_try
         let data = try! JSONEncoder().encode(payload)
-
-        var request = URLRequest(url: self.callbackUrl)
-        request.httpMethod = "POST"
-        request.httpBody = data
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        URLSession.shared.dataTask(with: request) { (_, _, _) in
-        }.resume()
+        post(data)
 
         var updatedData = seriesData
         if let be = self.data[stage] {
@@ -67,6 +53,21 @@ class TestHook: Hook {
         }
 
         return updatedData
+    }
+
+    /// Posts the callback synchronously so the harness observes callbacks in the order the SDK
+    /// invoked the hooks. A fire-and-forget `dataTask` would let posts race and arrive out of order.
+    private func post(_ body: Data) {
+        var request = URLRequest(url: self.callbackUrl)
+        request.httpMethod = "POST"
+        request.httpBody = body
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let semaphore = DispatchSemaphore(value: 0)
+        URLSession.shared.dataTask(with: request) { (_, _, _) in
+            semaphore.signal()
+        }.resume()
+        semaphore.wait()
     }
 }
 

@@ -57,7 +57,7 @@ final class LDClientTrackHookSpec: XCTestCase {
         }
 
         testContext.subject.track(key: "event-key")
-        // After stages run in reverse order of configuration.
+        // After stages run in reverse order of configuration, matching the Android SDK.
         expect(callRecord).toEventually(equal(["second afterTrack", "first afterTrack"]))
     }
 

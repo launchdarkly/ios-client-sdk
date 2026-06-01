@@ -731,7 +731,7 @@ public class LDClient {
         }
 
         let seriesContext = TrackSeriesContext(key: key, context: context, data: data, metricValue: metricValue)
-        // Invoke hooks in reverse order, mirroring the after-stage ordering of the other hook series.
+        // Invoke hooks in reverse order, matching the after-stage ordering of the other hook series.
         hooks.reversed().forEach { hook in
             hook.afterTrack(seriesContext: seriesContext)
         }
