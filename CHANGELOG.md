@@ -6,6 +6,13 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 * bumping swift-tools-version:5.5 and macosx to be compatible with otel
 - masOS "10.13" -> "12.00"
 
+## [11.2.0](https://github.com/launchdarkly/ios-client-sdk/compare/11.1.3...11.2.0) (2026-06-03)
+
+
+### Features
+
+* adds support for the track hook ([#504](https://github.com/launchdarkly/ios-client-sdk/issues/504)) ([4d6b10f](https://github.com/launchdarkly/ios-client-sdk/commit/4d6b10ff3704dc5524ebdcbecdfbf2add77884eb))
+
 ## [11.1.3](https://github.com/launchdarkly/ios-client-sdk/compare/11.1.2...11.1.3) (2026-05-13)
 
 
