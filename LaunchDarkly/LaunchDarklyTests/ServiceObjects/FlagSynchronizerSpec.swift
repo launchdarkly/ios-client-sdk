@@ -840,10 +840,11 @@ final class FlagSynchronizerSpec: QuickSpec {
 
                 waitUntil { done in
                     testContext.flagSynchronizer.onSyncComplete = { result in
-                        if case .error(let errorResult) = result {
+                        if case .error(let errorResult) = result,
+                           case .streamEventWhilePolling = errorResult {
                             syncError = errorResult
+                            done()
                         }
-                        done()
                     }
 
                     testContext.flagSynchronizer.testStreamOnMessage(event: "put", messageEvent: MessageEvent(data: data))
