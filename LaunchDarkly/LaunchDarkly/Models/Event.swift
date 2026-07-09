@@ -129,9 +129,11 @@ class IdentifyEvent: Event, SubEvent {
 class SummaryEvent: Event, SubEvent {
     let flagRequestTracker: FlagRequestTracker
     let endDate: Date
+    let context: LDContext?
 
-    init(flagRequestTracker: FlagRequestTracker, endDate: Date = Date()) {
+    init(flagRequestTracker: FlagRequestTracker, context: LDContext? = nil, endDate: Date = Date()) {
         self.flagRequestTracker = flagRequestTracker
+        self.context = context
         self.endDate = endDate
         super.init(kind: .summary)
     }
@@ -141,5 +143,8 @@ class SummaryEvent: Event, SubEvent {
         try container.encode(flagRequestTracker.startDate, forKey: .startDate)
         try container.encode(endDate, forKey: .endDate)
         try container.encode(flagRequestTracker.flagCounters, forKey: .features)
+        if let context = context {
+            try container.encode(context, forKey: .context)
+        }
     }
 }
