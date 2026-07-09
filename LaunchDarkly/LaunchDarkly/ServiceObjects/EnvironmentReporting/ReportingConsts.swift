@@ -1,6 +1,6 @@
 import Foundation
 
 struct ReportingConsts {
-    static let sdkVersion = "11.2.0" // x-release-please-version
+    static let sdkVersion = "11.3.0" // x-release-please-version
     static let sdkName = "ios-client-sdk"
 }
