@@ -169,13 +169,36 @@ extension LDClient {
     }
 
     private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool, methodName: String) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
+        var visited: Set<String>? = nil
+        return variationDetailInternal(flagKey, defaultValue, needsReason: needsReason, methodName: methodName, visited: &visited)
+    }
+
+    private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool, methodName: String, visited: inout Set<String>?) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
         return evaluateWithHooks(flagKey: flagKey, defaultValue: defaultValue, methodName: methodName) {
             var result: LDEvaluationDetail<T>
             let featureFlag = flagStore.featureFlag(for: flagKey)
             if let featureFlag = featureFlag {
-                featureFlag.prerequisites?.forEach { prereqFlagKey in
-                    // recurse on prerequisites to emulate prereq evaluations occurring with desirable side effects such as events for prereqs
-                    _ = variationDetailInternal(prereqFlagKey, LDValue.null, needsReason: needsReason, methodName: methodName)
+                if let prerequisites = featureFlag.prerequisites, !prerequisites.isEmpty {
+                    // Recurse on prerequisites to emulate prereq evaluations occurring with desirable side effects
+                    // such as events for prereqs.
+                    //
+                    // `visited` tracks the chain of prerequisite dependencies from the top-level evaluation to
+                    // (but not including) the current flag. The set is allocated lazily: it stays `nil` until we
+                    // descend into the first flag whose `prerequisites` are non-empty, so a variation call on a
+                    // leaf flag pays no heap allocation for cycle bookkeeping.
+                    if visited == nil {
+                        visited = Set<String>()
+                    }
+                    visited!.insert(flagKey)
+                    defer { visited!.remove(flagKey) }
+                    for prereqFlagKey in prerequisites {
+                        if visited!.contains(prereqFlagKey) {
+                            // Cyclic edge: skip descent, continue with remaining prerequisites at this level.
+                            // The requested flag's value and reason (below) are unaffected.
+                            continue
+                        }
+                        _ = variationDetailInternal(prereqFlagKey, LDValue.null, needsReason: needsReason, methodName: methodName, visited: &visited)
+                    }
                 }
 
                 if featureFlag.value == .null {

@@ -799,6 +799,69 @@ final class LDClientSpec: QuickSpec {
                     expect(events[7].key) == "flagABD"
                 }
             }
+            // Cycle-detection tests exercise the ancestor-set cycle guard added to
+            // variationDetailInternal. Prior to that guard, any of these flag configurations would
+            // cause unbounded recursion during a variation() call. The tests set up a cyclic
+            // prerequisite graph and evaluate one flag on the cycle, asserting (a) the SDK returns
+            // the flag's cached value unchanged and (b) the emitted evaluation events reflect
+            // exactly one recording per cycle-safe descent.
+            context("flag store contains cyclic prerequisites") {
+                var events = [FeatureEvent]()
+                beforeEach {
+                    events = []
+                    testContext.eventReporterMock.recordFlagEvaluationEventsCallback = {
+                        let args = testContext.eventReporterMock.recordFlagEvaluationEventsReceivedArguments!
+                        events.append(FeatureEvent(key: args.flagKey, context: args.context, value: args.value, defaultValue: args.defaultValue, featureFlag: args.featureFlag, includeReason: args.includeReason, isDebug: false))
+                    }
+                }
+                it("skips self-loop prerequisite and returns cached value") {
+                    let flagA = FeatureFlag(flagKey: "flagA", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagA"])
+                    testContext.flagStoreMock.replaceStore(newStoredItems: StoredItems(items: ["flagA": flagA]))
+                    // Requirement 1.2.5.1: the requested flag's cached value is returned unchanged.
+                    expect(testContext.subject.boolVariation(forKey: "flagA", defaultValue: false)) == true
+                    // The self-prereq is cycle-skipped, so only the top-level evaluation records an event.
+                    expect(events.map { $0.key }) == ["flagA"]
+                }
+                it("handles a two-cycle evaluating A") {
+                    let flagA = FeatureFlag(flagKey: "flagA", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagB"])
+                    let flagB = FeatureFlag(flagKey: "flagB", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagA"])
+                    testContext.flagStoreMock.replaceStore(newStoredItems: StoredItems(items: ["flagA": flagA, "flagB": flagB]))
+                    expect(testContext.subject.boolVariation(forKey: "flagA", defaultValue: false)) == true
+                    // A -> B -> [A skipped]. Events emitted deepest-first: B (as prereq of A), then A.
+                    expect(events.map { $0.key }) == ["flagB", "flagA"]
+                }
+                it("handles a two-cycle evaluating B") {
+                    let flagA = FeatureFlag(flagKey: "flagA", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagB"])
+                    let flagB = FeatureFlag(flagKey: "flagB", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagA"])
+                    testContext.flagStoreMock.replaceStore(newStoredItems: StoredItems(items: ["flagA": flagA, "flagB": flagB]))
+                    expect(testContext.subject.boolVariation(forKey: "flagB", defaultValue: false)) == true
+                    // Symmetric: same graph, entry from B. Events: A (as prereq of B), then B.
+                    expect(events.map { $0.key }) == ["flagA", "flagB"]
+                }
+                it("handles a three-cycle") {
+                    let flagA = FeatureFlag(flagKey: "flagA", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagB"])
+                    let flagB = FeatureFlag(flagKey: "flagB", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagC"])
+                    let flagC = FeatureFlag(flagKey: "flagC", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagA"])
+                    testContext.flagStoreMock.replaceStore(newStoredItems: StoredItems(items: ["flagA": flagA, "flagB": flagB, "flagC": flagC]))
+                    expect(testContext.subject.boolVariation(forKey: "flagA", defaultValue: false)) == true
+                    // A -> B -> C -> [A skipped]. Events emitted deepest-first: C, B, A.
+                    expect(events.map { $0.key }) == ["flagC", "flagB", "flagA"]
+                }
+                it("emits the shared descendant once per path in a non-cyclic diamond") {
+                    // Diamond: A -> [B, C], B -> [D], C -> [D]. Not a cycle. Ancestor-set (current-path)
+                    // semantics must let D be reached on each of the two independent paths — so D emits
+                    // twice. A naive "visited across the whole walk" implementation would incorrectly
+                    // count D only once; this case guards against that regression.
+                    let flagA = FeatureFlag(flagKey: "flagA", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagB", "flagC"])
+                    let flagB = FeatureFlag(flagKey: "flagB", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagD"])
+                    let flagC = FeatureFlag(flagKey: "flagC", value: LDValue.bool(true), trackEvents: false, trackReason: false, prerequisites: ["flagD"])
+                    let flagD = FeatureFlag(flagKey: "flagD", value: LDValue.bool(true), trackEvents: false, trackReason: false)
+                    testContext.flagStoreMock.replaceStore(newStoredItems: StoredItems(items: ["flagA": flagA, "flagB": flagB, "flagC": flagC, "flagD": flagD]))
+                    expect(testContext.subject.boolVariation(forKey: "flagA", defaultValue: false)) == true
+                    // Events (deepest-first per path): D (via B), B, D (via C), C, A. D appears twice.
+                    expect(events.map { $0.key }) == ["flagD", "flagB", "flagD", "flagC", "flagA"]
+                }
+            }
         }
     }
 
