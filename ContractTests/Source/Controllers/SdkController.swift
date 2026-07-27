@@ -34,6 +34,7 @@ final class SdkController: RouteCollection {
             "event-gzip",
             "optional-event-gzip",
             "client-prereq-events",
+            "client-prereq-cycle-detection",
             "polling-gzip",
             "client-per-context-summaries"
         ]
