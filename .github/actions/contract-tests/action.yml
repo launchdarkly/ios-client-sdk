@@ -16,8 +16,26 @@ runs:
       shell: bash
       run: make start-contract-test-service-bg
 
-    - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.0.2
+    - uses: actions/setup-go@v5
       with:
-        test_service_port: 8080
-        token: ${{ inputs.token }}
-        extra_params: "-status-timeout 120 -skip-from ./ContractTests/testharness-suppressions.txt"
+        go-version: 'stable'
+        cache: false
+
+    # Temporary: build the harness from the sdk-test-harness PR #377 branch
+    # (adds the streaming connection-lifecycle test) instead of downloading a
+    # released harness binary, and run only that test.
+    - name: Build harness from PR branch
+      shell: bash
+      run: |
+        git clone --depth 1 -b jb/sdk-2669/fdv1-close-contract-test https://github.com/launchdarkly/sdk-test-harness.git /tmp/sdk-test-harness
+        cd /tmp/sdk-test-harness
+        go build -o testharness .
+
+    - name: Run connection lifecycle contract test
+      shell: bash
+      run: |
+        /tmp/sdk-test-harness/testharness \
+          -url http://localhost:8080 \
+          -run 'streaming/connection lifecycle' \
+          -debug -status-timeout 120 -stop-service-at-end \
+          -skip-from ./ContractTests/testharness-suppressions.txt
