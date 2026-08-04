@@ -214,6 +214,11 @@
 		9A47F74D2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
 		9A47F74E2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
 		9A47F74F2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
+		9AE1D0A12F4A1B000001FD9C /* ExposureDeduper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A02F4A1B000001FD9C /* ExposureDeduper.swift */; };
+		9AE1D0A22F4A1B000001FD9C /* ExposureDeduper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A02F4A1B000001FD9C /* ExposureDeduper.swift */; };
+		9AE1D0A32F4A1B000001FD9C /* ExposureDeduper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A02F4A1B000001FD9C /* ExposureDeduper.swift */; };
+		9AE1D0A42F4A1B000001FD9C /* ExposureDeduper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A02F4A1B000001FD9C /* ExposureDeduper.swift */; };
+		9AE1D0A62F4A1B000001FD9C /* ExposureDeduperSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A52F4A1B000001FD9C /* ExposureDeduperSpec.swift */; };
 		A3047D642A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5D2A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift */; };
 		A3047D652A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5E2A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift */; };
 		A3047D662A606B6000F568E0 /* EnvironmentReporterChainBaseSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5F2A606B6000F568E0 /* EnvironmentReporterChainBaseSpec.swift */; };
@@ -532,6 +537,8 @@
 		83FEF8DE1F2667E4001CF12C /* EventReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventReporter.swift; sourceTree = "<group>"; };
 		9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSummarizerSpec.swift; sourceTree = "<group>"; };
 		9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSummarizer.swift; sourceTree = "<group>"; };
+		9AE1D0A02F4A1B000001FD9C /* ExposureDeduper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExposureDeduper.swift; sourceTree = "<group>"; };
+		9AE1D0A52F4A1B000001FD9C /* ExposureDeduperSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExposureDeduperSpec.swift; sourceTree = "<group>"; };
 		A3047D5D2A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SDKEnvironmentReporterSpec.swift; sourceTree = "<group>"; };
 		A3047D5E2A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IOSEnvironmentReporterSpec.swift; sourceTree = "<group>"; };
 		A3047D5F2A606B6000F568E0 /* EnvironmentReporterChainBaseSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnvironmentReporterChainBaseSpec.swift; sourceTree = "<group>"; };
@@ -670,6 +677,7 @@
 			isa = PBXGroup;
 			children = (
 				9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */,
+				9AE1D0A52F4A1B000001FD9C /* ExposureDeduperSpec.swift */,
 				50EE85C62EA0749C007CC662 /* TimeoutExecutorSpec.swift */,
 				A3047D5B2A606A0000F568E0 /* EnvironmentReporting */,
 				B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */,
@@ -934,6 +942,7 @@
 			isa = PBXGroup;
 			children = (
 				9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */,
+				9AE1D0A02F4A1B000001FD9C /* ExposureDeduper.swift */,
 				50EE85C12EA0487F007CC662 /* TimeoutExecutor.swift */,
 				A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */,
 				A358D6CF2A4DD45000270C60 /* EnvironmentReporting */,
@@ -1388,6 +1397,7 @@
 			files = (
 				83906A7B21190B7700D7D3C5 /* DateFormatter.swift in Sources */,
 				9A47F74F2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */,
+				9AE1D0A42F4A1B000001FD9C /* ExposureDeduper.swift in Sources */,
 				831188502113ADEF00D77CB5 /* EnvironmentReporter.swift in Sources */,
 				831188682113AE5600D77CB5 /* ObjcLDClient.swift in Sources */,
 				831188572113AE0B00D77CB5 /* FlagChangeNotifier.swift in Sources */,
@@ -1471,6 +1481,7 @@
 				B468E71224B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */,
 				A36EDFCF2853C50B00D91B05 /* ObjcLDContext.swift in Sources */,
 				9A47F74C2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */,
+				9AE1D0A12F4A1B000001FD9C /* ExposureDeduper.swift in Sources */,
 				831EF34320655E730001C643 /* LDCommon.swift in Sources */,
 				A3C6F7662B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */,
 				831EF34420655E730001C643 /* LDConfig.swift in Sources */,
@@ -1553,6 +1564,7 @@
 			files = (
 				831D8B6F1F71532300ED65E8 /* HTTPHeaders.swift in Sources */,
 				9A47F74D2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */,
+				9AE1D0A22F4A1B000001FD9C /* ExposureDeduper.swift in Sources */,
 				835E1D3F1F63450A00184DB4 /* ObjcLDClient.swift in Sources */,
 				83EBCBB320DABE1B003A7142 /* FlagRequestTracker.swift in Sources */,
 				837EF3742059C237009D628A /* Log.swift in Sources */,
@@ -1678,6 +1690,7 @@
 				831425AF206ABB5300F2EF36 /* EnvironmentReportingMock.swift in Sources */,
 				838AB53F1F72A7D5006F03F5 /* FlagSynchronizerSpec.swift in Sources */,
 				9A47F74A2F3D4CBF0001FD9C /* ContextSummarizerSpec.swift in Sources */,
+				9AE1D0A62F4A1B000001FD9C /* ExposureDeduperSpec.swift in Sources */,
 				A3FFE1132B7D4BA2009EF93F /* LDValueDecoderSpec.swift in Sources */,
 				A3570F5A28527B8200CF241A /* LDContextCodableSpec.swift in Sources */,
 				50EE85C72EA0749C007CC662 /* TimeoutExecutorSpec.swift in Sources */,
@@ -1695,6 +1708,7 @@
 			files = (
 				83D9EC752062DEAB004D7FA6 /* LDCommon.swift in Sources */,
 				9A47F74E2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */,
+				9AE1D0A32F4A1B000001FD9C /* ExposureDeduper.swift in Sources */,
 				83D9EC762062DEAB004D7FA6 /* LDConfig.swift in Sources */,
 				83EBCBB420DABE1B003A7142 /* FlagRequestTracker.swift in Sources */,
 				83D9EC772062DEAB004D7FA6 /* LDClient.swift in Sources */,

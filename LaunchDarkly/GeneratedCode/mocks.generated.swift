@@ -213,6 +213,13 @@ final class EventReportingMock: EventReporting {
         try! recordFlagEvaluationEventsCallback?()
     }
 
+    var resetFlagExposureDedupeCacheCallCount = 0
+    var resetFlagExposureDedupeCacheCallback: (() throws -> Void)?
+    func resetFlagExposureDedupeCache() {
+        resetFlagExposureDedupeCacheCallCount += 1
+        try! resetFlagExposureDedupeCacheCallback?()
+    }
+
     var flushCallCount = 0
     var flushCallback: (() throws -> Void)?
     var flushReceivedCompletion: CompletionClosure?

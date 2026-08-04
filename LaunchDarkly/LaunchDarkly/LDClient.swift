@@ -423,6 +423,11 @@ public class LDClient {
         }
 
         internalIdentifyQueue.sync {
+            // Exposures recorded before this point describe an earlier point in the app's lifecycle, so let them be
+            // reported again. This happens even when the context is unchanged, so that identify is a reliable way for
+            // an app to mark a new phase of a session.
+            self.eventReporter.resetFlagExposureDedupeCache()
+
             if self.context == updatedContext {
                 self.eventReporter.record(IdentifyEvent(context: self.context))
                 completion?()

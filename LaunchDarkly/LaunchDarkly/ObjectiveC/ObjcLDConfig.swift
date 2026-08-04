@@ -41,6 +41,27 @@ public final class ObjcLDConfig: NSObject {
         set { config.eventCapacity = newValue }
     }
 
+    /**
+     The time window, in milliseconds, during which repeated feature flag evaluations that resolve to the same result
+     are deduplicated, so that only a single evaluation is reported per unique (flag key, variation, flag version,
+     context) within the window.
+
+     Deduplicated evaluations are omitted from both the full feature events used by experimentation and the debugger,
+     and the summary events that drive flag evaluation counts.
+
+     Set to 0 (the default) to disable deduplication and report every evaluation.
+     */
+    @objc public var flagExposureDedupeWindowMillis: Int {
+        get { config.flagExposureDedupeWindowMillis }
+        set { config.flagExposureDedupeWindowMillis = newValue }
+    }
+
+    /// The maximum number of unique feature flag exposure keys tracked for deduplication at once. When exceeded, the least recently recorded keys are evicted to bound memory usage. (Default: 2000)
+    @objc public var flagExposureDedupeMaxSize: Int {
+        get { config.flagExposureDedupeMaxSize }
+        set { config.flagExposureDedupeMaxSize = newValue }
+    }
+
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
     @objc public var connectionTimeout: TimeInterval {
         get { config.connectionTimeout }
