@@ -67,8 +67,98 @@ final class EventReporterSpec: QuickSpec {
         isOnlineSpec()
         recordEventSpec()
         testRecordFlagEvaluationEvents()
+        flagExposureDedupeSpec()
         reportEventsSpec()
         reportTimerSpec()
+    }
+
+    private func flagExposureDedupeSpec() {
+        let context = LDContext.stub()
+        let trackedFlag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+
+        func makeReporter(windowMillis: Int) -> EventReporter {
+            var config = LDConfig.stub
+            config.flagExposureDedupeWindowMillis = windowMillis
+            return EventReporter(service: DarklyServiceMock(config: config), onSyncComplete: nil)
+        }
+
+        func record(_ reporter: EventReporter, flagKey: LDFlagKey = "flag-key", flag: FeatureFlag? = nil) {
+            reporter.recordFlagEvaluationEvents(flagKey: flagKey, value: "a", defaultValue: "b", featureFlag: flag ?? trackedFlag, context: context, includeReason: false)
+        }
+
+        func summaryCount(_ reporter: EventReporter, flagKey: LDFlagKey = "flag-key", variation: Int? = 1, version: Int? = 2) -> Int? {
+            reporter.contextSummarizer.getSummaries().first?.tracker.flagCounters[flagKey]?
+                .flagValueCounters[CounterKey(variation: variation, version: version)]?.count
+        }
+
+        describe("flag exposure deduplication") {
+            it("reports every evaluation when disabled by default") {
+                let reporter = makeReporter(windowMillis: 0)
+                (0..<3).forEach { _ in record(reporter) }
+                expect(reporter.eventStore.count) == 3
+                expect(summaryCount(reporter)) == 3
+            }
+            it("suppresses repeated evaluations of the same result") {
+                let reporter = makeReporter(windowMillis: 60_000)
+                (0..<3).forEach { _ in record(reporter) }
+                expect(reporter.eventStore.count) == 1
+                expect(summaryCount(reporter)) == 1
+            }
+            it("reports evaluations of different flags separately") {
+                let reporter = makeReporter(windowMillis: 60_000)
+                record(reporter, flagKey: "flag-a")
+                record(reporter, flagKey: "flag-b")
+                record(reporter, flagKey: "flag-a")
+                expect(reporter.eventStore.count) == 2
+                expect(summaryCount(reporter, flagKey: "flag-a")) == 1
+                expect(summaryCount(reporter, flagKey: "flag-b")) == 1
+            }
+            it("reports again when the flag resolves to a different variation") {
+                let reporter = makeReporter(windowMillis: 60_000)
+                record(reporter)
+                record(reporter, flag: FeatureFlag(flagKey: "unused", value: nil, variation: 3, flagVersion: 2, trackEvents: true))
+                expect(reporter.eventStore.count) == 2
+                expect(summaryCount(reporter, variation: 1)) == 1
+                expect(summaryCount(reporter, variation: 3)) == 1
+            }
+            it("reports again after a flag update changes the version") {
+                let reporter = makeReporter(windowMillis: 60_000)
+                record(reporter)
+                record(reporter, flag: FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 3, trackEvents: true))
+                expect(reporter.eventStore.count) == 2
+                expect(summaryCount(reporter, version: 2)) == 1
+                expect(summaryCount(reporter, version: 3)) == 1
+            }
+            it("reports again after the dedupe cache is reset") {
+                let reporter = makeReporter(windowMillis: 60_000)
+                record(reporter)
+                reporter.resetFlagExposureDedupeCache()
+                record(reporter)
+                expect(reporter.eventStore.count) == 2
+                expect(summaryCount(reporter)) == 2
+            }
+            it("suppresses debug events along with feature events") {
+                let reporter = makeReporter(windowMillis: 60_000)
+                reporter.setLastEventResponseDate(Date().addingTimeInterval(-3.0))
+                let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(3.0))
+                record(reporter, flag: flag)
+                record(reporter, flag: flag)
+                expect(reporter.eventStore.filter { $0.kind == .feature }.count) == 1
+                expect(reporter.eventStore.filter { $0.kind == .debug }.count) == 1
+            }
+            it("reports only one evaluation when the same flag is evaluated concurrently") {
+                let reporter = makeReporter(windowMillis: 60_000)
+                let counter = DispatchSemaphore(value: 0)
+                DispatchQueue.concurrentPerform(iterations: 10) { _ in
+                    record(reporter)
+                    counter.signal()
+                }
+                (0..<10).forEach { _ in counter.wait() }
+
+                expect(reporter.eventStore.count) == 1
+                expect(summaryCount(reporter)) == 1
+            }
+        }
     }
 
     private func initSpec() {

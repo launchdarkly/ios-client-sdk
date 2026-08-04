@@ -12,6 +12,7 @@ protocol EventReporting {
     func record(_ event: Event)
     // swiftlint:disable:next function_parameter_count
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)
+    func resetFlagExposureDedupeCache()
     func flush(completion: CompletionClosure?)
 }
 
@@ -23,6 +24,9 @@ class NullEventReporter: EventReporting {
     }
 
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool) {
+    }
+
+    func resetFlagExposureDedupeCache() {
     }
 
     func flush(completion: CompletionClosure?) {
@@ -44,6 +48,7 @@ class EventReporter: EventReporting {
     // These fields should only be used synchronized on the eventQueue
     private(set) var eventStore: [Event] = []
     private(set) var contextSummarizer: ContextSummarizer
+    private let exposureDeduper: ExposureDeduper
 
     private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
     private var eventReportTimer: TimeResponding?
@@ -56,6 +61,8 @@ class EventReporter: EventReporting {
         self.onSyncComplete = onSyncComplete
         self.lastEventResponseDate = Date()
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
+        self.exposureDeduper = ExposureDeduper(windowMillis: service.config.flagExposureDedupeWindowMillis,
+                                               maxSize: service.config.flagExposureDedupeMaxSize)
     }
 
     func record(_ event: Event) {
@@ -78,6 +85,16 @@ class EventReporter: EventReporting {
         let recordingDebugEvent = featureFlag?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
 
         eventQueue.sync {
+            // Building the key allocates, so it is skipped entirely while deduplication is off, which is the default.
+            if exposureDeduper.isEnabled {
+                let dedupeKey = EventReporter.exposureDedupeKey(flagKey: flagKey, featureFlag: featureFlag, context: context)
+                guard exposureDeduper.shouldRecord(key: dedupeKey)
+                else {
+                    os_log("%s deduplicated exposure for flagKey: %s", log: service.config.logger, type: .debug, typeName(and: #function), flagKey)
+                    return
+                }
+            }
+
             contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
             if recordingFeatureEvent {
                 let featureEvent = FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false)
@@ -88,6 +105,26 @@ class EventReporter: EventReporting {
                 recordNoSync(debugEvent)
             }
         }
+    }
+
+    func resetFlagExposureDedupeCache() {
+        eventQueue.sync { exposureDeduper.reset() }
+    }
+
+    /**
+     Builds the key identifying an evaluation result for deduplication purposes.
+
+     The variation and version pair is the same identity LaunchDarkly uses to bucket evaluations in summary events, so
+     two evaluations sharing that pair report identical data. Because the evaluation reason is carried on the versioned
+     flag payload, a change in reason implies a change in version and so is covered without being part of the key.
+     */
+    private static func exposureDedupeKey(flagKey: LDFlagKey, featureFlag: FeatureFlag?, context: LDContext) -> String {
+        [
+            flagKey,
+            featureFlag?.variation.map { String($0) } ?? "",
+            featureFlag?.versionForEvents.map { String($0) } ?? "",
+            context.fullyQualifiedKey()
+        ].joined(separator: "\n")
     }
 
     private func startReporting() {
