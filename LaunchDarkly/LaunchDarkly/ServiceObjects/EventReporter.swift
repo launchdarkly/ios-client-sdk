@@ -115,14 +115,16 @@ class EventReporter: EventReporting {
      Builds the key identifying an evaluation result for deduplication purposes.
 
      The variation and version pair is the same identity LaunchDarkly uses to bucket evaluations in summary events, so
-     two evaluations sharing that pair report identical data. Because the evaluation reason is carried on the versioned
-     flag payload, a change in reason implies a change in version and so is covered without being part of the key.
+     two evaluations sharing that pair report identical data. Experiment status needs its own component because
+     `versionForEvents` prefers `flagVersion`, which only moves when the flag itself changes: a prerequisite flipping can
+     move an evaluation into or out of an experiment while it lands on the same variation of the same flag version.
      */
     private static func exposureDedupeKey(flagKey: LDFlagKey, featureFlag: FeatureFlag?, context: LDContext) -> String {
         [
             flagKey,
             featureFlag?.variation.map { String($0) } ?? "",
             featureFlag?.versionForEvents.map { String($0) } ?? "",
+            String(featureFlag?.isInExperiment ?? false),
             context.fullyQualifiedKey()
         ].joined(separator: "\n")
     }
