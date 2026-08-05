@@ -66,6 +66,23 @@ final class ExposureDeduperSpec: QuickSpec {
                 expect(deduper.shouldRecord(key: "c", now: 1_010)) == true
                 expect(deduper.shouldRecord(key: "a", now: 1_010)) == false
             }
+            it("keeps live keys when reclaiming expired ones is enough") {
+                // maxSize is 8 so that the batch term (maxSize / 4) is non-zero, which is what makes an over-eager
+                // batch drop observable.
+                let deduper = ExposureDeduper(window: 10, maxSize: 8)
+                for i in 0..<2 {
+                    expect(deduper.shouldRecord(key: "expired-\(i)", now: 1_000)) == true
+                }
+                // The 7th of these exceeds the cap and triggers eviction. Reclaiming the two keys whose window has
+                // elapsed brings the map back within the cap on its own, so every one of these keys is still tracked
+                // and none of them should be reported again.
+                for i in 0..<7 {
+                    expect(deduper.shouldRecord(key: "live-\(i)", now: 1_015)) == true
+                }
+                for i in 0..<7 {
+                    expect(deduper.shouldRecord(key: "live-\(i)", now: 1_015)) == false
+                }
+            }
             it("falls back to the default cap for a non-positive maxSize") {
                 let deduper = ExposureDeduper(window: 1_000, maxSize: 0)
                 for i in 0..<LDConfig.Defaults.flagExposureDedupeMaxSize {
