@@ -530,18 +530,18 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
             }
 
-            it("resets the flag exposure dedupe cache") {
+            it("resets the evaluation exposure dedupe cache") {
                 let testContext = TestContext(startOnline: true)
                 testContext.start()
-                let priorResets = testContext.eventReporterMock.resetFlagExposureDedupeCacheCallCount
+                let priorResets = testContext.eventReporterMock.resetEvaluationExposureDedupeCacheCallCount
 
                 testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .yes)
-                expect(testContext.eventReporterMock.resetFlagExposureDedupeCacheCallCount) == priorResets + 1
+                expect(testContext.eventReporterMock.resetEvaluationExposureDedupeCacheCallCount) == priorResets + 1
 
                 // Re-identifying to the unchanged context resets as well, so an app can use identify to mark a new
                 // phase of a session.
                 testContext.subject.internalIdentify(newContext: testContext.subject.context, useCache: .yes)
-                expect(testContext.eventReporterMock.resetFlagExposureDedupeCacheCallCount) == priorResets + 2
+                expect(testContext.eventReporterMock.resetEvaluationExposureDedupeCacheCallCount) == priorResets + 2
             }
 
             it("no cache requires no store interaction") {

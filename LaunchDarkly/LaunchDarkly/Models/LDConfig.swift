@@ -261,11 +261,11 @@ public struct LDConfig {
         /// The default behavior for event payload compression.
         static let enableCompression: Bool = false
 
-        /// The default flag exposure dedupe window. (0 seconds, meaning deduplication is disabled)
-        static let flagExposureDedupeWindow: TimeInterval = 0.0
+        /// The default evaluation exposure dedupe window. (0 seconds, meaning deduplication is disabled)
+        static let evaluationExposureDedupeWindow: TimeInterval = 0.0
 
-        /// The default maximum number of flag exposure keys tracked for deduplication at once. (2000)
-        static let flagExposureDedupeMaxSize = 2000
+        /// The default maximum number of evaluation exposure keys tracked for deduplication at once. (2000)
+        static let evaluationExposureDedupeMaxSize = 2000
     }
 
     /// Constants relevant to setting up an `LDConfig`
@@ -337,19 +337,19 @@ public struct LDConfig {
 
      Set to 0 (the default) to disable deduplication and report every evaluation. Set a positive value to enable it.
 
-     See Also: `flagExposureDedupeMaxSize`
+     See Also: `evaluationExposureDedupeMaxSize`
      */
-    public var flagExposureDedupeWindow: TimeInterval = Defaults.flagExposureDedupeWindow
+    public var evaluationExposureDedupeWindow: TimeInterval = Defaults.evaluationExposureDedupeWindow
 
     /**
-     The maximum number of unique feature flag exposure keys tracked for deduplication at once. When exceeded, the
+     The maximum number of unique evaluation exposure keys tracked for deduplication at once. When exceeded, the
      least recently recorded keys are evicted to bound memory usage. (Default: 2000)
 
      Values less than or equal to zero are ignored, and the default is used instead.
 
-     See Also: `flagExposureDedupeWindow`
+     See Also: `evaluationExposureDedupeWindow`
      */
-    public var flagExposureDedupeMaxSize: Int = Defaults.flagExposureDedupeMaxSize
+    public var evaluationExposureDedupeMaxSize: Int = Defaults.evaluationExposureDedupeMaxSize
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
     public var connectionTimeout: TimeInterval = Defaults.connectionTimeout
@@ -581,8 +581,8 @@ extension LDConfig: Equatable {
             && lhs.streamUrl == rhs.streamUrl
             && lhs.eventCapacity == rhs.eventCapacity
             && lhs.sendEvents == rhs.sendEvents
-            && lhs.flagExposureDedupeWindow == rhs.flagExposureDedupeWindow
-            && lhs.flagExposureDedupeMaxSize == rhs.flagExposureDedupeMaxSize
+            && lhs.evaluationExposureDedupeWindow == rhs.evaluationExposureDedupeWindow
+            && lhs.evaluationExposureDedupeMaxSize == rhs.evaluationExposureDedupeMaxSize
             && lhs.connectionTimeout == rhs.connectionTimeout
             && lhs.eventFlushInterval == rhs.eventFlushInterval
             && lhs.flagPollingInterval == rhs.flagPollingInterval
