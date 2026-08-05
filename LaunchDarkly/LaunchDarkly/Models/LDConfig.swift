@@ -261,8 +261,8 @@ public struct LDConfig {
         /// The default behavior for event payload compression.
         static let enableCompression: Bool = false
 
-        /// The default flag exposure dedupe window. (0, meaning deduplication is disabled)
-        static let flagExposureDedupeWindowMillis = 0
+        /// The default flag exposure dedupe window. (0 seconds, meaning deduplication is disabled)
+        static let flagExposureDedupeWindow: TimeInterval = 0.0
 
         /// The default maximum number of flag exposure keys tracked for deduplication at once. (2000)
         static let flagExposureDedupeMaxSize = 2000
@@ -324,9 +324,9 @@ public struct LDConfig {
     public var eventCapacity: Int = Defaults.eventCapacity
 
     /**
-     The time window, in milliseconds, during which repeated feature flag evaluations that resolve to the same result
-     are deduplicated, so that only a single evaluation is reported per unique (flag key, variation, flag version,
-     context) within the window.
+     The time window during which repeated feature flag evaluations that resolve to the same result are deduplicated,
+     so that only a single evaluation is reported per unique (flag key, variation, flag version, context) within the
+     window.
 
      This is useful for reducing analytics event volume caused by frequent re-evaluations, for example a flag that is
      read on every render of a view.
@@ -339,7 +339,7 @@ public struct LDConfig {
 
      See Also: `flagExposureDedupeMaxSize`
      */
-    public var flagExposureDedupeWindowMillis: Int = Defaults.flagExposureDedupeWindowMillis
+    public var flagExposureDedupeWindow: TimeInterval = Defaults.flagExposureDedupeWindow
 
     /**
      The maximum number of unique feature flag exposure keys tracked for deduplication at once. When exceeded, the
@@ -347,7 +347,7 @@ public struct LDConfig {
 
      Values less than or equal to zero are ignored, and the default is used instead.
 
-     See Also: `flagExposureDedupeWindowMillis`
+     See Also: `flagExposureDedupeWindow`
      */
     public var flagExposureDedupeMaxSize: Int = Defaults.flagExposureDedupeMaxSize
 
@@ -581,7 +581,7 @@ extension LDConfig: Equatable {
             && lhs.streamUrl == rhs.streamUrl
             && lhs.eventCapacity == rhs.eventCapacity
             && lhs.sendEvents == rhs.sendEvents
-            && lhs.flagExposureDedupeWindowMillis == rhs.flagExposureDedupeWindowMillis
+            && lhs.flagExposureDedupeWindow == rhs.flagExposureDedupeWindow
             && lhs.flagExposureDedupeMaxSize == rhs.flagExposureDedupeMaxSize
             && lhs.connectionTimeout == rhs.connectionTimeout
             && lhs.eventFlushInterval == rhs.eventFlushInterval

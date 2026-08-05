@@ -11,22 +11,22 @@ import Foundation
  uses it only from its event queue.
  */
 class ExposureDeduper {
-    private let windowMillis: Int64
+    private let window: TimeInterval
     private let maxSize: Int
-    private var lastRecordedAt: [String: Int64] = [:]
+    private var lastRecordedAt: [String: TimeInterval] = [:]
 
     /**
-     - parameter windowMillis: The dedupe window in milliseconds. A value of zero or less disables deduplication, so
-     every exposure is recorded.
+     - parameter window: The dedupe window. A value of zero or less disables deduplication, so every exposure is
+     recorded.
      - parameter maxSize: The maximum number of exposure keys to track. A value of zero or less falls back to the
      default.
      */
-    init(windowMillis: Int, maxSize: Int) {
-        self.windowMillis = Int64(windowMillis)
+    init(window: TimeInterval, maxSize: Int) {
+        self.window = window
         self.maxSize = maxSize > 0 ? maxSize : LDConfig.Defaults.flagExposureDedupeMaxSize
     }
 
-    var isEnabled: Bool { windowMillis > 0 }
+    var isEnabled: Bool { window > 0 }
 
     /**
      Returns whether an exposure for the given key should be recorded, and if so starts a new dedupe window for it.
@@ -35,13 +35,13 @@ class ExposureDeduper {
      told to record.
 
      - parameter key: A stable key identifying the exposure result.
-     - parameter now: The current time in milliseconds since the epoch.
+     - parameter now: The current time as seconds since the epoch.
      */
-    func shouldRecord(key: String, now: Int64 = Date().millisSince1970) -> Bool {
+    func shouldRecord(key: String, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
         guard isEnabled
         else { return true }
 
-        if let last = lastRecordedAt[key], last > now - windowMillis {
+        if let last = lastRecordedAt[key], last > now - window {
             return false
         }
 
@@ -57,9 +57,9 @@ class ExposureDeduper {
         lastRecordedAt.removeAll()
     }
 
-    private func evict(now: Int64) {
+    private func evict(now: TimeInterval) {
         // Keys whose window has already elapsed no longer change the outcome of shouldRecord, so reclaim those first.
-        lastRecordedAt = lastRecordedAt.filter { $0.value > now - windowMillis }
+        lastRecordedAt = lastRecordedAt.filter { $0.value > now - window }
         guard lastRecordedAt.count > maxSize
         else { return }
 
