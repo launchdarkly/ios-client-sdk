@@ -148,12 +148,50 @@ extension LDClient {
             return evaluation()
         }
 
+        guard shouldReportExposureToHooks(flagKey: flagKey) else {
+            return evaluation()
+        }
+
         let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName)
         let hookData = self.execute_before_evaluation(seriesContext: seriesContext)
         let evaluationResult = evaluation()
         _ = self.execute_after_evaluation(seriesContext: seriesContext, hookData: hookData, evaluationDetail: evaluationResult.map { value in return value.toLDValue()})
 
         return evaluationResult
+    }
+
+    /**
+     Returns whether this evaluation's exposure should be reported to the registered hooks, and if so starts a new
+     dedupe window for it.
+
+     The decision is made before the series opens rather than after the evaluation completes, because hooks pair their
+     stages: the observability plugin starts a span in `beforeEvaluation` and ends it in `afterEvaluation`, so
+     suppressing only the after stage would leave that span open until something else closed it. Reading the stored flag
+     here identifies the same exposure the result would, since the result is derived from it.
+
+     The variation and version pair is the same identity LaunchDarkly uses to bucket evaluations in summary events, so
+     two evaluations sharing that pair report identical data. Experiment status needs its own component because
+     `versionForEvents` prefers `flagVersion`, which only moves when the flag itself changes: a prerequisite flipping can
+     move an evaluation into or out of an experiment while it lands on the same variation of the same flag version.
+     */
+    private func shouldReportExposureToHooks(flagKey: LDFlagKey) -> Bool {
+        guard evaluationExposureDeduper.isEnabled
+        else { return true }
+
+        let featureFlag = flagStore.featureFlag(for: flagKey)
+        let dedupeKey = [
+            flagKey,
+            featureFlag?.variation.map { String($0) } ?? "",
+            featureFlag?.versionForEvents.map { String($0) } ?? "",
+            String(featureFlag?.isInExperiment ?? false),
+            context.fullyQualifiedKey()
+        ].joined(separator: "\n")
+
+        if !evaluationExposureDeduper.shouldRecord(key: dedupeKey) {
+            os_log("%s deduplicated exposure for flagKey: %s", log: config.logger, type: .debug, typeName(and: #function), flagKey)
+            return false
+        }
+        return true
     }
 
     private func execute_before_evaluation(seriesContext: EvaluationSeriesContext) -> [EvaluationSeriesData] {
