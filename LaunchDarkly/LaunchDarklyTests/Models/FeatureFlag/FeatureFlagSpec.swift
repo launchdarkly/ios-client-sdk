@@ -209,6 +209,13 @@ final class FeatureFlagSpec: XCTestCase {
         XCTAssertEqual(FeatureFlag(flagKey: "t", flagVersion: 3).versionForEvents, 3)
         XCTAssertEqual(FeatureFlag(flagKey: "t", version: 2, flagVersion: 3).versionForEvents, 3)
     }
+
+    func testIsInExperiment() {
+        XCTAssertFalse(FeatureFlag(flagKey: "t").isInExperiment)
+        XCTAssertFalse(FeatureFlag(flagKey: "t", reason: ["kind": "FALLTHROUGH"]).isInExperiment)
+        XCTAssertFalse(FeatureFlag(flagKey: "t", reason: ["kind": "FALLTHROUGH", "inExperiment": false]).isInExperiment)
+        XCTAssertTrue(FeatureFlag(flagKey: "t", reason: ["kind": "FALLTHROUGH", "inExperiment": true]).isInExperiment)
+    }
 }
 
 extension StorageItem: Equatable {

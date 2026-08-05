@@ -129,6 +129,15 @@ final class EventReporterSpec: QuickSpec {
                 expect(summaryCount(reporter, version: 2)) == 1
                 expect(summaryCount(reporter, version: 3)) == 1
             }
+            it("reports again when the same result moves into an experiment") {
+                let reporter = makeReporter(window: 60)
+                record(reporter)
+                let inExperiment = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: true, reason: ["kind": "FALLTHROUGH", "inExperiment": true])
+                record(reporter, flag: inExperiment)
+                expect(reporter.eventStore.count) == 2
+                // Both evaluations share a summary counter because that is keyed on the variation and version alone.
+                expect(summaryCount(reporter)) == 2
+            }
             it("reports again after the dedupe cache is reset") {
                 let reporter = makeReporter(window: 60)
                 record(reporter)
