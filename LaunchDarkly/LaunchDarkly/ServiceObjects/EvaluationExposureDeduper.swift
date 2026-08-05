@@ -4,8 +4,8 @@ import Foundation
  Tracks recently recorded evaluation exposures so that repeated evaluations resolving to the same result do not
  report a new exposure within a configured time window.
 
- Each unique exposure key is only recorded once per window. The number of tracked keys is bounded; when the cap is
- exceeded the least recently recorded keys are evicted.
+ Each unique exposure key is only recorded once per window. The number of tracked keys is bounded: keys whose window
+ has elapsed are reclaimed first, and if more keys than the cap are live at once the cache starts over.
 
  This type provides no synchronization of its own. Callers are responsible for serializing access; `EventReporter`
  uses it only from its event queue.
@@ -47,7 +47,7 @@ class EvaluationExposureDeduper {
 
         lastRecordedAt[key] = now
         if lastRecordedAt.count > maxSize {
-            evict(now: now)
+            evict(keeping: key, now: now)
         }
         return true
     }
@@ -57,17 +57,20 @@ class EvaluationExposureDeduper {
         lastRecordedAt.removeAll()
     }
 
-    private func evict(now: TimeInterval) {
+    private func evict(keeping key: String, now: TimeInterval) {
         // Keys whose window has already elapsed no longer change the outcome of shouldRecord, so reclaim those first.
         lastRecordedAt = lastRecordedAt.filter { $0.value > now - window }
         guard lastRecordedAt.count > maxSize
         else { return }
 
-        // Evict a batch rather than a single key, so that a workload tracking more live keys than maxSize doesn't pay
-        // for a scan on every subsequent exposure.
-        let dropCount = lastRecordedAt.count - maxSize + maxSize / 4
-        lastRecordedAt.sorted { $0.value < $1.value }
-            .prefix(dropCount)
-            .forEach { lastRecordedAt.removeValue(forKey: $0.key) }
+        // More keys are live at once than the cap allows, so nothing can be reclaimed without discarding a window that
+        // is still open. Start over rather than ranking the keys by age: Dictionary is unordered, so singling out the
+        // oldest would mean sorting the whole cache. Refilling takes another maxSize exposures, which keeps the cost of
+        // starting over amortized, and the keys that were dropped are suppressed again as soon as they are re-recorded.
+        // Raise maxSize to stop reaching this at all.
+        lastRecordedAt.removeAll(keepingCapacity: true)
+
+        // The exposure being recorded right now opened its window a moment ago, so it would be the worst one to drop.
+        lastRecordedAt[key] = now
     }
 }
