@@ -7,12 +7,15 @@ import Foundation
  Each unique exposure key is only recorded once per window. The number of tracked keys is bounded: keys whose window
  has elapsed are reclaimed first, and if more keys than the cap are live at once the cache starts over.
 
- This type provides no synchronization of its own. Callers are responsible for serializing access; `EventReporter`
- uses it only from its event queue.
+ This type is thread-safe. Evaluations may be made from any thread, so the check of the window and the update of it
+ are performed together under a single lock.
  */
 class EvaluationExposureDeduper {
     private let window: TimeInterval
     private let maxSize: Int
+
+    private let queue = DispatchQueue(label: "com.launchdarkly.evaluationExposureDedupeQueue")
+    // These fields should only be used synchronized on the queue.
     private var lastRecordedAt: [String: TimeInterval] = [:]
 
     /**
@@ -41,20 +44,22 @@ class EvaluationExposureDeduper {
         guard isEnabled
         else { return true }
 
-        if let last = lastRecordedAt[key], last > now - window {
-            return false
-        }
+        return queue.sync {
+            if let last = lastRecordedAt[key], last > now - window {
+                return false
+            }
 
-        lastRecordedAt[key] = now
-        if lastRecordedAt.count > maxSize {
-            evict(keeping: key, now: now)
+            lastRecordedAt[key] = now
+            if lastRecordedAt.count > maxSize {
+                evict(keeping: key, now: now)
+            }
+            return true
         }
-        return true
     }
 
     /// Clears all recorded exposures. Called when the evaluation context changes.
     func reset() {
-        lastRecordedAt.removeAll()
+        queue.sync { lastRecordedAt.removeAll() }
     }
 
     private func evict(keeping key: String, now: TimeInterval) {

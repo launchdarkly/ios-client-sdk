@@ -423,10 +423,10 @@ public class LDClient {
         }
 
         internalIdentifyQueue.sync {
-            // Exposures recorded before this point describe an earlier point in the app's lifecycle, so let them be
-            // reported again. This happens even when the context is unchanged, so that identify is a reliable way for
-            // an app to mark a new phase of a session.
-            self.eventReporter.resetEvaluationExposureDedupeCache()
+            // Exposures reported to hooks before this point describe an earlier point in the app's lifecycle, so let
+            // them be reported again. This happens even when the context is unchanged, so that identify is a reliable
+            // way for an app to mark a new phase of a session.
+            self.evaluationExposureDeduper.reset()
 
             if self.context == updatedContext {
                 self.eventReporter.record(IdentifyEvent(context: self.context))
@@ -939,6 +939,7 @@ public class LDClient {
     private(set) var throttler: Throttling
     private(set) var diagnosticReporter: DiagnosticReporting
     let flagStore: FlagMaintaining
+    let evaluationExposureDeduper: EvaluationExposureDeduper
 
     private(set) var hasStarted: Bool {
         get { hasStartedQueue.sync { _hasStarted } }
@@ -957,6 +958,7 @@ public class LDClient {
     private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
         self.serviceFactory = serviceFactory
         self.hooks = Array(configuration.hooks)
+        self.evaluationExposureDeduper = EvaluationExposureDeduper(window: configuration.evaluationExposureDedupeWindow, maxSize: configuration.evaluationExposureDedupeMaxSize)
         environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
 
         // Collect plugin hooks before calling beforeIdentify, so plugin hooks participate in the init identify lifecycle.
@@ -981,8 +983,7 @@ public class LDClient {
         throttler = self.serviceFactory.makeThrottler(environmentReporter: environmentReporter)
 
         config = configuration
-        let anonymousContext = LDContext()
-        context = startContext ?? anonymousContext
+        context = startContext ?? LDContext()
 
         if config.autoEnvAttributes {
             context = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(context)

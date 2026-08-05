@@ -531,17 +531,22 @@ final class LDClientSpec: QuickSpec {
             }
 
             it("resets the evaluation exposure dedupe cache") {
-                let testContext = TestContext(startOnline: true)
+                var config = LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: false)
+                config.evaluationExposureDedupeWindow = 60
+                let testContext = TestContext(newConfig: config, startOnline: true)
                 testContext.start()
-                let priorResets = testContext.eventReporterMock.resetEvaluationExposureDedupeCacheCallCount
+                let deduper = testContext.subject.evaluationExposureDeduper
+                expect(deduper.shouldRecord(key: "exposure")) == true
+                expect(deduper.shouldRecord(key: "exposure")) == false
 
                 testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .yes)
-                expect(testContext.eventReporterMock.resetEvaluationExposureDedupeCacheCallCount) == priorResets + 1
+                expect(deduper.shouldRecord(key: "exposure")) == true
 
                 // Re-identifying to the unchanged context resets as well, so an app can use identify to mark a new
                 // phase of a session.
+                expect(deduper.shouldRecord(key: "exposure")) == false
                 testContext.subject.internalIdentify(newContext: testContext.subject.context, useCache: .yes)
-                expect(testContext.eventReporterMock.resetEvaluationExposureDedupeCacheCallCount) == priorResets + 2
+                expect(deduper.shouldRecord(key: "exposure")) == true
             }
 
             it("no cache requires no store interaction") {

@@ -324,16 +324,17 @@ public struct LDConfig {
     public var eventCapacity: Int = Defaults.eventCapacity
 
     /**
-     The time window during which repeated feature flag evaluations that resolve to the same result are deduplicated,
-     so that only a single evaluation is reported per unique (flag key, variation, flag version, context) within the
-     window.
+     The time window during which repeated feature flag evaluations that resolve to the same result are deduplicated
+     before being reported to hooks, so that a hook observes only a single evaluation per unique
+     (flag key, variation, flag version, experiment status, context) within the window.
 
-     This is useful for reducing analytics event volume caused by frequent re-evaluations, for example a flag that is
+     This is useful for reducing the telemetry volume produced by frequent re-evaluations, for example a flag that is
      read on every render of a view.
 
-     Deduplicated evaluations are omitted from both the full feature events used by experimentation and the debugger,
-     and the summary events that drive flag evaluation counts. Enabling this therefore reduces the evaluation counts
-     LaunchDarkly reports for your flags.
+     Deduplication applies to the whole evaluation series, so a suppressed evaluation invokes neither `beforeEvaluation`
+     nor `afterEvaluation` on any registered hook. This affects every hook, including your own, not only those added by
+     plugins. Analytics events are unaffected: feature, debug, and summary events are still recorded for every
+     evaluation, so the evaluation counts LaunchDarkly reports for your flags do not change.
 
      Set to 0 (the default) to disable deduplication and report every evaluation. Set a positive value to enable it.
 
