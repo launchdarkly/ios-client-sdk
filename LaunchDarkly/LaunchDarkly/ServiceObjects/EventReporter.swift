@@ -61,7 +61,7 @@ class EventReporter: EventReporting {
         self.onSyncComplete = onSyncComplete
         self.lastEventResponseDate = Date()
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
-        self.exposureDeduper = ExposureDeduper(windowMillis: service.config.flagExposureDedupeWindowMillis,
+        self.exposureDeduper = ExposureDeduper(window: service.config.flagExposureDedupeWindow,
                                                maxSize: service.config.flagExposureDedupeMaxSize)
     }
 
