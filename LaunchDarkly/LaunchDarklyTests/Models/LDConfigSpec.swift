@@ -7,8 +7,8 @@ final class LDConfigSpec: XCTestCase {
     struct Constants {
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
         fileprivate static let eventCapacity = 10
-        fileprivate static let flagExposureDedupeWindow: TimeInterval = 5.0
-        fileprivate static let flagExposureDedupeMaxSize = 50
+        fileprivate static let evaluationExposureDedupeWindow: TimeInterval = 5.0
+        fileprivate static let evaluationExposureDedupeMaxSize = 50
         fileprivate static let connectionTimeout: TimeInterval = 0.01
         fileprivate static let eventFlushInterval: TimeInterval = 0.01
         fileprivate static let flagPollingInterval: TimeInterval = 0.01
@@ -39,8 +39,8 @@ final class LDConfigSpec: XCTestCase {
          ("event URL", Constants.alternateMockUrl, { c, v in c.eventsUrl = v as! URL }),
          ("stream URL", Constants.alternateMockUrl, { c, v in c.streamUrl = v as! URL }),
          ("event capacity", Constants.eventCapacity, { c, v in c.eventCapacity = v as! Int }),
-         ("flag exposure dedupe window", Constants.flagExposureDedupeWindow, { c, v in c.flagExposureDedupeWindow = v as! TimeInterval }),
-         ("flag exposure dedupe max size", Constants.flagExposureDedupeMaxSize, { c, v in c.flagExposureDedupeMaxSize = v as! Int }),
+         ("evaluation exposure dedupe window", Constants.evaluationExposureDedupeWindow, { c, v in c.evaluationExposureDedupeWindow = v as! TimeInterval }),
+         ("evaluation exposure dedupe max size", Constants.evaluationExposureDedupeMaxSize, { c, v in c.evaluationExposureDedupeMaxSize = v as! Int }),
          ("connection timeout", Constants.connectionTimeout, { c, v in c.connectionTimeout = v as! TimeInterval }),
          ("event flush interval", Constants.eventFlushInterval, { c, v in c.eventFlushInterval = v as! TimeInterval }),
          ("poll interval", Constants.flagPollingInterval, { c, v in c.flagPollingInterval = v as! TimeInterval }),
@@ -66,8 +66,8 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.eventsUrl, LDConfig.Defaults.eventsUrl)
         XCTAssertEqual(config.streamUrl, LDConfig.Defaults.streamUrl)
         XCTAssertEqual(config.eventCapacity, LDConfig.Defaults.eventCapacity)
-        XCTAssertEqual(config.flagExposureDedupeWindow, LDConfig.Defaults.flagExposureDedupeWindow)
-        XCTAssertEqual(config.flagExposureDedupeMaxSize, LDConfig.Defaults.flagExposureDedupeMaxSize)
+        XCTAssertEqual(config.evaluationExposureDedupeWindow, LDConfig.Defaults.evaluationExposureDedupeWindow)
+        XCTAssertEqual(config.evaluationExposureDedupeMaxSize, LDConfig.Defaults.evaluationExposureDedupeMaxSize)
         XCTAssertEqual(config.connectionTimeout, LDConfig.Defaults.connectionTimeout)
         XCTAssertEqual(config.eventFlushInterval, LDConfig.Defaults.eventFlushInterval)
         XCTAssertEqual(config.flagPollingInterval, LDConfig.Defaults.flagPollingInterval)
@@ -99,8 +99,8 @@ final class LDConfigSpec: XCTestCase {
             XCTAssertEqual(config.eventsUrl, Constants.alternateMockUrl, "\(os)")
             XCTAssertEqual(config.streamUrl, Constants.alternateMockUrl, "\(os)")
             XCTAssertEqual(config.eventCapacity, Constants.eventCapacity, "\(os)")
-            XCTAssertEqual(config.flagExposureDedupeWindow, Constants.flagExposureDedupeWindow, "\(os)")
-            XCTAssertEqual(config.flagExposureDedupeMaxSize, Constants.flagExposureDedupeMaxSize, "\(os)")
+            XCTAssertEqual(config.evaluationExposureDedupeWindow, Constants.evaluationExposureDedupeWindow, "\(os)")
+            XCTAssertEqual(config.evaluationExposureDedupeMaxSize, Constants.evaluationExposureDedupeMaxSize, "\(os)")
             XCTAssertEqual(config.connectionTimeout, Constants.connectionTimeout, "\(os)")
             XCTAssertEqual(config.eventFlushInterval, Constants.eventFlushInterval, "\(os)")
             XCTAssertEqual(config.flagPollingInterval, Constants.flagPollingInterval, "\(os)")

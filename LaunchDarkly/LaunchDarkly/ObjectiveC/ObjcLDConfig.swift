@@ -51,15 +51,15 @@ public final class ObjcLDConfig: NSObject {
 
      Set to 0 (the default) to disable deduplication and report every evaluation.
      */
-    @objc public var flagExposureDedupeWindow: TimeInterval {
-        get { config.flagExposureDedupeWindow }
-        set { config.flagExposureDedupeWindow = newValue }
+    @objc public var evaluationExposureDedupeWindow: TimeInterval {
+        get { config.evaluationExposureDedupeWindow }
+        set { config.evaluationExposureDedupeWindow = newValue }
     }
 
-    /// The maximum number of unique feature flag exposure keys tracked for deduplication at once. When exceeded, the least recently recorded keys are evicted to bound memory usage. (Default: 2000)
-    @objc public var flagExposureDedupeMaxSize: Int {
-        get { config.flagExposureDedupeMaxSize }
-        set { config.flagExposureDedupeMaxSize = newValue }
+    /// The maximum number of unique evaluation exposure keys tracked for deduplication at once. When exceeded, the least recently recorded keys are evicted to bound memory usage. (Default: 2000)
+    @objc public var evaluationExposureDedupeMaxSize: Int {
+        get { config.evaluationExposureDedupeMaxSize }
+        set { config.evaluationExposureDedupeMaxSize = newValue }
     }
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)

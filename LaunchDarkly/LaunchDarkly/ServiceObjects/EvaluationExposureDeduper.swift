@@ -1,7 +1,7 @@
 import Foundation
 
 /**
- Tracks recently recorded feature flag exposures so that repeated evaluations resolving to the same result do not
+ Tracks recently recorded evaluation exposures so that repeated evaluations resolving to the same result do not
  report a new exposure within a configured time window.
 
  Each unique exposure key is only recorded once per window. The number of tracked keys is bounded; when the cap is
@@ -10,7 +10,7 @@ import Foundation
  This type provides no synchronization of its own. Callers are responsible for serializing access; `EventReporter`
  uses it only from its event queue.
  */
-class ExposureDeduper {
+class EvaluationExposureDeduper {
     private let window: TimeInterval
     private let maxSize: Int
     private var lastRecordedAt: [String: TimeInterval] = [:]
@@ -23,7 +23,7 @@ class ExposureDeduper {
      */
     init(window: TimeInterval, maxSize: Int) {
         self.window = window
-        self.maxSize = maxSize > 0 ? maxSize : LDConfig.Defaults.flagExposureDedupeMaxSize
+        self.maxSize = maxSize > 0 ? maxSize : LDConfig.Defaults.evaluationExposureDedupeMaxSize
     }
 
     var isEnabled: Bool { window > 0 }

@@ -3,25 +3,25 @@ import Quick
 import Nimble
 @testable import LaunchDarkly
 
-final class ExposureDeduperSpec: QuickSpec {
+final class EvaluationExposureDeduperSpec: QuickSpec {
     override func spec() {
-        describe("ExposureDeduper") {
+        describe("EvaluationExposureDeduper") {
             it("is disabled for a non-positive window") {
                 for window: TimeInterval in [0, -1] {
-                    let deduper = ExposureDeduper(window: window, maxSize: 10)
+                    let deduper = EvaluationExposureDeduper(window: window, maxSize: 10)
                     expect(deduper.isEnabled) == false
                     expect(deduper.shouldRecord(key: "a", now: 0)) == true
                     expect(deduper.shouldRecord(key: "a", now: 0)) == true
                 }
             }
             it("suppresses repeats within the window") {
-                let deduper = ExposureDeduper(window: 10, maxSize: 10)
+                let deduper = EvaluationExposureDeduper(window: 10, maxSize: 10)
                 expect(deduper.shouldRecord(key: "a", now: 1_000)) == true
                 expect(deduper.shouldRecord(key: "a", now: 1_000)) == false
                 expect(deduper.shouldRecord(key: "a", now: 1_009)) == false
             }
             it("records again once the window elapses") {
-                let deduper = ExposureDeduper(window: 10, maxSize: 10)
+                let deduper = EvaluationExposureDeduper(window: 10, maxSize: 10)
                 expect(deduper.shouldRecord(key: "a", now: 1_000)) == true
                 expect(deduper.shouldRecord(key: "a", now: 1_010)) == true
                 // Recording restarts the window rather than extending the original one.
@@ -29,26 +29,26 @@ final class ExposureDeduperSpec: QuickSpec {
                 expect(deduper.shouldRecord(key: "a", now: 1_020)) == true
             }
             it("applies a sub-second window") {
-                let deduper = ExposureDeduper(window: 0.5, maxSize: 10)
+                let deduper = EvaluationExposureDeduper(window: 0.5, maxSize: 10)
                 expect(deduper.shouldRecord(key: "a", now: 1_000)) == true
                 expect(deduper.shouldRecord(key: "a", now: 1_000.4)) == false
                 expect(deduper.shouldRecord(key: "a", now: 1_000.5)) == true
             }
             it("tracks keys independently") {
-                let deduper = ExposureDeduper(window: 10, maxSize: 10)
+                let deduper = EvaluationExposureDeduper(window: 10, maxSize: 10)
                 expect(deduper.shouldRecord(key: "a", now: 1_000)) == true
                 expect(deduper.shouldRecord(key: "b", now: 1_000)) == true
                 expect(deduper.shouldRecord(key: "a", now: 1_000)) == false
                 expect(deduper.shouldRecord(key: "b", now: 1_000)) == false
             }
             it("records again after reset") {
-                let deduper = ExposureDeduper(window: 10, maxSize: 10)
+                let deduper = EvaluationExposureDeduper(window: 10, maxSize: 10)
                 expect(deduper.shouldRecord(key: "a", now: 1_000)) == true
                 deduper.reset()
                 expect(deduper.shouldRecord(key: "a", now: 1_000)) == true
             }
             it("evicts the least recently recorded keys past the cap") {
-                let deduper = ExposureDeduper(window: 1_000, maxSize: 4)
+                let deduper = EvaluationExposureDeduper(window: 1_000, maxSize: 4)
                 for i in 0..<5 {
                     expect(deduper.shouldRecord(key: "key-\(i)", now: TimeInterval(1_000 + i))) == true
                 }
@@ -58,7 +58,7 @@ final class ExposureDeduperSpec: QuickSpec {
                 expect(deduper.shouldRecord(key: "key-4", now: 1_010)) == false
             }
             it("moves a re-recorded key to the most recent end of the eviction order") {
-                let deduper = ExposureDeduper(window: 10, maxSize: 2)
+                let deduper = EvaluationExposureDeduper(window: 10, maxSize: 2)
                 expect(deduper.shouldRecord(key: "a", now: 1_000)) == true
                 expect(deduper.shouldRecord(key: "b", now: 1_000)) == true
                 // "a" is re-recorded once its window elapses, which makes "b" the oldest tracked key.
@@ -69,7 +69,7 @@ final class ExposureDeduperSpec: QuickSpec {
             it("keeps live keys when reclaiming expired ones is enough") {
                 // maxSize is 8 so that the batch term (maxSize / 4) is non-zero, which is what makes an over-eager
                 // batch drop observable.
-                let deduper = ExposureDeduper(window: 10, maxSize: 8)
+                let deduper = EvaluationExposureDeduper(window: 10, maxSize: 8)
                 for i in 0..<2 {
                     expect(deduper.shouldRecord(key: "expired-\(i)", now: 1_000)) == true
                 }
@@ -84,8 +84,8 @@ final class ExposureDeduperSpec: QuickSpec {
                 }
             }
             it("falls back to the default cap for a non-positive maxSize") {
-                let deduper = ExposureDeduper(window: 1_000, maxSize: 0)
-                for i in 0..<LDConfig.Defaults.flagExposureDedupeMaxSize {
+                let deduper = EvaluationExposureDeduper(window: 1_000, maxSize: 0)
+                for i in 0..<LDConfig.Defaults.evaluationExposureDedupeMaxSize {
                     expect(deduper.shouldRecord(key: "key-\(i)", now: 1_000)) == true
                 }
                 expect(deduper.shouldRecord(key: "key-0", now: 1_000)) == false

@@ -67,18 +67,18 @@ final class EventReporterSpec: QuickSpec {
         isOnlineSpec()
         recordEventSpec()
         testRecordFlagEvaluationEvents()
-        flagExposureDedupeSpec()
+        evaluationExposureDedupeSpec()
         reportEventsSpec()
         reportTimerSpec()
     }
 
-    private func flagExposureDedupeSpec() {
+    private func evaluationExposureDedupeSpec() {
         let context = LDContext.stub()
         let trackedFlag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
 
         func makeReporter(window: TimeInterval) -> EventReporter {
             var config = LDConfig.stub
-            config.flagExposureDedupeWindow = window
+            config.evaluationExposureDedupeWindow = window
             return EventReporter(service: DarklyServiceMock(config: config), onSyncComplete: nil)
         }
 
@@ -91,7 +91,7 @@ final class EventReporterSpec: QuickSpec {
                 .flagValueCounters[CounterKey(variation: variation, version: version)]?.count
         }
 
-        describe("flag exposure deduplication") {
+        describe("evaluation exposure deduplication") {
             it("reports every evaluation when disabled by default") {
                 let reporter = makeReporter(window: 0)
                 (0..<3).forEach { _ in record(reporter) }
@@ -132,7 +132,7 @@ final class EventReporterSpec: QuickSpec {
             it("reports again after the dedupe cache is reset") {
                 let reporter = makeReporter(window: 60)
                 record(reporter)
-                reporter.resetFlagExposureDedupeCache()
+                reporter.resetEvaluationExposureDedupeCache()
                 record(reporter)
                 expect(reporter.eventStore.count) == 2
                 expect(summaryCount(reporter)) == 2

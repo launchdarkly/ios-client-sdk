@@ -12,7 +12,7 @@ protocol EventReporting {
     func record(_ event: Event)
     // swiftlint:disable:next function_parameter_count
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)
-    func resetFlagExposureDedupeCache()
+    func resetEvaluationExposureDedupeCache()
     func flush(completion: CompletionClosure?)
 }
 
@@ -26,7 +26,7 @@ class NullEventReporter: EventReporting {
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool) {
     }
 
-    func resetFlagExposureDedupeCache() {
+    func resetEvaluationExposureDedupeCache() {
     }
 
     func flush(completion: CompletionClosure?) {
@@ -48,7 +48,7 @@ class EventReporter: EventReporting {
     // These fields should only be used synchronized on the eventQueue
     private(set) var eventStore: [Event] = []
     private(set) var contextSummarizer: ContextSummarizer
-    private let exposureDeduper: ExposureDeduper
+    private let evaluationExposureDeduper: EvaluationExposureDeduper
 
     private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
     private var eventReportTimer: TimeResponding?
@@ -61,8 +61,8 @@ class EventReporter: EventReporting {
         self.onSyncComplete = onSyncComplete
         self.lastEventResponseDate = Date()
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
-        self.exposureDeduper = ExposureDeduper(window: service.config.flagExposureDedupeWindow,
-                                               maxSize: service.config.flagExposureDedupeMaxSize)
+        self.evaluationExposureDeduper = EvaluationExposureDeduper(window: service.config.evaluationExposureDedupeWindow,
+                                               maxSize: service.config.evaluationExposureDedupeMaxSize)
     }
 
     func record(_ event: Event) {
@@ -86,9 +86,9 @@ class EventReporter: EventReporting {
 
         eventQueue.sync {
             // Building the key allocates, so it is skipped entirely while deduplication is off, which is the default.
-            if exposureDeduper.isEnabled {
+            if evaluationExposureDeduper.isEnabled {
                 let dedupeKey = EventReporter.exposureDedupeKey(flagKey: flagKey, featureFlag: featureFlag, context: context)
-                guard exposureDeduper.shouldRecord(key: dedupeKey)
+                guard evaluationExposureDeduper.shouldRecord(key: dedupeKey)
                 else {
                     os_log("%s deduplicated exposure for flagKey: %s", log: service.config.logger, type: .debug, typeName(and: #function), flagKey)
                     return
@@ -107,8 +107,8 @@ class EventReporter: EventReporting {
         }
     }
 
-    func resetFlagExposureDedupeCache() {
-        eventQueue.sync { exposureDeduper.reset() }
+    func resetEvaluationExposureDedupeCache() {
+        eventQueue.sync { evaluationExposureDeduper.reset() }
     }
 
     /**
