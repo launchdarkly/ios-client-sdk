@@ -47,24 +47,29 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
                 deduper.reset()
                 expect(deduper.shouldRecord(key: "a", now: 1_000)) == true
             }
-            it("evicts the least recently recorded keys past the cap") {
+            it("starts over when more keys are live than the cap allows") {
                 let deduper = EvaluationExposureDeduper(window: 1_000, maxSize: 4)
-                for i in 0..<5 {
-                    expect(deduper.shouldRecord(key: "key-\(i)", now: TimeInterval(1_000 + i))) == true
+                for i in 0..<4 {
+                    expect(deduper.shouldRecord(key: "key-\(i)", now: 1_000)) == true
                 }
-                // "key-0" was recorded first, so it is the one dropped and can be recorded again, while the most
-                // recently recorded key is still being tracked.
-                expect(deduper.shouldRecord(key: "key-0", now: 1_010)) == true
-                expect(deduper.shouldRecord(key: "key-4", now: 1_010)) == false
+                // This key exceeds the cap while every tracked window is still open, so there is nothing to reclaim
+                // and the cache starts over.
+                expect(deduper.shouldRecord(key: "key-new", now: 1_000)) == true
+                // The key that triggered the reset keeps its window, since it only just opened...
+                expect(deduper.shouldRecord(key: "key-new", now: 1_000)) == false
+                // ...while a key dropped by the reset is reported again.
+                expect(deduper.shouldRecord(key: "key-0", now: 1_000)) == true
             }
-            it("moves a re-recorded key to the most recent end of the eviction order") {
+            it("reclaims the key whose window elapsed rather than one that was re-recorded") {
                 let deduper = EvaluationExposureDeduper(window: 10, maxSize: 2)
                 expect(deduper.shouldRecord(key: "a", now: 1_000)) == true
                 expect(deduper.shouldRecord(key: "b", now: 1_000)) == true
-                // "a" is re-recorded once its window elapses, which makes "b" the oldest tracked key.
+                // Re-recording "a" refreshes its window, so when the cap is reached "b" is the one whose window has
+                // elapsed. Reclaiming it is enough, and "a" keeps being suppressed.
                 expect(deduper.shouldRecord(key: "a", now: 1_010)) == true
                 expect(deduper.shouldRecord(key: "c", now: 1_010)) == true
                 expect(deduper.shouldRecord(key: "a", now: 1_010)) == false
+                expect(deduper.shouldRecord(key: "b", now: 1_010)) == true
             }
             it("keeps live keys when reclaiming expired ones is enough") {
                 // maxSize is 8 so that the batch term (maxSize / 4) is non-zero, which is what makes an over-eager
