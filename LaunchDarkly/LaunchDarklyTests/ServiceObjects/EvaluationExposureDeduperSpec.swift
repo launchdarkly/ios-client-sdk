@@ -94,6 +94,22 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
                     expect(deduper.shouldRecord(key: "live-\(i)", now: 1_015)) == false
                 }
             }
+            it("uses the default window and cap when built without parameters") {
+                // Ten minutes over 2000 keys.
+                expect(EvaluationExposureDeduper.defaultWindow) == 600
+                expect(EvaluationExposureDeduper.defaultMaxSize) == 2_000
+
+                let deduper = EvaluationExposureDeduper()
+                expect(deduper.shouldRecord(key: "a", now: 1_000)) == true
+                expect(deduper.shouldRecord(key: "a", now: 1_599)) == false
+                expect(deduper.shouldRecord(key: "a", now: 1_600)) == true
+
+                for i in 0..<(EvaluationExposureDeduper.defaultMaxSize - 1) {
+                    expect(deduper.shouldRecord(key: "key-\(i)", now: 1_600)) == true
+                }
+                // "a" and these keys fill the cap exactly, so nothing has been reclaimed yet.
+                expect(deduper.shouldRecord(key: "key-0", now: 1_600)) == false
+            }
             it("falls back to the default cap for a non-positive maxSize") {
                 let deduper = EvaluationExposureDeduper(window: 1_000, maxSize: 0)
                 for i in 0..<EvaluationExposureDeduper.defaultMaxSize {

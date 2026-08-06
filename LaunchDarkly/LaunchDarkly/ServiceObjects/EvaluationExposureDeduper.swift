@@ -13,6 +13,11 @@ import Foundation
  }
 
  class ObservabilityHook: Hook {
+     // Told about an evaluation at most once per `defaultWindow`, for at most `defaultMaxSize` results at a time.
+     let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper()
+ }
+
+ class TelemetryHook: Hook {
      let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper(window: 30, maxSize: 5_000)
  }
 
@@ -32,6 +37,9 @@ import Foundation
  exposure starts the window that suppresses the rest.
  */
 open class EvaluationExposureDeduper {
+    /// The dedupe window used by a deduper built without a window of its own. (10 minutes)
+    public static let defaultWindow: TimeInterval = 600
+
     /// The number of exposure keys tracked by a deduper built without a positive cap of its own. (2000)
     public static let defaultMaxSize = 2_000
 
@@ -51,12 +59,13 @@ open class EvaluationExposureDeduper {
     private var lastRecordedAt: [String: TimeInterval] = [:]
 
     /**
-     - parameter window: The dedupe window. A value of zero or less disables deduplication, so every evaluation reaches
-     the hook.
-     - parameter maxSize: The maximum number of exposure keys to track. A value of zero or less falls back to
-     `defaultMaxSize`.
+     - parameter window: The dedupe window, in seconds. Defaults to `defaultWindow`. A value of zero or less disables
+     deduplication, so every evaluation reaches the hook.
+     - parameter maxSize: The maximum number of exposure keys to track. Defaults to `defaultMaxSize`, as does a value
+     of zero or less.
      */
-    public init(window: TimeInterval, maxSize: Int) {
+    public init(window: TimeInterval = EvaluationExposureDeduper.defaultWindow,
+                maxSize: Int = EvaluationExposureDeduper.defaultMaxSize) {
         self.window = window
         self.maxSize = maxSize > 0 ? maxSize : Self.defaultMaxSize
     }
