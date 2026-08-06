@@ -70,6 +70,25 @@ public protocol Hook {
     /// - Parameters:
     ///   - seriesContext: Contains information about the track operation being performed. This is not mutable.
     func afterTrack(seriesContext: TrackSeriesContext)
+
+    /// Decides which evaluations reach this hook, overriding the deduplication configured on `LDConfig`. It affects
+    /// only this hook.
+    ///
+    /// Return `nil`, the default, to use a deduper built from `LDConfig.evaluationExposureDedupeWindow` and
+    /// `LDConfig.evaluationExposureDedupeMaxSize`. Return `.disabled` to observe every evaluation, an
+    /// `EvaluationExposureDeduper(window:maxSize:)` to use the SDK's implementation with different parameters, or your
+    /// own subclass to implement a different policy.
+    ///
+    /// ```
+    /// class ObservabilityHook: Hook {
+    ///     let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper(window: 60, maxSize: 2_000)
+    /// }
+    /// ```
+    ///
+    /// Deduplication applies to the whole evaluation series, so a suppressed evaluation invokes neither
+    /// `beforeEvaluation` nor `afterEvaluation`. The SDK reads this once, when the client is initialized, and clears
+    /// every hook's deduper on `LDClient.identify(context:)`.
+    var evaluationExposureDeduper: EvaluationExposureDeduper? { get }
 }
 
 public extension Hook {
@@ -109,5 +128,12 @@ public extension Hook {
     ///
     /// Default implementation is a no-op.
     func afterTrack(seriesContext: TrackSeriesContext) {
+    }
+
+    /// Decides which evaluations reach this hook.
+    ///
+    /// Default implementation returns `nil`, so the hook uses the deduplication configured on `LDConfig`.
+    var evaluationExposureDeduper: EvaluationExposureDeduper? {
+        return nil
     }
 }

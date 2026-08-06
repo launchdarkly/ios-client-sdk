@@ -144,64 +144,82 @@ extension LDClient {
     }
 
     private func evaluateWithHooks<D>(flagKey: LDFlagKey, defaultValue: D, methodName: String, evaluation: () -> LDEvaluationDetail<D>) -> LDEvaluationDetail<D> where D: LDValueConvertible, D: Decodable {
-        guard !self.hooks.isEmpty else {
-            return evaluation()
-        }
-
-        guard shouldReportExposureToHooks(flagKey: flagKey) else {
+        let reportingHooks = hooksForEvaluation(flagKey: flagKey)
+        guard !reportingHooks.isEmpty else {
             return evaluation()
         }
 
         let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName)
-        let hookData = self.execute_before_evaluation(seriesContext: seriesContext)
+        let hookData = self.execute_before_evaluation(hooks: reportingHooks, seriesContext: seriesContext)
         let evaluationResult = evaluation()
-        _ = self.execute_after_evaluation(seriesContext: seriesContext, hookData: hookData, evaluationDetail: evaluationResult.map { value in return value.toLDValue()})
+        _ = self.execute_after_evaluation(hooks: reportingHooks, seriesContext: seriesContext, hookData: hookData, evaluationDetail: evaluationResult.map { value in return value.toLDValue()})
 
         return evaluationResult
     }
 
     /**
-     Returns whether this evaluation's exposure should be reported to the registered hooks, and if so starts a new
-     dedupe window for it.
+     Returns the hooks that should observe this evaluation, starting a new dedupe window for each of them.
 
      The decision is made before the series opens rather than after the evaluation completes, because hooks pair their
      stages: the observability plugin starts a span in `beforeEvaluation` and ends it in `afterEvaluation`, so
-     suppressing only the after stage would leave that span open until something else closed it. Reading the stored flag
-     here identifies the same exposure the result would, since the result is derived from it.
+     suppressing only the after stage would leave that span open until something else closed it.
+     */
+    private func hooksForEvaluation(flagKey: LDFlagKey) -> [Hook] {
+        guard !hooks.isEmpty
+        else { return [] }
+
+        let now = Date().timeIntervalSince1970
+        // Built on demand, since every hook wanting every evaluation is both the default and more common than not.
+        var key: String?
+        var reporting: [Hook] = []
+        reporting.reserveCapacity(hooks.count)
+        for (hook, deduper) in zip(hooks, evaluationExposureDedupers) {
+            if deduper === EvaluationExposureDeduper.disabled {
+                reporting.append(hook)
+                continue
+            }
+            let exposure = key ?? exposureKey(flagKey: flagKey)
+            key = exposure
+            if deduper.shouldRecord(key: exposure, now: now) {
+                reporting.append(hook)
+            }
+        }
+        if reporting.count < hooks.count {
+            os_log("%s deduplicated exposure of flagKey: %s for %d of %d hooks", log: config.logger, type: .debug, typeName(and: #function), flagKey, hooks.count - reporting.count, hooks.count)
+        }
+        return reporting
+    }
+
+    /**
+     Identifies the evaluation a hook is about to be told about, so that a deduper can recognize a repeat of it.
+
+     This reads the stored flag rather than the evaluation result because the decision is made before the series opens,
+     and the stored flag identifies the same exposure the result would, since the result is derived from it.
 
      The variation and version pair is the same identity LaunchDarkly uses to bucket evaluations in summary events, so
      two evaluations sharing that pair report identical data. Experiment status needs its own component because
      `versionForEvents` prefers `flagVersion`, which only moves when the flag itself changes: a prerequisite flipping can
      move an evaluation into or out of an experiment while it lands on the same variation of the same flag version.
      */
-    private func shouldReportExposureToHooks(flagKey: LDFlagKey) -> Bool {
-        guard evaluationExposureDeduper.isEnabled
-        else { return true }
-
+    private func exposureKey(flagKey: LDFlagKey) -> String {
         let featureFlag = flagStore.featureFlag(for: flagKey)
-        let dedupeKey = [
+        return [
             flagKey,
             featureFlag?.variation.map { String($0) } ?? "",
             featureFlag?.versionForEvents.map { String($0) } ?? "",
             String(featureFlag?.isInExperiment ?? false),
             context.fullyQualifiedKey()
         ].joined(separator: "\n")
-
-        if !evaluationExposureDeduper.shouldRecord(key: dedupeKey) {
-            os_log("%s deduplicated exposure for flagKey: %s", log: config.logger, type: .debug, typeName(and: #function), flagKey)
-            return false
-        }
-        return true
     }
 
-    private func execute_before_evaluation(seriesContext: EvaluationSeriesContext) -> [EvaluationSeriesData] {
-        return self.hooks.map { hook in
+    private func execute_before_evaluation(hooks: [Hook], seriesContext: EvaluationSeriesContext) -> [EvaluationSeriesData] {
+        return hooks.map { hook in
             hook.beforeEvaluation(seriesContext: seriesContext, seriesData: EvaluationSeriesData())
         }
     }
 
-    private func execute_after_evaluation(seriesContext: EvaluationSeriesContext, hookData: [EvaluationSeriesData], evaluationDetail: LDEvaluationDetail<LDValue>) -> [EvaluationSeriesData] {
-        return zip(self.hooks, hookData).reversed().map { (hook, data) in
+    private func execute_after_evaluation(hooks: [Hook], seriesContext: EvaluationSeriesContext, hookData: [EvaluationSeriesData], evaluationDetail: LDEvaluationDetail<LDValue>) -> [EvaluationSeriesData] {
+        return zip(hooks, hookData).reversed().map { (hook, data) in
             return hook.afterEvaluation(seriesContext: seriesContext, seriesData: data, evaluationDetail: evaluationDetail)
         }
     }

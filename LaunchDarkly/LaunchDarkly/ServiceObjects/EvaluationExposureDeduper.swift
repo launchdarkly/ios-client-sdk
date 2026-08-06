@@ -1,16 +1,43 @@
 import Foundation
 
 /**
- Tracks recently recorded evaluation exposures so that repeated evaluations resolving to the same result do not
- report a new exposure within a configured time window.
+ Decides whether a hook should be told about an evaluation, so that repeated evaluations resolving to the same result do
+ not invoke the hook again within a time window.
 
- Each unique exposure key is only recorded once per window. The number of tracked keys is bounded: keys whose window
- has elapsed are reclaimed first, and if more keys than the cap are live at once the cache starts over.
+ The SDK gives each registered hook its own deduper. Return one from `Hook.evaluationExposureDeduper` to control that
+ hook's behavior; a hook returning `nil` gets a deduper built from `LDConfig.evaluationExposureDedupeWindow` and
+ `LDConfig.evaluationExposureDedupeMaxSize`.
 
- This type is thread-safe. Evaluations may be made from any thread, so the check of the window and the update of it
- are performed together under a single lock.
+ ```
+ class AuditHook: Hook {
+     // Observes every evaluation, whatever the SDK is configured to do.
+     let evaluationExposureDeduper: EvaluationExposureDeduper? = .disabled
+ }
+
+ class ObservabilityHook: Hook {
+     let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper(window: 30, maxSize: 5_000)
+ }
+ ```
+
+ This class is the SDK's implementation: it records each unique exposure key once per window and bounds the number of
+ tracked keys. Keys whose window has elapsed are reclaimed first, and if more keys than the cap are live at once the
+ cache starts over. Subclass it to implement a different policy; only `shouldRecord(key:now:)` and `reset()` are called
+ by the SDK.
+
+ A deduper is consulted once per evaluation, before the series opens, so a suppressed evaluation invokes neither
+ `beforeEvaluation` nor `afterEvaluation`. Implementations must be thread-safe, because evaluations may be made from any
+ thread. Give each hook its own instance unless you intend hooks to share a window: the first hook to be told about an
+ exposure starts the window that suppresses the rest.
  */
-class EvaluationExposureDeduper {
+open class EvaluationExposureDeduper {
+    /**
+     A deduper that suppresses nothing, so its hook is told about every evaluation regardless of the window configured
+     on `LDConfig`.
+
+     This instance holds no state and may be given to any number of hooks.
+     */
+    public static let disabled: EvaluationExposureDeduper = DisabledEvaluationExposureDeduper()
+
     private let window: TimeInterval
     private let maxSize: Int
 
@@ -19,29 +46,32 @@ class EvaluationExposureDeduper {
     private var lastRecordedAt: [String: TimeInterval] = [:]
 
     /**
-     - parameter window: The dedupe window. A value of zero or less disables deduplication, so every exposure is
-     recorded.
+     - parameter window: The dedupe window. A value of zero or less disables deduplication, so every evaluation reaches
+     the hook.
      - parameter maxSize: The maximum number of exposure keys to track. A value of zero or less falls back to the
      default.
      */
-    init(window: TimeInterval, maxSize: Int) {
+    public init(window: TimeInterval, maxSize: Int) {
         self.window = window
         self.maxSize = maxSize > 0 ? maxSize : LDConfig.Defaults.evaluationExposureDedupeMaxSize
     }
 
-    var isEnabled: Bool { window > 0 }
-
     /**
-     Returns whether an exposure for the given key should be recorded, and if so starts a new dedupe window for it.
+     Returns whether the hook should be told about the evaluation identified by the given key, and if so starts a new
+     dedupe window for it.
 
-     The check and the update are performed together so that concurrent evaluations of the same flag cannot both be
-     told to record.
+     The SDK calls this once per evaluation per hook. The key identifies the evaluation result: two evaluations share a
+     key when they resolve to the same variation of the same flag version, with the same experiment status, for the same
+     context.
 
-     - parameter key: A stable key identifying the exposure result.
+     The check and the update are performed together so that concurrent evaluations of the same flag cannot both be told
+     to record.
+
+     - parameter key: A stable key identifying the evaluation result.
      - parameter now: The current time as seconds since the epoch.
      */
-    func shouldRecord(key: String, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
-        guard isEnabled
+    open func shouldRecord(key: String, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
+        guard window > 0
         else { return true }
 
         return queue.sync {
@@ -57,8 +87,9 @@ class EvaluationExposureDeduper {
         }
     }
 
-    /// Clears all recorded exposures. Called when the evaluation context changes.
-    func reset() {
+    /// Clears all recorded exposures, so the next evaluation of each is reported again. The SDK calls this when the
+    /// evaluation context changes.
+    open func reset() {
         queue.sync { lastRecordedAt.removeAll() }
     }
 
@@ -77,5 +108,18 @@ class EvaluationExposureDeduper {
 
         // The exposure being recorded right now opened its window a moment ago, so it would be the worst one to drop.
         lastRecordedAt[key] = now
+    }
+}
+
+private final class DisabledEvaluationExposureDeduper: EvaluationExposureDeduper {
+    init() {
+        super.init(window: 0, maxSize: 0)
+    }
+
+    override func shouldRecord(key: String, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
+        return true
+    }
+
+    override func reset() {
     }
 }

@@ -5,6 +5,9 @@ import Nimble
 import LDSwiftEventSource
 @testable import LaunchDarkly
 
+/// A hook that does nothing, registered so that the client builds a deduper for it.
+private struct DedupeStubHook: Hook {}
+
 final class LDClientSpec: QuickSpec {
     struct Constants {
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
@@ -533,9 +536,10 @@ final class LDClientSpec: QuickSpec {
             it("resets the evaluation exposure dedupe cache") {
                 var config = LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: false)
                 config.evaluationExposureDedupeWindow = 60
+                config.hooks = [DedupeStubHook()]
                 let testContext = TestContext(newConfig: config, startOnline: true)
                 testContext.start()
-                let deduper = testContext.subject.evaluationExposureDeduper
+                let deduper = testContext.subject.evaluationExposureDedupers[0]
                 expect(deduper.shouldRecord(key: "exposure")) == true
                 expect(deduper.shouldRecord(key: "exposure")) == false
 

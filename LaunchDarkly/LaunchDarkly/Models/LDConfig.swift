@@ -332,23 +332,25 @@ public struct LDConfig {
      read on every render of a view.
 
      Deduplication applies to the whole evaluation series, so a suppressed evaluation invokes neither `beforeEvaluation`
-     nor `afterEvaluation` on any registered hook. This affects every hook, including your own, not only those added by
-     plugins. Analytics events are unaffected: feature, debug, and summary events are still recorded for every
-     evaluation, so the evaluation counts LaunchDarkly reports for your flags do not change.
+     nor `afterEvaluation`. Analytics events are unaffected: feature, debug, and summary events are still recorded for
+     every evaluation, so the evaluation counts LaunchDarkly reports for your flags do not change.
+
+     This is the default for every hook, including those added by plugins. Each hook is deduplicated independently, and
+     a hook can override this by returning its own `Hook.evaluationExposureDeduper`.
 
      Set to 0 (the default) to disable deduplication and report every evaluation. Set a positive value to enable it.
 
-     See Also: `evaluationExposureDedupeMaxSize`
+     See Also: `evaluationExposureDedupeMaxSize`, `Hook.evaluationExposureDeduper`
      */
     public var evaluationExposureDedupeWindow: TimeInterval = Defaults.evaluationExposureDedupeWindow
 
     /**
-     The maximum number of unique evaluation exposure keys tracked for deduplication at once. When exceeded, the
-     least recently recorded keys are evicted to bound memory usage. (Default: 2000)
+     The maximum number of unique evaluation exposure keys tracked for deduplication at once, per hook. When exceeded,
+     the least recently recorded keys are evicted to bound memory usage. (Default: 2000)
 
      Values less than or equal to zero are ignored, and the default is used instead.
 
-     See Also: `evaluationExposureDedupeWindow`
+     See Also: `evaluationExposureDedupeWindow`, `Hook.evaluationExposureDeduper`
      */
     public var evaluationExposureDedupeMaxSize: Int = Defaults.evaluationExposureDedupeMaxSize
 

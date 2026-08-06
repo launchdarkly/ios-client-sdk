@@ -6,13 +6,19 @@ import Nimble
 final class EvaluationExposureDeduperSpec: QuickSpec {
     override func spec() {
         describe("EvaluationExposureDeduper") {
-            it("is disabled for a non-positive window") {
+            it("records everything for a non-positive window") {
                 for window: TimeInterval in [0, -1] {
                     let deduper = EvaluationExposureDeduper(window: window, maxSize: 10)
-                    expect(deduper.isEnabled) == false
                     expect(deduper.shouldRecord(key: "a", now: 0)) == true
                     expect(deduper.shouldRecord(key: "a", now: 0)) == true
                 }
+            }
+            it("records everything when disabled") {
+                let deduper = EvaluationExposureDeduper.disabled
+                expect(deduper.shouldRecord(key: "a", now: 0)) == true
+                expect(deduper.shouldRecord(key: "a", now: 0)) == true
+                deduper.reset()
+                expect(deduper.shouldRecord(key: "a", now: 0)) == true
             }
             it("suppresses repeats within the window") {
                 let deduper = EvaluationExposureDeduper(window: 10, maxSize: 10)
