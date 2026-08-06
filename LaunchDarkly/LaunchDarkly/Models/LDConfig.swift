@@ -260,12 +260,6 @@ public struct LDConfig {
 
         /// The default behavior for event payload compression.
         static let enableCompression: Bool = false
-
-        /// The default evaluation exposure dedupe window. (0 seconds, meaning deduplication is disabled)
-        static let evaluationExposureDedupeWindow: TimeInterval = 0.0
-
-        /// The default maximum number of evaluation exposure keys tracked for deduplication at once. (2000)
-        static let evaluationExposureDedupeMaxSize = 2000
     }
 
     /// Constants relevant to setting up an `LDConfig`
@@ -322,37 +316,6 @@ public struct LDConfig {
 
     /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)
     public var eventCapacity: Int = Defaults.eventCapacity
-
-    /**
-     The time window during which repeated feature flag evaluations that resolve to the same result are deduplicated
-     before being reported to hooks, so that a hook observes only a single evaluation per unique
-     (flag key, variation, flag version, experiment status, context) within the window.
-
-     This is useful for reducing the telemetry volume produced by frequent re-evaluations, for example a flag that is
-     read on every render of a view.
-
-     Deduplication applies to the whole evaluation series, so a suppressed evaluation invokes neither `beforeEvaluation`
-     nor `afterEvaluation`. Analytics events are unaffected: feature, debug, and summary events are still recorded for
-     every evaluation, so the evaluation counts LaunchDarkly reports for your flags do not change.
-
-     This is the default for every hook, including those added by plugins. Each hook is deduplicated independently, and
-     a hook can override this by returning its own `Hook.evaluationExposureDeduper`.
-
-     Set to 0 (the default) to disable deduplication and report every evaluation. Set a positive value to enable it.
-
-     See Also: `evaluationExposureDedupeMaxSize`, `Hook.evaluationExposureDeduper`
-     */
-    public var evaluationExposureDedupeWindow: TimeInterval = Defaults.evaluationExposureDedupeWindow
-
-    /**
-     The maximum number of unique evaluation exposure keys tracked for deduplication at once, per hook. When exceeded,
-     the least recently recorded keys are evicted to bound memory usage. (Default: 2000)
-
-     Values less than or equal to zero are ignored, and the default is used instead.
-
-     See Also: `evaluationExposureDedupeWindow`, `Hook.evaluationExposureDeduper`
-     */
-    public var evaluationExposureDedupeMaxSize: Int = Defaults.evaluationExposureDedupeMaxSize
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
     public var connectionTimeout: TimeInterval = Defaults.connectionTimeout
@@ -584,8 +547,6 @@ extension LDConfig: Equatable {
             && lhs.streamUrl == rhs.streamUrl
             && lhs.eventCapacity == rhs.eventCapacity
             && lhs.sendEvents == rhs.sendEvents
-            && lhs.evaluationExposureDedupeWindow == rhs.evaluationExposureDedupeWindow
-            && lhs.evaluationExposureDedupeMaxSize == rhs.evaluationExposureDedupeMaxSize
             && lhs.connectionTimeout == rhs.connectionTimeout
             && lhs.eventFlushInterval == rhs.eventFlushInterval
             && lhs.flagPollingInterval == rhs.flagPollingInterval

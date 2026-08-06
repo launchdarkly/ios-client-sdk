@@ -96,7 +96,7 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
             }
             it("falls back to the default cap for a non-positive maxSize") {
                 let deduper = EvaluationExposureDeduper(window: 1_000, maxSize: 0)
-                for i in 0..<LDConfig.Defaults.evaluationExposureDedupeMaxSize {
+                for i in 0..<EvaluationExposureDeduper.defaultMaxSize {
                     expect(deduper.shouldRecord(key: "key-\(i)", now: 1_000)) == true
                 }
                 expect(deduper.shouldRecord(key: "key-0", now: 1_000)) == false
