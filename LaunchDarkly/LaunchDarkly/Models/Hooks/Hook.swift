@@ -79,7 +79,8 @@ public protocol Hook {
     ///
     /// ```
     /// class ObservabilityHook: Hook {
-    ///     let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper(window: 60, maxSize: 2_000)
+    ///     // Both parameters default: a 10 minute window over at most 2000 tracked results.
+    ///     let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper()
     /// }
     /// ```
     ///
