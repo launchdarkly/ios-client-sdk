@@ -97,10 +97,9 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertEqual(data["before"] as! String, "was called")
     }
 
-    private func dedupeTestContext(window: TimeInterval, hooks: [Hook]) -> TestContext {
+    private func dedupeTestContext(hooks: [Hook]) -> TestContext {
         var config = LDConfig(mobileKey: "mobile-key", autoEnvAttributes: .disabled)
         config.hooks = hooks
-        config.evaluationExposureDedupeWindow = window
 
         var testContext: TestContext!
         waitUntil { done in
@@ -111,29 +110,27 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         return testContext
     }
 
-    private func dedupeTestContext(window: TimeInterval, hook: Hook) -> TestContext {
-        return dedupeTestContext(window: window, hooks: [hook])
-    }
-
-    func testRepeatedEvaluationsReachHooksWhenDedupeIsDisabledByDefault() {
+    func testRepeatedEvaluationsReachAHookThatAskedForNoDedupe() {
         var befores = 0
         var afters = 0
         let hook = MockHook(before: { _, data in befores += 1; return data }, after: { _, data, _ in afters += 1; return data })
-        let testContext = dedupeTestContext(window: 0, hook: hook)
+        let testContext = dedupeTestContext(hooks: [hook])
 
         for _ in 0..<3 {
             _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
         }
 
+        // Deduplication is opt-in per hook, and this one did not opt in.
         XCTAssertEqual(befores, 3)
         XCTAssertEqual(afters, 3)
     }
 
-    func testRepeatedEvaluationsAreDeduplicatedWithinTheWindow() {
+    func testRepeatedEvaluationsAreDeduplicatedWithinTheHooksWindow() {
         var befores = 0
         var afters = 0
         let hook = MockHook(before: { _, data in befores += 1; return data }, after: { _, data, _ in afters += 1; return data })
-        let testContext = dedupeTestContext(window: 60, hook: hook)
+        hook.deduper = EvaluationExposureDeduper(window: 60, maxSize: 10)
+        let testContext = dedupeTestContext(hooks: [hook])
 
         for _ in 0..<3 {
             _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
@@ -146,7 +143,8 @@ final class LDClientEvaluationHookSpec: XCTestCase {
 
     func testDeduplicatedEvaluationsStillRecordEvents() {
         let hook = MockHook(before: { _, data in data }, after: { _, data, _ in data })
-        let testContext = dedupeTestContext(window: 60, hook: hook)
+        hook.deduper = EvaluationExposureDeduper(window: 60, maxSize: 10)
+        let testContext = dedupeTestContext(hooks: [hook])
 
         for _ in 0..<3 {
             _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
@@ -159,7 +157,8 @@ final class LDClientEvaluationHookSpec: XCTestCase {
     func testEvaluationsOfDifferentFlagsReachHooksSeparately() {
         var afters = 0
         let hook = MockHook(before: { _, data in data }, after: { _, data, _ in afters += 1; return data })
-        let testContext = dedupeTestContext(window: 60, hook: hook)
+        hook.deduper = EvaluationExposureDeduper(window: 60, maxSize: 10)
+        let testContext = dedupeTestContext(hooks: [hook])
 
         _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
         _ = testContext.subject.stringVariation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultFlagValues.string)
@@ -171,7 +170,8 @@ final class LDClientEvaluationHookSpec: XCTestCase {
     func testEvaluationsReachHooksAgainAfterTheFlagChanges() {
         var afters = 0
         let hook = MockHook(before: { _, data in data }, after: { _, data, _ in afters += 1; return data })
-        let testContext = dedupeTestContext(window: 60, hook: hook)
+        hook.deduper = EvaluationExposureDeduper(window: 60, maxSize: 10)
+        let testContext = dedupeTestContext(hooks: [hook])
 
         _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
         _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
@@ -187,7 +187,8 @@ final class LDClientEvaluationHookSpec: XCTestCase {
     func testIdentifyLetsEveryHookObserveEvaluationsAgain() {
         var afters = 0
         let hook = MockHook(before: { _, data in data }, after: { _, data, _ in afters += 1; return data })
-        let testContext = dedupeTestContext(window: 60, hook: hook)
+        hook.deduper = EvaluationExposureDeduper(window: 60, maxSize: 10)
+        let testContext = dedupeTestContext(hooks: [hook])
 
         _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
         _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
@@ -199,44 +200,40 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertEqual(afters, 2)
     }
 
-    func testAHookOptsOutOfDeduplication() {
+    func testHooksWithDifferentWindowsSuppressIndependently() {
+        var noDedupe = 0
         var deduped = 0
-        var everyEvaluation = 0
-        let dedupedHook = MockHook(before: { _, data in data }, after: { _, data, _ in deduped += 1; return data })
-        let auditHook = MockHook(before: { _, data in data }, after: { _, data, _ in everyEvaluation += 1; return data })
-        auditHook.deduper = .disabled
-        let testContext = dedupeTestContext(window: 60, hooks: [dedupedHook, auditHook])
+        var disabled = 0
+        let noDedupeHook = MockHook(before: { _, data in data }, after: { _, data, _ in noDedupe += 1; return data })
+        let dedupingHook = MockHook(before: { _, data in data }, after: { _, data, _ in deduped += 1; return data })
+        dedupingHook.deduper = EvaluationExposureDeduper(window: 60, maxSize: 10)
+        let disabledHook = MockHook(before: { _, data in data }, after: { _, data, _ in disabled += 1; return data })
+        disabledHook.deduper = .disabled
+        let testContext = dedupeTestContext(hooks: [noDedupeHook, dedupingHook, disabledHook])
 
         for _ in 0..<3 {
             _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
         }
 
+        // Only the hook that asked for a window suppresses. Carrying no deduper and carrying the
+        // disabled one behave the same way.
+        XCTAssertEqual(noDedupe, 3)
         XCTAssertEqual(deduped, 1)
-        XCTAssertEqual(everyEvaluation, 3)
+        XCTAssertEqual(disabled, 3)
+
+        testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .yes)
+        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        XCTAssertEqual(deduped, 2)
     }
 
-    func testAHookDeduplicatesWhileTheSdkDefaultIsDisabled() {
-        var deduped = 0
-        var everyEvaluation = 0
-        let dedupedHook = MockHook(before: { _, data in data }, after: { _, data, _ in deduped += 1; return data })
-        dedupedHook.deduper = EvaluationExposureDeduper(window: 60, maxSize: 10)
-        let defaultHook = MockHook(before: { _, data in data }, after: { _, data, _ in everyEvaluation += 1; return data })
-        let testContext = dedupeTestContext(window: 0, hooks: [dedupedHook, defaultHook])
-
-        for _ in 0..<3 {
-            _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
-        }
-
-        XCTAssertEqual(deduped, 1)
-        XCTAssertEqual(everyEvaluation, 3)
-    }
-
-    func testEachHookGetsItsOwnDefaultDeduper() {
+    func testHooksGivenSeparateDedupersDoNotSuppressEachOther() {
         var first = 0
         var second = 0
         let firstHook = MockHook(before: { _, data in data }, after: { _, data, _ in first += 1; return data })
+        firstHook.deduper = EvaluationExposureDeduper(window: 60, maxSize: 10)
         let secondHook = MockHook(before: { _, data in data }, after: { _, data, _ in second += 1; return data })
-        let testContext = dedupeTestContext(window: 60, hooks: [firstHook, secondHook])
+        secondHook.deduper = EvaluationExposureDeduper(window: 60, maxSize: 10)
+        let testContext = dedupeTestContext(hooks: [firstHook, secondHook])
 
         for _ in 0..<3 {
             _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
@@ -247,12 +244,29 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertEqual(second, 1)
     }
 
+    func testHooksSharingOneDeduperShareItsWindow() {
+        var first = 0
+        var second = 0
+        let shared = EvaluationExposureDeduper(window: 60, maxSize: 10)
+        let firstHook = MockHook(before: { _, data in data }, after: { _, data, _ in first += 1; return data })
+        firstHook.deduper = shared
+        let secondHook = MockHook(before: { _, data in data }, after: { _, data, _ in second += 1; return data })
+        secondHook.deduper = shared
+        let testContext = dedupeTestContext(hooks: [firstHook, secondHook])
+
+        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+
+        // The first hook's report starts the window, which suppresses the second hook's.
+        XCTAssertEqual(first, 1)
+        XCTAssertEqual(second, 0)
+    }
+
     func testACustomDeduperDecidesWhichEvaluationsReachItsHook() {
         var afters = 0
         let hook = MockHook(before: { _, data in data }, after: { _, data, _ in afters += 1; return data })
         let deduper = CountingDeduper()
         hook.deduper = deduper
-        let testContext = dedupeTestContext(window: 0, hooks: [hook])
+        let testContext = dedupeTestContext(hooks: [hook])
 
         for _ in 0..<4 {
             _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
@@ -269,7 +283,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let hook = MockHook(before: { _, data in data }, after: { _, data, _ in data })
         let deduper = CountingDeduper()
         hook.deduper = deduper
-        let testContext = dedupeTestContext(window: 0, hooks: [hook])
+        let testContext = dedupeTestContext(hooks: [hook])
 
         _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
         let resetsBeforeIdentify = deduper.resets

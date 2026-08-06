@@ -4,18 +4,20 @@ import Foundation
  Decides whether a hook should be told about an evaluation, so that repeated evaluations resolving to the same result do
  not invoke the hook again within a time window.
 
- The SDK gives each registered hook its own deduper. Return one from `Hook.evaluationExposureDeduper` to control that
- hook's behavior; a hook returning `nil` gets a deduper built from `LDConfig.evaluationExposureDedupeWindow` and
- `LDConfig.evaluationExposureDedupeMaxSize`.
+ Deduplication is opt-in per hook: a hook is told about every evaluation until it returns its own
+ `Hook.evaluationExposureDeduper`.
 
  ```
- class AuditHook: Hook {
-     // Observes every evaluation, whatever the SDK is configured to do.
-     let evaluationExposureDeduper: EvaluationExposureDeduper? = .disabled
+ class MetricsHook: Hook {
+     // Told about every evaluation.
  }
 
  class ObservabilityHook: Hook {
      let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper(window: 30, maxSize: 5_000)
+ }
+
+ class ExperimentHook: Hook {
+     let evaluationExposureDeduper: EvaluationExposureDeduper? = myCustomDeduper
  }
  ```
 
@@ -30,11 +32,14 @@ import Foundation
  exposure starts the window that suppresses the rest.
  */
 open class EvaluationExposureDeduper {
-    /**
-     A deduper that suppresses nothing, so its hook is told about every evaluation regardless of the window configured
-     on `LDConfig`.
+    /// The number of exposure keys tracked by a deduper built without a positive cap of its own. (2000)
+    public static let defaultMaxSize = 2_000
 
-     This instance holds no state and may be given to any number of hooks.
+    /**
+     A deduper that suppresses nothing, so its hook is told about every evaluation.
+
+     This is what a hook gets when it returns `nil` for `evaluationExposureDeduper`, so returning it is only useful to
+     state that intent explicitly. This instance holds no state and may be given to any number of hooks.
      */
     public static let disabled: EvaluationExposureDeduper = DisabledEvaluationExposureDeduper()
 
@@ -48,12 +53,12 @@ open class EvaluationExposureDeduper {
     /**
      - parameter window: The dedupe window. A value of zero or less disables deduplication, so every evaluation reaches
      the hook.
-     - parameter maxSize: The maximum number of exposure keys to track. A value of zero or less falls back to the
-     default.
+     - parameter maxSize: The maximum number of exposure keys to track. A value of zero or less falls back to
+     `defaultMaxSize`.
      */
     public init(window: TimeInterval, maxSize: Int) {
         self.window = window
-        self.maxSize = maxSize > 0 ? maxSize : LDConfig.Defaults.evaluationExposureDedupeMaxSize
+        self.maxSize = maxSize > 0 ? maxSize : Self.defaultMaxSize
     }
 
     /**
@@ -94,7 +99,7 @@ open class EvaluationExposureDeduper {
     }
 
     private func evict(keeping key: String, now: TimeInterval) {
-        // Keys whose window has already elapsed no longer change the outcome of shouldRecord, so reclaim those first.
+        // Keys whose window has elapsed no longer change the outcome of shouldRecord, so reclaim those first.
         lastRecordedAt = lastRecordedAt.filter { $0.value > now - window }
         guard lastRecordedAt.count > maxSize
         else { return }

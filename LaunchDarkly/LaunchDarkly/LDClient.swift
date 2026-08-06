@@ -277,8 +277,13 @@ public class LDClient {
 
     let config: LDConfig
     let service: DarklyServiceProvider
-    /// Fixed once the client is initialized, which `evaluationExposureDedupers` relies on to stay aligned with it.
-    private(set) var hooks: [Hook]
+    /// Fixed once the client is initialized. Each entry pairs a hook with the deduper that decides which evaluations
+    /// reach it, so the two never drift apart.
+    private(set) var registeredHooks: [RegisteredHook]
+    /// The hooks registered with this client.
+    var hooks: [Hook] { registeredHooks.map { $0.hook } }
+    /// The per-hook dedupers. Kept for tests that inspect reset behavior.
+    var evaluationExposureDedupers: [EvaluationExposureDeduper] { registeredHooks.map { $0.deduper } }
     private(set) var context: LDContext
 
     /**
@@ -427,7 +432,7 @@ public class LDClient {
             // Exposures reported to hooks before this point describe an earlier point in the app's lifecycle, so let
             // them be reported again. This happens even when the context is unchanged, so that identify is a reliable
             // way for an app to mark a new phase of a session.
-            self.evaluationExposureDedupers.forEach { $0.reset() }
+            self.registeredHooks.forEach { $0.deduper.reset() }
 
             if self.context == updatedContext {
                 self.eventReporter.record(IdentifyEvent(context: self.context))
@@ -941,26 +946,15 @@ public class LDClient {
     private(set) var diagnosticReporter: DiagnosticReporting
     let flagStore: FlagMaintaining
 
-    /// Parallel to `hooks`: the deduper deciding which evaluations reach the hook at the same index. Resolved once the
-    /// full set of hooks is known, and only ever read afterwards.
-    private(set) var evaluationExposureDedupers: [EvaluationExposureDeduper] = []
+    /// A registered hook together with the deduper that decides which evaluations reach it.
+    struct RegisteredHook {
+        let hook: Hook
+        let deduper: EvaluationExposureDeduper
+    }
 
-    /**
-     Gives each hook the deduper it asked for, falling back to the deduplication configured on `LDConfig`.
-
-     Hooks falling back get an instance each rather than a shared one, because sharing would let whichever hook observed
-     an evaluation first suppress that evaluation for all the others.
-     */
-    private static func evaluationExposureDedupers(for hooks: [Hook], config: LDConfig) -> [EvaluationExposureDeduper] {
-        let window = config.evaluationExposureDedupeWindow
-        let maxSize = config.evaluationExposureDedupeMaxSize
+    private static func registeredHooks(for hooks: [Hook]) -> [RegisteredHook] {
         return hooks.map { hook in
-            if let declared = hook.evaluationExposureDeduper {
-                return declared
-            }
-            guard window > 0
-            else { return EvaluationExposureDeduper.disabled }
-            return EvaluationExposureDeduper(window: window, maxSize: maxSize)
+            RegisteredHook(hook: hook, deduper: hook.evaluationExposureDeduper ?? .disabled)
         }
     }
 
@@ -980,7 +974,7 @@ public class LDClient {
 
     private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
         self.serviceFactory = serviceFactory
-        self.hooks = Array(configuration.hooks)
+        var hooks = Array(configuration.hooks)
         environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
 
         // Collect plugin hooks before calling beforeIdentify, so plugin hooks participate in the init identify lifecycle.
@@ -993,13 +987,13 @@ public class LDClient {
         for plugin in configuration.plugins {
             do {
                 let pluginHooks = try plugin.getHooks(metadata: initEnvironmentMetadata)
-                self.hooks.append(contentsOf: pluginHooks)
+                hooks.append(contentsOf: pluginHooks)
             } catch {
                 os_log("Exception thrown getting hooks for plugin %@. Unable to get hooks, plugin will not be registered.", log: configuration.logger, type: .error, plugin.getMetadata().getName())
             }
         }
 
-        self.evaluationExposureDedupers = LDClient.evaluationExposureDedupers(for: self.hooks, config: configuration)
+        self.registeredHooks = LDClient.registeredHooks(for: hooks)
 
         flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()

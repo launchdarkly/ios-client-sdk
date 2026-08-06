@@ -173,19 +173,19 @@ extension LDClient {
         var key: String?
         var reporting: [Hook] = []
         reporting.reserveCapacity(hooks.count)
-        for (hook, deduper) in zip(hooks, evaluationExposureDedupers) {
-            if deduper === EvaluationExposureDeduper.disabled {
-                reporting.append(hook)
+        for registered in registeredHooks {
+            if registered.deduper === EvaluationExposureDeduper.disabled {
+                reporting.append(registered.hook)
                 continue
             }
             let exposure = key ?? exposureKey(flagKey: flagKey)
             key = exposure
-            if deduper.shouldRecord(key: exposure, now: now) {
-                reporting.append(hook)
+            if registered.deduper.shouldRecord(key: exposure, now: now) {
+                reporting.append(registered.hook)
             }
         }
-        if reporting.count < hooks.count {
-            os_log("%s deduplicated exposure of flagKey: %s for %d of %d hooks", log: config.logger, type: .debug, typeName(and: #function), flagKey, hooks.count - reporting.count, hooks.count)
+        if reporting.count < registeredHooks.count {
+            os_log("%s deduplicated exposure of flagKey: %s for %d of %d hooks", log: config.logger, type: .debug, typeName(and: #function), flagKey, registeredHooks.count - reporting.count, registeredHooks.count)
         }
         return reporting
     }
