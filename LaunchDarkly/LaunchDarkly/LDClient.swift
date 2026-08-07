@@ -276,6 +276,9 @@ public class LDClient {
     }
 
     let config: LDConfig
+    /// The name this client is registered under in `LDClient.instances`, which identifies its environment. Assigned as
+    /// the instance is created, before anything can evaluate against it.
+    private(set) var environmentName: String = LDConfig.Constants.primaryEnvironmentName
     let service: DarklyServiceProvider
     /// Fixed once the client is initialized. Each entry pairs a hook with the deduper that decides which evaluations
     /// reach it, so the two never drift apart.
@@ -851,6 +854,7 @@ public class LDClient {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
             let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context, completion: completionCheck)
+            instance.environmentName = name
             instancesQueue.sync(flags: .barrier) {
                 LDClient.instances?[name] = instance
             }

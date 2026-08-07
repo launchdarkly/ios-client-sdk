@@ -276,7 +276,36 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertEqual(afters, 2)
         XCTAssertEqual(deduper.keys.count, 4)
         XCTAssertEqual(Set(deduper.keys).count, 1)
-        XCTAssertTrue(deduper.keys[0].hasPrefix(DarklyServiceMock.FlagKeys.bool))
+        XCTAssertTrue(deduper.keys[0].hasPrefix("\(LDConfig.Constants.primaryEnvironmentName)\n\(DarklyServiceMock.FlagKeys.bool)"))
+    }
+
+    func testEnvironmentsSharingAHookDoNotSuppressEachOther() {
+        var afters = 0
+        let hook = MockHook(before: { _, data in data }, after: { _, data, _ in afters += 1; return data })
+        hook.deduper = EvaluationExposureDeduper(window: 60, maxSize: 10)
+        var config = LDConfig(mobileKey: "mobile-key", autoEnvAttributes: .disabled)
+        config.hooks = [hook]
+        try! config.setSecondaryMobileKeys(["other": "other-mobile-key"])
+
+        var testContext: TestContext!
+        waitUntil { done in
+            testContext = TestContext(newConfig: config)
+            testContext.start(completion: done)
+        }
+        guard let other = LDClient.get(environment: "other")
+        else {
+            fail("The secondary environment's client was never created.")
+            return
+        }
+        for client in [testContext.subject, other] {
+            (client?.flagStore as? FlagMaintainingMock)?.replaceStore(newStoredItems: FlagMaintainingMock.stubStoredItems())
+        }
+
+        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        _ = other.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+
+        // Both environments resolve the flag identically, but the hook they share is told about each of them.
+        XCTAssertEqual(afters, 2)
     }
 
     func testIdentifyResetsACustomDeduper() {
