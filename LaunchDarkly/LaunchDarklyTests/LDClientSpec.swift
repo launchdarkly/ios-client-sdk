@@ -541,17 +541,21 @@ final class LDClientSpec: QuickSpec {
                 let testContext = TestContext(newConfig: config, startOnline: true)
                 testContext.start()
                 let deduper = testContext.subject.evaluationExposureDedupers[0]
-                expect(deduper.shouldRecord(key: "exposure")) == true
-                expect(deduper.shouldRecord(key: "exposure")) == false
+                let exposure = EvaluationExposureKey(environmentName: LDConfig.Constants.primaryEnvironmentName,
+                                                     flagKey: DarklyServiceMock.FlagKeys.bool, variation: 1,
+                                                     flagVersion: 2, inExperiment: false,
+                                                     fullyQualifiedContextKey: "user-key")
+                expect(deduper.shouldRecord(key: exposure)) == true
+                expect(deduper.shouldRecord(key: exposure)) == false
 
                 testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .yes)
-                expect(deduper.shouldRecord(key: "exposure")) == true
+                expect(deduper.shouldRecord(key: exposure)) == true
 
                 // Re-identifying to the unchanged context resets as well, so an app can use identify to mark a new
                 // phase of a session.
-                expect(deduper.shouldRecord(key: "exposure")) == false
+                expect(deduper.shouldRecord(key: exposure)) == false
                 testContext.subject.internalIdentify(newContext: testContext.subject.context, useCache: .yes)
-                expect(deduper.shouldRecord(key: "exposure")) == true
+                expect(deduper.shouldRecord(key: exposure)) == true
             }
 
             it("no cache requires no store interaction") {

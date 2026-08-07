@@ -1,6 +1,54 @@
 import Foundation
 
 /**
+ Identifies the evaluation result a hook is about to be told about, so that an `EvaluationExposureDeduper` can recognize
+ a repeat of it.
+
+ Two evaluations are the same exposure when every component here matches. The variation and version pair is the same
+ identity LaunchDarkly uses to bucket evaluations in summary events, so two evaluations sharing that pair report
+ identical data. Experiment status needs its own component because `versionForEvents` prefers `flagVersion`, which only
+ moves when the flag itself changes: a prerequisite flipping can move an evaluation into or out of an experiment while it
+ lands on the same variation of the same flag version. The environment is a component because a hook set on `LDConfig` is
+ one instance shared by the clients for every environment in `secondaryMobileKeys`, and so is its deduper.
+ */
+public struct EvaluationExposureKey: Hashable {
+    /// The name of the environment the evaluation was made against.
+    public let environmentName: String
+    /// The key of the flag that was evaluated.
+    public let flagKey: LDFlagKey
+    /// The index of the variation the result came from, or `nil` if the evaluation did not resolve to one.
+    public let variation: Int?
+    /// The flag version reported on events, or `nil` if the flag was not found.
+    public let flagVersion: Int?
+    /// Whether the evaluation was part of an experiment rollout.
+    public let inExperiment: Bool
+    /// The fully qualified key of the evaluation context.
+    public let fullyQualifiedContextKey: String
+
+    /**
+     - parameter environmentName: The name of the environment the evaluation was made against.
+     - parameter flagKey: The key of the flag that was evaluated.
+     - parameter variation: The index of the variation the result came from.
+     - parameter flagVersion: The flag version reported on events.
+     - parameter inExperiment: Whether the evaluation was part of an experiment rollout.
+     - parameter fullyQualifiedContextKey: The fully qualified key of the evaluation context.
+     */
+    public init(environmentName: String,
+                flagKey: LDFlagKey,
+                variation: Int?,
+                flagVersion: Int?,
+                inExperiment: Bool,
+                fullyQualifiedContextKey: String) {
+        self.environmentName = environmentName
+        self.flagKey = flagKey
+        self.variation = variation
+        self.flagVersion = flagVersion
+        self.inExperiment = inExperiment
+        self.fullyQualifiedContextKey = fullyQualifiedContextKey
+    }
+}
+
+/**
  Decides whether a hook should be told about an evaluation, so that repeated evaluations resolving to the same result do
  not invoke the hook again within a time window.
 
@@ -56,7 +104,7 @@ open class EvaluationExposureDeduper {
 
     private let queue = DispatchQueue(label: "com.launchdarkly.evaluationExposureDedupeQueue")
     // These fields should only be used synchronized on the queue.
-    private var lastRecordedAt: [String: TimeInterval] = [:]
+    private var lastRecordedAt: [EvaluationExposureKey: TimeInterval] = [:]
 
     /**
      - parameter window: The dedupe window, in seconds. Defaults to `defaultWindow`. A value of zero or less disables
@@ -74,18 +122,16 @@ open class EvaluationExposureDeduper {
      Returns whether the hook should be told about the evaluation identified by the given key, and if so starts a new
      dedupe window for it.
 
-     The SDK calls this once per evaluation per hook. The key identifies the evaluation result: two evaluations share a
-     key when they resolve to the same variation of the same flag version, with the same experiment status, for the same
-     context, in the same environment. Evaluations made against different environments never share a key, so a hook
-     shared by the clients for several environments observes each of them.
+     The SDK calls this once per evaluation per hook. See `EvaluationExposureKey` for what makes two evaluations the same
+     exposure.
 
      The check and the update are performed together so that concurrent evaluations of the same flag cannot both be told
      to record.
 
-     - parameter key: A stable key identifying the evaluation result.
+     - parameter key: The key identifying the evaluation result.
      - parameter now: The current time as seconds since the epoch.
      */
-    open func shouldRecord(key: String, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
+    open func shouldRecord(key: EvaluationExposureKey, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
         guard window > 0
         else { return true }
 
@@ -108,7 +154,7 @@ open class EvaluationExposureDeduper {
         queue.sync { lastRecordedAt.removeAll() }
     }
 
-    private func evict(keeping key: String, now: TimeInterval) {
+    private func evict(keeping key: EvaluationExposureKey, now: TimeInterval) {
         // Keys whose window has elapsed no longer change the outcome of shouldRecord, so reclaim those first.
         lastRecordedAt = lastRecordedAt.filter { $0.value > now - window }
         guard lastRecordedAt.count > maxSize
@@ -131,7 +177,7 @@ private final class DisabledEvaluationExposureDeduper: EvaluationExposureDeduper
         super.init(window: 0, maxSize: 0)
     }
 
-    override func shouldRecord(key: String, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
+    override func shouldRecord(key: EvaluationExposureKey, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
         return true
     }
 
