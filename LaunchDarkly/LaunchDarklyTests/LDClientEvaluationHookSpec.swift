@@ -276,7 +276,8 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertEqual(afters, 2)
         XCTAssertEqual(deduper.keys.count, 4)
         XCTAssertEqual(Set(deduper.keys).count, 1)
-        XCTAssertTrue(deduper.keys[0].hasPrefix("\(LDConfig.Constants.primaryEnvironmentName)\n\(DarklyServiceMock.FlagKeys.bool)"))
+        XCTAssertEqual(deduper.keys[0].flagKey, DarklyServiceMock.FlagKeys.bool)
+        XCTAssertEqual(deduper.keys[0].environmentName, LDConfig.Constants.primaryEnvironmentName)
     }
 
     func testEnvironmentsSharingAHookDoNotSuppressEachOther() {
@@ -327,14 +328,14 @@ final class LDClientEvaluationHookSpec: XCTestCase {
 
     /// Reports every other evaluation, so that it can be told apart from both of the dedupers the SDK provides.
     class CountingDeduper: EvaluationExposureDeduper {
-        private(set) var keys: [String] = []
+        private(set) var keys: [EvaluationExposureKey] = []
         private(set) var resets = 0
 
         init() {
             super.init(window: 0, maxSize: 0)
         }
 
-        override func shouldRecord(key: String, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
+        override func shouldRecord(key: EvaluationExposureKey, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
             keys.append(key)
             return keys.count % 2 == 1
         }

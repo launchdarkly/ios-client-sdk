@@ -170,7 +170,7 @@ extension LDClient {
 
         let now = Date().timeIntervalSince1970
         // Built on demand, since every hook wanting every evaluation is both the default and more common than not.
-        var key: String?
+        var key: EvaluationExposureKey?
         var reporting: [Hook] = []
         reporting.reserveCapacity(hooks.count)
         for registered in registeredHooks {
@@ -196,26 +196,18 @@ extension LDClient {
      This reads the stored flag rather than the evaluation result because the decision is made before the series opens,
      and the stored flag identifies the same exposure the result would, since the result is derived from it.
 
-     The variation and version pair is the same identity LaunchDarkly uses to bucket evaluations in summary events, so
-     two evaluations sharing that pair report identical data. Experiment status needs its own component because
-     `versionForEvents` prefers `flagVersion`, which only moves when the flag itself changes: a prerequisite flipping can
-     move an evaluation into or out of an experiment while it lands on the same variation of the same flag version.
-
-     The environment leads the key because a hook set on `LDConfig` is one instance shared by the clients for every
-     environment in `secondaryMobileKeys`, and so is its deduper. Without this component, two environments resolving a
-     flag to the same variation of the same version would look like a repeat of each other, and only the environment
-     evaluating first would reach the hook.
+     See `EvaluationExposureKey` for what makes two evaluations the same exposure.
      */
-    private func exposureKey(flagKey: LDFlagKey) -> String {
+    private func exposureKey(flagKey: LDFlagKey) -> EvaluationExposureKey {
         let featureFlag = flagStore.featureFlag(for: flagKey)
-        return [
-            environmentName,
-            flagKey,
-            featureFlag?.variation.map { String($0) } ?? "",
-            featureFlag?.versionForEvents.map { String($0) } ?? "",
-            String(featureFlag?.isInExperiment ?? false),
-            context.fullyQualifiedKey()
-        ].joined(separator: "\n")
+        return EvaluationExposureKey(
+            environmentName: environmentName,
+            flagKey: flagKey,
+            variation: featureFlag?.variation,
+            flagVersion: featureFlag?.versionForEvents,
+            inExperiment: featureFlag?.isInExperiment ?? false,
+            fullyQualifiedContextKey: context.fullyQualifiedKey()
+        )
     }
 
     private func execute_before_evaluation(hooks: [Hook], seriesContext: EvaluationSeriesContext) -> [EvaluationSeriesData] {
