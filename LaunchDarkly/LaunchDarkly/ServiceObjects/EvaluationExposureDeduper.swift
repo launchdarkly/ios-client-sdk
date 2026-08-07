@@ -74,10 +74,12 @@ public struct EvaluationExposureKey: Hashable {
  }
  ```
 
- This class is the SDK's implementation: it records each unique exposure key once per window and bounds the number of
- tracked keys. Keys whose window has elapsed are reclaimed first, and if more keys than the cap are live at once the
- cache starts over. Subclass it to implement a different policy; only `shouldRecord(key:now:)` and `reset()` are called
- by the SDK.
+ This class is the SDK's implementation: it remembers the result each flag last reported, and tells the hook about the
+ flag again as soon as that result changes, or once the window elapses while it stays the same. Tracking one result per
+ flag rather than every result seen keeps a flag that flips back and forth from hiding the flips, and bounds the cache by
+ the size of the flag set. The cap is a safety net on top of that: flags whose window has elapsed are reclaimed first,
+ and if more flags than the cap are live at once the cache starts over. Subclass this to implement a different policy;
+ only `shouldRecord(key:now:)` and `reset()` are called by the SDK.
 
  A deduper is consulted once per evaluation, before the series opens, so a suppressed evaluation invokes neither
  `beforeEvaluation` nor `afterEvaluation`. Implementations must be thread-safe, because evaluations may be made from any
@@ -88,7 +90,7 @@ open class EvaluationExposureDeduper {
     /// The dedupe window used by a deduper built without a window of its own. (10 minutes)
     public static let defaultWindow: TimeInterval = 600
 
-    /// The number of exposure keys tracked by a deduper built without a positive cap of its own. (2000)
+    /// The number of flags tracked by a deduper built without a positive cap of its own. (2000)
     public static let defaultMaxSize = 2_000
 
     /**
@@ -104,13 +106,13 @@ open class EvaluationExposureDeduper {
 
     private let queue = DispatchQueue(label: "com.launchdarkly.evaluationExposureDedupeQueue")
     // These fields should only be used synchronized on the queue.
-    private var lastRecordedAt: [EvaluationExposureKey: TimeInterval] = [:]
+    private var lastReported: [TrackedFlag: LastReported] = [:]
 
     /**
      - parameter window: The dedupe window, in seconds. Defaults to `defaultWindow`. A value of zero or less disables
      deduplication, so every evaluation reaches the hook.
-     - parameter maxSize: The maximum number of exposure keys to track. Defaults to `defaultMaxSize`, as does a value
-     of zero or less.
+     - parameter maxSize: The maximum number of flags to track, counting a flag once per environment it is evaluated
+     in. Defaults to `defaultMaxSize`, as does a value of zero or less.
      */
     public init(window: TimeInterval = EvaluationExposureDeduper.defaultWindow,
                 maxSize: Int = EvaluationExposureDeduper.defaultMaxSize) {
@@ -120,10 +122,11 @@ open class EvaluationExposureDeduper {
 
     /**
      Returns whether the hook should be told about the evaluation identified by the given key, and if so starts a new
-     dedupe window for it.
+     dedupe window for the flag.
 
-     The SDK calls this once per evaluation per hook. See `EvaluationExposureKey` for what makes two evaluations the same
-     exposure.
+     The SDK calls this once per evaluation per hook. This implementation answers true when the flag is reporting a
+     different result than it last did, and when the window has elapsed on the result it is repeating. See
+     `EvaluationExposureKey` for what makes two evaluations the same result.
 
      The check and the update are performed together so that concurrent evaluations of the same flag cannot both be told
      to record.
@@ -136,13 +139,14 @@ open class EvaluationExposureDeduper {
         else { return true }
 
         return queue.sync {
-            if let last = lastRecordedAt[key], last > now - window {
+            let flag = TrackedFlag(environmentName: key.environmentName, flagKey: key.flagKey)
+            if let reported = lastReported[flag], reported.reportedAt > now - window, reported.isSameResult(as: key) {
                 return false
             }
 
-            lastRecordedAt[key] = now
-            if lastRecordedAt.count > maxSize {
-                evict(keeping: key, now: now)
+            lastReported[flag] = LastReported(key: key, reportedAt: now)
+            if lastReported.count > maxSize {
+                evict(keeping: flag, now: now)
             }
             return true
         }
@@ -151,24 +155,57 @@ open class EvaluationExposureDeduper {
     /// Clears all recorded exposures, so the next evaluation of each is reported again. The SDK calls this when the
     /// evaluation context changes.
     open func reset() {
-        queue.sync { lastRecordedAt.removeAll() }
+        queue.sync { lastReported.removeAll() }
     }
 
-    private func evict(keeping key: EvaluationExposureKey, now: TimeInterval) {
-        // Keys whose window has elapsed no longer change the outcome of shouldRecord, so reclaim those first.
-        lastRecordedAt = lastRecordedAt.filter { $0.value > now - window }
-        guard lastRecordedAt.count > maxSize
+    private func evict(keeping flag: TrackedFlag, now: TimeInterval) {
+        // The exposure being recorded right now opened its window a moment ago, so it would be the worst one to drop.
+        let justReported = lastReported[flag]
+
+        // Flags whose window has elapsed no longer change the outcome of shouldRecord, so reclaim those first.
+        lastReported = lastReported.filter { $0.value.reportedAt > now - window }
+        guard lastReported.count > maxSize
         else { return }
 
-        // More keys are live at once than the cap allows, so nothing can be reclaimed without discarding a window that
-        // is still open. Start over rather than ranking the keys by age: Dictionary is unordered, so singling out the
+        // More flags are live at once than the cap allows, so nothing can be reclaimed without discarding a window that
+        // is still open. Start over rather than ranking the flags by age: Dictionary is unordered, so singling out the
         // oldest would mean sorting the whole cache. Refilling takes another maxSize exposures, which keeps the cost of
-        // starting over amortized, and the keys that were dropped are suppressed again as soon as they are re-recorded.
+        // starting over amortized, and the flags that were dropped are suppressed again as soon as they are re-reported.
         // Raise maxSize to stop reaching this at all.
-        lastRecordedAt.removeAll(keepingCapacity: true)
+        lastReported.removeAll(keepingCapacity: true)
+        lastReported[flag] = justReported
+    }
+}
 
-        // The exposure being recorded right now opened its window a moment ago, so it would be the worst one to drop.
-        lastRecordedAt[key] = now
+/// The flag a record belongs to. The environment is part of it because a hook set on `LDConfig` is one instance shared
+/// by the clients for every environment in `secondaryMobileKeys`: were the environments to share a record, each would
+/// look like the other having changed its result, and neither would ever be suppressed.
+private struct TrackedFlag: Hashable {
+    let environmentName: String
+    let flagKey: LDFlagKey
+}
+
+/// The result a flag last reported, and when.
+private struct LastReported {
+    let variation: Int?
+    let flagVersion: Int?
+    let inExperiment: Bool
+    let fullyQualifiedContextKey: String
+    let reportedAt: TimeInterval
+
+    init(key: EvaluationExposureKey, reportedAt: TimeInterval) {
+        self.variation = key.variation
+        self.flagVersion = key.flagVersion
+        self.inExperiment = key.inExperiment
+        self.fullyQualifiedContextKey = key.fullyQualifiedContextKey
+        self.reportedAt = reportedAt
+    }
+
+    func isSameResult(as key: EvaluationExposureKey) -> Bool {
+        return variation == key.variation
+            && flagVersion == key.flagVersion
+            && inExperiment == key.inExperiment
+            && fullyQualifiedContextKey == key.fullyQualifiedContextKey
     }
 }
 
