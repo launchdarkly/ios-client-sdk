@@ -200,10 +200,16 @@ extension LDClient {
      two evaluations sharing that pair report identical data. Experiment status needs its own component because
      `versionForEvents` prefers `flagVersion`, which only moves when the flag itself changes: a prerequisite flipping can
      move an evaluation into or out of an experiment while it lands on the same variation of the same flag version.
+
+     The environment leads the key because a hook set on `LDConfig` is one instance shared by the clients for every
+     environment in `secondaryMobileKeys`, and so is its deduper. Without this component, two environments resolving a
+     flag to the same variation of the same version would look like a repeat of each other, and only the environment
+     evaluating first would reach the hook.
      */
     private func exposureKey(flagKey: LDFlagKey) -> String {
         let featureFlag = flagStore.featureFlag(for: flagKey)
         return [
+            environmentName,
             flagKey,
             featureFlag?.variation.map { String($0) } ?? "",
             featureFlag?.versionForEvents.map { String($0) } ?? "",

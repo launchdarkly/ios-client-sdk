@@ -76,7 +76,8 @@ open class EvaluationExposureDeduper {
 
      The SDK calls this once per evaluation per hook. The key identifies the evaluation result: two evaluations share a
      key when they resolve to the same variation of the same flag version, with the same experiment status, for the same
-     context.
+     context, in the same environment. Evaluations made against different environments never share a key, so a hook
+     shared by the clients for several environments observes each of them.
 
      The check and the update are performed together so that concurrent evaluations of the same flag cannot both be told
      to record.
