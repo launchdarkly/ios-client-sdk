@@ -74,7 +74,7 @@ public protocol Hook {
     /// Decides which evaluations reach this hook. It affects only this hook.
     ///
     /// Deduplication is opt-in: return `nil`, the default, to observe every evaluation. Return an
-    /// `EvaluationExposureDeduper(window:maxSize:)` to use the SDK's implementation, `.disabled` to state that
+    /// `EvaluationExposureDeduper(window:)` to use the SDK's implementation, `.disabled` to state that
     /// intent explicitly, or your own subclass to implement a different policy.
     ///
     /// ```

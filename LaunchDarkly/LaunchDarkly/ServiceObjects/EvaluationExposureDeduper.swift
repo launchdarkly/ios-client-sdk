@@ -61,12 +61,12 @@ public struct EvaluationExposureKey: Hashable {
  }
 
  class ObservabilityHook: Hook {
-     // Told about an evaluation at most once per `defaultWindow`, for at most `defaultMaxSize` results at a time.
+     // Told about a flag's result at most once per `defaultWindow`.
      let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper()
  }
 
  class TelemetryHook: Hook {
-     let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper(window: 30, maxSize: 5_000)
+     let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper(window: 30)
  }
 
  class ExperimentHook: Hook {
@@ -77,9 +77,8 @@ public struct EvaluationExposureKey: Hashable {
  This class is the SDK's implementation: it remembers the result each flag last reported, and tells the hook about the
  flag again as soon as that result changes, or once the window elapses while it stays the same. Tracking one result per
  flag rather than every result seen keeps a flag that flips back and forth from hiding the flips, and bounds the cache by
- the size of the flag set. The cap is a safety net on top of that: flags whose window has elapsed are reclaimed first,
- and if more flags than the cap are live at once the cache starts over. Subclass this to implement a different policy;
- only `shouldRecord(key:now:)` and `reset()` are called by the SDK.
+ the size of the flag set, so the window is the only thing there is to configure. Subclass this to implement a different
+ policy; only `shouldRecord(key:now:)` and `reset()` are called by the SDK.
 
  A deduper is consulted once per evaluation, before the series opens, so a suppressed evaluation invokes neither
  `beforeEvaluation` nor `afterEvaluation`. Implementations must be thread-safe, because evaluations may be made from any
@@ -90,8 +89,10 @@ open class EvaluationExposureDeduper {
     /// The dedupe window used by a deduper built without a window of its own. (10 minutes)
     public static let defaultWindow: TimeInterval = 600
 
-    /// The number of flags tracked by a deduper built without a positive cap of its own. (2000)
-    public static let defaultMaxSize = 2_000
+    // Far more flags than an application evaluates, so this is never reached by tracking a flag set. It is here for an
+    // application that builds flag keys rather than naming them, which would otherwise grow the cache for as long as it
+    // kept generating them.
+    private static let maxTrackedFlagsBound = 2_000
 
     /**
      A deduper that suppresses nothing, so its hook is told about every evaluation.
@@ -102,7 +103,7 @@ open class EvaluationExposureDeduper {
     public static let disabled: EvaluationExposureDeduper = DisabledEvaluationExposureDeduper()
 
     private let window: TimeInterval
-    private let maxSize: Int
+    private let maxTrackedFlags: Int
 
     private let queue = DispatchQueue(label: "com.launchdarkly.evaluationExposureDedupeQueue")
     // These fields should only be used synchronized on the queue.
@@ -111,13 +112,16 @@ open class EvaluationExposureDeduper {
     /**
      - parameter window: The dedupe window, in seconds. Defaults to `defaultWindow`. A value of zero or less disables
      deduplication, so every evaluation reaches the hook.
-     - parameter maxSize: The maximum number of flags to track, counting a flag once per environment it is evaluated
-     in. Defaults to `defaultMaxSize`, as does a value of zero or less.
      */
-    public init(window: TimeInterval = EvaluationExposureDeduper.defaultWindow,
-                maxSize: Int = EvaluationExposureDeduper.defaultMaxSize) {
+    public init(window: TimeInterval = EvaluationExposureDeduper.defaultWindow) {
         self.window = window
-        self.maxSize = maxSize > 0 ? maxSize : Self.defaultMaxSize
+        self.maxTrackedFlags = Self.maxTrackedFlagsBound
+    }
+
+    /// Lets tests reach the bound on how many flags are tracked, which the SDK sets for itself rather than exposing.
+    init(window: TimeInterval, maxTrackedFlags: Int) {
+        self.window = window
+        self.maxTrackedFlags = maxTrackedFlags
     }
 
     /**
@@ -145,7 +149,7 @@ open class EvaluationExposureDeduper {
             }
 
             lastReported[flag] = LastReported(key: key, reportedAt: now)
-            if lastReported.count > maxSize {
+            if lastReported.count > maxTrackedFlags {
                 evict(keeping: flag, now: now)
             }
             return true
@@ -164,14 +168,14 @@ open class EvaluationExposureDeduper {
 
         // Flags whose window has elapsed no longer change the outcome of shouldRecord, so reclaim those first.
         lastReported = lastReported.filter { $0.value.reportedAt > now - window }
-        guard lastReported.count > maxSize
+        guard lastReported.count > maxTrackedFlags
         else { return }
 
-        // More flags are live at once than the cap allows, so nothing can be reclaimed without discarding a window that
-        // is still open. Start over rather than ranking the flags by age: Dictionary is unordered, so singling out the
-        // oldest would mean sorting the whole cache. Refilling takes another maxSize exposures, which keeps the cost of
-        // starting over amortized, and the flags that were dropped are suppressed again as soon as they are re-reported.
-        // Raise maxSize to stop reaching this at all.
+        // More flags are live at once than the bound allows, so nothing can be reclaimed without discarding a window
+        // that is still open. Start over rather than ranking the flags by age: Dictionary is unordered, so singling out
+        // the oldest would mean sorting the whole cache. Refilling takes another maxTrackedFlags exposures, which keeps
+        // the cost of starting over amortized, and the flags that were dropped are suppressed again as soon as they are
+        // re-reported.
         lastReported.removeAll(keepingCapacity: true)
         lastReported[flag] = justReported
     }
@@ -211,7 +215,7 @@ private struct LastReported {
 
 private final class DisabledEvaluationExposureDeduper: EvaluationExposureDeduper {
     init() {
-        super.init(window: 0, maxSize: 0)
+        super.init(window: 0)
     }
 
     override func shouldRecord(key: EvaluationExposureKey, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {

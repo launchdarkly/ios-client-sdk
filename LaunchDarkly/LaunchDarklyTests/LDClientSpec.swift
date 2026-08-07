@@ -7,7 +7,7 @@ import LDSwiftEventSource
 
 /// A hook that does nothing, registered so that the client builds a deduper for it.
 private struct DedupeStubHook: Hook {
-    let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper(window: 60, maxSize: 10)
+    let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper(window: 60)
 }
 
 final class LDClientSpec: QuickSpec {
