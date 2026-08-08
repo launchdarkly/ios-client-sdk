@@ -100,45 +100,6 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
                 deduper.reset()
                 expect(deduper.shouldRecord(key: key("a"), now: 1_000)) == true
             }
-            it("starts over when more flags are live than the cap allows") {
-                let deduper = EvaluationExposureDeduper(window: 1_000, maxTrackedFlags: 4)
-                for i in 0..<4 {
-                    expect(deduper.shouldRecord(key: key("key-\(i)"), now: 1_000)) == true
-                }
-                // This flag exceeds the cap while every tracked window is still open, so there is nothing to reclaim
-                // and the cache starts over.
-                expect(deduper.shouldRecord(key: key("key-new"), now: 1_000)) == true
-                // The flag that triggered the reset keeps its window, since it only just opened...
-                expect(deduper.shouldRecord(key: key("key-new"), now: 1_000)) == false
-                // ...while a flag dropped by the reset is reported again.
-                expect(deduper.shouldRecord(key: key("key-0"), now: 1_000)) == true
-            }
-            it("reclaims the flag whose window elapsed rather than one that was re-recorded") {
-                let deduper = EvaluationExposureDeduper(window: 10, maxTrackedFlags: 2)
-                expect(deduper.shouldRecord(key: key("a"), now: 1_000)) == true
-                expect(deduper.shouldRecord(key: key("b"), now: 1_000)) == true
-                // Re-recording "a" refreshes its window, so when the cap is reached "b" is the one whose window has
-                // elapsed. Reclaiming it is enough, and "a" keeps being suppressed.
-                expect(deduper.shouldRecord(key: key("a"), now: 1_010)) == true
-                expect(deduper.shouldRecord(key: key("c"), now: 1_010)) == true
-                expect(deduper.shouldRecord(key: key("a"), now: 1_010)) == false
-                expect(deduper.shouldRecord(key: key("b"), now: 1_010)) == true
-            }
-            it("keeps live flags when reclaiming expired ones is enough") {
-                let deduper = EvaluationExposureDeduper(window: 10, maxTrackedFlags: 8)
-                for i in 0..<2 {
-                    expect(deduper.shouldRecord(key: key("expired-\(i)"), now: 1_000)) == true
-                }
-                // The 7th of these exceeds the cap and triggers eviction. Reclaiming the two flags whose window has
-                // elapsed brings the cache back within the cap on its own, so every one of these flags is still
-                // tracked and none of them should be reported again.
-                for i in 0..<7 {
-                    expect(deduper.shouldRecord(key: key("live-\(i)"), now: 1_015)) == true
-                }
-                for i in 0..<7 {
-                    expect(deduper.shouldRecord(key: key("live-\(i)"), now: 1_015)) == false
-                }
-            }
             it("uses the default window when built without one") {
                 // Ten minutes.
                 expect(EvaluationExposureDeduper.defaultWindow) == 600
@@ -148,18 +109,16 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
                 expect(deduper.shouldRecord(key: key("a"), now: 1_599)) == false
                 expect(deduper.shouldRecord(key: key("a"), now: 1_600)) == true
             }
-            it("bounds how many flags it tracks") {
+            it("tracks every flag the application evaluates") {
                 let deduper = EvaluationExposureDeduper(window: 600)
                 for i in 0..<2_000 {
                     expect(deduper.shouldRecord(key: key("key-\(i)"), now: 1_000)) == true
                 }
 
-                // Nothing about the bound is configurable, because tracking one result per flag already keeps the cache
-                // to the size of the flag set. It is only reached by an application that generates flag keys, and then
-                // every window is still open, so the cache starts over.
+                // Nothing is dropped to make room, so the flag recorded first is suppressed just like the flag recorded
+                // last. What the deduper holds is the flag set, which the environment bounds.
+                expect(deduper.shouldRecord(key: key("key-0"), now: 1_000)) == false
                 expect(deduper.shouldRecord(key: key("key-1999"), now: 1_000)) == false
-                expect(deduper.shouldRecord(key: key("key-2000"), now: 1_000)) == true
-                expect(deduper.shouldRecord(key: key("key-0"), now: 1_000)) == true
             }
         }
         describe("EvaluationExposureKey") {
