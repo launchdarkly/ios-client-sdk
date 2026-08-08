@@ -76,9 +76,9 @@ public struct EvaluationExposureKey: Hashable {
 
  This class is the SDK's implementation: it remembers the result each flag last reported, and tells the hook about the
  flag again as soon as that result changes, or once the window elapses while it stays the same. Tracking one result per
- flag rather than every result seen keeps a flag that flips back and forth from hiding the flips, and bounds the cache by
- the size of the flag set, so the window is the only thing there is to configure. Subclass this to implement a different
- policy; only `shouldRecord(key:now:)` and `reset()` are called by the SDK.
+ flag rather than every result seen keeps a flag that flips back and forth from hiding the flips, and holds one record per
+ flag the application evaluates, so the window is the only thing there is to configure. Subclass this to implement a
+ different policy; only `shouldRecord(key:now:)` and `reset()` are called by the SDK.
 
  A deduper is consulted once per evaluation, before the series opens, so a suppressed evaluation invokes neither
  `beforeEvaluation` nor `afterEvaluation`. Implementations must be thread-safe, because evaluations may be made from any
@@ -89,11 +89,6 @@ open class EvaluationExposureDeduper {
     /// The dedupe window used by a deduper built without a window of its own. (10 minutes)
     public static let defaultWindow: TimeInterval = 600
 
-    // Far more flags than an application evaluates, so this is never reached by tracking a flag set. It is here for an
-    // application that builds flag keys rather than naming them, which would otherwise grow the cache for as long as it
-    // kept generating them.
-    private static let maxTrackedFlagsBound = 2_000
-
     /**
      A deduper that suppresses nothing, so its hook is told about every evaluation.
 
@@ -103,10 +98,10 @@ open class EvaluationExposureDeduper {
     public static let disabled: EvaluationExposureDeduper = DisabledEvaluationExposureDeduper()
 
     private let window: TimeInterval
-    private let maxTrackedFlags: Int
 
     private let queue = DispatchQueue(label: "com.launchdarkly.evaluationExposureDedupeQueue")
-    // These fields should only be used synchronized on the queue.
+    // Holds one record per flag the application evaluates, in each environment it evaluates it in. Nothing is evicted,
+    // because that set is the flags the environment serves. Should only be used synchronized on the queue.
     private var lastReported: [TrackedFlag: LastReported] = [:]
 
     /**
@@ -115,13 +110,6 @@ open class EvaluationExposureDeduper {
      */
     public init(window: TimeInterval = EvaluationExposureDeduper.defaultWindow) {
         self.window = window
-        self.maxTrackedFlags = Self.maxTrackedFlagsBound
-    }
-
-    /// Lets tests reach the bound on how many flags are tracked, which the SDK sets for itself rather than exposing.
-    init(window: TimeInterval, maxTrackedFlags: Int) {
-        self.window = window
-        self.maxTrackedFlags = maxTrackedFlags
     }
 
     /**
@@ -149,9 +137,6 @@ open class EvaluationExposureDeduper {
             }
 
             lastReported[flag] = LastReported(key: key, reportedAt: now)
-            if lastReported.count > maxTrackedFlags {
-                evict(keeping: flag, now: now)
-            }
             return true
         }
     }
@@ -160,24 +145,6 @@ open class EvaluationExposureDeduper {
     /// evaluation context changes.
     open func reset() {
         queue.sync { lastReported.removeAll() }
-    }
-
-    private func evict(keeping flag: TrackedFlag, now: TimeInterval) {
-        // The exposure being recorded right now opened its window a moment ago, so it would be the worst one to drop.
-        let justReported = lastReported[flag]
-
-        // Flags whose window has elapsed no longer change the outcome of shouldRecord, so reclaim those first.
-        lastReported = lastReported.filter { $0.value.reportedAt > now - window }
-        guard lastReported.count > maxTrackedFlags
-        else { return }
-
-        // More flags are live at once than the bound allows, so nothing can be reclaimed without discarding a window
-        // that is still open. Start over rather than ranking the flags by age: Dictionary is unordered, so singling out
-        // the oldest would mean sorting the whole cache. Refilling takes another maxTrackedFlags exposures, which keeps
-        // the cost of starting over amortized, and the flags that were dropped are suppressed again as soon as they are
-        // re-reported.
-        lastReported.removeAll(keepingCapacity: true)
-        lastReported[flag] = justReported
     }
 }
 
