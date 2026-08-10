@@ -164,7 +164,8 @@ extension LDClient: EvaluationExposureKeyResolving {
 
      See `EvaluationExposureKey` for what makes two evaluations the same exposure.
      */
-    func exposureKey(flagKey: LDFlagKey) -> EvaluationExposureKey {
+    func exposureKey(seriesContext: EvaluationSeriesContext) -> EvaluationExposureKey {
+        let flagKey = seriesContext.flagKey
         let featureFlag = flagStore.featureFlag(for: flagKey)
         return EvaluationExposureKey(
             environmentName: environmentName,
@@ -172,7 +173,7 @@ extension LDClient: EvaluationExposureKeyResolving {
             variation: featureFlag?.variation,
             flagVersion: featureFlag?.versionForEvents,
             inExperiment: featureFlag?.isInExperiment ?? false,
-            fullyQualifiedContextKey: context.fullyQualifiedKey()
+            fullyQualifiedContextKey: seriesContext.context.fullyQualifiedKey()
         )
     }
 
