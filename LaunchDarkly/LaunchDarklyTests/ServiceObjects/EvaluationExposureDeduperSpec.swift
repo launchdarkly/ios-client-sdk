@@ -34,13 +34,6 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
                     expect(deduper.shouldRecord(key: key("a"), now: 0)) == true
                 }
             }
-            it("records everything when disabled") {
-                let deduper = EvaluationExposureDeduper.disabled
-                expect(deduper.shouldRecord(key: key("a"), now: 0)) == true
-                expect(deduper.shouldRecord(key: key("a"), now: 0)) == true
-                deduper.reset()
-                expect(deduper.shouldRecord(key: key("a"), now: 0)) == true
-            }
             it("suppresses repeats within the window") {
                 let deduper = EvaluationExposureDeduper(window: 10)
                 expect(deduper.shouldRecord(key: key("a"), now: 1_000)) == true

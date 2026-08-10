@@ -11,6 +11,9 @@ public typealias EvaluationSeriesData = [String: Any]
 public typealias IdentifySeriesData = [String: Any]
 
 /// Protocol for extending SDK functionality via hooks.
+///
+/// To add behavior to a hook without changing it, such as the deduplication of repeated evaluations that `DedupingHook`
+/// performs, wrap it in a `HookDecorator` and register the wrapper.
 public protocol Hook {
     /// Get metadata about the hook implementation.
     func metadata() -> Metadata
@@ -71,23 +74,6 @@ public protocol Hook {
     ///   - seriesContext: Contains information about the track operation being performed. This is not mutable.
     func afterTrack(seriesContext: TrackSeriesContext)
 
-    /// Decides which evaluations reach this hook. It affects only this hook.
-    ///
-    /// Deduplication is opt-in: return `nil`, the default, to observe every evaluation. Return an
-    /// `EvaluationExposureDeduper(window:)` to use the SDK's implementation, `.disabled` to state that
-    /// intent explicitly, or your own subclass to implement a different policy.
-    ///
-    /// ```
-    /// class ObservabilityHook: Hook {
-    ///     // Both parameters default: a 10 minute window over at most 2000 tracked results.
-    ///     let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper()
-    /// }
-    /// ```
-    ///
-    /// Deduplication applies to the whole evaluation series, so a suppressed evaluation invokes neither
-    /// `beforeEvaluation` nor `afterEvaluation`. Analytics events are unaffected. The SDK reads this once, when the
-    /// client is initialized, and clears every hook's deduper on `LDClient.identify(context:)`.
-    var evaluationExposureDeduper: EvaluationExposureDeduper? { get }
 }
 
 public extension Hook {
@@ -129,10 +115,4 @@ public extension Hook {
     func afterTrack(seriesContext: TrackSeriesContext) {
     }
 
-    /// Decides which evaluations reach this hook.
-    ///
-    /// Default implementation returns `nil`, so the hook observes every evaluation.
-    var evaluationExposureDeduper: EvaluationExposureDeduper? {
-        return nil
-    }
 }

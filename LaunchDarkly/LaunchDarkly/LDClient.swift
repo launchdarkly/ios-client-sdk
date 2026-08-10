@@ -280,13 +280,8 @@ public class LDClient {
     /// the instance is created, before anything can evaluate against it.
     private(set) var environmentName: String = LDConfig.Constants.primaryEnvironmentName
     let service: DarklyServiceProvider
-    /// Fixed once the client is initialized. Each entry pairs a hook with the deduper that decides which evaluations
-    /// reach it, so the two never drift apart.
-    private(set) var registeredHooks: [RegisteredHook]
-    /// The hooks registered with this client.
-    var hooks: [Hook] { registeredHooks.map { $0.hook } }
-    /// The per-hook dedupers. Kept for tests that inspect reset behavior.
-    var evaluationExposureDedupers: [EvaluationExposureDeduper] { registeredHooks.map { $0.deduper } }
+    /// The hooks registered with this client. Fixed once the client is initialized.
+    private(set) var hooks: [Hook]
     private(set) var context: LDContext
 
     /**
@@ -432,11 +427,6 @@ public class LDClient {
         }
 
         internalIdentifyQueue.sync {
-            // Exposures reported to hooks before this point describe an earlier point in the app's lifecycle, so let
-            // them be reported again. This happens even when the context is unchanged, so that identify is a reliable
-            // way for an app to mark a new phase of a session.
-            self.registeredHooks.forEach { $0.deduper.reset() }
-
             if self.context == updatedContext {
                 self.eventReporter.record(IdentifyEvent(context: self.context))
                 completion?()
@@ -950,18 +940,6 @@ public class LDClient {
     private(set) var diagnosticReporter: DiagnosticReporting
     let flagStore: FlagMaintaining
 
-    /// A registered hook together with the deduper that decides which evaluations reach it.
-    struct RegisteredHook {
-        let hook: Hook
-        let deduper: EvaluationExposureDeduper
-    }
-
-    private static func registeredHooks(for hooks: [Hook]) -> [RegisteredHook] {
-        return hooks.map { hook in
-            RegisteredHook(hook: hook, deduper: hook.evaluationExposureDeduper ?? .disabled)
-        }
-    }
-
     private(set) var hasStarted: Bool {
         get { hasStartedQueue.sync { _hasStarted } }
         set { hasStartedQueue.sync { _hasStarted = newValue } }
@@ -997,7 +975,7 @@ public class LDClient {
             }
         }
 
-        self.registeredHooks = LDClient.registeredHooks(for: hooks)
+        self.hooks = hooks
 
         flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()

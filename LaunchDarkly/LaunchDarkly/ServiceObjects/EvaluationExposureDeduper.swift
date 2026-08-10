@@ -52,33 +52,23 @@ public struct EvaluationExposureKey: Hashable {
  Decides whether a hook should be told about an evaluation, so that repeated evaluations resolving to the same result do
  not invoke the hook again within a time window.
 
- Deduplication is opt-in per hook: a hook is told about every evaluation until it returns its own
- `Hook.evaluationExposureDeduper`.
+ Deduplication is opt-in per hook: a hook is told about every evaluation until you wrap it in a `DedupingHook`, which is
+ what consults a deduper.
 
- ```
- class MetricsHook: Hook {
-     // Told about every evaluation.
- }
-
- class ObservabilityHook: Hook {
-     // Told about a flag's result at most once per `defaultWindow`.
-     let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper()
- }
-
- class TelemetryHook: Hook {
-     let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper(window: 30)
- }
-
- class ExperimentHook: Hook {
-     let evaluationExposureDeduper: EvaluationExposureDeduper? = myCustomDeduper
- }
+ ```swift
+ config.hooks = [
+     MetricsHook(),                                     // told about every evaluation
+     DedupingHook(ObservabilityHook()),                  // default window
+     DedupingHook(TelemetryHook(), window: 30),
+     DedupingHook(ExperimentHook(), deduper: myCustomDeduper)
+ ]
  ```
 
  This class is the SDK's implementation: it remembers the result each flag last reported, and tells the hook about the
  flag again as soon as that result changes, or once the window elapses while it stays the same. Tracking one result per
  flag rather than every result seen keeps a flag that flips back and forth from hiding the flips, and holds one record per
  flag the application evaluates, so the window is the only thing there is to configure. Subclass this to implement a
- different policy; only `shouldRecord(key:now:)` and `reset()` are called by the SDK.
+ different policy; only `shouldRecord(key:now:)` and `reset()` are called by `DedupingHook`.
 
  A deduper is consulted once per evaluation, before the series opens, so a suppressed evaluation invokes neither
  `beforeEvaluation` nor `afterEvaluation`. Implementations must be thread-safe, because evaluations may be made from any
@@ -88,14 +78,6 @@ public struct EvaluationExposureKey: Hashable {
 open class EvaluationExposureDeduper {
     /// The dedupe window used by a deduper built without a window of its own. (10 minutes)
     public static let defaultWindow: TimeInterval = 600
-
-    /**
-     A deduper that suppresses nothing, so its hook is told about every evaluation.
-
-     This is what a hook gets when it returns `nil` for `evaluationExposureDeduper`, so returning it is only useful to
-     state that intent explicitly. This instance holds no state and may be given to any number of hooks.
-     */
-    public static let disabled: EvaluationExposureDeduper = DisabledEvaluationExposureDeduper()
 
     private let window: TimeInterval
 
@@ -116,7 +98,7 @@ open class EvaluationExposureDeduper {
      Returns whether the hook should be told about the evaluation identified by the given key, and if so starts a new
      dedupe window for the flag.
 
-     The SDK calls this once per evaluation per hook. This implementation answers true when the flag is reporting a
+     `DedupingHook` calls this once per evaluation. This implementation answers true when the flag is reporting a
      different result than it last did, and when the window has elapsed on the result it is repeating. See
      `EvaluationExposureKey` for what makes two evaluations the same result.
 
@@ -141,8 +123,8 @@ open class EvaluationExposureDeduper {
         }
     }
 
-    /// Clears all recorded exposures, so the next evaluation of each is reported again. The SDK calls this when the
-    /// evaluation context changes.
+    /// Clears all recorded exposures, so the next evaluation of each is reported again. `DedupingHook` calls this when
+    /// the evaluation context changes.
     open func reset() {
         queue.sync { lastReported.removeAll() }
     }
@@ -177,18 +159,5 @@ private struct LastReported {
             && flagVersion == key.flagVersion
             && inExperiment == key.inExperiment
             && fullyQualifiedContextKey == key.fullyQualifiedContextKey
-    }
-}
-
-private final class DisabledEvaluationExposureDeduper: EvaluationExposureDeduper {
-    init() {
-        super.init(window: 0)
-    }
-
-    override func shouldRecord(key: EvaluationExposureKey, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
-        return true
-    }
-
-    override func reset() {
     }
 }
