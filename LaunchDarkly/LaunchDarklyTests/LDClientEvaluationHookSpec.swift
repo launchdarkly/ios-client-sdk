@@ -400,7 +400,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
             super.init(window: 0)
         }
 
-        override func shouldRecord(key: EvaluationExposureKey, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
+        override func shouldRecord(key: EvaluationExposureKey, now: TimeInterval = EvaluationExposureDeduper.monotonicNow()) -> Bool {
             keys.append(key)
             return keys.count % 2 == 1
         }
