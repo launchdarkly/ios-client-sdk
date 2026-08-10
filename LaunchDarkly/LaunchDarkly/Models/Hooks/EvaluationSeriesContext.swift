@@ -1,8 +1,11 @@
 import Foundation
 
 /// Resolves what the result of an evaluation identifies. Implemented by the client, which is what holds the flags.
+///
+/// The whole evaluation is the parameter, rather than the parts of it a key is built from today, so that a component
+/// added to `EvaluationExposureKey` later does not change this signature.
 protocol EvaluationExposureKeyResolving: AnyObject {
-    func exposureKey(flagKey: LDFlagKey) -> EvaluationExposureKey
+    func exposureKey(seriesContext: EvaluationSeriesContext) -> EvaluationExposureKey
 }
 
 /// Contextual information that will be provided to handlers during evaluation series.
@@ -40,6 +43,6 @@ public class EvaluationSeriesContext {
      This is nil when the context was not built by the SDK, and so has no result to describe.
      */
     public var evaluationExposureKey: EvaluationExposureKey? {
-        return exposureKeyResolver?.exposureKey(flagKey: flagKey)
+        return exposureKeyResolver?.exposureKey(seriesContext: self)
     }
 }
