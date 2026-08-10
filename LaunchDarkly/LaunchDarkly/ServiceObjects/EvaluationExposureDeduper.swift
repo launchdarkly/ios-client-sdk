@@ -79,6 +79,23 @@ open class EvaluationExposureDeduper {
     /// The dedupe window used by a deduper built without a window of its own. (10 minutes)
     public static let defaultWindow: TimeInterval = 600
 
+    /**
+     Reads the clock a window is measured against, in seconds. This is what `shouldRecord(key:now:)` reads when it is
+     not given a time.
+
+     `CLOCK_MONOTONIC_RAW` counts from an arbitrary point rather than from the epoch, so that correcting the device
+     clock cannot stretch a window: were this `Date()`, a correction that moved the clock backwards would leave every
+     recorded time in the future and suppress those flags until real time caught up. It also advances while the device
+     sleeps, unlike `mach_absolute_time` and everything built on it, such as `DispatchTime.now()` and
+     `ProcessInfo.systemUptime`, so a window is an interval of real time rather than of awake time.
+
+     Only differences between readings are meaningful: this is not a time of day, and comparing it with
+     `Date().timeIntervalSince1970` is a mistake.
+     */
+    public static func monotonicNow() -> TimeInterval {
+        return TimeInterval(clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)) / TimeInterval(NSEC_PER_SEC)
+    }
+
     private let window: TimeInterval
 
     private let queue = DispatchQueue(label: "com.launchdarkly.evaluationExposureDedupeQueue")
@@ -106,9 +123,10 @@ open class EvaluationExposureDeduper {
      to record.
 
      - parameter key: The key identifying the evaluation result.
-     - parameter now: The current time as seconds since the epoch.
+     - parameter now: A reading of a clock that counts from an arbitrary point, in seconds. Defaults to
+     `monotonicNow()`, which is not a time of day; see it for why a window is not measured against `Date()`.
      */
-    open func shouldRecord(key: EvaluationExposureKey, now: TimeInterval = Date().timeIntervalSince1970) -> Bool {
+    open func shouldRecord(key: EvaluationExposureKey, now: TimeInterval = EvaluationExposureDeduper.monotonicNow()) -> Bool {
         guard window > 0
         else { return true }
 
