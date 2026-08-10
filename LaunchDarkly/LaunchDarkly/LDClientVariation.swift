@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-extension LDClient {
+extension LDClient: EvaluationExposureKeyResolving {
     // MARK: Flag variation methods
 
     /**
@@ -144,61 +144,27 @@ extension LDClient {
     }
 
     private func evaluateWithHooks<D>(flagKey: LDFlagKey, defaultValue: D, methodName: String, evaluation: () -> LDEvaluationDetail<D>) -> LDEvaluationDetail<D> where D: LDValueConvertible, D: Decodable {
-        let reportingHooks = hooksForEvaluation(flagKey: flagKey)
-        guard !reportingHooks.isEmpty else {
+        guard !hooks.isEmpty else {
             return evaluation()
         }
 
-        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName)
-        let hookData = self.execute_before_evaluation(hooks: reportingHooks, seriesContext: seriesContext)
+        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName, exposureKeyResolver: self)
+        let hookData = self.execute_before_evaluation(hooks: hooks, seriesContext: seriesContext)
         let evaluationResult = evaluation()
-        _ = self.execute_after_evaluation(hooks: reportingHooks, seriesContext: seriesContext, hookData: hookData, evaluationDetail: evaluationResult.map { value in return value.toLDValue()})
+        _ = self.execute_after_evaluation(hooks: hooks, seriesContext: seriesContext, hookData: hookData, evaluationDetail: evaluationResult.map { value in return value.toLDValue()})
 
         return evaluationResult
     }
 
     /**
-     Returns the hooks that should observe this evaluation, starting a new dedupe window for each of them.
+     Identifies the result an evaluation is about to return, so that a hook can recognize a repeat of it.
 
-     The decision is made before the series opens rather than after the evaluation completes, because hooks pair their
-     stages: the observability plugin starts a span in `beforeEvaluation` and ends it in `afterEvaluation`, so
-     suppressing only the after stage would leave that span open until something else closed it.
-     */
-    private func hooksForEvaluation(flagKey: LDFlagKey) -> [Hook] {
-        guard !hooks.isEmpty
-        else { return [] }
-
-        let now = Date().timeIntervalSince1970
-        // Built on demand, since every hook wanting every evaluation is both the default and more common than not.
-        var key: EvaluationExposureKey?
-        var reporting: [Hook] = []
-        reporting.reserveCapacity(hooks.count)
-        for registered in registeredHooks {
-            if registered.deduper === EvaluationExposureDeduper.disabled {
-                reporting.append(registered.hook)
-                continue
-            }
-            let exposure = key ?? exposureKey(flagKey: flagKey)
-            key = exposure
-            if registered.deduper.shouldRecord(key: exposure, now: now) {
-                reporting.append(registered.hook)
-            }
-        }
-        if reporting.count < registeredHooks.count {
-            os_log("%s deduplicated exposure of flagKey: %s for %d of %d hooks", log: config.logger, type: .debug, typeName(and: #function), flagKey, registeredHooks.count - reporting.count, registeredHooks.count)
-        }
-        return reporting
-    }
-
-    /**
-     Identifies the evaluation a hook is about to be told about, so that a deduper can recognize a repeat of it.
-
-     This reads the stored flag rather than the evaluation result because the decision is made before the series opens,
-     and the stored flag identifies the same exposure the result would, since the result is derived from it.
+     This reads the stored flag rather than the evaluation result because a hook may ask before the evaluation runs, and
+     the stored flag identifies the same exposure the result would, since the result is derived from it.
 
      See `EvaluationExposureKey` for what makes two evaluations the same exposure.
      */
-    private func exposureKey(flagKey: LDFlagKey) -> EvaluationExposureKey {
+    func exposureKey(flagKey: LDFlagKey) -> EvaluationExposureKey {
         let featureFlag = flagStore.featureFlag(for: flagKey)
         return EvaluationExposureKey(
             environmentName: environmentName,

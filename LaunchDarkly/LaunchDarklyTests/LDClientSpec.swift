@@ -5,11 +5,6 @@ import Nimble
 import LDSwiftEventSource
 @testable import LaunchDarkly
 
-/// A hook that does nothing, registered so that the client builds a deduper for it.
-private struct DedupeStubHook: Hook {
-    let evaluationExposureDeduper: EvaluationExposureDeduper? = EvaluationExposureDeduper(window: 60)
-}
-
 final class LDClientSpec: QuickSpec {
     struct Constants {
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
@@ -533,29 +528,6 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.subject.eventReporter.isOnline) == true
                 expect(testContext.subject.flagSynchronizer.isOnline) == true
                 expect(testContext.eventReporterMock.recordReceivedEvent?.kind == .identify).to(beTrue())
-            }
-
-            it("resets the evaluation exposure dedupe cache") {
-                var config = LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: false)
-                config.hooks = [DedupeStubHook()]
-                let testContext = TestContext(newConfig: config, startOnline: true)
-                testContext.start()
-                let deduper = testContext.subject.evaluationExposureDedupers[0]
-                let exposure = EvaluationExposureKey(environmentName: LDConfig.Constants.primaryEnvironmentName,
-                                                     flagKey: DarklyServiceMock.FlagKeys.bool, variation: 1,
-                                                     flagVersion: 2, inExperiment: false,
-                                                     fullyQualifiedContextKey: "user-key")
-                expect(deduper.shouldRecord(key: exposure)) == true
-                expect(deduper.shouldRecord(key: exposure)) == false
-
-                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .yes)
-                expect(deduper.shouldRecord(key: exposure)) == true
-
-                // Re-identifying to the unchanged context resets as well, so an app can use identify to mark a new
-                // phase of a session.
-                expect(deduper.shouldRecord(key: exposure)) == false
-                testContext.subject.internalIdentify(newContext: testContext.subject.context, useCache: .yes)
-                expect(deduper.shouldRecord(key: exposure)) == true
             }
 
             it("no cache requires no store interaction") {
