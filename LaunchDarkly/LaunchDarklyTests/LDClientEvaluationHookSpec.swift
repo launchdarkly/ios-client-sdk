@@ -335,7 +335,9 @@ final class LDClientEvaluationHookSpec: XCTestCase {
             _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
         }
 
-        // The outer decorator sees every evaluation, and the deduper inside it passes on one.
+        // The outer decorator sees every evaluation, and the deduper inside it passes on one. This is the arrangement
+        // the documentation advises against, and it works as long as the decorator outside the deduper does not store
+        // series data, which a suppressed evaluation replaces.
         XCTAssertEqual(counting.evaluationsForwarded, 3)
         XCTAssertEqual(afters, 1)
     }
