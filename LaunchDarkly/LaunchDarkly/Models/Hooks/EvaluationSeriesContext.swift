@@ -22,6 +22,8 @@ public class EvaluationSeriesContext {
     // Weak so that a hook holding on to a series context cannot keep a client alive. A client that has gone leaves the
     // evaluation with no result to describe, which is the same as not having been asked by the SDK at all.
     private weak var exposureKeyResolver: EvaluationExposureKeyResolving?
+    private var resolvedExposureKey: EvaluationExposureKey?
+    private let exposureKeyLock = NSLock()
 
     init(flagKey: String, context: LDContext, defaultValue: LDValue, methodName: String,
          exposureKeyResolver: EvaluationExposureKeyResolving? = nil) {
@@ -37,12 +39,21 @@ public class EvaluationSeriesContext {
      whether it has seen the same result before. `DedupingHook` is such a hook.
 
      The key describes the result as the SDK has it stored, which is what the evaluation is about to return, so it is
-     available to `beforeEvaluation` as well as to the after stage. It is resolved when asked for, so an evaluation costs
-     a flag lookup only when a hook wants one.
+     available to `beforeEvaluation` as well as to the after stage. It is resolved on the first ask, so an evaluation
+     costs a flag lookup only when a hook wants one, and every hook in an evaluation is told about the same result even
+     if the store changes while the evaluation is in progress.
 
      This is nil when the context was not built by the SDK, and so has no result to describe.
      */
     public var evaluationExposureKey: EvaluationExposureKey? {
-        return exposureKeyResolver?.exposureKey(seriesContext: self)
+        guard let resolver = exposureKeyResolver else {
+            return nil
+        }
+        exposureKeyLock.lock()
+        defer { exposureKeyLock.unlock() }
+        if resolvedExposureKey == nil {
+            resolvedExposureKey = resolver.exposureKey(seriesContext: self)
+        }
+        return resolvedExposureKey
     }
 }

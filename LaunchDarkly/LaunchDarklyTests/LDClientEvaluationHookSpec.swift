@@ -110,6 +110,28 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         return testContext
     }
 
+    func testEveryHookInAnEvaluationIsToldAboutTheSameResult() {
+        var keys: [EvaluationExposureKey?] = []
+        var emptyTheStore: (() -> Void)?
+        let firstHook = MockHook(before: { seriesContext, data in
+            keys.append(seriesContext.evaluationExposureKey)
+            emptyTheStore?()
+            return data
+        }, after: { _, data, _ in data })
+        let secondHook = MockHook(before: { seriesContext, data in
+            keys.append(seriesContext.evaluationExposureKey)
+            return data
+        }, after: { _, data, _ in data })
+        let testContext = dedupeTestContext(hooks: [firstHook, secondHook])
+        emptyTheStore = { testContext.flagStoreMock.replaceStore(newStoredItems: [:]) }
+
+        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+
+        XCTAssertEqual(keys.count, 2)
+        XCTAssertNotNil(keys[0])
+        XCTAssertEqual(keys[0], keys[1])
+    }
+
     func testRepeatedEvaluationsReachAHookThatAskedForNoDedupe() {
         var befores = 0
         var afters = 0
