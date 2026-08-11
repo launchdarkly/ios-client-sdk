@@ -12,8 +12,7 @@ public typealias IdentifySeriesData = [String: Any]
 
 /// Protocol for extending SDK functionality via hooks.
 ///
-/// To add behavior to a hook without changing it, such as the deduplication of repeated evaluations that `DedupingHook`
-/// performs, wrap it in a `HookDecorator` and register the wrapper.
+/// To deduplicate the repeated evaluations observed by one hook, wrap it in a `DedupingHook` and register the wrapper.
 public protocol Hook {
     /// Get metadata about the hook implementation.
     func metadata() -> Metadata

@@ -276,9 +276,10 @@ public class LDClient {
     }
 
     let config: LDConfig
-    /// The name this client is registered under in `LDClient.instances`, which identifies its environment. Assigned as
-    /// the instance is created, before anything can evaluate against it.
-    private(set) var environmentName: String = LDConfig.Constants.primaryEnvironmentName
+    /// The name this client is registered under in `LDClient.instances`, which identifies its environment. It names a
+    /// mobile key in the configuration, so it is known before the client exists rather than being learned as the client
+    /// starts: a hook that runs while the client is initializing is told which environment it belongs to.
+    let environmentName: String
     let service: DarklyServiceProvider
     /// The hooks registered with this client. Fixed once the client is initialized.
     private(set) var hooks: [Hook]
@@ -843,8 +844,7 @@ public class LDClient {
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
-            let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context, completion: completionCheck)
-            instance.environmentName = name
+            let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, environmentName: name, startContext: context, completion: completionCheck)
             instancesQueue.sync(flags: .barrier) {
                 LDClient.instances?[name] = instance
             }
@@ -954,27 +954,32 @@ public class LDClient {
     private var initializedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.initializedQueue")
     private var identifyQueue = SheddingQueue()
 
-    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
-        self.serviceFactory = serviceFactory
+    /// The hooks the configuration registers, followed by the hooks the plugins contribute. Collected before the init
+    /// identify series opens, so that plugin hooks take part in it.
+    private static func collectHooks(configuration: LDConfig, environmentReporter: EnvironmentReporting) -> [Hook] {
         var hooks = Array(configuration.hooks)
-        environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
-
-        // Collect plugin hooks before calling beforeIdentify, so plugin hooks participate in the init identify lifecycle.
-        let initSdkMetadata = SdkMetadata(name: SystemCapabilities.systemName, version: ReportingConsts.sdkVersion)
-        let initEnvironmentMetadata = EnvironmentMetadata(
+        let metadata = EnvironmentMetadata(
             applicationInfo: environmentReporter.applicationInfo,
-            sdkMetadata: initSdkMetadata,
+            sdkMetadata: SdkMetadata(name: SystemCapabilities.systemName, version: ReportingConsts.sdkVersion),
             credential: configuration.mobileKey
         )
         for plugin in configuration.plugins {
             do {
-                let pluginHooks = try plugin.getHooks(metadata: initEnvironmentMetadata)
-                hooks.append(contentsOf: pluginHooks)
+                hooks.append(contentsOf: try plugin.getHooks(metadata: metadata))
             } catch {
                 os_log("Exception thrown getting hooks for plugin %@. Unable to get hooks, plugin will not be registered.", log: configuration.logger, type: .error, plugin.getMetadata().getName())
             }
         }
+        return hooks
+    }
 
+    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, environmentName: String, startContext: LDContext?, completion: (() -> Void)? = nil) {
+        // Set before the hooks below run, so that the environment a hook is told about is this client's rather than the
+        // primary one's.
+        self.environmentName = environmentName
+        self.serviceFactory = serviceFactory
+        environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
+        let hooks = LDClient.collectHooks(configuration: configuration, environmentReporter: environmentReporter)
         self.hooks = hooks
 
         flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)

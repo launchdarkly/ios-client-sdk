@@ -19,6 +19,10 @@ import Foundation
  Two evaluations resolve to the same result when they agree on everything `EvaluationExposureKey` describes. Pass your own
  `EvaluationExposureDeduper` subclass to decide that differently.
 
+ An evaluation the SDK has no flag data for resolves to the default value, and is the same result as another that does.
+ Evaluations made before the client has flags are of that kind, so the wrapped hook is told about one of them and then
+ told about the flag again as soon as its data arrives.
+
  A suppressed evaluation reaches neither `beforeEvaluation` nor `afterEvaluation`, because hooks pair their stages. The
  identify and track stages are always forwarded. Analytics events are unaffected: feature, debug, and summary events are
  still recorded for every evaluation, so the evaluation counts LaunchDarkly reports for your flags do not change.
@@ -29,14 +33,15 @@ import Foundation
  Give each hook its own instance unless you intend hooks to share a window: the first hook to be told about an evaluation
  starts the window that suppresses the rest.
 
- Wrap outermost when you stack decorators. Suppressing an evaluation means returning series data that says so in place of
- what the stage was given, so a decorator outside this one does not get back what it stored in its own before stage. A
- decorator inside this one is unaffected, since a suppressed evaluation never reaches it.
+ Wrap outermost when you stack hooks that wrap other hooks. Suppressing an evaluation means returning series data that
+ says so in place of what the stage was given, so a wrapper outside this one does not get back what it stored in its own
+ before stage. A wrapper inside this one is unaffected, since a suppressed evaluation never reaches it.
  */
-public final class DedupingHook: HookDecorator {
+public final class DedupingHook: Hook {
     // Namespaced because it travels in series data that the wrapped hook may also write to.
     private static let suppressedKey = "com.launchdarkly.DedupingHook.suppressed"
 
+    private let delegate: Hook
     private let deduper: EvaluationExposureDeduper
 
     /**
@@ -44,9 +49,8 @@ public final class DedupingHook: HookDecorator {
      - parameter window: The dedupe window, in seconds. Defaults to `EvaluationExposureDeduper.defaultWindow`. A value of
      zero or less forwards every evaluation.
      */
-    public init(_ delegate: Hook, window: TimeInterval = EvaluationExposureDeduper.defaultWindow) {
-        self.deduper = EvaluationExposureDeduper(window: window)
-        super.init(delegate)
+    public convenience init(_ delegate: Hook, window: TimeInterval = EvaluationExposureDeduper.defaultWindow) {
+        self.init(delegate, deduper: EvaluationExposureDeduper(window: window))
     }
 
     /**
@@ -54,8 +58,13 @@ public final class DedupingHook: HookDecorator {
      - parameter deduper: Decides which evaluations reach the wrapped hook.
      */
     public init(_ delegate: Hook, deduper: EvaluationExposureDeduper) {
+        self.delegate = delegate
         self.deduper = deduper
-        super.init(delegate)
+    }
+
+    /// Returns the wrapped hook's metadata, so that the SDK names the hook a stage belongs to.
+    public func metadata() -> Metadata {
+        return delegate.metadata()
     }
 
     /**
@@ -65,20 +74,20 @@ public final class DedupingHook: HookDecorator {
      wrapped hook. An evaluation whose result the SDK did not describe, which is to say a series context built by
      something other than the SDK, is always forwarded.
      */
-    override public func beforeEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData) -> EvaluationSeriesData {
+    public func beforeEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData) -> EvaluationSeriesData {
         if let key = seriesContext.evaluationExposureKey, !deduper.shouldRecord(key: key) {
             // Recognized by identity below, so that stacked instances each recognize only their own suppressions.
             return [DedupingHook.suppressedKey: self]
         }
-        return super.beforeEvaluation(seriesContext: seriesContext, seriesData: seriesData)
+        return delegate.beforeEvaluation(seriesContext: seriesContext, seriesData: seriesData)
     }
 
     /// Forwards the result unless this instance suppressed the series in its before stage.
-    override public func afterEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>) -> EvaluationSeriesData {
+    public func afterEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>) -> EvaluationSeriesData {
         if let marker = seriesData[DedupingHook.suppressedKey], marker as AnyObject === self {
             return seriesData
         }
-        return super.afterEvaluation(seriesContext: seriesContext, seriesData: seriesData, evaluationDetail: evaluationDetail)
+        return delegate.afterEvaluation(seriesContext: seriesContext, seriesData: seriesData, evaluationDetail: evaluationDetail)
     }
 
     /**
@@ -88,8 +97,18 @@ public final class DedupingHook: HookDecorator {
      reported again afterwards. This happens even when the context is unchanged, so that identify is a reliable way for an
      application to mark a new phase of a session.
      */
-    override public func beforeIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData) -> IdentifySeriesData {
+    public func beforeIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData) -> IdentifySeriesData {
         deduper.reset()
-        return super.beforeIdentify(seriesContext: seriesContext, seriesData: seriesData)
+        return delegate.beforeIdentify(seriesContext: seriesContext, seriesData: seriesData)
+    }
+
+    /// Forwards the stage to the wrapped hook.
+    public func afterIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData, result: IdentifyResult) -> IdentifySeriesData {
+        return delegate.afterIdentify(seriesContext: seriesContext, seriesData: seriesData, result: result)
+    }
+
+    /// Forwards the stage to the wrapped hook.
+    public func afterTrack(seriesContext: TrackSeriesContext) {
+        delegate.afterTrack(seriesContext: seriesContext)
     }
 }

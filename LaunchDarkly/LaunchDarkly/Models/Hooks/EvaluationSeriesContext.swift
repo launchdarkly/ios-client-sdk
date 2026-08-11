@@ -46,14 +46,19 @@ public class EvaluationSeriesContext {
             return nil
         }
 
+        // The value the evaluation returns, which is the default value when there is no value to return: a flag the SDK
+        // has no data for, and a flag whose data carries no value, both fall back to it, as they do on the event the
+        // evaluation records. A value the calling method cannot decode into the type it was asked for also falls back
+        // to the default, but is not recognized here, because that type is not part of the series context.
+        let flagValue = featureFlag?.value ?? .null
+
         return EvaluationExposureKey(
             environmentName: environmentName,
             flagKey: flagKey,
             variation: featureFlag?.variation,
             flagVersion: featureFlag?.versionForEvents,
-            inExperiment: featureFlag?.isInExperiment ?? false,
             fullyQualifiedContextKey: context.fullyQualifiedKey(),
-            value: featureFlag?.value ?? .null
+            value: flagValue == .null ? defaultValue : flagValue
         )
     }
 }
