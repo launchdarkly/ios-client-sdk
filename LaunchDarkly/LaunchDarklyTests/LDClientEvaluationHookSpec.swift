@@ -110,7 +110,9 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         return testContext
     }
 
-    func testEveryHookInAnEvaluationIsToldAboutTheSameResult() {
+    // An evaluation reads the flag once, so every hook it reaches and the result it returns all describe that one read,
+    // whatever the store does in the meantime.
+    func testHooksAndTheResultDescribeOneReadOfTheFlag() {
         var keys: [EvaluationExposureKey?] = []
         var emptyTheStore: (() -> Void)?
         let firstHook = MockHook(before: { seriesContext, data in
@@ -125,11 +127,12 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let testContext = dedupeTestContext(hooks: [firstHook, secondHook])
         emptyTheStore = { testContext.flagStoreMock.replaceStore(newStoredItems: [:]) }
 
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        let value = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
 
         XCTAssertEqual(keys.count, 2)
-        XCTAssertNotNil(keys[0])
+        XCTAssertEqual(keys[0]?.variation, 2)
         XCTAssertEqual(keys[0], keys[1])
+        XCTAssertTrue(value)
     }
 
     func testRepeatedEvaluationsReachAHookThatAskedForNoDedupe() {

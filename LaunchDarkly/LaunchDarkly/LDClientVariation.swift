@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-extension LDClient: EvaluationExposureKeyResolving {
+extension LDClient {
     // MARK: Flag variation methods
 
     /**
@@ -143,12 +143,12 @@ extension LDClient: EvaluationExposureKeyResolving {
         return variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "variationDetail")
     }
 
-    private func evaluateWithHooks<D>(flagKey: LDFlagKey, defaultValue: D, methodName: String, evaluation: () -> LDEvaluationDetail<D>) -> LDEvaluationDetail<D> where D: LDValueConvertible, D: Decodable {
+    private func evaluateWithHooks<D>(flagKey: LDFlagKey, defaultValue: D, methodName: String, featureFlag: FeatureFlag?, evaluation: () -> LDEvaluationDetail<D>) -> LDEvaluationDetail<D> where D: LDValueConvertible, D: Decodable {
         guard !hooks.isEmpty else {
             return evaluation()
         }
 
-        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName, exposureKeyResolver: self)
+        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName, evaluationExposureKey: exposureKey(flagKey: flagKey, featureFlag: featureFlag))
         let hookData = self.execute_before_evaluation(hooks: hooks, seriesContext: seriesContext)
         let evaluationResult = evaluation()
         _ = self.execute_after_evaluation(hooks: hooks, seriesContext: seriesContext, hookData: hookData, evaluationDetail: evaluationResult.map { value in return value.toLDValue()})
@@ -159,21 +159,21 @@ extension LDClient: EvaluationExposureKeyResolving {
     /**
      Identifies the result an evaluation is about to return, so that a hook can recognize a repeat of it.
 
-     This reads the stored flag rather than the evaluation result because a hook may ask before the evaluation runs, and
-     the stored flag identifies the same exposure the result would, since the result is derived from it.
+     This describes the flag rather than the evaluation result because the decision a deduping hook makes is made before
+     the series opens: hooks pair their stages, so a hook that opens a span in `beforeEvaluation` and closes it in
+     `afterEvaluation` would be left holding an open span were only the after stage suppressed. It is given the flag the
+     evaluation itself reads, so it identifies the result that evaluation goes on to return.
 
      See `EvaluationExposureKey` for what makes two evaluations the same exposure.
      */
-    func exposureKey(seriesContext: EvaluationSeriesContext) -> EvaluationExposureKey {
-        let flagKey = seriesContext.flagKey
-        let featureFlag = flagStore.featureFlag(for: flagKey)
+    private func exposureKey(flagKey: LDFlagKey, featureFlag: FeatureFlag?) -> EvaluationExposureKey {
         return EvaluationExposureKey(
             environmentName: environmentName,
             flagKey: flagKey,
             variation: featureFlag?.variation,
             flagVersion: featureFlag?.versionForEvents,
             inExperiment: featureFlag?.isInExperiment ?? false,
-            fullyQualifiedContextKey: seriesContext.context.fullyQualifiedKey()
+            fullyQualifiedContextKey: context.fullyQualifiedKey()
         )
     }
 
@@ -195,9 +195,11 @@ extension LDClient: EvaluationExposureKeyResolving {
     }
 
     private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool, methodName: String, visited: inout Set<String>?) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
-        return evaluateWithHooks(flagKey: flagKey, defaultValue: defaultValue, methodName: methodName) {
+        // Read once, so that the flag a hook is told the evaluation is about to return is the flag it does return: were
+        // the store read again below, an update landing in between would leave the two describing different results.
+        let featureFlag = flagStore.featureFlag(for: flagKey)
+        return evaluateWithHooks(flagKey: flagKey, defaultValue: defaultValue, methodName: methodName, featureFlag: featureFlag) {
             var result: LDEvaluationDetail<T>
-            let featureFlag = flagStore.featureFlag(for: flagKey)
             if let featureFlag = featureFlag {
                 if let prerequisites = featureFlag.prerequisites, !prerequisites.isEmpty {
                     // Recurse on prerequisites to emulate prereq evaluations occurring with desirable side effects
