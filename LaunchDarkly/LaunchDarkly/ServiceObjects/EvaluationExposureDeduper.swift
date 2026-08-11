@@ -4,18 +4,20 @@ import Foundation
  Identifies the evaluation result a hook is about to be told about, so that an `EvaluationExposureDeduper` can recognize
  a repeat of it.
 
- Two evaluations are the same exposure when every component here matches. The variation and version pair is the same
- identity LaunchDarkly uses to bucket evaluations in summary events, so two evaluations sharing that pair report
- identical data. Experiment status needs its own component because `versionForEvents` prefers `flagVersion`, which only
- moves when the flag itself changes: a prerequisite flipping can move an evaluation into or out of an experiment while it
- lands on the same variation of the same flag version. The environment is a component because a hook set on `LDConfig` is
- one instance shared by the clients for every environment in `secondaryMobileKeys`, and so is its deduper.
+ Two evaluations are the same exposure when every component here matches. The value is included directly rather than
+ inferred from the variation and version: those are the identity LaunchDarkly uses to bucket summary events, but neither
+ by itself guarantees that the payload is unchanged. Experiment status needs its own component because a prerequisite
+ flipping can move an evaluation into or out of an experiment while it lands on the same value, variation, and flag
+ version. The environment is a component because a hook set on `LDConfig` is one instance shared by the clients for every
+ environment in `secondaryMobileKeys`, and so is its deduper.
  */
 public struct EvaluationExposureKey: Hashable {
     /// The name of the environment the evaluation was made against.
     public let environmentName: String
     /// The key of the flag that was evaluated.
     public let flagKey: LDFlagKey
+    /// The value in the flag payload, or null if the flag was not found.
+    public let value: LDValue
     /// The index of the variation the result came from, or `nil` if the evaluation did not resolve to one.
     public let variation: Int?
     /// The flag version reported on events, or `nil` if the flag was not found.
@@ -28,6 +30,7 @@ public struct EvaluationExposureKey: Hashable {
     /**
      - parameter environmentName: The name of the environment the evaluation was made against.
      - parameter flagKey: The key of the flag that was evaluated.
+     - parameter value: The value in the flag payload, or null if the flag was not found.
      - parameter variation: The index of the variation the result came from.
      - parameter flagVersion: The flag version reported on events.
      - parameter inExperiment: Whether the evaluation was part of an experiment rollout.
@@ -38,13 +41,56 @@ public struct EvaluationExposureKey: Hashable {
                 variation: Int?,
                 flagVersion: Int?,
                 inExperiment: Bool,
-                fullyQualifiedContextKey: String) {
+                fullyQualifiedContextKey: String,
+                value: LDValue = .null) {
         self.environmentName = environmentName
         self.flagKey = flagKey
+        self.value = value
         self.variation = variation
         self.flagVersion = flagVersion
         self.inExperiment = inExperiment
         self.fullyQualifiedContextKey = fullyQualifiedContextKey
+    }
+
+    /// Hashes every component of the exposure key.
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(environmentName)
+        hasher.combine(flagKey)
+        hash(value: value, into: &hasher)
+        hasher.combine(variation)
+        hasher.combine(flagVersion)
+        hasher.combine(inExperiment)
+        hasher.combine(fullyQualifiedContextKey)
+    }
+
+    private func hash(value: LDValue, into hasher: inout Hasher) {
+        switch value {
+        case .null:
+            hasher.combine(0)
+        case .bool(let value):
+            hasher.combine(1)
+            hasher.combine(value)
+        case .number(let value):
+            hasher.combine(2)
+            hasher.combine(value)
+        case .string(let value):
+            hasher.combine(3)
+            hasher.combine(value)
+        case .array(let values):
+            hasher.combine(4)
+            hasher.combine(values.count)
+            values.forEach { hash(value: $0, into: &hasher) }
+        case .object(let values):
+            hasher.combine(5)
+            hasher.combine(values.count)
+            // Dictionary order is not part of LDValue equality, so hash objects in key order.
+            values.keys.sorted().forEach { key in
+                hasher.combine(key)
+                if let value = values[key] {
+                    hash(value: value, into: &hasher)
+                }
+            }
+        }
     }
 }
 
@@ -99,8 +145,8 @@ open class EvaluationExposureDeduper {
     private let window: TimeInterval
 
     private let queue = DispatchQueue(label: "com.launchdarkly.evaluationExposureDedupeQueue")
-    // Holds one record per flag the application evaluates, in each environment it evaluates it in. Nothing is evicted,
-    // because that set is the flags the environment serves. Should only be used synchronized on the queue.
+    // Last result reported for each flag, per environment. Entries stay until `reset()`.
+    // Should only be used synchronized on the queue.
     private var lastReported: [TrackedFlag: LastReported] = [:]
 
     /**
@@ -158,6 +204,7 @@ private struct TrackedFlag: Hashable {
 
 /// The result a flag last reported, and when.
 private struct LastReported {
+    let value: LDValue
     let variation: Int?
     let flagVersion: Int?
     let inExperiment: Bool
@@ -165,6 +212,7 @@ private struct LastReported {
     let reportedAt: TimeInterval
 
     init(key: EvaluationExposureKey, reportedAt: TimeInterval) {
+        self.value = key.value
         self.variation = key.variation
         self.flagVersion = key.flagVersion
         self.inExperiment = key.inExperiment
@@ -173,7 +221,8 @@ private struct LastReported {
     }
 
     func isSameResult(as key: EvaluationExposureKey) -> Bool {
-        return variation == key.variation
+        return value == key.value
+            && variation == key.variation
             && flagVersion == key.flagVersion
             && inExperiment == key.inExperiment
             && fullyQualifiedContextKey == key.fullyQualifiedContextKey

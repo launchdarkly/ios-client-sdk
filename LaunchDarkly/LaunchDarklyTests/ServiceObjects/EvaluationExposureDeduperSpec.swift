@@ -11,7 +11,8 @@ private func key(_ flagKey: LDFlagKey) -> EvaluationExposureKey {
                                  variation: 1,
                                  flagVersion: 2,
                                  inExperiment: false,
-                                 fullyQualifiedContextKey: "user-key")
+                                 fullyQualifiedContextKey: "user-key",
+                                 value: .string("value"))
 }
 
 /// The same flag as `key(_:)`, resolved to a different variation.
@@ -21,7 +22,8 @@ private func otherResult(_ flagKey: LDFlagKey) -> EvaluationExposureKey {
                                  variation: 3,
                                  flagVersion: 2,
                                  inExperiment: false,
-                                 fullyQualifiedContextKey: "user-key")
+                                 fullyQualifiedContextKey: "user-key",
+                                 value: .string("other-value"))
 }
 
 final class EvaluationExposureDeduperSpec: QuickSpec {
@@ -71,6 +73,19 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
                 expect(deduper.shouldRecord(key: key("a"), now: 1_003)) == true
                 expect(deduper.shouldRecord(key: key("a"), now: 1_004)) == false
             }
+            it("reports again when only the flag value changes") {
+                let deduper = EvaluationExposureDeduper(window: 10)
+                let first = EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+                                                  flagVersion: 2, inExperiment: false,
+                                                  fullyQualifiedContextKey: "user-key", value: .string("first"))
+                let second = EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+                                                   flagVersion: 2, inExperiment: false,
+                                                   fullyQualifiedContextKey: "user-key", value: .string("second"))
+
+                expect(deduper.shouldRecord(key: first, now: 1_000)) == true
+                expect(deduper.shouldRecord(key: second, now: 1_001)) == true
+                expect(deduper.shouldRecord(key: second, now: 1_002)) == false
+            }
             it("tracks the same flag separately per environment") {
                 let deduper = EvaluationExposureDeduper(window: 10)
                 let primary = EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
@@ -108,8 +123,7 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
                     expect(deduper.shouldRecord(key: key("key-\(i)"), now: 1_000)) == true
                 }
 
-                // Nothing is dropped to make room, so the flag recorded first is suppressed just like the flag recorded
-                // last. What the deduper holds is the flag set, which the environment bounds.
+                // Records accumulate; the first flag is still suppressed after two thousand others have been recorded.
                 expect(deduper.shouldRecord(key: key("key-0"), now: 1_000)) == false
                 expect(deduper.shouldRecord(key: key("key-1999"), now: 1_000)) == false
             }
@@ -121,6 +135,9 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
                 expect(base) == EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
                                                       flagVersion: 2, inExperiment: false,
                                                       fullyQualifiedContextKey: "user-key")
+                expect(base) != EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+                                                      flagVersion: 2, inExperiment: false,
+                                                      fullyQualifiedContextKey: "user-key", value: .string("value"))
                 expect(base) != EvaluationExposureKey(environmentName: "default", flagKey: "other-flag", variation: 1,
                                                       flagVersion: 2, inExperiment: false,
                                                       fullyQualifiedContextKey: "user-key")
