@@ -148,33 +148,12 @@ extension LDClient {
             return evaluation()
         }
 
-        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName, evaluationExposureKey: exposureKey(flagKey: flagKey, featureFlag: featureFlag))
+        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName, environmentName: environmentName, featureFlag: featureFlag)
         let hookData = self.execute_before_evaluation(hooks: hooks, seriesContext: seriesContext)
         let evaluationResult = evaluation()
         _ = self.execute_after_evaluation(hooks: hooks, seriesContext: seriesContext, hookData: hookData, evaluationDetail: evaluationResult.map { value in return value.toLDValue()})
 
         return evaluationResult
-    }
-
-    /**
-     Identifies the result an evaluation is about to return, so that a hook can recognize a repeat of it.
-
-     This describes the flag rather than the evaluation result because the decision a deduping hook makes is made before
-     the series opens: hooks pair their stages, so a hook that opens a span in `beforeEvaluation` and closes it in
-     `afterEvaluation` would be left holding an open span were only the after stage suppressed. It is given the flag the
-     evaluation itself reads, so it identifies the result that evaluation goes on to return.
-
-     See `EvaluationExposureKey` for what makes two evaluations the same exposure.
-     */
-    private func exposureKey(flagKey: LDFlagKey, featureFlag: FeatureFlag?) -> EvaluationExposureKey {
-        return EvaluationExposureKey(
-            environmentName: environmentName,
-            flagKey: flagKey,
-            variation: featureFlag?.variation,
-            flagVersion: featureFlag?.versionForEvents,
-            inExperiment: featureFlag?.isInExperiment ?? false,
-            fullyQualifiedContextKey: context.fullyQualifiedKey()
-        )
     }
 
     private func execute_before_evaluation(hooks: [Hook], seriesContext: EvaluationSeriesContext) -> [EvaluationSeriesData] {
