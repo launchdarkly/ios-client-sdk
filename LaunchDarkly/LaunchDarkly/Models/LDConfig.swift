@@ -301,7 +301,11 @@ public struct LDConfig {
     }
 
     /// The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
-    public var mobileKey: String
+    ///
+    /// Set this with `setMobileKey(_:)`, which rejects a key already naming a secondary environment. The setter is not
+    /// public because it cannot throw, and an environment sharing a mobile key with another is not a configuration the
+    /// SDK can act on.
+    public internal(set) var mobileKey: String
 
     /// The base url for making feature flag requests. Do not change unless instructed by LaunchDarkly.
     public var baseUrl: URL = Defaults.baseUrl
@@ -457,6 +461,23 @@ public struct LDConfig {
         var internalMobileKeys = getSecondaryMobileKeys()
         internalMobileKeys[LDConfig.Constants.primaryEnvironmentName] = mobileKey
         return internalMobileKeys
+    }
+
+    /**
+     Sets the mobile key for the primary environment. Throws `LDInvalidArgumentError` if the key already names one of
+     the secondary environments, since each environment must have its own.
+
+     Setting the key and setting the secondary keys are checked against each other whichever order they are done in, so
+     that a configuration cannot arrive at a state neither call would have accepted on its own.
+
+     - parameter newMobileKey: The mobile key for the primary environment.
+     */
+    public mutating func setMobileKey(_ newMobileKey: String) throws {
+        if getSecondaryMobileKeys().values.contains(newMobileKey) {
+            throw(LDInvalidArgumentError("The primary environment key cannot be in the secondary mobile keys."))
+        }
+
+        mobileKey = newMobileKey
     }
 
     /**

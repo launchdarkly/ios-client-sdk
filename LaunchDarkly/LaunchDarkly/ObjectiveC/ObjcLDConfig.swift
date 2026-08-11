@@ -14,9 +14,20 @@ public final class ObjcLDConfig: NSObject {
     var config: LDConfig
 
     /// The Mobile key from your [LaunchDarkly Account](app.launchdarkly.com) settings (on the left at the bottom). If you have multiple projects be sure to choose the correct Mobile key.
+    ///
+    /// Read only, because setting it can fail: use `setMobileKey(_:)`.
     @objc public var mobileKey: String {
-        get { config.mobileKey }
-        set { config.mobileKey = newValue }
+        config.mobileKey
+    }
+
+    /**
+     Sets the mobile key for the primary environment. Throws if the key already names one of the secondary
+     environments, since each environment must have its own.
+
+     - parameter key: The mobile key for the primary environment.
+     */
+    @objc public func setMobileKey(_ key: String) throws {
+        try config.setMobileKey(key)
     }
 
     /// The url for making feature flag requests. Do not change unless instructed by LaunchDarkly.

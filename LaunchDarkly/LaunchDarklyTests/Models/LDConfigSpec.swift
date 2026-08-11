@@ -117,6 +117,27 @@ final class LDConfigSpec: XCTestCase {
         }
     }
 
+    func testSetMobileKeyRejectsASecondaryEnvironmentsKey() {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try! config.setSecondaryMobileKeys(["other": LDConfig.Constants.alternateMobileKey])
+
+        // Each environment must have its own key, and setSecondaryMobileKeys rejects the same collision the other way
+        // around, so neither order of the two calls can arrive at it.
+        XCTAssertThrowsError(try config.setMobileKey(LDConfig.Constants.alternateMobileKey)) { error in
+            XCTAssertTrue(error is LDInvalidArgumentError)
+        }
+        XCTAssertEqual(config.mobileKey, LDConfig.Constants.mockMobileKey)
+    }
+
+    func testSetMobileKeyAcceptsAKeyNoSecondaryEnvironmentUses() {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try! config.setSecondaryMobileKeys(["other": LDConfig.Constants.alternateMobileKey])
+
+        try! config.setMobileKey("another-mobile-key")
+
+        XCTAssertEqual(config.mobileKey, "another-mobile-key")
+    }
+
     func testMinimaInitDebug() {
         let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: true)
         XCTAssertEqual(config.minima.flagPollingInterval, LDConfig.Minima.Debug.flagPollingInterval)

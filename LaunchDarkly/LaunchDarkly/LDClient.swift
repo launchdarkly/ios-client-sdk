@@ -838,6 +838,8 @@ public class LDClient {
         mobileKeys[LDConfig.Constants.primaryEnvironmentName] = config.mobileKey
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
+            // Assigned rather than set through setMobileKey, which would reject a secondary environment's own key. The
+            // copy describes one environment, so the key it holds is that environment's whichever one it is.
             internalConfig.mobileKey = mobileKey
             let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context, completion: completionCheck)
             instancesQueue.sync(flags: .barrier) {
