@@ -52,7 +52,8 @@ public class EvaluationSeriesContext {
             variation: featureFlag?.variation,
             flagVersion: featureFlag?.versionForEvents,
             inExperiment: featureFlag?.isInExperiment ?? false,
-            fullyQualifiedContextKey: context.fullyQualifiedKey()
+            fullyQualifiedContextKey: context.fullyQualifiedKey(),
+            value: featureFlag?.value ?? .null
         )
     }
 }
