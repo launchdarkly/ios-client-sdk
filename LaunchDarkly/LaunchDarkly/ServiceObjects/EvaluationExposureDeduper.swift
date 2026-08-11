@@ -6,41 +6,46 @@ import Foundation
 
  Two evaluations are the same exposure when every component here matches. The value is included directly rather than
  inferred from the variation and version: those are the identity LaunchDarkly uses to bucket summary events, but neither
- by itself guarantees that the payload is unchanged. Experiment status needs its own component because a prerequisite
- flipping can move an evaluation into or out of an experiment while it lands on the same value, variation, and flag
- version. The environment is a component because a hook set on `LDConfig` is one instance shared by the clients for every
- environment in `secondaryMobileKeys`, and so is its deduper.
+ by itself guarantees that the payload is unchanged. The environment is a component because a hook set on `LDConfig` is
+ one instance shared by the clients for every environment in `secondaryMobileKeys`, and so is its deduper.
+
+ The components describe the result the evaluation returns, which is how the SDK identifies an evaluation on analytics
+ events too. An evaluation the SDK has no flag data for returns the default value, and so is described by that value with
+ no variation and no version, the same identity it summarizes such an evaluation under. Evaluations made before the
+ client has flags are of that kind, as are evaluations of a flag that does not exist, so the data arriving changes the
+ value, variation, and version, and the hook is told about the flag again rather than waiting out a window. A flag whose
+ data carries no value, which is what a flag that is off without an off variation has, likewise returns the default value
+ and is described by it, under the flag's own variation and version. The environment name is never unknown this way: it
+ names a mobile key in the configuration, so it is fixed before the client it belongs to evaluates anything.
  */
 public struct EvaluationExposureKey: Hashable {
     /// The name of the environment the evaluation was made against.
     public let environmentName: String
     /// The key of the flag that was evaluated.
     public let flagKey: LDFlagKey
-    /// The value in the flag payload, or null if the flag was not found.
+    /// The value the evaluation returns, which is the default value if the flag was not found.
     public let value: LDValue
     /// The index of the variation the result came from, or `nil` if the evaluation did not resolve to one.
     public let variation: Int?
     /// The flag version reported on events, or `nil` if the flag was not found.
     public let flagVersion: Int?
-    /// Whether the evaluation was part of an experiment rollout.
-    public let inExperiment: Bool
     /// The fully qualified key of the evaluation context.
     public let fullyQualifiedContextKey: String
 
     /**
      - parameter environmentName: The name of the environment the evaluation was made against.
      - parameter flagKey: The key of the flag that was evaluated.
-     - parameter value: The value in the flag payload, or null if the flag was not found.
+     - parameter value: The value the evaluation returns, which is the default value if the flag was not found.
+     Defaults to null; prefer stating it, since the variation and version do not by themselves distinguish one result
+     from another.
      - parameter variation: The index of the variation the result came from.
      - parameter flagVersion: The flag version reported on events.
-     - parameter inExperiment: Whether the evaluation was part of an experiment rollout.
      - parameter fullyQualifiedContextKey: The fully qualified key of the evaluation context.
      */
     public init(environmentName: String,
                 flagKey: LDFlagKey,
                 variation: Int?,
                 flagVersion: Int?,
-                inExperiment: Bool,
                 fullyQualifiedContextKey: String,
                 value: LDValue = .null) {
         self.environmentName = environmentName
@@ -48,7 +53,6 @@ public struct EvaluationExposureKey: Hashable {
         self.value = value
         self.variation = variation
         self.flagVersion = flagVersion
-        self.inExperiment = inExperiment
         self.fullyQualifiedContextKey = fullyQualifiedContextKey
     }
 
@@ -59,7 +63,6 @@ public struct EvaluationExposureKey: Hashable {
         hash(value: value, into: &hasher)
         hasher.combine(variation)
         hasher.combine(flagVersion)
-        hasher.combine(inExperiment)
         hasher.combine(fullyQualifiedContextKey)
     }
 
@@ -204,27 +207,13 @@ private struct TrackedFlag: Hashable {
 
 /// The result a flag last reported, and when.
 private struct LastReported {
-    let value: LDValue
-    let variation: Int?
-    let flagVersion: Int?
-    let inExperiment: Bool
-    let fullyQualifiedContextKey: String
+    let key: EvaluationExposureKey
     let reportedAt: TimeInterval
 
-    init(key: EvaluationExposureKey, reportedAt: TimeInterval) {
-        self.value = key.value
-        self.variation = key.variation
-        self.flagVersion = key.flagVersion
-        self.inExperiment = key.inExperiment
-        self.fullyQualifiedContextKey = key.fullyQualifiedContextKey
-        self.reportedAt = reportedAt
-    }
-
+    /// Holding the key rather than a copy of the components that describe its result is what keeps this from having to
+    /// be revisited whenever `EvaluationExposureKey` gains one. The environment and flag key it also compares are equal
+    /// by the time this is asked, since a record is only ever found under the `TrackedFlag` they make up.
     func isSameResult(as key: EvaluationExposureKey) -> Bool {
-        return value == key.value
-            && variation == key.variation
-            && flagVersion == key.flagVersion
-            && inExperiment == key.inExperiment
-            && fullyQualifiedContextKey == key.fullyQualifiedContextKey
+        return self.key == key
     }
 }

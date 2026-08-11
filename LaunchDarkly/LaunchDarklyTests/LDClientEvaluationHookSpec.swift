@@ -135,6 +135,28 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertTrue(value)
     }
 
+    func testAnEvaluationWithNoFlagDataIsDescribedByTheDefaultValue() {
+        var keys: [EvaluationExposureKey?] = []
+        let hook = MockHook(before: { seriesContext, data in
+            keys.append(seriesContext.evaluationExposureKey)
+            return data
+        }, after: { _, data, _ in data })
+        let testContext = dedupeTestContext(hooks: [hook])
+
+        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.unknown, defaultValue: true)
+
+        // The evaluation returns the default value, and the event it records reports that value under no variation and
+        // no version, so that is the result the hook is told about too.
+        guard let key = keys.first ?? nil
+        else {
+            fail("The hook was not told about the evaluation.")
+            return
+        }
+        XCTAssertEqual(key.value, .bool(true))
+        XCTAssertNil(key.variation)
+        XCTAssertNil(key.flagVersion)
+    }
+
     func testRepeatedEvaluationsReachAHookThatAskedForNoDedupe() {
         var befores = 0
         var afters = 0
@@ -148,6 +170,29 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         // Deduplication is opt-in per hook, and this one did not opt in.
         XCTAssertEqual(befores, 3)
         XCTAssertEqual(afters, 3)
+    }
+
+    func testEvaluationsOfAFlagWithNoValueAreTheExposuresOfTheDefaultsTheyReturn() {
+        var afters = 0
+        let hook = MockHook(before: { _, data in data }, after: { _, data, _ in afters += 1; return data })
+        let testContext = dedupeTestContext(hooks: [DedupingHook(hook, window: 60)])
+        // A flag that is off without an off variation arrives carrying no value, so every evaluation of it returns the
+        // default the caller passed.
+        let flagKey = "no-value-flag"
+        testContext.flagStoreMock.replaceStore(newStoredItems: StoredItems(items: [
+            flagKey: FeatureFlag(flagKey: flagKey, value: .null, variation: 1, version: 2)
+        ]))
+
+        XCTAssertTrue(testContext.subject.boolVariation(forKey: flagKey, defaultValue: true))
+        XCTAssertFalse(testContext.subject.boolVariation(forKey: flagKey, defaultValue: false))
+
+        // The two evaluations returned different values, so they are two exposures. Describing both by the value the
+        // flag holds would make the second look like a repeat of the first.
+        XCTAssertEqual(afters, 2)
+
+        // Repeating one of them is still a repeat.
+        XCTAssertFalse(testContext.subject.boolVariation(forKey: flagKey, defaultValue: false))
+        XCTAssertEqual(afters, 2)
     }
 
     func testRepeatedEvaluationsAreDeduplicatedWithinTheHooksWindow() {
@@ -350,6 +395,45 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertEqual(deduper.resets, resetsBeforeIdentify + 1)
     }
 
+    func testADeduperForwardsTheStagesItDoesNotDeduplicate() {
+        let hook = RecordingHook()
+        let testContext = dedupeTestContext(hooks: [DedupingHook(hook, window: 60)])
+        _ = hook.takeStages()
+
+        waitUntil { done in
+            testContext.subject.identify(context: LDContext.stub()) { _ in done() }
+        }
+        testContext.subject.track(key: "event-key")
+
+        // Only evaluations are deduplicated; the identify and track stages are always forwarded.
+        XCTAssertEqual(hook.takeStages(), ["beforeIdentify", "afterIdentify", "afterTrack"])
+    }
+
+    func testADeduperReportsTheWrappedHooksMetadata() {
+        let hook = RecordingHook()
+
+        // So that the SDK names the hook a stage belongs to rather than the wrapper around it.
+        XCTAssertTrue(DedupingHook(hook, window: 60).metadata() === hook.hookMetadata)
+    }
+
+    func testADeduperForwardsAnEvaluationWhoseResultTheSdkDidNotDescribe() {
+        let hook = RecordingHook()
+        let deduping = DedupingHook(hook, window: 60)
+        // A series context built by something other than the SDK has no result to recognize repeats by, so nothing is
+        // suppressed.
+        let seriesContext = EvaluationSeriesContext(flagKey: "flag", context: LDContext.stub(),
+                                                    defaultValue: .bool(false), methodName: "boolVariation")
+        let detail = LDEvaluationDetail(value: LDValue.bool(false), variationIndex: nil, reason: nil)
+
+        for _ in 0..<2 {
+            let seriesData = deduping.beforeEvaluation(seriesContext: seriesContext, seriesData: [:])
+            _ = deduping.afterEvaluation(seriesContext: seriesContext, seriesData: seriesData, evaluationDetail: detail)
+        }
+
+        XCTAssertEqual(hook.takeStages(),
+                       ["beforeEvaluation", "afterEvaluation", "beforeEvaluation", "afterEvaluation"])
+    }
+
     func testADeduperStacksInsideAnotherDecorator() {
         var afters = 0
         let hook = MockHook(before: { _, data in data }, after: { _, data, _ in afters += 1; return data })
@@ -399,19 +483,40 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertEqual(afters, 1)
     }
 
-    /// A decorator with its own behavior, to check that decorators compose.
-    class CountingDecorator: HookDecorator {
+    /// A hook that wraps another hook and counts what it forwards, to check that wrappers compose.
+    class CountingDecorator: Hook {
+        private let delegate: Hook
         private(set) var evaluationsForwarded = 0
         private(set) var resultsForwarded = 0
 
-        override func beforeEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData) -> EvaluationSeriesData {
-            evaluationsForwarded += 1
-            return super.beforeEvaluation(seriesContext: seriesContext, seriesData: seriesData)
+        init(_ delegate: Hook) {
+            self.delegate = delegate
         }
 
-        override func afterEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>) -> EvaluationSeriesData {
+        func metadata() -> Metadata {
+            return delegate.metadata()
+        }
+
+        func beforeEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData) -> EvaluationSeriesData {
+            evaluationsForwarded += 1
+            return delegate.beforeEvaluation(seriesContext: seriesContext, seriesData: seriesData)
+        }
+
+        func afterEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>) -> EvaluationSeriesData {
             resultsForwarded += 1
-            return super.afterEvaluation(seriesContext: seriesContext, seriesData: seriesData, evaluationDetail: evaluationDetail)
+            return delegate.afterEvaluation(seriesContext: seriesContext, seriesData: seriesData, evaluationDetail: evaluationDetail)
+        }
+
+        func beforeIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData) -> IdentifySeriesData {
+            return delegate.beforeIdentify(seriesContext: seriesContext, seriesData: seriesData)
+        }
+
+        func afterIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData, result: IdentifyResult) -> IdentifySeriesData {
+            return delegate.afterIdentify(seriesContext: seriesContext, seriesData: seriesData, result: result)
+        }
+
+        func afterTrack(seriesContext: TrackSeriesContext) {
+            delegate.afterTrack(seriesContext: seriesContext)
         }
     }
 
@@ -434,6 +539,49 @@ final class LDClientEvaluationHookSpec: XCTestCase {
 
         override func reset() {
             resets += 1
+        }
+    }
+
+    /// Records the stages it is told about, so a test can check what a hook wrapping it forwarded.
+    class RecordingHook: Hook {
+        // Returned rather than built on demand, so that a test can recognize it by identity: `Metadata` exposes
+        // nothing to compare it by.
+        let hookMetadata = Metadata(name: "recording-hook")
+        private var stages: [String] = []
+
+        /// The stages recorded since this was last called, so a test can ignore the identify the client makes as it
+        /// starts.
+        func takeStages() -> [String] {
+            defer { stages = [] }
+            return stages
+        }
+
+        func metadata() -> Metadata {
+            return hookMetadata
+        }
+
+        func beforeEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData) -> EvaluationSeriesData {
+            stages.append("beforeEvaluation")
+            return seriesData
+        }
+
+        func afterEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>) -> EvaluationSeriesData {
+            stages.append("afterEvaluation")
+            return seriesData
+        }
+
+        func beforeIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData) -> IdentifySeriesData {
+            stages.append("beforeIdentify")
+            return seriesData
+        }
+
+        func afterIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData, result: IdentifyResult) -> IdentifySeriesData {
+            stages.append("afterIdentify")
+            return seriesData
+        }
+
+        func afterTrack(seriesContext: TrackSeriesContext) {
+            stages.append("afterTrack")
         }
     }
 
