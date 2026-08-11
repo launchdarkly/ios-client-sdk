@@ -87,6 +87,28 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
                 expect(deduper.shouldRecord(key: primary, now: 1_001)) == false
                 expect(deduper.shouldRecord(key: secondary, now: 1_001)) == false
             }
+            it("tracks the same flag separately per call site") {
+                let deduper = EvaluationExposureDeduper(window: 10)
+                let view = EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+                                                 flagVersion: 2, inExperiment: false,
+                                                 fullyQualifiedContextKey: "user-key",
+                                                 callSite: EvaluationCallSite(fileID: "App/View.swift", line: 12))
+                let handler = EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+                                                    flagVersion: 2, inExperiment: false,
+                                                    fullyQualifiedContextKey: "user-key",
+                                                    callSite: EvaluationCallSite(fileID: "App/View.swift", line: 40))
+
+                // Each place the application reads the flag from is reported, on its own window. Sharing a record would
+                // make reading it alternately from each place look like the result changing every time.
+                expect(deduper.shouldRecord(key: view, now: 1_000)) == true
+                expect(deduper.shouldRecord(key: handler, now: 1_000)) == true
+                expect(deduper.shouldRecord(key: view, now: 1_001)) == false
+                expect(deduper.shouldRecord(key: handler, now: 1_001)) == false
+
+                // An evaluation with no call site, which is what the Objective-C interface makes, is its own place
+                // rather than joining whichever place happened to read the flag first.
+                expect(deduper.shouldRecord(key: key("flag"), now: 1_001)) == true
+            }
             it("records again after reset") {
                 let deduper = EvaluationExposureDeduper(window: 10)
                 expect(deduper.shouldRecord(key: key("a"), now: 1_000)) == true

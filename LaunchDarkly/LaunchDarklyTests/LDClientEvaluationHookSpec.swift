@@ -135,6 +135,19 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertTrue(value)
     }
 
+    // The evaluations a test makes go through these rather than being written inline, so that they share one call
+    // site. Each place in an application that reads a flag is deduplicated on its own, so evaluations written on
+    // separate lines of a test would never suppress one another, whatever the deduper decided.
+    @discardableResult
+    private func evaluateBoolFlag(_ client: LDClient) -> Bool {
+        client.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+    }
+
+    @discardableResult
+    private func evaluateStringFlag(_ client: LDClient) -> String {
+        client.stringVariation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultFlagValues.string)
+    }
+
     func testRepeatedEvaluationsReachAHookThatAskedForNoDedupe() {
         var befores = 0
         var afters = 0
@@ -142,7 +155,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let testContext = dedupeTestContext(hooks: [hook])
 
         for _ in 0..<3 {
-            _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+            evaluateBoolFlag(testContext.subject)
         }
 
         // Deduplication is opt-in per hook, and this one did not opt in.
@@ -157,7 +170,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let testContext = dedupeTestContext(hooks: [DedupingHook(hook, window: 60)])
 
         for _ in 0..<3 {
-            _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+            evaluateBoolFlag(testContext.subject)
         }
 
         // The whole series is skipped, so a hook pairing its stages never sees an unmatched before.
@@ -165,12 +178,44 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertEqual(afters, 1)
     }
 
+    func testEachPlaceTheFlagIsReadFromReachesHooksSeparately() {
+        var afters = 0
+        let hook = MockHook(before: { _, data in data }, after: { _, data, _ in afters += 1; return data })
+        let testContext = dedupeTestContext(hooks: [DedupingHook(hook, window: 60)])
+
+        // Two places in this file reading one flag to one result, each of them twice.
+        for _ in 0..<2 {
+            evaluateBoolFlag(testContext.subject)
+        }
+        for _ in 0..<2 {
+            _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        }
+
+        // A view and a tap handler reading the same flag both reach the hook, and neither hides the other, while the
+        // repeat from each place is still suppressed.
+        XCTAssertEqual(afters, 2)
+    }
+
+    func testTheCallSiteIsWhereTheApplicationReadTheFlag() {
+        let hook = MockHook(before: { _, data in data }, after: { _, data, _ in data })
+        let deduper = CountingDeduper()
+        let testContext = dedupeTestContext(hooks: [DedupingHook(hook, deduper: deduper)])
+
+        let readAt = UInt(#line + 1)
+        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+
+        // The place the application read the flag from, rather than anywhere inside the SDK it passed through.
+        XCTAssertEqual(deduper.keys.count, 1)
+        XCTAssertEqual(deduper.keys[0].callSite?.fileID, #fileID)
+        XCTAssertEqual(deduper.keys[0].callSite?.line, readAt)
+    }
+
     func testDeduplicatedEvaluationsStillRecordEvents() {
         let hook = MockHook(before: { _, data in data }, after: { _, data, _ in data })
         let testContext = dedupeTestContext(hooks: [DedupingHook(hook, window: 60)])
 
         for _ in 0..<3 {
-            _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+            evaluateBoolFlag(testContext.subject)
         }
 
         // Deduplication applies to hooks only, so analytics events are unaffected.
@@ -182,9 +227,9 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let hook = MockHook(before: { _, data in data }, after: { _, data, _ in afters += 1; return data })
         let testContext = dedupeTestContext(hooks: [DedupingHook(hook, window: 60)])
 
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
-        _ = testContext.subject.stringVariation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultFlagValues.string)
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        evaluateBoolFlag(testContext.subject)
+        evaluateStringFlag(testContext.subject)
+        evaluateBoolFlag(testContext.subject)
 
         XCTAssertEqual(afters, 2)
     }
@@ -194,13 +239,13 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let hook = MockHook(before: { _, data in data }, after: { _, data, _ in afters += 1; return data })
         let testContext = dedupeTestContext(hooks: [DedupingHook(hook, window: 60)])
 
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        evaluateBoolFlag(testContext.subject)
+        evaluateBoolFlag(testContext.subject)
         XCTAssertEqual(afters, 1)
 
         let updated = FeatureFlag(flagKey: DarklyServiceMock.FlagKeys.bool, value: true, variation: 2, flagVersion: 99)
         testContext.flagStoreMock.replaceStore(newStoredItems: [DarklyServiceMock.FlagKeys.bool: .item(updated)])
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        evaluateBoolFlag(testContext.subject)
 
         XCTAssertEqual(afters, 2)
     }
@@ -210,8 +255,8 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let hook = MockHook(before: { _, data in data }, after: { _, data, _ in afters += 1; return data })
         let testContext = dedupeTestContext(hooks: [DedupingHook(hook, window: 60)])
 
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        evaluateBoolFlag(testContext.subject)
+        evaluateBoolFlag(testContext.subject)
         XCTAssertEqual(afters, 1)
 
         // Identifying to the unchanged context still lets the flag be reported again, so the evaluation after it is not
@@ -221,7 +266,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
             testContext.subject.identify(context: testContext.subject.context) { _ in done() }
         }
         testContext.flagStoreMock.replaceStore(newStoredItems: FlagMaintainingMock.stubStoredItems())
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        evaluateBoolFlag(testContext.subject)
 
         XCTAssertEqual(afters, 2)
     }
@@ -238,7 +283,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
                                                     DedupingHook(zeroWindowHook, window: 0)])
 
         for _ in 0..<3 {
-            _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+            evaluateBoolFlag(testContext.subject)
         }
 
         // Only the hook wrapped in a window suppresses. Being unwrapped and being wrapped in a window of zero behave the
@@ -252,7 +297,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
             testContext.subject.identify(context: testContext.subject.context) { _ in done() }
         }
         testContext.flagStoreMock.replaceStore(newStoredItems: FlagMaintainingMock.stubStoredItems())
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        evaluateBoolFlag(testContext.subject)
         XCTAssertEqual(deduped, 2)
     }
 
@@ -265,7 +310,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
                                                     DedupingHook(secondHook, window: 60)])
 
         for _ in 0..<3 {
-            _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+            evaluateBoolFlag(testContext.subject)
         }
 
         // Sharing a deduper would let the first hook consume the window and leave the second hook with nothing.
@@ -282,7 +327,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let testContext = dedupeTestContext(hooks: [DedupingHook(firstHook, deduper: shared),
                                                     DedupingHook(secondHook, deduper: shared)])
 
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        evaluateBoolFlag(testContext.subject)
 
         // The first hook's report starts the window, which suppresses the second hook's.
         XCTAssertEqual(first, 1)
@@ -296,7 +341,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let testContext = dedupeTestContext(hooks: [DedupingHook(hook, deduper: deduper)])
 
         for _ in 0..<4 {
-            _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+            evaluateBoolFlag(testContext.subject)
         }
 
         // The subclass reports every other evaluation, which the SDK's implementation would not.
@@ -328,8 +373,8 @@ final class LDClientEvaluationHookSpec: XCTestCase {
             (client?.flagStore as? FlagMaintainingMock)?.replaceStore(newStoredItems: FlagMaintainingMock.stubStoredItems())
         }
 
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
-        _ = other.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        evaluateBoolFlag(testContext.subject)
+        evaluateBoolFlag(other)
 
         // Both environments resolve the flag identically, but the hook they share is told about each of them.
         XCTAssertEqual(afters, 2)
@@ -340,7 +385,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let deduper = CountingDeduper()
         let testContext = dedupeTestContext(hooks: [DedupingHook(hook, deduper: deduper)])
 
-        _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+        evaluateBoolFlag(testContext.subject)
         let resetsBeforeIdentify = deduper.resets
 
         waitUntil { done in
@@ -357,7 +402,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let testContext = dedupeTestContext(hooks: [counting])
 
         for _ in 0..<3 {
-            _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+            evaluateBoolFlag(testContext.subject)
         }
 
         // The outer decorator sees every evaluation, and the deduper inside it passes on one. This is the arrangement
@@ -374,7 +419,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let testContext = dedupeTestContext(hooks: [DedupingHook(counting, window: 60)])
 
         for _ in 0..<3 {
-            _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+            evaluateBoolFlag(testContext.subject)
         }
 
         // The deduper is outermost this time, so the decorator inside it sees only what it forwards.
@@ -391,7 +436,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         let testContext = dedupeTestContext(hooks: [DedupingHook(counting, window: 0)])
 
         for _ in 0..<3 {
-            _ = testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+            evaluateBoolFlag(testContext.subject)
         }
 
         XCTAssertEqual(counting.evaluationsForwarded, 3)

@@ -9,10 +9,12 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
+     - parameter file: the place the flag is read from, which defaults to the file of the call. Pass nil to leave the read unattributed to a place in your application; see `EvaluationCallSite`.
+     - parameter line: the place the flag is read from, which defaults to the line of the call.
      - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
-    public func boolVariation(forKey flagKey: LDFlagKey, defaultValue: Bool) -> Bool {
-        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "boolVariation").value
+    public func boolVariation(forKey flagKey: LDFlagKey, defaultValue: Bool, file: String? = #fileID, line: UInt = #line) -> Bool {
+        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "boolVariation", file: file, line: line).value
     }
 
     /**
@@ -21,10 +23,12 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
+     - parameter file: the place the flag is read from, which defaults to the file of the call. Pass nil to leave the read unattributed to a place in your application; see `EvaluationCallSite`.
+     - parameter line: the place the flag is read from, which defaults to the line of the call.
      - returns: an `LDEvaluationDetail` object
      */
-    public func boolVariationDetail(forKey flagKey: LDFlagKey, defaultValue: Bool) -> LDEvaluationDetail<Bool> {
-        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "boolVariationDetail")
+    public func boolVariationDetail(forKey flagKey: LDFlagKey, defaultValue: Bool, file: String? = #fileID, line: UInt = #line) -> LDEvaluationDetail<Bool> {
+        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "boolVariationDetail", file: file, line: line)
     }
 
     /**
@@ -32,10 +36,12 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
+     - parameter file: the place the flag is read from, which defaults to the file of the call. Pass nil to leave the read unattributed to a place in your application; see `EvaluationCallSite`.
+     - parameter line: the place the flag is read from, which defaults to the line of the call.
      - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
-    public func intVariation(forKey flagKey: LDFlagKey, defaultValue: Int) -> Int {
-        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "intVariation").value
+    public func intVariation(forKey flagKey: LDFlagKey, defaultValue: Int, file: String? = #fileID, line: UInt = #line) -> Int {
+        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "intVariation", file: file, line: line).value
     }
 
     /**
@@ -44,10 +50,12 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
+     - parameter file: the place the flag is read from, which defaults to the file of the call. Pass nil to leave the read unattributed to a place in your application; see `EvaluationCallSite`.
+     - parameter line: the place the flag is read from, which defaults to the line of the call.
      - returns: an `LDEvaluationDetail` object
      */
-    public func intVariationDetail(forKey flagKey: LDFlagKey, defaultValue: Int) -> LDEvaluationDetail<Int> {
-        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "intVariationDetail")
+    public func intVariationDetail(forKey flagKey: LDFlagKey, defaultValue: Int, file: String? = #fileID, line: UInt = #line) -> LDEvaluationDetail<Int> {
+        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "intVariationDetail", file: file, line: line)
     }
 
     /**
@@ -55,10 +63,12 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
+     - parameter file: the place the flag is read from, which defaults to the file of the call. Pass nil to leave the read unattributed to a place in your application; see `EvaluationCallSite`.
+     - parameter line: the place the flag is read from, which defaults to the line of the call.
      - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
-    public func doubleVariation(forKey flagKey: LDFlagKey, defaultValue: Double) -> Double {
-        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "doubleVariation").value
+    public func doubleVariation(forKey flagKey: LDFlagKey, defaultValue: Double, file: String? = #fileID, line: UInt = #line) -> Double {
+        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "doubleVariation", file: file, line: line).value
     }
 
     /**
@@ -67,10 +77,12 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
+     - parameter file: the place the flag is read from, which defaults to the file of the call. Pass nil to leave the read unattributed to a place in your application; see `EvaluationCallSite`.
+     - parameter line: the place the flag is read from, which defaults to the line of the call.
      - returns: an `LDEvaluationDetail` object
      */
-    public func doubleVariationDetail(forKey flagKey: LDFlagKey, defaultValue: Double) -> LDEvaluationDetail<Double> {
-        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "doubleVariationDetail")
+    public func doubleVariationDetail(forKey flagKey: LDFlagKey, defaultValue: Double, file: String? = #fileID, line: UInt = #line) -> LDEvaluationDetail<Double> {
+        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "doubleVariationDetail", file: file, line: line)
     }
 
     /**
@@ -78,10 +90,12 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
+     - parameter file: the place the flag is read from, which defaults to the file of the call. Pass nil to leave the read unattributed to a place in your application; see `EvaluationCallSite`.
+     - parameter line: the place the flag is read from, which defaults to the line of the call.
      - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
-    public func stringVariation(forKey flagKey: LDFlagKey, defaultValue: String) -> String {
-        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "stringVariation").value
+    public func stringVariation(forKey flagKey: LDFlagKey, defaultValue: String, file: String? = #fileID, line: UInt = #line) -> String {
+        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "stringVariation", file: file, line: line).value
     }
 
     /**
@@ -90,10 +104,12 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
+     - parameter file: the place the flag is read from, which defaults to the file of the call. Pass nil to leave the read unattributed to a place in your application; see `EvaluationCallSite`.
+     - parameter line: the place the flag is read from, which defaults to the line of the call.
      - returns: an `LDEvaluationDetail` object
      */
-    public func stringVariationDetail(forKey flagKey: LDFlagKey, defaultValue: String) -> LDEvaluationDetail<String> {
-        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "stringVariationDetail")
+    public func stringVariationDetail(forKey flagKey: LDFlagKey, defaultValue: String, file: String? = #fileID, line: UInt = #line) -> LDEvaluationDetail<String> {
+        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "stringVariationDetail", file: file, line: line)
     }
 
     /**
@@ -101,10 +117,12 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
+     - parameter file: the place the flag is read from, which defaults to the file of the call. Pass nil to leave the read unattributed to a place in your application; see `EvaluationCallSite`.
+     - parameter line: the place the flag is read from, which defaults to the line of the call.
      - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
-    public func jsonVariation(forKey flagKey: LDFlagKey, defaultValue: LDValue) -> LDValue {
-        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "jsonVariation").value
+    public func jsonVariation(forKey flagKey: LDFlagKey, defaultValue: LDValue, file: String? = #fileID, line: UInt = #line) -> LDValue {
+        variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "jsonVariation", file: file, line: line).value
     }
 
     /**
@@ -113,10 +131,12 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
+     - parameter file: the place the flag is read from, which defaults to the file of the call. Pass nil to leave the read unattributed to a place in your application; see `EvaluationCallSite`.
+     - parameter line: the place the flag is read from, which defaults to the line of the call.
      - returns: an `LDEvaluationDetail` object
      */
-    public func jsonVariationDetail(forKey flagKey: LDFlagKey, defaultValue: LDValue) -> LDEvaluationDetail<LDValue> {
-        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "jsonVariationDetail")
+    public func jsonVariationDetail(forKey flagKey: LDFlagKey, defaultValue: LDValue, file: String? = #fileID, line: UInt = #line) -> LDEvaluationDetail<LDValue> {
+        variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "jsonVariationDetail", file: file, line: line)
     }
 
     /**
@@ -124,10 +144,12 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
+     - parameter file: the place the flag is read from, which defaults to the file of the call. Pass nil to leave the read unattributed to a place in your application; see `EvaluationCallSite`.
+     - parameter line: the place the flag is read from, which defaults to the line of the call.
      - returns: the variation for the selected context, or `defaultValue` if the flag is not available.
      */
-    public func variation<T>(forKey flagKey: LDFlagKey, defaultValue: T) -> T where T: LDValueConvertible, T: Decodable {
-        return variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "variation").value
+    public func variation<T>(forKey flagKey: LDFlagKey, defaultValue: T, file: String? = #fileID, line: UInt = #line) -> T where T: LDValueConvertible, T: Decodable {
+        return variationDetailInternal(flagKey, defaultValue, needsReason: false, methodName: "variation", file: file, line: line).value
     }
 
     /**
@@ -137,18 +159,24 @@ extension LDClient {
 
      - parameter forKey: the unique feature key for the feature flag.
      - parameter defaultValue: the default value for if the flag value is unavailable.
+     - parameter file: the place the flag is read from, which defaults to the file of the call. Pass nil to leave the read unattributed to a place in your application; see `EvaluationCallSite`.
+     - parameter line: the place the flag is read from, which defaults to the line of the call.
      - returns: an `LDEvaluationDetail` object
      */
-    public func variationDetail<T>(forKey flagKey: LDFlagKey, defaultValue: T) -> LDEvaluationDetail<T> where T: LDValueConvertible, T: Decodable {
-        return variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "variationDetail")
+    public func variationDetail<T>(forKey flagKey: LDFlagKey, defaultValue: T, file: String? = #fileID, line: UInt = #line) -> LDEvaluationDetail<T> where T: LDValueConvertible, T: Decodable {
+        return variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "variationDetail", file: file, line: line)
     }
 
-    private func evaluateWithHooks<D>(flagKey: LDFlagKey, defaultValue: D, methodName: String, featureFlag: FeatureFlag?, evaluation: () -> LDEvaluationDetail<D>) -> LDEvaluationDetail<D> where D: LDValueConvertible, D: Decodable {
+    // The private evaluation path carries what the caller asked for, which is the flag, the default, whether a reason is
+    // wanted, the method called and where it was called from, along with the state of the descent through prerequisites.
+    // That is more than five things, and gathering them into a type would only be moving the same things about.
+    // swiftlint:disable function_parameter_count
+    private func evaluateWithHooks<D>(flagKey: LDFlagKey, defaultValue: D, methodName: String, featureFlag: FeatureFlag?, callSite: EvaluationCallSite?, evaluation: () -> LDEvaluationDetail<D>) -> LDEvaluationDetail<D> where D: LDValueConvertible, D: Decodable {
         guard !hooks.isEmpty else {
             return evaluation()
         }
 
-        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName, environmentName: environmentName, featureFlag: featureFlag)
+        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName, environmentName: environmentName, featureFlag: featureFlag, callSite: callSite)
         let hookData = self.execute_before_evaluation(hooks: hooks, seriesContext: seriesContext)
         let evaluationResult = evaluation()
         _ = self.execute_after_evaluation(hooks: hooks, seriesContext: seriesContext, hookData: hookData, evaluationDetail: evaluationResult.map { value in return value.toLDValue()})
@@ -168,16 +196,19 @@ extension LDClient {
         }
     }
 
-    private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool, methodName: String) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
+    private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool, methodName: String, file: String?, line: UInt) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
         var visited: Set<String>? = nil
-        return variationDetailInternal(flagKey, defaultValue, needsReason: needsReason, methodName: methodName, visited: &visited)
+        // Nil says the caller is not somewhere in an application, which is what the Objective-C interface passes: its
+        // own file and line describe the wrapper rather than anywhere the flag is read from.
+        let callSite = file.map { EvaluationCallSite(fileID: $0, line: line) }
+        return variationDetailInternal(flagKey, defaultValue, needsReason: needsReason, methodName: methodName, callSite: callSite, visited: &visited)
     }
 
-    private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool, methodName: String, visited: inout Set<String>?) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
+    private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool, methodName: String, callSite: EvaluationCallSite?, visited: inout Set<String>?) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
         // Read once, so that the flag a hook is told the evaluation is about to return is the flag it does return: were
         // the store read again below, an update landing in between would leave the two describing different results.
         let featureFlag = flagStore.featureFlag(for: flagKey)
-        return evaluateWithHooks(flagKey: flagKey, defaultValue: defaultValue, methodName: methodName, featureFlag: featureFlag) {
+        return evaluateWithHooks(flagKey: flagKey, defaultValue: defaultValue, methodName: methodName, featureFlag: featureFlag, callSite: callSite) {
             var result: LDEvaluationDetail<T>
             if let featureFlag = featureFlag {
                 if let prerequisites = featureFlag.prerequisites, !prerequisites.isEmpty {
@@ -199,7 +230,8 @@ extension LDClient {
                             // The requested flag's value and reason (below) are unaffected.
                             continue
                         }
-                        _ = variationDetailInternal(prereqFlagKey, LDValue.null, needsReason: needsReason, methodName: methodName, visited: &visited)
+                        // The prerequisite is read because of the same call, so it is read from the same place.
+                        _ = variationDetailInternal(prereqFlagKey, LDValue.null, needsReason: needsReason, methodName: methodName, callSite: callSite, visited: &visited)
                     }
                 }
 
@@ -228,6 +260,7 @@ extension LDClient {
             return result
         }
     }
+    // swiftlint:enable function_parameter_count
 }
 
 /**

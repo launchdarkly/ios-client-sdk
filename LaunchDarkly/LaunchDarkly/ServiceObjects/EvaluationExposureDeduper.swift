@@ -1,6 +1,32 @@
 import Foundation
 
 /**
+ Where in an application an evaluation was made from.
+
+ This is part of what identifies an exposure, so that a flag read from several places in an application is reported for
+ each of them rather than the first place read standing for all of them. An application that reads a flag on a redraw
+ and also when handling a tap sees both, and each one on its own schedule.
+
+ The SDK captures this from the call to a variation method. An evaluation it cannot attribute to a place in the
+ application, which is to say one made through the Objective-C interface, has none.
+ */
+public struct EvaluationCallSite: Hashable {
+    /// The `#fileID` of the call, which names the module and the file rather than giving a path.
+    public let fileID: String
+    /// The `#line` of the call.
+    public let line: UInt
+
+    /**
+     - parameter fileID: The `#fileID` of the call.
+     - parameter line: The `#line` of the call.
+     */
+    public init(fileID: String, line: UInt) {
+        self.fileID = fileID
+        self.line = line
+    }
+}
+
+/**
  Identifies the evaluation result a hook is about to be told about, so that an `EvaluationExposureDeduper` can recognize
  a repeat of it.
 
@@ -9,7 +35,8 @@ import Foundation
  identical data. Experiment status needs its own component because `versionForEvents` prefers `flagVersion`, which only
  moves when the flag itself changes: a prerequisite flipping can move an evaluation into or out of an experiment while it
  lands on the same variation of the same flag version. The environment is a component because a hook set on `LDConfig` is
- one instance shared by the clients for every environment in `secondaryMobileKeys`, and so is its deduper.
+ one instance shared by the clients for every environment in `secondaryMobileKeys`, and so is its deduper. The call site
+ is a component so that a flag read from several places is reported for each of them; see `EvaluationCallSite`.
  */
 public struct EvaluationExposureKey: Hashable {
     /// The name of the environment the evaluation was made against.
@@ -24,6 +51,8 @@ public struct EvaluationExposureKey: Hashable {
     public let inExperiment: Bool
     /// The fully qualified key of the evaluation context.
     public let fullyQualifiedContextKey: String
+    /// Where in the application the evaluation was made, or nil for one the SDK could not attribute to a place in it.
+    public let callSite: EvaluationCallSite?
 
     /**
      - parameter environmentName: The name of the environment the evaluation was made against.
@@ -32,19 +61,22 @@ public struct EvaluationExposureKey: Hashable {
      - parameter flagVersion: The flag version reported on events.
      - parameter inExperiment: Whether the evaluation was part of an experiment rollout.
      - parameter fullyQualifiedContextKey: The fully qualified key of the evaluation context.
+     - parameter callSite: Where in the application the evaluation was made.
      */
     public init(environmentName: String,
                 flagKey: LDFlagKey,
                 variation: Int?,
                 flagVersion: Int?,
                 inExperiment: Bool,
-                fullyQualifiedContextKey: String) {
+                fullyQualifiedContextKey: String,
+                callSite: EvaluationCallSite? = nil) {
         self.environmentName = environmentName
         self.flagKey = flagKey
         self.variation = variation
         self.flagVersion = flagVersion
         self.inExperiment = inExperiment
         self.fullyQualifiedContextKey = fullyQualifiedContextKey
+        self.callSite = callSite
     }
 }
 
@@ -64,11 +96,12 @@ public struct EvaluationExposureKey: Hashable {
  ]
  ```
 
- This class is the SDK's implementation: it remembers the result each flag last reported, and tells the hook about the
- flag again as soon as that result changes, or once the window elapses while it stays the same. Tracking one result per
- flag rather than every result seen keeps a flag that flips back and forth from hiding the flips, and holds one record per
- flag the application evaluates, so the window is the only thing there is to configure. Subclass this to implement a
- different policy; only `shouldRecord(key:now:)` and `reset()` are called by `DedupingHook`.
+ This class is the SDK's implementation: it remembers the result each place in the application that reads a flag last
+ reported, and tells the hook about that place again as soon as its result changes, or once the window elapses while it
+ stays the same. Tracking one result rather than every result seen keeps a flag that flips back and forth from hiding the
+ flips, and holds one record per place a flag is read from, so the window is the only thing there is to configure. Reading
+ a flag from two places therefore reports both, each on its own window; see `EvaluationCallSite`. Subclass this to
+ implement a different policy; only `shouldRecord(key:now:)` and `reset()` are called by `DedupingHook`.
 
  A deduper is consulted once per evaluation, before the series opens, so a suppressed evaluation invokes neither
  `beforeEvaluation` nor `afterEvaluation`. Implementations must be thread-safe, because evaluations may be made from any
@@ -99,7 +132,7 @@ open class EvaluationExposureDeduper {
     private let window: TimeInterval
 
     private let queue = DispatchQueue(label: "com.launchdarkly.evaluationExposureDedupeQueue")
-    // Holds one record per flag the application evaluates, in each environment it evaluates it in. Nothing is evicted,
+    // Holds one record per place the application reads a flag from, in each environment it reads it in. Nothing is evicted,
     // because that set is the flags the environment serves. Should only be used synchronized on the queue.
     private var lastReported: [TrackedFlag: LastReported] = [:]
 
@@ -131,7 +164,7 @@ open class EvaluationExposureDeduper {
         else { return true }
 
         return queue.sync {
-            let flag = TrackedFlag(environmentName: key.environmentName, flagKey: key.flagKey)
+            let flag = TrackedFlag(environmentName: key.environmentName, flagKey: key.flagKey, callSite: key.callSite)
             if let reported = lastReported[flag], reported.reportedAt > now - window, reported.isSameResult(as: key) {
                 return false
             }
@@ -150,10 +183,14 @@ open class EvaluationExposureDeduper {
 
 /// The flag a record belongs to. The environment is part of it because a hook set on `LDConfig` is one instance shared
 /// by the clients for every environment in `secondaryMobileKeys`: were the environments to share a record, each would
-/// look like the other having changed its result, and neither would ever be suppressed.
+/// look like the other having changed its result, and neither would ever be suppressed. The call site is part of it for
+/// the same reason: a flag read from two places would otherwise have one record, and reading it alternately from each
+/// would look like the result changing every time, so nothing would ever be suppressed. A record per call site instead
+/// gives each place a flag is read from its own window.
 private struct TrackedFlag: Hashable {
     let environmentName: String
     let flagKey: LDFlagKey
+    let callSite: EvaluationCallSite?
 }
 
 /// The result a flag last reported, and when.

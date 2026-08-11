@@ -16,15 +16,17 @@ public class EvaluationSeriesContext {
     // context was built by something other than the SDK, and so has no result to describe at all.
     private let environmentName: String?
     private let featureFlag: FeatureFlag?
+    private let callSite: EvaluationCallSite?
 
     init(flagKey: String, context: LDContext, defaultValue: LDValue, methodName: String,
-         environmentName: String? = nil, featureFlag: FeatureFlag? = nil) {
+         environmentName: String? = nil, featureFlag: FeatureFlag? = nil, callSite: EvaluationCallSite? = nil) {
         self.flagKey = flagKey
         self.context = context
         self.defaultValue = defaultValue
         self.methodName = methodName
         self.environmentName = environmentName
         self.featureFlag = featureFlag
+        self.callSite = callSite
     }
 
     /**
@@ -52,7 +54,8 @@ public class EvaluationSeriesContext {
             variation: featureFlag?.variation,
             flagVersion: featureFlag?.versionForEvents,
             inExperiment: featureFlag?.isInExperiment ?? false,
-            fullyQualifiedContextKey: context.fullyQualifiedKey()
+            fullyQualifiedContextKey: context.fullyQualifiedKey(),
+            callSite: callSite
         )
     }
 }

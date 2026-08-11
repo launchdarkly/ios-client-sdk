@@ -7,6 +7,9 @@ import Foundation
  same. This is useful for reducing the telemetry volume produced by frequent re-evaluations, for example a flag that is
  read on every redraw of a view. Deduplication is opt-in: a hook that is registered unwrapped observes every evaluation.
 
+ Each place in your application that reads a flag is deduplicated on its own, so reading one flag from a view and from a
+ tap handler tells the wrapped hook about both. Only reads from the same line are folded together.
+
  ```swift
  config.hooks = [
      MetricsHook(),                                     // observes every evaluation

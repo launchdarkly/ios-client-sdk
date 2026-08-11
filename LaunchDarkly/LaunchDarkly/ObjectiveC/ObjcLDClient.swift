@@ -182,7 +182,10 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: boolVariation
     @objc public func boolVariation(forKey key: LDFlagKey, defaultValue: Bool) -> Bool {
-        ldClient.boolVariation(forKey: key, defaultValue: defaultValue)
+        // Every variation method here passes a nil file, as this one does: were the call site left to default, it would
+        // be this wrapper rather than anywhere an Objective-C caller reads a flag from, and every read made through this
+        // interface would look to a deduping hook like the same handful of places. Objective-C cannot supply its own.
+        ldClient.boolVariation(forKey: key, defaultValue: defaultValue, file: nil, line: 0)
     }
 
     /**
@@ -194,7 +197,7 @@ public final class ObjcLDClient: NSObject {
      - returns: ObjcLDBoolEvaluationDetail containing your value as well as useful information on why that value was returned.
     */
     @objc public func boolVariationDetail(forKey key: LDFlagKey, defaultValue: Bool) -> ObjcLDBoolEvaluationDetail {
-        let evaluationDetail = ldClient.boolVariationDetail(forKey: key, defaultValue: defaultValue)
+        let evaluationDetail = ldClient.boolVariationDetail(forKey: key, defaultValue: defaultValue, file: nil, line: 0)
         return ObjcLDBoolEvaluationDetail(value: evaluationDetail.value,
                                           variationIndex: evaluationDetail.variationIndex,
                                           reason: evaluationDetail.reason?.mapValues { ObjcLDValue(wrappedValue: $0) })
@@ -219,7 +222,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: integerVariation
     @objc public func integerVariation(forKey key: LDFlagKey, defaultValue: Int) -> Int {
-        ldClient.intVariation(forKey: key, defaultValue: defaultValue)
+        ldClient.intVariation(forKey: key, defaultValue: defaultValue, file: nil, line: 0)
     }
 
     /**
@@ -231,7 +234,7 @@ public final class ObjcLDClient: NSObject {
      - returns: ObjcLDIntegerEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
     @objc public func integerVariationDetail(forKey key: LDFlagKey, defaultValue: Int) -> ObjcLDIntegerEvaluationDetail {
-        let evaluationDetail = ldClient.intVariationDetail(forKey: key, defaultValue: defaultValue)
+        let evaluationDetail = ldClient.intVariationDetail(forKey: key, defaultValue: defaultValue, file: nil, line: 0)
         return ObjcLDIntegerEvaluationDetail(value: evaluationDetail.value,
                                              variationIndex: evaluationDetail.variationIndex,
                                              reason: evaluationDetail.reason?.mapValues { ObjcLDValue(wrappedValue: $0) })
@@ -256,7 +259,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: doubleVariation
     @objc public func doubleVariation(forKey key: LDFlagKey, defaultValue: Double) -> Double {
-        ldClient.doubleVariation(forKey: key, defaultValue: defaultValue)
+        ldClient.doubleVariation(forKey: key, defaultValue: defaultValue, file: nil, line: 0)
     }
 
     /**
@@ -268,7 +271,7 @@ public final class ObjcLDClient: NSObject {
      - returns: ObjcLDDoubleEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
     @objc public func doubleVariationDetail(forKey key: LDFlagKey, defaultValue: Double) -> ObjcLDDoubleEvaluationDetail {
-        let evaluationDetail = ldClient.doubleVariationDetail(forKey: key, defaultValue: defaultValue)
+        let evaluationDetail = ldClient.doubleVariationDetail(forKey: key, defaultValue: defaultValue, file: nil, line: 0)
         return ObjcLDDoubleEvaluationDetail(value: evaluationDetail.value,
                                             variationIndex: evaluationDetail.variationIndex,
                                             reason: evaluationDetail.reason?.mapValues { ObjcLDValue(wrappedValue: $0) })
@@ -293,7 +296,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: stringVariation
     @objc public func stringVariation(forKey key: LDFlagKey, defaultValue: String) -> String {
-        ldClient.stringVariation(forKey: key, defaultValue: defaultValue)
+        ldClient.stringVariation(forKey: key, defaultValue: defaultValue, file: nil, line: 0)
     }
 
     /**
@@ -305,7 +308,7 @@ public final class ObjcLDClient: NSObject {
      - returns: ObjcLDStringEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
     @objc public func stringVariationDetail(forKey key: LDFlagKey, defaultValue: String) -> ObjcLDStringEvaluationDetail {
-        let evaluationDetail = ldClient.stringVariationDetail(forKey: key, defaultValue: defaultValue)
+        let evaluationDetail = ldClient.stringVariationDetail(forKey: key, defaultValue: defaultValue, file: nil, line: 0)
         return ObjcLDStringEvaluationDetail(value: evaluationDetail.value,
                                             variationIndex: evaluationDetail.variationIndex,
                                             reason: evaluationDetail.reason?.mapValues { ObjcLDValue(wrappedValue: $0) })
@@ -328,7 +331,7 @@ public final class ObjcLDClient: NSObject {
      */
     /// - Tag: arrayVariation
     @objc public func jsonVariation(forKey key: LDFlagKey, defaultValue: ObjcLDValue) -> ObjcLDValue {
-        ObjcLDValue(wrappedValue: ldClient.jsonVariation(forKey: key, defaultValue: defaultValue.wrappedValue))
+        ObjcLDValue(wrappedValue: ldClient.jsonVariation(forKey: key, defaultValue: defaultValue.wrappedValue, file: nil, line: 0))
     }
 
     /**
@@ -340,7 +343,7 @@ public final class ObjcLDClient: NSObject {
      - returns: ObjcLDJSONEvaluationDetail containing your value as well as useful information on why that value was returned.
      */
     @objc public func jsonVariationDetail(forKey key: LDFlagKey, defaultValue: ObjcLDValue) -> ObjcLDJSONEvaluationDetail {
-        let evaluationDetail = ldClient.jsonVariationDetail(forKey: key, defaultValue: defaultValue.wrappedValue)
+        let evaluationDetail = ldClient.jsonVariationDetail(forKey: key, defaultValue: defaultValue.wrappedValue, file: nil, line: 0)
         return ObjcLDJSONEvaluationDetail(value: ObjcLDValue(wrappedValue: evaluationDetail.value),
                                            variationIndex: evaluationDetail.variationIndex,
                                            reason: evaluationDetail.reason?.mapValues { ObjcLDValue(wrappedValue: $0) })
