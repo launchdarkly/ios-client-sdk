@@ -6,8 +6,9 @@ import Foundation
 
  Two evaluations are the same exposure when every component here matches. The value is included directly rather than
  inferred from the variation and version: those are the identity LaunchDarkly uses to bucket summary events, but neither
- by itself guarantees that the payload is unchanged. The environment is a component because a hook set on `LDConfig` is
- one instance shared by the clients for every environment in `secondaryMobileKeys`, and so is its deduper.
+ by itself guarantees that the payload is unchanged. The mobile key, which is what identifies the environment an
+ evaluation was made against, is a component because a hook set on `LDConfig` is one instance shared by the clients for
+ every environment in `secondaryMobileKeys`, and so is its deduper.
 
  The components describe the result the evaluation returns, which is how the SDK identifies an evaluation on analytics
  events too. An evaluation the SDK has no flag data for returns the default value, and so is described by that value with
@@ -15,8 +16,8 @@ import Foundation
  client has flags are of that kind, as are evaluations of a flag that does not exist, so the data arriving changes the
  value, variation, and version, and the hook is told about the flag again rather than waiting out a window. A flag whose
  data carries no value, which is what a flag that is off without an off variation has, likewise returns the default value
- and is described by it, under the flag's own variation and version. The environment name is never unknown this way: it
- names a mobile key in the configuration, so it is fixed before the client it belongs to evaluates anything.
+ and is described by it, under the flag's own variation and version. The mobile key is never unknown this way: it comes
+ from the configuration, so it is fixed before the client it belongs to evaluates anything.
 
  The reason the SDK gives for a result is not a component, so neither is the experiment membership drawn from it. A
  prerequisite that starts failing to the variation an experiment had been choosing leaves the value, the variation, and
@@ -26,8 +27,8 @@ import Foundation
  until the window elapses.
  */
 public struct EvaluationExposureKey: Hashable {
-    /// The name of the environment the evaluation was made against.
-    public let environmentName: String
+    /// The mobile key of the environment the evaluation was made against.
+    public let mobileKey: String
     /// The key of the flag that was evaluated.
     public let flagKey: LDFlagKey
     /// The value the evaluation returns, which is the default value if the flag was not found.
@@ -40,7 +41,7 @@ public struct EvaluationExposureKey: Hashable {
     public let fullyQualifiedContextKey: String
 
     /**
-     - parameter environmentName: The name of the environment the evaluation was made against.
+     - parameter mobileKey: The mobile key of the environment the evaluation was made against.
      - parameter flagKey: The key of the flag that was evaluated.
      - parameter value: The value the evaluation returns, which is the default value if the flag was not found.
      Defaults to null; prefer stating it, since the variation and version do not by themselves distinguish one result
@@ -49,13 +50,13 @@ public struct EvaluationExposureKey: Hashable {
      - parameter flagVersion: The flag version reported on events.
      - parameter fullyQualifiedContextKey: The fully qualified key of the evaluation context.
      */
-    public init(environmentName: String,
+    public init(mobileKey: String,
                 flagKey: LDFlagKey,
                 variation: Int?,
                 flagVersion: Int?,
                 fullyQualifiedContextKey: String,
                 value: LDValue = .null) {
-        self.environmentName = environmentName
+        self.mobileKey = mobileKey
         self.flagKey = flagKey
         self.value = value
         self.variation = variation
@@ -65,7 +66,7 @@ public struct EvaluationExposureKey: Hashable {
 
     /// Hashes every component of the exposure key.
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(environmentName)
+        hasher.combine(mobileKey)
         hasher.combine(flagKey)
         hash(value: value, into: &hasher)
         hasher.combine(variation)
@@ -187,7 +188,7 @@ open class EvaluationExposureDeduper {
         else { return true }
 
         return queue.sync {
-            let flag = TrackedFlag(environmentName: key.environmentName, flagKey: key.flagKey)
+            let flag = TrackedFlag(mobileKey: key.mobileKey, flagKey: key.flagKey)
             if let reported = lastReported[flag], reported.reportedAt > now - window, reported.isSameResult(as: key) {
                 return false
             }
@@ -204,11 +205,12 @@ open class EvaluationExposureDeduper {
     }
 }
 
-/// The flag a record belongs to. The environment is part of it because a hook set on `LDConfig` is one instance shared
-/// by the clients for every environment in `secondaryMobileKeys`: were the environments to share a record, each would
-/// look like the other having changed its result, and neither would ever be suppressed.
+/// The flag a record belongs to. The mobile key, which is what identifies the environment, is part of it because a hook
+/// set on `LDConfig` is one instance shared by the clients for every environment in `secondaryMobileKeys`: were the
+/// environments to share a record, each would look like the other having changed its result, and neither would ever be
+/// suppressed.
 private struct TrackedFlag: Hashable {
-    let environmentName: String
+    let mobileKey: String
     let flagKey: LDFlagKey
 }
 
@@ -218,7 +220,7 @@ private struct LastReported {
     let reportedAt: TimeInterval
 
     /// Holding the key rather than a copy of the components that describe its result is what keeps this from having to
-    /// be revisited whenever `EvaluationExposureKey` gains one. The environment and flag key it also compares are equal
+    /// be revisited whenever `EvaluationExposureKey` gains one. The mobile key and flag key it also compares are equal
     /// by the time this is asked, since a record is only ever found under the `TrackedFlag` they make up.
     func isSameResult(as key: EvaluationExposureKey) -> Bool {
         return self.key == key

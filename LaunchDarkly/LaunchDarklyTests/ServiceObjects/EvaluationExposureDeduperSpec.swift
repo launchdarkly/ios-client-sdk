@@ -6,7 +6,7 @@ import Nimble
 /// An exposure key that differs from every other one this spec builds only by its flag key, so that a test can talk
 /// about "the exposure of a" without spelling out the whole key.
 private func key(_ flagKey: LDFlagKey) -> EvaluationExposureKey {
-    return EvaluationExposureKey(environmentName: "default",
+    return EvaluationExposureKey(mobileKey: "mobile-key",
                                  flagKey: flagKey,
                                  variation: 1,
                                  flagVersion: 2,
@@ -16,7 +16,7 @@ private func key(_ flagKey: LDFlagKey) -> EvaluationExposureKey {
 
 /// The same flag as `key(_:)`, resolved to a different variation.
 private func otherResult(_ flagKey: LDFlagKey) -> EvaluationExposureKey {
-    return EvaluationExposureKey(environmentName: "default",
+    return EvaluationExposureKey(mobileKey: "mobile-key",
                                  flagKey: flagKey,
                                  variation: 3,
                                  flagVersion: 2,
@@ -28,7 +28,7 @@ private func otherResult(_ flagKey: LDFlagKey) -> EvaluationExposureKey {
 /// flag that does not exist. Such an evaluation returns the default value, so that is the value describing it, with no
 /// variation and no version.
 private func unknownFlag(_ flagKey: LDFlagKey, _ defaultValue: LDValue) -> EvaluationExposureKey {
-    return EvaluationExposureKey(environmentName: "default",
+    return EvaluationExposureKey(mobileKey: "mobile-key",
                                  flagKey: flagKey,
                                  variation: nil,
                                  flagVersion: nil,
@@ -85,10 +85,10 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
             }
             it("reports again when only the flag value changes") {
                 let deduper = EvaluationExposureDeduper(window: 10)
-                let first = EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+                let first = EvaluationExposureKey(mobileKey: "mobile-key", flagKey: "flag", variation: 1,
                                                   flagVersion: 2,
                                                   fullyQualifiedContextKey: "user-key", value: .string("first"))
-                let second = EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+                let second = EvaluationExposureKey(mobileKey: "mobile-key", flagKey: "flag", variation: 1,
                                                    flagVersion: 2,
                                                    fullyQualifiedContextKey: "user-key", value: .string("second"))
 
@@ -122,10 +122,10 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
             }
             it("tracks the same flag separately per environment") {
                 let deduper = EvaluationExposureDeduper(window: 10)
-                let primary = EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+                let primary = EvaluationExposureKey(mobileKey: "mobile-key", flagKey: "flag", variation: 1,
                                                     flagVersion: 2,
                                                     fullyQualifiedContextKey: "user-key")
-                let secondary = EvaluationExposureKey(environmentName: "other", flagKey: "flag", variation: 3,
+                let secondary = EvaluationExposureKey(mobileKey: "other-mobile-key", flagKey: "flag", variation: 3,
                                                       flagVersion: 4,
                                                       fullyQualifiedContextKey: "user-key")
 
@@ -178,38 +178,38 @@ final class EvaluationExposureDeduperSpec: QuickSpec {
             }
         }
         describe("EvaluationExposureKey") {
-            let base = EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+            let base = EvaluationExposureKey(mobileKey: "mobile-key", flagKey: "flag", variation: 1,
                                              flagVersion: 2, fullyQualifiedContextKey: "user-key")
             it("distinguishes every component") {
-                expect(base) == EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+                expect(base) == EvaluationExposureKey(mobileKey: "mobile-key", flagKey: "flag", variation: 1,
                                                       flagVersion: 2,
                                                       fullyQualifiedContextKey: "user-key")
-                expect(base) != EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+                expect(base) != EvaluationExposureKey(mobileKey: "mobile-key", flagKey: "flag", variation: 1,
                                                       flagVersion: 2,
                                                       fullyQualifiedContextKey: "user-key", value: .string("value"))
-                expect(base) != EvaluationExposureKey(environmentName: "default", flagKey: "other-flag", variation: 1,
+                expect(base) != EvaluationExposureKey(mobileKey: "mobile-key", flagKey: "other-flag", variation: 1,
                                                       flagVersion: 2,
                                                       fullyQualifiedContextKey: "user-key")
-                expect(base) != EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 3,
+                expect(base) != EvaluationExposureKey(mobileKey: "mobile-key", flagKey: "flag", variation: 3,
                                                       flagVersion: 2,
                                                       fullyQualifiedContextKey: "user-key")
-                expect(base) != EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+                expect(base) != EvaluationExposureKey(mobileKey: "mobile-key", flagKey: "flag", variation: 1,
                                                       flagVersion: 4,
                                                       fullyQualifiedContextKey: "user-key")
-                expect(base) != EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: 1,
+                expect(base) != EvaluationExposureKey(mobileKey: "mobile-key", flagKey: "flag", variation: 1,
                                                       flagVersion: 2,
                                                       fullyQualifiedContextKey: "other-user-key")
                 // A hook shared across environments observes the same result once per environment.
-                expect(base) != EvaluationExposureKey(environmentName: "other-env", flagKey: "flag", variation: 1,
+                expect(base) != EvaluationExposureKey(mobileKey: "other-mobile-key", flagKey: "flag", variation: 1,
                                                       flagVersion: 2,
                                                       fullyQualifiedContextKey: "user-key")
             }
             it("tells a missing variation and version apart from any present one") {
-                let missing = EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: nil,
+                let missing = EvaluationExposureKey(mobileKey: "mobile-key", flagKey: "flag", variation: nil,
                                                     flagVersion: nil,
                                                     fullyQualifiedContextKey: "user-key")
                 expect(missing) != base
-                expect(missing) == EvaluationExposureKey(environmentName: "default", flagKey: "flag", variation: nil,
+                expect(missing) == EvaluationExposureKey(mobileKey: "mobile-key", flagKey: "flag", variation: nil,
                                                          flagVersion: nil,
                                                          fullyQualifiedContextKey: "user-key")
             }
