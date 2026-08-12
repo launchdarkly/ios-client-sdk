@@ -349,7 +349,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertEqual(deduper.keys.count, 4)
         XCTAssertEqual(Set(deduper.keys).count, 1)
         XCTAssertEqual(deduper.keys[0].flagKey, DarklyServiceMock.FlagKeys.bool)
-        XCTAssertEqual(deduper.keys[0].environmentName, LDConfig.Constants.primaryEnvironmentName)
+        XCTAssertEqual(deduper.keys[0].mobileKey, "mobile-key")
     }
 
     func testEnvironmentsSharingAHookDoNotSuppressEachOther() {
