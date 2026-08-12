@@ -148,7 +148,7 @@ extension LDClient {
             return evaluation()
         }
 
-        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName, environmentId: environmentId, featureFlag: featureFlag)
+        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName, mobileKeyHash: mobileKeyHash, featureFlag: featureFlag)
         let hookData = self.execute_before_evaluation(hooks: hooks, seriesContext: seriesContext)
         let evaluationResult = evaluation()
         _ = self.execute_after_evaluation(hooks: hooks, seriesContext: seriesContext, hookData: hookData, evaluationDetail: evaluationResult.map { value in return value.toLDValue()})
