@@ -29,10 +29,11 @@ import Foundation
  until the window elapses.
  */
 public struct EvaluationExposureKey: Hashable {
-    /// Identifies the environment the evaluation was made against, for comparison only: it is a hash of the mobile key,
-    /// so nothing can be read out of it, and the SDK gives no guarantee about how it is derived beyond being the same
-    /// for two evaluations made against the same environment and different otherwise.
-    public let environmentId: String
+    /// Identifies the environment the evaluation was made against, for comparison only: the mobile key is hashed so
+    /// that a hook is not handed the credential, and the hash the SDK uses is not part of its contract. All that is
+    /// guaranteed is that two evaluations made against the same environment give the same value, and evaluations made
+    /// against different environments do not.
+    public let mobileKeyHash: String
     /// The key of the flag that was evaluated.
     public let flagKey: LDFlagKey
     /// The value the evaluation returns, which is the default value if the flag was not found.
@@ -45,7 +46,7 @@ public struct EvaluationExposureKey: Hashable {
     public let fullyQualifiedContextKey: String
 
     /**
-     - parameter environmentId: An opaque identifier for the environment the evaluation was made against.
+     - parameter mobileKeyHash: A hash of the mobile key of the environment the evaluation was made against.
      - parameter flagKey: The key of the flag that was evaluated.
      - parameter value: The value the evaluation returns, which is the default value if the flag was not found.
      Defaults to null; prefer stating it, since the variation and version do not by themselves distinguish one result
@@ -54,13 +55,13 @@ public struct EvaluationExposureKey: Hashable {
      - parameter flagVersion: The flag version reported on events.
      - parameter fullyQualifiedContextKey: The fully qualified key of the evaluation context.
      */
-    public init(environmentId: String,
+    public init(mobileKeyHash: String,
                 flagKey: LDFlagKey,
                 variation: Int?,
                 flagVersion: Int?,
                 fullyQualifiedContextKey: String,
                 value: LDValue = .null) {
-        self.environmentId = environmentId
+        self.mobileKeyHash = mobileKeyHash
         self.flagKey = flagKey
         self.value = value
         self.variation = variation
@@ -70,7 +71,7 @@ public struct EvaluationExposureKey: Hashable {
 
     /// Hashes every component of the exposure key.
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(environmentId)
+        hasher.combine(mobileKeyHash)
         hasher.combine(flagKey)
         hash(value: value, into: &hasher)
         hasher.combine(variation)
@@ -192,7 +193,7 @@ open class EvaluationExposureDeduper {
         else { return true }
 
         return queue.sync {
-            let flag = TrackedFlag(environmentId: key.environmentId, flagKey: key.flagKey)
+            let flag = TrackedFlag(mobileKeyHash: key.mobileKeyHash, flagKey: key.flagKey)
             if let reported = lastReported[flag], reported.reportedAt > now - window, reported.isSameResult(as: key) {
                 return false
             }
@@ -213,7 +214,7 @@ open class EvaluationExposureDeduper {
 /// by the clients for every environment in `secondaryMobileKeys`: were the environments to share a record, each would
 /// look like the other having changed its result, and neither would ever be suppressed.
 private struct TrackedFlag: Hashable {
-    let environmentId: String
+    let mobileKeyHash: String
     let flagKey: LDFlagKey
 }
 
