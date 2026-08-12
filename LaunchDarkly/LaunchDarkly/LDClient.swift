@@ -280,6 +280,10 @@ public class LDClient {
     /// mobile key in the configuration, so it is known before the client exists rather than being learned as the client
     /// starts: a hook that runs while the client is initializing is told which environment it belongs to.
     let environmentName: String
+    /// Identifies this client's environment to a hook, without handing it the mobile key that identifies the
+    /// environment to LaunchDarkly. Hashed once here rather than per evaluation, because a deduping hook asks for it on
+    /// a path an application may take on every redraw of a view.
+    let environmentId: String
     let service: DarklyServiceProvider
     /// The hooks registered with this client. Fixed once the client is initialized.
     private(set) var hooks: [Hook]
@@ -977,6 +981,7 @@ public class LDClient {
         // Set before the hooks below run, so that the environment a hook is told about is this client's rather than the
         // primary one's.
         self.environmentName = environmentName
+        self.environmentId = Util.sha256base64(configuration.mobileKey)
         self.serviceFactory = serviceFactory
         environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
         let hooks = LDClient.collectHooks(configuration: configuration, environmentReporter: environmentReporter)

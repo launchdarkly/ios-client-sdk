@@ -349,7 +349,9 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertEqual(deduper.keys.count, 4)
         XCTAssertEqual(Set(deduper.keys).count, 1)
         XCTAssertEqual(deduper.keys[0].flagKey, DarklyServiceMock.FlagKeys.bool)
-        XCTAssertEqual(deduper.keys[0].mobileKey, "mobile-key")
+        // A hook is told which environment an evaluation was made against, but not the credential that identifies it.
+        XCTAssertEqual(deduper.keys[0].environmentId, testContext.subject.environmentId)
+        XCTAssertNotEqual(deduper.keys[0].environmentId, "mobile-key")
     }
 
     func testEnvironmentsSharingAHookDoNotSuppressEachOther() {
