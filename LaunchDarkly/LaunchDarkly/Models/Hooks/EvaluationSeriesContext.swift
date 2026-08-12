@@ -12,18 +12,18 @@ public class EvaluationSeriesContext {
     public let methodName: String
 
     // The evaluation's own read of the flag, rather than the key describing it, so that an evaluation reaching only
-    // hooks that never ask what its result is builds nothing to describe it. A nil mobile key is what says this
+    // hooks that never ask what its result is builds nothing to describe it. A nil environment is what says this
     // context was built by something other than the SDK, and so has no result to describe at all.
-    private let mobileKey: String?
+    private let environmentId: String?
     private let featureFlag: FeatureFlag?
 
     init(flagKey: String, context: LDContext, defaultValue: LDValue, methodName: String,
-         mobileKey: String? = nil, featureFlag: FeatureFlag? = nil) {
+         environmentId: String? = nil, featureFlag: FeatureFlag? = nil) {
         self.flagKey = flagKey
         self.context = context
         self.defaultValue = defaultValue
         self.methodName = methodName
-        self.mobileKey = mobileKey
+        self.environmentId = environmentId
         self.featureFlag = featureFlag
     }
 
@@ -42,7 +42,7 @@ public class EvaluationSeriesContext {
      This is nil when the context was not built by the SDK, and so has no result to describe.
      */
     public var evaluationExposureKey: EvaluationExposureKey? {
-        guard let mobileKey = mobileKey else {
+        guard let environmentId = environmentId else {
             return nil
         }
 
@@ -53,7 +53,7 @@ public class EvaluationSeriesContext {
         let flagValue = featureFlag?.value ?? .null
 
         return EvaluationExposureKey(
-            mobileKey: mobileKey,
+            environmentId: environmentId,
             flagKey: flagKey,
             variation: featureFlag?.variation,
             flagVersion: featureFlag?.versionForEvents,
