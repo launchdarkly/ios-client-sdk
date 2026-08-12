@@ -17,6 +17,13 @@ import Foundation
  data carries no value, which is what a flag that is off without an off variation has, likewise returns the default value
  and is described by it, under the flag's own variation and version. The environment name is never unknown this way: it
  names a mobile key in the configuration, so it is fixed before the client it belongs to evaluates anything.
+
+ The reason the SDK gives for a result is not a component, so neither is the experiment membership drawn from it. A
+ prerequisite that starts failing to the variation an experiment had been choosing leaves the value, the variation, and
+ the version unchanged while moving the flag out of that experiment, and the evaluations that follow are repeats here.
+ The analytics the SDK sends are untouched by any of this, each carrying its own reason, so what LaunchDarkly attributes
+ to an experiment does not depend on the window; a hook that reads the reason itself is what can miss such a change
+ until the window elapses.
  */
 public struct EvaluationExposureKey: Hashable {
     /// The name of the environment the evaluation was made against.
