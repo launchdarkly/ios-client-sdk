@@ -285,8 +285,10 @@ public class LDClient {
     /// a path an application may take on every redraw of a view.
     let mobileKeyHash: String
     let service: DarklyServiceProvider
-    /// The hooks registered with this client. Fixed once the client is initialized.
-    private(set) var hooks: [Hook]
+    /// The hooks registered with this client: the configuration's, followed by the ones its plugins contribute.
+    /// Constant, so that a series reading it more than once, as an evaluation series does for its before and after
+    /// stages, runs the same hooks in both, whichever thread the evaluation was made from.
+    let hooks: [Hook]
     private(set) var context: LDContext
 
     /**

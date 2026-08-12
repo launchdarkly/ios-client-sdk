@@ -31,6 +31,9 @@ public class EvaluationSeriesContext {
      The key identifying the result this evaluation will return, for a hook that decides what to do with an evaluation by
      whether it has seen the same result before. `DedupingHook` is such a hook.
 
+     This property is not stable, and not subject to any backwards compatibility guarantees or semantic versioning. It
+     is experimental.
+
      This describes the flag rather than the evaluation result because a deduping hook decides before the series opens:
      hooks pair their stages, so a hook that opens a span in `beforeEvaluation` and closes it in `afterEvaluation` would
      be left holding an open span were only the after stage suppressed. It is the evaluation's own read of the flag, the
