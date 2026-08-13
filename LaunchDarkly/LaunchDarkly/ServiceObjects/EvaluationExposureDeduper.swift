@@ -118,9 +118,6 @@ open class EvaluationExposureDeduper {
      it, such as `DispatchTime.now()` and `ProcessInfo.systemUptime`, so a window is an interval of real time rather
      than of awake time. Where a platform's monotonic clock instead stops while the host is suspended, a window outlasts
      the suspension, which holds a repeat back for longer rather than reporting one too often.
-
-     Only differences between readings are meaningful: this is not a time of day, and comparing it with
-     `Date().timeIntervalSince1970` is a mistake.
      */
     public static func monotonicNow() -> TimeInterval {
         var now = timespec()
