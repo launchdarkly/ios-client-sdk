@@ -73,46 +73,6 @@ public struct EvaluationExposureKey: Hashable {
         self.flagVersion = flagVersion
         self.fullyQualifiedContextKey = fullyQualifiedContextKey
     }
-
-    /// Hashes every component of the exposure key.
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(mobileKeyHash)
-        hasher.combine(flagKey)
-        hash(value: value, into: &hasher)
-        hasher.combine(variation)
-        hasher.combine(flagVersion)
-        hasher.combine(fullyQualifiedContextKey)
-    }
-
-    private func hash(value: LDValue, into hasher: inout Hasher) {
-        switch value {
-        case .null:
-            hasher.combine(0)
-        case .bool(let value):
-            hasher.combine(1)
-            hasher.combine(value)
-        case .number(let value):
-            hasher.combine(2)
-            hasher.combine(value)
-        case .string(let value):
-            hasher.combine(3)
-            hasher.combine(value)
-        case .array(let values):
-            hasher.combine(4)
-            hasher.combine(values.count)
-            values.forEach { hash(value: $0, into: &hasher) }
-        case .object(let values):
-            hasher.combine(5)
-            hasher.combine(values.count)
-            // Dictionary order is not part of LDValue equality, so hash objects in key order.
-            values.keys.sorted().forEach { key in
-                hasher.combine(key)
-                if let value = values[key] {
-                    hash(value: value, into: &hasher)
-                }
-            }
-        }
-    }
 }
 
 /**
