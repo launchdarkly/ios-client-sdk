@@ -485,40 +485,36 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         XCTAssertEqual(afters, 1)
     }
 
+    func testADecoratorForwardsTheStagesItDoesNotOverride() {
+        let hook = RecordingHook()
+        let testContext = dedupeTestContext(hooks: [CountingDecorator(hook)])
+        _ = hook.takeStages()
+
+        waitUntil { done in
+            testContext.subject.identify(context: LDContext.stub()) { _ in done() }
+        }
+        testContext.subject.track(key: "event-key")
+
+        // The decorator mentions neither identify nor track, and the hook it wraps is still told about both: a stage a
+        // decorator leaves alone is forwarded rather than dropped.
+        XCTAssertEqual(hook.takeStages(), ["beforeIdentify", "afterIdentify", "afterTrack"])
+    }
+
     /// A hook that wraps another hook and counts what it forwards, to check that wrappers compose.
-    class CountingDecorator: Hook {
-        private let delegate: Hook
+    ///
+    /// Overrides only the evaluation stages, as a wrapper a customer writes would: the rest are inherited.
+    class CountingDecorator: HookDecorator {
         private(set) var evaluationsForwarded = 0
         private(set) var resultsForwarded = 0
 
-        init(_ delegate: Hook) {
-            self.delegate = delegate
-        }
-
-        func metadata() -> Metadata {
-            return delegate.metadata()
-        }
-
-        func beforeEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData) -> EvaluationSeriesData {
+        override func beforeEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData) -> EvaluationSeriesData {
             evaluationsForwarded += 1
-            return delegate.beforeEvaluation(seriesContext: seriesContext, seriesData: seriesData)
+            return super.beforeEvaluation(seriesContext: seriesContext, seriesData: seriesData)
         }
 
-        func afterEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>) -> EvaluationSeriesData {
+        override func afterEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>) -> EvaluationSeriesData {
             resultsForwarded += 1
-            return delegate.afterEvaluation(seriesContext: seriesContext, seriesData: seriesData, evaluationDetail: evaluationDetail)
-        }
-
-        func beforeIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData) -> IdentifySeriesData {
-            return delegate.beforeIdentify(seriesContext: seriesContext, seriesData: seriesData)
-        }
-
-        func afterIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData, result: IdentifyResult) -> IdentifySeriesData {
-            return delegate.afterIdentify(seriesContext: seriesContext, seriesData: seriesData, result: result)
-        }
-
-        func afterTrack(seriesContext: TrackSeriesContext) {
-            delegate.afterTrack(seriesContext: seriesContext)
+            return super.afterEvaluation(seriesContext: seriesContext, seriesData: seriesData, evaluationDetail: evaluationDetail)
         }
     }
 

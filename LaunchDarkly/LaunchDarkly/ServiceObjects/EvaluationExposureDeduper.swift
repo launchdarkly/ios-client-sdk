@@ -1,4 +1,9 @@
 import Foundation
+#if canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#endif
 
 /**
  Identifies the evaluation result a hook is about to be told about, so that an `EvaluationExposureDeduper` can recognize
@@ -122,15 +127,14 @@ public struct EvaluationExposureKey: Hashable {
      MetricsHook(),                                     // told about every evaluation
      DedupingHook(ObservabilityHook()),                  // default window
      DedupingHook(TelemetryHook(), window: 30),
-     DedupingHook(ExperimentHook(), deduper: myCustomDeduper)
+     DedupingHook(ExperimentHook(), deduper: sharedDeduper)
  ]
  ```
 
  This class is the SDK's implementation: it remembers the result each flag last reported, and tells the hook about the
  flag again as soon as that result changes, or once the window elapses while it stays the same. Tracking one result per
  flag rather than every result seen keeps a flag that flips back and forth from hiding the flips, and holds one record per
- flag the application evaluates, so the window is the only thing there is to configure. Subclass this to implement a
- different policy; only `shouldRecord(key:now:)` and `reset()` are called by `DedupingHook`.
+ flag the application evaluates, so the window is the only thing there is to configure.
 
  A deduper is consulted once per evaluation, before the series opens, so a suppressed evaluation invokes neither
  `beforeEvaluation` nor `afterEvaluation`. Implementations must be thread-safe, because evaluations may be made from any
@@ -145,18 +149,26 @@ open class EvaluationExposureDeduper {
      Reads the clock a window is measured against, in seconds. This is what `shouldRecord(key:now:)` reads when it is
      not given a time.
 
-     `CLOCK_MONOTONIC_RAW` counts from an arbitrary point rather than from the epoch, so that correcting the device
-     clock cannot stretch a window: were this `Date()`, a correction that moved the clock backwards would leave every
-     recorded time in the future and suppress those flags until real time caught up. It also advances while the device
-     sleeps, unlike `mach_absolute_time` and everything built on it, such as `DispatchTime.now()` and
-     `ProcessInfo.systemUptime`, so a window is an interval of real time rather than of awake time.
+     `CLOCK_MONOTONIC` counts from an arbitrary point rather than from the epoch, so that correcting the device clock
+     cannot stretch a window: were this `Date()`, a correction that moved the clock backwards would leave every recorded
+     time in the future and suppress those flags until real time caught up. It is POSIX rather than one of Darwin's own
+     clocks, so the same reading is available on every platform Swift builds for.
+
+     On Apple platforms it keeps advancing while the device sleeps, unlike `mach_absolute_time` and everything built on
+     it, such as `DispatchTime.now()` and `ProcessInfo.systemUptime`, so a window is an interval of real time rather
+     than of awake time. Where a platform's monotonic clock instead stops while the host is suspended, a window outlasts
+     the suspension, which holds a repeat back for longer rather than reporting one too often.
 
      Only differences between readings are meaningful: this is not a time of day, and comparing it with
      `Date().timeIntervalSince1970` is a mistake.
      */
     public static func monotonicNow() -> TimeInterval {
-        return TimeInterval(clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW)) / TimeInterval(NSEC_PER_SEC)
+        var now = timespec()
+        clock_gettime(CLOCK_MONOTONIC, &now)
+        return TimeInterval(now.tv_sec) + TimeInterval(now.tv_nsec) / nanosecondsPerSecond
     }
+
+    private static let nanosecondsPerSecond: TimeInterval = 1_000_000_000
 
     private let window: TimeInterval
 

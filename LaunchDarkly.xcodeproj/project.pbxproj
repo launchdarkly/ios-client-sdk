@@ -326,6 +326,10 @@
 		9AE1D0C22F4A1B000001FD9C /* DedupingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */; };
 		9AE1D0C32F4A1B000001FD9C /* DedupingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */; };
 		9AE1D0C42F4A1B000001FD9C /* DedupingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */; };
+		9AE1D0B12F4A1B000001FD9C /* HookDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */; };
+		9AE1D0B22F4A1B000001FD9C /* HookDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */; };
+		9AE1D0B32F4A1B000001FD9C /* HookDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */; };
+		9AE1D0B42F4A1B000001FD9C /* HookDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */; };
 		A3BA7CEA2BD056920000DB28 /* Hook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7CE82BD056920000DB28 /* Hook.swift */; };
 		A3BA7CEB2BD056920000DB28 /* Hook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7CE82BD056920000DB28 /* Hook.swift */; };
 		A3BA7CEC2BD056920000DB28 /* Hook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7CE82BD056920000DB28 /* Hook.swift */; };
@@ -582,6 +586,7 @@
 		A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SheddingQueue.swift; sourceTree = "<group>"; };
 		A3BA7CE82BD056920000DB28 /* Hook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hook.swift; sourceTree = "<group>"; };
 		9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DedupingHook.swift; sourceTree = "<group>"; };
+		9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookDecorator.swift; sourceTree = "<group>"; };
 		A3BA7CED2BD059180000DB28 /* Metadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metadata.swift; sourceTree = "<group>"; };
 		A3BA7CF22BD05A280000DB28 /* EvaluationSeriesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluationSeriesContext.swift; sourceTree = "<group>"; };
 		A3BA7D032BD2BD620000DB28 /* TestContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestContext.swift; sourceTree = "<group>"; };
@@ -1030,6 +1035,7 @@
 				FED0000000000000000000C0 /* TrackSeriesContext.swift */,
 				A3BA7CE82BD056920000DB28 /* Hook.swift */,
 				9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */,
+				9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */,
 				A3BA7CED2BD059180000DB28 /* Metadata.swift */,
 				A3BA7CF22BD05A280000DB28 /* EvaluationSeriesContext.swift */,
 			);
@@ -1468,6 +1474,7 @@
 				A36EDFCB2853883400D91B05 /* ObjcLDReference.swift in Sources */,
 				A3BA7CEC2BD056920000DB28 /* Hook.swift in Sources */,
 				9AE1D0C12F4A1B000001FD9C /* DedupingHook.swift in Sources */,
+				9AE1D0B12F4A1B000001FD9C /* HookDecorator.swift in Sources */,
 				832D68A5224A38FC005F052A /* CacheConverter.swift in Sources */,
 				A35AD4632A619E45005A8DCB /* SystemCapabilities.swift in Sources */,
 				A358D6FA2A4DF1D500270C60 /* SDKEnvironmentReporter.swift in Sources */,
@@ -1555,6 +1562,7 @@
 				B495A8A42787762C0051977C /* LDClientVariation.swift in Sources */,
 				A3BA7CEB2BD056920000DB28 /* Hook.swift in Sources */,
 				9AE1D0C22F4A1B000001FD9C /* DedupingHook.swift in Sources */,
+				9AE1D0B22F4A1B000001FD9C /* HookDecorator.swift in Sources */,
 				A3599E8A2A4B4AD400DB5C67 /* Modifier.swift in Sources */,
 				831EF36320655E730001C643 /* Date.swift in Sources */,
 				831EF36520655E730001C643 /* Thread.swift in Sources */,
@@ -1637,6 +1645,7 @@
 				8358F2621F47747F00ECE1AF /* FlagChangeObserver.swift in Sources */,
 				A3BA7CE92BD056920000DB28 /* Hook.swift in Sources */,
 				9AE1D0C32F4A1B000001FD9C /* DedupingHook.swift in Sources */,
+				9AE1D0B32F4A1B000001FD9C /* HookDecorator.swift in Sources */,
 				832D68A2224A38FC005F052A /* CacheConverter.swift in Sources */,
 				A35AD4602A619E45005A8DCB /* SystemCapabilities.swift in Sources */,
 				A358D6F72A4DF1D500270C60 /* SDKEnvironmentReporter.swift in Sources */,
@@ -1783,6 +1792,7 @@
 				A36EDFC92853883400D91B05 /* ObjcLDReference.swift in Sources */,
 				A3BA7CEA2BD056920000DB28 /* Hook.swift in Sources */,
 				9AE1D0C42F4A1B000001FD9C /* DedupingHook.swift in Sources */,
+				9AE1D0B42F4A1B000001FD9C /* HookDecorator.swift in Sources */,
 				83D9EC952062DEAB004D7FA6 /* Date.swift in Sources */,
 				A35AD4612A619E45005A8DCB /* SystemCapabilities.swift in Sources */,
 				A358D6F82A4DF1D500270C60 /* SDKEnvironmentReporter.swift in Sources */,

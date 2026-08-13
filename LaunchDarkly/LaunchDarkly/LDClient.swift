@@ -276,10 +276,6 @@ public class LDClient {
     }
 
     let config: LDConfig
-    /// The name this client is registered under in `LDClient.instances`, which identifies its environment. It names a
-    /// mobile key in the configuration, so it is known before the client exists rather than being learned as the client
-    /// starts: a hook that runs while the client is initializing is told which environment it belongs to.
-    let environmentName: String
     /// Identifies this client's environment to a hook, without handing it the mobile key that identifies the
     /// environment to LaunchDarkly. Hashed once here rather than per evaluation, because a deduping hook asks for it on
     /// a path an application may take on every redraw of a view.
@@ -850,7 +846,7 @@ public class LDClient {
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
-            let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, environmentName: name, startContext: context, completion: completionCheck)
+            let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context, completion: completionCheck)
             instancesQueue.sync(flags: .barrier) {
                 LDClient.instances?[name] = instance
             }
@@ -979,10 +975,9 @@ public class LDClient {
         return hooks
     }
 
-    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, environmentName: String, startContext: LDContext?, completion: (() -> Void)? = nil) {
+    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
         // Set before the hooks below run, so that the environment a hook is told about is this client's rather than the
         // primary one's.
-        self.environmentName = environmentName
         self.mobileKeyHash = Util.sha256base64(configuration.mobileKey)
         self.serviceFactory = serviceFactory
         environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
