@@ -335,6 +335,7 @@
 		A3C6F7662B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
 		A3C6F7672B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
 		A3FFE1132B7D4BA2009EF93F /* LDValueDecoderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */; };
+		9AF0E1012F5A1C000001FD9C /* LDValueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
 		B468E71024B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
@@ -575,6 +576,7 @@
 		A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheddingQueueSpec.swift; sourceTree = "<group>"; };
 		A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentifyTypes.swift; sourceTree = "<group>"; };
 		A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueDecoderSpec.swift; sourceTree = "<group>"; };
+		9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueSpec.swift; sourceTree = "<group>"; };
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
 		B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDEvaluationDetail.swift; sourceTree = "<group>"; };
@@ -789,6 +791,7 @@
 				8354EFD21F22491C00C05156 /* Info.plist */,
 				B4265EB024E7390C001CFD2C /* TestUtil.swift */,
 				A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */,
+				9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */,
 				A3BA7D032BD2BD620000DB28 /* TestContext.swift */,
 			);
 			name = LaunchDarklyTests;
@@ -1679,6 +1682,7 @@
 				838AB53F1F72A7D5006F03F5 /* FlagSynchronizerSpec.swift in Sources */,
 				9A47F74A2F3D4CBF0001FD9C /* ContextSummarizerSpec.swift in Sources */,
 				A3FFE1132B7D4BA2009EF93F /* LDValueDecoderSpec.swift in Sources */,
+				9AF0E1012F5A1C000001FD9C /* LDValueSpec.swift in Sources */,
 				A3570F5A28527B8200CF241A /* LDContextCodableSpec.swift in Sources */,
 				50EE85C72EA0749C007CC662 /* TimeoutExecutorSpec.swift in Sources */,
 				837406D421F760640087B22B /* LDTimerSpec.swift in Sources */,
