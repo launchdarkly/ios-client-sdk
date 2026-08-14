@@ -21,9 +21,6 @@ struct FeatureFlag: Codable {
 
     var versionForEvents: Int? { flagVersion ?? version }
 
-    /// Whether this evaluation was part of an experiment rollout, as reported on the evaluation reason.
-    var isInExperiment: Bool { reason?["inExperiment"] == .bool(true) }
-
     init(flagKey: LDFlagKey,
          value: LDValue = .null,
          variation: Int? = nil,

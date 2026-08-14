@@ -961,7 +961,6 @@
 			isa = PBXGroup;
 			children = (
 				9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */,
-				9AE1D0A02F4A1B000001FD9C /* EvaluationExposureDeduper.swift */,
 				50EE85C12EA0487F007CC662 /* TimeoutExecutor.swift */,
 				A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */,
 				A358D6CF2A4DD45000270C60 /* EnvironmentReporting */,
@@ -1042,6 +1041,7 @@
 				A3BA7CE82BD056920000DB28 /* Hook.swift */,
 				9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */,
 				9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */,
+				9AE1D0A02F4A1B000001FD9C /* EvaluationExposureDeduper.swift */,
 				A3BA7CED2BD059180000DB28 /* Metadata.swift */,
 				A3BA7CF22BD05A280000DB28 /* EvaluationSeriesContext.swift */,
 			);
