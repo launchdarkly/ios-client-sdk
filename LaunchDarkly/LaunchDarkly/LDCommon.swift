@@ -51,9 +51,12 @@ struct DynamicKey: CodingKey {
 
  This can be used to represent complex data in a context attribute, or to get a feature flag value that uses a
  complex type or does not always use the same type.
+
+ Values are `Hashable`, so one can key a dictionary or belong to a set. Two values that are equal hash alike, which for
+ an object means that the order its keys were written in does not matter.
  */
 public enum LDValue: Codable,
-                     Equatable,
+                     Hashable,
                      ExpressibleByNilLiteral,
                      ExpressibleByBooleanLiteral,
                      ExpressibleByIntegerLiteral,
