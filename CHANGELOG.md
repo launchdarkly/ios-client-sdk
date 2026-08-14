@@ -6,6 +6,13 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 * bumping swift-tools-version:5.5 and macosx to be compatible with otel
 - masOS "10.13" -> "12.00"
 
+## [11.5.0](https://github.com/launchdarkly/ios-client-sdk/compare/11.4.0...11.5.0) (2026-08-14)
+
+
+### Features
+
+* add configurable evaluation exposure deduplication ([#516](https://github.com/launchdarkly/ios-client-sdk/issues/516)) ([3528ebe](https://github.com/launchdarkly/ios-client-sdk/commit/3528ebefab9324432e0f6e594707cca013e4591f))
+
 ## [11.4.0](https://github.com/launchdarkly/ios-client-sdk/compare/11.3.1...11.4.0) (2026-08-14)
 
 
