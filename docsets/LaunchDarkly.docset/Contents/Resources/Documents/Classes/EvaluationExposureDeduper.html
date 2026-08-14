@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>EvaluationExposureDeduper Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Class/EvaluationExposureDeduper" class="dashAnchor"></a>
+    <a title="EvaluationExposureDeduper Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">LaunchDarkly 11.5.0 Docs</a> (93% documented)</p>
+        <p class="header-right"><a href="https://github.com/launchdarkly/ios-client-sdk"><img src="../img/gh.png" alt="GitHub"/>View on GitHub</a></p>
+        <div class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </div>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">LaunchDarkly</a>
+        <img id="carat" src="../img/carat.png" alt=""/>
+        <a href="../Other%20Classes.html">Other Classes</a>
+        <img id="carat" src="../img/carat.png" alt=""/>
+        EvaluationExposureDeduper Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Core%20Classes.html">Core Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/LDClient.html">LDClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDConfig.html">LDConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDConfig/Constants.html">– Constants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDConfig/Minima.html">– Minima</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDContext.html">LDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDContextBuilder.html">LDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/Reference.html">Reference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDMultiContextBuilder.html">LDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LDEvaluationDetail.html">LDEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/LDValue.html">LDValue</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Flag%20Change%20Observers.html">Flag Change Observers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly15LDObserverOwnera">LDObserverOwner</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LDChangedFlag.html">LDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly19LDFlagChangeHandlera">LDFlagChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly29LDFlagCollectionChangeHandlera">LDFlagCollectionChangeHandler</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Flag%20Change%20Observers.html#/s:12LaunchDarkly23LDFlagsUnchangedHandlera">LDFlagsUnchangedHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Connection%20Information.html">Connection Information</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation.html">ConnectionInformation</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation/ConnectionMode.html">– ConnectionMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation/LastConnectionFailureReason.html">– LastConnectionFailureReason</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ConnectionInformation.html#/s:12LaunchDarkly21ConnectionInformationV9ConstantsV">– Constants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Connection%20Information.html#/s:12LaunchDarkly30LDConnectionModeChangedHandlera">LDConnectionModeChangedHandler</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Types.html">Other Types</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/LDStreamingMode.html">LDStreamingMode</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Other%20Types.html#/s:12LaunchDarkly9LDFlagKeya">LDFlagKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LDInvalidArgumentError.html">LDInvalidArgumentError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Other%20Types.html#/s:12LaunchDarkly22RequestHeaderTransforma">RequestHeaderTransform</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Objective-C%20Core%20Interfaces.html">Objective-C Core Interfaces</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDClient.html">ObjcLDClient</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDConfig.html">ObjcLDConfig</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDReference.html">ObjcLDReference</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContext.html">ObjcLDContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDChangedFlag.html">ObjcLDChangedFlag</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDValue.html">ObjcLDValue</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ObjcLDValueType.html">ObjcLDValueType</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Objective-C%20EvaluationDetail%20Wrappers.html">Objective-C EvaluationDetail Wrappers</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDBoolEvaluationDetail.html">ObjcLDBoolEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDIntegerEvaluationDetail.html">ObjcLDIntegerEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDDoubleEvaluationDetail.html">ObjcLDDoubleEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDStringEvaluationDetail.html">ObjcLDStringEvaluationDetail</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDJSONEvaluationDetail.html">ObjcLDJSONEvaluationDetail</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Guides.html">Other Guides</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../changelog.html">CHANGELOG</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../contributing.html">CONTRIBUTING</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../licensetxt.html">LICENSE.txt</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Classes.html">Other Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/ContextBuilderResult.html">ContextBuilderResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/DedupingHook.html">DedupingHook</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/EnvironmentMetadata.html">EnvironmentMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/EvaluationExposureDeduper.html">EvaluationExposureDeduper</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/EvaluationSeriesContext.html">EvaluationSeriesContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/HookDecorator.html">HookDecorator</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/IdentifySeriesContext.html">IdentifySeriesContext</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Metadata.html">Metadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDApplicationInfo.html">ObjcLDApplicationInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDContextBuilder.html">ObjcLDContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDMultiContextBuilder.html">ObjcLDMultiContextBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ObjcLDReferenceError.html">ObjcLDReferenceError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/PluginMetadata.html">PluginMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SdkMetadata.html">SdkMetadata</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/TrackSeriesContext.html">TrackSeriesContext</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Enums.html">Other Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/AutoEnvAttributes.html">AutoEnvAttributes</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ContextBuilderError.html">ContextBuilderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/IdentifyCacheUsage.html">IdentifyCacheUsage</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/IdentifyResult.html">IdentifyResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Kind.html">Kind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ReferenceError.html">ReferenceError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Extensions.html">Other Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Bool.html">Bool</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Data.html">Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Double.html">Double</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Int.html">Int</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Protocols.html">Other Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/Hook.html">Hook</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/LDValueConvertible.html">LDValueConvertible</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/Plugin.html">Plugin</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Structs.html">Other Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/ApplicationInfo.html">ApplicationInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/EvaluationExposureKey.html">EvaluationExposureKey</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Other%20Typealiases.html">Other Type Aliases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Other%20Typealiases.html#/s:12LaunchDarkly20EvaluationSeriesDataa">EvaluationSeriesData</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Other%20Typealiases.html#/s:12LaunchDarkly18IdentifySeriesDataa">IdentifySeriesData</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>EvaluationExposureDeduper</h1>
+              <div class="declaration">
+                <div class="language">
+                  
+                  <pre class="highlight swift"><code><span class="kd">open</span> <span class="kd">class</span> <span class="kt">EvaluationExposureDeduper</span></code></pre>
+
+                </div>
+              </div>
+            <p>Decides whether a hook should be told about an evaluation, so that repeated evaluations resolving to the same result do
+not invoke the hook again within a time window.</p>
+
+<p>This class is not stable, and not subject to any backwards compatibility guarantees or semantic versioning. It is
+experimental. Subclassing it to change which evaluations are deduplicated is supported, but the shape it is subclassed
+through, and the components of <code><a href="../Structs/EvaluationExposureKey.html">EvaluationExposureKey</a></code> a subclass reasons about, may change.</p>
+
+<p>Deduplication is opt-in per hook: a hook is told about every evaluation until you wrap it in a <code><a href="../Classes/DedupingHook.html">DedupingHook</a></code>, which is
+what consults a deduper.</p>
+<pre class="highlight swift"><code><span class="n">config</span><span class="o">.</span><span class="n">hooks</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="kt">MetricsHook</span><span class="p">(),</span>                                     <span class="c1">// told about every evaluation</span>
+    <span class="kt">DedupingHook</span><span class="p">(</span><span class="kt">ObservabilityHook</span><span class="p">()),</span>                  <span class="c1">// default window</span>
+    <span class="kt">DedupingHook</span><span class="p">(</span><span class="kt">TelemetryHook</span><span class="p">(),</span> <span class="nv">window</span><span class="p">:</span> <span class="mi">30</span><span class="p">),</span>
+    <span class="kt">DedupingHook</span><span class="p">(</span><span class="kt">ExperimentHook</span><span class="p">(),</span> <span class="nv">deduper</span><span class="p">:</span> <span class="n">sharedDeduper</span><span class="p">)</span>
+<span class="p">]</span>
+</code></pre>
+
+<p>This class is the SDK&rsquo;s implementation: it remembers the result each flag last reported, and tells the hook about the
+flag again as soon as that result changes, or once the window elapses while it stays the same. Tracking one result per
+flag rather than every result seen keeps a flag that flips back and forth from hiding the flips, and holds one record per
+flag the application evaluates, so the window is the only thing there is to configure.</p>
+
+<p>A deduper is consulted once per evaluation, before the series opens, so a suppressed evaluation invokes neither
+<code>beforeEvaluation</code> nor <code>afterEvaluation</code>. Implementations must be thread-safe, because evaluations may be made from any
+thread. Give each hook its own instance unless you intend hooks to share a window: the first hook to be told about an
+exposure starts the window that suppresses the rest.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly25EvaluationExposureDeduperC13defaultWindowSdvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/defaultWindow" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly25EvaluationExposureDeduperC13defaultWindowSdvpZ">defaultWindow</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The dedupe window used by a deduper built without a window of its own. (10 minutes)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">let</span> <span class="nv">defaultWindow</span><span class="p">:</span> <span class="kt">TimeInterval</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly25EvaluationExposureDeduperC12monotonicNowSdyFZ"></a>
+                    <a name="//apple_ref/swift/Method/monotonicNow()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly25EvaluationExposureDeduperC12monotonicNowSdyFZ">monotonicNow()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Reads the clock a window is measured against, in seconds. This is what <code><a href="../Classes/EvaluationExposureDeduper.html#/s:12LaunchDarkly25EvaluationExposureDeduperC12shouldRecord3key3nowSbAA0cD3KeyV_SdtF">shouldRecord(key:now:)</a></code> reads when it is
+not given a time.</p>
+
+<p><code>CLOCK_MONOTONIC</code> counts from an arbitrary point rather than from the epoch, so that correcting the device clock
+cannot stretch a window: were this <code>Date()</code>, a correction that moved the clock backwards would leave every recorded
+time in the future and suppress those flags until real time caught up. It is POSIX rather than one of Darwin&rsquo;s own
+clocks, so the same reading is available on every platform Swift builds for.</p>
+
+<p>On Apple platforms it keeps advancing while the device sleeps, unlike <code>mach_absolute_time</code> and everything built on
+it, such as <code>DispatchTime.now()</code> and <code>ProcessInfo.systemUptime</code>, so a window is an interval of real time rather
+than of awake time. Where a platform&rsquo;s monotonic clock instead stops while the host is suspended, a window outlasts
+the suspension, which holds a repeat back for longer rather than reporting one too often.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">monotonicNow</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">TimeInterval</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly25EvaluationExposureDeduperC6windowACSd_tcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(window:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly25EvaluationExposureDeduperC6windowACSd_tcfc">init(window:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">window</span><span class="p">:</span> <span class="kt">TimeInterval</span> <span class="o">=</span> <span class="kt">EvaluationExposureDeduper</span><span class="o">.</span><span class="n"><a href="../Classes/EvaluationExposureDeduper.html#/s:12LaunchDarkly25EvaluationExposureDeduperC13defaultWindowSdvpZ">defaultWindow</a></span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>window</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The dedupe window, in seconds. Defaults to <code><a href="../Classes/EvaluationExposureDeduper.html#/s:12LaunchDarkly25EvaluationExposureDeduperC13defaultWindowSdvpZ">defaultWindow</a></code>. A value of zero or less disables
+deduplication, so every evaluation reaches the hook.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly25EvaluationExposureDeduperC12shouldRecord3key3nowSbAA0cD3KeyV_SdtF"></a>
+                    <a name="//apple_ref/swift/Method/shouldRecord(key:now:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly25EvaluationExposureDeduperC12shouldRecord3key3nowSbAA0cD3KeyV_SdtF">shouldRecord(key:<wbr>now:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns whether the hook should be told about the evaluation identified by the given key, and if so starts a new
+dedupe window for the flag.</p>
+
+<p><code><a href="../Classes/DedupingHook.html">DedupingHook</a></code> calls this once per evaluation. This implementation answers true when the flag is reporting a
+different result than it last did, and when the window has elapsed on the result it is repeating. See
+<code><a href="../Structs/EvaluationExposureKey.html">EvaluationExposureKey</a></code> for what makes two evaluations the same result.</p>
+
+<p>The check and the update are performed together so that concurrent evaluations of the same flag cannot both be told
+to record.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">open</span> <span class="kd">func</span> <span class="nf">shouldRecord</span><span class="p">(</span><span class="nv">key</span><span class="p">:</span> <span class="kt"><a href="../Structs/EvaluationExposureKey.html">EvaluationExposureKey</a></span><span class="p">,</span> <span class="nv">now</span><span class="p">:</span> <span class="kt">TimeInterval</span> <span class="o">=</span> <span class="kt">EvaluationExposureDeduper</span><span class="o">.</span><span class="nf">monotonicNow</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>key</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The key identifying the evaluation result.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>now</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>A reading of a clock that counts from an arbitrary point, in seconds. Defaults to
+<code><a href="../Classes/EvaluationExposureDeduper.html#/s:12LaunchDarkly25EvaluationExposureDeduperC12monotonicNowSdyFZ">monotonicNow()</a></code>, which is not a time of day; see it for why a window is not measured against <code>Date()</code>.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:12LaunchDarkly25EvaluationExposureDeduperC5resetyyF"></a>
+                    <a name="//apple_ref/swift/Method/reset()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:12LaunchDarkly25EvaluationExposureDeduperC5resetyyF">reset()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Clears all recorded exposures, so the next evaluation of each is reported again. <code><a href="../Classes/DedupingHook.html">DedupingHook</a></code> calls this when
+the evaluation context changes.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">open</span> <span class="kd">func</span> <span class="nf">reset</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>Copyright © 2019 Catamorphic Co.</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.15.4</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</html>
