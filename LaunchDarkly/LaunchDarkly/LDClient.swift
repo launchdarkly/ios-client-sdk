@@ -276,8 +276,15 @@ public class LDClient {
     }
 
     let config: LDConfig
+    /// Identifies this client's environment to a hook, without handing it the mobile key that identifies the
+    /// environment to LaunchDarkly. Hashed once here rather than per evaluation, because a deduping hook asks for it on
+    /// a path an application may take on every redraw of a view.
+    let mobileKeyHash: String
     let service: DarklyServiceProvider
-    var hooks: [Hook]
+    /// The hooks registered with this client: the configuration's.
+    /// Constant, so that a series reading it more than once, as an evaluation series does for its before and after
+    /// stages, runs the same hooks in both, whichever thread the evaluation was made from.
+    let hooks: [Hook]
     private(set) var context: LDContext
 
     /**
@@ -949,26 +956,33 @@ public class LDClient {
     private var initializedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.initializedQueue")
     private var identifyQueue = SheddingQueue()
 
-    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
-        self.serviceFactory = serviceFactory
-        self.hooks = Array(configuration.hooks)
-        environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
-
-        // Collect plugin hooks before calling beforeIdentify, so plugin hooks participate in the init identify lifecycle.
-        let initSdkMetadata = SdkMetadata(name: SystemCapabilities.systemName, version: ReportingConsts.sdkVersion)
-        let initEnvironmentMetadata = EnvironmentMetadata(
+    /// The hooks the configuration registers, followed by the hooks the plugins contribute. Collected before the init
+    /// identify series opens, so that plugin hooks take part in it.
+    private static func collectHooks(configuration: LDConfig, environmentReporter: EnvironmentReporting) -> [Hook] {
+        var hooks = Array(configuration.hooks)
+        let metadata = EnvironmentMetadata(
             applicationInfo: environmentReporter.applicationInfo,
-            sdkMetadata: initSdkMetadata,
+            sdkMetadata: SdkMetadata(name: SystemCapabilities.systemName, version: ReportingConsts.sdkVersion),
             credential: configuration.mobileKey
         )
         for plugin in configuration.plugins {
             do {
-                let pluginHooks = try plugin.getHooks(metadata: initEnvironmentMetadata)
-                self.hooks.append(contentsOf: pluginHooks)
+                hooks.append(contentsOf: try plugin.getHooks(metadata: metadata))
             } catch {
                 os_log("Exception thrown getting hooks for plugin %@. Unable to get hooks, plugin will not be registered.", log: configuration.logger, type: .error, plugin.getMetadata().getName())
             }
         }
+        return hooks
+    }
+
+    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
+        // Set before the hooks below run, so that the environment a hook is told about is this client's rather than the
+        // primary one's.
+        self.mobileKeyHash = Util.sha256base64(configuration.mobileKey)
+        self.serviceFactory = serviceFactory
+        environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
+        let hooks = LDClient.collectHooks(configuration: configuration, environmentReporter: environmentReporter)
+        self.hooks = hooks
 
         flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()
@@ -976,8 +990,7 @@ public class LDClient {
         throttler = self.serviceFactory.makeThrottler(environmentReporter: environmentReporter)
 
         config = configuration
-        let anonymousContext = LDContext()
-        context = startContext ?? anonymousContext
+        context = startContext ?? LDContext()
 
         if config.autoEnvAttributes {
             context = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(context)

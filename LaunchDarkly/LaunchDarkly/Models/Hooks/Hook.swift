@@ -11,6 +11,11 @@ public typealias EvaluationSeriesData = [String: Any]
 public typealias IdentifySeriesData = [String: Any]
 
 /// Protocol for extending SDK functionality via hooks.
+///
+/// Note that each stage below has a default implementation that does nothing, so a hook implements only the stages it
+/// cares about. A `HookDecorator` wraps a hook and forwards every stage to it, which is what a hook that adds behavior
+/// to another hook is built on. To deduplicate the repeated evaluations observed by one hook, wrap it in a
+/// `DedupingHook` and register the wrapper.
 public protocol Hook {
     /// Get metadata about the hook implementation.
     func metadata() -> Metadata
@@ -70,6 +75,7 @@ public protocol Hook {
     /// - Parameters:
     ///   - seriesContext: Contains information about the track operation being performed. This is not mutable.
     func afterTrack(seriesContext: TrackSeriesContext)
+
 }
 
 public extension Hook {
@@ -110,4 +116,5 @@ public extension Hook {
     /// Default implementation is a no-op.
     func afterTrack(seriesContext: TrackSeriesContext) {
     }
+
 }

@@ -143,27 +143,27 @@ extension LDClient {
         return variationDetailInternal(flagKey, defaultValue, needsReason: true, methodName: "variationDetail")
     }
 
-    private func evaluateWithHooks<D>(flagKey: LDFlagKey, defaultValue: D, methodName: String, evaluation: () -> LDEvaluationDetail<D>) -> LDEvaluationDetail<D> where D: LDValueConvertible, D: Decodable {
-        guard !self.hooks.isEmpty else {
+    private func evaluateWithHooks<D>(flagKey: LDFlagKey, defaultValue: D, methodName: String, featureFlag: FeatureFlag?, evaluation: () -> LDEvaluationDetail<D>) -> LDEvaluationDetail<D> where D: LDValueConvertible, D: Decodable {
+        guard !hooks.isEmpty else {
             return evaluation()
         }
 
-        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName)
-        let hookData = self.execute_before_evaluation(seriesContext: seriesContext)
+        let seriesContext = EvaluationSeriesContext(flagKey: flagKey, context: self.context, defaultValue: defaultValue.toLDValue(), methodName: methodName, mobileKeyHash: mobileKeyHash, featureFlag: featureFlag)
+        let hookData = self.execute_before_evaluation(hooks: hooks, seriesContext: seriesContext)
         let evaluationResult = evaluation()
-        _ = self.execute_after_evaluation(seriesContext: seriesContext, hookData: hookData, evaluationDetail: evaluationResult.map { value in return value.toLDValue()})
+        _ = self.execute_after_evaluation(hooks: hooks, seriesContext: seriesContext, hookData: hookData, evaluationDetail: evaluationResult.map { value in return value.toLDValue()})
 
         return evaluationResult
     }
 
-    private func execute_before_evaluation(seriesContext: EvaluationSeriesContext) -> [EvaluationSeriesData] {
-        return self.hooks.map { hook in
+    private func execute_before_evaluation(hooks: [Hook], seriesContext: EvaluationSeriesContext) -> [EvaluationSeriesData] {
+        return hooks.map { hook in
             hook.beforeEvaluation(seriesContext: seriesContext, seriesData: EvaluationSeriesData())
         }
     }
 
-    private func execute_after_evaluation(seriesContext: EvaluationSeriesContext, hookData: [EvaluationSeriesData], evaluationDetail: LDEvaluationDetail<LDValue>) -> [EvaluationSeriesData] {
-        return zip(self.hooks, hookData).reversed().map { (hook, data) in
+    private func execute_after_evaluation(hooks: [Hook], seriesContext: EvaluationSeriesContext, hookData: [EvaluationSeriesData], evaluationDetail: LDEvaluationDetail<LDValue>) -> [EvaluationSeriesData] {
+        return zip(hooks, hookData).reversed().map { (hook, data) in
             return hook.afterEvaluation(seriesContext: seriesContext, seriesData: data, evaluationDetail: evaluationDetail)
         }
     }
@@ -174,9 +174,11 @@ extension LDClient {
     }
 
     private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool, methodName: String, visited: inout Set<String>?) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
-        return evaluateWithHooks(flagKey: flagKey, defaultValue: defaultValue, methodName: methodName) {
+        // Read once, so that the flag a hook is told the evaluation is about to return is the flag it does return: were
+        // the store read again below, an update landing in between would leave the two describing different results.
+        let featureFlag = flagStore.featureFlag(for: flagKey)
+        return evaluateWithHooks(flagKey: flagKey, defaultValue: defaultValue, methodName: methodName, featureFlag: featureFlag) {
             var result: LDEvaluationDetail<T>
-            let featureFlag = flagStore.featureFlag(for: flagKey)
             if let featureFlag = featureFlag {
                 if let prerequisites = featureFlag.prerequisites, !prerequisites.isEmpty {
                     // Recurse on prerequisites to emulate prereq evaluations occurring with desirable side effects
