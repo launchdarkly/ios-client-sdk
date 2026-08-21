@@ -83,6 +83,149 @@ final class LDClientPluginsSpec: XCTestCase {
         XCTAssertEqual(mockPlugin.getCallRecord()[3], "first after")
     }
 
+    func testRegisterPluginPassesClientAndEnvironmentMetadata() {
+        var registerCallCount = 0
+        var receivedClient: LDClient?
+        var receivedMetadata: EnvironmentMetadata?
+
+        let mockPlugin = MockPlugin { client, metadata in
+            registerCallCount += 1
+            receivedClient = client
+            receivedMetadata = metadata
+        }
+
+        let config = LDConfig(mobileKey: "mobile-key", autoEnvAttributes: .disabled)
+        var testContext: TestContext!
+        waitUntil { done in
+            testContext = TestContext(newConfig: config)
+            testContext.start(completion: done)
+        }
+
+        // Nothing happens until the plugin is registered, since it was not in the configuration.
+        XCTAssertEqual(registerCallCount, 0)
+
+        testContext.subject.registerPlugin(mockPlugin)
+
+        XCTAssertEqual(registerCallCount, 1)
+        XCTAssertTrue(receivedClient === testContext.subject)
+        // The same environment description a plugin configured up front would have been given.
+        XCTAssertEqual(receivedMetadata?.credential, "mobile-key")
+        XCTAssertEqual(receivedMetadata?.sdkMetadata.name, SystemCapabilities.systemName)
+    }
+
+    func testRegisterPluginActivatesBundledHooks() {
+        let mockPlugin = MockPlugin { _, _ in }
+
+        let config = LDConfig(mobileKey: "mobile-key", autoEnvAttributes: .disabled)
+        var testContext: TestContext!
+        waitUntil { done in
+            testContext = TestContext(newConfig: config)
+            testContext.start(completion: done)
+        }
+
+        testContext.subject.registerPlugin(mockPlugin)
+        testContext.subject.boolVariation(forKey: "test-flag", defaultValue: false)
+
+        XCTAssertEqual(mockPlugin.getCallRecord(), ["first before", "second before", "second after", "first after"])
+    }
+
+    func testRegisterPluginDoesNotRunTheRegisteringPluginsOwnHooks() {
+        // Evaluates a flag from inside register, so the test can tell whether this plugin's own hooks were live then.
+        let mockPlugin = MockPlugin { client, _ in
+            client.boolVariation(forKey: "test-flag", defaultValue: false)
+        }
+
+        let config = LDConfig(mobileKey: "mobile-key", autoEnvAttributes: .disabled)
+        var testContext: TestContext!
+        waitUntil { done in
+            testContext = TestContext(newConfig: config)
+            testContext.start(completion: done)
+        }
+
+        testContext.subject.registerPlugin(mockPlugin)
+        XCTAssertEqual(mockPlugin.getCallRecord(), [])
+
+        // They do run for evaluations made once registration has completed.
+        testContext.subject.boolVariation(forKey: "test-flag", defaultValue: false)
+        XCTAssertEqual(mockPlugin.getCallRecord(), ["first before", "second before", "second after", "first after"])
+    }
+
+    func testRegisterPluginHooksRunAfterConfiguredHooks() {
+        var callRecord: [String] = []
+        let record: (String) -> Void = { callRecord.append($0) }
+
+        var config = LDConfig(mobileKey: "mobile-key", autoEnvAttributes: .disabled)
+        config.hooks = [LDClientPluginsSpec.recordingHook("config", into: record)]
+
+        var testContext: TestContext!
+        waitUntil { done in
+            testContext = TestContext(newConfig: config)
+            testContext.start(completion: done)
+        }
+
+        let plugin = StubPlugin(hooks: [LDClientPluginsSpec.recordingHook("plugin", into: record)])
+        testContext.subject.registerPlugin(plugin)
+
+        testContext.subject.boolVariation(forKey: "test-flag", defaultValue: false)
+
+        // The configured hook was registered first, so it opens the series and, the after stage running in reverse,
+        // closes it last.
+        XCTAssertEqual(callRecord, ["config before", "plugin before", "plugin after", "config after"])
+    }
+
+    func testRegisterPluginAppliesOnlyToTheClientItIsCalledOn() {
+        var callRecord: [String] = []
+        let record: (String) -> Void = { callRecord.append($0) }
+
+        var config = LDConfig(mobileKey: "primary-mobile-key", autoEnvAttributes: .disabled)
+        try! config.setSecondaryMobileKeys(["test": "secondary-key-1"])
+
+        var testContext: TestContext!
+        waitUntil { done in
+            testContext = TestContext(newConfig: config)
+            testContext.start(completion: done)
+        }
+
+        let plugin = StubPlugin(hooks: [LDClientPluginsSpec.recordingHook("plugin", into: record)])
+        testContext.subject.registerPlugin(plugin)
+
+        testContext.subject.boolVariation(forKey: "test-flag", defaultValue: false)
+        XCTAssertEqual(callRecord, ["plugin before", "plugin after"])
+
+        // The other environment has its own client, which this plugin was not registered with.
+        LDClient.get(environment: "test")?.boolVariation(forKey: "test-flag", defaultValue: false)
+        XCTAssertEqual(callRecord, ["plugin before", "plugin after"])
+    }
+
+    private static func recordingHook(_ name: String, into record: @escaping (String) -> Void) -> MockHook {
+        MockHook(
+            before: { _, data in record("\(name) before"); return data },
+            after: { _, data, _ in record("\(name) after"); return data })
+    }
+
+    /// Contributes a fixed set of hooks, and optionally runs a closure when registered.
+    class StubPlugin: Plugin {
+        private let hooksToReturn: [Hook]
+        private let onRegister: (LDClient, EnvironmentMetadata) -> Void
+
+        init(hooks: [Hook], onRegister: @escaping (LDClient, EnvironmentMetadata) -> Void = { _, _ in }) {
+            self.hooksToReturn = hooks
+            self.onRegister = onRegister
+        }
+
+        func getMetadata() -> PluginMetadata {
+            return PluginMetadata(name: "StubPlugin")
+        }
+
+        func register(client: LDClient, metadata: EnvironmentMetadata) {
+            onRegister(client, metadata)
+        }
+
+        func getHooks(metadata: EnvironmentMetadata) -> [Hook] {
+            return hooksToReturn
+        }
+    }
+
     class MockPlugin: Plugin {
         private let registerCallback: (LDClient, EnvironmentMetadata) -> Void
         private var callRecord: [String] = []
