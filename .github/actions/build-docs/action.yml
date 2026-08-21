@@ -4,10 +4,10 @@ description: 'Build Documentation.'
 runs:
   using: composite
   steps:
-    - name: Install jazzy gem
+    - name: Install documentation gems
       shell: bash
-      run: gem install jazzy
+      run: bundle install
 
     - name: Build Documentation
       shell: bash
-      run: jazzy -o docs
+      run: bundle exec jazzy -o docs
