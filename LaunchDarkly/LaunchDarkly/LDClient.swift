@@ -774,10 +774,9 @@ public class LDClient {
      Registers a single plugin with this client after the client has been configured and started. To register plugins
      before the client starts, set `LDConfig.plugins` instead.
 
-     The plugin's hooks are collected first, then `Plugin.register` is called, and only then do those hooks begin
-     running. This ordering differs from registration at configuration time, where a plugin's hooks are active before
-     `register` is called: here a plugin's own hooks will not observe flag evaluations or identify calls that its
-     `register` makes. Once this method returns, later evaluations, identify calls, and track calls do run them.
+     The plugin's hooks begin running before `Plugin.register` is called, as they do for a plugin registered at
+     configuration time, so a plugin's own hooks observe the flag evaluations and identify calls that its `register`
+     makes. A plugin whose `register` fails keeps contributing its hooks, again matching configuration time.
 
      This registers the plugin with this client only. In a multi-environment configuration each environment has its own
      client, so registering with every environment means calling this on each of them.
@@ -785,9 +784,8 @@ public class LDClient {
      - parameter plugin: The plugin to register.
      */
     public func registerPlugin(_ plugin: Plugin) {
-        let pluginHooks = plugin.getHooks(metadata: environmentMetadata)
+        addHooks(plugin.getHooks(metadata: environmentMetadata))
         plugin.register(client: self, metadata: environmentMetadata)
-        addHooks(pluginHooks)
     }
 
     /**
