@@ -144,6 +144,7 @@ extension LDClient {
     }
 
     private func evaluateWithHooks<D>(flagKey: LDFlagKey, defaultValue: D, methodName: String, featureFlag: FeatureFlag?, evaluation: () -> LDEvaluationDetail<D>) -> LDEvaluationDetail<D> where D: LDValueConvertible, D: Decodable {
+        let hooks = self.hooks
         guard !hooks.isEmpty else {
             return evaluation()
         }

@@ -281,10 +281,34 @@ public class LDClient {
     /// a path an application may take on every redraw of a view.
     let mobileKeyHash: String
     let service: DarklyServiceProvider
-    /// The hooks registered with this client: the configuration's.
-    /// Constant, so that a series reading it more than once, as an evaluation series does for its before and after
-    /// stages, runs the same hooks in both, whichever thread the evaluation was made from.
-    let hooks: [Hook]
+    /// The hooks registered with this client: the configuration's, then those contributed by plugins.
+    /// Replaced rather than modified in place, so that a caller of `registerPlugin` on one thread cannot be seen half
+    /// way by a series running on another.
+    private var storedHooks: [Hook]
+    private let hooksLock = NSLock()
+
+    /// A snapshot of the hooks to run. Every series reads this once into a local and works from that, so the hooks a
+    /// series ends with are the hooks it began with: were it read again mid-series, a hook registered in between would
+    /// be given an "after" stage for a series whose "before" stage it was never in.
+    var hooks: [Hook] {
+        hooksLock.lock()
+        defer { hooksLock.unlock() }
+        return storedHooks
+    }
+
+    /// Describes this client's environment to a plugin. Retained so that a plugin registered later, via
+    /// `registerPlugin`, is handed the same description as one configured up front.
+    let environmentMetadata: EnvironmentMetadata
+
+    /// Adds hooks, which the next series to begin will run. A series already under way runs the hooks it began with.
+    private func addHooks(_ newHooks: [Hook]) {
+        guard !newHooks.isEmpty else { return }
+
+        hooksLock.lock()
+        defer { hooksLock.unlock() }
+        storedHooks.append(contentsOf: newHooks)
+    }
+
     private(set) var context: LDContext
 
     /**
@@ -733,6 +757,7 @@ public class LDClient {
     }
 
     private func executeAfterTrackHooks(key: String, data: LDValue?, metricValue: Double?) {
+        let hooks = self.hooks
         guard !hooks.isEmpty else {
             return
         }
@@ -743,6 +768,24 @@ public class LDClient {
         hooks.forEach { hook in
             hook.afterTrack(seriesContext: seriesContext)
         }
+    }
+
+    /**
+     Registers a single plugin with this client after the client has been configured and started. To register plugins
+     before the client starts, set `LDConfig.plugins` instead.
+
+     The plugin's hooks begin running before `Plugin.register` is called, as they do for a plugin registered at
+     configuration time, so a plugin's own hooks observe the flag evaluations and identify calls that its `register`
+     makes. A plugin whose `register` fails keeps contributing its hooks, again matching configuration time.
+
+     This registers the plugin with this client only. In a multi-environment configuration each environment has its own
+     client, so registering with every environment means calling this on each of them.
+
+     - parameter plugin: The plugin to register.
+     */
+    public func registerPlugin(_ plugin: Plugin) {
+        addHooks(plugin.getHooks(metadata: environmentMetadata))
+        plugin.register(client: self, metadata: environmentMetadata)
     }
 
     /**
@@ -851,17 +894,10 @@ public class LDClient {
                 LDClient.instances?[name] = instance
             }
 
-            let sdkMetadata = SdkMetadata(name: SystemCapabilities.systemName, version: ReportingConsts.sdkVersion)
-            let environmentMetadata = EnvironmentMetadata(
-                applicationInfo: instance.environmentReporter.applicationInfo,
-                sdkMetadata: sdkMetadata,
-                credential: mobileKey
-            )
-
             // now register the client with all the plugins
             for plugin in config.plugins {
                 do {
-                    plugin.register(client: instance, metadata: environmentMetadata)
+                    plugin.register(client: instance, metadata: instance.environmentMetadata)
                 } catch {
                     os_log("Exception thrown registering plugin %@.", log: config.logger, type: .error, plugin.getMetadata().getName())
                 }
@@ -958,13 +994,8 @@ public class LDClient {
 
     /// The hooks the configuration registers, followed by the hooks the plugins contribute. Collected before the init
     /// identify series opens, so that plugin hooks take part in it.
-    private static func collectHooks(configuration: LDConfig, environmentReporter: EnvironmentReporting) -> [Hook] {
+    private static func collectHooks(configuration: LDConfig, metadata: EnvironmentMetadata) -> [Hook] {
         var hooks = Array(configuration.hooks)
-        let metadata = EnvironmentMetadata(
-            applicationInfo: environmentReporter.applicationInfo,
-            sdkMetadata: SdkMetadata(name: SystemCapabilities.systemName, version: ReportingConsts.sdkVersion),
-            credential: configuration.mobileKey
-        )
         for plugin in configuration.plugins {
             do {
                 hooks.append(contentsOf: try plugin.getHooks(metadata: metadata))
@@ -981,8 +1012,14 @@ public class LDClient {
         self.mobileKeyHash = Util.sha256base64(configuration.mobileKey)
         self.serviceFactory = serviceFactory
         environmentReporter = self.serviceFactory.makeEnvironmentReporter(config: configuration)
-        let hooks = LDClient.collectHooks(configuration: configuration, environmentReporter: environmentReporter)
-        self.hooks = hooks
+        let environmentMetadata = EnvironmentMetadata(
+            applicationInfo: environmentReporter.applicationInfo,
+            sdkMetadata: SdkMetadata(name: SystemCapabilities.systemName, version: ReportingConsts.sdkVersion),
+            credential: configuration.mobileKey
+        )
+        self.environmentMetadata = environmentMetadata
+        let hooks = LDClient.collectHooks(configuration: configuration, metadata: environmentMetadata)
+        self.storedHooks = hooks
 
         flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()
