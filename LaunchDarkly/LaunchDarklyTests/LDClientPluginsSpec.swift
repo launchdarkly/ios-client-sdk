@@ -129,7 +129,7 @@ final class LDClientPluginsSpec: XCTestCase {
         XCTAssertEqual(mockPlugin.getCallRecord(), ["first before", "second before", "second after", "first after"])
     }
 
-    func testRegisterPluginRunsTheRegisteringPluginsOwnHooks() {
+    func testRegisterPluginDoesNotRunTheRegisteringPluginsOwnHooks() {
         // Evaluates a flag from inside register, so the test can tell whether this plugin's own hooks were live then.
         let mockPlugin = MockPlugin { client, _ in
             client.boolVariation(forKey: "test-flag", defaultValue: false)
@@ -142,17 +142,13 @@ final class LDClientPluginsSpec: XCTestCase {
             testContext.start(completion: done)
         }
 
-        // The hooks are live by the time register runs, as they are for a plugin configured up front, so the
-        // evaluation register makes passes through them.
+        // The hooks only go live once register has returned, so the evaluation register makes does not reach them.
         testContext.subject.registerPlugin(mockPlugin)
-        XCTAssertEqual(mockPlugin.getCallRecord(), ["first before", "second before", "second after", "first after"])
+        XCTAssertEqual(mockPlugin.getCallRecord(), [])
 
-        // And they keep running for evaluations made after registration.
+        // They do run for evaluations made once registration has completed.
         testContext.subject.boolVariation(forKey: "test-flag", defaultValue: false)
-        XCTAssertEqual(mockPlugin.getCallRecord(), [
-            "first before", "second before", "second after", "first after",
-            "first before", "second before", "second after", "first after"
-        ])
+        XCTAssertEqual(mockPlugin.getCallRecord(), ["first before", "second before", "second after", "first after"])
     }
 
     func testRegisterPluginHooksRunAfterConfiguredHooks() {
@@ -200,6 +196,30 @@ final class LDClientPluginsSpec: XCTestCase {
         // The other environment has its own client, which this plugin was not registered with.
         LDClient.get(environment: "test")?.boolVariation(forKey: "test-flag", defaultValue: false)
         XCTAssertEqual(callRecord, ["plugin before", "plugin after"])
+    }
+
+    func testConfiguredPluginHooksDoNotObserveAnotherPluginsRegister() {
+        let firstPlugin = MockPlugin { _, _ in }
+        // Registers after the first plugin, and evaluates a flag while doing so.
+        let secondPlugin = MockPlugin { client, _ in
+            _ = client.boolVariation(forKey: "test-flag", defaultValue: false)
+        }
+
+        var config = LDConfig(mobileKey: "mobile-key", autoEnvAttributes: .disabled)
+        config.plugins = [firstPlugin, secondPlugin]
+
+        var testContext: TestContext!
+        waitUntil { done in
+            testContext = TestContext(newConfig: config)
+            testContext.start(completion: done)
+        }
+
+        // Hooks are activated only once every plugin has registered, so the first plugin's hooks did not
+        // observe the evaluation the second plugin made while registering.
+        XCTAssertEqual(firstPlugin.getCallRecord(), [])
+
+        _ = testContext.subject.boolVariation(forKey: "test-flag", defaultValue: false)
+        XCTAssertEqual(firstPlugin.getCallRecord(), ["first before", "second before", "second after", "first after"])
     }
 
     private static func recordingHook(_ name: String, into record: @escaping (String) -> Void) -> MockHook {

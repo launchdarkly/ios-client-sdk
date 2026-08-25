@@ -774,9 +774,9 @@ public class LDClient {
      Registers a single plugin with this client after the client has been configured and started. To register plugins
      before the client starts, set `LDConfig.plugins` instead.
 
-     The plugin's hooks begin running before `Plugin.register` is called, as they do for a plugin registered at
-     configuration time, so a plugin's own hooks observe the flag evaluations and identify calls that its `register`
-     makes. A plugin whose `register` fails keeps contributing its hooks, again matching configuration time.
+     The plugin's hooks begin running only once `Plugin.register` has returned, so a plugin's own hooks do not observe
+     the flag evaluations or identify calls that its `register` makes. This is also how the plugins in
+     `LDConfig.plugins` are registered, by this same method, so a plugin behaves the same however it was registered.
 
      This registers the plugin with this client only. In a multi-environment configuration each environment has its own
      client, so registering with every environment means calling this on each of them.
@@ -784,8 +784,24 @@ public class LDClient {
      - parameter plugin: The plugin to register.
      */
     public func registerPlugin(_ plugin: Plugin) {
-        addHooks(plugin.getHooks(metadata: environmentMetadata))
-        plugin.register(client: self, metadata: environmentMetadata)
+        registerPlugins([plugin])
+    }
+
+    /// Registers each of `plugins` with this client, then activates the hooks they contribute.
+    ///
+    /// The hooks go live as the last step, once every plugin has registered, so that no plugin's hooks observe
+    /// any plugin's `register` call. Shared by the plugins in `LDConfig.plugins` and by `registerPlugin`, so that
+    /// a plugin behaves the same however it was registered.
+    private func registerPlugins(_ plugins: [Plugin]) {
+        var hooksToActivate: [Hook] = []
+
+        for plugin in plugins {
+            let pluginHooks = plugin.getHooks(metadata: environmentMetadata)
+            plugin.register(client: self, metadata: environmentMetadata)
+            hooksToActivate.append(contentsOf: pluginHooks)
+        }
+
+        addHooks(hooksToActivate)
     }
 
     /**
@@ -889,19 +905,18 @@ public class LDClient {
         for (name, mobileKey) in mobileKeys {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
-            let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context, completion: completionCheck)
+            let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context)
+            // Published before the plugins register, so that a plugin calling `LDClient.get()` from its `register`
+            // finds this instance.
             instancesQueue.sync(flags: .barrier) {
                 LDClient.instances?[name] = instance
             }
 
-            // now register the client with all the plugins
-            for plugin in config.plugins {
-                do {
-                    plugin.register(client: instance, metadata: instance.environmentMetadata)
-                } catch {
-                    os_log("Exception thrown registering plugin %@.", log: config.logger, type: .error, plugin.getMetadata().getName())
-                }
-            }
+            // Registered before the first identify series opens, so that the hooks the plugins contribute take
+            // part in it just as the configuration's own hooks do.
+            instance.registerPlugins(config.plugins)
+
+            instance.startIdentifyAndGoOnline(completion: completionCheck)
         }
 
         completionCheck()
@@ -992,21 +1007,7 @@ public class LDClient {
     private var initializedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.initializedQueue")
     private var identifyQueue = SheddingQueue()
 
-    /// The hooks the configuration registers, followed by the hooks the plugins contribute. Collected before the init
-    /// identify series opens, so that plugin hooks take part in it.
-    private static func collectHooks(configuration: LDConfig, metadata: EnvironmentMetadata) -> [Hook] {
-        var hooks = Array(configuration.hooks)
-        for plugin in configuration.plugins {
-            do {
-                hooks.append(contentsOf: try plugin.getHooks(metadata: metadata))
-            } catch {
-                os_log("Exception thrown getting hooks for plugin %@. Unable to get hooks, plugin will not be registered.", log: configuration.logger, type: .error, plugin.getMetadata().getName())
-            }
-        }
-        return hooks
-    }
-
-    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
+    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?) {
         // Set before the hooks below run, so that the environment a hook is told about is this client's rather than the
         // primary one's.
         self.mobileKeyHash = Util.sha256base64(configuration.mobileKey)
@@ -1018,8 +1019,9 @@ public class LDClient {
             credential: configuration.mobileKey
         )
         self.environmentMetadata = environmentMetadata
-        let hooks = LDClient.collectHooks(configuration: configuration, metadata: environmentMetadata)
-        self.storedHooks = hooks
+        // Only the configuration's own hooks. A plugin's hooks are added by `registerPlugin` once that plugin has
+        // registered, which `start` does before opening the first identify series.
+        self.storedHooks = Array(configuration.hooks)
 
         flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()
@@ -1031,13 +1033,6 @@ public class LDClient {
 
         if config.autoEnvAttributes {
             context = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(context)
-        }
-
-        var hookState: IdentifyHookState? = nil
-        if !hooks.isEmpty {
-            let seriesContext = IdentifySeriesContext(context: context, methodName: "init")
-            let seriesData = hooks.map { hook in hook.beforeIdentify(seriesContext: seriesContext, seriesData: EvaluationSeriesData()) }
-            hookState = IdentifyHookState(seriesContext: seriesContext, seriesData: seriesData, hooksSnapshot: hooks)
         }
 
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, context: context, envReporter: environmentReporter)
@@ -1074,11 +1069,21 @@ public class LDClient {
             flagStore.replaceStore(newStoredItems: cachedFlags)
         }
 
-        eventReporter.record(IdentifyEvent(context: context))
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
+    }
 
-        internalSetOnline(configuration.startOnline) {
-            os_log("%s LDClient started", log: configuration.logger, type: .debug, self.typeName(and: #function))
+    /// Opens the first identify series and brings the client online, finishing the startup `init` began.
+    ///
+    /// Separate from `init` so that `start` can publish the instance and register its configured plugins in
+    /// between: a plugin's hooks go live only once it has registered, and they must be in place before this
+    /// series opens for them to take part in it, as the configuration's own hooks do.
+    private func startIdentifyAndGoOnline(completion: (() -> Void)? = nil) {
+        let hookState = executeBeforeIdentifyHooks(context: context, methodName: "init")
+
+        eventReporter.record(IdentifyEvent(context: context))
+
+        internalSetOnline(config.startOnline) {
+            os_log("%s LDClient started", log: self.config.logger, type: .debug, self.typeName(and: #function))
             completion?()
             if let state = hookState {
                 self.executeAfterIdentifyHooks(state: state, result: .complete)
