@@ -837,6 +837,35 @@ extension EventReporterSpec {
                 nextRun.isOnline = false
             }
 
+            it("delivers what a previous run left behind as soon as it is online, without waiting for a report interval") {
+                testContext = TestContext()
+                testContext.recordEvents(2)
+                testContext.eventReporter.commitRecordedEvents()
+
+                let recovered = EventStore(directory: testContext.store.directory, capacity: 100, logger: .disabled)
+                let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
+
+                // Nothing asks for a flush, and the report interval is several times longer than this waits, so the
+                // only thing that can deliver these is the reporter coming online.
+                nextRun.isOnline = true
+
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+                expect(recovered.pendingEventCount).toEventually(equal(0))
+                nextRun.isOnline = false
+            }
+
+            it("does not bring a delivery forward when a previous run left nothing behind") {
+                testContext = TestContext()
+
+                testContext.eventReporter.isOnline = true
+
+                // Coming online is not itself a reason to send: an ordinary start has nothing waiting, and the events
+                // this run records keep to the report interval.
+                testContext.recordEvents(1)
+                Thread.sleep(forTimeInterval: 0.2)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+            }
+
             it("delivers a batch a failed run left behind under the same payload id") {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)

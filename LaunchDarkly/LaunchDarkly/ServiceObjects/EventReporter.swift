@@ -84,6 +84,12 @@ class EventReporter: EventReporting {
     /// Deliveries run here, off whatever thread recorded an event.
     private let deliveryQueue = DispatchQueue(label: "com.launchdarkly.eventSyncQueue", qos: .userInitiated)
 
+    /// Whether the store held events from a previous run of the application when this reporter started.
+    ///
+    /// Only to be used on `deliveryQueue`, which is what makes it safe without a lock: the recovery that answers the
+    /// question and the delivery that acts on it are both enqueued there, in that order.
+    private var hasEventsFromPreviousRun = false
+
     private let onSyncComplete: EventSyncCompleteClosure?
 
     init(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?, store: EventStoring? = nil) {
@@ -96,7 +102,10 @@ class EventReporter: EventReporting {
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
         // doing it on the caller's thread would put file I/O in the way of the client starting up.
         let store = self.store
-        deliveryQueue.async { store.recoverInterruptedLog() }
+        deliveryQueue.async { [weak self] in
+            store.recoverInterruptedLog()
+            self?.hasEventsFromPreviousRun = !store.pendingBatches().isEmpty
+        }
     }
 
     private static func makeStore(config: LDConfig) -> EventStoring {
@@ -226,6 +235,17 @@ class EventReporter: EventReporting {
         guard eventReportTimer == nil
         else { return }
         eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: deliveryQueue, execute: reportEvents)
+
+        // Events a previous run left behind are already late by however long the application was gone, so they do not
+        // wait out a report interval on top of that: an application that crashed reports it as soon as it is next able
+        // to. Only the first time online brings a delivery forward, so going online again later, as a network comes and
+        // goes, keeps to the ordinary cadence.
+        deliveryQueue.async { [weak self] in
+            guard let self, self.hasEventsFromPreviousRun
+            else { return }
+            self.hasEventsFromPreviousRun = false
+            self.reportEvents()
+        }
     }
 
     private func stopReporting() {
