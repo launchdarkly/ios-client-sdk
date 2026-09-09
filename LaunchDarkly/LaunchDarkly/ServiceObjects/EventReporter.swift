@@ -92,10 +92,19 @@ class EventReporter: EventReporting {
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
+    /// The encoder every recorded event goes through.
+    ///
+    /// Built once and then only read. `JSONEncoder` is `@unchecked Sendable` and constructs a fresh internal encoder
+    /// for each `encode` call, so the threads recording events can share this one — but only while nothing mutates it,
+    /// which is why `userInfo` is set here rather than per event. What it holds cannot go stale: `config` is a `let` on
+    /// the service, so the privacy settings the encoding depends on are fixed for as long as this reporter exists.
+    private let encoder: JSONEncoder
+
     init(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?, store: EventStoring? = nil) {
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.responseDate = Date()
+        self.encoder = EventReporter.makeEncoder(config: service.config)
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
         self.store = store ?? EventReporter.makeStore(config: service.config)
 
@@ -210,17 +219,20 @@ class EventReporter: EventReporting {
         }
     }
 
-    private func encode(_ event: Event) -> Data? {
+    private static func makeEncoder(config: LDConfig) -> JSONEncoder {
         let encoder = JSONEncoder()
         encoder.userInfo = [
-            LDContext.UserInfoKeys.allAttributesPrivate: service.config.allContextAttributesPrivate,
-            LDContext.UserInfoKeys.globalPrivateAttributes: service.config.privateContextAttributes.map { $0 }
+            LDContext.UserInfoKeys.allAttributesPrivate: config.allContextAttributesPrivate,
+            LDContext.UserInfoKeys.globalPrivateAttributes: config.privateContextAttributes.map { $0 }
         ]
         encoder.dateEncodingStrategy = .custom { date, encoder in
             var container = encoder.singleValueContainer()
             try container.encode(date.millisSince1970)
         }
+        return encoder
+    }
 
+    private func encode(_ event: Event) -> Data? {
         guard let encoded = try? encoder.encode(event)
         else {
             os_log("%s Failed to serialize event for publication: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: event))

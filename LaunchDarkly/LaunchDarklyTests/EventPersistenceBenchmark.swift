@@ -170,15 +170,28 @@ final class EventPersistenceBenchmark: XCTestCase {
             _ = event.kind
         }
 
+        // Everything `EventReporter.encode` used to do per event: a fresh `JSONEncoder`, a `userInfo` dictionary
+        // rebuilt from the configuration, and the array copy of the private attributes that goes into it. Measuring
+        // only the `JSONEncoder()` allocation understates what reusing one is worth, because the dictionary and the
+        // array are the larger half of the setup.
+        let privateAttributes: [Reference] = []
         let buildingAndEncoding = measure(iterations: 100_000) {
             let event = FeatureEvent(key: "benchmark-flag", context: context, value: true, defaultValue: false, featureFlag: flag, includeReason: false, isDebug: false)
             let encoder = JSONEncoder()
+            encoder.userInfo = [
+                LDContext.UserInfoKeys.allAttributesPrivate: false,
+                LDContext.UserInfoKeys.globalPrivateAttributes: privateAttributes.map { $0 }
+            ]
             encoder.dateEncodingStrategy = .custom(dateAsMillis)
             _ = try? encoder.encode(event)
         }
 
-        // The same work with the encoder built once, to show what a fresh `JSONEncoder` per event is worth.
+        // The same work with the encoder built and configured once, which is what the reporter now does.
         let sharedEncoder = JSONEncoder()
+        sharedEncoder.userInfo = [
+            LDContext.UserInfoKeys.allAttributesPrivate: false,
+            LDContext.UserInfoKeys.globalPrivateAttributes: privateAttributes.map { $0 }
+        ]
         sharedEncoder.dateEncodingStrategy = .custom(dateAsMillis)
         let reusingEncoder = measure(iterations: 100_000) {
             let event = FeatureEvent(key: "benchmark-flag", context: context, value: true, defaultValue: false, featureFlag: flag, includeReason: false, isDebug: false)
