@@ -263,6 +263,9 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
+        // A backgrounded application is one the OS may kill without warning, so whatever it has recorded is made
+        // durable now rather than waiting for the next report interval to come around.
+        eventReporter.commitRecordedEvents()
         Thread.performOnMain {
             runMode = .background
         }
