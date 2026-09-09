@@ -1360,6 +1360,30 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.eventReporterMock.flushCallCount) == 1
             }
         }
+
+        describe("flushAndWait") {
+            it("reports true when delivery succeeds") {
+                let testContext = TestContext()
+                testContext.start()
+                testContext.eventReporterMock.flushReportingOutcomeResult = true
+                expect(testContext.subject.flushAndWait(timeout: 1.0)) == true
+                expect(testContext.eventReporterMock.flushReportingOutcomeCallCount) == 1
+            }
+
+            it("reports false when delivery cannot finish") {
+                let testContext = TestContext()
+                testContext.start()
+                testContext.eventReporterMock.flushReportingOutcomeResult = false
+                expect(testContext.subject.flushAndWait(timeout: 1.0)) == false
+            }
+
+            it("reports false when the budget expires first") {
+                let testContext = TestContext()
+                testContext.start()
+                testContext.eventReporterMock.flushReportingOutcomeCompletesImmediately = false
+                expect(testContext.subject.flushAndWait(timeout: 0.05)) == false
+            }
+        }
     }
 
     private func allFlagsSpec() {

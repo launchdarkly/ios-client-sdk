@@ -804,8 +804,71 @@ public class LDClient {
         }
     }
 
+    /**
+     Sends any currently queued events and waits up to `timeout` for the delivery to finish.
+
+     Returns `true` if the events were delivered, or there were none to deliver. Returns `false` if the timeout
+     expired first, or the SDK is offline, closed, or otherwise unable to deliver them.
+
+     The timeout bounds how long this call waits, not how long the delivery may run: an in-flight request is left to
+     finish so a payload already on the wire is not abandoned. With more than one environment, the environments share
+     the one budget rather than each getting a fresh copy of it.
+
+     This is for a caller that is about to give up control — `close()`, going into the background, winding the process
+     down. It is not a crash-time mechanism. The SDK has no crash hook of its own on Apple, and this call does not
+     change that.
+
+     Safe to call from the main thread. The wait is not free there: the watchdog terminates an application that fails
+     to return from a lifecycle callback in time. Keep the budget far below 15 seconds.
+
+     - parameter timeout: How long to wait, in seconds.
+     - returns: Whether the pending events left the SDK's hands inside the budget.
+     */
+    @discardableResult
+    public func flushAndWait(timeout: TimeInterval) -> Bool {
+        if timeout > LDClient.longTimeoutInterval {
+            os_log("%s LDClient.flushAndWait was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
+        }
+
+        let clients = LDClient.instancesQueue.sync { Array((LDClient.instances ?? [:]).values) }
+        let deadline = Date().addingTimeInterval(max(0, timeout))
+        var delivered = true
+        for client in clients {
+            let remaining = max(0, deadline.timeIntervalSinceNow)
+            delivered = client.internalFlushAndWait(timeout: remaining) && delivered
+        }
+        return delivered
+    }
+
     private func internalFlush() {
         eventReporter.flush(completion: nil)
+    }
+
+    /// Completions that feed this wait must not hop to the main queue: lifecycle callers are already on it, and
+    /// waiting for a main-queue callback from the main thread is a deadlock. They also must not run on
+    /// `EventReporter`'s delivery queue, which is why this queue exists.
+    private static let flushWaitQueue = DispatchQueue(label: "com.launchdarkly.flushWait", qos: .userInitiated)
+
+    private func internalFlushAndWait(timeout: TimeInterval) -> Bool {
+        let timeout = max(0, timeout)
+        let finished = DispatchSemaphore(value: 0)
+        var delivered = false
+        TimeoutExecutor.run(
+            timeout: timeout,
+            queue: LDClient.flushWaitQueue,
+            operation: { done in
+                self.eventReporter.flushReportingOutcome(completion: done)
+            },
+            timeoutValue: false,
+            completion: { result in
+                delivered = result
+                finished.signal()
+            }
+        )
+        // Slightly longer than the caller's budget so the outcome that returns is TimeoutExecutor's, not a race
+        // between this wait and the executor's timer.
+        _ = finished.wait(timeout: .now() + timeout + 0.25)
+        return delivered
     }
 
     private func onEventSyncComplete(result: SynchronizingError?) {

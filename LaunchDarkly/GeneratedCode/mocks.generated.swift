@@ -222,6 +222,20 @@ final class EventReportingMock: EventReporting {
         try! flushCallback?()
     }
 
+    var flushReportingOutcomeCallCount = 0
+    var flushReportingOutcomeCallback: (() throws -> Void)?
+    var flushReportingOutcomeReceivedCompletion: ((Bool) -> Void)?
+    var flushReportingOutcomeResult = true
+    var flushReportingOutcomeCompletesImmediately = true
+    func flushReportingOutcome(completion: @escaping (Bool) -> Void) {
+        flushReportingOutcomeCallCount += 1
+        flushReportingOutcomeReceivedCompletion = completion
+        try! flushReportingOutcomeCallback?()
+        if flushReportingOutcomeCompletesImmediately {
+            completion(flushReportingOutcomeResult)
+        }
+    }
+
     var commitRecordedEventsCallCount = 0
     var commitRecordedEventsCallback: (() throws -> Void)?
     func commitRecordedEvents() {

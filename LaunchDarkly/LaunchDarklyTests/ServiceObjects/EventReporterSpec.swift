@@ -91,6 +91,7 @@ final class EventReporterSpec: QuickSpec {
         reportEventsSpec()
         reportTimerSpec()
         durabilitySpec()
+        flushReportingOutcomeSpec()
     }
 
     private func initSpec() {
@@ -917,6 +918,72 @@ extension EventReporterSpec {
                 expect(secondFinished).toEventually(beTrue())
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
                 expect(testContext.store.pendingEventCount) == 0
+            }
+        }
+    }
+
+    private func flushReportingOutcomeSpec() {
+        describe("flush reporting outcome") {
+            var testContext: TestContext!
+            afterEach {
+                testContext.cleanUp()
+            }
+
+            it("reports true when there is nothing to deliver") {
+                testContext = TestContext()
+                testContext.eventReporter.isOnline = true
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+            }
+
+            it("reports false while offline") {
+                testContext = TestContext()
+                testContext.recordEvents(1)
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+            }
+
+            it("reports true when LaunchDarkly accepts the batch") {
+                testContext = TestContext()
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+                expect(testContext.store.pendingEventCount) == 0
+            }
+
+            it("reports false when a retryable failure leaves the batch on disk") {
+                testContext = TestContext(stubResponseSuccess: false)
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                var delivered: Bool?
+                waitUntil(timeout: .seconds(10)) { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.store.pendingBatches().count) == 1
             }
         }
     }

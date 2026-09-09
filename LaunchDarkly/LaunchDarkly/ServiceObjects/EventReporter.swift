@@ -14,6 +14,12 @@ protocol EventReporting {
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)
     func flush(completion: CompletionClosure?)
 
+    /// Same as `flush`, and reports whether the pending batches left the SDK's hands.
+    ///
+    /// `true` if they were delivered, refused for good, or there were none. `false` if the SDK is offline or a
+    /// retryable failure left batches on disk.
+    func flushReportingOutcome(completion: @escaping (Bool) -> Void)
+
     /// Makes everything recorded so far outlive the process, without waiting for a delivery.
     ///
     /// The SDK does this itself at the points where an application is most likely to be about to die. It is worth
@@ -33,6 +39,10 @@ class NullEventReporter: EventReporting {
 
     func flush(completion: CompletionClosure?) {
         completion?()
+    }
+
+    func flushReportingOutcome(completion: @escaping (Bool) -> Void) {
+        completion(true)
     }
 
     func commitRecordedEvents() {
@@ -104,7 +114,7 @@ class EventReporter: EventReporting {
     private var hasWaitingRequest = false
 
     /// Callers waiting on the pass that `hasWaitingRequest` will start.
-    private var waitingCompletions: [CompletionClosure] = []
+    private var waitingCompletions: [(Bool) -> Void] = []
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
@@ -282,6 +292,10 @@ class EventReporter: EventReporting {
     }
 
     func flush(completion: CompletionClosure?) {
+        flushReportingOutcome { _ in completion?() }
+    }
+
+    func flushReportingOutcome(completion: @escaping (Bool) -> Void) {
         // Flush is a commit point: everything accepted before this call must be on disk before control returns,
         // even when delivery cannot run because the client is offline.
         commitRecordedEvents()
@@ -294,7 +308,7 @@ class EventReporter: EventReporting {
         reportEvents(completion: nil)
     }
 
-    private func reportEvents(completion: CompletionClosure?) {
+    private func reportEvents(completion: ((Bool) -> Void)?) {
         guard !isDelivering
         else {
             // Everything this caller recorded is already committed, so one pass after the current delivery finishes
@@ -310,7 +324,7 @@ class EventReporter: EventReporting {
         else {
             os_log("%s aborted. EventReporter is offline", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(.isOffline)
-            completion?()
+            completion?(false)
             return
         }
 
@@ -322,30 +336,30 @@ class EventReporter: EventReporting {
         else {
             os_log("%s aborted. Event store is empty", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(nil)
-            completion?()
+            completion?(true)
             return
         }
 
         os_log("%s starting", log: service.config.logger, type: .debug, typeName(and: #function))
         isDelivering = true
-        deliver(batches) { [weak self] in
+        deliver(batches) { [weak self] delivered in
             guard let self
             else {
-                completion?()
+                completion?(false)
                 return
             }
             // `deliver` reports from whichever queue the response arrived on.
             self.deliveryQueue.async {
-                self.finishDelivery(completion)
+                self.finishDelivery(delivered, completion)
             }
         }
     }
 
     /// Releases the in-flight claim and, if a delivery was asked for while it was held, makes the one pass that covers
     /// every caller that waited.
-    private func finishDelivery(_ completion: CompletionClosure?) {
+    private func finishDelivery(_ delivered: Bool, _ completion: ((Bool) -> Void)?) {
         isDelivering = false
-        completion?()
+        completion?(delivered)
 
         guard hasWaitingRequest
         else { return }
@@ -353,8 +367,8 @@ class EventReporter: EventReporting {
         let waiting = waitingCompletions
         hasWaitingRequest = false
         waitingCompletions = []
-        reportEvents {
-            waiting.forEach { $0() }
+        reportEvents { result in
+            waiting.forEach { $0(result) }
         }
     }
 
@@ -362,11 +376,11 @@ class EventReporter: EventReporting {
     ///
     /// Stopping matters: the batches that are left keep their place in the log, and a later delivery attempts them
     /// again rather than the SDK spending the rest of the session's requests on a service that is refusing them.
-    private func deliver(_ batches: [EventBatch], _ completion: CompletionClosure?) {
+    private func deliver(_ batches: [EventBatch], _ completion: ((Bool) -> Void)?) {
         var remaining = batches
         guard !remaining.isEmpty
         else {
-            completion?()
+            completion?(true)
             return
         }
 
@@ -384,7 +398,7 @@ class EventReporter: EventReporting {
             if shouldContinue {
                 self.deliver(remaining, completion)
             } else {
-                completion?()
+                completion?(false)
             }
         }
     }
