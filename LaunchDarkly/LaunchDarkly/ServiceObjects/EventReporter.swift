@@ -90,6 +90,22 @@ class EventReporter: EventReporting {
     /// question and the delivery that acts on it are both enqueued there, in that order.
     private var hasEventsFromPreviousRun = false
 
+    /// Whether a delivery is running, from the request being sent until its response has been handled.
+    ///
+    /// `deliveryQueue` serializes the *start* of a delivery but not the round trip it waits on, and a batch stays on
+    /// disk until its response arrives. Without this, a delivery beginning inside that window would list the same batch
+    /// again and send it a second time -- under the same payload ID, leaving it to LaunchDarkly to notice that two
+    /// requests arriving at once are the same one.
+    ///
+    /// Only to be used on `deliveryQueue`, like the two below.
+    private var isDelivering = false
+
+    /// Whether a delivery was asked for while one was already running.
+    private var hasWaitingRequest = false
+
+    /// Callers waiting on the pass that `hasWaitingRequest` will start.
+    private var waitingCompletions: [CompletionClosure] = []
+
     private let onSyncComplete: EventSyncCompleteClosure?
 
     /// The encoder every recorded event goes through.
@@ -279,6 +295,17 @@ class EventReporter: EventReporting {
     }
 
     private func reportEvents(completion: CompletionClosure?) {
+        guard !isDelivering
+        else {
+            // Everything this caller recorded is already committed, so one pass after the current delivery finishes
+            // covers it. Starting one now would only re-send what is still in flight.
+            hasWaitingRequest = true
+            if let completion {
+                waitingCompletions.append(completion)
+            }
+            return
+        }
+
         guard isOnline
         else {
             os_log("%s aborted. EventReporter is offline", log: service.config.logger, type: .debug, typeName(and: #function))
@@ -300,7 +327,35 @@ class EventReporter: EventReporting {
         }
 
         os_log("%s starting", log: service.config.logger, type: .debug, typeName(and: #function))
-        deliver(batches, completion)
+        isDelivering = true
+        deliver(batches) { [weak self] in
+            guard let self
+            else {
+                completion?()
+                return
+            }
+            // `deliver` reports from whichever queue the response arrived on.
+            self.deliveryQueue.async {
+                self.finishDelivery(completion)
+            }
+        }
+    }
+
+    /// Releases the in-flight claim and, if a delivery was asked for while it was held, makes the one pass that covers
+    /// every caller that waited.
+    private func finishDelivery(_ completion: CompletionClosure?) {
+        isDelivering = false
+        completion?()
+
+        guard hasWaitingRequest
+        else { return }
+
+        let waiting = waitingCompletions
+        hasWaitingRequest = false
+        waitingCompletions = []
+        reportEvents {
+            waiting.forEach { $0() }
+        }
     }
 
     /// Delivers batches oldest first, stopping at the first one that failed in a way worth retrying.

@@ -889,6 +889,35 @@ extension EventReporterSpec {
                 expect(payloadIds.count) == 1
                 expect(payloadIds.first) == kept.first?.payloadId
             }
+
+            it("does not send a batch again when a delivery is asked for while one is in flight") {
+                testContext = TestContext()
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                // The response is held back, so the first delivery stays in flight and its batch stays on disk --
+                // the window in which a second delivery would find that batch and send it again.
+                testContext.serviceMock.holdsEventCompletions = true
+
+                var firstFinished = false
+                testContext.eventReporter.flush { firstFinished = true }
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+
+                var secondFinished = false
+                testContext.eventReporter.flush { secondFinished = true }
+                // Nothing more goes out while the first delivery is unanswered.
+                Thread.sleep(forTimeInterval: 0.3)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+
+                // The second caller is answered by the pass that runs once the first delivery is done. It finds an
+                // empty store, so the batch is sent once in total.
+                expect(firstFinished).toEventually(beTrue())
+                expect(secondFinished).toEventually(beTrue())
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                expect(testContext.store.pendingEventCount) == 0
+            }
         }
     }
 }
