@@ -732,6 +732,29 @@ final class LDClientSpec: QuickSpec {
 
                 expect(testContext.throttlerMock?.runThrottledCallCount) == 0
             }
+            // When online, identify brings the new data source up via go(online: true), which
+            // registers flag observers and fires the completion only once flags for the new
+            // context arrive -- unlike the offline/backgrounded path, which completes
+            // immediately. This is the online completion path the other tests don't exercise
+            // (they call internalIdentify without a completion).
+            it("defers the identify completion until flags arrive when online, then fires once") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+
+                var count = 0
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no) {
+                    count += 1
+                }
+                // Online: the completion waits for the new context's flags, so it has not fired.
+                expect(count) == 0
+
+                testContext.onSyncComplete?(.flagCollection((FeatureFlagCollection([:]), nil)))
+                expect(count).toEventually(equal(1))
+
+                // Drain any further queued observer callbacks; the completion must not fire again.
+                waitUntil { done in DispatchQueue.main.async { done() } }
+                expect(count) == 1
+            }
             it("leaves a client the application set offline offline") {
                 let testContext = TestContext(startOnline: false, enableBackgroundUpdates: false)
                 testContext.start()
