@@ -96,7 +96,7 @@ public class LDClient {
 
      When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.
 
-     The SDK protects itself from multiple rapid calls to setOnline(true) by enforcing an increasing delay (called *throttling*) each time setOnline(true) is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the `setOnline(true)` will proceed, assuming that the client app has not called `setOnline(false)` during the delay. Therefore a call to setOnline(true) may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid setOnline(true) calls. Calls to setOnline(false) are not throttled. Note that calls to `start(config: context: completion:)`, and setting the `config` or `context` can also call `setOnline(true)` under certain conditions. After the delay, the SDK resets and the client app can make a susequent call to setOnline(true) without being throttled.
+     The SDK protects itself from multiple rapid calls to setOnline(true) by enforcing an increasing delay (called *throttling*) each time setOnline(true) is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the `setOnline(true)` will proceed, assuming that the client app has not called `setOnline(false)` during the delay. Therefore a call to setOnline(true) may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid setOnline(true) calls. Calls to setOnline(false) are not throttled. Note that calls to `start(config: context: completion:)` can also call `setOnline(true)` under certain conditions. After the delay, the SDK resets and the client app can make a susequent call to setOnline(true) without being throttled.
 
      Client apps can set a completion closure called when the setOnline call completes. For unthrottled `setOnline(true)` and all `setOnline(false)` calls, the SDK will call the closure immediately on completion of this method. For throttled `setOnline(true)` calls, the SDK will call the closure after the throttling delay at the completion of the setOnline method.
 
@@ -318,12 +318,12 @@ public class LDClient {
 
      The client app can change the active `context` by calling identify with a new or updated LDContext. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
 
-    When a new context is set, the LDClient goes offline and sets the new context. If the client was online when the new context was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready.
+    When a new context is set, the LDClient replaces its connection to LaunchDarkly with one for the new context. The client's online state is unchanged. A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready; when the client is offline, or backgrounded where background updates are unsupported, the completion is called immediately without fresh values.
 
     Note: The `completion` closure is invoked on the main thread.
 
     - parameter context: The LDContext set with the desired context.
-     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays. (Optional)
+     - parameter completion: Closure called when the identify completes: when the client is online, once fresh flag values for the new context are ready; when offline or backgrounded, immediately. (Optional)
     */
     @available(*, deprecated, message: "Use LDClient.identify(context: completion:) with non-optional completion parameter")
     public func identify(context: LDContext, completion: (() -> Void)? = nil) {
@@ -343,7 +343,7 @@ public class LDClient {
 
      The client app can change the active `context` by calling identify with a new or updated LDContext. Client apps should follow [Apple's Privacy Policy](apple.com/legal/privacy) when collecting user information.
 
-     When a new context is set, the LDClient goes offline and sets the new context. If the client was online when the new context was set, it goes online again, subject to a throttling delay if in force (see `setOnline(_: completion:)` for details). A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready.
+     When a new context is set, the LDClient replaces its connection to LaunchDarkly with one for the new context. The client's online state is unchanged. A completion may be passed to the identify method to allow a client app to know when fresh flag values for the new context are ready; when the client is offline, or backgrounded where background updates are unsupported, the completion is called immediately without fresh values.
 
     While only a single identify request can be active at a time, consumers of this SDK can call this method multiple times. To prevent unnecessary network traffic, these requests are placed
     into a sheddable queue. Identify requests will be shed if 1) an existing identify request is in flight, and 2) a third identify has been requested which can be replace the one being shed.
@@ -351,7 +351,7 @@ public class LDClient {
     Note: The `completion` closure is invoked on the main thread.
 
     - parameter context: The LDContext set with the desired context.
-     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
+     - parameter completion: Closure called when the identify completes: when the client is online, once fresh flag values for the new context are ready; when offline or backgrounded, immediately.
      */
     public func identify(context: LDContext, completion: @escaping (_ result: IdentifyResult) -> Void) {
         identifyHooked(context: context, sheddable: true, useCache: .yes, timeout: 0) { result in
@@ -371,7 +371,7 @@ public class LDClient {
 
     - parameter context: The LDContext set with the desired context.
      - parameter useCache: How to handle flag caches during identify transition.
-     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
+     - parameter completion: Closure called when the identify completes: when the client is online, once fresh flag values for the new context are ready; when offline or backgrounded, immediately.
      */
     public func identify(context: LDContext, useCache: IdentifyCacheUsage, completion: @escaping (_ result: IdentifyResult) -> Void) {
         identifyHooked(context: context, sheddable: true, useCache: useCache, timeout: 0) { result in
@@ -416,7 +416,7 @@ public class LDClient {
 
     - parameter context: The LDContext set with the desired context.
      - parameter timeout: The upper time limit before the `completion` callback will be invoked.
-     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
+     - parameter completion: Closure called when the identify completes: when the client is online, once fresh flag values for the new context are ready; when offline or backgrounded, immediately.
      */
     public func identify(context: LDContext, timeout: TimeInterval, completion: @escaping ((_ result: IdentifyResult) -> Void)) {
         identify(context: context, timeout: timeout, useCache: .yes, completion: completion)
@@ -433,7 +433,7 @@ public class LDClient {
     - parameter context: The LDContext set with the desired context.
      - parameter timeout: The upper time limit before the `completion` callback will be invoked.
      - parameter useCache: How to handle flag caches during identify transition.
-     - parameter completion: Closure called when the embedded `setOnlineIdentify` call completes, subject to throttling delays.
+     - parameter completion: Closure called when the identify completes: when the client is online, once fresh flag values for the new context are ready; when offline or backgrounded, immediately.
      */
     public func identify(context: LDContext, timeout: TimeInterval, useCache: IdentifyCacheUsage, completion: @escaping ((_ result: IdentifyResult) -> Void)) {
         if timeout > LDClient.longTimeoutInterval {
@@ -462,8 +462,10 @@ public class LDClient {
 
             self.context = updatedContext
             os_log("%s new context set with key: %s", log: config.logger, type: .debug, typeName(and: #function), self.context.fullyQualifiedKey())
-            let wasOnline = self.isOnline
-            self.internalSetOnline(false)
+            // Only the data source needs to come down for the swap: take the old synchronizer
+            // offline directly, as the run-mode transition does, leaving isOnline, the event
+            // reporter, and the diagnostic reporter untouched.
+            self.flagSynchronizer.isOnline = false
 
             let cachedData = self.flagCache.getCachedData(cacheKey: self.context.fullyQualifiedHashedKey(), contextHash: self.context.contextHash())
 
@@ -506,7 +508,11 @@ public class LDClient {
                 self.eventReporter.record(IdentifyEvent(context: self.context))
             }
 
-            self.internalSetOnline(wasOnline, completion: completion)
+            if self.isOnline && self.isInSupportedRunMode {
+                self.go(online: true, reasonOnlineUnavailable: "", completion: completion)
+            } else {
+                completion?()
+            }
         }
     }
 

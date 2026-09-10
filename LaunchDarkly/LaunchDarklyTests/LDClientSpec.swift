@@ -17,6 +17,7 @@ final class LDClientSpec: QuickSpec {
         startSpec()
         moveToBackgroundSpec()
         identifySpec()
+        identifyRunModeSpec()
         setOnlineSpec()
         closeSpec()
         trackEventSpec()
@@ -574,6 +575,176 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.subject.context) == newContext
                 expect(testContext.flagStoreMock.replaceStoreCallCount) == 1
                 expect(testContext.flagStoreMock.replaceStoreReceivedNewFlags) == stubFlags
+            }
+        }
+    }
+
+    // An identify while the client is backgrounded (with background updates unsupported) must not
+    // record the run-mode refusal in `isOnline`: the client should be left in the same state a
+    // plain backgrounding produces -- `isOnline` reflecting the app's request, data source down --
+    // so that returning to the foreground reconnects. Through 11.6.0 the refusal was recorded, and
+    // the client was permanently stuck offline.
+    private func identifyRunModeSpec() {
+        func backgroundedOnlineClient() -> TestContext {
+            let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
+            testContext.start()
+            testContext.subject.setRunMode(.background)
+            return testContext
+        }
+
+        func foreground() {
+            NotificationCenter.default.post(name: SystemCapabilities.foregroundNotification!, object: self)
+        }
+
+        describe("identify while running in the background") {
+            it("keeps isOnline and leaves the data source down") {
+                let testContext = backgroundedOnlineClient()
+
+                var completed = false
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no) {
+                    completed = true
+                }
+
+                expect(testContext.subject.isOnline) == true
+                expect(testContext.flagSynchronizerMock.isOnline) == false
+                expect(testContext.subject.eventReporter.isOnline) == true
+                expect(testContext.subject.isInitialized) == false
+                expect(completed).toEventually(beTrue())
+            }
+            it("takes the client back online at the foreground notification") {
+                let testContext = backgroundedOnlineClient()
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
+
+                foreground()
+
+                expect(testContext.subject.isOnline).toEventually(beTrue())
+                expect(testContext.flagSynchronizerMock.isOnline).toEventually(beTrue())
+            }
+            it("recovers after repeated identifies while backgrounded") {
+                let testContext = backgroundedOnlineClient()
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
+
+                foreground()
+
+                expect(testContext.subject.isOnline).toEventually(beTrue())
+                expect(testContext.flagSynchronizerMock.isOnline).toEventually(beTrue())
+            }
+            // Identify swaps the data source without taking the client offline, so the connection
+            // mode observers are not told the client went offline. Through 11.6.0 the whole client
+            // was bounced and observers saw .offline mid-swap.
+            it("does not report the client offline while identify swaps contexts") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                var modes: [ConnectionInformation.ConnectionMode] = []
+                testContext.subject.observeCurrentConnectionMode(owner: self) { mode in
+                    modes.append(mode)
+                }
+
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
+                testContext.onSyncComplete?(.flagCollection((FeatureFlagCollection([:]), nil)))
+
+                expect(testContext.subject.isInitialized).toEventually(beTrue(), timeout: DispatchTimeInterval.seconds(2))
+                expect(modes.filter { $0 == .offline }).to(beEmpty())
+            }
+            // The swap no longer routes through go(online: false), which latched `initialized`,
+            // so identify no longer claims initialization for a context whose flags have not
+            // arrived. Through 11.6.0 this reported initialized immediately.
+            it("does not report initialized until flags arrive for the new context") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                expect(testContext.subject.isInitialized) == false
+
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
+
+                expect(testContext.subject.isInitialized) == false
+
+                testContext.onSyncComplete?(.flagCollection((FeatureFlagCollection([:]), nil)))
+                expect(testContext.subject.isInitialized).toEventually(beTrue(), timeout: DispatchTimeInterval.seconds(2))
+            }
+            // Samples state in the middle of the swap, via the cache read identify performs
+            // between taking the old data source down and bringing the new one up. Through
+            // 11.6.0 the whole client was bounced, so both read false mid-swap.
+            it("keeps the client online and events flowing while identify swaps contexts") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                let original = testContext.featureFlagCachingMock.getCachedDataCallback
+                var isOnlineDuringSwap: Bool?
+                var eventReporterOnlineDuringSwap: Bool?
+                testContext.featureFlagCachingMock.getCachedDataCallback = {
+                    try original?()
+                    isOnlineDuringSwap = testContext.subject.isOnline
+                    eventReporterOnlineDuringSwap = testContext.subject.eventReporter.isOnline
+                }
+
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
+
+                expect(isOnlineDuringSwap) == true
+                expect(eventReporterOnlineDuringSwap) == true
+            }
+            it("recovers when the app backgrounds midway through an identify") {
+                let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
+                testContext.start()
+                let original = testContext.featureFlagCachingMock.getCachedDataCallback
+                testContext.featureFlagCachingMock.getCachedDataCallback = {
+                    try original?()
+                    testContext.subject.setRunMode(.background)
+                }
+
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
+                testContext.featureFlagCachingMock.getCachedDataCallback = original
+
+                expect(testContext.subject.isOnline) == true
+                expect(testContext.flagSynchronizerMock.isOnline) == false
+
+                NotificationCenter.default.post(name: SystemCapabilities.foregroundNotification!, object: self)
+                expect(testContext.subject.isOnline).toEventually(beTrue())
+                expect(testContext.flagSynchronizerMock.isOnline).toEventually(beTrue())
+            }
+            // The mirror image of the background-then-identify cases above: identify then
+            // background must end in the same state, so the two transitions compose in either
+            // order.
+            it("stays online with the data source down when backgrounded after an identify") {
+                let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
+                testContext.start()
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
+                expect(testContext.subject.isOnline) == true
+
+                testContext.subject.setRunMode(.background)
+
+                expect(testContext.subject.isOnline) == true
+                expect(testContext.flagSynchronizerMock.isOnline) == false
+
+                NotificationCenter.default.post(name: SystemCapabilities.foregroundNotification!, object: self)
+                expect(testContext.subject.isOnline).toEventually(beTrue())
+                expect(testContext.flagSynchronizerMock.isOnline).toEventually(beTrue())
+            }
+            // Identify brings the new data source up directly rather than through the throttled
+            // setOnline path, so a pending throttled work item can neither defer it nor discard
+            // its completion. Through 11.6.0 the restore consumed a throttle attempt.
+            it("does not involve the throttler") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                testContext.throttlerMock?.runThrottledCallCount = 0
+
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
+
+                expect(testContext.throttlerMock?.runThrottledCallCount) == 0
+            }
+            it("leaves a client the application set offline offline") {
+                let testContext = TestContext(startOnline: false, enableBackgroundUpdates: false)
+                testContext.start()
+                testContext.subject.setRunMode(.background)
+
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
+                foreground()
+
+                // wait for the foreground transition to be fully handled, then check it did not
+                // resurrect a client the application asked to be offline
+                expect(testContext.subject.runMode).toEventually(equal(.foreground))
+                expect(testContext.subject.isOnline) == false
+                expect(testContext.flagSynchronizerMock.isOnline) == false
             }
         }
     }
@@ -1443,6 +1614,99 @@ final class LDClientSpec: QuickSpec {
 
                 testContext.subject.close()
                 expect(testContext.subject.isInitialized) == false
+            }
+
+            // MARK: SDK-3065 characterization
+            //
+            // These pin `isInitialized` behavior this branch retains from 11.6.0, so the identify
+            // change cannot alter it unnoticed.
+
+            it("becomes true when set offline before flags arrive") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                expect(testContext.subject.isInitialized) == false
+
+                testContext.subject.setOnline(false)
+
+                expect(testContext.subject.isInitialized) == true
+            }
+            it("stays true after going back online without ever receiving flags") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                testContext.subject.setOnline(false)
+                expect(testContext.subject.isInitialized) == true
+
+                testContext.subject.setOnline(true)
+
+                // Monotonic: the offline latch is never cleared.
+                expect(testContext.subject.isInitialized) == true
+            }
+            it("stays true when identify runs after flags arrived") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                testContext.onSyncComplete?(.flagCollection((FeatureFlagCollection([:]), nil)))
+                expect(testContext.subject.isInitialized).toEventually(beTrue(), timeout: DispatchTimeInterval.seconds(2))
+
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .yes)
+
+                expect(testContext.subject.isInitialized) == true
+            }
+            it("stays true across setOnline and identify cycles once flags arrived") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                testContext.onSyncComplete?(.flagCollection((FeatureFlagCollection([:]), nil)))
+                expect(testContext.subject.isInitialized).toEventually(beTrue(), timeout: DispatchTimeInterval.seconds(2))
+
+                testContext.subject.setOnline(false)
+                expect(testContext.subject.isInitialized) == true
+                testContext.subject.setOnline(true)
+                expect(testContext.subject.isInitialized) == true
+                testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .yes)
+                expect(testContext.subject.isInitialized) == true
+            }
+            it("becomes true when setOnline(true) is refused in the background") {
+                let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
+                testContext.start()
+                testContext.subject.setRunMode(.background)
+                expect(testContext.subject.isInitialized) == false
+
+                testContext.subject.setOnline(true)
+                expect(testContext.subject.isInitialized) == true
+
+                NotificationCenter.default.post(name: SystemCapabilities.foregroundNotification!, object: self)
+                expect(testContext.subject.isInitialized) == true
+            }
+            it("remains false across a background and foreground cycle without flags") {
+                let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
+                testContext.start()
+                expect(testContext.subject.isInitialized) == false
+
+                testContext.subject.setRunMode(.background)
+                expect(testContext.subject.isInitialized) == false
+
+                NotificationCenter.default.post(name: SystemCapabilities.foregroundNotification!, object: self)
+                expect(testContext.subject.isInitialized) == false
+            }
+            it("becomes true when the client is unauthorized") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                expect(testContext.subject.isInitialized) == false
+
+                let unauthorized = HTTPURLResponse(url: URL(string: "https://app.launchdarkly.com")!,
+                                                   statusCode: 401,
+                                                   httpVersion: nil,
+                                                   headerFields: nil)
+                testContext.onSyncComplete?(.error(.response(unauthorized)))
+
+                expect(testContext.subject.isInitialized).toEventually(beTrue(), timeout: DispatchTimeInterval.seconds(2))
+            }
+            it("becomes true when the mobile key is empty") {
+                let config = LDConfig.stub(mobileKey: "", autoEnvAttributes: .disabled, isDebugBuild: false)
+                let testContext = TestContext(newConfig: config, startOnline: true)
+                testContext.start()
+
+                expect(testContext.subject.isOnline) == false
+                expect(testContext.subject.isInitialized) == true
             }
         }
     }
