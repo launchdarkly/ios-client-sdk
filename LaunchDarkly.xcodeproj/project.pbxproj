@@ -68,6 +68,7 @@
 		831188572113AE0B00D77CB5 /* FlagChangeNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F25F1F476AD800ECE1AF /* FlagChangeNotifier.swift */; };
 		831188582113AE0F00D77CB5 /* EventReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* EventReporter.swift */; };
 		ED7244F6BFD7A65A5B002346 /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93E83CC1D4F608AE52D4633 /* EventStore.swift */; };
+		3A4395C09ECAAB0A117A66BC /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C39742D61CCF01BDF2922B6 /* BackgroundActivity.swift */; };
 		831188592113AE1200D77CB5 /* FlagStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B731F72994600ED65E8 /* FlagStore.swift */; };
 		8311885A2113AE1500D77CB5 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837EF3732059C237009D628A /* Log.swift */; };
 		8311885B2113AE1D00D77CB5 /* Throttler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2B20A9E4F600B46DBA /* Throttler.swift */; };
@@ -109,6 +110,7 @@
 		831EF35620655E730001C643 /* FlagChangeNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F25F1F476AD800ECE1AF /* FlagChangeNotifier.swift */; };
 		831EF35720655E730001C643 /* EventReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* EventReporter.swift */; };
 		A89576FC2844509ED8DCCD9C /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93E83CC1D4F608AE52D4633 /* EventStore.swift */; };
+		62011159797943BDC7F47338 /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C39742D61CCF01BDF2922B6 /* BackgroundActivity.swift */; };
 		831EF35820655E730001C643 /* FlagStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B731F72994600ED65E8 /* FlagStore.swift */; };
 		831EF35920655E730001C643 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837EF3732059C237009D628A /* Log.swift */; };
 		831EF35A20655E730001C643 /* HTTPHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */; };
@@ -193,6 +195,7 @@
 		83D9EC882062DEAB004D7FA6 /* FlagChangeNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F25F1F476AD800ECE1AF /* FlagChangeNotifier.swift */; };
 		83D9EC892062DEAB004D7FA6 /* EventReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* EventReporter.swift */; };
 		35F5D36D293D298AD0F138A9 /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93E83CC1D4F608AE52D4633 /* EventStore.swift */; };
+		65C2CAE3E52F47E7F2952C77 /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C39742D61CCF01BDF2922B6 /* BackgroundActivity.swift */; };
 		83D9EC8A2062DEAB004D7FA6 /* FlagStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B731F72994600ED65E8 /* FlagStore.swift */; };
 		83D9EC8B2062DEAB004D7FA6 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837EF3732059C237009D628A /* Log.swift */; };
 		83D9EC8C2062DEAB004D7FA6 /* HTTPHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */; };
@@ -218,6 +221,7 @@
 		83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
 		83FEF8DF1F2667E4001CF12C /* EventReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* EventReporter.swift */; };
 		FE7E6D4C4CE5165FC8A9407B /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93E83CC1D4F608AE52D4633 /* EventStore.swift */; };
+		AA25F694C519D4DEB49E8DE6 /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C39742D61CCF01BDF2922B6 /* BackgroundActivity.swift */; };
 		9A47F74A2F3D4CBF0001FD9C /* ContextSummarizerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */; };
 		9A47F74C2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
 		9A47F74D2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
@@ -557,6 +561,7 @@
 		83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlagSynchronizer.swift; sourceTree = "<group>"; };
 		83FEF8DE1F2667E4001CF12C /* EventReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventReporter.swift; sourceTree = "<group>"; };
 		D93E83CC1D4F608AE52D4633 /* EventStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventStore.swift; sourceTree = "<group>"; };
+		8C39742D61CCF01BDF2922B6 /* BackgroundActivity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackgroundActivity.swift; sourceTree = "<group>"; };
 		9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSummarizerSpec.swift; sourceTree = "<group>"; };
 		9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSummarizer.swift; sourceTree = "<group>"; };
 		9AE1D0A02F4A1B000001FD9C /* EvaluationExposureDeduper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluationExposureDeduper.swift; sourceTree = "<group>"; };
@@ -982,6 +987,7 @@
 				831425B0206B030100F2EF36 /* EnvironmentReporter.swift */,
 				83FEF8DE1F2667E4001CF12C /* EventReporter.swift */,
 				D93E83CC1D4F608AE52D4633 /* EventStore.swift */,
+				8C39742D61CCF01BDF2922B6 /* BackgroundActivity.swift */,
 				8358F25F1F476AD800ECE1AF /* FlagChangeNotifier.swift */,
 				831D8B731F72994600ED65E8 /* FlagStore.swift */,
 				83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */,
@@ -1451,6 +1457,7 @@
 				831188522113ADF700D77CB5 /* KeyedValueCache.swift in Sources */,
 				831188582113AE0F00D77CB5 /* EventReporter.swift in Sources */,
 				ED7244F6BFD7A65A5B002346 /* EventStore.swift in Sources */,
+				3A4395C09ECAAB0A117A66BC /* BackgroundActivity.swift in Sources */,
 				50EE85C42EA0487F007CC662 /* TimeoutExecutor.swift in Sources */,
 				A350386E2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */,
 				FED0000000000000000000C1 /* TrackSeriesContext.swift in Sources */,
@@ -1560,6 +1567,7 @@
 				A358D6D92A4DE6A500270C60 /* ApplicationInfoEnvironmentReporter.swift in Sources */,
 				831EF35720655E730001C643 /* EventReporter.swift in Sources */,
 				A89576FC2844509ED8DCCD9C /* EventStore.swift in Sources */,
+				62011159797943BDC7F47338 /* BackgroundActivity.swift in Sources */,
 				A350386F2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */,
 				FED0000000000000000000C2 /* TrackSeriesContext.swift in Sources */,
 				831EF35820655E730001C643 /* FlagStore.swift in Sources */,
@@ -1653,6 +1661,7 @@
 				8358F2601F476AD800ECE1AF /* FlagChangeNotifier.swift in Sources */,
 				83FEF8DF1F2667E4001CF12C /* EventReporter.swift in Sources */,
 				FE7E6D4C4CE5165FC8A9407B /* EventStore.swift in Sources */,
+				AA25F694C519D4DEB49E8DE6 /* BackgroundActivity.swift in Sources */,
 				831D2AAF2061AAA000B4AC3C /* Thread.swift in Sources */,
 				A358D6DD2A4DE7D600270C60 /* IOSEnvironmentReporter.swift in Sources */,
 				83B9A082204F6022000C3F17 /* FlagsUnchangedObserver.swift in Sources */,
@@ -1800,6 +1809,7 @@
 				C443A40B2315AA4D00145710 /* NetworkReporter.swift in Sources */,
 				83D9EC892062DEAB004D7FA6 /* EventReporter.swift in Sources */,
 				35F5D36D293D298AD0F138A9 /* EventStore.swift in Sources */,
+				65C2CAE3E52F47E7F2952C77 /* BackgroundActivity.swift in Sources */,
 				83D9EC8A2062DEAB004D7FA6 /* FlagStore.swift in Sources */,
 				29F9D19F2812E005008D12C0 /* ObjcLDValue.swift in Sources */,
 				A3599E892A4B4AD400DB5C67 /* Modifier.swift in Sources */,

@@ -1122,6 +1122,16 @@ final class LDClientSpec: QuickSpec {
                     expect(testContext.eventReporterMock.isOnline) == false
                     expect(testContext.flagSynchronizerMock.isOnline) == false
                 }
+                it("commits what was recorded and then tries to deliver it") {
+                    let testContext = TestContext(startOnline: true)
+                    testContext.start()
+                    NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
+
+                    // Committing is what makes the events survive a process the OS is now free to kill; the delivery
+                    // that follows is an attempt to make surviving unnecessary.
+                    expect(testContext.eventReporterMock.commitRecordedEventsCallCount).toEventually(equal(1))
+                    expect(testContext.eventReporterMock.flushReportingOutcomeCallCount).toEventually(equal(1))
+                }
             }
         }
 
