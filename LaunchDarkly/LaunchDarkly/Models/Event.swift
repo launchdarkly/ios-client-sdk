@@ -86,9 +86,7 @@ class FeatureEvent: Event, SubEvent {
             self.context = context
             super.init(kind: .debug)
         } else {
-            var newContext = LDContext(copyFrom: context)
-            newContext.redactAnonymousAttributes = true
-            self.context = newContext
+            self.context = context.redactingAnonymousAttributes()
             super.init(kind: .feature)
         }
     }

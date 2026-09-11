@@ -61,13 +61,10 @@ class ContextSummarizer {
     private func ensureTrackerExists(for context: LDContext, key: ContextKey) {
         guard trackers[key] == nil else { return }
 
-        // Create filtered context for privacy
-        var filteredContext = LDContext(copyFrom: context)
-        filteredContext.redactAnonymousAttributes = true
-
         trackers[key] = TrackerWithContext(
             tracker: FlagRequestTracker(logger: logger),
-            context: filteredContext
+            // Summaries redact anonymous attributes, as feature events do.
+            context: context.redactingAnonymousAttributes()
         )
     }
 

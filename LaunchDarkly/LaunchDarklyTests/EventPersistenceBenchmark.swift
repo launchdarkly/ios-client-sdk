@@ -290,23 +290,12 @@ final class EventPersistenceBenchmark: XCTestCase {
     /// O2: reusing the last context's encoded bytes when the context has not changed.
     ///
     /// Measured at both ends of the hit rate, because the cache is only worth having if a miss costs close to nothing.
-    /// The comparison `LDContext ==` is reported alongside, since that is what a hit actually pays -- and note that
-    /// every feature event builds a fresh context copy, so the comparison runs against a new value each time rather
-    /// than short-circuiting on identity.
+    /// What a hit pays on top of the lookup is `LDContext ==`, which `testContextCopyAndComparisonCost` prices
+    /// separately for each way two equal contexts can be related.
     func testContextCacheCost() throws {
         try requireBenchmarking()
 
         let flag = FeatureFlag(flagKey: "benchmark-flag", value: true, variation: 1, flagVersion: 7, trackEvents: true)
-        let shapes = EventPersistenceBenchmark.contextShapes()
-
-        var comparisons: [(String, Double)] = []
-        for (shapeName, context) in shapes {
-            let copy = LDContext(copyFrom: context)
-            comparisons.append(("LDContext == , \(shapeName)", measure(iterations: 500_000) {
-                _ = context == copy
-            }))
-        }
-        report("comparing two equal contexts", comparisons)
 
         // The context to alternate with differs only in its key, so a miss costs the same encode as a hit would have.
         // Alternating between contexts of different sizes would price the other context, not the miss.
@@ -368,6 +357,53 @@ final class EventPersistenceBenchmark: XCTestCase {
             ("one JSONWriter reused", reusing),
             ("saved", fresh - reusing)
         ])
+    }
+
+    /// What it costs to copy a context and to compare two equal ones, which together decide whether the context cache
+    /// is worth anything outside a benchmark.
+    ///
+    /// Three kinds of equal pair, because they are not the same question:
+    /// - **shared storage**: one value assigned to another, so `Dictionary` and `Array` equality take the identity
+    ///   fast path. This is what the cache benchmark measured, and it flatters the result.
+    /// - **after `redactingAnonymousAttributes()`**: what the SDK actually hands to a feature event.
+    /// - **independently built**: two equal contexts that share nothing, which is what an application that rebuilds
+    ///   its context between evaluations produces. This is the case the cache's real-world value depends on.
+    func testContextCopyAndComparisonCost() throws {
+        try requireBenchmarking()
+
+        var comparisons: [(String, Double)] = []
+        var copies: [(String, Double)] = []
+
+        for shape in ContextShape.allCases {
+            let context = EventPersistenceBenchmark.makeContext(shape, key: "benchmark-key")
+            let shared = context
+            let redacting = context.redactingAnonymousAttributes()
+            let rebuilt = EventPersistenceBenchmark.makeContext(shape, key: "benchmark-key")
+                .redactingAnonymousAttributes()
+
+            // Each pair must be equal, or the figures below measure an early exit rather than a comparison.
+            XCTAssertEqual(context, shared, "\(shape.rawValue)")
+            XCTAssertEqual(redacting, redacting, "\(shape.rawValue)")
+            XCTAssertEqual(redacting, rebuilt, "\(shape.rawValue)")
+
+            comparisons.append(("shared storage, \(shape.rawValue)", measure(iterations: 500_000) {
+                _ = context == shared
+            }))
+            let alsoRedacting = context.redactingAnonymousAttributes()
+            comparisons.append(("after redactingAnonymousAttributes, \(shape.rawValue)", measure(iterations: 500_000) {
+                _ = redacting == alsoRedacting
+            }))
+            comparisons.append(("independently built, \(shape.rawValue)", measure(iterations: 200_000) {
+                _ = redacting == rebuilt
+            }))
+
+            copies.append(("redactingAnonymousAttributes(), \(shape.rawValue)", measure(iterations: 500_000) {
+                _ = context.redactingAnonymousAttributes()
+            }))
+        }
+
+        report("comparing two equal contexts", comparisons)
+        report("copying a context", copies)
     }
 
     // MARK: Corpus

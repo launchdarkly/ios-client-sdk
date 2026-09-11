@@ -244,6 +244,43 @@ final class EventJSONWriterTests: XCTestCase {
         }
     }
 
+    /// `redactingAnonymousAttributes()` is a plain struct copy, which -- unlike the deep copy it replaced -- leaves the
+    /// sub-contexts of a multi-context untouched instead of clearing their flags. That is only safe because encoding
+    /// reads the flag from the top-level context and passes it down, ignoring whatever the sub-contexts hold. This
+    /// pins that: setting the flag on a sub-context before it is added changes nothing about the output, while setting
+    /// it on the parent redacts both.
+    func testOnlyTheTopLevelAnonymousRedactionFlagIsRead() throws {
+        let writer = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
+
+        func multiContext(redactingParts: Bool) throws -> LDContext {
+            var builder = LDMultiContextBuilder()
+            for kind in ["user", "device"] {
+                var part = LDContextBuilder(key: "\(kind)-key")
+                part.kind(kind)
+                part.anonymous(true)
+                _ = part.trySetValue("email", "person@example.com")
+                let built = try part.build().get()
+                builder.addContext(redactingParts ? built.redactingAnonymousAttributes() : built)
+            }
+            return try builder.build().get()
+        }
+
+        let plain = try multiContext(redactingParts: false)
+        let partsFlagged = try multiContext(redactingParts: true)
+
+        func encoded(_ context: LDContext) throws -> String {
+            let event = IdentifyEvent(context: context)
+            return try canonical(try XCTUnwrap(writer.encode(event)))
+        }
+
+        // A flag set on the sub-contexts is not read, so it makes no difference.
+        XCTAssertEqual(try encoded(partsFlagged), try encoded(plain))
+        // Set on the parent, it is read, and the anonymous attributes go away.
+        let redacted = try encoded(plain.redactingAnonymousAttributes())
+        XCTAssertNotEqual(redacted, try encoded(plain))
+        XCTAssertFalse(redacted.contains("person@example.com"))
+    }
+
     /// Escaping in isolation, over every code point the writer treats specially plus a sample of those it does not.
     func testStringEscaping() throws {
         var scalars: [String] = ["", "plain", "\"", "\\", "/", "\u{07}", "\u{0B}", "\u{7F}", "é", "→", "🎉", "𝄞"]
