@@ -126,11 +126,19 @@ class EventReporter: EventReporting {
     /// the service, so the privacy settings the encoding depends on are fixed for as long as this reporter exists.
     private let encoder: JSONEncoder
 
-    init(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?, store: EventStoring? = nil) {
+    let encoding: Encoding
+    private let handWrittenEncoder: EventJSONWriter
+
+    init(service: DarklyServiceProvider,
+         onSyncComplete: EventSyncCompleteClosure?,
+         store: EventStoring? = nil,
+         encoding: Encoding = .codable) {
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.responseDate = Date()
+        self.encoding = encoding
         self.encoder = EventReporter.makeEncoder(config: service.config)
+        self.handWrittenEncoder = EventJSONWriter(config: service.config)
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
         self.store = store ?? EventReporter.makeStore(config: service.config)
 
@@ -259,7 +267,8 @@ class EventReporter: EventReporting {
     }
 
     private func encode(_ event: Event) -> Data? {
-        guard let encoded = try? encoder.encode(event)
+        let encoded: Data? = encoding == .handWritten ? handWrittenEncoder.encode(event) : try? encoder.encode(event)
+        guard let encoded = encoded
         else {
             os_log("%s Failed to serialize event for publication: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: event))
             return nil
@@ -481,6 +490,15 @@ class EventReporter: EventReporting {
         DispatchQueue.main.async {
             onSyncComplete(result)
         }
+    }
+}
+
+extension EventReporter {
+    /// Which encoder recorded events go through. Experimental: `.codable` is the shipping path, and `.handWritten`
+    /// exists so the two can be measured against each other on the same recording path rather than in isolation.
+    enum Encoding {
+        case codable
+        case handWritten
     }
 }
 

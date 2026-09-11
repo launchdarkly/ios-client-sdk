@@ -609,6 +609,32 @@ extension LDContext: Decodable {
 
 extension LDContext: TypeIdentifying {}
 
+/// The seam `LDContextJSONWriter` reaches through.
+///
+/// Redaction is the part of encoding worth measuring, so the hand-written writer reuses `maybeRedact` and the
+/// private-attribute lookup it walks rather than reimplementing them: the two encoders must differ in how bytes are
+/// produced, not in what gets redacted. Those, and the three stored properties below, are file-private to `LDContext`,
+/// and this is the whole of what the writer needs from them.
+extension LDContext {
+    internal var writableKey: String? { key }
+    internal var isAnonymous: Bool { anonymous }
+
+    internal static func privateAttributeLookup(for references: [Reference]) -> SharedDictionary<String, PrivateAttributeLookupNode> {
+        makePrivateAttributeLookupData(references: references)
+    }
+
+    internal func redactionDecision(parentPath: [String],
+                                    value: LDValue,
+                                    redactedAttributes: inout [String],
+                                    globalPrivateAttributes: SharedDictionary<String, PrivateAttributeLookupNode>) -> (Bool, Bool) {
+        LDContext.maybeRedact(context: self,
+                              parentPath: parentPath,
+                              value: value,
+                              redactedAttributes: &redactedAttributes,
+                              globalPrivateAttributes: globalPrivateAttributes)
+    }
+}
+
 enum LDContextBuilderKey {
     case generateKey
     case key(String)
