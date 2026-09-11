@@ -252,25 +252,57 @@ final class EventJSONWriterTests: XCTestCase {
     /// Where it cannot reach the output, the two variants the event stream carries encode to identical bytes -- and
     /// still occupy separate cache slots, because the flag is a stored property and so part of `==`.
     func testTheAnonymousRedactionFlagOnlyChangesBytesForAnonymousContexts() throws {
-        let writer = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
-
-        func encoded(_ context: LDContext) throws -> String {
-            try canonical(try XCTUnwrap(writer.encode(IdentifyEvent(context: context))))
+        func encoded(_ context: LDContext, redactAnonymous: Bool) throws -> String {
+            let writer = JSONWriter()
+            context.writeJSON(into: writer,
+                              allAttributesPrivate: false,
+                              globalPrivateAttributes: [],
+                              redactAnonymousAttributes: redactAnonymous)
+            return try canonical(writer.data)
         }
 
-        // Nothing anonymous: the flag is inert, and the two cache slots would hold the same bytes.
+        // Nothing anonymous: the directive is inert, and the two cache slots hold the same bytes.
         for (name, context) in [("simple", simpleContext()), ("rich", richContext())] {
-            XCTAssertEqual(try encoded(context),
-                           try encoded(context.redactingAnonymousAttributes()),
-                           "the flag reached the output for a context with no anonymous part: \(name)")
+            XCTAssertEqual(try encoded(context, redactAnonymous: false),
+                           try encoded(context, redactAnonymous: true),
+                           "the directive reached the output for a context with no anonymous part: \(name)")
         }
 
-        // Anonymous, whole or in part: the flag is load-bearing, and the slots must stay separate.
+        // Anonymous, whole or in part: the directive is load-bearing, and the slots must stay separate.
         for (name, context) in [("anonymous", anonymousContext()), ("multi, anonymous device", multiContext())] {
-            XCTAssertNotEqual(try encoded(context),
-                              try encoded(context.redactingAnonymousAttributes()),
-                              "the flag failed to reach the output for: \(name)")
+            XCTAssertNotEqual(try encoded(context, redactAnonymous: false),
+                              try encoded(context, redactAnonymous: true),
+                              "the directive failed to reach the output for: \(name)")
         }
+    }
+
+    /// The directive now comes from the event kind, so the same context redacts on a feature event and does not on the
+    /// debug event that accompanies it. Both paths have to agree on that, since the debug event exists to show what was
+    /// evaluated.
+    func testTheEventKindDecidesWhetherAnonymousAttributesAreRedacted() throws {
+        let context = anonymousContext()
+        let flag = FeatureFlag(flagKey: "flag-key", value: true, variation: 1, flagVersion: 7, trackEvents: true)
+
+        func event(isDebug: Bool) -> FeatureEvent {
+            FeatureEvent(key: "flag-key", context: context, value: true, defaultValue: false,
+                         featureFlag: flag, includeReason: false, isDebug: isDebug)
+        }
+
+        for (name, writer) in encoders() {
+            let feature = try canonical(try XCTUnwrap(writer(event(isDebug: false))))
+            let debug = try canonical(try XCTUnwrap(writer(event(isDebug: true))))
+
+            XCTAssertFalse(feature.contains("anon@example.com"), "feature event leaked an anonymous attribute: \(name)")
+            XCTAssertTrue(feature.contains("redactedAttributes"), "feature event did not redact: \(name)")
+            XCTAssertTrue(debug.contains("anon@example.com"), "debug event redacted when it should not have: \(name)")
+        }
+    }
+
+    /// The `Codable` encoder and the hand-written one, so a test can assert a behaviour holds for both.
+    private func encoders() -> [(String, (Event) throws -> Data?)] {
+        let codable = Self.makeCodableEncoder(allAttributesPrivate: false, globalPrivateAttributes: [])
+        let handWritten = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
+        return [("Codable", { try codable.encode($0) }), ("hand-written", { handWritten.encode($0) })]
     }
 
     /// `redactingAnonymousAttributes()` is a plain struct copy, which -- unlike the deep copy it replaced -- leaves the
@@ -279,8 +311,6 @@ final class EventJSONWriterTests: XCTestCase {
     /// pins that: setting the flag on a sub-context before it is added changes nothing about the output, while setting
     /// it on the parent redacts both.
     func testOnlyTheTopLevelAnonymousRedactionFlagIsRead() throws {
-        let writer = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
-
         func multiContext(redactingParts: Bool) throws -> LDContext {
             var builder = LDMultiContextBuilder()
             for kind in ["user", "device"] {
@@ -297,17 +327,18 @@ final class EventJSONWriterTests: XCTestCase {
         let plain = try multiContext(redactingParts: false)
         let partsFlagged = try multiContext(redactingParts: true)
 
-        func encoded(_ context: LDContext) throws -> String {
-            let event = IdentifyEvent(context: context)
-            return try canonical(try XCTUnwrap(writer.encode(event)))
-        }
+        for (name, writer) in encoders() {
+            func encoded(_ context: LDContext) throws -> String {
+                try canonical(try XCTUnwrap(writer(IdentifyEvent(context: context))))
+            }
 
-        // A flag set on the sub-contexts is not read, so it makes no difference.
-        XCTAssertEqual(try encoded(partsFlagged), try encoded(plain))
-        // Set on the parent, it is read, and the anonymous attributes go away.
-        let redacted = try encoded(plain.redactingAnonymousAttributes())
-        XCTAssertNotEqual(redacted, try encoded(plain))
-        XCTAssertFalse(redacted.contains("person@example.com"))
+            // A flag set on the sub-contexts is not read, so it makes no difference.
+            XCTAssertEqual(try encoded(partsFlagged), try encoded(plain), name)
+            // Set on the parent, it is read, and the anonymous attributes go away.
+            let redacted = try encoded(plain.redactingAnonymousAttributes())
+            XCTAssertNotEqual(redacted, try encoded(plain), name)
+            XCTAssertFalse(redacted.contains("person@example.com"), name)
+        }
     }
 
     /// Escaping in isolation, over every code point the writer treats specially plus a sample of those it does not.

@@ -116,9 +116,13 @@ final class ContextSummarizerSpec: QuickSpec {
                 }
 
                 context("context privacy") {
-                    it("stores filtered context with redactAnonymousAttributes flag") {
+                    // The summarizer stores the context as given; that a summary redacts the attributes of an
+                    // anonymous context is decided when the event is encoded, by `redactsAnonymousAttributes`.
+                    // Asserting the encoded output rather than the stored flag keeps this pinned to the behaviour.
+                    it("redacts the attributes of an anonymous context when the summary is encoded") {
                         var builder = LDContextBuilder(key: "anon-key")
                         builder.anonymous(true)
+                        _ = builder.trySetValue("email", "anon@example.com")
                         let anonymousContext = try! builder.build().get()
 
                         summarizer.trackRequest(
@@ -131,7 +135,13 @@ final class ContextSummarizerSpec: QuickSpec {
 
                         let summaries = summarizer.getSummaries()
                         expect(summaries.count) == 1
-                        expect(summaries[0].context.redactAnonymousAttributes) == true
+
+                        let event = SummaryEvent(flagRequestTracker: summaries[0].tracker, context: summaries[0].context)
+                        expect(event.redactsAnonymousAttributes) == true
+
+                        let encoded = String(data: try! JSONEncoder().encode(event), encoding: .utf8) ?? ""
+                        expect(encoded.contains("anon@example.com")) == false
+                        expect(encoded.contains("redactedAttributes")) == true
                     }
                 }
             }

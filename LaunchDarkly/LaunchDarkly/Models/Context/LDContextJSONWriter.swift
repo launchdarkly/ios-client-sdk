@@ -5,7 +5,13 @@ import Foundation
 /// The field set, the omissions, and the redaction rules are deliberately identical to the `Codable` path; where the
 /// two disagree, the `Codable` path is right and this is wrong. `EventJSONWriterTests` asserts they agree.
 extension LDContext {
-    internal func writeJSON(into writer: JSONWriter, allAttributesPrivate: Bool, globalPrivateAttributes: [Reference]) {
+    /// Unlike `encode(to:)`, this takes the anonymous-redaction directive as an argument rather than reading it off
+    /// the context. `Encodable` has a fixed signature and no such option; nothing here is constrained that way, so the
+    /// context never has to carry an encoding concern for this writer's benefit.
+    internal func writeJSON(into writer: JSONWriter,
+                            allAttributesPrivate: Bool,
+                            globalPrivateAttributes: [Reference],
+                            redactAnonymousAttributes: Bool) {
         let lookup = LDContext.privateAttributeLookup(for: globalPrivateAttributes)
 
         writer.beginObject()

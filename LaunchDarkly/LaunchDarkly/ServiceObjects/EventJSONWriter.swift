@@ -304,7 +304,7 @@ struct EventJSONWriter {
     private func write(feature event: FeatureEvent, into writer: JSONWriter) {
         writer.key("key")
         writer.write(event.key)
-        writeContext(event.context, into: writer)
+        writeContext(event.context, of: event, into: writer)
 
         if let variation = event.featureFlag?.variation {
             writer.key("variation")
@@ -338,7 +338,7 @@ struct EventJSONWriter {
     private func write(custom event: CustomEvent, into writer: JSONWriter) {
         writer.key("key")
         writer.write(event.key)
-        writeContext(event.context, into: writer)
+        writeContext(event.context, of: event, into: writer)
 
         if event.data != .null {
             writer.key("data")
@@ -356,7 +356,7 @@ struct EventJSONWriter {
     private func write(identify event: IdentifyEvent, into writer: JSONWriter) {
         writer.key("key")
         writer.write(event.context.fullyQualifiedKey())
-        writeContext(event.context, into: writer)
+        writeContext(event.context, of: event, into: writer)
         writer.key("creationDate")
         writer.write(event.creationDate.millisSince1970)
     }
@@ -376,7 +376,7 @@ struct EventJSONWriter {
         writer.endObject()
 
         if let context = event.context {
-            writeContext(context, into: writer)
+            writeContext(context, of: event, into: writer)
         }
     }
 
@@ -422,18 +422,25 @@ struct EventJSONWriter {
         writer.endObject()
     }
 
-    private func writeContext(_ context: LDContext, into writer: JSONWriter) {
+    /// The redaction directive comes from the event rather than the context, so every event can carry the caller's
+    /// context value unchanged -- which is also what keeps the cache's `==` on its identity fast path.
+    private func writeContext(_ context: LDContext, of event: Event, into writer: JSONWriter) {
         writer.key("context")
+        // The event is the source of the directive. The context's own flag is folded in only so that this path cannot
+        // disagree with `Codable` -- which reads that flag and has no way not to -- for a context that arrives with it
+        // already set. Nothing in the SDK produces one, and the `||` is what keeps that from being load-bearing.
+        let redactAnonymous = event.redactsAnonymousAttributes || context.redactAnonymousAttributes
 
         guard let cache = contextCache
         else {
             context.writeJSON(into: writer,
                               allAttributesPrivate: allAttributesPrivate,
-                              globalPrivateAttributes: globalPrivateAttributes)
+                              globalPrivateAttributes: globalPrivateAttributes,
+                              redactAnonymousAttributes: redactAnonymous)
             return
         }
 
-        if let cached = cache.encodedContext(for: context) {
+        if let cached = cache.encodedContext(for: context, redactAnonymous: redactAnonymous) {
             writer.writeRaw(cached)
             return
         }
@@ -441,7 +448,8 @@ struct EventJSONWriter {
         let start = writer.byteCount
         context.writeJSON(into: writer,
                           allAttributesPrivate: allAttributesPrivate,
-                          globalPrivateAttributes: globalPrivateAttributes)
-        cache.store(context, encoded: writer.bytes(from: start))
+                          globalPrivateAttributes: globalPrivateAttributes,
+                          redactAnonymousAttributes: redactAnonymous)
+        cache.store(context, redactAnonymous: redactAnonymous, encoded: writer.bytes(from: start))
     }
 }
