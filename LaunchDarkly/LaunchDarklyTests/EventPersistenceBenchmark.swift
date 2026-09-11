@@ -73,14 +73,17 @@ final class EventPersistenceBenchmark: XCTestCase {
             ("write(2), 512 bytes", measure(iterations: 200_000) {
                 payload.withUnsafeBytes { _ = write(descriptor, $0.baseAddress, $0.count) }
             }),
-            ("write(2) + fsync", measure(iterations: 500) {
+            // One round, unlike everything else here. These wait on a disk rather than on the CPU, so the fastest
+            // of several rounds would report the best case the hardware can do rather than what a commit costs,
+            // and repeating them is slow for a figure that is only ever quoted as an order of magnitude.
+            ("write(2) + fsync", measure(iterations: 500, rounds: 1) {
                 payload.withUnsafeBytes { _ = write(descriptor, $0.baseAddress, $0.count) }
                 _ = fsync(descriptor)
             })
         ]
 
         #if canImport(Darwin)
-        results.append(("write(2) + F_FULLFSYNC", measure(iterations: 200) {
+        results.append(("write(2) + F_FULLFSYNC", measure(iterations: 200, rounds: 1) {
             payload.withUnsafeBytes { _ = write(descriptor, $0.baseAddress, $0.count) }
             _ = fcntl(descriptor, F_FULLFSYNC)
         }))
@@ -481,22 +484,38 @@ final class EventPersistenceBenchmark: XCTestCase {
 
     // MARK: Harness
 
-    private func measure(iterations: Int, _ body: () -> Void) -> Double {
-        measure(iterations: iterations) { _ in body() }
+    /// How many times each timed loop is repeated; the fastest round is reported.
+    ///
+    /// Deliberately the same as the Android benchmark's, because the aggregation is what decides whether the two
+    /// platforms' numbers can be put in one table. Reporting the mean of a single round on one platform and the
+    /// fastest of five on the other would flatter the second by however much noise the first happened to catch.
+    private static let rounds = 5
+
+    private func measure(iterations: Int, rounds: Int = EventPersistenceBenchmark.rounds, _ body: () -> Void) -> Double {
+        measure(iterations: iterations, rounds: rounds) { _ in body() }
     }
 
-    private func measure(iterations: Int, _ body: (Int) -> Void) -> Double {
-        // Warm up, so the first allocation or page fault is not charged to the measurement.
+    /// Times `body`, returning nanoseconds per iteration: warmed, then run `rounds` times with the fastest round
+    /// reported, since a descheduled thread or a page fault can only ever make a round slower.
+    ///
+    /// The warmup is a smaller share here than in the Android benchmark, which needs enough iterations to get the
+    /// JIT to compile what it is measuring. Swift is compiled ahead of time and only needs the first allocation and
+    /// page fault charged elsewhere.
+    private func measure(iterations: Int, rounds: Int = EventPersistenceBenchmark.rounds, _ body: (Int) -> Void) -> Double {
         for iteration in 0..<max(1, iterations / 100) {
             body(iteration)
         }
 
-        let start = monotonicNanoseconds()
-        for iteration in 0..<iterations {
-            body(iteration)
+        var best = Double.greatestFiniteMagnitude
+        for _ in 0..<max(1, rounds) {
+            let start = monotonicNanoseconds()
+            for iteration in 0..<iterations {
+                body(iteration)
+            }
+            let elapsed = monotonicNanoseconds() - start
+            best = min(best, Double(elapsed) / Double(iterations))
         }
-        let elapsed = monotonicNanoseconds() - start
-        return Double(elapsed) / Double(iterations)
+        return best
     }
 
     private func measureConcurrent(threads: Int, iterationsPerThread: Int, _ body: () -> Void) -> Double {
