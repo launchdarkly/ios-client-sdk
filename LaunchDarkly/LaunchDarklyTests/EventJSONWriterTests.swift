@@ -244,6 +244,35 @@ final class EventJSONWriterTests: XCTestCase {
         }
     }
 
+    /// `redactAnonymousAttributes` is never written out -- it is a directive, read in one place:
+    /// `redactAll = allAttributesPrivate || (isAnonymous && redactAnonymousAttributes)`. So it can only reach the
+    /// output through a context that is itself anonymous, or, for a multi-context, through any part that is: the
+    /// top-level flag is passed down and each part is tested against its own `anonymous`.
+    ///
+    /// Where it cannot reach the output, the two variants the event stream carries encode to identical bytes -- and
+    /// still occupy separate cache slots, because the flag is a stored property and so part of `==`.
+    func testTheAnonymousRedactionFlagOnlyChangesBytesForAnonymousContexts() throws {
+        let writer = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
+
+        func encoded(_ context: LDContext) throws -> String {
+            try canonical(try XCTUnwrap(writer.encode(IdentifyEvent(context: context))))
+        }
+
+        // Nothing anonymous: the flag is inert, and the two cache slots would hold the same bytes.
+        for (name, context) in [("simple", simpleContext()), ("rich", richContext())] {
+            XCTAssertEqual(try encoded(context),
+                           try encoded(context.redactingAnonymousAttributes()),
+                           "the flag reached the output for a context with no anonymous part: \(name)")
+        }
+
+        // Anonymous, whole or in part: the flag is load-bearing, and the slots must stay separate.
+        for (name, context) in [("anonymous", anonymousContext()), ("multi, anonymous device", multiContext())] {
+            XCTAssertNotEqual(try encoded(context),
+                              try encoded(context.redactingAnonymousAttributes()),
+                              "the flag failed to reach the output for: \(name)")
+        }
+    }
+
     /// `redactingAnonymousAttributes()` is a plain struct copy, which -- unlike the deep copy it replaced -- leaves the
     /// sub-contexts of a multi-context untouched instead of clearing their flags. That is only safe because encoding
     /// reads the flag from the top-level context and passes it down, ignoring whatever the sub-contexts hold. This
