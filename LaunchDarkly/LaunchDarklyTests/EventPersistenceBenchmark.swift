@@ -253,7 +253,9 @@ final class EventPersistenceBenchmark: XCTestCase {
         let summaryOnlyFlag = FeatureFlag(flagKey: "benchmark-flag", value: true, variation: 1, flagVersion: 7, trackEvents: false)
 
         var results: [(String, Double)] = []
-        for (name, encoding) in [("Codable", EventReporter.Encoding.codable), ("hand-written", .handWritten)] {
+        for (name, encoding) in [("Codable", EventReporter.Encoding.codable),
+                                 ("hand-written", .handWritten),
+                                 ("hand-written + cache", .handWrittenCachingContext)] {
             let service = DarklyServiceMock()
             var config = LDConfig.stub
             config.eventCapacity = .max
@@ -270,13 +272,102 @@ final class EventPersistenceBenchmark: XCTestCase {
             results.append(("\(name): evaluation, trackEvents on", measure(iterations: 50_000) {
                 reporter.recordFlagEvaluationEvents(flagKey: "benchmark-flag", value: true, defaultValue: false, featureFlag: trackedFlag, context: context, includeReason: false)
             }))
+            reporter.contextCache?.resetCounters()
             results.append(("\(name): evaluation + track (commit point)", measure(iterations: 20_000) { iteration in
                 reporter.recordFlagEvaluationEvents(flagKey: "benchmark-flag", value: true, defaultValue: false, featureFlag: summaryOnlyFlag, context: context, includeReason: false)
                 reporter.record(CustomEvent(key: "benchmark-\(iteration)", context: context, data: nil))
             }))
+            if let cache = reporter.contextCache {
+                let total = cache.hits + cache.misses
+                let rate = total == 0 ? 0 : 100 * Double(cache.hits) / Double(total)
+                print("  \(name) at a commit point: \(cache.hits) hits / \(total) lookups (\(String(format: "%.1f", rate))%)")
+            }
         }
 
         report("recording, per call, by encoder", results)
+    }
+
+    /// O2: reusing the last context's encoded bytes when the context has not changed.
+    ///
+    /// Measured at both ends of the hit rate, because the cache is only worth having if a miss costs close to nothing.
+    /// The comparison `LDContext ==` is reported alongside, since that is what a hit actually pays -- and note that
+    /// every feature event builds a fresh context copy, so the comparison runs against a new value each time rather
+    /// than short-circuiting on identity.
+    func testContextCacheCost() throws {
+        try requireBenchmarking()
+
+        let flag = FeatureFlag(flagKey: "benchmark-flag", value: true, variation: 1, flagVersion: 7, trackEvents: true)
+        let shapes = EventPersistenceBenchmark.contextShapes()
+
+        var comparisons: [(String, Double)] = []
+        for (shapeName, context) in shapes {
+            let copy = LDContext(copyFrom: context)
+            comparisons.append(("LDContext == , \(shapeName)", measure(iterations: 500_000) {
+                _ = context == copy
+            }))
+        }
+        report("comparing two equal contexts", comparisons)
+
+        // The context to alternate with differs only in its key, so a miss costs the same encode as a hit would have.
+        // Alternating between contexts of different sizes would price the other context, not the miss.
+        for (shapeName, context, other) in EventPersistenceBenchmark.contextShapePairs() {
+            let uncached = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
+            let allHits = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [], cachingContexts: true)
+            let allMisses = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [], cachingContexts: true)
+
+            func event(_ carried: LDContext) -> FeatureEvent {
+                FeatureEvent(key: "benchmark-flag", context: carried, value: true, defaultValue: false, featureFlag: flag, includeReason: false, isDebug: false)
+            }
+
+            let uncachedTime = measure(iterations: 50_000) {
+                _ = uncached.encode(event(context))
+            }
+            let hitTime = measure(iterations: 50_000) {
+                _ = allHits.encode(event(context))
+            }
+            // Both sides of the miss comparison walk the same alternating sequence.
+            let uncachedAlternating = measure(iterations: 50_000) { iteration in
+                _ = uncached.encode(event(iteration.isMultiple(of: 2) ? context : other))
+            }
+            let missTime = measure(iterations: 50_000) { iteration in
+                _ = allMisses.encode(event(iteration.isMultiple(of: 2) ? context : other))
+            }
+
+            report("hand-written encode -- \(shapeName)", [
+                ("no cache", uncachedTime),
+                ("cache, every event hits", hitTime),
+                ("no cache, alternating contexts", uncachedAlternating),
+                ("cache, every event misses", missTime),
+                ("cost of a miss", missTime - uncachedAlternating)
+            ])
+            print("  speedup on a hit                          \(String(format: "%8.2fx", uncachedTime / hitTime))")
+            print("  observed: \(allHits.contextCache?.hits ?? 0) hits all-hit, \(allMisses.contextCache?.hits ?? 0) hits alternating")
+        }
+    }
+
+    /// What the per-event `JSONWriter` allocation costs, which is the cheapest of the memory questions to answer.
+    func testWriterAllocationCost() throws {
+        try requireBenchmarking()
+
+        let context = LDContext.stub()
+        let flag = FeatureFlag(flagKey: "benchmark-flag", value: true, variation: 1, flagVersion: 7, trackEvents: true)
+        let writer = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
+        let reused = JSONWriter()
+
+        let fresh = measure(iterations: 100_000) {
+            let event = FeatureEvent(key: "benchmark-flag", context: context, value: true, defaultValue: false, featureFlag: flag, includeReason: false, isDebug: false)
+            _ = writer.encode(event)
+        }
+        let reusing = measure(iterations: 100_000) {
+            let event = FeatureEvent(key: "benchmark-flag", context: context, value: true, defaultValue: false, featureFlag: flag, includeReason: false, isDebug: false)
+            _ = writer.encode(event, into: reused)
+        }
+
+        report("encoding a feature event, stub context", [
+            ("a fresh JSONWriter per event", fresh),
+            ("one JSONWriter reused", reusing),
+            ("saved", fresh - reusing)
+        ])
     }
 
     // MARK: Corpus
@@ -300,33 +391,56 @@ final class EventPersistenceBenchmark: XCTestCase {
          ("all private", true, [])]
     }
 
-    private static func contextShapes() -> [(String, LDContext)] {
-        var minimal = LDContextBuilder(key: "benchmark-key")
+    private enum ContextShape: String, CaseIterable {
+        case keyOnly = "key only"
+        case stub = "stub, 9 attributes"
+        case wide = "20 flat attributes"
+        case nested = "nested attributes"
+        case multi = "multi-context"
+    }
 
-        var wide = LDContextBuilder(key: "benchmark-key")
-        wide.name("Wide")
-        for index in 0..<20 {
-            _ = wide.trySetValue("attribute\(index)", .string("value\(index)"))
+    /// Built from a key so the cache benchmark can make two contexts of identical shape that never compare equal.
+    private static func makeContext(_ shape: ContextShape, key: String) -> LDContext {
+        switch shape {
+        case .keyOnly:
+            let builder = LDContextBuilder(key: key)
+            return (try? builder.build().get()) ?? LDContext.stub()
+        case .stub:
+            return LDContext.stub(key: key)
+        case .wide:
+            var builder = LDContextBuilder(key: key)
+            builder.name("Wide")
+            for index in 0..<20 {
+                _ = builder.trySetValue("attribute\(index)", .string("value\(index)"))
+            }
+            return (try? builder.build().get()) ?? LDContext.stub()
+        case .nested:
+            var builder = LDContextBuilder(key: key)
+            builder.name("Nested")
+            _ = builder.trySetValue("address", ["street": "1 Main St", "city": "Springfield", "geo": ["lat": 1.5, "lon": -2.5]])
+            _ = builder.trySetValue("tags", ["a", "b", "c", "d", "e"])
+            return (try? builder.build().get()) ?? LDContext.stub()
+        case .multi:
+            var device = LDContextBuilder(key: "device-\(key)")
+            device.kind("device")
+            _ = device.trySetValue("os", ["name": "iOS", "version": 18])
+
+            var builder = LDMultiContextBuilder()
+            builder.addContext(LDContext.stub(key: key))
+            builder.addContext((try? device.build().get()) ?? LDContext.stub())
+            return (try? builder.build().get()) ?? LDContext.stub()
         }
+    }
 
-        var nested = LDContextBuilder(key: "benchmark-key")
-        nested.name("Nested")
-        _ = nested.trySetValue("address", ["street": "1 Main St", "city": "Springfield", "geo": ["lat": 1.5, "lon": -2.5]])
-        _ = nested.trySetValue("tags", ["a", "b", "c", "d", "e"])
+    private static func contextShapes() -> [(String, LDContext)] {
+        ContextShape.allCases.map { ($0.rawValue, makeContext($0, key: "benchmark-key")) }
+    }
 
-        var device = LDContextBuilder(key: "device-key")
-        device.kind("device")
-        _ = device.trySetValue("os", ["name": "iOS", "version": 18])
-
-        var multi = LDMultiContextBuilder()
-        multi.addContext(LDContext.stub())
-        multi.addContext((try? device.build().get()) ?? LDContext.stub())
-
-        return [("key only", (try? minimal.build().get()) ?? LDContext.stub()),
-                ("stub, 9 attributes", LDContext.stub()),
-                ("20 flat attributes", (try? wide.build().get()) ?? LDContext.stub()),
-                ("nested attributes", (try? nested.build().get()) ?? LDContext.stub()),
-                ("multi-context", (try? multi.build().get()) ?? LDContext.stub())]
+    /// Each shape as a pair that costs the same to encode but never compares equal, for pricing a cache miss.
+    private static func contextShapePairs() -> [(String, LDContext, LDContext)] {
+        ContextShape.allCases.map { ($0.rawValue,
+                                     makeContext($0, key: "benchmark-key"),
+                                     makeContext($0, key: "benchmark-key-alternate")) }
     }
 
     // MARK: Harness

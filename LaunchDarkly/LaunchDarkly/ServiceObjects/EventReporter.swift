@@ -127,7 +127,7 @@ class EventReporter: EventReporting {
     private let encoder: JSONEncoder
 
     let encoding: Encoding
-    private let handWrittenEncoder: EventJSONWriter
+    fileprivate let handWrittenEncoder: EventJSONWriter
 
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
@@ -138,7 +138,8 @@ class EventReporter: EventReporting {
         self.responseDate = Date()
         self.encoding = encoding
         self.encoder = EventReporter.makeEncoder(config: service.config)
-        self.handWrittenEncoder = EventJSONWriter(config: service.config)
+        self.handWrittenEncoder = EventJSONWriter(config: service.config,
+                                                  cachingContexts: encoding == .handWrittenCachingContext)
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
         self.store = store ?? EventReporter.makeStore(config: service.config)
 
@@ -253,21 +254,8 @@ class EventReporter: EventReporting {
         }
     }
 
-    private static func makeEncoder(config: LDConfig) -> JSONEncoder {
-        let encoder = JSONEncoder()
-        encoder.userInfo = [
-            LDContext.UserInfoKeys.allAttributesPrivate: config.allContextAttributesPrivate,
-            LDContext.UserInfoKeys.globalPrivateAttributes: config.privateContextAttributes.map { $0 }
-        ]
-        encoder.dateEncodingStrategy = .custom { date, encoder in
-            var container = encoder.singleValueContainer()
-            try container.encode(date.millisSince1970)
-        }
-        return encoder
-    }
-
     private func encode(_ event: Event) -> Data? {
-        let encoded: Data? = encoding == .handWritten ? handWrittenEncoder.encode(event) : try? encoder.encode(event)
+        let encoded: Data? = encoding == .codable ? try? encoder.encode(event) : handWrittenEncoder.encode(event)
         guard let encoded = encoded
         else {
             os_log("%s Failed to serialize event for publication: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: event))
@@ -499,6 +487,24 @@ extension EventReporter {
     enum Encoding {
         case codable
         case handWritten
+        /// The hand-written writer, reusing the last context's encoded bytes when the context has not changed.
+        case handWrittenCachingContext
+    }
+
+    /// Exposed so the benchmark can report an observed hit rate instead of assuming one.
+    var contextCache: ContextEncodingCache? { handWrittenEncoder.contextCache }
+
+    fileprivate static func makeEncoder(config: LDConfig) -> JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.userInfo = [
+            LDContext.UserInfoKeys.allAttributesPrivate: config.allContextAttributesPrivate,
+            LDContext.UserInfoKeys.globalPrivateAttributes: config.privateContextAttributes.map { $0 }
+        ]
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(date.millisSince1970)
+        }
+        return encoder
     }
 }
 

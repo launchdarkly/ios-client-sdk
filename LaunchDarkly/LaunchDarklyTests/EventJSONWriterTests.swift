@@ -145,28 +145,103 @@ final class EventJSONWriterTests: XCTestCase {
     func testMatchesCodableOutputAcrossTheCorpus() throws {
         var compared = 0
 
-        for (privacyName, allAttributesPrivate, globalPrivateAttributes) in privacySettings {
-            let codable = Self.makeCodableEncoder(allAttributesPrivate: allAttributesPrivate,
-                                                  globalPrivateAttributes: globalPrivateAttributes)
-            let handWritten = EventJSONWriter(allAttributesPrivate: allAttributesPrivate,
-                                              globalPrivateAttributes: globalPrivateAttributes)
+        // Run the whole corpus with the context cache off and on. With it on, the first event for a context misses and
+        // the rest hit, and the feature events hit a *different* entry from the others because they carry a copy with
+        // `redactAnonymousAttributes` set -- so this covers the cache distinguishing them as well as agreeing with
+        // `Codable`.
+        for cachingContexts in [false, true] {
+            for (privacyName, allAttributesPrivate, globalPrivateAttributes) in privacySettings {
+                let codable = Self.makeCodableEncoder(allAttributesPrivate: allAttributesPrivate,
+                                                      globalPrivateAttributes: globalPrivateAttributes)
+                let handWritten = EventJSONWriter(allAttributesPrivate: allAttributesPrivate,
+                                                  globalPrivateAttributes: globalPrivateAttributes,
+                                                  cachingContexts: cachingContexts)
 
-            for (contextName, context) in contexts {
-                for (eventName, event) in events(context: context) {
-                    let label = "\(eventName) / \(contextName) / \(privacyName)"
+                for (contextName, context) in contexts {
+                    for (eventName, event) in events(context: context) {
+                        let label = "\(eventName) / \(contextName) / \(privacyName) / cache \(cachingContexts)"
 
-                    let expected = try codable.encode(event)
-                    let actual = try XCTUnwrap(handWritten.encode(event), "no output for \(label)")
+                        let expected = try codable.encode(event)
+                        let actual = try XCTUnwrap(handWritten.encode(event), "no output for \(label)")
 
-                    XCTAssertEqual(try canonical(expected),
-                                   try canonical(actual),
-                                   "mismatch for \(label)")
-                    compared += 1
+                        XCTAssertEqual(try canonical(expected),
+                                       try canonical(actual),
+                                       "mismatch for \(label)")
+                        compared += 1
+                    }
                 }
             }
         }
 
-        XCTAssertEqual(compared, privacySettings.count * contexts.count * events(context: simpleContext()).count)
+        XCTAssertEqual(compared, 2 * privacySettings.count * contexts.count * events(context: simpleContext()).count)
+    }
+
+    /// The cache key's one non-obvious obligation.
+    ///
+    /// `Reference` compares its parsed components and ignores the string it was built from, so two contexts whose only
+    /// difference is how a private attribute was spelled are `==`. Redaction writes that spelling into
+    /// `_meta.redactedAttributes`, so they do not encode the same. A cache keyed on `==` alone would serve one for the
+    /// other, which is why `ContextEncodingCache` compares spellings separately.
+    func testPrivateAttributeSpellingIsPartOfTheCacheKey() throws {
+        func context(privateAttribute: String) throws -> LDContext {
+            var builder = LDContextBuilder(key: "user-key")
+            builder.name("Spelling")
+            _ = builder.trySetValue("email", "a@example.com")
+            builder.addPrivateAttribute(Reference(privateAttribute))
+            return try builder.build().get()
+        }
+
+        let slashed = try context(privateAttribute: "/email")
+        let plain = try context(privateAttribute: "email")
+
+        // The premise: `==` cannot tell them apart.
+        XCTAssertEqual(slashed, plain, "the hole this test guards has closed; the cache key can be simplified")
+
+        // Events are built once, with a fixed creationDate, so that re-encoding one compares equal to itself.
+        let when = Date(timeIntervalSince1970: 1_700_000_000)
+        let slashedEvent = IdentifyEvent(context: slashed, creationDate: when)
+        let plainEvent = IdentifyEvent(context: plain, creationDate: when)
+
+        // They do not encode the same, so `==` alone would be an unsound key.
+        let plainWriter = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
+        let slashedJSON = try canonical(try XCTUnwrap(plainWriter.encode(slashedEvent)))
+        let plainJSON = try canonical(try XCTUnwrap(plainWriter.encode(plainEvent)))
+        XCTAssertNotEqual(slashedJSON, plainJSON)
+
+        // The cache must not confuse them, in either order, including on a repeat.
+        let caching = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [], cachingContexts: true)
+        // Paired explicitly rather than selected with `==`, which by construction cannot tell these two apart.
+        let sequence = [(slashedEvent, slashedJSON), (plainEvent, plainJSON), (slashedEvent, slashedJSON),
+                        (slashedEvent, slashedJSON), (plainEvent, plainJSON)]
+        for (event, expected) in sequence {
+            let produced = try canonical(try XCTUnwrap(caching.encode(event)))
+            XCTAssertEqual(produced, expected)
+        }
+    }
+
+    /// A run of events on one context, which is the pattern the cache exists for, then a context that changes under it.
+    func testCacheSurvivesContextChanges() throws {
+        let caching = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [], cachingContexts: true)
+        let uncached = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
+
+        var mutating = LDContextBuilder(key: "user-key")
+        mutating.name("First")
+        _ = mutating.trySetValue("email", "first@example.com")
+        let first = try mutating.build().get()
+
+        mutating.name("Second")
+        _ = mutating.trySetValue("email", "second@example.com")
+        let second = try mutating.build().get()
+
+        // Same key and kind, different attributes: a digest keyed on the canonical key would collide here.
+        XCTAssertNotEqual(first, second)
+
+        for context in [first, first, second, second, first, anonymousContext(), first] {
+            for (name, event) in events(context: context) {
+                let produced = try canonical(try XCTUnwrap(caching.encode(event), name))
+                XCTAssertEqual(produced, try canonical(try XCTUnwrap(uncached.encode(event), name)), "mismatch for \(name)")
+            }
+        }
     }
 
     /// Escaping in isolation, over every code point the writer treats specially plus a sample of those it does not.

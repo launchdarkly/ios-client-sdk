@@ -21,9 +21,23 @@ final class JSONWriter {
 
     var data: Data { Data(bytes) }
 
+    var byteCount: Int { bytes.count }
+
     func reset() {
         bytes.removeAll(keepingCapacity: true)
         needsSeparator = false
+    }
+
+    /// Appends JSON that was produced earlier, in the position a value would go.
+    func writeRaw(_ raw: [UInt8]) {
+        separate()
+        bytes.append(contentsOf: raw)
+        needsSeparator = true
+    }
+
+    /// The bytes written since `offset`, for handing a freshly encoded fragment to a cache.
+    func bytes(from offset: Int) -> [UInt8] {
+        Array(bytes[offset...])
     }
 
     // MARK: Structure
@@ -167,34 +181,63 @@ final class JSONWriter {
     }
 
     /// Escapes exactly what JSON requires. Multi-byte UTF-8 passes through untouched, because every continuation byte
-    /// has its high bit set and so matches none of the cases below.
+    /// has its high bit set and so is above the escape range.
+    ///
+    /// Keys and values almost never contain a byte needing an escape, so the loop finds runs that need none and copies
+    /// each in one go rather than appending a byte at a time. `withContiguousStorageIfAvailable` succeeds for native
+    /// Swift strings; the fallback exists for the bridged ones where it does not.
     private func writeQuoted(_ value: String) {
         bytes.append(UInt8(ascii: "\""))
-        for byte in value.utf8 {
-            switch byte {
-            case UInt8(ascii: "\""):
-                bytes.append(contentsOf: [UInt8(ascii: "\\"), UInt8(ascii: "\"")])
-            case UInt8(ascii: "\\"):
-                bytes.append(contentsOf: [UInt8(ascii: "\\"), UInt8(ascii: "\\")])
-            case 0x08:
-                bytes.append(contentsOf: [UInt8(ascii: "\\"), UInt8(ascii: "b")])
-            case 0x09:
-                bytes.append(contentsOf: [UInt8(ascii: "\\"), UInt8(ascii: "t")])
-            case 0x0A:
-                bytes.append(contentsOf: [UInt8(ascii: "\\"), UInt8(ascii: "n")])
-            case 0x0C:
-                bytes.append(contentsOf: [UInt8(ascii: "\\"), UInt8(ascii: "f")])
-            case 0x0D:
-                bytes.append(contentsOf: [UInt8(ascii: "\\"), UInt8(ascii: "r")])
-            case 0x00...0x1F:
-                bytes.append(contentsOf: [UInt8(ascii: "\\"), UInt8(ascii: "u"), UInt8(ascii: "0"), UInt8(ascii: "0")])
-                bytes.append(JSONWriter.hexDigits[Int(byte >> 4)])
-                bytes.append(JSONWriter.hexDigits[Int(byte & 0x0F)])
-            default:
-                bytes.append(byte)
+        let written: Void? = value.utf8.withContiguousStorageIfAvailable { buffer in
+            appendEscaped(buffer)
+        }
+        if written == nil {
+            for byte in value.utf8 {
+                if JSONWriter.needsEscape(byte) {
+                    appendEscape(byte)
+                } else {
+                    bytes.append(byte)
+                }
             }
         }
         bytes.append(UInt8(ascii: "\""))
+    }
+
+    private static func needsEscape(_ byte: UInt8) -> Bool {
+        byte < 0x20 || byte == UInt8(ascii: "\"") || byte == UInt8(ascii: "\\")
+    }
+
+    private func appendEscaped(_ buffer: UnsafeBufferPointer<UInt8>) {
+        var runStart = 0
+        for index in 0..<buffer.count where JSONWriter.needsEscape(buffer[index]) {
+            if index > runStart {
+                bytes.append(contentsOf: buffer[runStart..<index])
+            }
+            appendEscape(buffer[index])
+            runStart = index + 1
+        }
+        if runStart < buffer.count {
+            bytes.append(contentsOf: buffer[runStart...])
+        }
+    }
+
+    private func appendEscape(_ byte: UInt8) {
+        bytes.append(UInt8(ascii: "\\"))
+        switch byte {
+        case UInt8(ascii: "\""): bytes.append(UInt8(ascii: "\""))
+        case UInt8(ascii: "\\"): bytes.append(UInt8(ascii: "\\"))
+        case 0x08: bytes.append(UInt8(ascii: "b"))
+        case 0x09: bytes.append(UInt8(ascii: "t"))
+        case 0x0A: bytes.append(UInt8(ascii: "n"))
+        case 0x0C: bytes.append(UInt8(ascii: "f"))
+        case 0x0D: bytes.append(UInt8(ascii: "r"))
+        default:
+            bytes.append(UInt8(ascii: "u"))
+            bytes.append(UInt8(ascii: "0"))
+            bytes.append(UInt8(ascii: "0"))
+            bytes.append(JSONWriter.hexDigits[Int(byte >> 4)])
+            bytes.append(JSONWriter.hexDigits[Int(byte & 0x0F)])
+        }
     }
 }
 
@@ -206,18 +249,29 @@ struct EventJSONWriter {
     private let allAttributesPrivate: Bool
     private let globalPrivateAttributes: [Reference]
 
-    init(allAttributesPrivate: Bool, globalPrivateAttributes: [Reference]) {
+    /// Reuses the last context's encoded bytes when the next event carries the same context. Nil encodes every time.
+    private(set) var contextCache: ContextEncodingCache?
+
+    init(allAttributesPrivate: Bool, globalPrivateAttributes: [Reference], cachingContexts: Bool = false) {
         self.allAttributesPrivate = allAttributesPrivate
         self.globalPrivateAttributes = globalPrivateAttributes
+        self.contextCache = cachingContexts ? ContextEncodingCache() : nil
     }
 
-    init(config: LDConfig) {
+    init(config: LDConfig, cachingContexts: Bool = false) {
         self.init(allAttributesPrivate: config.allContextAttributesPrivate,
-                  globalPrivateAttributes: config.privateContextAttributes)
+                  globalPrivateAttributes: config.privateContextAttributes,
+                  cachingContexts: cachingContexts)
     }
 
     func encode(_ event: Event) -> Data? {
-        let writer = JSONWriter()
+        encode(event, into: JSONWriter())
+    }
+
+    /// Encodes into a writer the caller owns, so its buffer can outlive one event. Callers are responsible for not
+    /// sharing one writer across threads; `encode(_:)` allocates precisely so that the ordinary path need not care.
+    func encode(_ event: Event, into writer: JSONWriter) -> Data? {
+        writer.reset()
         guard write(event, into: writer)
         else { return nil }
         return writer.data
@@ -370,8 +424,24 @@ struct EventJSONWriter {
 
     private func writeContext(_ context: LDContext, into writer: JSONWriter) {
         writer.key("context")
+
+        guard let cache = contextCache
+        else {
+            context.writeJSON(into: writer,
+                              allAttributesPrivate: allAttributesPrivate,
+                              globalPrivateAttributes: globalPrivateAttributes)
+            return
+        }
+
+        if let cached = cache.encodedContext(for: context) {
+            writer.writeRaw(cached)
+            return
+        }
+
+        let start = writer.byteCount
         context.writeJSON(into: writer,
                           allAttributesPrivate: allAttributesPrivate,
                           globalPrivateAttributes: globalPrivateAttributes)
+        cache.store(context, encoded: writer.bytes(from: start))
     }
 }
