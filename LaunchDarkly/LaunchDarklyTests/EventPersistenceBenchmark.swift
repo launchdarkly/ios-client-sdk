@@ -8,6 +8,10 @@ import Darwin
 import Glibc
 #endif
 
+#if canImport(SQLite3)
+import SQLite3
+#endif
+
 /// Measures what recording an event costs, so the choices behind `EventStore` can be checked rather than assumed.
 ///
 /// Skipped unless `LD_EVENT_BENCH=1`, because the durability figures spend seconds waiting on the disk on purpose and
@@ -116,6 +120,210 @@ final class EventPersistenceBenchmark: XCTestCase {
             ("stage + commit, every event", committedEach)
         ])
     }
+
+    #if canImport(SQLite3)
+    /// The same store contract kept in a SQLite table instead of an append-only log.
+    ///
+    /// The durability spec leaves the mechanism open (§13.2) and names a SQLite table as an alternative to be held
+    /// against D1-D9 on its own terms. Correctness is `SQLiteEventStoreSpec`'s job; this prices it.
+    ///
+    /// The `synchronous` settings are the point of the comparison rather than a tuning knob. The log never syncs, so
+    /// `OFF` is the setting that puts the durability boundary in the same place; `NORMAL` and `FULL` are here to show
+    /// what moving that boundary costs.
+    func testSQLiteStoreCost() throws {
+        try requireBenchmarking()
+
+        let event = Data(#"{"kind":"feature","key":"benchmark-flag","value":true,"default":false,"variation":1,"version":7,"creationDate":1740000000000}"#.utf8)
+
+        // MARK: staging and committing
+
+        var staging: [(String, Double)] = []
+        var committing: [(String, Double)] = []
+
+        let log = EventStore.temporary(capacity: .max)
+        defer { log.deleteEverything() }
+        staging.append(("append-only log", measure(iterations: 200_000) { _ = log.stage(event) }))
+
+        let committingLog = EventStore.temporary(capacity: .max)
+        defer { committingLog.deleteEverything() }
+        committing.append(("append-only log", measure(iterations: 20_000) {
+            _ = committingLog.stage(event)
+            committingLog.commit()
+        }))
+
+        var toClean: [SQLiteEventStore] = []
+        defer { toClean.forEach { $0.deleteEverything() } }
+
+        for durability in [SQLiteEventStore.Durability.off, .normal, .full] {
+            let staged = SQLiteEventStore.temporary(capacity: .max, durability: durability)
+            toClean.append(staged)
+            staging.append(("SQLite, synchronous=\(durability.rawValue)", measure(iterations: 200_000) {
+                _ = staged.stage(event)
+            }))
+
+            let committed = SQLiteEventStore.temporary(capacity: .max, durability: durability)
+            toClean.append(committed)
+            committing.append(("SQLite, synchronous=\(durability.rawValue)", measure(iterations: 20_000) {
+                _ = committed.stage(event)
+                committed.commit()
+            }))
+        }
+
+        report("staging one \(event.count) byte event, no write", staging)
+        // What a commit point pays, and so what D1 costs: `track` is durable by the time it returns.
+        report("stage + commit, every event", committing)
+
+        // MARK: closing and reading a batch
+
+        let logBatchStore = EventStore.temporary(capacity: .max)
+        defer { logBatchStore.deleteEverything() }
+        let sqlBatchStore = SQLiteEventStore.temporary(capacity: .max)
+        toClean.append(sqlBatchStore)
+
+        // Closing is measured per batch rather than per event: 50 events in, one close, repeated.
+        let logClose = measure(iterations: 2_000) {
+            for _ in 0..<50 { _ = logBatchStore.stage(event) }
+            if let batch = logBatchStore.closeBatch() { logBatchStore.remove(batch) }
+        }
+        let sqlClose = measure(iterations: 2_000) {
+            for _ in 0..<50 { _ = sqlBatchStore.stage(event) }
+            if let batch = sqlBatchStore.closeBatch() { sqlBatchStore.remove(batch) }
+        }
+        report("closing and discarding a 50 event batch", [
+            ("append-only log", logClose),
+            ("SQLite, synchronous=NORMAL", sqlClose)
+        ])
+
+        // MARK: assembling a request body
+
+        let logBody = EventStore.temporary(capacity: .max)
+        defer { logBody.deleteEverything() }
+        let sqlBody = SQLiteEventStore.temporary(capacity: .max)
+        toClean.append(sqlBody)
+        for _ in 0..<500 {
+            _ = logBody.stage(event)
+            _ = sqlBody.stage(event)
+        }
+        guard let logReady = logBody.closeBatch(), let sqlReady = sqlBody.closeBatch()
+        else { return XCTFail("expected both stores to close a batch") }
+
+        report("assembling the request body for a 500 event batch", [
+            ("append-only log", measure(iterations: 2_000) { _ = logBody.body(of: logReady) }),
+            ("SQLite, synchronous=NORMAL", measure(iterations: 2_000) { _ = sqlBody.body(of: sqlReady) })
+        ])
+
+        // MARK: does insert cost grow with the table?
+
+        // An append is O(1) in what is already there; a B-tree insert is not. Whether that matters at the sizes a
+        // capped event store reaches is the question, so the same insert is timed against a table that already holds
+        // a hundred events and against one holding a hundred thousand.
+        var byTableSize: [(String, Double)] = []
+        for existing in [1_000, 100_000] {
+            let store = SQLiteEventStore.temporary(capacity: .max)
+            toClean.append(store)
+            for _ in 0..<existing { _ = store.stage(event) }
+            store.commit()
+
+            byTableSize.append(("\(existing) rows already stored", measure(iterations: 20_000) {
+                _ = store.stage(event)
+                store.commit()
+            }))
+        }
+        report("stage + commit against a table that already holds", byTableSize)
+
+        // MARK: what it costs on disk
+
+        let logBytes = EventStore.temporary(capacity: .max)
+        defer { logBytes.deleteEverything() }
+        let sqlBytes = SQLiteEventStore.temporary(capacity: .max)
+        toClean.append(sqlBytes)
+        for _ in 0..<10_000 {
+            _ = logBytes.stage(event)
+            _ = sqlBytes.stage(event)
+        }
+        logBytes.commit()
+        sqlBytes.commit()
+
+        print("10,000 events of \(event.count) bytes on disk")
+        print("  append-only log             \(pad(bytesOnDisk(logBytes.directory))) (\(10_000 * event.count) bytes of payload)")
+        print("  SQLite, synchronous=NORMAL  \(pad(bytesOnDisk(sqlBytes.directory)))")
+        print("")
+    }
+
+    /// SQLite's own floor for one durable insert, with `SQLiteEventStore` taken out of the picture.
+    ///
+    /// Without this, the store's commit figures cannot be read: a reader is entitled to ask whether the gap against
+    /// the log is SQLite or the wrapper around it, and whether it would close under tuning. This opens a raw
+    /// connection and times `BEGIN/INSERT/COMMIT` through the C API directly, including the one pragma that would
+    /// plausibly help and that D9 rules out.
+    func testSQLiteFloorCost() throws {
+        try requireBenchmarking()
+
+        let payload = Data(#"{"kind":"feature","key":"benchmark-flag","value":true,"default":false,"variation":1,"version":7,"creationDate":1740000000000}"#.utf8)
+
+        // `EXCLUSIVE` holds the file lock across transactions instead of taking it per commit. It is the obvious
+        // tuning answer and it is not available here: D9 requires that two processes of one application -- an app and
+        // its extension, both with a client for the same environment -- cannot corrupt each other's events, and an
+        // exclusive lock means the second one simply cannot write.
+        let configurations: [(String, [String])] = [
+            ("WAL, synchronous=OFF", ["PRAGMA journal_mode=WAL", "PRAGMA synchronous=OFF"]),
+            ("WAL, synchronous=NORMAL", ["PRAGMA journal_mode=WAL", "PRAGMA synchronous=NORMAL"]),
+            ("WAL, OFF, locking_mode=EXCLUSIVE (D9 forbids)",
+             ["PRAGMA journal_mode=WAL", "PRAGMA synchronous=OFF", "PRAGMA locking_mode=EXCLUSIVE"])
+        ]
+
+        var results: [(String, Double)] = []
+        for (name, pragmas) in configurations {
+            let directory = FileManager.default.temporaryDirectory
+                .appendingPathComponent("com.launchdarkly.tests.events", isDirectory: true)
+                .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: directory) }
+
+            var db: OpaquePointer?
+            guard sqlite3_open_v2(directory.appendingPathComponent("floor.sqlite").path, &db,
+                                  SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, nil) == SQLITE_OK
+            else { return XCTFail("could not open a database") }
+            defer { sqlite3_close_v2(db) }
+
+            for pragma in pragmas {
+                sqlite3_exec(db, pragma, nil, nil, nil)
+            }
+            sqlite3_exec(db, "CREATE TABLE events (id INTEGER PRIMARY KEY AUTOINCREMENT, payload BLOB NOT NULL)", nil, nil, nil)
+
+            var insert: OpaquePointer?
+            guard sqlite3_prepare_v2(db, "INSERT INTO events (payload) VALUES (?)", -1, &insert, nil) == SQLITE_OK
+            else { return XCTFail("could not prepare the insert") }
+            defer { sqlite3_finalize(insert) }
+
+            results.append((name, measure(iterations: 20_000) {
+                sqlite3_exec(db, "BEGIN IMMEDIATE", nil, nil, nil)
+                sqlite3_reset(insert)
+                payload.withUnsafeBytes { raw in
+                    sqlite3_bind_blob(insert, 1, raw.baseAddress, Int32(raw.count), nil)
+                    _ = sqlite3_step(insert)
+                }
+                sqlite3_exec(db, "COMMIT", nil, nil, nil)
+            }))
+        }
+
+        report("one insert committed on its own, raw SQLite", results)
+    }
+
+    private func bytesOnDisk(_ directory: URL) -> String {
+        let files = (try? FileManager.default.contentsOfDirectory(at: directory,
+                                                                  includingPropertiesForKeys: [.fileSizeKey],
+                                                                  options: [])) ?? []
+        let total = files.reduce(0) { sum, file in
+            sum + ((try? file.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0)
+        }
+        return "\(total) bytes"
+    }
+
+    private func pad(_ value: String) -> String {
+        value.count >= 12 ? value : String(repeating: " ", count: 12 - value.count) + value
+    }
+    #endif
 
     /// The figures that decide whether this is affordable: what an evaluation and a track cost end to end.
     func testRecordingCost() throws {
