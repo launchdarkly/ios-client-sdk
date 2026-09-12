@@ -287,6 +287,83 @@ final class EventPersistenceBenchmark: XCTestCase {
         XCTAssertNotEqual(sink, -1)
     }
 
+    /// Why closing a batch costs the log three times what it costs the SQLite store.
+    ///
+    /// Closing is the one operation the database wins outright, and the reason is not the database: the log's close
+    /// is a sequence of filesystem *metadata* operations -- rename the open log, unlink the delivered batch, then
+    /// recreate a descriptor -- and metadata is the expensive kind of filesystem work on APFS. The SQLite store
+    /// mutates a file that is already open and never touches a directory entry.
+    ///
+    /// Two of these run per close and need not run at all: `descriptorForAppending()` recreates the directory and
+    /// re-applies the backup exclusion every time the descriptor is reopened, which `closeBatch()` guarantees.
+    ///
+    /// One round each: these wait on the filesystem rather than the CPU, so the fastest of several is not the
+    /// interesting number, and repeating them is slow.
+    func testBatchCloseBreakdown() throws {
+        try requireBenchmarking()
+
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("com.launchdarkly.tests.events", isDirectory: true)
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let first = directory.appendingPathComponent("a")
+        let second = directory.appendingPathComponent("b")
+        FileManager.default.createFile(atPath: first.path, contents: Data("x".utf8))
+
+        var results: [(String, Double)] = []
+
+        results.append(("createDirectory, already exists", measure(iterations: 2_000, rounds: 1) {
+            try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        }))
+
+        results.append(("setResourceValues, excluded from backup", measure(iterations: 2_000, rounds: 1) {
+            var url = directory
+            var values = URLResourceValues()
+            values.isExcludedFromBackup = true
+            try? url.setResourceValues(values)
+        }))
+
+        results.append(("open(O_CREAT) + close", measure(iterations: 2_000, rounds: 1) {
+            let opened = first.withUnsafeFileSystemRepresentation { path -> Int32 in
+                guard let path = path else { return -1 }
+                return open(path, O_WRONLY | O_APPEND | O_CREAT, 0o600)
+            }
+            if opened >= 0 { close(opened) }
+        }))
+
+        // Alternating, so each iteration renames a file that is there and leaves one for the next. Measured both
+        // through Foundation, which is what the store uses, and through the syscall it eventually reaches.
+        results.append(("FileManager.moveItem", measure(iterations: 2_000, rounds: 1) { iteration in
+            let from = iteration.isMultiple(of: 2) ? first : second
+            let to = iteration.isMultiple(of: 2) ? second : first
+            try? FileManager.default.moveItem(at: from, to: to)
+        }))
+
+        let firstPath = first.path
+        let secondPath = second.path
+        results.append(("rename(2)", measure(iterations: 2_000, rounds: 1) { iteration in
+            let from = iteration.isMultiple(of: 2) ? firstPath : secondPath
+            let to = iteration.isMultiple(of: 2) ? secondPath : firstPath
+            _ = rename(from, to)
+        }))
+
+        let scratchPath = directory.appendingPathComponent("scratch").path
+        results.append(("FileManager.createFile + removeItem", measure(iterations: 2_000, rounds: 1) {
+            FileManager.default.createFile(atPath: scratchPath, contents: Data("x".utf8))
+            try? FileManager.default.removeItem(atPath: scratchPath)
+        }))
+
+        results.append(("open(O_CREAT) + close + unlink(2)", measure(iterations: 2_000, rounds: 1) {
+            let opened = open(scratchPath, O_WRONLY | O_CREAT, 0o600)
+            if opened >= 0 { close(opened) }
+            _ = unlink(scratchPath)
+        }))
+
+        report("filesystem operations a batch close pays for", results)
+    }
+
     /// SQLite's own floor for one durable insert, with `SQLiteEventStore` taken out of the picture.
     ///
     /// Without this, the store's commit figures cannot be read: a reader is entitled to ask whether the gap against
