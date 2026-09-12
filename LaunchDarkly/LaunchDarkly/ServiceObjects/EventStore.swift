@@ -561,7 +561,7 @@ private extension EventStore {
 /// without having to parse the event to find where it ends. The version is what makes an upgrade safe -- a log this
 /// version does not understand is discarded rather than misread -- and the frame type leaves room for a later version to
 /// write something new into a log this one still reads.
-private enum EventLogFormat {
+enum EventLogFormat {
     /// Bump this whenever the framing or the meaning of a frame changes.
     static let version: UInt16 = 1
     static let magic = Data("LDEV".utf8)

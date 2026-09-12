@@ -250,6 +250,43 @@ final class EventPersistenceBenchmark: XCTestCase {
         print("")
     }
 
+    /// Where the log's staging cost goes, given that the SQLite store's equivalent is an order of magnitude cheaper.
+    ///
+    /// The two stores stage differently on purpose: the log turns an event into a framed byte sequence on the spot,
+    /// while the SQLite store keeps the event and does all of its work at commit. That is not a free choice either
+    /// way -- the framing has to happen somewhere -- but it decides which thread pays for it, and staging is the part
+    /// an evaluation pays on the caller's thread.
+    func testStagingBreakdown() throws {
+        try requireBenchmarking()
+
+        let event = Data(#"{"kind":"feature","key":"benchmark-flag","value":true,"default":false,"variation":1,"version":7,"creationDate":1740000000000}"#.utf8)
+        var sink = 0
+        var buffer = Data()
+        var array: [Data] = []
+
+        let framing = measure(iterations: 500_000) {
+            sink &+= EventLogFormat.frame(for: event).count
+        }
+
+        // Reset periodically so neither side is measured against a buffer growing into the tens of megabytes.
+        let framingAndAppending = measure(iterations: 500_000) { iteration in
+            if iteration.isMultiple(of: 1_000) { buffer.removeAll(keepingCapacity: true) }
+            buffer.append(EventLogFormat.frame(for: event))
+        }
+
+        let arrayAppend = measure(iterations: 500_000) { iteration in
+            if iteration.isMultiple(of: 1_000) { array.removeAll(keepingCapacity: true) }
+            array.append(event)
+        }
+
+        report("staging one \(event.count) byte event, by step", [
+            ("build the frame, discard it", framing),
+            ("build the frame and append it to the buffer", framingAndAppending),
+            ("append the event to an array (what SQLite stages)", arrayAppend)
+        ])
+        XCTAssertNotEqual(sink, -1)
+    }
+
     /// SQLite's own floor for one durable insert, with `SQLiteEventStore` taken out of the picture.
     ///
     /// Without this, the store's commit figures cannot be read: a reader is entitled to ask whether the gap against
