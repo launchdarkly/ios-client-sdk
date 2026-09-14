@@ -250,6 +250,130 @@ final class EventPersistenceBenchmark: XCTestCase {
         print("")
     }
 
+    /// What a bulk of recordings costs, split by which thread pays for it.
+    ///
+    /// Every other figure here prices one call, which hides the thing that decides whether a store is affordable:
+    /// neither store writes on the thread that staged an event. Both accumulate 16 KiB and then hand the write to a
+    /// commit queue, so a row that times `stage` alone reports a memcpy and silently omits the write it caused. That
+    /// omission is not the same size for the two, which is how the staging rows can make SQLite look an order of
+    /// magnitude cheaper than the log while the commit rows have it an order of magnitude more expensive. Neither
+    /// row is wrong; neither is the number an application pays.
+    ///
+    /// So this records a bulk the way an application would and prices both sides of the hand-off:
+    ///
+    /// - *caller thread* is wall time on the thread that recorded. It includes whatever the commit queue made it wait
+    ///   for on `bufferLock`, because a real evaluation waits for that too.
+    /// - *commit queue* is the CPU every other thread in the process burned while that was happening. Nothing else in
+    ///   the process is doing anything, so this is mostly the commit queue and the write it is performing.
+    ///
+    /// **The hundred-event row is the noise floor of that second column.** A hundred events of this size never reach
+    /// the 16 KiB threshold, so the true answer there is zero and whatever it reports is XCTest's own threads. This is
+    /// inferred from process CPU rather than measured directly, because a `DispatchQueue` cannot be wrapped the way
+    /// the Android benchmark wraps its `Executor`; reading the smallest row as the floor is what that costs. By ten
+    /// thousand events the floor is a small fraction of the figure and the column can be taken at face value.
+    ///
+    /// Deliberately no `closeBatch` and no `remove`. Those run on the delivery queue once per flush interval -- 30
+    /// seconds by default -- so folding them into a per-event figure answers a question nobody asked.
+    func testCallerThreadCostOfABulk() throws {
+        try requireBenchmarking()
+
+        let event = Data(#"{"kind":"feature","key":"benchmark-flag","value":true,"default":false,"variation":1,"version":7,"creationDate":1740000000000}"#.utf8)
+
+        // Three sizes, because the 16 KiB threshold is what decides whether there is any deferred work at all. A
+        // hundred events of this size never reach it: nothing is written, and the whole cost is the caller's. A
+        // thousand cross it about eight times and ten thousand about eighty. Reading the three together is what
+        // separates a store that is genuinely cheap to stage into from one that has not paid for anything yet.
+        for bulk in EventPersistenceBenchmark.bulkSizes {
+            var results: [(String, BulkCost)] = []
+
+            let logQueue = DispatchQueue(label: "com.launchdarkly.benchmark.logCommit")
+            var log = EventStore.temporary(capacity: .max, commitQueue: logQueue)
+            defer { log.deleteEverything() }
+            results.append(("append-only log", measureBulk(iterations: bulk, newRound: {
+                log.deleteEverything()
+                log = EventStore.temporary(capacity: .max, commitQueue: logQueue)
+                // Opens the descriptor outside the timed region, so the round's first event does not pay for it.
+                _ = log.stage(event)
+                log.commit()
+            }, record: { _ in
+                _ = log.stage(event)
+            }, drain: {
+                logQueue.sync { }
+            })))
+
+            #if canImport(SQLite3)
+            var toClean: [SQLiteEventStore] = []
+            defer { toClean.forEach { $0.deleteEverything() } }
+
+            for durability in [SQLiteEventStore.Durability.off, .normal, .full] {
+                let queue = DispatchQueue(label: "com.launchdarkly.benchmark.sqlCommit")
+                var store = SQLiteEventStore.temporary(capacity: .max, durability: durability, commitQueue: queue)
+                results.append(("SQLite, synchronous=\(durability.rawValue)", measureBulk(iterations: bulk, newRound: {
+                    toClean.append(store)
+                    store = SQLiteEventStore.temporary(capacity: .max, durability: durability, commitQueue: queue)
+                    // Opens the database outside the timed region, as the log opens its descriptor.
+                    _ = store.stage(event)
+                    store.commit()
+                }, record: { _ in
+                    _ = store.stage(event)
+                }, drain: {
+                    queue.sync { }
+                })))
+                toClean.append(store)
+            }
+            #endif
+
+            reportBulk("recording \(count(bulk)) events, nothing delivered", results)
+        }
+    }
+
+    /// What a commit point costs when it goes badly, rather than on average.
+    ///
+    /// `track` and `identify` commit on the caller's thread by design -- that is the durable barrier -- so this is the
+    /// one figure here an application can observe as a stall. A mean hides what is worth knowing about a database:
+    /// SQLite in WAL mode folds the write-ahead log back into the file every thousand pages, on whichever thread
+    /// happens to be committing when the threshold is crossed. One unlucky `track` in a few hundred pays for all of
+    /// them, and with `synchronous=NORMAL` that checkpoint is also where the deferred `fsync` finally happens.
+    ///
+    /// The log has no equivalent, because an append is an append. So if the asymmetry is real, it shows up as a
+    /// maximum far from the median on the SQLite rows and close to it on the log's.
+    func testCommitPointOutliers() throws {
+        try requireBenchmarking()
+
+        let event = Data(#"{"kind":"feature","key":"benchmark-flag","value":true,"default":false,"variation":1,"version":7,"creationDate":1740000000000}"#.utf8)
+
+        // Swept over the same three sizes as the bulk figures, and here the sweep is the finding rather than a
+        // convenience. A write-ahead log is checkpointed once it has filled, so a run short enough never reaches one
+        // and reports a tail that does not exist. Each size gets a store of its own for the same reason: a database
+        // inherited from the previous size would arrive with its log part-filled and charge the wrong run for it.
+        for calls in EventPersistenceBenchmark.bulkSizes {
+            var results: [(String, Distribution)] = []
+
+            let log = EventStore.temporary(capacity: .max)
+            defer { log.deleteEverything() }
+            results.append(("append-only log", measureDistribution(iterations: calls) {
+                _ = log.stage(event)
+                log.commit()
+            }))
+
+            #if canImport(SQLite3)
+            var toClean: [SQLiteEventStore] = []
+            defer { toClean.forEach { $0.deleteEverything() } }
+
+            for durability in [SQLiteEventStore.Durability.off, .normal, .full] {
+                let store = SQLiteEventStore.temporary(capacity: .max, durability: durability)
+                toClean.append(store)
+                results.append(("SQLite, synchronous=\(durability.rawValue)", measureDistribution(iterations: calls) {
+                    _ = store.stage(event)
+                    store.commit()
+                }))
+            }
+            #endif
+
+            reportDistribution("one commit point, \(count(calls)) of them, on the caller's thread", results)
+        }
+    }
+
     /// Where the log's staging cost goes, given that the SQLite store's equivalent is an order of magnitude cheaper.
     ///
     /// The two stores stage differently on purpose: the log turns an event into a framed byte sequence on the spot,
@@ -813,6 +937,19 @@ final class EventPersistenceBenchmark: XCTestCase {
     /// fastest of five on the other would flatter the second by however much noise the first happened to catch.
     private static let rounds = 5
 
+    /// The bulk sizes the recording figures are swept over.
+    ///
+    /// Chosen around the store's 16 KiB staging threshold rather than for being round. At the event size used here a
+    /// hundred events stay under it and cause no write at all, a thousand cross it a handful of times, and ten
+    /// thousand cross it often enough that the deferred column is an average rather than a report on one commit.
+    /// The same three are used by the Android benchmark, so the two platforms' tables line up row for row.
+    private static let bulkSizes = [100, 1_000, 10_000]
+
+    /// How many recordings it takes for a bulk to settle, independent of how many the round then makes.
+    ///
+    /// The smallest bulk size is below it on purpose, which is exactly why this is not a share of the round.
+    private static let bulkWarmup = 10_000
+
     private func measure(iterations: Int, rounds: Int = EventPersistenceBenchmark.rounds, _ body: () -> Void) -> Double {
         measure(iterations: iterations, rounds: rounds) { _ in body() }
     }
@@ -857,6 +994,119 @@ final class EventPersistenceBenchmark: XCTestCase {
         return UInt64(now.tv_sec) * 1_000_000_000 + UInt64(now.tv_nsec)
     }
 
+    /// CPU burned by every thread in the process, which is how work handed to another queue is caught.
+    private func processCpuNanoseconds() -> UInt64 {
+        var now = timespec()
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &now)
+        return UInt64(now.tv_sec) * 1_000_000_000 + UInt64(now.tv_nsec)
+    }
+
+    /// CPU burned by the calling thread alone. Subtracted from the process figure to leave the commit queue's share.
+    private func threadCpuNanoseconds() -> UInt64 {
+        var now = timespec()
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now)
+        return UInt64(now.tv_sec) * 1_000_000_000 + UInt64(now.tv_nsec)
+    }
+
+    /// What one bulk of recordings cost, per event, split by which thread paid for it.
+    private struct BulkCost {
+        /// Wall time on the thread that recorded, which is what an application feels.
+        let caller: Double
+        /// CPU burned elsewhere in the process, which is the commit queue writing what the recordings staged.
+        let deferred: Double
+
+        var total: Double { caller + deferred }
+    }
+
+    /// Records `iterations` events per round, returning the cheapest round priced on both sides of the hand-off.
+    ///
+    /// `newRound` gets a fresh store. That matters more than it would for the other figures here: an append is O(1) in
+    /// what the file already holds and a B-tree insert is not, so reusing one store across rounds would charge the
+    /// later rounds for the earlier ones on exactly one of the two implementations being compared.
+    private func measureBulk(iterations: Int,
+                             rounds: Int = EventPersistenceBenchmark.rounds,
+                             newRound: () -> Void,
+                             record: (Int) -> Void,
+                             drain: () -> Void) -> BulkCost {
+        // Warmed against a store of its own, and outside the rounds. The first events a process records pay for page
+        // faults and lazy allocation that no later one does, and at a hundred events per round there are not enough
+        // of them for that to amortize away.
+        //
+        // A fixed count rather than a share of the round, for the reason the Android benchmark spells out: what it
+        // takes to settle has nothing to do with how many events the round is about to record, and scaling the warmup
+        // down with the round leaves the smallest size reporting the warmup.
+        newRound()
+        for iteration in 0..<EventPersistenceBenchmark.bulkWarmup {
+            record(iteration)
+        }
+        drain()
+
+        var best: BulkCost?
+
+        for _ in 0..<max(1, rounds) {
+            newRound()
+
+            let startProcessCpu = processCpuNanoseconds()
+            let startThreadCpu = threadCpuNanoseconds()
+            let startWall = monotonicNanoseconds()
+            for iteration in 0..<iterations {
+                record(iteration)
+            }
+            let callerWall = monotonicNanoseconds() - startWall
+            let callerCpu = threadCpuNanoseconds() - startThreadCpu
+
+            // Drained inside the measured window, so that a commit still in flight when the loop ended is charged to
+            // the queue rather than escaping the figure entirely.
+            drain()
+            let processCpu = processCpuNanoseconds() - startProcessCpu
+
+            let round = BulkCost(caller: Double(callerWall) / Double(iterations),
+                                 deferred: max(0, Double(processCpu) - Double(callerCpu)) / Double(iterations))
+            if best == nil || round.total < best!.total {
+                best = round
+            }
+        }
+        return best ?? BulkCost(caller: 0, deferred: 0)
+    }
+
+    /// How long one call took, across many of them, when the tail is the point.
+    private struct Distribution {
+        let median: Double
+        let mean: Double
+        let p999: Double
+        let worst: Double
+    }
+
+    /// Times every call rather than the enclosing loop, so the tail survives to be reported.
+    ///
+    /// One round, and the median rather than the fastest. Every other figure here reports the cheapest of several
+    /// rounds, on the reasoning that noise can only make a round slower -- but here an outlier is the measurement, and
+    /// that aggregation would throw away the answer.
+    ///
+    /// The warmup is a single call, where every other figure here warms proportionally. That is deliberate: the tail
+    /// this is looking for appears only once enough commits have filled a write-ahead log, so a warmup generous enough
+    /// to settle anything would be generous enough to spend the very budget being measured. One call is what it takes
+    /// to get the file or the database open, and Swift is compiled ahead of time and needs no more.
+    private func measureDistribution(iterations: Int, warmup: Int = 1, _ body: () -> Void) -> Distribution {
+        for _ in 0..<max(0, warmup) {
+            body()
+        }
+
+        var samples = [Double](repeating: 0, count: iterations)
+        for index in 0..<iterations {
+            let start = monotonicNanoseconds()
+            body()
+            samples[index] = Double(monotonicNanoseconds() - start)
+        }
+
+        let mean = samples.reduce(0, +) / Double(iterations)
+        samples.sort()
+        return Distribution(median: samples[iterations / 2],
+                            mean: mean,
+                            p999: samples[min(iterations - 1, (iterations * 999) / 1_000)],
+                            worst: samples[iterations - 1])
+    }
+
     private func report(_ title: String, _ results: [(String, Double)]) {
         let width = results.map { $0.0.count }.max() ?? 0
         print("\n\(title)")
@@ -864,6 +1114,41 @@ final class EventPersistenceBenchmark: XCTestCase {
             let padded = name.padding(toLength: width, withPad: " ", startingAt: 0)
             print("  \(padded)  \(format(nanoseconds))")
         }
+    }
+
+    /// Three columns rather than one, because the split is the whole point of the table.
+    private func reportBulk(_ title: String, _ results: [(String, BulkCost)]) {
+        let width = results.map { $0.0.count }.max() ?? 0
+        print("\n\(title), per event")
+        print("  \(String(repeating: " ", count: width))  \(column("caller thread"))  \(column("commit queue"))  \(column("total"))")
+        for (name, cost) in results {
+            let padded = name.padding(toLength: width, withPad: " ", startingAt: 0)
+            print("  \(padded)  \(format(cost.caller))  \(format(cost.deferred))  \(format(cost.total))")
+        }
+        print("")
+    }
+
+    private func reportDistribution(_ title: String, _ results: [(String, Distribution)]) {
+        let width = results.map { $0.0.count }.max() ?? 0
+        print("\n\(title)")
+        print("  \(String(repeating: " ", count: width))  \(column("median"))  \(column("mean"))  \(column("p99.9"))  \(column("worst"))")
+        for (name, distribution) in results {
+            let padded = name.padding(toLength: width, withPad: " ", startingAt: 0)
+            print("  \(padded)  \(format(distribution.median))  \(format(distribution.mean))  \(format(distribution.p999))  \(format(distribution.worst))")
+        }
+        print("")
+    }
+
+    /// Right-aligns a column heading over the fixed width `format` produces.
+    private func column(_ title: String) -> String {
+        String(repeating: " ", count: max(0, 11 - title.count)) + title
+    }
+
+    /// Renders a count with thousands separators, so a table title reads as a quantity rather than a code literal.
+    private func count(_ value: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        return formatter.string(from: NSNumber(value: value)) ?? String(value)
     }
 
     private func format(_ nanoseconds: Double) -> String {

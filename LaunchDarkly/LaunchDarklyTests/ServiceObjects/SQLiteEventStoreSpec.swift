@@ -16,6 +16,7 @@ final class SQLiteEventStoreSpec: QuickSpec {
     override func spec() {
         stagingSpec()
         recoverySpec()
+        sigkillSpec()
         batchSpec()
         capacitySpec()
         schemaVersionSpec()
@@ -30,6 +31,28 @@ final class SQLiteEventStoreSpec: QuickSpec {
     /// what actually reached the disk, which is the whole question a crash asks.
     private static func reader(sharing store: SQLiteEventStore) -> SQLiteEventStore {
         SQLiteEventStore(directory: store.directory, capacity: 100, logger: .disabled)
+    }
+
+    /// Copies the database as it sits on disk while the writer is still open.
+    ///
+    /// That is the `SIGKILL` picture: no `sqlite3_close`, no WAL checkpoint, no `deinit`. The `-shm` file is
+    /// process-local and is not copied; SQLite rebuilds it. The main file and the WAL are what the next process sees.
+    private static func imageAfterKill(of store: SQLiteEventStore) -> URL {
+        let destination = FileManager.default.temporaryDirectory
+            .appendingPathComponent("com.launchdarkly.tests.events", isDirectory: true)
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try? FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
+        for name in ["events.sqlite", "events.sqlite-wal"] {
+            let source = store.directory.appendingPathComponent(name)
+            if FileManager.default.fileExists(atPath: source.path) {
+                try? FileManager.default.copyItem(at: source, to: destination.appendingPathComponent(name))
+            }
+        }
+        return destination
+    }
+
+    private static func store(at directory: URL) -> SQLiteEventStore {
+        SQLiteEventStore(directory: directory, capacity: 100, logger: .disabled)
     }
 
     private static func keys(of store: SQLiteEventStore) -> [String] {
@@ -147,6 +170,93 @@ final class SQLiteEventStoreSpec: QuickSpec {
                 next.recoverInterruptedLog()
 
                 expect(next.pendingEventCount) == 10
+            }
+        }
+    }
+
+    /// `SIGKILL` does not run `deinit`, so it never `COMMIT`s leftover staged rows and never closes the connection.
+    ///
+    /// The tests snapshot the files after the call under test returns, while the writer is still alive, then open a
+    /// new store on that copy. That is stricter than opening a second connection on the live directory: the writer
+    /// cannot checkpoint on the way out, because it never sees the copy.
+    private func sigkillSpec() {
+        describe("SIGKILL") {
+            var writer: SQLiteEventStore!
+            beforeEach {
+                writer = SQLiteEventStore.temporary()
+            }
+            afterEach {
+                writer.deleteEverything()
+            }
+
+            it("keeps an event whose commit had returned") {
+                _ = writer.stage(Self.payload("committed"), bypassingCapacity: false)
+                writer.commit()
+
+                let image = Self.imageAfterKill(of: writer)
+                defer { try? FileManager.default.removeItem(at: image) }
+
+                let next = Self.store(at: image)
+                next.recoverInterruptedLog()
+
+                expect(Self.keys(of: next)) == ["committed"]
+                expect(next.pendingBatches().first?.eventCount) == 1
+            }
+
+            it("loses an event that was only staged") {
+                _ = writer.stage(Self.payload("still-in-memory"), bypassingCapacity: false)
+
+                let image = Self.imageAfterKill(of: writer)
+                defer { try? FileManager.default.removeItem(at: image) }
+
+                let next = Self.store(at: image)
+                next.recoverInterruptedLog()
+
+                expect(Self.keys(of: next)) == []
+                expect(next.pendingBatches()) == []
+            }
+
+            it("keeps a tracked event recorded through EventReporter") {
+                var config = LDConfig.stub
+                config.sendEvents = true
+                let service = DarklyServiceMock()
+                service.config = config
+                let reporter = EventReporter(service: service, onSyncComplete: nil, store: writer)
+
+                reporter.record(CustomEvent(key: "fatal-error", context: LDContext.stub(), data: nil))
+
+                let image = Self.imageAfterKill(of: writer)
+                defer { try? FileManager.default.removeItem(at: image) }
+
+                let next = Self.store(at: image)
+                next.recoverInterruptedLog()
+                let payloads = next.pendingEventPayloads()
+                expect(payloads.count) == 1
+                expect(String(data: payloads[0], encoding: .utf8)).to(contain("\"kind\":\"custom\""))
+                expect(String(data: payloads[0], encoding: .utf8)).to(contain("fatal-error"))
+            }
+
+            it("does not keep an evaluation that never reached a commit point") {
+                var config = LDConfig.stub
+                config.sendEvents = true
+                let service = DarklyServiceMock()
+                service.config = config
+                let reporter = EventReporter(service: service, onSyncComplete: nil, store: writer)
+                let flag = FeatureFlag(flagKey: "flag-key", value: true, variation: 1, flagVersion: 2, trackEvents: true)
+
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key",
+                                                    value: true,
+                                                    defaultValue: false,
+                                                    featureFlag: flag,
+                                                    context: LDContext.stub(),
+                                                    includeReason: false)
+
+                let image = Self.imageAfterKill(of: writer)
+                defer { try? FileManager.default.removeItem(at: image) }
+
+                let next = Self.store(at: image)
+                next.recoverInterruptedLog()
+                expect(next.pendingEventPayloads()) == []
             }
         }
     }

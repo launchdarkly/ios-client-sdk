@@ -158,7 +158,15 @@ class EventReporter: EventReporting {
             os_log("Events cannot be persisted: no writable directory was available", log: config.logger, type: .debug)
             return NullEventStore()
         }
+        // Experimental on this branch: the production path uses the SQLite store so a SIGKILL after `track`
+        // can be checked against a real client, not only a unit-test fixture. The log remains the control
+        // in `EventStoreSpec` and anywhere a test injects `EventStore` directly.
+        #if canImport(SQLite3)
+        os_log("Persisting events with SQLiteEventStore (experimental)", log: config.logger, type: .debug)
+        return SQLiteEventStore(directory: directory, capacity: config.eventCapacity, logger: config.logger)
+        #else
         return EventStore(directory: directory, capacity: config.eventCapacity, logger: config.logger)
+        #endif
     }
 
     // MARK: Recording
