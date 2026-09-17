@@ -5,10 +5,10 @@ import PackageDescription
 let package = Package(
     name: "ContractTests",
     platforms: [
-        .iOS(.v13),
+        .iOS(.v15),
         .macOS(.v12),
-        .watchOS(.v6),
-        .tvOS(.v13)
+        .watchOS("9.0"),
+        .tvOS(.v15)
     ],
     products: [
         .executable(
