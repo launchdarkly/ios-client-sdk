@@ -29,10 +29,12 @@ final class EventReporterSpec: QuickSpec {
              stubResponseErrorOnly: Bool = false,
              eventStubResponseDate: Date? = nil,
              onSyncComplete: EventSyncCompleteClosure? = nil,
-             store: EventStore? = nil) {
+             store: EventStore? = nil,
+             eventCapacity: Int = Event.Kind.allKinds.count,
+             commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.EventReporter.commitQueue")) {
 
             config = LDConfig.stub
-            config.eventCapacity = Event.Kind.allKinds.count
+            config.eventCapacity = eventCapacity
             config.eventFlushInterval = eventFlushInterval ?? Constants.eventFlushInterval
 
             context = LDContext.stub()
@@ -47,7 +49,8 @@ final class EventReporterSpec: QuickSpec {
 
             self.lastEventResponseDate = lastEventResponseDate.adjustedForHttpUrlHeaderUse
             self.store = store ?? EventStore.temporary(capacity: config.eventCapacity)
-            eventReporter = EventReporter(service: serviceMock, onSyncComplete: onSyncComplete, store: self.store)
+            eventReporter = EventReporter(service: serviceMock, onSyncComplete: onSyncComplete,
+                                          store: self.store, commitQueue: commitQueue)
             (0..<eventCount).forEach {
                 let event = Event.stub(Event.eventKind(for: $0), with: context!)
                 events.append(event)
@@ -64,15 +67,13 @@ final class EventReporterSpec: QuickSpec {
             }
         }
 
-        /// The events the reporter is holding on disk, as the JSON it would send.
-        ///
-        /// Recorded events are serialized on the way in rather than kept as objects, so what the reporter is holding is
-        /// asserted against the wire format the events encode to.
-        func pendingEvents() -> [LDValue] {
-            store.pendingEventPayloads().compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
+        /// Commits everything accepted so far and returns its wire representation.
+        func committedEvents() -> [LDValue] {
+            eventReporter.commitRecordedEvents()
+            return store.pendingEventPayloads().compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
         }
 
-        /// The events recorded so far, in the JSON they encode to, for comparison with `pendingEvents()`.
+        /// The events recorded so far, in the JSON they encode to, for comparison with `committedEvents()`.
         func recordedEventsAsJSON() -> [LDValue] {
             events.compactMap { encodeToLDValue($0) }
         }
@@ -180,7 +181,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                    expect(testContext.pendingEvents()) == testContext.recordedEventsAsJSON()
+                    expect(testContext.committedEvents()) == testContext.recordedEventsAsJSON()
                 }
             }
         }
@@ -198,7 +199,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                    expect(testContext.pendingEvents()) == testContext.recordedEventsAsJSON()
+                    expect(testContext.committedEvents()) == testContext.recordedEventsAsJSON()
                 }
                 it("does not record a dropped event to diagnosticCache") {
                     expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 0
@@ -216,7 +217,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                    expect(testContext.pendingEvents()) == testContext.recordedEventsAsJSON()
+                    expect(testContext.committedEvents()) == testContext.recordedEventsAsJSON()
                 }
                 it("records a dropped event to diagnosticCache") {
                     expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 1
@@ -539,7 +540,7 @@ final class EventReporterSpec: QuickSpec {
 
                     // Being offline delays delivery, not durability: a flush is a commit point, so the recorded events and
                     // the evaluations counted so far are on disk even though nothing can be sent.
-                    let pending = testContext.pendingEvents()
+                    let pending = testContext.committedEvents()
                     expect(pending.dropLast().map { $0 }) == testContext.recordedEventsAsJSON()
                     expect(pending.last?.kindField) == "summary"
                     expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
@@ -599,7 +600,8 @@ final class EventReporterSpec: QuickSpec {
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: true)
                 let expected = FeatureEvent(key: "flag-key", context: context, value: "a", defaultValue: "b", featureFlag: flag, includeReason: true, isDebug: false)
-                expect(recordedEvents(store)) == expectedEvents([expected])
+                expect(expectedEvents(reporter.pendingEventsForTesting)) == expectedEvents([expected])
+                expect(recordedEvents(store)).to(beEmpty())
                 expect(reporter.contextSummarizer.hasLoggedRequests) == true
                 let summaries = reporter.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
@@ -630,7 +632,8 @@ final class EventReporterSpec: QuickSpec {
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(3.0))
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
                 let expected = FeatureEvent(key: "flag-key", context: context, value: "a", defaultValue: "b", featureFlag: flag, includeReason: false, isDebug: true)
-                expect(recordedEvents(store)) == expectedEvents([expected])
+                expect(expectedEvents(reporter.pendingEventsForTesting)) == expectedEvents([expected])
+                expect(recordedEvents(store)).to(beEmpty())
                 expect(reporter.contextSummarizer.hasLoggedRequests) == true
                 let summaries = reporter.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
@@ -664,7 +667,8 @@ final class EventReporterSpec: QuickSpec {
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
                 let expectedFeature = FeatureEvent(key: "flag-key", context: context, value: "a", defaultValue: "b", featureFlag: flag, includeReason: false, isDebug: false)
                 let expectedDebug = FeatureEvent(key: "flag-key", context: context, value: "a", defaultValue: "b", featureFlag: flag, includeReason: false, isDebug: true)
-                expect(recordedEvents(store)) == expectedEvents([expectedFeature, expectedDebug])
+                expect(expectedEvents(reporter.pendingEventsForTesting)) == expectedEvents([expectedFeature, expectedDebug])
+                expect(recordedEvents(store)).to(beEmpty())
                 expect(reporter.contextSummarizer.hasLoggedRequests) == true
                 let summaries = reporter.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
@@ -687,10 +691,11 @@ final class EventReporterSpec: QuickSpec {
                 }
                 (0..<10).forEach { _ in counter.wait() }
 
-                let recorded = recordedEvents(store)
-                expect(recorded.count) == 20
-                expect(recorded.filter { $0.kindField == "feature" }.count) == 10
-                expect(recorded.filter { $0.kindField == "debug" }.count) == 10
+                let held = expectedEvents(reporter.pendingEventsForTesting)
+                expect(held.count) == 20
+                expect(held.filter { $0.kindField == "feature" }.count) == 10
+                expect(held.filter { $0.kindField == "debug" }.count) == 10
+                expect(recordedEvents(store)).to(beEmpty())
                 expect(reporter.contextSummarizer.hasLoggedRequests) == true
                 let summaries = reporter.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
@@ -782,7 +787,7 @@ extension EventReporterSpec {
                 testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
                 testContext.eventReporter.record(CustomEvent(key: "fatal-error", context: testContext.context, data: nil))
 
-                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["summary", "custom"]
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom", "summary"]
             }
 
             it("persists feature and summary events synchronously on flush") {
@@ -804,11 +809,14 @@ extension EventReporterSpec {
                 // evaluating is usually this one.
                 let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
                 commits.suspend()
-                testContext = TestContext(lastEventResponseDate: Date(), store: EventStore.temporary(capacity: .max, commitQueue: commits))
+                testContext = TestContext(lastEventResponseDate: Date(),
+                                          store: EventStore.temporary(capacity: .max),
+                                          eventCapacity: .max,
+                                          commitQueue: commits)
 
                 let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
                 expect(Thread.isMainThread) == true
-                // Far past the staging threshold, so the buffer filled several times over.
+                // Far past the pending threshold, so one coalesced commit is waiting.
                 for _ in 0..<400 {
                     testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
                 }
@@ -817,7 +825,8 @@ extension EventReporterSpec {
 
                 commits.resume()
 
-                expect(eventsLeftOnDisk().count).toEventually(equal(400))
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }.filter { $0 == "feature" }.count)
+                    .toEventually(equal(400))
             }
 
             it("reports the events a previous run left behind") {

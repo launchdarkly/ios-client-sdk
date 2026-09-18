@@ -51,16 +51,33 @@ class NullEventReporter: EventReporting {
 
 /// Records analytics events and delivers them to LaunchDarkly.
 ///
-/// Recorded events are serialized immediately and appended to an `EventStore`, an on-disk log, rather than held in
-/// memory until a delivery succeeds. That is what lets an application that dies moments after recording an event still
-/// report it: the events are on disk before the process is gone, and the next run of the application delivers them.
+/// Recorded events end up in an `EventStore`, an on-disk log, rather than held in memory until a delivery succeeds.
+/// That is what lets an application that dies moments after recording an event still report it: the events are on disk
+/// before the process is gone, and the next run of the application delivers them.
 ///
-/// Committing an event to the log is a syscall, so it is not done once per event. Staged bytes are committed when the
-/// buffer fills, when a delivery starts, and at a *commit point* -- recording a custom or identify event, or the
-/// application being backgrounded. An evaluation is not a commit point, which is the deliberate trade: the exposures an
-/// application accumulates become durable when it next does something that suggests it cares, such as tracking the
-/// error that is about to end the session.
+/// Recording an event summarizes it and, if it has to be delivered in full, holds it as an `Event`. Nothing is encoded
+/// on the thread that recorded it; a commit turns the whole held run into bytes at once. So an evaluation of an
+/// untracked flag costs a counter update, and an evaluation of a tracked one costs that plus an array append.
+///
+/// Where the line falls is between the events an application asked for by name and the ones it did not. Recording a
+/// custom or identify event is a *commit point*: it encodes and writes before returning, because an application
+/// reporting something it chose to report is saying this matters more than the microseconds it costs, and the crash it
+/// describes may be moments away. That commit takes the whole held run with it, so the exposures leading up to the
+/// error go down alongside it. Evaluations get no such promise, and are committed once `pendingCommitThreshold` of
+/// them have accumulated, when a delivery starts, or on `flush`.
 class EventReporter: EventReporting {
+    /// How many full events may be held unencoded before one of them pays for a commit.
+    ///
+    /// It sets two things at once. The first is how many evaluations a termination can take -- not everything a crash
+    /// could take, since an application that flushes on its way out commits the whole run, but the window for the
+    /// terminations that run nothing on the way out, such as the system reclaiming a backgrounded process. Recording a
+    /// custom or identify event closes it too, because that commits.
+    ///
+    /// The second is the worst a commit point can cost, since it encodes whatever is held before returning. The common
+    /// case is far below the bound, because the commit queue keeps the run drained; raising this trades that tail
+    /// against the number of writes.
+    private static let pendingCommitThreshold = 32
+
     var isOnline: Bool {
         get { timerQueue.sync { eventReportTimer != nil } }
         set { timerQueue.sync { newValue ? startReporting() : stopReporting() } }
@@ -86,6 +103,37 @@ class EventReporter: EventReporting {
     private(set) var contextSummarizer: ContextSummarizer
     /// Only to be used while holding `stateLock`.
     private var responseDate: Date
+
+    /// Held for the whole of a commit, so that only one runs at a time.
+    ///
+    /// This is what a commit point's guarantee rests on. Without it a commit already in flight could take the caller's
+    /// event out of `pending` before the caller got there, leaving the caller nothing to write and returning while
+    /// those bytes were still being produced somewhere else. Waiting here instead means that when the call returns the
+    /// event is on disk, whichever commit put it there. It also keeps two encoders from staging their runs in
+    /// whichever order they happened to finish.
+    ///
+    /// Taken before `pendingLock` and before anything the store locks, never after.
+    private let commitLock = UnfairLock()
+
+    /// Guards the held events. Held only long enough to append one or to hand the run over, never across the encoder.
+    private let pendingLock = UnfairLock()
+
+    /// Full events recorded but not yet encoded. Only to be used while holding `pendingLock`.
+    ///
+    /// Held rather than encoded because encoding early would not make them durable: the store stages bytes into memory
+    /// too, and only a commit reaches the file. Both forms are equally lost to a crash, so the encode may as well
+    /// happen where it is cheapest.
+    private var pending: [Event] = []
+
+    /// Whether a commit is already queued, so a run of recordings past the threshold asks for one write rather than
+    /// one each. Only to be used while holding `pendingLock`.
+    private var isCommitScheduled = false
+
+    /// How many events the SDK will hold in total, across `pending` and the store.
+    private let capacity: Int
+
+    /// Where a commit runs when no caller is waiting on it.
+    private let commitQueue: DispatchQueue
 
     private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
     private var eventReportTimer: TimeResponding?
@@ -132,11 +180,14 @@ class EventReporter: EventReporting {
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
          store: EventStoring? = nil,
-         encoding: Encoding = .codable) {
+         encoding: Encoding = .codable,
+         commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.commitQueue", qos: .userInitiated)) {
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.responseDate = Date()
         self.encoding = encoding
+        self.capacity = service.config.eventCapacity
+        self.commitQueue = commitQueue
         self.encoder = EventReporter.makeEncoder(config: service.config)
         self.handWrittenEncoder = EventJSONWriter(config: service.config,
                                                   cachingContexts: encoding == .handWrittenCachingContext)
@@ -158,34 +209,16 @@ class EventReporter: EventReporting {
             os_log("Events cannot be persisted: no writable directory was available", log: config.logger, type: .debug)
             return NullEventStore()
         }
-        // Experimental on this branch: the production path uses the SQLite store so a SIGKILL after `track`
-        // can be checked against a real client, not only a unit-test fixture. The log remains the control
-        // in `EventStoreSpec` and anywhere a test injects `EventStore` directly.
-        #if canImport(SQLite3)
-        os_log("Persisting events with SQLiteEventStore (experimental)", log: config.logger, type: .debug)
-        return SQLiteEventStore(directory: directory, capacity: config.eventCapacity, logger: config.logger)
-        #else
         return EventStore(directory: directory, capacity: config.eventCapacity, logger: config.logger)
-        #endif
     }
 
     // MARK: Recording
 
     func record(_ event: Event) {
-        guard let encoded = encode(event)
-        else { return }
+        hold(event)
 
-        let isCommitPoint = EventReporter.isCommitPoint(event.kind)
-        // Ahead of the event, so that the exposures an application accumulated before tracking something are made
-        // durable by the same commit rather than left behind by it.
-        if isCommitPoint {
-            stageSummaries()
-        }
-
-        stage(encoded)
-
-        if isCommitPoint {
-            store.commit()
+        if EventReporter.isCommitPoint(event.kind) {
+            commitRecordedEvents()
         }
     }
 
@@ -194,31 +227,95 @@ class EventReporter: EventReporting {
         let recordingFeatureEvent = featureFlag?.trackEvents == true
         let recordingDebugEvent = featureFlag?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
 
-        // Built and serialized before the lock is taken. Copying the context and walking it to produce JSON is the
-        // expensive part of recording an evaluation, and no other evaluation needs to wait for it.
-        var encodedEvents: [Data] = []
-        if recordingFeatureEvent {
-            let featureEvent = FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false)
-            encode(featureEvent).map { encodedEvents.append($0) }
-        }
-        if recordingDebugEvent {
-            let debugEvent = FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: true)
-            encode(debugEvent).map { encodedEvents.append($0) }
-        }
-
         stateLock.lock()
         contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
         stateLock.unlock()
 
-        encodedEvents.forEach { stage($0) }
+        if recordingFeatureEvent {
+            hold(FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false))
+        }
+        if recordingDebugEvent {
+            hold(FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: true))
+        }
+        // Deliberately no commit. An evaluation is expected to cost what bookkeeping costs, and it is usually the main
+        // thread doing it; the run is encoded and written on the commit queue once enough of them have piled up, and
+        // the next event recorded at a commit point makes them durable along with itself.
+    }
+
+    /// Holds an event for the next commit to encode, counting it as dropped if the SDK is already full.
+    ///
+    /// Capacity is consulted before anything else, so an event that will not be kept is never encoded. That ordering is
+    /// what bounds an application re-evaluating a tracked flag in a render loop: once the limit is reached an
+    /// evaluation costs no more than its summary counter, however fast the loop runs.
+    private func hold(_ event: Event) {
+        pendingLock.lock()
+
+        guard pending.count + store.pendingEventCount < capacity
+        else {
+            pendingLock.unlock()
+            os_log("%s aborted. Event store is full", log: service.config.logger, type: .debug, typeName(and: #function))
+            service.diagnosticCache?.incrementDroppedEventCount()
+            return
+        }
+
+        pending.append(event)
+        let needsCommit = pending.count >= EventReporter.pendingCommitThreshold && !isCommitScheduled
+        if needsCommit {
+            isCommitScheduled = true
+        }
+        pendingLock.unlock()
+
+        guard needsCommit
+        else { return }
+
+        commitQueue.async { [weak self] in
+            guard let self
+            else { return }
+            // Cleared before the commit rather than after it, so that an event held while this one is in flight can ask
+            // for another commit instead of finding one apparently already on its way.
+            self.pendingLock.lock()
+            self.isCommitScheduled = false
+            self.pendingLock.unlock()
+
+            self.commitRecordedEvents()
+        }
     }
 
     func commitRecordedEvents() {
+        commitLock.lock()
+        defer { commitLock.unlock() }
+
+        stagePendingEvents()
         stageSummaries()
         store.commit()
     }
 
-    /// Whether recording this kind of event should leave the log durable when it returns.
+    /// Encodes the held events as one run and stages the bytes.
+    ///
+    /// The run is taken under `pendingLock` and encoded outside it, so recording does not wait on the encoder. Staging
+    /// bypasses capacity because the decision to keep these events was made in `hold`, and refusing them here would
+    /// drop events the SDK has already counted as accepted.
+    ///
+    /// Requires `commitLock`: two threads draining separate runs would stage them in whichever order they finished
+    /// encoding, which is not the order they were recorded in.
+    private func stagePendingEvents() {
+        pendingLock.lock()
+        if pending.isEmpty {
+            pendingLock.unlock()
+            return
+        }
+        let run = pending
+        pending = []
+        pendingLock.unlock()
+
+        for event in run {
+            guard let encoded = encode(event)
+            else { continue }
+            stage(encoded, bypassingCapacity: true)
+        }
+    }
+
+    /// Whether recording this kind of event should encode and write the held run before it returns.
     ///
     /// Custom and identify events are recorded because the application did something it chose to report, which is both
     /// rare enough to afford a write and the moment it is least acceptable to lose. Evaluations are neither.
@@ -333,7 +430,7 @@ class EventReporter: EventReporting {
             return
         }
 
-        stageSummaries()
+        commitRecordedEvents()
         _ = store.closeBatch()
 
         let batches = store.pendingBatches()
@@ -591,6 +688,13 @@ private final class NullEventStore: EventStoring {
 
 #if DEBUG
     extension EventReporter {
+        /// Full events accepted but not yet handed to a commit.
+        var pendingEventsForTesting: [Event] {
+            pendingLock.lock()
+            defer { pendingLock.unlock() }
+            return pending
+        }
+
         func setLastEventResponseDate(_ date: Date) {
             stateLock.lock()
             responseDate = date

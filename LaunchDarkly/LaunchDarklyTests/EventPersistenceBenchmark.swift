@@ -1,6 +1,10 @@
 import XCTest
 import Foundation
+#if os(watchOS)
+@testable import LaunchDarkly_watchOS
+#else
 @testable import LaunchDarkly
+#endif
 
 #if canImport(Darwin)
 import Darwin
@@ -20,8 +24,13 @@ import SQLite3
 ///     LD_EVENT_BENCH=1 xcrun xctest -XCTest LaunchDarklyTests.EventPersistenceBenchmark <bundle>
 final class EventPersistenceBenchmark: XCTestCase {
     private func requireBenchmarking() throws {
+        #if os(watchOS)
+        // This file is compiled into the dedicated WatchEventBench scheme only.
+        return
+        #else
         try XCTSkipUnless(ProcessInfo.processInfo.environment["LD_EVENT_BENCH"] == "1",
                           "Set LD_EVENT_BENCH=1 to measure event recording")
+        #endif
     }
 
     /// The claim W3 rests on: taking a lock is cheap enough to do once per evaluation, and a queue hop is not.
@@ -961,31 +970,43 @@ final class EventPersistenceBenchmark: XCTestCase {
     /// JIT to compile what it is measuring. Swift is compiled ahead of time and only needs the first allocation and
     /// page fault charged elsewhere.
     private func measure(iterations: Int, rounds: Int = EventPersistenceBenchmark.rounds, _ body: (Int) -> Void) -> Double {
-        for iteration in 0..<max(1, iterations / 100) {
+        #if os(watchOS)
+        let measuredIterations = max(1, iterations / 10)
+        #else
+        let measuredIterations = iterations
+        #endif
+
+        for iteration in 0..<max(1, measuredIterations / 100) {
             body(iteration)
         }
 
         var best = Double.greatestFiniteMagnitude
         for _ in 0..<max(1, rounds) {
             let start = monotonicNanoseconds()
-            for iteration in 0..<iterations {
+            for iteration in 0..<measuredIterations {
                 body(iteration)
             }
             let elapsed = monotonicNanoseconds() - start
-            best = min(best, Double(elapsed) / Double(iterations))
+            best = min(best, Double(elapsed) / Double(measuredIterations))
         }
         return best
     }
 
     private func measureConcurrent(threads: Int, iterationsPerThread: Int, _ body: () -> Void) -> Double {
+        #if os(watchOS)
+        let measuredIterations = max(1, iterationsPerThread / 10)
+        #else
+        let measuredIterations = iterationsPerThread
+        #endif
+
         let start = monotonicNanoseconds()
         DispatchQueue.concurrentPerform(iterations: threads) { _ in
-            for _ in 0..<iterationsPerThread {
+            for _ in 0..<measuredIterations {
                 body()
             }
         }
         let elapsed = monotonicNanoseconds() - start
-        return Double(elapsed) / Double(threads * iterationsPerThread)
+        return Double(elapsed) / Double(threads * measuredIterations)
     }
 
     private func monotonicNanoseconds() -> UInt64 {

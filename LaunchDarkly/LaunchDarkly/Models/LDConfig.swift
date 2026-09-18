@@ -192,7 +192,7 @@ public struct LDConfig {
         static let sendEvents = true
 
         /// The default maximum number of events the LDClient can store
-        static let eventCapacity = 100
+        static let eventCapacity = 1000
 
         /// The default timeout interval for flag requests and event reports. (10 seconds)
         static let connectionTimeout: TimeInterval = 10.0
@@ -314,7 +314,7 @@ public struct LDConfig {
     /// only the sending of client-side events, not streaming or polling for events from the server.
     public var sendEvents: Bool = Defaults.sendEvents
 
-    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)
+    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 1000)
     public var eventCapacity: Int = Defaults.eventCapacity
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)

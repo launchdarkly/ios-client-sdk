@@ -35,7 +35,7 @@ public final class ObjcLDConfig: NSObject {
         set { config.streamUrl = newValue }
     }
 
-    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)
+    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 1000)
     @objc public var eventCapacity: Int {
         get { config.eventCapacity }
         set { config.eventCapacity = newValue }

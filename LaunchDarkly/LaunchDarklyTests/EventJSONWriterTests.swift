@@ -394,6 +394,8 @@ final class EventJSONWriterTests: XCTestCase {
 
             codableReporter.record(event)
             handWrittenReporter.record(event)
+            codableReporter.commitRecordedEvents()
+            handWrittenReporter.commitRecordedEvents()
 
             let expected = try XCTUnwrap(codableStore.pendingEventPayloads().first, "nothing recorded for \(name)")
             let actual = try XCTUnwrap(handWrittenStore.pendingEventPayloads().first, "nothing recorded for \(name)")
