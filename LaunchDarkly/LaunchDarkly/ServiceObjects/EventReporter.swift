@@ -180,7 +180,7 @@ class EventReporter: EventReporting {
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
          store: EventStoring? = nil,
-         encoding: Encoding = .codable,
+         encoding: Encoding = .handWritten,
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.commitQueue", qos: .userInitiated)) {
         self.service = service
         self.onSyncComplete = onSyncComplete
@@ -590,17 +590,17 @@ class EventReporter: EventReporting {
 }
 
 extension EventReporter {
-    /// Which encoder recorded events go through. Experimental: `.codable` is the shipping path, and `.handWritten`
-    /// exists so the two can be measured against each other on the same recording path rather than in isolation.
+    /// Which encoder recorded events go through.
+    ///
+    /// `.handWritten` is the shipping path, matching the Android SDK, which writes the wire form directly rather than
+    /// going through a reflective encoder. `.codable` is kept because it is the oracle the writer is checked against:
+    /// `EventJSONWriterTests` asserts the two produce identical bytes, and where they disagree `.codable` is right.
     enum Encoding {
         case codable
         case handWritten
         /// The hand-written writer, reusing the last context's encoded bytes when the context has not changed.
         case handWrittenCachingContext
     }
-
-    /// Exposed so the benchmark can report an observed hit rate instead of assuming one.
-    var contextCache: ContextEncodingCache? { handWrittenEncoder.contextCache }
 
     fileprivate static func makeEncoder(config: LDConfig) -> JSONEncoder {
         let encoder = JSONEncoder()

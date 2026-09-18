@@ -72,28 +72,3 @@ extension EventStore {
         try? FileManager.default.removeItem(at: directory)
     }
 }
-
-#if canImport(SQLite3)
-extension SQLiteEventStore {
-    /// The `EventStore.temporary()` of the SQLite experiment, so a test can swap one for the other and change nothing
-    /// else about how it is set up.
-    static func temporary(
-        capacity: Int = 100,
-        durability: SQLiteEventStore.Durability = .normal,
-        commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.commitQueue")
-    ) -> SQLiteEventStore {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("com.launchdarkly.tests.events", isDirectory: true)
-            .appendingPathComponent(UUID().uuidString, isDirectory: true)
-        return SQLiteEventStore(directory: directory,
-                                capacity: capacity,
-                                durability: durability,
-                                logger: .disabled,
-                                commitQueue: commitQueue)
-    }
-
-    func deleteEverything() {
-        try? FileManager.default.removeItem(at: directory)
-    }
-}
-#endif
