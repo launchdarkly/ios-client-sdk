@@ -11,6 +11,36 @@ final class EventStoreSpec: QuickSpec {
         batchSpec()
         capacitySpec()
         fallbackSpec()
+        optOutSpec()
+    }
+
+    private func optOutSpec() {
+        describe("a store the application did not ask to persist") {
+            var store: EventStore!
+            beforeEach {
+                store = EventStore.temporary(persistEvents: false)
+            }
+            afterEach {
+                store.deleteEverything()
+            }
+
+            it("writes nothing to the disk, so the directory is never even created") {
+                _ = store.stage(EventStoreSpec.payload("held"))
+                store.commit()
+
+                expect(FileManager.default.fileExists(atPath: store.directory.path)) == false
+                expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))).to(beEmpty())
+            }
+
+            it("delivers the events from memory, so opting out costs durability and nothing else") {
+                _ = store.stage(EventStoreSpec.payload("held"))
+                let batch = store.closeBatch()!
+
+                expect(batch.eventCount) == 1
+                expect(store.pendingEventCount) == 1
+                expect(store.body(of: batch)) == Data("[{\"kind\":\"custom\",\"key\":\"held\"}]".utf8)
+            }
+        }
     }
 
     /// A store that can never write, because the directory it was given sits underneath a regular file and so cannot
@@ -249,6 +279,23 @@ final class EventStoreSpec: QuickSpec {
 
                 expect(store.pendingBatches()).to(beEmpty())
                 expect(store.pendingEventCount) == 0
+            }
+
+            it("counts a batch it closed without reading the file back") {
+                _ = store.stage(EventStoreSpec.payload("first"))
+                _ = store.stage(EventStoreSpec.payload("second"))
+                let batch = store.closeBatch()!
+
+                // Nothing appends to a batch once it is closed, so the count taken at the close still holds and
+                // listing it has no reason to go to the disk. Damaging the file is how the test tells the two apart:
+                // a listing that read would refuse this batch, which is exactly what the store below does.
+                let batchUrl = store.directory.appendingPathComponent("ready-\(batch.payloadId)")
+                try Data("not an event log".utf8).write(to: batchUrl)
+
+                expect(store.pendingBatches()) == [batch]
+
+                // A store that did not close it has no count to go on, so it reads, and finds the damage.
+                expect(EventStoreSpec.reader(sharing: store).pendingBatches()).to(beEmpty())
             }
 
             it("gives a batch its own payload id, so a retry is not read as a new delivery") {

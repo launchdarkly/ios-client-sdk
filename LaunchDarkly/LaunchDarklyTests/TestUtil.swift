@@ -54,12 +54,17 @@ extension EventStore {
     /// nor leave any in the directory a real client would use.
     static func temporary(
         capacity: Int = 100,
+        persistEvents: Bool = true,
         commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.commitQueue")
     ) -> EventStore {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("com.launchdarkly.tests.events", isDirectory: true)
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
-        return EventStore(directory: directory, capacity: capacity, logger: .disabled, commitQueue: commitQueue)
+        return EventStore(directory: directory,
+                          capacity: capacity,
+                          persistEvents: persistEvents,
+                          logger: .disabled,
+                          commitQueue: commitQueue)
     }
 
     /// Removes the store's directory, including any batch still waiting to be delivered.

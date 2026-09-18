@@ -209,7 +209,10 @@ class EventReporter: EventReporting {
             os_log("Events cannot be persisted: no writable directory was available", log: config.logger, type: .debug)
             return NullEventStore()
         }
-        return EventStore(directory: directory, capacity: config.eventCapacity, logger: config.logger)
+        return EventStore(directory: directory,
+                          capacity: config.eventCapacity,
+                          persistEvents: config.persistEvents,
+                          logger: config.logger)
     }
 
     // MARK: Recording

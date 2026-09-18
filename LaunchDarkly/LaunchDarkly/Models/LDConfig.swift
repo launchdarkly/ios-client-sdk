@@ -194,6 +194,9 @@ public struct LDConfig {
         /// The default maximum number of events the LDClient can store
         static let eventCapacity = 1000
 
+        /// The default behavior for the SDK is to keep events in memory only.
+        static let persistEvents = false
+
         /// The default timeout interval for flag requests and event reports. (10 seconds)
         static let connectionTimeout: TimeInterval = 10.0
         /// The default time interval between event reports. (30 seconds)
@@ -316,6 +319,17 @@ public struct LDConfig {
 
     /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 1000)
     public var eventCapacity: Int = Defaults.eventCapacity
+
+    /// Whether recorded events are written to disk, so that they survive the process ending.
+    ///
+    /// Without this, an event lives in memory until it is delivered, and a process that dies before the next flush
+    /// takes everything recorded since the last one. That includes the crash an application was reporting when it
+    /// died, which is the case this exists for. With it on, events are appended to a log under Application Support
+    /// and delivered on a later run, and a `track` or `identify` is on disk before the call returns.
+    ///
+    /// The cost is a write on the thread that called `track` or `identify`, measured in tens of microseconds.
+    /// Evaluating a flag stays in memory either way. (Default: false)
+    public var persistEvents: Bool = Defaults.persistEvents
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
     public var connectionTimeout: TimeInterval = Defaults.connectionTimeout
@@ -546,6 +560,7 @@ extension LDConfig: Equatable {
             && lhs.eventsUrl == rhs.eventsUrl
             && lhs.streamUrl == rhs.streamUrl
             && lhs.eventCapacity == rhs.eventCapacity
+            && lhs.persistEvents == rhs.persistEvents
             && lhs.sendEvents == rhs.sendEvents
             && lhs.connectionTimeout == rhs.connectionTimeout
             && lhs.eventFlushInterval == rhs.eventFlushInterval

@@ -90,8 +90,9 @@ final class EventStore: EventStoring {
     private var bufferedEventCount = 0
     private var committedEvents = 0
     private var closedEvents = 0
-    /// Whether persistence has been given up on for the rest of the session, because the filesystem refused a write.
-    private var isDisabled = false
+    /// Whether events are being written to disk, which is what the application asked for until a write fails and the
+    /// store gives up on persistence for the rest of the session.
+    private var persistEvents = true
     /// Whether a commit is already on its way, so that a burst of recordings queues one write rather than one each.
     private var isCommitScheduled = false
 
@@ -107,6 +108,16 @@ final class EventStore: EventStoring {
     /// Only to be used while holding `ioLock`.
     private var inMemoryBatches: [HeldBatch] = []
 
+    /// How many events are in each batch this process closed or recovered, so that listing them does not have to read
+    /// them back.
+    ///
+    /// A batch is never appended to once it is closed, so a count taken at the close holds until the batch is
+    /// delivered. Without this, listing reads every batch file in full while holding `ioLock`, and a commit at a
+    /// commit point can end up waiting behind those reads.
+    ///
+    /// Only to be used while holding `ioLock`.
+    private var eventCounts: [String: Int] = [:]
+
     private var currentLogUrl: URL { directory.appendingPathComponent("current") }
 
     /// A batch is identified by its payload ID rather than by a path, so that a batch listed from the directory and the
@@ -117,12 +128,18 @@ final class EventStore: EventStoring {
 
     init(directory: URL,
          capacity: Int,
+         persistEvents: Bool = true,
          logger: OSLog,
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventStore.commitQueue", qos: .userInitiated)) {
         self.directory = directory
         self.capacity = capacity
         self.logger = logger
         self.commitQueue = commitQueue
+        // An application that has not asked for persistence gets the same store running the same way it runs once a
+        // write has failed: events are held, delivered, and lost only if the process dies. Batches a run with
+        // persistence turned on left behind are still recovered and delivered, which is why this sets the runtime
+        // flag rather than skipping the store's reads.
+        self.persistEvents = persistEvents
     }
 
     /// The directory the store for a mobile key belongs in, or nil where the platform gave us nowhere to write.
@@ -177,7 +194,7 @@ final class EventStore: EventStoring {
         bufferedEventCount += 1
         // Nothing to schedule once persistence has been given up on: there is nowhere for a commit to put these bytes,
         // so they stay in memory until a delivery closes them into a batch.
-        let needsCommit = !isDisabled && bufferData.count >= EventStore.stagingThreshold && !isCommitScheduled
+        let needsCommit = persistEvents && bufferData.count >= EventStore.stagingThreshold && !isCommitScheduled
         if needsCommit {
             isCommitScheduled = true
         }
@@ -251,6 +268,8 @@ final class EventStore: EventStoring {
             return nil
         }
 
+        eventCounts[payloadId] = events
+
         bufferLock.lock()
         committedEvents = 0
         closedEvents += events
@@ -272,19 +291,27 @@ final class EventStore: EventStoring {
         var batches = contents
             .filter { $0.lastPathComponent.hasPrefix(EventStore.batchPrefix) }
             .compactMap { file -> (EventBatch, Date)? in
-                guard let events = EventLogFormat.eventCount(in: file)
+                let payloadId = String(file.lastPathComponent.dropFirst(EventStore.batchPrefix.count))
+                // Reading is only for a batch this process has not counted: one a previous run left behind, or one
+                // belonging to another process sharing the environment.
+                guard let events = eventCounts[payloadId] ?? EventLogFormat.eventCount(in: file)
                 else {
                     // Written by a version of the SDK whose format this one does not read, or damaged beyond what the
                     // torn tail recovery tolerates. Either way it can never be delivered, so it is not kept.
                     try? FileManager.default.removeItem(at: file)
                     return nil
                 }
-                let payloadId = String(file.lastPathComponent.dropFirst(EventStore.batchPrefix.count))
+                eventCounts[payloadId] = events
                 let modified = (try? file.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
                 return (EventBatch(payloadId: payloadId, eventCount: events), modified ?? Date.distantPast)
             }
             .sorted { $0.1 < $1.1 }
             .map { $0.0 }
+
+        // A batch that left the directory without going through `remove` -- a purged cache directory on tvOS, say --
+        // would otherwise keep its count for the rest of the session.
+        let listed = Set(batches.map { $0.payloadId })
+        eventCounts = eventCounts.filter { listed.contains($0.key) }
 
         // After the files, since anything held in memory was closed by this run and so is newer than whatever a
         // previous run left on the disk.
@@ -320,6 +347,7 @@ final class EventStore: EventStoring {
             inMemoryBatches.remove(at: index)
         } else {
             try? FileManager.default.removeItem(at: url(of: batch.payloadId))
+            eventCounts[batch.payloadId] = nil
         }
 
         bufferLock.lock()
@@ -354,6 +382,7 @@ final class EventStore: EventStoring {
         guard (try? FileManager.default.moveItem(at: currentLogUrl, to: url(of: payloadId))) != nil
         else { return }
 
+        eventCounts[payloadId] = events
         os_log("%s recovered %d event(s) from a previous run", log: logger, type: .debug, typeName(and: #function), events)
     }
 
@@ -362,7 +391,7 @@ final class EventStore: EventStoring {
     /// Requires `ioLock`.
     private func commitHoldingIoLock() {
         bufferLock.lock()
-        guard !isDisabled, bufferedEventCount > 0
+        guard persistEvents, bufferedEventCount > 0
         else {
             // Staged bytes are left where they are. With nowhere durable to put them, memory is better than dropping
             // them: a delivery can still close them into a batch and send them.
@@ -516,7 +545,7 @@ private extension EventStore {
     func disablePersistenceHoldingIoLock() {
         closeDescriptor()
         bufferLock.lock()
-        isDisabled = true
+        persistEvents = false
         bufferLock.unlock()
     }
 

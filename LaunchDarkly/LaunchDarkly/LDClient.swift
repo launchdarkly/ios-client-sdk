@@ -1101,9 +1101,11 @@ extension LDClient {
      on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
      sent, it only triggers a background task to send them immediately.
 
-     It does, however, write before it returns. Recording an event does not on its own make it outlive the process:
-     events are written in runs, so one recorded shortly before the process ends may never have been written at all.
-     This call writes everything recorded so far, and those events then survive whether or not the delivery does.
+     Where `LDConfig.persistEvents` is on, it also writes before it returns. Recording an event does not on its own
+     make it outlive the process: events are written in runs, so one recorded shortly before the process ends may
+     never have been written at all. This call writes everything recorded so far, and those events then survive
+     whether or not the delivery does. Where it is off, events live in memory only and nothing survives the process,
+     whether or not this was called.
 
      That is what makes it worth calling where the process is about to end deliberately. It is not a crash-time
      mechanism — Apple gives the SDK no crash hook, and a trap or a `SIGKILL` takes whatever was recorded since the
