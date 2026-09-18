@@ -41,14 +41,15 @@ public final class ObjcLDConfig: NSObject {
         set { config.eventCapacity = newValue }
     }
 
-    /// Whether recorded events are written to disk, so that they survive the process ending.
+    /// How far the SDK goes to make a recorded event outlive the process that recorded it.
     ///
     /// Without this, an event lives in memory until it is delivered, and a process that dies before the next flush
     /// takes everything recorded since the last one, including the crash an application was reporting when it died.
-    /// The cost of turning it on is a write on the thread that called `track` or `identify`. (Default: false)
-    @objc public var persistEvents: Bool {
-        get { config.persistEvents }
-        set { config.persistEvents = newValue }
+    /// `.immediate` additionally puts the write on the thread that called `track` or `identify`, so there is no window
+    /// in which the event exists only in memory. (Default: `.disabled`)
+    @objc public var eventPersistence: EventPersistence {
+        get { config.eventPersistence }
+        set { config.eventPersistence = newValue }
     }
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)

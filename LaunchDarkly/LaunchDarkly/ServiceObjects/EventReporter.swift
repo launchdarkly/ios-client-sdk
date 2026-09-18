@@ -60,11 +60,14 @@ class NullEventReporter: EventReporting {
 /// untracked flag costs a counter update, and an evaluation of a tracked one costs that plus an array append.
 ///
 /// Where the line falls is between the events an application asked for by name and the ones it did not. Recording a
-/// custom or identify event is a *commit point*: it encodes and writes before returning, because an application
-/// reporting something it chose to report is saying this matters more than the microseconds it costs, and the crash it
-/// describes may be moments away. That commit takes the whole held run with it, so the exposures leading up to the
-/// error go down alongside it. Evaluations get no such promise, and are committed once `pendingCommitThreshold` of
-/// them have accumulated, when a delivery starts, or on `flush`.
+/// custom or identify event is a *commit point*, because an application reporting something it chose to report is
+/// saying this matters more than the microseconds it costs, and the crash it describes may be moments away. A commit
+/// takes the whole held run with it, so the exposures leading up to the error go down alongside it. Evaluations get no
+/// such promise, and are committed once `pendingCommitThreshold` of them have accumulated, when a delivery starts, or
+/// on `flush`.
+///
+/// Whether a commit point runs on the caller's thread is the application's choice, through
+/// `LDConfig.eventPersistence`. Only at `.immediate` can `track` promise the event is on disk by the time it returns.
 class EventReporter: EventReporting {
     /// How many full events may be held unencoded before one of them pays for a commit.
     ///
@@ -211,7 +214,7 @@ class EventReporter: EventReporting {
         }
         return EventStore(directory: directory,
                           capacity: config.eventCapacity,
-                          persistEvents: config.persistEvents,
+                          persistEvents: config.eventPersistence != .disabled,
                           logger: config.logger)
     }
 
@@ -221,7 +224,7 @@ class EventReporter: EventReporting {
         hold(event)
 
         if EventReporter.isCommitPoint(event.kind) {
-            commitRecordedEvents()
+            commitAtCommitPoint()
         }
     }
 
@@ -262,14 +265,38 @@ class EventReporter: EventReporting {
         }
 
         pending.append(event)
-        let needsCommit = pending.count >= EventReporter.pendingCommitThreshold && !isCommitScheduled
-        if needsCommit {
-            isCommitScheduled = true
-        }
+        let needsCommit = pending.count >= EventReporter.pendingCommitThreshold
         pendingLock.unlock()
 
-        guard needsCommit
-        else { return }
+        if needsCommit {
+            scheduleCommit()
+        }
+    }
+
+    /// Commits at a commit point, on the caller's thread or off it as the application asked.
+    ///
+    /// Committing on the caller's thread is what lets `track` promise its event is on disk by the time it returns.
+    /// Scheduling it instead keeps the encode and the write off that thread, and the event is durable a moment later
+    /// rather than immediately — which is nothing at all when persistence is off, since there is no disk for an early
+    /// commit to reach.
+    private func commitAtCommitPoint() {
+        if service.config.eventPersistence == .immediate {
+            commitRecordedEvents()
+        } else {
+            scheduleCommit()
+        }
+    }
+
+    /// Queues a commit unless one is already queued, so a run of recordings asks for one write rather than one each.
+    private func scheduleCommit() {
+        pendingLock.lock()
+        guard !isCommitScheduled
+        else {
+            pendingLock.unlock()
+            return
+        }
+        isCommitScheduled = true
+        pendingLock.unlock()
 
         commitQueue.async { [weak self] in
             guard let self

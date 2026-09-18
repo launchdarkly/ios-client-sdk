@@ -31,10 +31,14 @@ final class EventReporterSpec: QuickSpec {
              onSyncComplete: EventSyncCompleteClosure? = nil,
              store: EventStore? = nil,
              eventCapacity: Int = Event.Kind.allKinds.count,
+             eventPersistence: EventPersistence = .immediate,
              commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.EventReporter.commitQueue")) {
 
             config = LDConfig.stub
             config.eventCapacity = eventCapacity
+            // The durable behaviour is what most of these are about, so it is the default here even though an
+            // application has to ask for it.
+            config.eventPersistence = eventPersistence
             config.eventFlushInterval = eventFlushInterval ?? Constants.eventFlushInterval
 
             context = LDContext.stub()
@@ -774,6 +778,16 @@ extension EventReporterSpec {
                 let onDisk = eventsLeftOnDisk()
                 expect(onDisk.count) == 1
                 expect(onDisk.first?.kindField) == "custom"
+            }
+
+            it("still writes a tracked event when the write is not on the caller's thread") {
+                testContext = TestContext(eventPersistence: .deferred)
+
+                testContext.eventReporter.record(CustomEvent(key: "fatal-error", context: testContext.context, data: ["message": "boom"]))
+
+                // The promise is weaker by exactly one scheduling hop: the event reaches the disk, just not before
+                // recording it returned.
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]))
             }
 
             it("has written the evaluations that came before a tracked event") {

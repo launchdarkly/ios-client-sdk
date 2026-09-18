@@ -7,6 +7,7 @@ final class LDConfigSpec: XCTestCase {
     struct Constants {
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
         fileprivate static let eventCapacity = 10
+        fileprivate static let eventPersistence = EventPersistence.immediate
         fileprivate static let connectionTimeout: TimeInterval = 0.01
         fileprivate static let eventFlushInterval: TimeInterval = 0.01
         fileprivate static let flagPollingInterval: TimeInterval = 0.01
@@ -37,6 +38,7 @@ final class LDConfigSpec: XCTestCase {
          ("event URL", Constants.alternateMockUrl, { c, v in c.eventsUrl = v as! URL }),
          ("stream URL", Constants.alternateMockUrl, { c, v in c.streamUrl = v as! URL }),
          ("event capacity", Constants.eventCapacity, { c, v in c.eventCapacity = v as! Int }),
+         ("event persistence", Constants.eventPersistence, { c, v in c.eventPersistence = v as! EventPersistence }),
          ("connection timeout", Constants.connectionTimeout, { c, v in c.connectionTimeout = v as! TimeInterval }),
          ("event flush interval", Constants.eventFlushInterval, { c, v in c.eventFlushInterval = v as! TimeInterval }),
          ("poll interval", Constants.flagPollingInterval, { c, v in c.flagPollingInterval = v as! TimeInterval }),
@@ -62,6 +64,7 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.eventsUrl, LDConfig.Defaults.eventsUrl)
         XCTAssertEqual(config.streamUrl, LDConfig.Defaults.streamUrl)
         XCTAssertEqual(config.eventCapacity, LDConfig.Defaults.eventCapacity)
+        XCTAssertEqual(config.eventPersistence, LDConfig.Defaults.eventPersistence)
         XCTAssertEqual(config.connectionTimeout, LDConfig.Defaults.connectionTimeout)
         XCTAssertEqual(config.eventFlushInterval, LDConfig.Defaults.eventFlushInterval)
         XCTAssertEqual(config.flagPollingInterval, LDConfig.Defaults.flagPollingInterval)

@@ -19,6 +19,27 @@ public enum LDStreamingMode {
     case polling
 }
 
+/// How far the SDK goes to make a recorded event outlive the process that recorded it.
+///
+/// An event lives in memory until it is delivered, so a process that dies before the next flush takes everything
+/// recorded since the last one — including the crash an application was reporting when it died. Writing events to
+/// disk is what closes that gap: they are delivered on a later launch instead of being lost.
+@objc(LDEventPersistence) public enum EventPersistence: Int {
+    /// Events are kept in memory only, and nothing survives the process ending.
+    case disabled
+    /// Events are written to disk, off the thread that recorded them.
+    ///
+    /// Recording stays as cheap as it is without persistence, and an event becomes durable a moment after it was
+    /// recorded rather than immediately. A process that dies inside that window still loses it.
+    case deferred
+    /// Events are written to disk before `track` and `identify` return.
+    ///
+    /// The write happens on the calling thread, costing tens of microseconds depending on how many evaluations are
+    /// waiting to be encoded alongside it. In exchange there is no window: a process that dies the instant after
+    /// `track` returns still reports that event on the next launch. Evaluating a flag stays in memory regardless.
+    case immediate
+}
+
 /**
  Enable / disable options for Auto Environment Attributes functionality. When enabled, the SDK will automatically
  provide data about the mobile environment where the application is running. This data makes it simpler to target
@@ -195,7 +216,7 @@ public struct LDConfig {
         static let eventCapacity = 1000
 
         /// The default behavior for the SDK is to keep events in memory only.
-        static let persistEvents = false
+        static let eventPersistence = EventPersistence.disabled
 
         /// The default timeout interval for flag requests and event reports. (10 seconds)
         static let connectionTimeout: TimeInterval = 10.0
@@ -320,16 +341,13 @@ public struct LDConfig {
     /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 1000)
     public var eventCapacity: Int = Defaults.eventCapacity
 
-    /// Whether recorded events are written to disk, so that they survive the process ending.
+    /// How far the SDK goes to make a recorded event outlive the process that recorded it.
     ///
-    /// Without this, an event lives in memory until it is delivered, and a process that dies before the next flush
-    /// takes everything recorded since the last one. That includes the crash an application was reporting when it
-    /// died, which is the case this exists for. With it on, events are appended to a log under Application Support
-    /// and delivered on a later run, and a `track` or `identify` is on disk before the call returns.
-    ///
-    /// The cost is a write on the thread that called `track` or `identify`, measured in tens of microseconds.
-    /// Evaluating a flag stays in memory either way. (Default: false)
-    public var persistEvents: Bool = Defaults.persistEvents
+    /// Anything other than `.disabled` appends events to a log under Application Support and delivers them on a later
+    /// run, which is what lets the crash an application was reporting when it died reach LaunchDarkly at all.
+    /// `.immediate` additionally puts the write on the thread that called `track` or `identify`, so there is no window
+    /// in which the event exists only in memory. (Default: `.disabled`)
+    public var eventPersistence: EventPersistence = Defaults.eventPersistence
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
     public var connectionTimeout: TimeInterval = Defaults.connectionTimeout
@@ -560,7 +578,7 @@ extension LDConfig: Equatable {
             && lhs.eventsUrl == rhs.eventsUrl
             && lhs.streamUrl == rhs.streamUrl
             && lhs.eventCapacity == rhs.eventCapacity
-            && lhs.persistEvents == rhs.persistEvents
+            && lhs.eventPersistence == rhs.eventPersistence
             && lhs.sendEvents == rhs.sendEvents
             && lhs.connectionTimeout == rhs.connectionTimeout
             && lhs.eventFlushInterval == rhs.eventFlushInterval
