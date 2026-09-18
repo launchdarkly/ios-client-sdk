@@ -180,7 +180,7 @@ class EventReporter: EventReporting {
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
          store: EventStoring? = nil,
-         encoding: Encoding = .handWritten,
+         encoding: Encoding = .handWrittenCachingContext,
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.commitQueue", qos: .userInitiated)) {
         self.service = service
         self.onSyncComplete = onSyncComplete
@@ -592,9 +592,12 @@ class EventReporter: EventReporting {
 extension EventReporter {
     /// Which encoder recorded events go through.
     ///
-    /// `.handWritten` is the shipping path, matching the Android SDK, which writes the wire form directly rather than
-    /// going through a reflective encoder. `.codable` is kept because it is the oracle the writer is checked against:
-    /// `EventJSONWriterTests` asserts the two produce identical bytes, and where they disagree `.codable` is right.
+    /// `.handWrittenCachingContext` is the shipping path. Writing the wire form directly rather than through a
+    /// reflective encoder is what the Android SDK does, and the context cache on top of it pays off because a run of
+    /// evaluations is nearly always the same context encoded again and again.
+    ///
+    /// `.codable` is kept because it is the oracle the writer is checked against: `EventJSONWriterTests` asserts the
+    /// two produce identical bytes, and where they disagree `.codable` is right.
     enum Encoding {
         case codable
         case handWritten
