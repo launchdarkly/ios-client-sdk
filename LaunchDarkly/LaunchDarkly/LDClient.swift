@@ -263,6 +263,22 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
+        // A backgrounded process is suspended as soon as it goes idle, so a delivery started here reaches the network
+        // only inside an activity assertion. Without one, whatever is queued waits in memory for a foreground the
+        // process may not live to see.
+        BackgroundActivity.run(reason: "LaunchDarkly event delivery") { [weak self] finished in
+            guard let self = self
+            else {
+                finished()
+                return
+            }
+            self.eventReporter.flushReportingOutcome { delivered in
+                if !delivered {
+                    os_log("%s events did not reach LaunchDarkly before suspension", log: self.config.logger, type: .debug, self.typeName(and: #function))
+                }
+                finished()
+            }
+        }
         Thread.performOnMain {
             runMode = .background
         }
@@ -794,32 +810,6 @@ public class LDClient {
         plugin.register(client: self, metadata: environmentMetadata)
     }
 
-    /**
-     Tells the SDK to immediately send any currently queued events to LaunchDarkly.
-
-     There should not normally be a need to call this function. While online, the LDClient automatically reports events
-     on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
-     sent, it only triggers a background task to send events immediately.
-     */
-    public func flush() {
-        LDClient.instancesQueue.sync(flags: .barrier) {
-            LDClient.instances?.forEach { $1.internalFlush() }
-        }
-    }
-
-    private func internalFlush() {
-        eventReporter.flush(completion: nil)
-    }
-
-    private func onEventSyncComplete(result: SynchronizingError?) {
-        if let synchronizingError = result {
-            os_log("%s result: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: synchronizingError))
-            process(synchronizingError, logPrefix: typeName(and: #function))
-        } else {
-            os_log("%s result: success", log: config.logger, type: .debug, typeName(and: #function))
-        }
-    }
-
     @objc private func didCloseEventSource() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
         self.connectionInformation = ConnectionInformation.lastSuccessfulConnectionCheck(connectionInformation: self.connectionInformation)
@@ -1094,6 +1084,96 @@ public class LDClient {
 }
 
 extension LDClient: TypeIdentifying { }
+
+// MARK: - Event delivery
+extension LDClient {
+    private func onEventSyncComplete(result: SynchronizingError?) {
+        if let synchronizingError = result {
+            os_log("%s result: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: synchronizingError))
+            process(synchronizingError, logPrefix: typeName(and: #function))
+        } else {
+            os_log("%s result: success", log: config.logger, type: .debug, typeName(and: #function))
+        }
+    }
+
+    /**
+     Tells the SDK to immediately send any currently queued events to LaunchDarkly.
+
+     There should not normally be a need to call this function. While online, the LDClient automatically reports events
+     on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
+     sent, it only triggers a background task to send events immediately.
+     */
+    public func flush() {
+        LDClient.instancesQueue.sync(flags: .barrier) {
+            LDClient.instances?.forEach { $1.internalFlush() }
+        }
+    }
+
+    /**
+     Sends any currently queued events to LaunchDarkly and waits up to `timeout` seconds to find out whether they got
+     there.
+
+     The timeout bounds how long this call waits, not how long the delivery may run: an in-flight request is left to
+     finish so a payload already on the wire is not abandoned. With more than one environment, the environments share
+     the one budget rather than each getting a fresh copy of it.
+
+     This is for a caller that is about to give up control — `close()`, going into the background, winding the process
+     down. It is not a crash-time mechanism. The SDK has no crash hook of its own on Apple, and this call does not
+     change that.
+
+     Safe to call from the main thread. The wait is not free there: the watchdog terminates an application that fails
+     to return from a lifecycle callback in time. Keep the budget far below 15 seconds.
+
+     - parameter timeout: How long to wait, in seconds.
+     - returns: Whether the pending events left the SDK's hands inside the budget.
+     */
+    @discardableResult
+    public func flushAndWait(timeout: TimeInterval) -> Bool {
+        if timeout > LDClient.longTimeoutInterval {
+            os_log("%s LDClient.flushAndWait was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
+        }
+
+        let clients = LDClient.instancesQueue.sync { Array((LDClient.instances ?? [:]).values) }
+        let deadline = Date().addingTimeInterval(max(0, timeout))
+        var delivered = true
+        for client in clients {
+            let remaining = max(0, deadline.timeIntervalSinceNow)
+            delivered = client.internalFlushAndWait(timeout: remaining) && delivered
+        }
+        return delivered
+    }
+
+    private func internalFlush() {
+        eventReporter.flush(completion: nil)
+    }
+
+    /// Completions that feed this wait must not hop to the main queue: lifecycle callers are already on it, and
+    /// waiting for a main-queue callback from the main thread is a deadlock. They also must not run on
+    /// `EventReporter`'s delivery queue, which is why this queue exists.
+    private static let flushWaitQueue = DispatchQueue(label: "com.launchdarkly.flushWait", qos: .userInitiated)
+
+    private func internalFlushAndWait(timeout: TimeInterval) -> Bool {
+        let timeout = max(0, timeout)
+        let finished = DispatchSemaphore(value: 0)
+        var delivered = false
+        TimeoutExecutor.run(
+            timeout: timeout,
+            queue: LDClient.flushWaitQueue,
+            operation: { done in
+                self.eventReporter.flushReportingOutcome(completion: done)
+            },
+            timeoutValue: false,
+            completion: { result in
+                delivered = result
+                finished.signal()
+            }
+        )
+        // Slightly longer than the caller's budget so the outcome that returns is TimeoutExecutor's, not a race
+        // between this wait and the executor's timer.
+        _ = finished.wait(timeout: .now() + timeout + 0.25)
+        return delivered
+    }
+}
 
 #if DEBUG
 extension LDClient {

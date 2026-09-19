@@ -1284,6 +1284,15 @@ final class LDClientSpec: QuickSpec {
                                 expect(testContext.eventReporterMock.isOnline) == true
                                 expect(testContext.flagSynchronizerMock.isOnline) == false
                             }
+                            it("tries to deliver what it has before the process is suspended") {
+                                let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
+                                testContext.start()
+                                NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
+
+                                // Backgrounding is the last moment the SDK is told about before the OS may suspend
+                                // or kill the process, so it spends it trying to get the events out.
+                                expect(testContext.eventReporterMock.flushReportingOutcomeCallCount).toEventually(equal(1))
+                            }
                             it("background updates enabled") {
                                 let testContext = TestContext(startOnline: true)
                                 testContext.start()
@@ -1552,6 +1561,42 @@ final class LDClientSpec: QuickSpec {
                 testContext.start()
                 testContext.subject.flush()
                 expect(testContext.eventReporterMock.flushCallCount) == 1
+            }
+        }
+
+        describe("flushAndWait") {
+            /// Answers the reporter's completion from inside the call, which is the only chance a test gets: the
+            /// caller is blocked on it from the moment it returns.
+            func answer(_ mock: EventReportingMock, with delivered: Bool) {
+                mock.flushReportingOutcomeCallback = { [weak mock] in
+                    mock?.flushReportingOutcomeReceivedCompletion?(delivered)
+                }
+            }
+
+            it("reports true when delivery succeeds") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventReporterMock, with: true)
+
+                expect(testContext.subject.flushAndWait(timeout: 1.0)) == true
+                expect(testContext.eventReporterMock.flushReportingOutcomeCallCount) == 1
+            }
+
+            it("reports false when delivery cannot finish") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventReporterMock, with: false)
+
+                expect(testContext.subject.flushAndWait(timeout: 1.0)) == false
+            }
+
+            it("reports false when the budget expires first") {
+                let testContext = TestContext()
+                testContext.start()
+                // Never answers, so the only thing that can end the wait is the timeout.
+                testContext.eventReporterMock.flushReportingOutcomeCallback = nil
+
+                expect(testContext.subject.flushAndWait(timeout: 0.05)) == false
             }
         }
     }

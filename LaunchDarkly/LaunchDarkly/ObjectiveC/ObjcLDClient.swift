@@ -539,6 +539,20 @@ public final class ObjcLDClient: NSObject {
         ldClient.flush()
     }
 
+    /**
+     Sends any currently queued events and waits up to `timeout` for the delivery to finish.
+
+     Returns `YES` if the events were delivered, or there were none to deliver. Returns `NO` if the timeout
+     expired first, or the SDK is offline, closed, or otherwise unable to deliver them.
+
+     This is not a crash-time mechanism. Keep the budget far below 15 seconds when calling from the main thread.
+
+     - parameter timeout: How long to wait, in seconds.
+     */
+    @objc public func flushAndWait(timeout: TimeInterval) -> Bool {
+        ldClient.flushAndWait(timeout: timeout)
+    }
+
    /**
      Starts the LDClient using the passed in `config` & `context`. Call this before requesting feature flag values. The LDClient will not go online until you call this method.
      Starting the LDClient means setting the `config` & `context`, setting the client online if `config.startOnline` is true (the default setting), and starting event recording. The client app must start the LDClient before it will report feature flag values. If a client does not call `start`, no methods will work.

@@ -2,6 +2,8 @@ import Foundation
 import OSLog
 
 typealias EventSyncCompleteClosure = ((SynchronizingError?) -> Void)
+/// Reports whether the events a flush covered left the SDK's hands.
+typealias FlushOutcomeClosure = (Bool) -> Void
 // sourcery: autoMockable
 protocol EventReporting {
     // sourcery: defaultMockValue = false
@@ -13,6 +15,12 @@ protocol EventReporting {
     // swiftlint:disable:next function_parameter_count
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)
     func flush(completion: CompletionClosure?)
+
+    /// Same as `flush`, and reports whether the pending events left the SDK's hands.
+    ///
+    /// `true` if they were delivered, refused for good, or there were none. `false` if the SDK is offline or a
+    /// retryable failure means they are still waiting to be sent.
+    func flushReportingOutcome(completion: @escaping FlushOutcomeClosure)
 }
 
 class NullEventReporter: EventReporting {
@@ -27,6 +35,10 @@ class NullEventReporter: EventReporting {
 
     func flush(completion: CompletionClosure?) {
         completion?()
+    }
+
+    func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
+        completion(true)
     }
 }
 
@@ -119,6 +131,10 @@ class EventReporter: EventReporting {
     }
 
     func flush(completion: CompletionClosure?) {
+        flushReportingOutcome { _ in completion?() }
+    }
+
+    func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
         eventQueue.async {
             self.reportEvents(completion: completion)
         }
@@ -128,12 +144,12 @@ class EventReporter: EventReporting {
         reportEvents(completion: nil)
     }
 
-    private func reportEvents(completion: CompletionClosure?) {
+    private func reportEvents(completion: FlushOutcomeClosure?) {
         guard isOnline
         else {
             os_log("%s aborted. EventReporter is offline", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(.isOffline)
-            completion?()
+            completion?(false)
             return
         }
 
@@ -150,7 +166,7 @@ class EventReporter: EventReporting {
         else {
             os_log("%s aborted. Event store is empty", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(nil)
-            completion?()
+            completion?(true)
             return
         }
 
@@ -166,27 +182,40 @@ class EventReporter: EventReporting {
         }
     }
 
-    private func publish(_ events: [Event], _ payloadId: String, _ completion: CompletionClosure?) {
+    private func publish(_ events: [Event], _ payloadId: String, _ completion: FlushOutcomeClosure?) {
         guard let eventData = encode(events)
         else {
             os_log("%s Failed to serialize event(s) for publication: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: events))
-            completion?()
+            // Nothing is left waiting to be sent: no later attempt would produce bytes this one could not.
+            completion?(true)
             return
         }
         self.service.publishEventData(eventData, payloadId) { response in
-            let shouldRetry = self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: false)
-            if shouldRetry {
+            switch self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: false) {
+            case .settled:
+                completion?(true)
+            case .dropped:
+                completion?(false)
+            case .retryable:
                 os_log("%s Retrying event post after delay.", log: self.service.config.logger, type: .debug, self.typeName(and: #function))
                 DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.0) {
                     self.service.publishEventData(eventData, payloadId) { response in
-                        _ = self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: true)
-                        completion?()
+                        let outcome = self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: true)
+                        completion?(outcome == .settled)
                     }
                 }
-            } else {
-                completion?()
             }
         }
+    }
+
+    /// What a delivery attempt's response means for the events it carried.
+    private enum DeliveryOutcome {
+        /// Accepted, or refused in a way no further attempt would get past. Either way they are off our hands.
+        case settled
+        /// A failure another attempt might get past.
+        case retryable
+        /// A failure with no attempt left to make.
+        case dropped
     }
 
     /// Encodes a run of events as the array the events endpoint takes.
@@ -212,7 +241,7 @@ class EventReporter: EventReporting {
         return payload
     }
 
-    private func processEventResponse(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> Bool {
+    private func processEventResponse(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> DeliveryOutcome {
         if error == nil && (200..<300).contains(response?.statusCode ?? 0) {
             let serverTime = response?.headerDate ?? self.lastEventResponseDate
             if serverTime > self.lastEventResponseDate {
@@ -221,13 +250,13 @@ class EventReporter: EventReporting {
 
             os_log("%s Completed sending %d event(s)", log: service.config.logger, type: .debug, typeName(and: #function), sentEvents)
             self.reportSyncComplete(nil)
-            return false
+            return .settled
         }
 
         if let statusCode = response?.statusCode, (400..<500).contains(statusCode) && ![400, 408, 429].contains(statusCode) {
             os_log("%s dropping events due to non-retriable response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: response))
             self.reportSyncComplete(.response(response))
-            return false
+            return .settled
         }
 
         os_log("%s Sending events failed with error: %s response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: response))
@@ -239,10 +268,10 @@ class EventReporter: EventReporting {
             } else {
                 reportSyncComplete(.response(response))
             }
-            return false
+            return .dropped
         }
 
-        return true
+        return .retryable
     }
 
     private func reportSyncComplete(_ result: SynchronizingError?) {
