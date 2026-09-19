@@ -51,10 +51,27 @@ class EventReporter: EventReporting {
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
-    init(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) {
+    /// The reflective encoder, built once and then only read.
+    ///
+    /// `JSONEncoder` is `@unchecked Sendable` and constructs a fresh internal encoder for each `encode` call, so one
+    /// instance can be shared — but only while nothing mutates it, which is why `userInfo` is set here rather than per
+    /// call. What it holds cannot go stale: `config` is a `let` on the service, so the privacy settings the encoding
+    /// depends on are fixed for as long as this reporter exists.
+    private let encoder: JSONEncoder
+
+    let encoding: Encoding
+    private let handWrittenEncoder: EventJSONWriter
+
+    init(service: DarklyServiceProvider,
+         onSyncComplete: EventSyncCompleteClosure?,
+         encoding: Encoding = .handWrittenCachingContext) {
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.lastEventResponseDate = Date()
+        self.encoding = encoding
+        self.encoder = EventReporter.makeEncoder(config: service.config)
+        self.handWrittenEncoder = EventJSONWriter(config: service.config,
+                                                  cachingContexts: encoding == .handWrittenCachingContext)
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
     }
 
@@ -150,18 +167,7 @@ class EventReporter: EventReporting {
     }
 
     private func publish(_ events: [Event], _ payloadId: String, _ completion: CompletionClosure?) {
-        let encodingConfig: [CodingUserInfoKey: Any] =
-            [
-                LDContext.UserInfoKeys.allAttributesPrivate: service.config.allContextAttributesPrivate,
-                LDContext.UserInfoKeys.globalPrivateAttributes: service.config.privateContextAttributes.map { $0 }
-            ]
-        let encoder = JSONEncoder()
-        encoder.userInfo = encodingConfig
-        encoder.dateEncodingStrategy = .custom { date, encoder in
-            var container = encoder.singleValueContainer()
-            try container.encode(date.millisSince1970)
-        }
-        guard let eventData = try? encoder.encode(events)
+        guard let eventData = encode(events)
         else {
             os_log("%s Failed to serialize event(s) for publication: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: events))
             completion?()
@@ -181,6 +187,29 @@ class EventReporter: EventReporting {
                 completion?()
             }
         }
+    }
+
+    /// Encodes a run of events as the array the events endpoint takes.
+    ///
+    /// One `JSONWriter` covers the whole run rather than one per event, so its byte buffer and the capacity it has
+    /// grown into are reused. That, and the context cache, is most of what the hand-written path saves over the
+    /// reflective one — a run of evaluations is nearly always the same context encoded again and again.
+    private func encode(_ events: [Event]) -> Data? {
+        guard encoding != .codable
+        else { return try? encoder.encode(events) }
+
+        let writer = JSONWriter()
+        var payload = Data([UInt8(ascii: "[")])
+        for (index, event) in events.enumerated() {
+            guard let encoded = handWrittenEncoder.encode(event, into: writer)
+            else { return nil }
+            if index > 0 {
+                payload.append(UInt8(ascii: ","))
+            }
+            payload.append(encoded)
+        }
+        payload.append(UInt8(ascii: "]"))
+        return payload
     }
 
     private func processEventResponse(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> Bool {
@@ -223,6 +252,36 @@ class EventReporter: EventReporting {
         DispatchQueue.main.async {
             onSyncComplete(result)
         }
+    }
+}
+
+extension EventReporter {
+    /// Which encoder recorded events go through.
+    ///
+    /// `.handWrittenCachingContext` is the shipping path. Writing the wire form directly rather than through a
+    /// reflective encoder is what the Android SDK does, and the context cache on top of it pays off because a run of
+    /// evaluations is nearly always the same context encoded again and again.
+    ///
+    /// `.codable` is kept because it is the oracle the writer is checked against: `EventJSONWriterTests` asserts the
+    /// two produce identical bytes, and where they disagree `.codable` is right.
+    enum Encoding {
+        case codable
+        case handWritten
+        /// The hand-written writer, reusing the last context's encoded bytes when the context has not changed.
+        case handWrittenCachingContext
+    }
+
+    fileprivate static func makeEncoder(config: LDConfig) -> JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.userInfo = [
+            LDContext.UserInfoKeys.allAttributesPrivate: config.allContextAttributesPrivate,
+            LDContext.UserInfoKeys.globalPrivateAttributes: config.privateContextAttributes.map { $0 }
+        ]
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(date.millisSince1970)
+        }
+        return encoder
     }
 }
 

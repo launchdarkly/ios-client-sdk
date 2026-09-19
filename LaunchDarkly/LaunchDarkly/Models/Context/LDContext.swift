@@ -48,15 +48,20 @@ public struct LDContext: Encodable, Equatable {
         self.canonicalizedKey = canonicalizedKey
     }
 
-    internal init(copyFrom: LDContext) {
-        kind = copyFrom.kind
-        contexts = copyFrom.contexts.map { c in LDContext(copyFrom: c) }
-        name = copyFrom.name
-        anonymous = copyFrom.anonymous
-        privateAttributes = copyFrom.privateAttributes
-        key = copyFrom.key
-        canonicalizedKey = copyFrom.canonicalizedKey
-        attributes = copyFrom.attributes
+    /// A copy of this context that redacts anonymous attributes when it is encoded.
+    ///
+    /// `LDContext` is a value type, so this is an ordinary struct copy: the attribute dictionary and the sub-context
+    /// array are shared until one side mutates, and nothing is rebuilt. **The sharing matters for more than the
+    /// allocation it saves.** `Dictionary` and `Array` equality compare buffer identity before contents, so two
+    /// contexts related by this copy compare equal in single-digit nanoseconds instead of by walking every attribute --
+    /// which is what makes a context-keyed cache affordable.
+    ///
+    /// Only the top-level flag is ever read. `encode(to:)` passes the parent's value down to every sub-context and
+    /// ignores whatever theirs holds, so the sub-contexts do not need rewriting here.
+    internal func redactingAnonymousAttributes() -> LDContext {
+        var copy = self
+        copy.redactAnonymousAttributes = true
+        return copy
     }
 
     init() {
@@ -608,6 +613,32 @@ extension LDContext: Decodable {
 }
 
 extension LDContext: TypeIdentifying {}
+
+/// The seam `LDContextJSONWriter` reaches through.
+///
+/// Redaction is the part of encoding worth measuring, so the hand-written writer reuses `maybeRedact` and the
+/// private-attribute lookup it walks rather than reimplementing them: the two encoders must differ in how bytes are
+/// produced, not in what gets redacted. Those, and the three stored properties below, are file-private to `LDContext`,
+/// and this is the whole of what the writer needs from them.
+extension LDContext {
+    internal var writableKey: String? { key }
+    internal var isAnonymous: Bool { anonymous }
+
+    internal static func privateAttributeLookup(for references: [Reference]) -> SharedDictionary<String, PrivateAttributeLookupNode> {
+        makePrivateAttributeLookupData(references: references)
+    }
+
+    internal func redactionDecision(parentPath: [String],
+                                    value: LDValue,
+                                    redactedAttributes: inout [String],
+                                    globalPrivateAttributes: SharedDictionary<String, PrivateAttributeLookupNode>) -> (Bool, Bool) {
+        LDContext.maybeRedact(context: self,
+                              parentPath: parentPath,
+                              value: value,
+                              redactedAttributes: &redactedAttributes,
+                              globalPrivateAttributes: globalPrivateAttributes)
+    }
+}
 
 enum LDContextBuilderKey {
     case generateKey
