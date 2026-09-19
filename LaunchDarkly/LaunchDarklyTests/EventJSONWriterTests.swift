@@ -328,8 +328,11 @@ final class EventJSONWriterTests: XCTestCase {
         let partsFlagged = try multiContext(redactingParts: true)
 
         for (name, writer) in encoders() {
+            // Pinned, because an event stamps its creation date when it is built: two of them either side of a
+            // millisecond boundary differ in a field this has nothing to say about.
+            let creationDate = Date()
             func encoded(_ context: LDContext) throws -> String {
-                try canonical(try XCTUnwrap(writer(IdentifyEvent(context: context))))
+                try canonical(try XCTUnwrap(writer(IdentifyEvent(context: context, creationDate: creationDate))))
             }
 
             // A flag set on the sub-contexts is not read, so it makes no difference.
