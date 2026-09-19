@@ -384,30 +384,27 @@ final class EventJSONWriterTests: XCTestCase {
         config.privateContextAttributes = [Reference("email")]
 
         for (name, event) in events(context: context) {
-            let expected = try XCTUnwrap(published(event, config: config, encoding: .codable),
-                                         "nothing published for \(name)")
-            let actual = try XCTUnwrap(published(event, config: config, encoding: .handWritten),
-                                       "nothing published for \(name)")
+            let codableStore = EventStore.temporary(capacity: .max)
+            defer { codableStore.deleteEverything() }
+            let handWrittenStore = EventStore.temporary(capacity: .max)
+            defer { handWrittenStore.deleteEverything() }
+
+            let service = DarklyServiceMock()
+            service.config = config
+
+            let codableReporter = EventReporter(service: service, onSyncComplete: nil, store: codableStore, encoding: .codable)
+            let handWrittenReporter = EventReporter(service: service, onSyncComplete: nil, store: handWrittenStore, encoding: .handWritten)
+
+            codableReporter.record(event)
+            handWrittenReporter.record(event)
+            codableReporter.commitRecordedEvents()
+            handWrittenReporter.commitRecordedEvents()
+
+            let expected = try XCTUnwrap(codableStore.pendingEventPayloads().first, "nothing recorded for \(name)")
+            let actual = try XCTUnwrap(handWrittenStore.pendingEventPayloads().first, "nothing recorded for \(name)")
 
             XCTAssertEqual(try canonical(expected), try canonical(actual), "mismatch through the reporter for \(name)")
         }
-    }
-
-    /// Records one event and returns the payload the reporter handed to the service.
-    private func published(_ event: Event, config: LDConfig, encoding: EventReporter.Encoding) -> Data? {
-        let service = DarklyServiceMock()
-        service.config = config
-        service.stubEventResponse(success: true)
-
-        let reporter = EventReporter(service: service, onSyncComplete: nil, encoding: encoding)
-        reporter.isOnline = true
-        reporter.record(event)
-
-        let published = expectation(description: "published")
-        reporter.flush { published.fulfill() }
-        wait(for: [published], timeout: 5)
-
-        return service.publishedEventData
     }
 
     // MARK: Helpers

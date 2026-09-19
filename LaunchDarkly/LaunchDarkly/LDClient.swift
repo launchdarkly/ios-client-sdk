@@ -263,9 +263,12 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
-        // A backgrounded process is suspended as soon as it goes idle, so a delivery started here reaches the network
-        // only inside an activity assertion. Without one, whatever is queued waits in memory for a foreground the
-        // process may not live to see.
+        // A backgrounded application is one the OS may kill without warning, so whatever it has recorded is made
+        // durable now rather than waiting for the next report interval to come around.
+        eventReporter.commitRecordedEvents()
+        // The commit above makes the events survivable; this tries to make surviving unnecessary. A backgrounded
+        // process is suspended as soon as it goes idle, so a delivery started here reaches the network only inside an
+        // activity assertion. If it does not get out, the bytes are on disk and the next launch sends them.
         BackgroundActivity.run(reason: "LaunchDarkly event delivery") { [weak self] finished in
             guard let self = self
             else {
@@ -274,7 +277,7 @@ public class LDClient {
             }
             self.eventReporter.flushReportingOutcome { delivered in
                 if !delivered {
-                    os_log("%s events did not reach LaunchDarkly before suspension", log: self.config.logger, type: .debug, self.typeName(and: #function))
+                    os_log("%s events did not reach LaunchDarkly before suspension; they remain on disk", log: self.config.logger, type: .debug, self.typeName(and: #function))
                 }
                 finished()
             }
@@ -1097,11 +1100,21 @@ extension LDClient {
     }
 
     /**
-     Tells the SDK to immediately send any currently queued events to LaunchDarkly.
+     Writes down all pending events and sends them to LaunchDarkly.
 
      There should not normally be a need to call this function. While online, the LDClient automatically reports events
      on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
-     sent, it only triggers a background task to send events immediately.
+     sent, it only triggers a background task to send them immediately.
+
+     Where `LDConfig.eventPersistence` is on, it also writes before it returns. Recording an event does not on its own
+     make it outlive the process: events are written in runs, so one recorded shortly before the process ends may
+     never have been written at all. This call writes everything recorded so far, and those events then survive
+     whether or not the delivery does. Where it is off, events live in memory only and nothing survives the process,
+     whether or not this was called.
+
+     That is what makes it worth calling where the process is about to end deliberately. It is not a crash-time
+     mechanism — Apple gives the SDK no crash hook, and a trap or a `SIGKILL` takes whatever was recorded since the
+     last write. Those events are not lost so much as late: they reach LaunchDarkly on the next launch.
      */
     public func flush() {
         LDClient.instancesQueue.sync(flags: .barrier) {

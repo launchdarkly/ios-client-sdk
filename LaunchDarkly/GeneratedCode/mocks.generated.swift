@@ -230,6 +230,13 @@ final class EventReportingMock: EventReporting {
         flushReportingOutcomeReceivedCompletion = completion
         try! flushReportingOutcomeCallback?()
     }
+
+    var commitRecordedEventsCallCount = 0
+    var commitRecordedEventsCallback: (() throws -> Void)?
+    func commitRecordedEvents() {
+        commitRecordedEventsCallCount += 1
+        try! commitRecordedEventsCallback?()
+    }
 }
 
 // MARK: - FeatureFlagCachingMock

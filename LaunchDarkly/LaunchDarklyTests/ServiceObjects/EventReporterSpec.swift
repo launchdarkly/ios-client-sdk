@@ -14,6 +14,7 @@ final class EventReporterSpec: QuickSpec {
         var config: LDConfig!
         var context: LDContext!
         var serviceMock: DarklyServiceMock!
+        var store: EventStore!
         var events: [Event] = []
         var lastEventResponseDate: Date
         var eventStubResponseDate: Date?
@@ -27,10 +28,17 @@ final class EventReporterSpec: QuickSpec {
              stubResponseOnly: Bool = false,
              stubResponseErrorOnly: Bool = false,
              eventStubResponseDate: Date? = nil,
-             onSyncComplete: EventSyncCompleteClosure? = nil) {
+             onSyncComplete: EventSyncCompleteClosure? = nil,
+             store: EventStore? = nil,
+             eventCapacity: Int = Event.Kind.allKinds.count,
+             eventPersistence: EventPersistence = .immediate,
+             commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.EventReporter.commitQueue")) {
 
             config = LDConfig.stub
-            config.eventCapacity = Event.Kind.allKinds.count
+            config.eventCapacity = eventCapacity
+            // The durable behaviour is what most of these are about, so it is the default here even though an
+            // application has to ask for it.
+            config.eventPersistence = eventPersistence
             config.eventFlushInterval = eventFlushInterval ?? Constants.eventFlushInterval
 
             context = LDContext.stub()
@@ -44,7 +52,9 @@ final class EventReporterSpec: QuickSpec {
             serviceMock.diagnosticCache = diagnosticCache
 
             self.lastEventResponseDate = lastEventResponseDate.adjustedForHttpUrlHeaderUse
-            eventReporter = EventReporter(service: serviceMock, onSyncComplete: onSyncComplete)
+            self.store = store ?? EventStore.temporary(capacity: config.eventCapacity)
+            eventReporter = EventReporter(service: serviceMock, onSyncComplete: onSyncComplete,
+                                          store: self.store, commitQueue: commitQueue)
             (0..<eventCount).forEach {
                 let event = Event.stub(Event.eventKind(for: $0), with: context!)
                 events.append(event)
@@ -60,6 +70,22 @@ final class EventReporterSpec: QuickSpec {
                 eventReporter.record(event)
             }
         }
+
+        /// Commits everything accepted so far and returns its wire representation.
+        func committedEvents() -> [LDValue] {
+            eventReporter.commitRecordedEvents()
+            return store.pendingEventPayloads().compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
+        }
+
+        /// The events recorded so far, in the JSON they encode to, for comparison with `committedEvents()`.
+        func recordedEventsAsJSON() -> [LDValue] {
+            events.compactMap { encodeToLDValue($0) }
+        }
+
+        func cleanUp() {
+            eventReporter.isOnline = false
+            store.deleteEverything()
+        }
     }
 
     override func spec() {
@@ -69,6 +95,8 @@ final class EventReporterSpec: QuickSpec {
         testRecordFlagEvaluationEvents()
         reportEventsSpec()
         reportTimerSpec()
+        durabilitySpec()
+        flushReportingOutcomeSpec()
     }
 
     private func initSpec() {
@@ -76,7 +104,7 @@ final class EventReporterSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-                testContext.eventReporter = EventReporter(service: testContext.serviceMock) { _ in }
+                testContext.eventReporter = EventReporter(service: testContext.serviceMock, onSyncComplete: { _ in }, store: testContext.store)
             }
             it("starts offline without reporting events") {
                 expect(testContext.eventReporter.service) === testContext.serviceMock
@@ -94,7 +122,7 @@ final class EventReporterSpec: QuickSpec {
                 testContext = TestContext()
             }
             afterEach {
-                testContext.eventReporter.isOnline = false
+                testContext.cleanUp()
             }
             context("online to offline") {
                 beforeEach {
@@ -157,7 +185,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                    expect(testContext.eventReporter.eventStore) == testContext.events
+                    expect(testContext.committedEvents()) == testContext.recordedEventsAsJSON()
                 }
             }
         }
@@ -175,7 +203,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                    expect(testContext.eventReporter.eventStore) == testContext.events
+                    expect(testContext.committedEvents()) == testContext.recordedEventsAsJSON()
                 }
                 it("does not record a dropped event to diagnosticCache") {
                     expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 0
@@ -193,7 +221,7 @@ final class EventReporterSpec: QuickSpec {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                    expect(testContext.eventReporter.eventStore) == testContext.events
+                    expect(testContext.committedEvents()) == testContext.recordedEventsAsJSON()
                 }
                 it("records a dropped event to diagnosticCache") {
                     expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 1
@@ -210,7 +238,7 @@ final class EventReporterSpec: QuickSpec {
                 eventStubResponseDate = Date().addingTimeInterval(-TimeInterval(3))
             }
             afterEach {
-                testContext.eventReporter.isOnline = false
+                testContext.cleanUp()
             }
             let erOnline = {
                 expect(testContext.eventReporter.isOnline) == true
@@ -252,7 +280,7 @@ final class EventReporterSpec: QuickSpec {
                             }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
-                            expect(testContext.eventReporter.eventStore.isEmpty) == true
+                            expect(testContext.store.pendingEventCount) == 0
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
@@ -277,7 +305,7 @@ final class EventReporterSpec: QuickSpec {
                             expect(published) == encodeToLDValue(testContext.events)
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == testContext.events.count
-                            expect(testContext.eventReporter.eventStore.isEmpty) == true
+                            expect(testContext.store.pendingEventCount) == 0
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
@@ -315,7 +343,7 @@ final class EventReporterSpec: QuickSpec {
                             }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == 1
-                            expect(testContext.eventReporter.eventStore.isEmpty) == true
+                            expect(testContext.store.pendingEventCount) == 0
                             expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
                             expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
@@ -336,7 +364,7 @@ final class EventReporterSpec: QuickSpec {
                             erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 0
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
-                            expect(testContext.eventReporter.eventStore.isEmpty) == true
+                            expect(testContext.store.pendingEventCount) == 0
                             expect(testContext.eventReporter.lastEventResponseDate) == Date.distantPast
                             expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
@@ -365,10 +393,11 @@ final class EventReporterSpec: QuickSpec {
                                 testContext.eventReporter.flush(completion: nil)
                             }
                         }
-                        it("drops events after the failure") {
+                        it("keeps the events to retry after the failure") {
                             erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 2 // 1 retry attempt
-                            expect(testContext.eventReporter.eventStore.isEmpty) == true
+                            // The events are not lost by a failed delivery; they stay in the log, summary included.
+                            expect(testContext.store.pendingEventCount) == testContext.events.count + 1
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             valueIsArray(published) { valueArray in
                                 expect(valueArray.count) == testContext.events.count + 1
@@ -410,10 +439,11 @@ final class EventReporterSpec: QuickSpec {
                                 testContext.eventReporter.flush(completion: nil)
                             }
                         }
-                        it("drops events after the failure") {
+                        it("keeps the events to retry after the failure") {
                             erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 2 // 1 retry attempt
-                            expect(testContext.eventReporter.eventStore.isEmpty) == true
+                            // The events are not lost by a failed delivery; they stay in the log, summary included.
+                            expect(testContext.store.pendingEventCount) == testContext.events.count + 1
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             valueIsArray(published) { valueArray in
                                 expect(valueArray.count) == testContext.events.count + 1
@@ -458,10 +488,11 @@ final class EventReporterSpec: QuickSpec {
                                 testContext.eventReporter.flush(completion: nil)
                             }
                         }
-                        it("drops events events after the failure") {
+                        it("keeps the events to retry after the failure") {
                             erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 2 // 1 retry attempt
-                            expect(testContext.eventReporter.eventStore.isEmpty) == true
+                            // The events are not lost by a failed delivery; they stay in the log, summary included.
+                            expect(testContext.store.pendingEventCount) == testContext.events.count + 1
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             valueIsArray(published) { valueArray in
                                 expect(valueArray.count) == testContext.events.count + 1
@@ -504,14 +535,19 @@ final class EventReporterSpec: QuickSpec {
                         testContext.eventReporter.flush(completion: nil)
                     }
                 }
-                it("doesn't report events") {
+                it("doesn't report events, but persists them") {
                     expect(testContext.eventReporter.isOnline) == false
                     expect(testContext.eventReporter.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
-                    expect(testContext.eventReporter.eventStore) == testContext.events
                     expect(testContext.eventReporter.lastEventResponseDate) == Date.distantPast
-                    expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == true
+
+                    // Being offline delays delivery, not durability: a flush is a commit point, so the recorded events and
+                    // the evaluations counted so far are on disk even though nothing can be sent.
+                    let pending = testContext.committedEvents()
+                    expect(pending.dropLast().map { $0 }) == testContext.recordedEventsAsJSON()
+                    expect(pending.last?.kindField) == "summary"
+                    expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
                     guard case .isOffline = testContext.syncResult
                     else {
                         fail("Expected error .isOffline result for event send")
@@ -525,11 +561,19 @@ final class EventReporterSpec: QuickSpec {
     func testRecordFlagEvaluationEvents() {
         let context = LDContext.stub()
         let serviceMock = DarklyServiceMock()
+
+        /// A reporter writing to a store of its own, and that store, so a test can read back what was recorded.
+        func makeReporter() -> (EventReporter, EventStore) {
+            let store = EventStore.temporary()
+            return (EventReporter(service: serviceMock, onSyncComplete: nil, store: store), store)
+        }
+
         describe("recordFlagEvaluationEvents") {
             it("unknown flag") {
-                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                let (reporter, store) = makeReporter()
+                defer { store.deleteEverything() }
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: nil, context: context, includeReason: true)
-                expect(reporter.eventStore.count) == 0
+                expect(recordedEvents(store)).to(beEmpty())
                 expect(reporter.contextSummarizer.hasLoggedRequests) == true
                 let summaries = reporter.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
@@ -540,10 +584,11 @@ final class EventReporterSpec: QuickSpec {
                 expect(tracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: nil, version: nil)]?.value) == "a"
             }
             it("untracked flag") {
-                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                let (reporter, store) = makeReporter()
+                defer { store.deleteEverything() }
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: true)
-                expect(reporter.eventStore.count) == 0
+                expect(recordedEvents(store)).to(beEmpty())
                 expect(reporter.contextSummarizer.hasLoggedRequests) == true
                 let summaries = reporter.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
@@ -554,17 +599,13 @@ final class EventReporterSpec: QuickSpec {
                 expect(tracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.value) == "a"
             }
             it("tracked flag") {
-                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                let (reporter, store) = makeReporter()
+                defer { store.deleteEverything() }
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: true)
-                expect(reporter.eventStore.count) == 1
-                expect((reporter.eventStore[0] as? FeatureEvent)?.kind) == .feature
-                expect((reporter.eventStore[0] as? FeatureEvent)?.key) == "flag-key"
-                expect((reporter.eventStore[0] as? FeatureEvent)?.context.contextHash()) == context.contextHash()
-                expect((reporter.eventStore[0] as? FeatureEvent)?.value) == "a"
-                expect((reporter.eventStore[0] as? FeatureEvent)?.defaultValue) == "b"
-                expect((reporter.eventStore[0] as? FeatureEvent)?.featureFlag) == flag
-                expect((reporter.eventStore[0] as? FeatureEvent)?.includeReason) == true
+                let expected = FeatureEvent(key: "flag-key", context: context, value: "a", defaultValue: "b", featureFlag: flag, includeReason: true, isDebug: false)
+                expect(expectedEvents(reporter.pendingEventsForTesting)) == expectedEvents([expected])
+                expect(recordedEvents(store)).to(beEmpty())
                 expect(reporter.contextSummarizer.hasLoggedRequests) == true
                 let summaries = reporter.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
@@ -575,10 +616,11 @@ final class EventReporterSpec: QuickSpec {
                 expect(tracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.value) == "a"
             }
             it("debug until past date") {
-                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                let (reporter, store) = makeReporter()
+                defer { store.deleteEverything() }
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(-1.0))
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: true)
-                expect(reporter.eventStore.count) == 0
+                expect(recordedEvents(store)).to(beEmpty())
                 expect(reporter.contextSummarizer.hasLoggedRequests) == true
                 let summaries = reporter.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
@@ -589,17 +631,13 @@ final class EventReporterSpec: QuickSpec {
                 expect(tracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.value) == "a"
             }
             it("debug until future date") {
-                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                let (reporter, store) = makeReporter()
+                defer { store.deleteEverything() }
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(3.0))
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
-                expect(reporter.eventStore.count) == 1
-                expect((reporter.eventStore[0] as? FeatureEvent)?.kind) == .debug
-                expect((reporter.eventStore[0] as? FeatureEvent)?.key) == "flag-key"
-                expect((reporter.eventStore[0] as? FeatureEvent)?.context) == context
-                expect((reporter.eventStore[0] as? FeatureEvent)?.value) == "a"
-                expect((reporter.eventStore[0] as? FeatureEvent)?.defaultValue) == "b"
-                expect((reporter.eventStore[0] as? FeatureEvent)?.featureFlag) == flag
-                expect((reporter.eventStore[0] as? FeatureEvent)?.includeReason) == false
+                let expected = FeatureEvent(key: "flag-key", context: context, value: "a", defaultValue: "b", featureFlag: flag, includeReason: false, isDebug: true)
+                expect(expectedEvents(reporter.pendingEventsForTesting)) == expectedEvents([expected])
+                expect(recordedEvents(store)).to(beEmpty())
                 expect(reporter.contextSummarizer.hasLoggedRequests) == true
                 let summaries = reporter.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
@@ -610,11 +648,12 @@ final class EventReporterSpec: QuickSpec {
                 expect(tracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.value) == "a"
             }
             it("debug until future date earlier than service date") {
-                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                let (reporter, store) = makeReporter()
+                defer { store.deleteEverything() }
                 reporter.setLastEventResponseDate(Date().addingTimeInterval(10.0))
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(3.0))
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: true)
-                expect(reporter.eventStore.count) == 0
+                expect(recordedEvents(store)).to(beEmpty())
                 expect(reporter.contextSummarizer.hasLoggedRequests) == true
                 let summaries = reporter.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
@@ -625,27 +664,15 @@ final class EventReporterSpec: QuickSpec {
                 expect(tracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.value) == "a"
             }
             it("tracked flag and debug date in future") {
-                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                let (reporter, store) = makeReporter()
+                defer { store.deleteEverything() }
                 reporter.setLastEventResponseDate(Date().addingTimeInterval(-3.0))
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: true, debugEventsUntilDate: Date())
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
-                expect(reporter.eventStore.count) == 2
-                let featureEvent = reporter.eventStore.first { $0.kind == .feature } as? FeatureEvent
-                let debugEvent = reporter.eventStore.first { $0.kind == .debug } as? FeatureEvent
-                expect(featureEvent?.kind) == .feature
-                expect(featureEvent?.key) == "flag-key"
-                expect(featureEvent?.context.contextHash()) == context.contextHash()
-                expect(featureEvent?.value) == "a"
-                expect(featureEvent?.defaultValue) == "b"
-                expect(featureEvent?.featureFlag) == flag
-                expect(featureEvent?.includeReason) == false
-                expect(debugEvent?.kind) == .debug
-                expect(debugEvent?.key) == "flag-key"
-                expect(debugEvent?.context) == context
-                expect(debugEvent?.value) == "a"
-                expect(debugEvent?.defaultValue) == "b"
-                expect(debugEvent?.featureFlag) == flag
-                expect(debugEvent?.includeReason) == false
+                let expectedFeature = FeatureEvent(key: "flag-key", context: context, value: "a", defaultValue: "b", featureFlag: flag, includeReason: false, isDebug: false)
+                let expectedDebug = FeatureEvent(key: "flag-key", context: context, value: "a", defaultValue: "b", featureFlag: flag, includeReason: false, isDebug: true)
+                expect(expectedEvents(reporter.pendingEventsForTesting)) == expectedEvents([expectedFeature, expectedDebug])
+                expect(recordedEvents(store)).to(beEmpty())
                 expect(reporter.contextSummarizer.hasLoggedRequests) == true
                 let summaries = reporter.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
@@ -656,7 +683,8 @@ final class EventReporterSpec: QuickSpec {
                 expect(tracker.flagCounters["flag-key"]?.flagValueCounters[CounterKey(variation: 1, version: 2)]?.value) == "a"
             }
             it("records events concurrently") {
-                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil)
+                let (reporter, store) = makeReporter()
+                defer { store.deleteEverything() }
                 reporter.setLastEventResponseDate(Date())
                 let flag = FeatureFlag(flagKey: "unused", trackEvents: true, debugEventsUntilDate: Date().addingTimeInterval(3.0))
 
@@ -667,9 +695,11 @@ final class EventReporterSpec: QuickSpec {
                 }
                 (0..<10).forEach { _ in counter.wait() }
 
-                expect(reporter.eventStore.count) == 20
-                expect(reporter.eventStore.filter { $0.kind == .feature }.count) == 10
-                expect(reporter.eventStore.filter { $0.kind == .debug }.count) == 10
+                let held = expectedEvents(reporter.pendingEventsForTesting)
+                expect(held.count) == 20
+                expect(held.filter { $0.kindField == "feature" }.count) == 10
+                expect(held.filter { $0.kindField == "debug" }.count) == 10
+                expect(recordedEvents(store)).to(beEmpty())
                 expect(reporter.contextSummarizer.hasLoggedRequests) == true
                 let summaries = reporter.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
@@ -686,7 +716,7 @@ final class EventReporterSpec: QuickSpec {
         describe("report timer fires") {
             var testContext: TestContext!
             afterEach {
-                testContext.eventReporter.isOnline = false
+                testContext.cleanUp()
             }
             context("with events") {
                 beforeEach {
@@ -696,7 +726,7 @@ final class EventReporterSpec: QuickSpec {
                 }
                 it("reports events") {
                     expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
-                    expect(testContext.eventReporter.eventStore.isEmpty).toEventually(beTrue())
+                    expect(testContext.store.pendingEventCount).toEventually(equal(0))
                     expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount).toEventually(equal(1))
                     expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch).toEventually(equal(testContext.events.count))
                     let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
@@ -718,6 +748,297 @@ final class EventReporterSpec: QuickSpec {
                 }
             }
         }
+    }
+}
+
+extension EventReporterSpec {
+    /// What the SDK is able to report after the process it was recording in is gone.
+    ///
+    /// These are written against a second store reading the same directory, which is what the next run of the
+    /// application amounts to: it sees the bytes that reached the disk and nothing that was still in memory.
+    private func durabilitySpec() {
+        describe("surviving the process") {
+            var testContext: TestContext!
+            afterEach {
+                testContext.cleanUp()
+            }
+
+            /// The events the next run of the application would find.
+            func eventsLeftOnDisk() -> [LDValue] {
+                let reader = EventStore(directory: testContext.store.directory, capacity: 100, logger: .disabled)
+                return reader.pendingEventPayloads().compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
+            }
+
+            it("has written a tracked event by the time recording it returns") {
+                testContext = TestContext()
+
+                // The sequence that loses events today: something is tracked and the process ends immediately after.
+                testContext.eventReporter.record(CustomEvent(key: "fatal-error", context: testContext.context, data: ["message": "boom"]))
+
+                let onDisk = eventsLeftOnDisk()
+                expect(onDisk.count) == 1
+                expect(onDisk.first?.kindField) == "custom"
+            }
+
+            it("still writes a tracked event when the write is not on the caller's thread") {
+                testContext = TestContext(eventPersistence: .deferred)
+
+                testContext.eventReporter.record(CustomEvent(key: "fatal-error", context: testContext.context, data: ["message": "boom"]))
+
+                // The promise is weaker by exactly one scheduling hop: the event reaches the disk, just not before
+                // recording it returned.
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]))
+            }
+
+            it("has written the evaluations that came before a tracked event") {
+                // A response date of its own, because the distant past that a fresh context defaults to also satisfies
+                // the debug window comparison and would add a debug event to what is asserted below.
+                testContext = TestContext(lastEventResponseDate: Date())
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+
+                // An untracked flag is only ever reported as a summary, so this is the case where the exposure exists
+                // nowhere but in memory until something forces it out.
+                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+                testContext.eventReporter.record(CustomEvent(key: "fatal-error", context: testContext.context, data: nil))
+
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom", "summary"]
+            }
+
+            it("persists feature and summary events synchronously on flush") {
+                testContext = TestContext(lastEventResponseDate: Date())
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+
+                // The deliberate trade: an evaluation does not pay for a write, so it is only staged until something
+                // else commits it.
+                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+                expect(eventsLeftOnDisk()).to(beEmpty())
+
+                testContext.eventReporter.flush(completion: nil)
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["feature", "summary"]
+            }
+
+            it("does not write on the main thread when a flag is evaluated there") {
+                // Suspended for the length of the evaluations, so that a write this thread was going to cause is a
+                // write that cannot happen: an evaluation is expected to be a memory operation, and the thread
+                // evaluating is usually this one.
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
+                commits.suspend()
+                testContext = TestContext(lastEventResponseDate: Date(),
+                                          store: EventStore.temporary(capacity: .max),
+                                          eventCapacity: .max,
+                                          commitQueue: commits)
+
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+                expect(Thread.isMainThread) == true
+                // Far past the pending threshold, so one coalesced commit is waiting.
+                for _ in 0..<400 {
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+                }
+
+                expect(eventsLeftOnDisk()).to(beEmpty())
+
+                commits.resume()
+
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }.filter { $0 == "feature" }.count)
+                    .toEventually(equal(400))
+            }
+
+            it("reports the events a previous run left behind") {
+                testContext = TestContext()
+                testContext.recordEvents(2)
+                testContext.eventReporter.commitRecordedEvents()
+
+                // Nothing delivered them and nothing closed the log, as would be the case had the process died here.
+                let recovered = EventStore(directory: testContext.store.directory, capacity: 100, logger: .disabled)
+                let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
+                nextRun.isOnline = true
+
+                waitUntil { done in
+                    nextRun.flush(completion: done)
+                }
+
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
+                valueIsArray(published) { events in
+                    expect(events.count) == 2
+                }
+                expect(recovered.pendingEventCount) == 0
+                nextRun.isOnline = false
+            }
+
+            it("delivers what a previous run left behind as soon as it is online, without waiting for a report interval") {
+                testContext = TestContext()
+                testContext.recordEvents(2)
+                testContext.eventReporter.commitRecordedEvents()
+
+                let recovered = EventStore(directory: testContext.store.directory, capacity: 100, logger: .disabled)
+                let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
+
+                // Nothing asks for a flush, and the report interval is several times longer than this waits, so the
+                // only thing that can deliver these is the reporter coming online.
+                nextRun.isOnline = true
+
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+                expect(recovered.pendingEventCount).toEventually(equal(0))
+                nextRun.isOnline = false
+            }
+
+            it("does not bring a delivery forward when a previous run left nothing behind") {
+                testContext = TestContext()
+
+                testContext.eventReporter.isOnline = true
+
+                // Coming online is not itself a reason to send: an ordinary start has nothing waiting, and the events
+                // this run records keep to the report interval.
+                testContext.recordEvents(1)
+                Thread.sleep(forTimeInterval: 0.2)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+            }
+
+            it("delivers a batch a failed run left behind under the same payload id") {
+                testContext = TestContext(stubResponseSuccess: false)
+                testContext.recordEvents(1)
+
+                waitUntil(timeout: .seconds(10)) { done in
+                    testContext.eventReporter.isOnline = true
+                    testContext.eventReporter.flush(completion: done)
+                }
+
+                let kept = testContext.store.pendingBatches()
+                expect(kept.count) == 1
+
+                // A payload LaunchDarkly may have already seen is retried under the identifier it was first sent with,
+                // which is how the events are not counted twice.
+                let payloadIds = Set(testContext.serviceMock.publishedPayloadIds)
+                expect(payloadIds.count) == 1
+                expect(payloadIds.first) == kept.first?.payloadId
+            }
+
+            it("does not send a batch again when a delivery is asked for while one is in flight") {
+                testContext = TestContext()
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                // The response is held back, so the first delivery stays in flight and its batch stays on disk --
+                // the window in which a second delivery would find that batch and send it again.
+                testContext.serviceMock.holdsEventCompletions = true
+
+                var firstFinished = false
+                testContext.eventReporter.flush { firstFinished = true }
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+
+                var secondFinished = false
+                testContext.eventReporter.flush { secondFinished = true }
+                // Nothing more goes out while the first delivery is unanswered.
+                Thread.sleep(forTimeInterval: 0.3)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+
+                // The second caller is answered by the pass that runs once the first delivery is done. It finds an
+                // empty store, so the batch is sent once in total.
+                expect(firstFinished).toEventually(beTrue())
+                expect(secondFinished).toEventually(beTrue())
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                expect(testContext.store.pendingEventCount) == 0
+            }
+        }
+    }
+
+    private func flushReportingOutcomeSpec() {
+        describe("flush reporting outcome") {
+            var testContext: TestContext!
+            afterEach {
+                testContext.cleanUp()
+            }
+
+            it("reports true when there is nothing to deliver") {
+                testContext = TestContext()
+                testContext.eventReporter.isOnline = true
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+            }
+
+            it("reports false while offline") {
+                testContext = TestContext()
+                testContext.recordEvents(1)
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+            }
+
+            it("reports true when LaunchDarkly accepts the batch") {
+                testContext = TestContext()
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+                expect(testContext.store.pendingEventCount) == 0
+            }
+
+            it("reports false when a retryable failure leaves the batch on disk") {
+                testContext = TestContext(stubResponseSuccess: false)
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                var delivered: Bool?
+                waitUntil(timeout: .seconds(10)) { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.store.pendingBatches().count) == 1
+            }
+        }
+    }
+}
+
+/// The events a store is holding, as JSON with `creationDate` dropped.
+///
+/// Dropping the timestamp is what lets an expectation be written as the event the SDK should have produced, rather than
+/// as a list of whichever fields the test remembered to check: the recorded event and the expected one are constructed
+/// moments apart and differ only in when they were made.
+private func recordedEvents(_ store: EventStore) -> [LDValue] {
+    store.pendingEventPayloads()
+        .compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
+        .map(withoutCreationDate)
+}
+
+private func expectedEvents(_ events: [Event]) -> [LDValue] {
+    events.compactMap { encodeToLDValue($0) }.map(withoutCreationDate)
+}
+
+private func withoutCreationDate(_ value: LDValue) -> LDValue {
+    guard case .object(var fields) = value
+    else { return value }
+    fields["creationDate"] = nil
+    return .object(fields)
+}
+
+private extension LDValue {
+    var kindField: String? {
+        guard case .object(let fields) = self, case .string(let kind) = fields["kind"]
+        else { return nil }
+        return kind
     }
 }
 
