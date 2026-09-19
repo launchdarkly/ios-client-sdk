@@ -24,6 +24,25 @@ class Event: Encodable {
         self.kind = kind
     }
 
+    /// Whether this event's context is written with the attributes of anonymous contexts redacted.
+    ///
+    /// This is a property of the *event*, not of the context: one context redacts on a feature event and does not on
+    /// the debug event that accompanies it. Keeping it here means every event can hold the caller's context value
+    /// unchanged, rather than a copy carrying an encoding directive.
+    var redactsAnonymousAttributes: Bool {
+        kind == .feature || kind == .summary
+    }
+
+    /// Writes `context` under `.context`, applying this event's redaction directive.
+    ///
+    /// `Encodable.encode(to:)` takes no arguments, so the `Codable` path has no way to pass the directive down except
+    /// on the context itself -- which is what `LDContext.redactAnonymousAttributes` exists for. Taking that copy here,
+    /// at encode time, confines it to this one call instead of the lifetime of the event.
+    fileprivate func encode(context: LDContext, into container: inout KeyedEncodingContainer<CodingKeys>) throws {
+        try container.encode(redactsAnonymousAttributes ? context.redactingAnonymousAttributes() : context,
+                             forKey: .context)
+    }
+
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(kind.rawValue, forKey: .kind)
@@ -55,7 +74,7 @@ class CustomEvent: Event, SubEvent {
     fileprivate func encode(to encoder: Encoder, container: KeyedEncodingContainer<Event.CodingKeys>) throws {
         var container = container
         try container.encode(key, forKey: .key)
-        try container.encode(context, forKey: .context)
+        try encode(context: context, into: &container)
 
         if data != .null {
             try container.encode(data, forKey: .data)
@@ -82,21 +101,14 @@ class FeatureEvent: Event, SubEvent {
         self.includeReason = includeReason
         self.creationDate = creationDate
 
-        if isDebug {
-            self.context = context
-            super.init(kind: .debug)
-        } else {
-            var newContext = LDContext(copyFrom: context)
-            newContext.redactAnonymousAttributes = true
-            self.context = newContext
-            super.init(kind: .feature)
-        }
+        self.context = context
+        super.init(kind: isDebug ? .debug : .feature)
     }
 
     fileprivate func encode(to encoder: Encoder, container: KeyedEncodingContainer<Event.CodingKeys>) throws {
         var container = container
         try container.encode(key, forKey: .key)
-        try container.encode(context, forKey: .context)
+        try encode(context: context, into: &container)
         try container.encodeIfPresent(featureFlag?.variation, forKey: .variation)
         try container.encodeIfPresent(featureFlag?.versionForEvents, forKey: .version)
         try container.encode(value, forKey: .value)
@@ -121,7 +133,7 @@ class IdentifyEvent: Event, SubEvent {
     fileprivate func encode(to encoder: Encoder, container: KeyedEncodingContainer<Event.CodingKeys>) throws {
         var container = container
         try container.encode(context.fullyQualifiedKey(), forKey: .key)
-        try container.encode(context, forKey: .context)
+        try encode(context: context, into: &container)
         try container.encode(creationDate, forKey: .creationDate)
     }
 }
@@ -144,7 +156,7 @@ class SummaryEvent: Event, SubEvent {
         try container.encode(endDate, forKey: .endDate)
         try container.encode(flagRequestTracker.flagCounters, forKey: .features)
         if let context = context {
-            try container.encode(context, forKey: .context)
+            try encode(context: context, into: &container)
         }
     }
 }
