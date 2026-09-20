@@ -212,6 +212,7 @@
 		83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
 		83FEF8DF1F2667E4001CF12C /* EventReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* EventReporter.swift */; };
 		94C1C136BA8989F1B8AFE0A8 /* EventJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B430884DBF2E541B919C08FA /* EventJSONWriter.swift */; };
+		8B3D9E2F5A6C1047B2D5E9F1 /* JSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */; };
 		9A47F74A2F3D4CBF0001FD9C /* ContextSummarizerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */; };
 		9A47F74C2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
 		9A47F74D2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
@@ -236,7 +237,9 @@
 		9AE1D0D42F4A1B000001FD9C /* UnfairLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0D02F4A1B000001FD9C /* UnfairLock.swift */; };
 		9AF0E1012F5A1C000001FD9C /* LDValueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */; };
 		9BE9637664F4E97681CFCD45 /* EventJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B430884DBF2E541B919C08FA /* EventJSONWriter.swift */; };
+		AD5F10417C8E3269D4F701B3 /* JSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */; };
 		A032A73E446055D14A546CA0 /* EventJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B430884DBF2E541B919C08FA /* EventJSONWriter.swift */; };
+		BE6011528D9F4370E50812C4 /* JSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */; };
 		A0BAD9EE25943C43A5154E6F /* EventJSONWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367A9182439001C3EBD68477 /* EventJSONWriterTests.swift */; };
 		A3047D642A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5D2A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift */; };
 		A3047D652A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5E2A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift */; };
@@ -405,6 +408,7 @@
 		C443A41123186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
 		C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
 		C4AF311E4DA8C3AB7040637D /* EventJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B430884DBF2E541B919C08FA /* EventJSONWriter.swift */; };
+		9C4E0F306B7D2158C3E6F0A2 /* JSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */; };
 		D7A500FCA04E3412F931003F /* ContextEncodingCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93B7F5F6CF5C3DE79FB4286 /* ContextEncodingCache.swift */; };
 		DAF5695D58E28B8CF9221213 /* LDContextJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88DAB8D1864C14D9C7E06F11 /* LDContextJSONWriter.swift */; };
 		EBFA09F4DFC59FCB6C0AE209 /* LDContextJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88DAB8D1864C14D9C7E06F11 /* LDContextJSONWriter.swift */; };
@@ -615,6 +619,7 @@
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
 		B430884DBF2E541B919C08FA /* EventJSONWriter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventJSONWriter.swift; sourceTree = "<group>"; };
+		6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JSONWriter.swift; sourceTree = "<group>"; };
 		B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDEvaluationDetail.swift; sourceTree = "<group>"; };
 		B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticReporterSpec.swift; sourceTree = "<group>"; };
 		B495A8A12787762C0051977C /* LDClientVariation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientVariation.swift; sourceTree = "<group>"; };
@@ -996,6 +1001,7 @@
 				C443A4092315AA4D00145710 /* NetworkReporter.swift */,
 				831AAE2B20A9E4F600B46DBA /* Throttler.swift */,
 				B430884DBF2E541B919C08FA /* EventJSONWriter.swift */,
+				6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */,
 				D93B7F5F6CF5C3DE79FB4286 /* ContextEncodingCache.swift */,
 			);
 			path = ServiceObjects;
@@ -1518,6 +1524,7 @@
 				831188622113AE3A00D77CB5 /* Data.swift in Sources */,
 				A8449C0800DF492B8F0619E4 /* LDContextJSONWriter.swift in Sources */,
 				94C1C136BA8989F1B8AFE0A8 /* EventJSONWriter.swift in Sources */,
+				8B3D9E2F5A6C1047B2D5E9F1 /* JSONWriter.swift in Sources */,
 				40F4D07AD934AF976687011D /* ContextEncodingCache.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1608,6 +1615,7 @@
 				50EE85C22EA0487F007CC662 /* TimeoutExecutor.swift in Sources */,
 				DAF5695D58E28B8CF9221213 /* LDContextJSONWriter.swift in Sources */,
 				C4AF311E4DA8C3AB7040637D /* EventJSONWriter.swift in Sources */,
+				9C4E0F306B7D2158C3E6F0A2 /* JSONWriter.swift in Sources */,
 				4882B223C23B63F30BC60941 /* ContextEncodingCache.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1697,6 +1705,7 @@
 				838F96781FBA504A009CFC45 /* ClientServiceFactory.swift in Sources */,
 				AFCE752CB1A75DEBABC23034 /* LDContextJSONWriter.swift in Sources */,
 				9BE9637664F4E97681CFCD45 /* EventJSONWriter.swift in Sources */,
+				AD5F10417C8E3269D4F701B3 /* JSONWriter.swift in Sources */,
 				D7A500FCA04E3412F931003F /* ContextEncodingCache.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1849,6 +1858,7 @@
 				83D9EC9C2062DEAB004D7FA6 /* ObjcLDChangedFlag.swift in Sources */,
 				EBFA09F4DFC59FCB6C0AE209 /* LDContextJSONWriter.swift in Sources */,
 				A032A73E446055D14A546CA0 /* EventJSONWriter.swift in Sources */,
+				BE6011528D9F4370E50812C4 /* JSONWriter.swift in Sources */,
 				BAE0B4F45562EBF4AC786B5D /* ContextEncodingCache.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

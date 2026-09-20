@@ -362,6 +362,20 @@ final class EventJSONWriterTests: XCTestCase {
         }
     }
 
+    func testIntegerFormatting() throws {
+        let values: [Int64] = [0, 1, -1, 17, -17, Int64.min, Int64.max]
+
+        for value in values {
+            let writer = JSONWriter()
+            writer.write(value)
+
+            let expected = try JSONEncoder().encode([value])
+            let actual = Data("[".utf8) + writer.data + Data("]".utf8)
+
+            XCTAssertEqual(try canonical(expected), try canonical(actual), "mismatch formatting \(value)")
+        }
+    }
+
     func testNumberFormatting() throws {
         let numbers: [Double] = [0, -0, 1, -1, 17, -17, 0.5, -0.5, 1.25, 3.141592653589793,
                                  1e10, 1e-10, 1e20, -1e20, Double(Int32.max), Double(Int64.max), 9007199254740993]
