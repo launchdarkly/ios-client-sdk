@@ -5,7 +5,7 @@ import Foundation
 /// Knows JSON structure and scalars — objects, arrays, strings, numbers, bools, and null — and not the shapes of
 /// any SDK type. Callers own those. `EventJSONWriterTests` is the correctness gate against `JSONEncoder`.
 final class JSONWriter {
-    private(set) var bytes: [UInt8] = []
+    private var bytes: [UInt8] = []
 
     /// Whether the next value written needs a comma in front of it.
     ///
@@ -17,7 +17,10 @@ final class JSONWriter {
         bytes.reserveCapacity(capacity)
     }
 
-    var data: Data { Data(bytes) }
+    var data: Data {
+        // Copy. `Data(bytes)` can share the array's storage, and the next `reset()` would mutate it in place.
+        bytes.withUnsafeBytes { Data($0) }
+    }
 
     var byteCount: Int { bytes.count }
 
@@ -34,8 +37,13 @@ final class JSONWriter {
     }
 
     /// The bytes written since `offset`, for handing a freshly encoded fragment to a cache.
+    ///
+    /// Copied out of the live buffer so the cache does not share storage with `bytes`. `Array(bytes[offset...])` can,
+    /// and a later `reset()` would then clear the cached fragment in place.
     func bytes(from offset: Int) -> [UInt8] {
-        Array(bytes[offset...])
+        bytes.withUnsafeBufferPointer { buffer in
+            Array(buffer[offset..<buffer.count])
+        }
     }
 
     // MARK: Structure

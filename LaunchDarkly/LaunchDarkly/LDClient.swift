@@ -293,7 +293,7 @@ public class LDClient {
     var hooks: [Hook] {
         hooksLock.lock()
         defer { hooksLock.unlock() }
-        return storedHooks
+        return Array(storedHooks)
     }
 
     /// Describes this client's environment to a plugin. Retained so that a plugin registered later, via
