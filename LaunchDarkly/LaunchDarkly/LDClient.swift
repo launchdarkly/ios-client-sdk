@@ -697,16 +697,17 @@ public class LDClient {
             // restarts will honor the appropriate polling delay.
             self.updateCacheFreshness(context: self.context)
         case .error(let synchronizingError):
-            process(synchronizingError, logPrefix: typeName(and: #function))
+            process(synchronizingError: synchronizingError, logPrefix: typeName(and: #function))
         }
     }
 
-    private func process(_ synchronizingError: SynchronizingError, logPrefix: String) {
-        if synchronizingError.isClientUnauthorized {
-            os_log("%s LDClient is unauthorized", log: config.logger, type: .debug, logPrefix)
-            internalSetOnline(false)
-        }
+    private func process(synchronizingError: SynchronizingError, logPrefix: String) {
         connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
+        if synchronizingError.isTerminal {
+            os_log("%s data source terminal error; stopping flag delivery", log: config.logger, type: .debug, logPrefix)
+            flagSynchronizer.isOnline = false
+            initialized = true
+        }
     }
 
     private func updateCacheAndReportChanges(context: LDContext,
@@ -814,7 +815,6 @@ public class LDClient {
     private func onEventSyncComplete(result: SynchronizingError?) {
         if let synchronizingError = result {
             os_log("%s result: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: synchronizingError))
-            process(synchronizingError, logPrefix: typeName(and: #function))
         } else {
             os_log("%s result: success", log: config.logger, type: .debug, typeName(and: #function))
         }

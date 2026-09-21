@@ -23,14 +23,22 @@ enum SynchronizingError: Error {
     case unknownEventType(String)
 
     var isClientUnauthorized: Bool {
+        httpStatusCode == HTTPURLResponse.StatusCodes.unauthorized
+    }
+
+    var isTerminal: Bool {
+        guard let statusCode = httpStatusCode
+        else { return false }
+        return HTTPURLResponse.StatusCodes.isTerminalStatusCode(statusCode)
+    }
+
+    var httpStatusCode: Int? {
         switch self {
         case .response(let urlResponse):
-            guard let httpResponse = urlResponse as? HTTPURLResponse
-            else { return false }
-            return httpResponse.statusCode == HTTPURLResponse.StatusCodes.unauthorized
+            return (urlResponse as? HTTPURLResponse)?.statusCode
         case .streamError(let error as UnsuccessfulResponseError):
-            return error.responseCode == HTTPURLResponse.StatusCodes.unauthorized
-        default: return false
+            return error.responseCode
+        default: return nil
         }
     }
 }
@@ -275,9 +283,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         else { return .proceed }
         // Now we know that we received an error HTTP response code
         let responseCode: Int = unsuccessfulResponseError.responseCode
-        if (400..<500).contains(responseCode) && ![400, 408, 429].contains(responseCode) {
-            // Not a invalid request, timeout, or too many requests error
-            // We will not retry in this case
+        if HTTPURLResponse.StatusCodes.isTerminalStatusCode(responseCode) {
             reportSyncComplete(.error(.streamError(error)))
             return .shutdown
         }

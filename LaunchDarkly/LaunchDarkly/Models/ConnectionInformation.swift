@@ -101,13 +101,19 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
             case .request(let error):
                 let errorString = error.localizedDescription.isEmpty ? Constants.unknownError : error.localizedDescription
                 connectionInformationVar.lastConnectionFailureReason = .unknownError(errorString)
-            case .response(let urlResponse):
-                let statusCode = (urlResponse as? HTTPURLResponse)?.statusCode
-                connectionInformationVar.lastConnectionFailureReason = .httpError(statusCode ?? ConnectionInformation.Constants.noCode)
+            case .response:
+                connectionInformationVar.lastConnectionFailureReason = .httpError(synchronizingError.httpStatusCode ?? ConnectionInformation.Constants.noCode)
+            case .streamError:
+                if let statusCode = synchronizingError.httpStatusCode {
+                    connectionInformationVar.lastConnectionFailureReason = .httpError(statusCode)
+                }
             default: break
             }
         }
         connectionInformationVar.lastFailedConnection = Date()
+        if synchronizingError.isTerminal {
+            connectionInformationVar.currentConnectionMode = .offline
+        }
         return connectionInformationVar
     }
 

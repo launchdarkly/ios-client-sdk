@@ -84,7 +84,7 @@ class DiagnosticReporter: DiagnosticReporting {
             return false
         }
 
-        if let statusCode = response?.statusCode, (400..<500).contains(statusCode) && ![400, 408, 429].contains(statusCode) {
+        if let statusCode = response?.statusCode, HTTPURLResponse.StatusCodes.isTerminalStatusCode(statusCode) {
             os_log("%s Dropping diagnostic event due to non-retriable response: %s", log: service.config.logger, type: .debug, typeName, String(describing: response))
             return false
         }
