@@ -676,21 +676,21 @@ public class LDClient {
         case let .flagCollection((flagCollection, etag)):
             os_log("%s: got flag collection with %d flags.", log: config.logger, type: .debug, typeName(and: #function), flagCollection.flags.count)
             let oldStoredItems = flagStore.storedItems
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
             flagStore.replaceStore(newStoredItems: StoredItems(items: flagCollection.flags))
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: etag)
         case let .patch(featureFlag):
             let oldStoredItems = flagStore.storedItems
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
             flagStore.updateStore(updatedFlag: featureFlag)
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: nil)
         case let .delete(deleteResponse):
             let oldStoredItems = flagStore.storedItems
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
             flagStore.deleteFlag(deleteResponse: deleteResponse)
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: nil)
         case .upToDate:
-            connectionInformation.lastKnownFlagValidity = Date()
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
             flagChangeNotifier.notifyUnchanged()
             // If a polling request receives a 304 not modified, we still need
             // to update the "last updated" field of the cache so subsequent

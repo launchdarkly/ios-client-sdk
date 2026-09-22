@@ -1318,6 +1318,29 @@ final class LDClientSpec: QuickSpec {
             expect(after.lastConnectionFailureReason.description) == before.lastConnectionFailureReason.description
             expect(after.lastFailedConnection) == before.lastFailedConnection
         }
+        it("recovers the connection mode when a streaming sync succeeds after a terminal error") {
+            let testContext = TestContext(startOnline: true)
+            testContext.start()
+            testContext.subject.flagChangeNotifier = ClientServiceMockFactory(config: testContext.config).makeFlagChangeNotifier()
+            testContext.onSyncComplete?(.error(.response(forbiddenError)))
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .offline
+
+            waitUntil { done in
+                testContext.changeNotifierMock.notifyObserversCallback = done
+                testContext.onSyncComplete?(.patch(FeatureFlag(flagKey: "recover")))
+            }
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .streaming
+        }
+        it("recovers to polling when a poll succeeds after a terminal error") {
+            let testContext = TestContext(startOnline: true)
+            testContext.start()
+            testContext.flagSynchronizerMock.streamingMode = .polling
+            testContext.onSyncComplete?(.error(.response(forbiddenError)))
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .offline
+
+            testContext.onSyncComplete?(.upToDate)
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .polling
+        }
     }
 
     private func runModeSpec() {
