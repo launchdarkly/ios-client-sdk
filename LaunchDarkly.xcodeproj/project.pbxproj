@@ -15,10 +15,6 @@
 		29FE1299280413D4008CC918 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FE1297280413D4008CC918 /* Util.swift */; };
 		29FE129A280413D4008CC918 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FE1297280413D4008CC918 /* Util.swift */; };
 		29FE129B280413D4008CC918 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FE1297280413D4008CC918 /* Util.swift */; };
-		9AE1D0D12F4A1B000001FD9C /* UnfairLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0D02F4A1B000001FD9C /* UnfairLock.swift */; };
-		9AE1D0D22F4A1B000001FD9C /* UnfairLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0D02F4A1B000001FD9C /* UnfairLock.swift */; };
-		9AE1D0D32F4A1B000001FD9C /* UnfairLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0D02F4A1B000001FD9C /* UnfairLock.swift */; };
-		9AE1D0D42F4A1B000001FD9C /* UnfairLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0D02F4A1B000001FD9C /* UnfairLock.swift */; };
 		3D2406142E0D90E000F91253 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406102E0D90E000F91253 /* Plugin.swift */; };
 		3D2406152E0D90E000F91253 /* PluginMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406112E0D90E000F91253 /* PluginMetadata.swift */; };
 		3D2406162E0D90E000F91253 /* EnvironmentMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D24060F2E0D90E000F91253 /* EnvironmentMetadata.swift */; };
@@ -213,6 +209,11 @@
 		83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F0A5631FB5F33800550A95 /* LDConfigSpec.swift */; };
 		83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
 		83FEF8DF1F2667E4001CF12C /* EventReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* EventReporter.swift */; };
+		8E38AA8C306308E500C4C163 /* RetryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA8B306308E500C4C163 /* RetryState.swift */; };
+		8E38AA8D306308E500C4C163 /* RetryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA8B306308E500C4C163 /* RetryState.swift */; };
+		8E38AA8E306308E500C4C163 /* RetryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA8B306308E500C4C163 /* RetryState.swift */; };
+		8E38AA8F306308E500C4C163 /* RetryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA8B306308E500C4C163 /* RetryState.swift */; };
+		8E38AA913063090600C4C163 /* RetryStateSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA903063090600C4C163 /* RetryStateSpec.swift */; };
 		9A47F74A2F3D4CBF0001FD9C /* ContextSummarizerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */; };
 		9A47F74C2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
 		9A47F74D2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
@@ -223,6 +224,19 @@
 		9AE1D0A32F4A1B000001FD9C /* EvaluationExposureDeduper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A02F4A1B000001FD9C /* EvaluationExposureDeduper.swift */; };
 		9AE1D0A42F4A1B000001FD9C /* EvaluationExposureDeduper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A02F4A1B000001FD9C /* EvaluationExposureDeduper.swift */; };
 		9AE1D0A62F4A1B000001FD9C /* EvaluationExposureDeduperSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A52F4A1B000001FD9C /* EvaluationExposureDeduperSpec.swift */; };
+		9AE1D0B12F4A1B000001FD9C /* HookDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */; };
+		9AE1D0B22F4A1B000001FD9C /* HookDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */; };
+		9AE1D0B32F4A1B000001FD9C /* HookDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */; };
+		9AE1D0B42F4A1B000001FD9C /* HookDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */; };
+		9AE1D0C12F4A1B000001FD9C /* DedupingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */; };
+		9AE1D0C22F4A1B000001FD9C /* DedupingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */; };
+		9AE1D0C32F4A1B000001FD9C /* DedupingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */; };
+		9AE1D0C42F4A1B000001FD9C /* DedupingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */; };
+		9AE1D0D12F4A1B000001FD9C /* UnfairLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0D02F4A1B000001FD9C /* UnfairLock.swift */; };
+		9AE1D0D22F4A1B000001FD9C /* UnfairLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0D02F4A1B000001FD9C /* UnfairLock.swift */; };
+		9AE1D0D32F4A1B000001FD9C /* UnfairLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0D02F4A1B000001FD9C /* UnfairLock.swift */; };
+		9AE1D0D42F4A1B000001FD9C /* UnfairLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0D02F4A1B000001FD9C /* UnfairLock.swift */; };
+		9AF0E1012F5A1C000001FD9C /* LDValueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */; };
 		A3047D642A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5D2A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift */; };
 		A3047D652A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5E2A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift */; };
 		A3047D662A606B6000F568E0 /* EnvironmentReporterChainBaseSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5F2A606B6000F568E0 /* EnvironmentReporterChainBaseSpec.swift */; };
@@ -255,10 +269,6 @@
 		A350386E2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */; };
 		A350386F2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */; };
 		A35038702F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */; };
-		FED0000000000000000000C1 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
-		FED0000000000000000000C2 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
-		FED0000000000000000000C3 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
-		FED0000000000000000000C4 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
 		A35038772F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
 		A35038782F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
 		A35038792F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
@@ -268,7 +278,6 @@
 		A350387E2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
 		A350387F2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
 		A35038812F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift */; };
-		FED0000000000000000000D1 /* LDClientTrackHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000D0 /* LDClientTrackHookSpec.swift */; };
 		A35038832F4F96680032BA9F /* LDClientEvaluationHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038822F4F96680032BA9F /* LDClientEvaluationHookSpec.swift */; };
 		A35038852F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038842F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift */; };
 		A3570F5A28527B8200CF241A /* LDContextCodableSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */; };
@@ -326,14 +335,6 @@
 		A3A8BCD42B7EAA89009A77E4 /* SheddingQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */; };
 		A3A8BCD52B7EAA89009A77E4 /* SheddingQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */; };
 		A3BA7CE92BD056920000DB28 /* Hook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7CE82BD056920000DB28 /* Hook.swift */; };
-		9AE1D0C12F4A1B000001FD9C /* DedupingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */; };
-		9AE1D0C22F4A1B000001FD9C /* DedupingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */; };
-		9AE1D0C32F4A1B000001FD9C /* DedupingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */; };
-		9AE1D0C42F4A1B000001FD9C /* DedupingHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */; };
-		9AE1D0B12F4A1B000001FD9C /* HookDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */; };
-		9AE1D0B22F4A1B000001FD9C /* HookDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */; };
-		9AE1D0B32F4A1B000001FD9C /* HookDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */; };
-		9AE1D0B42F4A1B000001FD9C /* HookDecorator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */; };
 		A3BA7CEA2BD056920000DB28 /* Hook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7CE82BD056920000DB28 /* Hook.swift */; };
 		A3BA7CEB2BD056920000DB28 /* Hook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7CE82BD056920000DB28 /* Hook.swift */; };
 		A3BA7CEC2BD056920000DB28 /* Hook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7CE82BD056920000DB28 /* Hook.swift */; };
@@ -352,7 +353,6 @@
 		A3C6F7662B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
 		A3C6F7672B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
 		A3FFE1132B7D4BA2009EF93F /* LDValueDecoderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */; };
-		9AF0E1012F5A1C000001FD9C /* LDValueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
 		B468E71024B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
@@ -400,6 +400,11 @@
 		C443A41023186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
 		C443A41123186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
 		C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
+		FED0000000000000000000C1 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
+		FED0000000000000000000C2 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
+		FED0000000000000000000C3 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
+		FED0000000000000000000C4 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
+		FED0000000000000000000D1 /* LDClientTrackHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000D0 /* LDClientTrackHookSpec.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -468,7 +473,6 @@
 /* Begin PBXFileReference section */
 		29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDValue.swift; sourceTree = "<group>"; };
 		29FE1297280413D4008CC918 /* Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
-		9AE1D0D02F4A1B000001FD9C /* UnfairLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnfairLock.swift; sourceTree = "<group>"; };
 		3D24060F2E0D90E000F91253 /* EnvironmentMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentMetadata.swift; sourceTree = "<group>"; };
 		3D2406102E0D90E000F91253 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
 		3D2406112E0D90E000F91253 /* PluginMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginMetadata.swift; sourceTree = "<group>"; };
@@ -549,10 +553,16 @@
 		83F0A5631FB5F33800550A95 /* LDConfigSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDConfigSpec.swift; sourceTree = "<group>"; };
 		83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlagSynchronizer.swift; sourceTree = "<group>"; };
 		83FEF8DE1F2667E4001CF12C /* EventReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventReporter.swift; sourceTree = "<group>"; };
+		8E38AA8B306308E500C4C163 /* RetryState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryState.swift; sourceTree = "<group>"; };
+		8E38AA903063090600C4C163 /* RetryStateSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryStateSpec.swift; sourceTree = "<group>"; };
 		9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSummarizerSpec.swift; sourceTree = "<group>"; };
 		9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSummarizer.swift; sourceTree = "<group>"; };
 		9AE1D0A02F4A1B000001FD9C /* EvaluationExposureDeduper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluationExposureDeduper.swift; sourceTree = "<group>"; };
 		9AE1D0A52F4A1B000001FD9C /* EvaluationExposureDeduperSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluationExposureDeduperSpec.swift; sourceTree = "<group>"; };
+		9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookDecorator.swift; sourceTree = "<group>"; };
+		9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DedupingHook.swift; sourceTree = "<group>"; };
+		9AE1D0D02F4A1B000001FD9C /* UnfairLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnfairLock.swift; sourceTree = "<group>"; };
+		9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueSpec.swift; sourceTree = "<group>"; };
 		A3047D5D2A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SDKEnvironmentReporterSpec.swift; sourceTree = "<group>"; };
 		A3047D5E2A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IOSEnvironmentReporterSpec.swift; sourceTree = "<group>"; };
 		A3047D5F2A606B6000F568E0 /* EnvironmentReporterChainBaseSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnvironmentReporterChainBaseSpec.swift; sourceTree = "<group>"; };
@@ -566,11 +576,9 @@
 		A33A5F7928466D04000C29C7 /* LDContextStub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDContextStub.swift; sourceTree = "<group>"; };
 		A3470C362B7C1ACE00951CEE /* LDValueDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueDecoder.swift; sourceTree = "<group>"; };
 		A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentifySeriesContext.swift; sourceTree = "<group>"; };
-		FED0000000000000000000C0 /* TrackSeriesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackSeriesContext.swift; sourceTree = "<group>"; };
 		A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientIdentifyHook.swift; sourceTree = "<group>"; };
 		A350387B2F4F5A380032BA9F /* Data+Compression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+Compression.swift"; sourceTree = "<group>"; };
 		A35038802F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientIdentifyHookSpec.swift; sourceTree = "<group>"; };
-		FED0000000000000000000D0 /* LDClientTrackHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientTrackHookSpec.swift; sourceTree = "<group>"; };
 		A35038822F4F96680032BA9F /* LDClientEvaluationHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientEvaluationHookSpec.swift; sourceTree = "<group>"; };
 		A35038842F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchOSEnvironmentReporterSpec.swift; sourceTree = "<group>"; };
 		A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDContextCodableSpec.swift; sourceTree = "<group>"; };
@@ -590,15 +598,12 @@
 		A380B0982B60178D00AB64A6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SheddingQueue.swift; sourceTree = "<group>"; };
 		A3BA7CE82BD056920000DB28 /* Hook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hook.swift; sourceTree = "<group>"; };
-		9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DedupingHook.swift; sourceTree = "<group>"; };
-		9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookDecorator.swift; sourceTree = "<group>"; };
 		A3BA7CED2BD059180000DB28 /* Metadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Metadata.swift; sourceTree = "<group>"; };
 		A3BA7CF22BD05A280000DB28 /* EvaluationSeriesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluationSeriesContext.swift; sourceTree = "<group>"; };
 		A3BA7D032BD2BD620000DB28 /* TestContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestContext.swift; sourceTree = "<group>"; };
 		A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheddingQueueSpec.swift; sourceTree = "<group>"; };
 		A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentifyTypes.swift; sourceTree = "<group>"; };
 		A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueDecoderSpec.swift; sourceTree = "<group>"; };
-		9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueSpec.swift; sourceTree = "<group>"; };
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
 		B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjcLDEvaluationDetail.swift; sourceTree = "<group>"; };
@@ -613,6 +618,8 @@
 		C43C37E0236BA050003C1624 /* LDEvaluationDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDEvaluationDetail.swift; sourceTree = "<group>"; };
 		C443A4092315AA4D00145710 /* NetworkReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkReporter.swift; sourceTree = "<group>"; };
 		C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionModeChangeObserver.swift; sourceTree = "<group>"; };
+		FED0000000000000000000C0 /* TrackSeriesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackSeriesContext.swift; sourceTree = "<group>"; };
+		FED0000000000000000000D0 /* LDClientTrackHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientTrackHookSpec.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -693,6 +700,7 @@
 		831D8B751F72A48900ED65E8 /* ServiceObjects */ = {
 			isa = PBXGroup;
 			children = (
+				8E38AA903063090600C4C163 /* RetryStateSpec.swift */,
 				9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */,
 				9AE1D0A52F4A1B000001FD9C /* EvaluationExposureDeduperSpec.swift */,
 				50EE85C62EA0749C007CC662 /* TimeoutExecutorSpec.swift */,
@@ -960,6 +968,7 @@
 		83FEF8D91F2666BF001CF12C /* ServiceObjects */ = {
 			isa = PBXGroup;
 			children = (
+				8E38AA8B306308E500C4C163 /* RetryState.swift */,
 				9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */,
 				50EE85C12EA0487F007CC662 /* TimeoutExecutor.swift */,
 				A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */,
@@ -1482,6 +1491,7 @@
 				A3BA7CEC2BD056920000DB28 /* Hook.swift in Sources */,
 				9AE1D0C12F4A1B000001FD9C /* DedupingHook.swift in Sources */,
 				9AE1D0B12F4A1B000001FD9C /* HookDecorator.swift in Sources */,
+				8E38AA8D306308E500C4C163 /* RetryState.swift in Sources */,
 				832D68A5224A38FC005F052A /* CacheConverter.swift in Sources */,
 				A35AD4632A619E45005A8DCB /* SystemCapabilities.swift in Sources */,
 				A358D6FA2A4DF1D500270C60 /* SDKEnvironmentReporter.swift in Sources */,
@@ -1581,6 +1591,7 @@
 				B4C9D43A2489E20A004A9B03 /* DiagnosticReporter.swift in Sources */,
 				A35038792F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */,
 				831EF36A20655E730001C643 /* ObjcLDChangedFlag.swift in Sources */,
+				8E38AA8F306308E500C4C163 /* RetryState.swift in Sources */,
 				50EE85C22EA0487F007CC662 /* TimeoutExecutor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1655,6 +1666,7 @@
 				A3BA7CE92BD056920000DB28 /* Hook.swift in Sources */,
 				9AE1D0C32F4A1B000001FD9C /* DedupingHook.swift in Sources */,
 				9AE1D0B32F4A1B000001FD9C /* HookDecorator.swift in Sources */,
+				8E38AA8E306308E500C4C163 /* RetryState.swift in Sources */,
 				832D68A2224A38FC005F052A /* CacheConverter.swift in Sources */,
 				A35AD4602A619E45005A8DCB /* SystemCapabilities.swift in Sources */,
 				A358D6F72A4DF1D500270C60 /* SDKEnvironmentReporter.swift in Sources */,
@@ -1708,6 +1720,7 @@
 				A3047D652A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift in Sources */,
 				83EBCBB120D9C7B5003A7142 /* FlagCounterSpec.swift in Sources */,
 				A3047D642A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift in Sources */,
+				8E38AA913063090600C4C163 /* RetryStateSpec.swift in Sources */,
 				83B8C2451FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift in Sources */,
 				8335299E1FC37727001166F8 /* FlagMaintainingMock.swift in Sources */,
 				A3047D692A606B6000F568E0 /* ApplicationInfoEnvironmentReporterSpec.swift in Sources */,
@@ -1803,6 +1816,7 @@
 				A3BA7CEA2BD056920000DB28 /* Hook.swift in Sources */,
 				9AE1D0C42F4A1B000001FD9C /* DedupingHook.swift in Sources */,
 				9AE1D0B42F4A1B000001FD9C /* HookDecorator.swift in Sources */,
+				8E38AA8C306308E500C4C163 /* RetryState.swift in Sources */,
 				83D9EC952062DEAB004D7FA6 /* Date.swift in Sources */,
 				A35AD4612A619E45005A8DCB /* SystemCapabilities.swift in Sources */,
 				A358D6F82A4DF1D500270C60 /* SDKEnvironmentReporter.swift in Sources */,
