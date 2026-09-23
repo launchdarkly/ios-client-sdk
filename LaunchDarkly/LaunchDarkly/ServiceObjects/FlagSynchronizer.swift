@@ -67,12 +67,14 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     let service: DarklyServiceProvider
     private var eventSource: DarklyStreamingProvider?
+    // Only accessed on isOnlineQueue.
     private var flagRequestTimer: TimeResponding?
     var onSyncComplete: FlagSyncCompleteClosure?
 
     let streamingMode: LDStreamingMode
 
-    // Not thread-safe. Only accessed on the event source callback queue (eventSourceErrorHandler).
+    // Not thread-safe, but only accessed on one queue per instance: the event source callback queue for
+    // streaming, or isOnlineQueue for polling.
     private let retryState: RetryState
     private static let healthyResetThreshold: TimeInterval = 60
 
@@ -99,6 +101,8 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     private var connectedAt: Date?
     // Only accessed on isOnlineQueue.
     private var reconnectTimer: TimeResponding?
+    // Consecutive successful polls, toward the reset threshold. Only accessed on isOnlineQueue.
+    private var consecutivePollSuccesses = 0
 
     init(streamingMode: LDStreamingMode,
          pollingInterval: TimeInterval,
@@ -188,20 +192,18 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             return
         }
 
-        // We should fire right away, unless we know how fresh the cache is and can
-        // adjust accordingly.
-        var fireAt = Date.distantPast
+        var initialDelay: TimeInterval = 0
         if let lastTime = self.lastCachedRequestedTime {
-            fireAt = lastTime.addingTimeInterval(pollingInterval)
-            // If we do consider the cached values already fresh enough, we should
-            // signal completion immediately
+            // The cache is still fresh, so delay the first poll until the cached flags would go stale.
+            initialDelay = max(0, lastTime.addingTimeInterval(pollingInterval).timeIntervalSinceNow)
+            // We loaded cached flags, so report completion immediately rather than blocking on the first poll.
             syncQueue.async { [self] in
                 guard isOnline
                 else { return }
                 reportSyncComplete(.upToDate)
             }
         }
-        flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, fireAt: fireAt, execute: processTimer)
+        scheduleNextPoll(after: initialDelay)
         os_log("%s", log: service.config.logger, type: .debug, typeName(and: #function))
     }
 
@@ -215,6 +217,29 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         os_log("%s", log: service.config.logger, type: .debug, typeName(and: #function))
         flagRequestTimer?.cancel()
         flagRequestTimer = nil
+    }
+
+    private func scheduleNextPoll(after delay: TimeInterval) {
+        flagRequestTimer?.cancel()
+        flagRequestTimer = LDTimer(withTimeInterval: delay, fireQueue: syncQueue, repeats: false, execute: processTimer)
+    }
+
+    private func pollDidComplete(failed: Bool, unexpected: Bool) {
+        isOnlineQueue.async { [weak self] in
+            guard let self = self, self._isOnline, self.streamingMode == .polling
+            else { return }
+            if failed {
+                self.retryState.recordFailure(unexpected: unexpected)
+                self.consecutivePollSuccesses = 0
+                self.scheduleNextPoll(after: self.retryState.nextDelay())
+            } else {
+                self.consecutivePollSuccesses += 1
+                if self.consecutivePollSuccesses == 2 {
+                    self.retryState.reset()
+                }
+                self.scheduleNextPoll(after: self.pollingInterval)
+            }
+        }
     }
 
     @objc private func processTimer() {
@@ -264,9 +289,14 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             service.resetFlagResponseCache(etag: nil)
             return
         }
+        var failed = false
+        var unexpected = false
+        defer { pollDidComplete(failed: failed, unexpected: unexpected) }
+
         if let serviceResponseError = serviceResponse.error {
             os_log("%s error: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: serviceResponseError))
             reportSyncComplete(.error(.request(serviceResponseError)))
+            failed = true
             return
         }
         if serviceResponse.urlResponse?.httpStatusCode == HTTPURLResponse.StatusCodes.notModified {
@@ -276,13 +306,17 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         guard serviceResponse.urlResponse?.httpStatusCode == HTTPURLResponse.StatusCodes.ok
         else {
             os_log("%s response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: serviceResponse.urlResponse))
-            reportSyncComplete(.error(.response(serviceResponse.urlResponse)))
+            let syncError = SynchronizingError.response(serviceResponse.urlResponse)
+            reportSyncComplete(.error(syncError))
+            failed = true
+            unexpected = syncError.isTerminal
             return
         }
         guard let data = serviceResponse.data,
               let flagCollection = try? JSONDecoder().decode(FeatureFlagCollection.self, from: data)
         else {
             reportDataError(serviceResponse.data)
+            failed = true
             return
         }
         reportSyncComplete(.flagCollection((flagCollection, serviceResponse.etag)))
