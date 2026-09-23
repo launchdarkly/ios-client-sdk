@@ -17,7 +17,7 @@ final class RetryStateSpec: XCTestCase {
     }
 
     func testStreamingRetryLifecycle() {
-        let retry = RetryState.forStreaming(initialReconnectDelay: 1)
+        let retry = RetryState.forStreaming()
 
         // Normal failures back off from the initial delay and double to the 30s ceiling.
         for range in [0.5...1, 1...2, 2...4, 4...8, 8...16, 15...30, 15...30] as [ClosedRange<TimeInterval>] {

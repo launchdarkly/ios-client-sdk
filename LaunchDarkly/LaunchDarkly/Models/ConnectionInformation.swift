@@ -92,7 +92,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
     }
 
     // Used for parsing SynchronizingError in LDClient.process
-    static func synchronizingErrorCheck(synchronizingError: SynchronizingError, connectionInformation: ConnectionInformation) -> ConnectionInformation {
+    static func recordSynchronizingError(_ synchronizingError: SynchronizingError, streamingMode: LDStreamingMode, connectionInformation: ConnectionInformation) -> ConnectionInformation {
         var connectionInformationVar = connectionInformation
         if synchronizingError.isClientUnauthorized {
             connectionInformationVar.lastConnectionFailureReason = .unauthorized
@@ -112,7 +112,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
         }
         connectionInformationVar.lastFailedConnection = Date()
         if synchronizingError.isTerminal {
-            connectionInformationVar.currentConnectionMode = .offline
+            connectionInformationVar.currentConnectionMode = (streamingMode == .streaming) ? .establishingStreamingConnection : .polling
         }
         return connectionInformationVar
     }

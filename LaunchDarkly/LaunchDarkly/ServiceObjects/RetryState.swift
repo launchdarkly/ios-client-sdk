@@ -26,11 +26,11 @@ final class RetryState {
         self.minDelay = minDelay
     }
 
-    /// Streaming. Normal backoff runs from `initialReconnectDelay` up to 30
-    /// seconds. Extended runs from 5 minutes up to 1 hour. There is no wait floor.
-    static func forStreaming(initialReconnectDelay: TimeInterval) -> RetryState {
+    /// Streaming. Normal backoff runs from 1 second up to 30 seconds. Extended
+    /// runs from 5 minutes up to 1 hour. There is no wait floor.
+    static func forStreaming() -> RetryState {
         RetryState(
-            normal: RetryRegime(initialDelay: initialReconnectDelay, maxDelay: 30),
+            normal: RetryRegime(initialDelay: 1, maxDelay: 30),
             extended: RetryRegime(initialDelay: 5 * 60, maxDelay: 60 * 60),
             minDelay: 0)
     }

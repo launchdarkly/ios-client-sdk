@@ -72,6 +72,10 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     let streamingMode: LDStreamingMode
 
+    // Not thread-safe. Only accessed on the event source callback queue (eventSourceErrorHandler).
+    private let retryState: RetryState
+    private static let healthyResetThreshold: TimeInterval = 60
+
     var isOnline: Bool {
         get { isOnlineQueue.sync { _isOnline } }
         set {
@@ -91,6 +95,10 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     private var syncQueue = DispatchQueue(label: Constants.queueName, qos: .utility)
     private var eventSourceStarted: Date?
+    // Only accessed on the event source callback queue.
+    private var connectedAt: Date?
+    // Only accessed on isOnlineQueue.
+    private var reconnectWorkItem: DispatchWorkItem?
 
     init(streamingMode: LDStreamingMode,
          pollingInterval: TimeInterval,
@@ -100,6 +108,9 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
          onSyncComplete: FlagSyncCompleteClosure?) {
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
+        self.retryState = (streamingMode == .streaming)
+            ? RetryState.forStreaming()
+            : RetryState.forPolling(pollInterval: pollingInterval)
         self.useReport = useReport
         self.lastCachedRequestedTime = lastUpdated
         self.service = service
@@ -142,6 +153,8 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     private func stopEventSource() {
+        reconnectWorkItem?.cancel()
+        reconnectWorkItem = nil
         guard eventSource != nil
         else {
             os_log("%s aborted. Clientstream is not connected.", log: service.config.logger, type: .debug, typeName(and: #function))
@@ -151,6 +164,19 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         os_log("%s", log: service.config.logger, type: .debug, typeName(and: #function))
         eventSource?.stop()
         eventSource = nil
+    }
+
+    private func scheduleReconnect(after delay: TimeInterval) {
+        reconnectWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in self?.reconnect() }
+        reconnectWorkItem = workItem
+        isOnlineQueue.asyncAfter(deadline: .now() + delay, execute: workItem)
+    }
+
+    private func reconnect() {
+        guard _isOnline
+        else { return }
+        startEventSource()
     }
 
     // MARK: Polling
@@ -290,16 +316,23 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         }
         eventSourceStarted = now
 
-        guard let unsuccessfulResponseError = error as? UnsuccessfulResponseError
-        else { return .proceed }
-        // Now we know that we received an error HTTP response code
-        let responseCode: Int = unsuccessfulResponseError.responseCode
-        if HTTPURLResponse.StatusCodes.isTerminalStatusCode(responseCode) {
-            reportSyncComplete(.error(.streamError(error)))
-            return .shutdown
+        // If the stream stayed healthy long enough before failing, reset the backoff.
+        if let connectedAt = connectedAt, now.timeIntervalSince(connectedAt) >= FlagSynchronizer.healthyResetThreshold {
+            retryState.reset()
         }
-        // Otherwise we will retry
-        return .proceed
+        connectedAt = nil
+
+        retryState.recordFailure(unexpected: SynchronizingError.streamError(error).isTerminal)
+        let delay = retryState.nextDelay()
+        os_log("%s stream error; reconnecting in %.3fs. error: %s", log: service.config.logger, type: .debug, typeName(and: #function), delay, String(describing: error))
+        reportSyncComplete(.error(.streamError(error)))
+
+        // Tear down the failed connection now, then reconnect after the backoff.
+        isOnlineQueue.async { [weak self] in
+            self?.stopEventSource()
+            self?.scheduleReconnect(after: delay)
+        }
+        return .shutdown
     }
 
     func shouldAbortStreamUpdate() -> Bool {
@@ -341,6 +374,11 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     public func onMessage(eventType: String, messageEvent: MessageEvent) {
         guard !shouldAbortStreamUpdate()
         else { return }
+
+        // The first payload on a fresh stream marks healthy operation.
+        if connectedAt == nil {
+            connectedAt = Date()
+        }
 
         switch eventType {
         case "ping": makeFlagRequest(isOnline: isOnline)

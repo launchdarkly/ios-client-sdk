@@ -697,16 +697,7 @@ public class LDClient {
             // restarts will honor the appropriate polling delay.
             self.updateCacheFreshness(context: self.context)
         case .error(let synchronizingError):
-            process(synchronizingError: synchronizingError, logPrefix: typeName(and: #function))
-        }
-    }
-
-    private func process(synchronizingError: SynchronizingError, logPrefix: String) {
-        connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
-        if synchronizingError.isTerminal {
-            os_log("%s data source terminal error; stopping flag delivery", log: config.logger, type: .debug, logPrefix)
-            flagSynchronizer.isOnline = false
-            initialized = true
+            connectionInformation = ConnectionInformation.recordSynchronizingError(synchronizingError, streamingMode: flagSynchronizer.streamingMode, connectionInformation: connectionInformation)
         }
     }
 

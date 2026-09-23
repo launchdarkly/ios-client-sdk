@@ -614,7 +614,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                     expect(testContext.serviceMock.getFeatureFlagsCallCount) == 0
                     expect(testContext.serviceMock.createEventSourceCallCount) == 1
                     expect(testContext.serviceMock.createdEventSource?.startCallCount) == 1
-                    expect(testContext.serviceMock.createdEventSource?.stopCallCount) == 0
+                    expect(testContext.serviceMock.createdEventSource?.stopCallCount).toEventually(equal(1))
 
                     expect(syncError).toNot(beNil())
                     expect(syncError?.isClientUnauthorized).to(beFalse())
