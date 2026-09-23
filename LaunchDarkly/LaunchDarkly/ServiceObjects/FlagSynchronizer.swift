@@ -98,7 +98,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     // Only accessed on the event source callback queue.
     private var connectedAt: Date?
     // Only accessed on isOnlineQueue.
-    private var reconnectWorkItem: DispatchWorkItem?
+    private var reconnectTimer: TimeResponding?
 
     init(streamingMode: LDStreamingMode,
          pollingInterval: TimeInterval,
@@ -153,8 +153,8 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     private func stopEventSource() {
-        reconnectWorkItem?.cancel()
-        reconnectWorkItem = nil
+        reconnectTimer?.cancel()
+        reconnectTimer = nil
         guard eventSource != nil
         else {
             os_log("%s aborted. Clientstream is not connected.", log: service.config.logger, type: .debug, typeName(and: #function))
@@ -167,10 +167,10 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     private func scheduleReconnect(after delay: TimeInterval) {
-        reconnectWorkItem?.cancel()
-        let workItem = DispatchWorkItem { [weak self] in self?.reconnect() }
-        reconnectWorkItem = workItem
-        isOnlineQueue.asyncAfter(deadline: .now() + delay, execute: workItem)
+        reconnectTimer?.cancel()
+        reconnectTimer = LDTimer(withTimeInterval: delay, fireQueue: isOnlineQueue, repeats: false) { [weak self] in
+            self?.reconnect()
+        }
     }
 
     private func reconnect() {
