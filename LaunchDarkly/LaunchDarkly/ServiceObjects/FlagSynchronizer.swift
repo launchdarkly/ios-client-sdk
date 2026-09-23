@@ -234,6 +234,8 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         guard isOnline
         else {
             os_log("%s aborted. Flag Synchronizer is offline.", log: service.config.logger, type: .debug, typeName(and: #function))
+            // The service already advanced its etag for this response, so clear it to refetch on the next poll.
+            service.resetFlagResponseCache(etag: nil)
             return
         }
         if let serviceResponseError = serviceResponse.error {
