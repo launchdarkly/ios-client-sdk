@@ -1062,6 +1062,25 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
             }
         }
+        describe("processFlagResponse") {
+            context("offline") {
+                it("drops the response") {
+                    var testContext: TestContext!
+                    var reportedResult: FlagSyncResult?
+                    testContext = TestContext(streamingMode: .polling, useReport: false) { result in
+                        reportedResult = result
+                    }
+                    testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
+
+                    // A response received while offline must be dropped, not reported.
+                    testContext.flagSynchronizer.testProcessFlagResponse(serviceResponse: testContext.serviceMock.stubbedFlagResponse!)
+
+                    // Let any dispatched report land before asserting none did.
+                    waitUntil { done in DispatchQueue.main.async { done() } }
+                    expect(reportedResult).to(beNil())
+                }
+            }
+        }
     }
 }
 

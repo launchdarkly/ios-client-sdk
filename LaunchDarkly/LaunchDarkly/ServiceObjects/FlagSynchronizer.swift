@@ -169,7 +169,11 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             fireAt = lastTime.addingTimeInterval(pollingInterval)
             // If we do consider the cached values already fresh enough, we should
             // signal completion immediately
-            syncQueue.async { [self] in reportSyncComplete(.upToDate) }
+            syncQueue.async { [self] in
+                guard isOnline
+                else { return }
+                reportSyncComplete(.upToDate)
+            }
         }
         flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, fireAt: fireAt, execute: processTimer)
         os_log("%s", log: service.config.logger, type: .debug, typeName(and: #function))
@@ -227,6 +231,11 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     private func processFlagResponse(serviceResponse: ServiceResponse) {
+        guard isOnline
+        else {
+            os_log("%s aborted. Flag Synchronizer is offline.", log: service.config.logger, type: .debug, typeName(and: #function))
+            return
+        }
         if let serviceResponseError = serviceResponse.error {
             os_log("%s error: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: serviceResponseError))
             reportSyncComplete(.error(.request(serviceResponseError)))
@@ -395,6 +404,10 @@ extension FlagSynchronizer {
 
     func testStreamOnMessage(event: String, messageEvent: MessageEvent) {
         onMessage(eventType: event, messageEvent: messageEvent)
+    }
+
+    func testProcessFlagResponse(serviceResponse: ServiceResponse) {
+        processFlagResponse(serviceResponse: serviceResponse)
     }
 }
 
