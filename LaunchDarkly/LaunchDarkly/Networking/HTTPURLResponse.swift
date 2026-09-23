@@ -15,8 +15,18 @@ extension HTTPURLResponse {
         static let badRequest = 400
         static let unauthorized = 401
         static let methodNotAllowed = 405
+        static let requestTimeout = 408
+        static let tooManyRequests = 429
         static let internalServerError = 500
         static let notImplemented = 501
+
+        // The 4xx statuses the SDK keeps retrying on. Any other 4xx is terminal.
+        static let recoverableClientErrors = [badRequest, requestTimeout, tooManyRequests]
+
+        // Returns true for a 4xx status the SDK should not retry.
+        static func isTerminalStatusCode(_ statusCode: Int) -> Bool {
+            (400..<500).contains(statusCode) && !recoverableClientErrors.contains(statusCode)
+        }
     }
 
     var headerDate: Date? {

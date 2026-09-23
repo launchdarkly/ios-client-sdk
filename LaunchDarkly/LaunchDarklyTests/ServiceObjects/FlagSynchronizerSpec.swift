@@ -1062,6 +1062,27 @@ final class FlagSynchronizerSpec: QuickSpec {
                 }
             }
         }
+        describe("processFlagResponse") {
+            context("offline") {
+                it("drops the response and clears the etag") {
+                    var testContext: TestContext!
+                    var reportedResult: FlagSyncResult?
+                    testContext = TestContext(streamingMode: .polling, useReport: false) { result in
+                        reportedResult = result
+                    }
+                    testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.ok)
+
+                    testContext.flagSynchronizer.testProcessFlagResponse(serviceResponse: testContext.serviceMock.stubbedFlagResponse!)
+
+                    // reportSyncComplete dispatches to main, so drain it before asserting nothing was reported.
+                    waitUntil { done in DispatchQueue.main.async { done() } }
+                    expect(reportedResult).to(beNil())
+
+                    // The service already advanced its etag for this response; it must be cleared to refetch next poll.
+                    expect(testContext.serviceMock.clearFlagResponseCacheCallCount) == 1
+                }
+            }
+        }
     }
 }
 
