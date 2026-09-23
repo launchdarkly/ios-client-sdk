@@ -118,12 +118,8 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
     }
 
     // Reconciles the connection mode and flag validity after a successful sync.
-    static func checkEstablishingStreaming(connectionInformation: ConnectionInformation, streamingMode: LDStreamingMode) -> ConnectionInformation {
+    static func checkEstablishingStreaming(connectionInformation: ConnectionInformation) -> ConnectionInformation {
         var connectionInformationVar = connectionInformation
-        // Recover a terminal-error offline into the connecting mode. The checks below finish the transition.
-        if connectionInformationVar.currentConnectionMode == .offline {
-            connectionInformationVar.currentConnectionMode = (streamingMode == .streaming) ? .establishingStreamingConnection : .polling
-        }
         if connectionInformationVar.currentConnectionMode == .establishingStreamingConnection {
             connectionInformationVar.currentConnectionMode = .streaming
             connectionInformationVar.lastKnownFlagValidity = nil
