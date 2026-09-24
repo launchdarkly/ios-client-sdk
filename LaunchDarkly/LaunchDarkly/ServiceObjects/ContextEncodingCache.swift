@@ -35,10 +35,6 @@ final class ContextEncodingCache {
     private let lock = UnfairLock()
     private var entries: [Entry?] = [nil, nil]
 
-    /// Counted only so the experiment can report a hit rate rather than assume one.
-    private(set) var hits = 0
-    private(set) var misses = 0
-
     /// The encoded bytes for `context` under `redactAnonymous`, or nil if that slot does not hold it.
     func encodedContext(for context: LDContext, redactAnonymous: Bool) -> [UInt8]? {
         lock.lock()
@@ -47,20 +43,9 @@ final class ContextEncodingCache {
         guard let entry = entries[ContextEncodingCache.slot(redactAnonymous)],
               entry.context == context,
               ContextEncodingCache.spellingsMatch(entry.spellings, context)
-        else {
-            misses += 1
-            return nil
-        }
+        else { return nil }
 
-        hits += 1
         return entry.encoded
-    }
-
-    func resetCounters() {
-        lock.lock()
-        defer { lock.unlock() }
-        hits = 0
-        misses = 0
     }
 
     func store(_ context: LDContext, redactAnonymous: Bool, encoded: [UInt8]) {
