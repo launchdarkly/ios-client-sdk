@@ -60,18 +60,15 @@ class EventReporter: EventReporting {
     private let encoder: JSONEncoder
 
     let encoding: Encoding
-    private let handWrittenEncoder: EventJSONWriter
 
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
-         encoding: Encoding = .handWrittenCachingContext) {
+         encoding: Encoding = .handWritten) {
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.lastEventResponseDate = Date()
         self.encoding = encoding
         self.encoder = EventReporter.makeEncoder(config: service.config)
-        self.handWrittenEncoder = EventJSONWriter(config: service.config,
-                                                  cachingContexts: encoding == .handWrittenCachingContext)
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
     }
 
@@ -207,8 +204,9 @@ class EventReporter: EventReporting {
         }
 
         let writer = JSONWriter()
+        let handWritten = EventJSONWriter(config: service.config)
         return encodeSkippingFailures(events, using: { event in
-            guard let encoded = handWrittenEncoder.encode(event, into: writer)
+            guard let encoded = handWritten.encode(event, into: writer)
             else { throw EventEncodingError.handWritten }
             return encoded
         })
@@ -291,8 +289,8 @@ class EventReporter: EventReporting {
 extension EventReporter {
     /// Which encoder recorded events go through.
     ///
-    /// `.handWrittenCachingContext` is the shipping path. Writing the wire form directly rather than through a
-    /// reflective encoder is what the Android SDK does, and the context cache on top of it pays off because a run of
+    /// `.handWritten` is the shipping path. Writing the wire form directly rather than through a reflective encoder is
+    /// what the Android SDK does, and reusing a context's encoded bytes across the batch pays off because a run of
     /// evaluations is nearly always the same context encoded again and again.
     ///
     /// `.codable` is kept because it is the oracle the writer is checked against: `EventJSONWriterTests` asserts the
@@ -300,8 +298,6 @@ extension EventReporter {
     enum Encoding {
         case codable
         case handWritten
-        /// The hand-written writer, reusing the last context's encoded bytes when the context has not changed.
-        case handWrittenCachingContext
     }
 
     fileprivate static func makeEncoder(config: LDConfig) -> JSONEncoder {

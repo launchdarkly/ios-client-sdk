@@ -348,7 +348,7 @@ final class EventReporterSpec: QuickSpec {
 
             context("when the shipping encoder sees a non-finite metric") {
                 beforeEach {
-                    reporter = makeReporter(encoding: .handWrittenCachingContext)
+                    reporter = makeReporter(encoding: .handWritten)
                     reporter.isOnline = true
                 }
                 it("serializes the event and still delivers later events") {

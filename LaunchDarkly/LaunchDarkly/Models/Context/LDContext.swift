@@ -142,7 +142,7 @@ public struct LDContext: Encodable, Equatable {
             let reference = Reference(key)
             if let value = context.getValue(reference) {
                 if redactAll {
-                    redactedAttributes.append(reference.raw())
+                    redactedAttributes.append(reference.canonical())
                     continue
                 }
 
@@ -194,7 +194,7 @@ public struct LDContext: Encodable, Equatable {
         var (reactedAttrReference, nestedPropertiesAreRedacted) = LDContext.checkGlobalPrivateAttributeReferences(context: context, parentPath: parentPath, globalPrivateAttributes: globalPrivateAttributes)
 
         if let reactedAttrReference = reactedAttrReference {
-            redactedAttributes.append(reactedAttrReference.raw())
+            redactedAttributes.append(reactedAttrReference.canonical())
             return (true, false)
         }
 
@@ -230,7 +230,7 @@ public struct LDContext: Encodable, Equatable {
 
             if hasMatch {
                 if depth == parentPath.count {
-                    redactedAttributes.append(privateAttribute.raw())
+                    redactedAttributes.append(privateAttribute.canonical())
                     return (true, false)
                 }
 

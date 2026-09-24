@@ -4,23 +4,26 @@ import Foundation
 ///
 /// The field set, the omissions, and the redaction rules are deliberately identical to `Event.encode(to:)` and
 /// `LDContext.encode(to:)`; where the two disagree, the `Codable` path is right and this is wrong.
+///
+/// One writer encodes one batch of events, and carries the context cache for it. Events within a batch are nearly
+/// always the same context over and over, and an instance is cheap, so the reuse worth having is the reuse a batch
+/// already offers; making one writer outlive a batch would only mean sharing the cache across the concurrent flushes
+/// `EventReporter` can have in flight.
 struct EventJSONWriter {
     private let allAttributesPrivate: Bool
     private let globalPrivateAttributes: [Reference]
 
-    /// Reuses the last context's encoded bytes when the next event carries the same context. Nil encodes every time.
-    private(set) var contextCache: ContextEncodingCache?
+    /// Reuses a context's encoded bytes for the later events in this batch that carry it.
+    private let contextCache = ContextEncodingCache()
 
-    init(allAttributesPrivate: Bool, globalPrivateAttributes: [Reference], cachingContexts: Bool = false) {
+    init(allAttributesPrivate: Bool, globalPrivateAttributes: [Reference]) {
         self.allAttributesPrivate = allAttributesPrivate
         self.globalPrivateAttributes = globalPrivateAttributes
-        self.contextCache = cachingContexts ? ContextEncodingCache() : nil
     }
 
-    init(config: LDConfig, cachingContexts: Bool = false) {
+    init(config: LDConfig) {
         self.init(allAttributesPrivate: config.allContextAttributesPrivate,
-                  globalPrivateAttributes: config.privateContextAttributes,
-                  cachingContexts: cachingContexts)
+                  globalPrivateAttributes: config.privateContextAttributes)
     }
 
     func encode(_ event: Event) -> Data? {
@@ -190,16 +193,7 @@ struct EventJSONWriter {
         // already set. Nothing in the SDK produces one, and the `||` is what keeps that from being load-bearing.
         let redactAnonymous = event.redactsAnonymousAttributes || context.redactAnonymousAttributes
 
-        guard let cache = contextCache
-        else {
-            context.writeJSON(into: writer,
-                              allAttributesPrivate: allAttributesPrivate,
-                              globalPrivateAttributes: globalPrivateAttributes,
-                              redactAnonymousAttributes: redactAnonymous)
-            return
-        }
-
-        if let cached = cache.encodedContext(for: context, redactAnonymous: redactAnonymous) {
+        if let cached = contextCache.encodedContext(for: context, redactAnonymous: redactAnonymous) {
             writer.writeRaw(cached)
             return
         }
@@ -209,6 +203,6 @@ struct EventJSONWriter {
                           allAttributesPrivate: allAttributesPrivate,
                           globalPrivateAttributes: globalPrivateAttributes,
                           redactAnonymousAttributes: redactAnonymous)
-        cache.store(context, redactAnonymous: redactAnonymous, encoded: writer.bytes(from: start))
+        contextCache.store(context, redactAnonymous: redactAnonymous, encoded: writer.bytes(from: start))
     }
 }
