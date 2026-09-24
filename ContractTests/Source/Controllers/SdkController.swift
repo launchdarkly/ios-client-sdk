@@ -36,7 +36,9 @@ final class SdkController: RouteCollection {
             "client-prereq-events",
             "client-prereq-cycle-detection",
             "polling-gzip",
-            "client-per-context-summaries"
+            "client-per-context-summaries",
+            "retry-conformance-fdv1-streaming",
+            "retry-conformance-fdv1-polling"
         ]
 
         return StatusResponse(
