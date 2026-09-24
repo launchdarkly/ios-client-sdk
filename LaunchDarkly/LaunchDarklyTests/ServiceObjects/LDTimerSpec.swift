@@ -11,10 +11,10 @@ final class LDTimerSpec: QuickSpec {
         let timeInterval: TimeInterval
         let fireDate: Date
 
-        init(timeInterval: TimeInterval = 60.0, execute: @escaping () -> Void) {
+        init(timeInterval: TimeInterval = 60.0, repeats: Bool = true, execute: @escaping () -> Void) {
             self.timeInterval = timeInterval
             self.fireDate = Date().addingTimeInterval(timeInterval)
-            ldTimer = LDTimer(withTimeInterval: timeInterval, fireQueue: fireQueue, execute: execute)
+            ldTimer = LDTimer(withTimeInterval: timeInterval, fireQueue: fireQueue, repeats: repeats, execute: execute)
         }
     }
 
@@ -60,6 +60,22 @@ final class LDTimerSpec: QuickSpec {
                 expect(testContext.ldTimer.timer?.isValid) == true
                 expect(testContext.ldTimer.isCancelled) == false
                 expect(fireCount) == 2
+
+                testContext.ldTimer.cancel()
+            }
+            it("fires a non repeating timer only once") {
+                var fireCount = 0
+                var testContext: TestContext!
+                waitUntil { done in
+                    testContext = TestContext(timeInterval: 0.01, repeats: false, execute: {
+                        fireCount += 1
+                        done()
+                    })
+                }
+
+                // A non repeating timer invalidates itself after it fires, so it never fires again.
+                expect(testContext.ldTimer.timer?.isValid ?? false).to(beFalse())
+                expect(fireCount) == 1
 
                 testContext.ldTimer.cancel()
             }

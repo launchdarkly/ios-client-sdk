@@ -39,6 +39,7 @@ final class FlagSynchronizerSpec: QuickSpec {
         changeIsOnlineSpec()
         streamingEventSpec()
         pollingTimerFiresSpec()
+        pollingBackoffSpec()
         flagRequestSpec()
     }
 
@@ -250,6 +251,7 @@ final class FlagSynchronizerSpec: QuickSpec {
             streamingDeleteEventSpec()
             streamingOtherEventSpec()
             streamingProcessingSpec()
+            streamingReconnectSpec()
         }
     }
 
@@ -614,7 +616,7 @@ final class FlagSynchronizerSpec: QuickSpec {
                     expect(testContext.serviceMock.getFeatureFlagsCallCount) == 0
                     expect(testContext.serviceMock.createEventSourceCallCount) == 1
                     expect(testContext.serviceMock.createdEventSource?.startCallCount) == 1
-                    expect(testContext.serviceMock.createdEventSource?.stopCallCount) == 0
+                    expect(testContext.serviceMock.createdEventSource?.stopCallCount).toEventually(equal(1))
 
                     expect(syncError).toNot(beNil())
                     expect(syncError?.isClientUnauthorized).to(beFalse())
@@ -876,6 +878,89 @@ final class FlagSynchronizerSpec: QuickSpec {
                 else {
                     return fail("Expected syncError to be .isOffline, was: \(String(describing: syncError))")
                 }
+            }
+        }
+    }
+
+    func streamingReconnectSpec() {
+        describe("streaming reconnect") {
+            var testContext: TestContext!
+
+            beforeEach {
+                testContext = TestContext(streamingMode: .streaming, useReport: false)
+                testContext.flagSynchronizer.isOnline = true
+                // The failed connection is torn down before the reconnect is armed.
+                testContext.flagSynchronizer.testEventSource = nil
+            }
+
+            afterEach {
+                testContext.flagSynchronizer.isOnline = false
+            }
+
+            it("connects a fresh event source when reconnecting") {
+                testContext.flagSynchronizer.testReconnect()
+
+                expect(testContext.serviceMock.createEventSourceCallCount) == 2
+                expect(testContext.serviceMock.createdEventSource?.startCallCount) == 1
+            }
+            it("does not reconnect while offline") {
+                testContext.flagSynchronizer.isOnline = false
+                testContext.flagSynchronizer.testReconnect()
+
+                expect(testContext.serviceMock.createEventSourceCallCount) == 1
+            }
+            it("resets the backoff after a stream stays healthy") {
+                // A 405 is unexpected, so the stream moves into the multi-minute extended regime.
+                _ = testContext.providedErrorHandler!(UnsuccessfulResponseError(responseCode: HTTPURLResponse.StatusCodes.methodNotAllowed))
+                // The next stream stayed healthy for over a minute before a recoverable failure.
+                testContext.flagSynchronizer.testConnectedAt = Date().addingTimeInterval(-61)
+                _ = testContext.providedErrorHandler!(UnsuccessfulResponseError(responseCode: HTTPURLResponse.StatusCodes.internalServerError))
+
+                guard let fireDate = testContext.flagSynchronizer.testReconnectFireDate
+                else { return fail("Expected a scheduled reconnect") }
+                // Back in the normal regime, so the next attempt is seconds away, not minutes.
+                expect(fireDate.timeIntervalSinceNow).to(beLessThan(60))
+            }
+            it("keeps the extended backoff after a short-lived stream") {
+                _ = testContext.providedErrorHandler!(UnsuccessfulResponseError(responseCode: HTTPURLResponse.StatusCodes.methodNotAllowed))
+                // The stream was healthy for only a moment, so the extended backoff holds.
+                testContext.flagSynchronizer.testConnectedAt = Date().addingTimeInterval(-10)
+                _ = testContext.providedErrorHandler!(UnsuccessfulResponseError(responseCode: HTTPURLResponse.StatusCodes.internalServerError))
+
+                guard let fireDate = testContext.flagSynchronizer.testReconnectFireDate
+                else { return fail("Expected a scheduled reconnect") }
+                expect(fireDate.timeIntervalSinceNow).to(beGreaterThanOrEqualTo(150))
+            }
+            it("clears the healthy marker when the stream closes") {
+                // A closed stream must not leave its connect time behind for the next stream.
+                testContext.flagSynchronizer.testConnectedAt = Date().addingTimeInterval(-120)
+                testContext.providedEventHandler!.onClosed()
+
+                expect(testContext.flagSynchronizer.testConnectedAt).to(beNil())
+            }
+        }
+    }
+
+    func pollingBackoffSpec() {
+        describe("polling backoff") {
+            var testContext: TestContext!
+
+            afterEach {
+                testContext.flagSynchronizer.isOnline = false
+            }
+
+            it("resets the backoff after two consecutive successful polls") {
+                testContext = TestContext(streamingMode: .polling, useReport: false)
+                testContext.flagSynchronizer.testForceOnline()
+
+                // An unexpected failure moves polling into the multi-minute extended regime.
+                testContext.flagSynchronizer.testPollDidComplete(failed: true, unexpected: true)
+                expect(testContext.flagSynchronizer.testNextPollDelay).to(beGreaterThanOrEqualTo(150))
+
+                // Two clean polls reset it back to the poll interval.
+                testContext.flagSynchronizer.testPollDidComplete(failed: false, unexpected: false)
+                testContext.flagSynchronizer.testPollDidComplete(failed: false, unexpected: false)
+                expect(testContext.flagSynchronizer.testNextPollDelay) == Constants.pollingInterval
             }
         }
     }

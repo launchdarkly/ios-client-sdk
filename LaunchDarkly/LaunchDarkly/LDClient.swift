@@ -676,37 +676,28 @@ public class LDClient {
         case let .flagCollection((flagCollection, etag)):
             os_log("%s: got flag collection with %d flags.", log: config.logger, type: .debug, typeName(and: #function), flagCollection.flags.count)
             let oldStoredItems = flagStore.storedItems
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.replaceStore(newStoredItems: StoredItems(items: flagCollection.flags))
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: etag)
         case let .patch(featureFlag):
             let oldStoredItems = flagStore.storedItems
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.updateStore(updatedFlag: featureFlag)
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: nil)
         case let .delete(deleteResponse):
             let oldStoredItems = flagStore.storedItems
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.deleteFlag(deleteResponse: deleteResponse)
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: nil)
         case .upToDate:
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagChangeNotifier.notifyUnchanged()
             // If a polling request receives a 304 not modified, we still need
             // to update the "last updated" field of the cache so subsequent
             // restarts will honor the appropriate polling delay.
             self.updateCacheFreshness(context: self.context)
         case .error(let synchronizingError):
-            process(synchronizingError: synchronizingError, logPrefix: typeName(and: #function))
-        }
-    }
-
-    private func process(synchronizingError: SynchronizingError, logPrefix: String) {
-        connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
-        if synchronizingError.isTerminal {
-            os_log("%s data source terminal error; stopping flag delivery", log: config.logger, type: .debug, logPrefix)
-            flagSynchronizer.isOnline = false
-            initialized = true
+            connectionInformation = ConnectionInformation.recordSynchronizingError(synchronizingError, streamingMode: flagSynchronizer.streamingMode, connectionInformation: connectionInformation)
         }
     }
 
