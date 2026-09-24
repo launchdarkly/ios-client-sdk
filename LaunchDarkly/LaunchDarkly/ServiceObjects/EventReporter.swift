@@ -169,7 +169,7 @@ class EventReporter: EventReporting {
     private func publish(_ events: [Event], _ payloadId: String, _ completion: CompletionClosure?) {
         guard let eventData = encode(events)
         else {
-            os_log("%s Failed to serialize event(s) for publication: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: events))
+            os_log("%s Failed to serialize event(s) for publication: %s", log: service.config.logger, type: .error, typeName(and: #function), String(describing: events))
             completion?()
             return
         }
@@ -194,22 +194,55 @@ class EventReporter: EventReporting {
     /// One `JSONWriter` covers the whole run rather than one per event, so its byte buffer and the capacity it has
     /// grown into are reused. That, and the context cache, is most of what the hand-written path saves over the
     /// reflective one — a run of evaluations is nearly always the same context encoded again and again.
+    ///
+    /// If the run cannot be encoded as a whole, each event is retried on its own. Failures are dropped rather than
+    /// put back: the writer cannot fail transiently, so a failed event would fail every later flush.
     private func encode(_ events: [Event]) -> Data? {
         guard encoding != .codable
-        else { return try? encoder.encode(events) }
+        else {
+            if let data = try? encoder.encode(events) {
+                return data
+            }
+            return encodeSkippingFailures(events, using: { try encoder.encode($0) })
+        }
 
         let writer = JSONWriter()
-        var payload = Data([UInt8(ascii: "[")])
-        for (index, event) in events.enumerated() {
+        return encodeSkippingFailures(events, using: { event in
             guard let encoded = handWrittenEncoder.encode(event, into: writer)
-            else { return nil }
-            if index > 0 {
+            else { throw EventEncodingError.handWritten }
+            return encoded
+        })
+    }
+
+    private func encodeSkippingFailures(_ events: [Event], using encodeOne: (Event) throws -> Data) -> Data? {
+        var payload = Data([UInt8(ascii: "[")])
+        var written = 0
+        for event in events {
+            let encoded: Data
+            do {
+                encoded = try encodeOne(event)
+            } catch {
+                os_log("%s dropping unserializable event: %s",
+                       log: service.config.logger,
+                       type: .error,
+                       typeName(and: #function),
+                       String(describing: event))
+                continue
+            }
+            if written > 0 {
                 payload.append(UInt8(ascii: ","))
             }
             payload.append(encoded)
+            written += 1
         }
+        guard written > 0
+        else { return nil }
         payload.append(UInt8(ascii: "]"))
         return payload
+    }
+
+    private enum EventEncodingError: Error {
+        case handWritten
     }
 
     private func processEventResponse(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> Bool {
