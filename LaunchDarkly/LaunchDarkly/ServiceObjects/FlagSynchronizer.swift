@@ -483,6 +483,36 @@ extension FlagSynchronizer {
     func testProcessFlagResponse(serviceResponse: ServiceResponse) {
         processFlagResponse(serviceResponse: serviceResponse)
     }
+
+    // connectedAt is set on the event source callback queue; a test uses this on the
+    // thread where it drives eventSourceErrorHandler.
+    var testConnectedAt: Date? {
+        get { connectedAt }
+        set { connectedAt = newValue }
+    }
+
+    // Marks the synchronizer online without starting a data source, so a test can
+    // drive pollDidComplete without real polls racing the assertions.
+    func testForceOnline() {
+        isOnlineQueue.sync { _isOnline = true }
+    }
+
+    func testPollDidComplete(failed: Bool, unexpected: Bool) {
+        pollDidComplete(failed: failed, unexpected: unexpected)
+    }
+
+    // Reads the poll delay on isOnlineQueue so it serializes after a pending pollDidComplete.
+    var testNextPollDelay: TimeInterval {
+        isOnlineQueue.sync { retryState.nextDelay() }
+    }
+
+    func testReconnect() {
+        reconnect()
+    }
+
+    var testReconnectFireDate: Date? {
+        isOnlineQueue.sync { reconnectTimer?.fireDate }
+    }
 }
 
 #endif
