@@ -180,13 +180,19 @@ class EventReporter: EventReporting {
     private let encoder: JSONEncoder
 
     let encoding: Encoding
+    /// Outlives a commit rather than being built per commit, so that its context cache spans them.
+    ///
+    /// That is worth having here and not at the tiers below: a commit point writes a single event, so a cache that
+    /// lived for one commit would never be read. It carries no lock of its own because it is only ever reached from
+    /// `encode(_:)`, which runs under `commitLock`.
     fileprivate let handWrittenEncoder: EventJSONWriter
 
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
          store: EventStoring? = nil,
-         encoding: Encoding = .handWrittenCachingContext,
+         encoding: Encoding = .handWritten,
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.commitQueue", qos: .userInitiated)) {
+        self.handWrittenEncoder = EventJSONWriter(config: service.config)
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.responseDate = Date()
@@ -194,8 +200,6 @@ class EventReporter: EventReporting {
         self.capacity = service.config.eventCapacity
         self.commitQueue = commitQueue
         self.encoder = EventReporter.makeEncoder(config: service.config)
-        self.handWrittenEncoder = EventJSONWriter(config: service.config,
-                                                  cachingContexts: encoding == .handWrittenCachingContext)
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
         self.store = store ?? EventReporter.makeStore(config: service.config)
 
@@ -395,7 +399,7 @@ class EventReporter: EventReporting {
         let encoded: Data? = encoding == .codable ? try? encoder.encode(event) : handWrittenEncoder.encode(event)
         guard let encoded = encoded
         else {
-            os_log("%s Failed to serialize event for publication: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: event))
+            os_log("%s Failed to serialize event for publication: %s", log: service.config.logger, type: .error, typeName(and: #function), String(describing: event))
             return nil
         }
         return encoded
@@ -621,8 +625,8 @@ class EventReporter: EventReporting {
 extension EventReporter {
     /// Which encoder recorded events go through.
     ///
-    /// `.handWrittenCachingContext` is the shipping path. Writing the wire form directly rather than through a
-    /// reflective encoder is what the Android SDK does, and the context cache on top of it pays off because a run of
+    /// `.handWritten` is the shipping path. Writing the wire form directly rather than through a reflective encoder is
+    /// what the Android SDK does, and reusing a context's encoded bytes across the batch pays off because a run of
     /// evaluations is nearly always the same context encoded again and again.
     ///
     /// `.codable` is kept because it is the oracle the writer is checked against: `EventJSONWriterTests` asserts the
@@ -630,8 +634,6 @@ extension EventReporter {
     enum Encoding {
         case codable
         case handWritten
-        /// The hand-written writer, reusing the last context's encoded bytes when the context has not changed.
-        case handWrittenCachingContext
     }
 
     fileprivate static func makeEncoder(config: LDConfig) -> JSONEncoder {
