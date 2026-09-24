@@ -240,6 +240,7 @@ final class EventReporterSpec: QuickSpec {
             var serviceMock: DarklyServiceMock!
             var ldContext: LDContext!
             var reporter: EventReporter!
+            var store: EventStore!
 
             func makeReporter(encoding: EventReporter.Encoding) -> EventReporter {
                 var config = LDConfig.stub
@@ -248,7 +249,8 @@ final class EventReporterSpec: QuickSpec {
                 serviceMock = DarklyServiceMock()
                 serviceMock.config = config
                 serviceMock.stubEventResponse(success: true)
-                return EventReporter(service: serviceMock, onSyncComplete: nil, encoding: encoding)
+                store = EventStore.temporary(capacity: config.eventCapacity)
+                return EventReporter(service: serviceMock, onSyncComplete: nil, store: store, encoding: encoding)
             }
 
             afterEach {
@@ -266,7 +268,7 @@ final class EventReporterSpec: QuickSpec {
                         reporter.flush(completion: done)
                     }
                     expect(serviceMock.publishEventDataCallCount) == 0
-                    expect(reporter.eventStore.isEmpty) == true
+                    expect(store.pendingEventCount) == 0
 
                     waitUntil { done in
                         reporter.record(CustomEvent(key: "after-poison", context: ldContext, metricValue: 1.0))
@@ -348,7 +350,7 @@ final class EventReporterSpec: QuickSpec {
                         reporter.flush(completion: done)
                     }
                     expect(serviceMock.publishEventDataCallCount) == 0
-                    expect(reporter.eventStore.isEmpty) == true
+                    expect(store.pendingEventCount) == 0
                     expect(reporter.contextSummarizer.hasLoggedRequests) == false
 
                     waitUntil { done in
