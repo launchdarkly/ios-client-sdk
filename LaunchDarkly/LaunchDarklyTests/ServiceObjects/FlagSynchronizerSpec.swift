@@ -931,6 +931,13 @@ final class FlagSynchronizerSpec: QuickSpec {
                 else { return fail("Expected a scheduled reconnect") }
                 expect(fireDate.timeIntervalSinceNow).to(beGreaterThanOrEqualTo(150))
             }
+            it("clears the healthy marker when the stream closes") {
+                // A closed stream must not leave its connect time behind for the next stream.
+                testContext.flagSynchronizer.testConnectedAt = Date().addingTimeInterval(-120)
+                testContext.providedEventHandler!.onClosed()
+
+                expect(testContext.flagSynchronizer.testConnectedAt).to(beNil())
+            }
         }
     }
 

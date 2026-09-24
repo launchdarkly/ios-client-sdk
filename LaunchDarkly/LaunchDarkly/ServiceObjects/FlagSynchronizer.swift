@@ -402,6 +402,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     public func onClosed() {
         os_log("%s EventSource closed", log: service.config.logger, type: .debug, typeName(and: #function))
+        connectedAt = nil
         NotificationCenter.default.post(name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
     }
 
