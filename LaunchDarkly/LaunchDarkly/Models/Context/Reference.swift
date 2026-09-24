@@ -222,6 +222,22 @@ public struct Reference: Codable {
         return rawPath
     }
 
+    /// The reference in slash syntax, escaping `~` and `/` within each component.
+    ///
+    /// `Reference("name")` and `Reference("/name")` are `==`, because equality is on the parsed components and
+    /// ignores the string they were built from, but `raw()` tells them apart. Output that is compared or keyed by
+    /// reference *value* has to be written from this, or two references that are equal produce different bytes.
+    ///
+    /// An invalid reference has no components to write, so it keeps the string it was built from.
+    internal func canonical() -> String {
+        guard isValid()
+        else { return rawPath }
+
+        return "/" + components
+            .map { $0.replacingOccurrences(of: "~", with: "~0").replacingOccurrences(of: "/", with: "~1") }
+            .joined(separator: "/")
+    }
+
     internal func component(_ index: Int) -> String? {
         if index >= self.depth() {
             return nil

@@ -72,18 +72,15 @@ class EventReporter: EventReporting {
     private let encoder: JSONEncoder
 
     let encoding: Encoding
-    private let handWrittenEncoder: EventJSONWriter
 
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
-         encoding: Encoding = .handWrittenCachingContext) {
+         encoding: Encoding = .handWritten) {
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.lastEventResponseDate = Date()
         self.encoding = encoding
         self.encoder = EventReporter.makeEncoder(config: service.config)
-        self.handWrittenEncoder = EventJSONWriter(config: service.config,
-                                                  cachingContexts: encoding == .handWrittenCachingContext)
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
     }
 
@@ -185,7 +182,7 @@ class EventReporter: EventReporting {
     private func publish(_ events: [Event], _ payloadId: String, _ completion: FlushOutcomeClosure?) {
         guard let eventData = encode(events)
         else {
-            os_log("%s Failed to serialize event(s) for publication: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: events))
+            os_log("%s Failed to serialize event(s) for publication: %s", log: service.config.logger, type: .error, typeName(and: #function), String(describing: events))
             // Nothing is left waiting to be sent: no later attempt would produce bytes this one could not.
             completion?(true)
             return
@@ -223,22 +220,56 @@ class EventReporter: EventReporting {
     /// One `JSONWriter` covers the whole run rather than one per event, so its byte buffer and the capacity it has
     /// grown into are reused. That, and the context cache, is most of what the hand-written path saves over the
     /// reflective one — a run of evaluations is nearly always the same context encoded again and again.
+    ///
+    /// If the run cannot be encoded as a whole, each event is retried on its own. Failures are dropped rather than
+    /// put back: the writer cannot fail transiently, so a failed event would fail every later flush.
     private func encode(_ events: [Event]) -> Data? {
         guard encoding != .codable
-        else { return try? encoder.encode(events) }
+        else {
+            if let data = try? encoder.encode(events) {
+                return data
+            }
+            return encodeSkippingFailures(events, using: { try encoder.encode($0) })
+        }
 
         let writer = JSONWriter()
+        let handWritten = EventJSONWriter(config: service.config)
+        return encodeSkippingFailures(events, using: { event in
+            guard let encoded = handWritten.encode(event, into: writer)
+            else { throw EventEncodingError.handWritten }
+            return encoded
+        })
+    }
+
+    private func encodeSkippingFailures(_ events: [Event], using encodeOne: (Event) throws -> Data) -> Data? {
         var payload = Data([UInt8(ascii: "[")])
-        for (index, event) in events.enumerated() {
-            guard let encoded = handWrittenEncoder.encode(event, into: writer)
-            else { return nil }
-            if index > 0 {
+        var written = 0
+        for event in events {
+            let encoded: Data
+            do {
+                encoded = try encodeOne(event)
+            } catch {
+                os_log("%s dropping unserializable event: %s",
+                       log: service.config.logger,
+                       type: .error,
+                       typeName(and: #function),
+                       String(describing: event))
+                continue
+            }
+            if written > 0 {
                 payload.append(UInt8(ascii: ","))
             }
             payload.append(encoded)
+            written += 1
         }
+        guard written > 0
+        else { return nil }
         payload.append(UInt8(ascii: "]"))
         return payload
+    }
+
+    private enum EventEncodingError: Error {
+        case handWritten
     }
 
     private func processEventResponse(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> DeliveryOutcome {
@@ -287,8 +318,8 @@ class EventReporter: EventReporting {
 extension EventReporter {
     /// Which encoder recorded events go through.
     ///
-    /// `.handWrittenCachingContext` is the shipping path. Writing the wire form directly rather than through a
-    /// reflective encoder is what the Android SDK does, and the context cache on top of it pays off because a run of
+    /// `.handWritten` is the shipping path. Writing the wire form directly rather than through a reflective encoder is
+    /// what the Android SDK does, and reusing a context's encoded bytes across the batch pays off because a run of
     /// evaluations is nearly always the same context encoded again and again.
     ///
     /// `.codable` is kept because it is the oracle the writer is checked against: `EventJSONWriterTests` asserts the
@@ -296,8 +327,6 @@ extension EventReporter {
     enum Encoding {
         case codable
         case handWritten
-        /// The hand-written writer, reusing the last context's encoded bytes when the context has not changed.
-        case handWrittenCachingContext
     }
 
     fileprivate static func makeEncoder(config: LDConfig) -> JSONEncoder {

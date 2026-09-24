@@ -68,6 +68,7 @@ final class EventReporterSpec: QuickSpec {
         recordEventSpec()
         testRecordFlagEvaluationEvents()
         reportEventsSpec()
+        unserializableEventSpec()
         reportTimerSpec()
     }
 
@@ -197,6 +198,178 @@ final class EventReporterSpec: QuickSpec {
                 }
                 it("records a dropped event to diagnosticCache") {
                     expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 1
+                }
+            }
+        }
+    }
+
+    /// Matching the Android recovery tests: a run that cannot be serialized is dropped, and the next
+    /// flush still delivers. The shipping encoder writes non-finite numbers as JSON null, so the
+    /// public `track(metricValue: .nan)` path does not fail encode; `JSONEncoder` does, which is how
+    /// these tests force the failure the Android Gson path sees for `Double.NaN`.
+    private func unserializableEventSpec() {
+        describe("unserializable events") {
+            var serviceMock: DarklyServiceMock!
+            var ldContext: LDContext!
+            var reporter: EventReporter!
+
+            func makeReporter(encoding: EventReporter.Encoding) -> EventReporter {
+                var config = LDConfig.stub
+                config.eventCapacity = 8
+                ldContext = LDContext.stub()
+                serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                serviceMock.stubEventResponse(success: true)
+                return EventReporter(service: serviceMock, onSyncComplete: nil, encoding: encoding)
+            }
+
+            afterEach {
+                reporter?.isOnline = false
+            }
+
+            context("when JSONEncoder rejects a non-finite metric") {
+                beforeEach {
+                    reporter = makeReporter(encoding: .codable)
+                    reporter.isOnline = true
+                }
+                it("drops the poisoned batch and delivers a later event") {
+                    waitUntil { done in
+                        reporter.record(CustomEvent(key: "poison", context: ldContext, metricValue: .nan))
+                        reporter.flush(completion: done)
+                    }
+                    expect(serviceMock.publishEventDataCallCount) == 0
+                    expect(reporter.eventStore.isEmpty) == true
+
+                    waitUntil { done in
+                        reporter.record(CustomEvent(key: "after-poison", context: ldContext, metricValue: 1.0))
+                        reporter.flush(completion: done)
+                    }
+                    expect(serviceMock.publishEventDataCallCount) == 1
+                    let published = try JSONDecoder().decode(LDValue.self, from: serviceMock.publishedEventData!)
+                    valueIsArray(published) { events in
+                        expect(events.count) == 1
+                        valueIsObject(events[0]) { body in
+                            expect(body["key"]) == "after-poison"
+                        }
+                    }
+                }
+            }
+
+            context("when JSONEncoder rejects a non-finite metric beside a valid event") {
+                beforeEach {
+                    reporter = makeReporter(encoding: .codable)
+                    reporter.isOnline = true
+                }
+                it("drops only the poisoned event") {
+                    waitUntil { done in
+                        reporter.record(CustomEvent(key: "poison", context: ldContext, metricValue: .nan))
+                        reporter.record(CustomEvent(key: "kept", context: ldContext, metricValue: 1.0))
+                        reporter.flush(completion: done)
+                    }
+                    expect(serviceMock.publishEventDataCallCount) == 1
+                    let published = try JSONDecoder().decode(LDValue.self, from: serviceMock.publishedEventData!)
+                    valueIsArray(published) { events in
+                        expect(events.count) == 1
+                        valueIsObject(events[0]) { body in
+                            expect(body["key"]) == "kept"
+                        }
+                    }
+                }
+            }
+
+            context("when JSONEncoder rejects a non-finite summary beside a valid event") {
+                beforeEach {
+                    reporter = makeReporter(encoding: .codable)
+                    reporter.isOnline = true
+                }
+                it("drops only the poisoned summary") {
+                    waitUntil { done in
+                        reporter.recordFlagEvaluationEvents(flagKey: "poison-flag",
+                                                            value: .number(.nan),
+                                                            defaultValue: .number(0),
+                                                            featureFlag: nil,
+                                                            context: ldContext,
+                                                            includeReason: false)
+                        reporter.record(IdentifyEvent(context: ldContext))
+                        reporter.flush(completion: done)
+                    }
+                    expect(serviceMock.publishEventDataCallCount) == 1
+                    let published = try JSONDecoder().decode(LDValue.self, from: serviceMock.publishedEventData!)
+                    valueIsArray(published) { events in
+                        expect(events.count) == 1
+                        valueIsObject(events[0]) { body in
+                            expect(body["kind"]) == "identify"
+                        }
+                    }
+                }
+            }
+
+            context("when JSONEncoder rejects a non-finite summary value") {
+                beforeEach {
+                    reporter = makeReporter(encoding: .codable)
+                    reporter.isOnline = true
+                }
+                it("drops the poisoned summary and delivers a later one") {
+                    waitUntil { done in
+                        reporter.recordFlagEvaluationEvents(flagKey: "poison-flag",
+                                                            value: .number(.nan),
+                                                            defaultValue: .number(0),
+                                                            featureFlag: nil,
+                                                            context: ldContext,
+                                                            includeReason: false)
+                        reporter.flush(completion: done)
+                    }
+                    expect(serviceMock.publishEventDataCallCount) == 0
+                    expect(reporter.eventStore.isEmpty) == true
+                    expect(reporter.contextSummarizer.hasLoggedRequests) == false
+
+                    waitUntil { done in
+                        reporter.recordFlagEvaluationEvents(flagKey: "after-poison",
+                                                            value: .bool(true),
+                                                            defaultValue: .bool(false),
+                                                            featureFlag: nil,
+                                                            context: ldContext,
+                                                            includeReason: false)
+                        reporter.flush(completion: done)
+                    }
+                    expect(serviceMock.publishEventDataCallCount) == 1
+                    let published = try JSONDecoder().decode(LDValue.self, from: serviceMock.publishedEventData!)
+                    valueIsArray(published) { events in
+                        expect(events.count) == 1
+                        valueIsObject(events[0]) { body in
+                            expect(body["kind"]) == "summary"
+                            valueIsObject(body["features"]) { features in
+                                expect(features["after-poison"]).toNot(beNil())
+                            }
+                        }
+                    }
+                }
+            }
+
+            context("when the shipping encoder sees a non-finite metric") {
+                beforeEach {
+                    reporter = makeReporter(encoding: .handWritten)
+                    reporter.isOnline = true
+                }
+                it("serializes the event and still delivers later events") {
+                    waitUntil { done in
+                        reporter.record(CustomEvent(key: "poison", context: ldContext, metricValue: .nan))
+                        reporter.flush(completion: done)
+                    }
+                    expect(serviceMock.publishEventDataCallCount) == 1
+
+                    waitUntil { done in
+                        reporter.record(CustomEvent(key: "after-poison", context: ldContext, metricValue: 1.0))
+                        reporter.flush(completion: done)
+                    }
+                    expect(serviceMock.publishEventDataCallCount) == 2
+                    let published = try JSONDecoder().decode(LDValue.self, from: serviceMock.publishedEventData!)
+                    valueIsArray(published) { events in
+                        expect(events.count) == 1
+                        valueIsObject(events[0]) { body in
+                            expect(body["key"]) == "after-poison"
+                        }
+                    }
                 }
             }
         }
@@ -704,6 +877,19 @@ final class EventReporterSpec: QuickSpec {
                         expect(valueArray.count) == testContext.events.count
                         expect(valueArray) == testContext.events.map { encodeToLDValue($0) }
                     }
+                }
+            }
+            context("on later intervals") {
+                beforeEach {
+                    testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
+                    testContext.eventReporter.isOnline = true
+                    testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
+                }
+                it("publishes events recorded after the first fire") {
+                    expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+                    testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
+                    expect(testContext.serviceMock.publishEventDataCallCount)
+                        .toEventually(equal(2), timeout: .seconds(2))
                 }
             }
             it("without events") {
