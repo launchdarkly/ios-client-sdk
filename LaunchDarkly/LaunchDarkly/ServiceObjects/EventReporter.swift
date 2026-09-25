@@ -184,14 +184,14 @@ class EventReporter: EventReporting {
     ///
     /// A commit point writes a single event, so a cache that lived for one commit would never be read. It needs no
     /// lock of its own because it is only ever reached from `encode(_:)`, which runs under `commitLock`.
-    fileprivate let handWrittenEncoder: EventJSONWriter
+    fileprivate let eventJSONWriter: EventJSONWriter
 
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
          store: EventStoring? = nil,
          encoding: Encoding = .handWritten,
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.commitQueue", qos: .userInitiated)) {
-        self.handWrittenEncoder = EventJSONWriter(config: service.config)
+        self.eventJSONWriter = EventJSONWriter(config: service.config)
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.responseDate = Date()
@@ -395,7 +395,7 @@ class EventReporter: EventReporting {
     }
 
     private func encode(_ event: Event) -> Data? {
-        let encoded: Data? = encoding == .codable ? try? encoder.encode(event) : handWrittenEncoder.encode(event)
+        let encoded: Data? = encoding == .codable ? try? encoder.encode(event) : eventJSONWriter.encode(event)
         guard let encoded = encoded
         else {
             os_log("%s Failed to serialize event for publication: %s", log: service.config.logger, type: .error, typeName(and: #function), String(describing: event))
