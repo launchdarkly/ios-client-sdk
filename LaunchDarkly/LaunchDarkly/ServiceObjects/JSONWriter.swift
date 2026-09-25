@@ -1,9 +1,7 @@
 import Foundation
 
-/// Appends JSON straight into a byte buffer, with no intermediate objects, containers, or existentials.
-///
-/// Knows JSON structure and scalars — objects, arrays, strings, numbers, bools, and null — and not the shapes of
-/// any SDK type. Callers own those. `EventJSONWriterTests` is the correctness gate against `JSONEncoder`.
+/// Appends compact JSON to a byte buffer. Callers are responsible for well-formed nesting: every `key` is followed by
+/// exactly one value, and every container that is begun is ended.
 final class JSONWriter {
     private var bytes: [UInt8] = []
 
@@ -18,15 +16,20 @@ final class JSONWriter {
     }
 
     var data: Data {
-        // Copy. `Data(bytes)` can share the array's storage, and the next `reset()` would mutate it in place.
+        // Copied, so the next `reset()` cannot affect it.
         bytes.withUnsafeBytes { Data($0) }
     }
 
     var byteCount: Int { bytes.count }
 
+    /// Whether a NaN or infinite `Double` has been written since the last `reset()`. JSON cannot represent one, so
+    /// output with this set is not what the caller asked for.
+    private(set) var wroteNonFiniteNumber = false
+
     func reset() {
         bytes.removeAll(keepingCapacity: true)
         needsSeparator = false
+        wroteNonFiniteNumber = false
     }
 
     /// Appends JSON that was produced earlier, in the position a value would go.
@@ -36,10 +39,7 @@ final class JSONWriter {
         needsSeparator = true
     }
 
-    /// The bytes written since `offset`, for handing a freshly encoded fragment to a cache.
-    ///
-    /// Copied out of the live buffer so the cache does not share storage with `bytes`. `Array(bytes[offset...])` can,
-    /// and a later `reset()` would then clear the cached fragment in place.
+    /// A copy of the bytes written since `offset`, independent of the buffer so that `reset()` does not affect it.
     func bytes(from offset: Int) -> [UInt8] {
         bytes.withUnsafeBufferPointer { buffer in
             Array(buffer[offset..<buffer.count])
@@ -102,9 +102,8 @@ final class JSONWriter {
     }
 
     /// Integral values up to 2^53 are written as plain integers and everything else as Swift's shortest round-trip
-    /// description, which is where `JSONEncoder` draws the same line: above 2^53 it writes `1e+17`, not
-    /// `100000000000000000`. The two spellings are the same number, but only matching the boundary keeps a value from
-    /// changing form depending on which encoder wrote it.
+    /// description, the same boundary `JSONEncoder` uses. A non-finite value is written as `null`, so the output stays
+    /// well-formed, and sets `wroteNonFiniteNumber`.
     ///
     /// `-0.0` is written as `0`, where `JSONEncoder` writes `-0`. Both parse to a value equal to zero.
     func write(_ value: Double) {
@@ -115,6 +114,7 @@ final class JSONWriter {
             bytes.append(contentsOf: String(value).utf8)
         } else {
             bytes.append(contentsOf: JSONWriter.nullBytes)
+            wroteNonFiniteNumber = true
         }
         needsSeparator = true
     }
@@ -158,8 +158,7 @@ final class JSONWriter {
     private static let nullBytes = Array("null".utf8)
     private static let hexDigits = Array("0123456789abcdef".utf8)
 
-    /// 2^53: every integer up to here is exactly representable as a `Double`, and it is the largest `JSONEncoder`
-    /// writes without an exponent.
+    /// 2^53, the largest value `JSONEncoder` writes without an exponent.
     private static let largestPlainInteger: Double = 9_007_199_254_740_992
 
     private func separate() {
@@ -169,7 +168,6 @@ final class JSONWriter {
     }
 
     /// Digits are appended in reverse and then flipped in place, so no scratch buffer is allocated per number.
-    /// `String(value).utf8` is 3× slower.
     private func writeInteger(_ value: Int64) {
         if value < 0 {
             bytes.append(UInt8(ascii: "-"))
@@ -195,13 +193,12 @@ final class JSONWriter {
         }
     }
 
-    /// Escapes exactly what JSON requires. Multi-byte UTF-8 passes through untouched, because every continuation byte
-    /// has its high bit set and so is above the escape range. That leaves `/` unescaped, where `JSONEncoder` writes
-    /// `\/`; JSON allows either and they decode to the same string.
+    /// Escapes exactly what JSON requires: control characters, `"` and `\`. Multi-byte UTF-8 passes through untouched,
+    /// because every byte of it has the high bit set. `/` is left unescaped, where `JSONEncoder` writes `\/`; both
+    /// decode to the same string.
     ///
-    /// Keys and values almost never contain a byte needing an escape, so the loop finds runs that need none and copies
-    /// each in one go rather than appending a byte at a time. `withContiguousStorageIfAvailable` succeeds for native
-    /// Swift strings; the fallback exists for the bridged ones where it does not.
+    /// Runs that need no escaping are copied in one append. The byte-at-a-time fallback is for bridged strings, which
+    /// may not have contiguous UTF-8 storage.
     private func writeQuoted(_ value: String) {
         bytes.append(UInt8(ascii: "\""))
         let written: Void? = value.utf8.withContiguousStorageIfAvailable { buffer in

@@ -37,31 +37,8 @@ public struct LDContext: Encodable, Equatable {
     fileprivate var canonicalizedKey: String
     internal var attributes: [String: LDValue] = [:]
 
-    // Internal property used to control encoding.
-    //
-    // Normally we would control this encoding mechanism through the use of userKeys.
-    // However, the anonymous redaction mechanism has to vary on a per event basis,
-    // and so we cannot affect the entire JSON encoder in this way.
-    internal var redactAnonymousAttributes: Bool = false
-
     fileprivate init(canonicalizedKey: String) {
         self.canonicalizedKey = canonicalizedKey
-    }
-
-    /// A copy of this context that redacts anonymous attributes when it is encoded.
-    ///
-    /// `LDContext` is a value type, so this is an ordinary struct copy: the attribute dictionary and the sub-context
-    /// array are shared until one side mutates, and nothing is rebuilt. **The sharing matters for more than the
-    /// allocation it saves.** `Dictionary` and `Array` equality compare buffer identity before contents, so two
-    /// contexts related by this copy compare equal in single-digit nanoseconds instead of by walking every attribute --
-    /// which is what makes a context-keyed cache affordable.
-    ///
-    /// Only the top-level flag is ever read. `encode(to:)` passes the parent's value down to every sub-context and
-    /// ignores whatever theirs holds, so the sub-contexts do not need rewriting here.
-    internal func redactingAnonymousAttributes() -> LDContext {
-        var copy = self
-        copy.redactAnonymousAttributes = true
-        return copy
     }
 
     init() {
@@ -154,7 +131,10 @@ public struct LDContext: Encodable, Equatable {
 
         let meta = Meta(privateAttributes: context.privateAttributes, redactedAttributes: redactedAttributes)
 
-        if !meta.isEmpty {
+        // Redacted output writes `_meta` only when something was redacted, as Android does. Unredacted output still
+        // writes it whenever the context has private attributes: `contextHash()` digests that output to validate
+        // cached flags, so changing it would discard them.
+        if redactAttributes ? !redactedAttributes.isEmpty : !meta.isEmpty {
             try container.encodeIfPresent(meta, forKey: DynamicCodingKeys(string: "_meta"))
         }
 
@@ -263,6 +243,12 @@ public struct LDContext: Encodable, Equatable {
     }
 
     public func encode(to encoder: Encoder) throws {
+        try encode(to: encoder, redactAnonymousAttributes: false)
+    }
+
+    /// `redactAnonymousAttributes` applies to every part of a multi-context. It is an argument rather than an
+    /// encoder `userInfo` key because it varies per event, while `userInfo` is fixed for the whole encoder.
+    internal func encode(to encoder: Encoder, redactAnonymousAttributes: Bool) throws {
         var container = encoder.container(keyedBy: DynamicCodingKeys.self)
 
         let allAttributesPrivate = encoder.userInfo[UserInfoKeys.allAttributesPrivate] as? Bool ?? false
@@ -614,12 +600,8 @@ extension LDContext: Decodable {
 
 extension LDContext: TypeIdentifying {}
 
-/// The seam `LDContextJSONWriter` reaches through.
-///
-/// Redaction is the part of encoding worth measuring, so the hand-written writer reuses `maybeRedact` and the
-/// private-attribute lookup it walks rather than reimplementing them: the two encoders must differ in how bytes are
-/// produced, not in what gets redacted. Those, and the three stored properties below, are file-private to `LDContext`,
-/// and this is the whole of what the writer needs from them.
+/// Access to file-private state and redaction logic for `LDContextJSONWriter`, so both encoders redact through the
+/// same `maybeRedact`.
 extension LDContext {
     internal var writableKey: String? { key }
     internal var isAnonymous: Bool { anonymous }
@@ -739,6 +721,8 @@ public struct LDContextBuilder {
     ///
     /// - "anonymous": Must be a boolean. See `LDContextBuilder.anonymous(_:)`.
     ///
+    /// - "_meta": Reserved for the context's metadata, and cannot be set with any value.
+    ///
     /// Values that are JSON arrays or objects have special behavior when referenced in
     /// flag/segment rules.
     ///
@@ -770,6 +754,8 @@ public struct LDContextBuilder {
         case ("anonymous", .bool(let val)):
             self.anonymous(val)
         case ("anonymous", _):
+            return false
+        case ("_meta", _):
             return false
         case (_, .null):
             self.attributes.removeValue(forKey: name)

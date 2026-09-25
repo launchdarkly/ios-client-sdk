@@ -51,12 +51,7 @@ class EventReporter: EventReporting {
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
-    /// The reflective encoder, built once and then only read.
-    ///
-    /// `JSONEncoder` is `@unchecked Sendable` and constructs a fresh internal encoder for each `encode` call, so one
-    /// instance can be shared — but only while nothing mutates it, which is why `userInfo` is set here rather than per
-    /// call. What it holds cannot go stale: `config` is a `let` on the service, so the privacy settings the encoding
-    /// depends on are fixed for as long as this reporter exists.
+    /// Shared across concurrent flushes, so it must not be mutated after `init`.
     private let encoder: JSONEncoder
 
     let encoding: Encoding
@@ -188,12 +183,8 @@ class EventReporter: EventReporting {
 
     /// Encodes a run of events as the array the events endpoint takes.
     ///
-    /// One `EventJSONWriter` covers the whole run rather than one per event, so its byte buffer and the capacity it
-    /// has grown into are reused. That, and its context cache, is most of what the hand-written path saves over the
-    /// reflective one — a run of evaluations is nearly always the same context encoded again and again.
-    ///
-    /// If the run cannot be encoded as a whole, each event is retried on its own. Failures are dropped rather than
-    /// put back: the writer cannot fail transiently, so a failed event would fail every later flush.
+    /// If the run cannot be encoded as a whole, each event is retried on its own. Events that fail are dropped rather
+    /// than put back, because encoding is deterministic and they would fail every later flush too.
     private func encode(_ events: [Event]) -> Data? {
         guard encoding != .codable
         else {
@@ -288,13 +279,8 @@ class EventReporter: EventReporting {
 extension EventReporter {
     /// Which encoder recorded events go through.
     ///
-    /// `.handWritten` is the shipping path. Writing the wire form directly rather than through a reflective encoder is
-    /// what the Android SDK does, and reusing a context's encoded bytes across the batch pays off because a run of
-    /// evaluations is nearly always the same context encoded again and again.
-    ///
-    /// `.codable` is kept because it is the oracle the writer is checked against: `EventJSONWriterTests` asserts the
-    /// two produce equal JSON, and where they disagree `.codable` is right. Equal JSON rather than identical bytes: key
-    /// order differs, and so do `/` against `\/` and `0` against `-0`.
+    /// `.codable` is the reference `.handWritten` is tested against. The two produce equal JSON but not identical
+    /// bytes: key order differs, as do `/` against `\/` and `0` against `-0`.
     enum Encoding {
         case codable
         case handWritten

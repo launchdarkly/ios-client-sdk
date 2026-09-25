@@ -9,24 +9,11 @@ class ContextSummarizer {
 
     /// A context used as a dictionary key.
     ///
-    /// `LDContext.contextHash()` encodes the context to JSON and digests the result. That is the right price for the
-    /// flag cache, which persists the digest and compares it across launches, but it is far more than a bucketing key
-    /// needs to cost -- and an application reading a flag on every redraw pays it on every redraw. Hashing the
-    /// canonicalized key instead reads a string the context already stores. Equal contexts always share that key, so
-    /// the `Hashable` contract holds; the contexts that differ elsewhere collide, and `==` separates them.
+    /// Hashes only the fully qualified key, which the context already stores; `LDContext.contextHash()` would encode
+    /// the whole context on every evaluation. Equal contexts share that key, so the `Hashable` contract holds, and
+    /// contexts that collide are separated by `==`.
     struct ContextKey: Hashable {
         let context: LDContext
-
-        init(context: LDContext) {
-            // `redactAnonymousAttributes` says how a context is encoded for output, not which context it is,
-            // and Swift synthesizes `==` across every stored property. Left alone it would let an encoding
-            // concern split one context into two buckets. Android keys on `LDContext.equals`, which has no
-            // such field, so clearing it is also what keeps the two platforms agreeing on which evaluations
-            // belong to the same summary.
-            var normalized = context
-            normalized.redactAnonymousAttributes = false
-            self.context = normalized
-        }
 
         func hash(into hasher: inout Hasher) {
             hasher.combine(context.fullyQualifiedKey())
@@ -61,8 +48,7 @@ class ContextSummarizer {
     private func ensureTrackerExists(for context: LDContext, key: ContextKey) {
         guard trackers[key] == nil else { return }
 
-        // Stored as the caller gave it. Summaries redact anonymous attributes, as feature events do, but that is
-        // `SummaryEvent.redactsAnonymousAttributes` to say at encode time -- not something to bake into the context.
+        // Redaction is applied when the summary is encoded; see `Event.redactsAnonymousAttributes`.
         trackers[key] = TrackerWithContext(
             tracker: FlagRequestTracker(logger: logger),
             context: context

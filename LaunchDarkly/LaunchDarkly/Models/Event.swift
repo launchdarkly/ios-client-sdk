@@ -26,21 +26,26 @@ class Event: Encodable {
 
     /// Whether this event's context is written with the attributes of anonymous contexts redacted.
     ///
-    /// This is a property of the *event*, not of the context: one context redacts on a feature event and does not on
-    /// the debug event that accompanies it. Keeping it here means every event can hold the caller's context value
-    /// unchanged, rather than a copy carrying an encoding directive.
+    /// Depends on the event kind, not the context: the same context is redacted in a feature event and not in the
+    /// debug event that accompanies it.
     var redactsAnonymousAttributes: Bool {
         kind == .feature || kind == .summary
     }
 
-    /// Writes `context` under `.context`, applying this event's redaction directive.
-    ///
-    /// `Encodable.encode(to:)` takes no arguments, so the `Codable` path has no way to pass the directive down except
-    /// on the context itself -- which is what `LDContext.redactAnonymousAttributes` exists for. Taking that copy here,
-    /// at encode time, confines it to this one call instead of the lifetime of the event.
     fileprivate func encode(context: LDContext, into container: inout KeyedEncodingContainer<CodingKeys>) throws {
-        try container.encode(redactsAnonymousAttributes ? context.redactingAnonymousAttributes() : context,
+        try container.encode(EventContext(context: context, redactAnonymousAttributes: redactsAnonymousAttributes),
                              forKey: .context)
+    }
+
+    /// Carries the redaction directive to `LDContext.encode(to:redactAnonymousAttributes:)`, since `encode(to:)`
+    /// takes no arguments.
+    private struct EventContext: Encodable {
+        let context: LDContext
+        let redactAnonymousAttributes: Bool
+
+        func encode(to encoder: Encoder) throws {
+            try context.encode(to: encoder, redactAnonymousAttributes: redactAnonymousAttributes)
+        }
     }
 
     func encode(to encoder: Encoder) throws {

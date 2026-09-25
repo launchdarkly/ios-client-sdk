@@ -1,17 +1,16 @@
 import XCTest
 @testable import LaunchDarkly
 
-/// The gate `EventJSONWriter` has to pass before its speed is worth discussing: for every event and context shape the
-/// SDK can produce, it must write the same JSON the `Codable` path writes.
+/// For every event and context shape the SDK can produce, `EventJSONWriter` must write the same JSON as the `Codable`
+/// path.
 ///
-/// Comparison is JSON-equal rather than byte-equal, because neither encoder fixes the order of object keys and Swift's
-/// `Dictionary` iteration order is not stable between runs. Both sides are reparsed and reserialized with sorted keys,
-/// which normalizes ordering and `1` against `1.0` while still separating `true` from `1` and `"1"` from `1`.
+/// Comparison is JSON-equal rather than byte-equal, because neither encoder fixes the order of object keys. Both sides
+/// are reparsed and reserialized with sorted keys, which normalizes ordering and `1` against `1.0` while still
+/// separating `true` from `1` and `"1"` from `1`.
 ///
-/// That normalization is not a perfect equivalence. It also hides the byte-level differences the writer has on
-/// purpose -- `/` against `\/`, `0` against `-0` -- and it reserializes `100000000000000000` and `1e+17` differently
-/// even though they are the same number, so numbers are additionally compared as bytes where the formats should
-/// agree exactly.
+/// That normalization also hides the writer's known byte-level differences -- `/` against `\/`, `0` against `-0` --
+/// and it reserializes `100000000000000000` and `1e+17` differently even though they are the same number, so numbers
+/// are also compared as bytes where the two formats should agree exactly.
 final class EventJSONWriterTests: XCTestCase {
 
     // MARK: Corpus
@@ -40,7 +39,7 @@ final class EventJSONWriterTests: XCTestCase {
         return try! builder.build().get()
     }
 
-    /// Keys and values that exercise escaping, which is where a hand-written writer is most likely to be wrong.
+    /// Keys and values that need escaping.
     private func awkwardContext() -> LDContext {
         var builder = LDContextBuilder(key: "quote\"back\\slash")
         builder.name("tab\there\nnewline\u{0001}control")
@@ -71,12 +70,21 @@ final class EventJSONWriterTests: XCTestCase {
         return try! builder.build().get()
     }
 
-    /// A context whose only `_meta` content is private attributes, which the event path never writes. The `Codable`
-    /// path still emits an empty `_meta` object here, and so must this one.
+    /// A private attribute that matches nothing, so nothing is redacted and no `_meta` is written.
     private func contextWithUnmatchedPrivateAttribute() -> LDContext {
         var builder = LDContextBuilder(key: "user-key")
         builder.name("Unmatched")
         builder.addPrivateAttribute(Reference("notPresent"))
+        return try! builder.build().get()
+    }
+
+    /// Tries to set an attribute named `_meta` alongside a private attribute, so `_meta` is also written by the SDK.
+    private func contextAttemptingMeta() -> LDContext {
+        var builder = LDContextBuilder(key: "user-key")
+        builder.name("Meta")
+        _ = builder.trySetValue("email", "meta@example.com")
+        _ = builder.trySetValue("_meta", ["redactedAttributes": [], "appSupplied": "leaked"])
+        builder.addPrivateAttribute(Reference("email"))
         return try! builder.build().get()
     }
 
@@ -104,6 +112,7 @@ final class EventJSONWriterTests: XCTestCase {
          ("anonymous", anonymousContext()),
          ("private attributes", contextWithPrivateAttributes()),
          ("unmatched private attribute", contextWithUnmatchedPrivateAttribute()),
+         ("attempting _meta", contextAttemptingMeta()),
          ("multi", multiContext())]
     }
 
@@ -145,15 +154,14 @@ final class EventJSONWriterTests: XCTestCase {
         ]
     }
 
-    // MARK: The gate
+    // MARK: Agreement with Codable
 
     func testMatchesCodableOutputAcrossTheCorpus() throws {
         var compared = 0
 
-        // Run the whole corpus twice: once with a writer per event, so its cache never hits, and once with a writer
-        // for the whole corpus, so the first event for a context misses and the rest hit. Feature events hit a
-        // *different* entry from the others because they carry a copy with `redactAnonymousAttributes` set, so the
-        // second pass covers the cache distinguishing them as well as agreeing with `Codable`.
+        // Once with a writer per event, so the cache never hits, and once with one writer for the whole corpus, so
+        // every event after the first for a context hits. Feature events and summaries use the other cache entry,
+        // so the second pass also covers the two entries being kept apart.
         for sharingAWriter in [false, true] {
             for (privacyName, allAttributesPrivate, globalPrivateAttributes) in privacySettings {
                 let codable = Self.makeCodableEncoder(allAttributesPrivate: allAttributesPrivate,
@@ -185,13 +193,8 @@ final class EventJSONWriterTests: XCTestCase {
         XCTAssertEqual(compared, 2 * privacySettings.count * contexts.count * events(context: simpleContext()).count)
     }
 
-    /// What makes `==` a sound cache key even though `Reference` equality ignores spelling.
-    ///
-    /// `Reference` compares its parsed components and ignores the string it was built from, so two contexts whose only
-    /// difference is how a private attribute was spelled are `==`. Redaction writes `_meta.redactedAttributes` from
-    /// `Reference.canonical()` rather than from that spelling, so contexts that are `==` also encode the same, and the
-    /// cache cannot serve one for the other in any way an observer could tell. Write `raw()` there instead and this
-    /// fails.
+    /// Contexts that differ only in how a private attribute is spelled are `==`, so they share a cache entry, and must
+    /// therefore encode the same.
     func testPrivateAttributeSpellingDoesNotReachTheOutput() throws {
         func context(privateAttribute: String) throws -> LDContext {
             var builder = LDContextBuilder(key: "user-key")
@@ -233,7 +236,79 @@ final class EventJSONWriterTests: XCTestCase {
         }
     }
 
-    /// A run of events on one context, which is the pattern the cache exists for, then a context that changes under it.
+    /// Checked on the raw bytes, because reparsing collapses repeated keys and would hide a second `_meta`.
+    func testOnlyTheSDKWritesMeta() throws {
+        let event = IdentifyEvent(context: contextAttemptingMeta())
+
+        for (name, writer) in encoders() {
+            let written = utf8(try XCTUnwrap(writer(event), name))
+
+            XCTAssertEqual(written.components(separatedBy: "\"_meta\"").count - 1, 1, "\(name): \(written)")
+            XCTAssertFalse(written.contains("appSupplied"), "\(name): \(written)")
+            XCTAssertTrue(written.contains("\"redactedAttributes\":[\"") && written.contains("email\"]"),
+                          "\(name): \(written)")
+        }
+    }
+
+    /// Events write `_meta` only when something was redacted. Unredacted output keeps it for a context with private
+    /// attributes, because `contextHash()` digests that output to validate cached flags.
+    func testMetaIsWrittenOnlyWhenSomethingWasRedacted() throws {
+        let context = contextWithUnmatchedPrivateAttribute()
+
+        for (name, writer) in encoders() {
+            let written = utf8(try XCTUnwrap(writer(IdentifyEvent(context: context)), name))
+            XCTAssertFalse(written.contains("_meta"), "\(name): \(written)")
+        }
+
+        let unredacted = JSONEncoder()
+        unredacted.userInfo[LDContext.UserInfoKeys.redactAttributes] = false
+        XCTAssertTrue(utf8(try unredacted.encode(context)).contains("\"_meta\":{}"))
+    }
+
+    /// Wherever a NaN or infinite number sits in an event, neither encoder produces output for it.
+    func testEventsHoldingNonFiniteNumbersAreRejectedByBothEncoders() throws {
+        var builder = LDContextBuilder(key: "user-key")
+        _ = builder.trySetValue("score", .number(.infinity))
+        let contextWithInfinity = try builder.build().get()
+        let context = simpleContext()
+
+        var tracker = FlagRequestTracker(logger: .disabled)
+        tracker.trackRequest(flagKey: "flag-key", reportedValue: .number(.nan), featureFlag: nil,
+                             defaultValue: false, context: context)
+
+        let events: [(String, Event)] = [
+            ("metric", CustomEvent(key: "custom-key", context: context, metricValue: .nan)),
+            ("data", CustomEvent(key: "custom-key", context: context, data: ["nested": [.number(-.infinity)]])),
+            ("feature value", FeatureEvent(key: "flag-key", context: context, value: .number(.nan), defaultValue: false,
+                                           featureFlag: nil, includeReason: false, isDebug: false)),
+            ("summary value", SummaryEvent(flagRequestTracker: tracker, context: context)),
+            ("context attribute", IdentifyEvent(context: contextWithInfinity))
+        ]
+
+        let codable = Self.makeCodableEncoder(allAttributesPrivate: false, globalPrivateAttributes: [])
+        let handWritten = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
+        for (name, event) in events {
+            XCTAssertThrowsError(try codable.encode(event), name)
+            XCTAssertNil(handWritten.encode(event), name)
+        }
+    }
+
+    /// A context that failed to encode is not cached, or a later event would be served its bytes without the number
+    /// that made them invalid.
+    func testAContextHoldingANonFiniteNumberIsNotCached() throws {
+        var builder = LDContextBuilder(key: "user-key")
+        _ = builder.trySetValue("score", .number(.nan))
+        let context = try builder.build().get()
+
+        let writer = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
+        for _ in 0..<3 {
+            XCTAssertNil(writer.encode(IdentifyEvent(context: context)))
+            XCTAssertNil(writer.encode(CustomEvent(key: "custom-key", context: context)))
+        }
+        XCTAssertNotNil(writer.encode(IdentifyEvent(context: simpleContext())))
+    }
+
+    /// A run of events on one context, then on a different one.
     func testCacheSurvivesContextChanges() throws {
         let caching = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
 
@@ -246,7 +321,7 @@ final class EventJSONWriterTests: XCTestCase {
         _ = mutating.trySetValue("email", "second@example.com")
         let second = try mutating.build().get()
 
-        // Same key and kind, different attributes: a digest keyed on the canonical key would collide here.
+        // Same key and kind, different attributes.
         XCTAssertNotEqual(first, second)
 
         for context in [first, first, second, second, first, anonymousContext(), first] {
@@ -258,13 +333,26 @@ final class EventJSONWriterTests: XCTestCase {
         }
     }
 
-    /// `redactAnonymousAttributes` is never written out -- it is a directive, read in one place:
-    /// `redactAll = allAttributesPrivate || (isAnonymous && redactAnonymousAttributes)`. So it can only reach the
-    /// output through a context that is itself anonymous, or, for a multi-context, through any part that is: the
-    /// top-level flag is passed down and each part is tested against its own `anonymous`.
-    ///
-    /// Where it cannot reach the output, the two variants the event stream carries encode to identical bytes -- and
-    /// still occupy separate cache slots, because the flag is a stored property and so part of `==`.
+    func testAnEqualContextBuiltSeparatelyIsServedFromTheCache() throws {
+        let cache = ContextEncodingCache()
+        let stored = richContext()
+        let rebuilt = richContext()
+        let encoded = Array("stored".utf8)
+        XCTAssertEqual(stored, rebuilt)
+
+        cache.store(stored, redactAnonymous: false, encoded: encoded)
+
+        for _ in 0..<3 {
+            XCTAssertEqual(cache.encodedContext(for: rebuilt, redactAnonymous: false), encoded)
+            XCTAssertEqual(cache.encodedContext(for: stored, redactAnonymous: false), encoded)
+        }
+        XCTAssertNil(cache.encodedContext(for: rebuilt, redactAnonymous: true))
+        XCTAssertNil(cache.encodedContext(for: simpleContext(), redactAnonymous: false))
+        XCTAssertEqual(cache.encodedContext(for: stored, redactAnonymous: false), encoded)
+    }
+
+    /// The anonymous-redaction directive only affects contexts that are anonymous, or multi-contexts with an anonymous
+    /// part.
     func testTheAnonymousRedactionFlagOnlyChangesBytesForAnonymousContexts() throws {
         func encoded(_ context: LDContext, redactAnonymous: Bool) throws -> String {
             let writer = JSONWriter()
@@ -275,14 +363,14 @@ final class EventJSONWriterTests: XCTestCase {
             return try canonical(writer.data)
         }
 
-        // Nothing anonymous: the directive is inert, and the two cache slots hold the same bytes.
+        // Nothing anonymous: the directive changes nothing.
         for (name, context) in [("simple", simpleContext()), ("rich", richContext())] {
             XCTAssertEqual(try encoded(context, redactAnonymous: false),
                            try encoded(context, redactAnonymous: true),
                            "the directive reached the output for a context with no anonymous part: \(name)")
         }
 
-        // Anonymous, whole or in part: the directive is load-bearing, and the slots must stay separate.
+        // Anonymous, whole or in part: the directive changes the output.
         for (name, context) in [("anonymous", anonymousContext()), ("multi, anonymous device", multiContext())] {
             XCTAssertNotEqual(try encoded(context, redactAnonymous: false),
                               try encoded(context, redactAnonymous: true),
@@ -290,9 +378,7 @@ final class EventJSONWriterTests: XCTestCase {
         }
     }
 
-    /// The directive now comes from the event kind, so the same context redacts on a feature event and does not on the
-    /// debug event that accompanies it. Both paths have to agree on that, since the debug event exists to show what was
-    /// evaluated.
+    /// The same context is redacted in a feature event and not in the debug event that accompanies it, by both encoders.
     func testTheEventKindDecidesWhetherAnonymousAttributesAreRedacted() throws {
         let context = anonymousContext()
         let flag = FeatureFlag(flagKey: "flag-key", value: true, variation: 1, flagVersion: 7, trackEvents: true)
@@ -319,42 +405,28 @@ final class EventJSONWriterTests: XCTestCase {
         return [("Codable", { try codable.encode($0) }), ("hand-written", { handWritten.encode($0) })]
     }
 
-    /// `redactingAnonymousAttributes()` is a plain struct copy, which -- unlike the deep copy it replaced -- leaves the
-    /// sub-contexts of a multi-context untouched instead of clearing their flags. That is only safe because encoding
-    /// reads the flag from the top-level context and passes it down, ignoring whatever the sub-contexts hold. This
-    /// pins that: setting the flag on a sub-context before it is added changes nothing about the output, while setting
-    /// it on the parent redacts both.
-    func testOnlyTheTopLevelAnonymousRedactionFlagIsRead() throws {
-        func multiContext(redactingParts: Bool) throws -> LDContext {
-            var builder = LDMultiContextBuilder()
-            for kind in ["user", "device"] {
-                var part = LDContextBuilder(key: "\(kind)-key")
-                part.kind(kind)
-                part.anonymous(true)
-                _ = part.trySetValue("email", "person@example.com")
-                let built = try part.build().get()
-                builder.addContext(redactingParts ? built.redactingAnonymousAttributes() : built)
-            }
-            return try builder.build().get()
+    func testAFeatureEventRedactsEveryAnonymousPartOfAMultiContext() throws {
+        var builder = LDMultiContextBuilder()
+        for kind in ["user", "device"] {
+            var part = LDContextBuilder(key: "\(kind)-key")
+            part.kind(kind)
+            part.anonymous(true)
+            _ = part.trySetValue("email", .string("\(kind)@example.com"))
+            builder.addContext(try part.build().get())
         }
-
-        let plain = try multiContext(redactingParts: false)
-        let partsFlagged = try multiContext(redactingParts: true)
+        let context = try builder.build().get()
+        let flag = FeatureFlag(flagKey: "flag-key", value: true, variation: 1, flagVersion: 7, trackEvents: true)
 
         for (name, writer) in encoders() {
-            // Pinned, because an event stamps its creation date when it is built: two of them either side of a
-            // millisecond boundary differ in a field this has nothing to say about.
-            let creationDate = Date()
-            func encoded(_ context: LDContext) throws -> String {
-                try canonical(try XCTUnwrap(writer(IdentifyEvent(context: context, creationDate: creationDate))))
-            }
+            for isDebug in [false, true] {
+                let event = FeatureEvent(key: "flag-key", context: context, value: true, defaultValue: false,
+                                         featureFlag: flag, includeReason: false, isDebug: isDebug)
+                let written = try canonical(try XCTUnwrap(writer(event)))
 
-            // A flag set on the sub-contexts is not read, so it makes no difference.
-            XCTAssertEqual(try encoded(partsFlagged), try encoded(plain), name)
-            // Set on the parent, it is read, and the anonymous attributes go away.
-            let redacted = try encoded(plain.redactingAnonymousAttributes())
-            XCTAssertNotEqual(redacted, try encoded(plain), name)
-            XCTAssertFalse(redacted.contains("person@example.com"), name)
+                for kind in ["user", "device"] {
+                    XCTAssertEqual(written.contains("\(kind)@example.com"), isDebug, "\(name), debug \(isDebug): \(kind)")
+                }
+            }
         }
     }
 
