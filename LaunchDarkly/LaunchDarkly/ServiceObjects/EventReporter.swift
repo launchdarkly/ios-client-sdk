@@ -180,11 +180,10 @@ class EventReporter: EventReporting {
     private let encoder: JSONEncoder
 
     let encoding: Encoding
-    /// Outlives a commit rather than being built per commit, so that its context cache spans them.
+    /// Outlives a commit rather than being built per commit, so that its buffer and context cache span them.
     ///
-    /// That is worth having here and not at the tiers below: a commit point writes a single event, so a cache that
-    /// lived for one commit would never be read. It carries no lock of its own because it is only ever reached from
-    /// `encode(_:)`, which runs under `commitLock`.
+    /// A commit point writes a single event, so a cache that lived for one commit would never be read. It needs no
+    /// lock of its own because it is only ever reached from `encode(_:)`, which runs under `commitLock`.
     fileprivate let handWrittenEncoder: EventJSONWriter
 
     init(service: DarklyServiceProvider,
