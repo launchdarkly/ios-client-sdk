@@ -245,8 +245,9 @@ class EventReporter: EventReporting {
             return false
         }
 
-        if let statusCode = response?.statusCode, (400..<500).contains(statusCode) && ![400, 408, 429].contains(statusCode) {
+        if let statusCode = response?.statusCode, HTTPURLResponse.StatusCodes.isTerminalStatusCode(statusCode) {
             os_log("%s dropping events due to non-retriable response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: response))
+            isOnline = false
             self.reportSyncComplete(.response(response))
             return false
         }

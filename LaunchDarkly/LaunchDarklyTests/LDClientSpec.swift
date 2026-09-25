@@ -1233,7 +1233,7 @@ final class LDClientSpec: QuickSpec {
                 testContext.subject.flagChangeNotifier = ClientServiceMockFactory(config: testContext.config).makeFlagChangeNotifier()
                 testContext.onSyncComplete?(.error(err))
 
-                expect(testContext.subject.isOnline) == !err.isClientUnauthorized
+                expect(testContext.subject.isOnline).to(beTrue())
                 expect(testContext.featureFlagCachingMock.saveCachedDataCallCount) == 0
                 expect(testContext.changeNotifierMock.notifyObserversCallCount) == 0
                 expect(testContext.subject.getConnectionInformation().lastFailedConnection).to(beCloseTo(Date(), within: 5.0))
@@ -1265,6 +1265,82 @@ final class LDClientSpec: QuickSpec {
         }
         runTest("there was a data error", .data(DarklyServiceMock.Constants.errorData)) { _ in }
         runTest("there was a non-NSError error", .streamError(DummyError())) { _ in }
+        runTest("there was a stream HTTP error", .streamError(UnsuccessfulResponseError(responseCode: 403))) { error in
+            if case .httpError(let errCode) = error {
+                expect(errCode) == 403
+            } else { fail("Incorrect error in connection information") }
+        }
+
+        let forbiddenError = HTTPURLResponse(url: DarklyServiceMock.Constants.mockBaseUrl,
+                                             statusCode: 403,
+                                             httpVersion: DarklyServiceMock.Constants.httpVersion,
+                                             headerFields: nil)
+        it("stops only the data source and marks initialized on a terminal flag error") {
+            let testContext = TestContext(startOnline: true)
+            testContext.start()
+            testContext.onSyncComplete?(.error(.response(forbiddenError)))
+
+            expect(testContext.flagSynchronizerMock.isOnline).to(beFalse())
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .offline
+            expect(testContext.subject.isInitialized).to(beTrue())
+            expect(testContext.subject.isOnline).to(beTrue())
+            expect(testContext.eventReporterMock.isOnline).to(beTrue())
+        }
+        it("keeps the data source running on a recoverable flag error") {
+            let testContext = TestContext(startOnline: true)
+            testContext.start()
+            let modeBefore = testContext.subject.getConnectionInformation().currentConnectionMode
+            testContext.onSyncComplete?(.error(.response(serverError)))
+
+            expect(testContext.flagSynchronizerMock.isOnline).to(beTrue())
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == modeBefore
+            expect(testContext.subject.isOnline).to(beTrue())
+        }
+        it("restarts the data source when set online again after a terminal error") {
+            let testContext = TestContext(startOnline: true)
+            testContext.start()
+            testContext.onSyncComplete?(.error(.response(forbiddenError)))
+            expect(testContext.flagSynchronizerMock.isOnline).to(beFalse())
+
+            testContext.subject.setOnline(true)
+            expect(testContext.flagSynchronizerMock.isOnline).toEventually(beTrue())
+        }
+        it("event delivery errors do not affect flag delivery or connection information") {
+            let testContext = TestContext(startOnline: true)
+            testContext.start()
+            let before = testContext.subject.getConnectionInformation()
+            testContext.serviceFactoryMock.onEventSyncComplete?(.response(unauthedError))
+
+            expect(testContext.flagSynchronizerMock.isOnline).to(beTrue())
+            expect(testContext.subject.isOnline).to(beTrue())
+            let after = testContext.subject.getConnectionInformation()
+            expect(after.currentConnectionMode) == before.currentConnectionMode
+            expect(after.lastConnectionFailureReason.description) == before.lastConnectionFailureReason.description
+            expect(after.lastFailedConnection) == before.lastFailedConnection
+        }
+        it("recovers the connection mode when a streaming sync succeeds after a terminal error") {
+            let testContext = TestContext(startOnline: true)
+            testContext.start()
+            testContext.subject.flagChangeNotifier = ClientServiceMockFactory(config: testContext.config).makeFlagChangeNotifier()
+            testContext.onSyncComplete?(.error(.response(forbiddenError)))
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .offline
+
+            waitUntil { done in
+                testContext.changeNotifierMock.notifyObserversCallback = done
+                testContext.onSyncComplete?(.patch(FeatureFlag(flagKey: "recover")))
+            }
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .streaming
+        }
+        it("recovers to polling when a poll succeeds after a terminal error") {
+            let testContext = TestContext(startOnline: true)
+            testContext.start()
+            testContext.flagSynchronizerMock.streamingMode = .polling
+            testContext.onSyncComplete?(.error(.response(forbiddenError)))
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .offline
+
+            testContext.onSyncComplete?(.upToDate)
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .polling
+        }
     }
 
     private func runModeSpec() {

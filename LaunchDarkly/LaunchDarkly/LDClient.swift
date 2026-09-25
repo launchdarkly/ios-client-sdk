@@ -676,37 +676,38 @@ public class LDClient {
         case let .flagCollection((flagCollection, etag)):
             os_log("%s: got flag collection with %d flags.", log: config.logger, type: .debug, typeName(and: #function), flagCollection.flags.count)
             let oldStoredItems = flagStore.storedItems
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
             flagStore.replaceStore(newStoredItems: StoredItems(items: flagCollection.flags))
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: etag)
         case let .patch(featureFlag):
             let oldStoredItems = flagStore.storedItems
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
             flagStore.updateStore(updatedFlag: featureFlag)
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: nil)
         case let .delete(deleteResponse):
             let oldStoredItems = flagStore.storedItems
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
             flagStore.deleteFlag(deleteResponse: deleteResponse)
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: nil)
         case .upToDate:
-            connectionInformation.lastKnownFlagValidity = Date()
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
             flagChangeNotifier.notifyUnchanged()
             // If a polling request receives a 304 not modified, we still need
             // to update the "last updated" field of the cache so subsequent
             // restarts will honor the appropriate polling delay.
             self.updateCacheFreshness(context: self.context)
         case .error(let synchronizingError):
-            process(synchronizingError, logPrefix: typeName(and: #function))
+            process(synchronizingError: synchronizingError, logPrefix: typeName(and: #function))
         }
     }
 
-    private func process(_ synchronizingError: SynchronizingError, logPrefix: String) {
-        if synchronizingError.isClientUnauthorized {
-            os_log("%s LDClient is unauthorized", log: config.logger, type: .debug, logPrefix)
-            internalSetOnline(false)
-        }
+    private func process(synchronizingError: SynchronizingError, logPrefix: String) {
         connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
+        if synchronizingError.isTerminal {
+            os_log("%s data source terminal error; stopping flag delivery", log: config.logger, type: .debug, logPrefix)
+            flagSynchronizer.isOnline = false
+            initialized = true
+        }
     }
 
     private func updateCacheAndReportChanges(context: LDContext,
@@ -814,7 +815,6 @@ public class LDClient {
     private func onEventSyncComplete(result: SynchronizingError?) {
         if let synchronizingError = result {
             os_log("%s result: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: synchronizingError))
-            process(synchronizingError, logPrefix: typeName(and: #function))
         } else {
             os_log("%s result: success", log: config.logger, type: .debug, typeName(and: #function))
         }
