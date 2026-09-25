@@ -188,8 +188,8 @@ class EventReporter: EventReporting {
 
     /// Encodes a run of events as the array the events endpoint takes.
     ///
-    /// One `JSONWriter` covers the whole run rather than one per event, so its byte buffer and the capacity it has
-    /// grown into are reused. That, and the context cache, is most of what the hand-written path saves over the
+    /// One `EventJSONWriter` covers the whole run rather than one per event, so its byte buffer and the capacity it
+    /// has grown into are reused. That, and its context cache, is most of what the hand-written path saves over the
     /// reflective one — a run of evaluations is nearly always the same context encoded again and again.
     ///
     /// If the run cannot be encoded as a whole, each event is retried on its own. Failures are dropped rather than
@@ -203,10 +203,9 @@ class EventReporter: EventReporting {
             return encodeSkippingFailures(events, using: { try encoder.encode($0) })
         }
 
-        let writer = JSONWriter()
         let handWritten = EventJSONWriter(config: service.config)
         return encodeSkippingFailures(events, using: { event in
-            guard let encoded = handWritten.encode(event, into: writer)
+            guard let encoded = handWritten.encode(event)
             else { throw EventEncodingError.handWritten }
             return encoded
         })
