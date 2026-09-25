@@ -1,13 +1,9 @@
 import Foundation
 
-/// The hand-written counterpart to `LDContext.encode(to:)`, for the encoding experiment behind `EventJSONWriter`.
-///
-/// The field set, the omissions, and the redaction rules are deliberately identical to the `Codable` path; where the
-/// two disagree, the `Codable` path is right and this is wrong. `EventJSONWriterTests` asserts they agree.
+/// Writes a context as it appears in events, producing the same JSON as `LDContext.encode(to:)` with redaction on and
+/// `privateAttributes` omitted. Redaction goes through the same `maybeRedact` as the `Codable` path.
 extension LDContext {
-    /// Unlike `encode(to:)`, this takes the anonymous-redaction directive as an argument rather than reading it off
-    /// the context. `Encodable` has a fixed signature and no such option; nothing here is constrained that way, so the
-    /// context never has to carry an encoding concern for this writer's benefit.
+    /// `redactAnonymousAttributes` applies to every part of a multi-context.
     internal func writeJSON(into writer: JSONWriter,
                             allAttributesPrivate: Bool,
                             globalPrivateAttributes: [Reference],
@@ -39,7 +35,7 @@ extension LDContext {
         writer.endObject()
     }
 
-    /// Writes the members of one context, without the enclosing braces, mirroring `encodeSingleContext`.
+    /// Writes the members of one context, without the enclosing braces.
     private func writeSingleContext(into writer: JSONWriter,
                                     discardKind: Bool,
                                     allAttributesPrivate: Bool,
@@ -78,20 +74,15 @@ extension LDContext {
         }
         let redactedAttributes = redaction.redactedAttributes
 
-        // Matches `Meta.isEmpty` and `Meta.encode`: `_meta` is written whenever either list is non-empty, but
-        // `privateAttributes` is only included when the caller asked for it, which the event path never does. A context
-        // with private attributes and nothing redacted therefore writes an empty `_meta`, as it does today.
-        if !privateAttributes.isEmpty || !redactedAttributes.isEmpty {
+        if !redactedAttributes.isEmpty {
             writer.key("_meta")
             writer.beginObject()
-            if !redactedAttributes.isEmpty {
-                writer.key("redactedAttributes")
-                writer.beginArray()
-                for attribute in redactedAttributes {
-                    writer.write(attribute)
-                }
-                writer.endArray()
+            writer.key("redactedAttributes")
+            writer.beginArray()
+            for attribute in redactedAttributes {
+                writer.write(attribute)
             }
+            writer.endArray()
             writer.endObject()
         }
 
@@ -101,7 +92,6 @@ extension LDContext {
         }
     }
 
-    /// What the attribute walk accumulates, grouped so the recursion carries one value rather than two.
     private struct Redaction {
         let globalPrivateAttributes: SharedDictionary<String, PrivateAttributeLookupNode>
         var redactedAttributes: [String] = []
