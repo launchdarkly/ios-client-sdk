@@ -5,13 +5,18 @@ import Foundation
 /// The field set, the omissions, and the redaction rules are deliberately identical to `Event.encode(to:)` and
 /// `LDContext.encode(to:)`; where the two disagree, the `Codable` path is right and this is wrong.
 ///
-/// One writer encodes one batch of events, and carries the context cache for it. Events within a batch are nearly
-/// always the same context over and over, and an instance is cheap, so the reuse worth having is the reuse a batch
-/// already offers; making one writer outlive a batch would only mean sharing the cache across the concurrent flushes
-/// `EventReporter` can have in flight.
+/// One writer encodes one batch of events, and carries the byte buffer and the context cache for it. Events within a
+/// batch are nearly always the same context over and over, and an instance is cheap, so the reuse worth having is the
+/// reuse a batch already offers; making one writer outlive a batch would only mean sharing it across the concurrent
+/// flushes `EventReporter` can have in flight.
+///
+/// Not thread-safe: the buffer and the cache are both mutated on every `encode(_:)`.
 struct EventJSONWriter {
     private let allAttributesPrivate: Bool
     private let globalPrivateAttributes: [Reference]
+
+    /// Reset for each event rather than replaced, so the capacity it has grown into is kept.
+    private let writer = JSONWriter()
 
     /// Reuses a context's encoded bytes for the later events in this batch that carry it.
     private let contextCache = ContextEncodingCache()
@@ -27,19 +32,13 @@ struct EventJSONWriter {
     }
 
     func encode(_ event: Event) -> Data? {
-        encode(event, into: JSONWriter())
-    }
-
-    /// Encodes into a writer the caller owns, so its buffer can outlive one event. Callers are responsible for not
-    /// sharing one writer across threads; `encode(_:)` allocates precisely so that the ordinary path need not care.
-    func encode(_ event: Event, into writer: JSONWriter) -> Data? {
         writer.reset()
         guard write(event, into: writer)
         else { return nil }
         return writer.data
     }
 
-    func write(_ event: Event, into writer: JSONWriter) -> Bool {
+    private func write(_ event: Event, into writer: JSONWriter) -> Bool {
         writer.beginObject()
         writer.key("kind")
         writer.write(event.kind.rawValue)
