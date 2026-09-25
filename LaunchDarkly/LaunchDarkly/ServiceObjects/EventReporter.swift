@@ -293,7 +293,8 @@ extension EventReporter {
     /// evaluations is nearly always the same context encoded again and again.
     ///
     /// `.codable` is kept because it is the oracle the writer is checked against: `EventJSONWriterTests` asserts the
-    /// two produce identical bytes, and where they disagree `.codable` is right.
+    /// two produce equal JSON, and where they disagree `.codable` is right. Equal JSON rather than identical bytes: key
+    /// order differs, and so do `/` against `\/` and `0` against `-0`.
     enum Encoding {
         case codable
         case handWritten
