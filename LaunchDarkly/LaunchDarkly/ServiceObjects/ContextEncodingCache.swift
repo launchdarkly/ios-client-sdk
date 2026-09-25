@@ -1,35 +1,23 @@
 import Foundation
 
-/// Caches the encoded, redacted bytes of the contexts events were most recently written for.
+/// Caches the encoded, redacted bytes of the most recently written contexts, so a run of events sharing a context
+/// encodes it once.
 ///
-/// The access pattern this exploits: an application identifies once and then evaluates repeatedly, so a run of events
-/// shares one context.
+/// There is one entry per redaction directive. Feature events and summaries redact anonymous attributes and the other
+/// event kinds do not, so an anonymous context has two encodings, and a stream that alternates them would evict a
+/// single entry on every event.
 ///
-/// **Two entries rather than one, because the event stream interleaves two encodings of the same context.** Feature
-/// events and summaries redact anonymous attributes; custom, identify and debug events do not. The two produce
-/// different bytes for an anonymous context, so a single entry thrashes: measured at a one-entry cache hitting on
-/// **0 of 40,400** lookups at a commit point, which alternates a custom event with a summary. The directive is a
-/// boolean, so two slots cover the interleaving exactly.
+/// Serving one context's bytes for another would leak attributes that should have been redacted, so the key is the
+/// context value itself, compared with `==`. That covers everything redaction depends on: the context's stored
+/// properties are all part of `==`, the directive selects the entry, and `allAttributesPrivate` and
+/// `globalPrivateAttributes` are fixed for the lifetime of the owning `EventJSONWriter`. Redacted attributes are
+/// written from `Reference.canonical()`, so private attributes that are `==` but spelled differently encode the same.
 ///
-/// The directive is supplied by the caller rather than read from the context, because it belongs to the event -- see
-/// `Event.redactsAnonymousAttributes`. That is what lets every event share one context value, so the `==` below stays
-/// on `Dictionary` and `Array`'s identity fast path instead of walking attributes.
+/// `==` returns without reading attributes when both sides share storage, which is the case for copies of one
+/// context. A hit therefore replaces the stored context with the caller's, so that after an equal but separately built
+/// context arrives, later lookups compare by identity again rather than attribute by attribute.
 ///
-/// **The cache key is the whole of the correctness argument.** Serving one context's redacted bytes for another is a
-/// privacy bug, and a far worse outcome than being slow, so the key is the context *value* rather than a digest of it.
-/// Everything redaction reads is either a stored property of `LDContext` -- and so covered by its synthesized `==` --
-/// or fixed for the lifetime of the reporter:
-///
-/// - `kind`, `key`, `name`, `anonymous`, `attributes`, `contexts` and `privateAttributes` are stored properties,
-///   compared by `==`; the redaction directive is the slot.
-/// - `allAttributesPrivate` and `globalPrivateAttributes` come from `LDConfig`, which is a `let` on the service.
-///
-/// `Reference` equality is on parsed components and ignores the string a reference was spelled with, which would
-/// leave a gap here if redaction wrote that spelling out. It does not: redacted attributes are written from
-/// `Reference.canonical()`, so contexts that are `==` encode the same.
-///
-/// One instance belongs to one `EventJSONWriter` and is reached only through it, so it takes no lock of its own:
-/// whatever keeps that writer on one thread keeps this on one thread too.
+/// Not thread-safe. It belongs to one `EventJSONWriter` and is used only through it.
 final class ContextEncodingCache {
     private struct Entry {
         let context: LDContext
@@ -38,11 +26,13 @@ final class ContextEncodingCache {
 
     private var entries: [Entry?] = [nil, nil]
 
-    /// The encoded bytes for `context` under `redactAnonymous`, or nil if that slot does not hold it.
+    /// The encoded bytes for `context` under `redactAnonymous`, or nil if that entry holds a different context.
     func encodedContext(for context: LDContext, redactAnonymous: Bool) -> [UInt8]? {
-        guard let entry = entries[ContextEncodingCache.slot(redactAnonymous)], entry.context == context
+        let slot = ContextEncodingCache.slot(redactAnonymous)
+        guard let entry = entries[slot], entry.context == context
         else { return nil }
 
+        entries[slot] = Entry(context: context, encoded: entry.encoded)
         return entry.encoded
     }
 
@@ -50,8 +40,6 @@ final class ContextEncodingCache {
         entries[ContextEncodingCache.slot(redactAnonymous)] = Entry(context: context, encoded: encoded)
     }
 
-    /// The directive is not part of the context, and so not part of `==`; the two encodings would otherwise evict each
-    /// other in a single slot.
     private static func slot(_ redactAnonymous: Bool) -> Int {
         redactAnonymous ? 1 : 0
     }

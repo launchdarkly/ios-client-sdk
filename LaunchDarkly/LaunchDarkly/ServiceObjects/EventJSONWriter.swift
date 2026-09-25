@@ -1,22 +1,15 @@
 import Foundation
 
-/// Writes an `Event` as the wire JSON the service already accepts, without going through `Codable`.
+/// Writes an `Event` as the JSON the events endpoint accepts, producing the same JSON as `Event.encode(to:)`.
 ///
-/// The field set, the omissions, and the redaction rules are deliberately identical to `Event.encode(to:)` and
-/// `LDContext.encode(to:)`; where the two disagree, the `Codable` path is right and this is wrong.
-///
-/// Carries a byte buffer and a context cache from one event to the next, so the longer an instance lives the more
-/// both are reused. `EventReporter` keeps one for as long as it exists and reaches it only under `commitLock`.
-///
-/// Not thread-safe: the buffer and the cache are both mutated on every `encode(_:)`.
+/// The buffer and the context cache are reused from one event to the next, so the longer an instance lives the more
+/// they save. Neither is safe to share between threads.
 struct EventJSONWriter {
     private let allAttributesPrivate: Bool
     private let globalPrivateAttributes: [Reference]
 
-    /// Reset for each event rather than replaced, so the capacity it has grown into is kept.
+    /// Reset for each event rather than replaced, so its capacity is kept.
     private let writer = JSONWriter()
-
-    /// Reuses a context's encoded bytes for the later events that carry it.
     private let contextCache = ContextEncodingCache()
 
     init(allAttributesPrivate: Bool, globalPrivateAttributes: [Reference]) {
@@ -29,9 +22,11 @@ struct EventJSONWriter {
                   globalPrivateAttributes: config.privateContextAttributes)
     }
 
+    /// Nil if the event cannot be encoded, including when it holds a NaN or infinite number, which `JSONEncoder` also
+    /// rejects.
     func encode(_ event: Event) -> Data? {
         writer.reset()
-        guard write(event)
+        guard write(event), !writer.wroteNonFiniteNumber
         else { return nil }
         return writer.data
     }
@@ -181,14 +176,9 @@ struct EventJSONWriter {
         writer.endObject()
     }
 
-    /// The redaction directive comes from the event rather than the context, so every event can carry the caller's
-    /// context value unchanged -- which is also what keeps the cache's `==` on its identity fast path.
     private func writeContext(_ context: LDContext, of event: Event) {
         writer.key("context")
-        // The event is the source of the directive. The context's own flag is folded in only so that this path cannot
-        // disagree with `Codable` -- which reads that flag and has no way not to -- for a context that arrives with it
-        // already set. Nothing in the SDK produces one, and the `||` is what keeps that from being load-bearing.
-        let redactAnonymous = event.redactsAnonymousAttributes || context.redactAnonymousAttributes
+        let redactAnonymous = event.redactsAnonymousAttributes
 
         if let cached = contextCache.encodedContext(for: context, redactAnonymous: redactAnonymous) {
             writer.writeRaw(cached)
@@ -200,6 +190,9 @@ struct EventJSONWriter {
                           allAttributesPrivate: allAttributesPrivate,
                           globalPrivateAttributes: globalPrivateAttributes,
                           redactAnonymousAttributes: redactAnonymous)
+        // A later event would otherwise be served these bytes without writing the number that makes them invalid.
+        guard !writer.wroteNonFiniteNumber
+        else { return }
         contextCache.store(context, redactAnonymous: redactAnonymous, encoded: writer.bytes(from: start))
     }
 }

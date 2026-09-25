@@ -171,12 +171,7 @@ class EventReporter: EventReporting {
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
-    /// The encoder every recorded event goes through.
-    ///
-    /// Built once and then only read. `JSONEncoder` is `@unchecked Sendable` and constructs a fresh internal encoder
-    /// for each `encode` call, so the threads recording events can share this one — but only while nothing mutates it,
-    /// which is why `userInfo` is set here rather than per event. What it holds cannot go stale: `config` is a `let` on
-    /// the service, so the privacy settings the encoding depends on are fixed for as long as this reporter exists.
+    /// Shared by the threads recording events, so it must not be mutated after `init`.
     private let encoder: JSONEncoder
 
     let encoding: Encoding
@@ -624,13 +619,8 @@ class EventReporter: EventReporting {
 extension EventReporter {
     /// Which encoder recorded events go through.
     ///
-    /// `.handWritten` is the shipping path. Writing the wire form directly rather than through a reflective encoder is
-    /// what the Android SDK does, and reusing a context's encoded bytes across the batch pays off because a run of
-    /// evaluations is nearly always the same context encoded again and again.
-    ///
-    /// `.codable` is kept because it is the oracle the writer is checked against: `EventJSONWriterTests` asserts the
-    /// two produce equal JSON, and where they disagree `.codable` is right. Equal JSON rather than identical bytes: key
-    /// order differs, and so do `/` against `\/` and `0` against `-0`.
+    /// `.codable` is the reference `.handWritten` is tested against. The two produce equal JSON but not identical
+    /// bytes: key order differs, as do `/` against `\/` and `0` against `-0`.
     enum Encoding {
         case codable
         case handWritten

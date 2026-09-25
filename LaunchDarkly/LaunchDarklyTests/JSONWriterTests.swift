@@ -181,16 +181,21 @@ final class JSONWriterTests: XCTestCase {
         XCTAssertEqual(text(writer), "42")
     }
 
-    /// `JSONEncoder` throws on these instead. The writer cannot fail, so it writes the one JSON value that claims nothing.
-    func testNonFiniteDoublesAreWrittenAsNull() {
-        let writer = JSONWriter()
-        writer.beginArray()
+    func testNonFiniteDoublesAreWrittenAsNullAndReported() {
         for number in [Double.nan, .infinity, -.infinity] {
+            let writer = JSONWriter()
+            writer.beginArray()
+            writer.write(1.5)
+            XCTAssertFalse(writer.wroteNonFiniteNumber)
             writer.write(number)
-        }
-        writer.endArray()
+            writer.endArray()
 
-        XCTAssertEqual(text(writer), "[null,null,null]")
+            XCTAssertEqual(text(writer), "[1.5,null]")
+            XCTAssertTrue(writer.wroteNonFiniteNumber, "\(number)")
+
+            writer.reset()
+            XCTAssertFalse(writer.wroteNonFiniteNumber)
+        }
     }
 
     func testIntegerBoundaries() {
