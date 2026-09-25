@@ -203,9 +203,9 @@ class EventReporter: EventReporting {
             return encodeSkippingFailures(events, using: { try encoder.encode($0) })
         }
 
-        let handWritten = EventJSONWriter(config: service.config)
+        let eventJSONWriter = EventJSONWriter(config: service.config)
         return encodeSkippingFailures(events, using: { event in
-            guard let encoded = handWritten.encode(event)
+            guard let encoded = eventJSONWriter.encode(event)
             else { throw EventEncodingError.handWritten }
             return encoded
         })
