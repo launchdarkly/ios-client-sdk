@@ -28,8 +28,8 @@ import Foundation
 /// leave a gap here if redaction wrote that spelling out. It does not: redacted attributes are written from
 /// `Reference.canonical()`, so contexts that are `==` encode the same.
 ///
-/// One instance belongs to one `EventJSONWriter`, which belongs to one batch being encoded, so it is never shared and
-/// takes no lock.
+/// One instance belongs to one `EventJSONWriter` and is reached only through it, so it takes no lock of its own:
+/// whatever keeps that writer on one thread keeps this on one thread too.
 final class ContextEncodingCache {
     private struct Entry {
         let context: LDContext
