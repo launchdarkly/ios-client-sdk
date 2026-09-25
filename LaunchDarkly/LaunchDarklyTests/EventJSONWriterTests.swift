@@ -7,6 +7,11 @@ import XCTest
 /// Comparison is JSON-equal rather than byte-equal, because neither encoder fixes the order of object keys and Swift's
 /// `Dictionary` iteration order is not stable between runs. Both sides are reparsed and reserialized with sorted keys,
 /// which normalizes ordering and `1` against `1.0` while still separating `true` from `1` and `"1"` from `1`.
+///
+/// That normalization is not a perfect equivalence. It also hides the byte-level differences the writer has on
+/// purpose -- `/` against `\/`, `0` against `-0` -- and it reserializes `100000000000000000` and `1e+17` differently
+/// even though they are the same number, so numbers are additionally compared as bytes where the formats should
+/// agree exactly.
 final class EventJSONWriterTests: XCTestCase {
 
     // MARK: Corpus
@@ -387,7 +392,8 @@ final class EventJSONWriterTests: XCTestCase {
 
     func testNumberFormatting() throws {
         let numbers: [Double] = [0, -0, 1, -1, 17, -17, 0.5, -0.5, 1.25, 3.141592653589793,
-                                 1e10, 1e-10, 1e20, -1e20, Double(Int32.max), Double(Int64.max), 9007199254740993]
+                                 1e10, 1e-10, 1e20, -1e20, Double(Int32.max), Double(Int64.max), 9007199254740993,
+                                 1e16, 1e17, -1e17, 1.5e17, 1e18, 9.2e18, -9.2e18, 9223372036854774784]
 
         for number in numbers {
             let writer = JSONWriter()
@@ -400,8 +406,48 @@ final class EventJSONWriterTests: XCTestCase {
         }
     }
 
+    /// Integral doubles on both sides of 2^53, compared as bytes rather than through `canonical`.
+    ///
+    /// `JSONEncoder` writes plain integers up to 2^53 and exponent form above it. The writer has to change form at the
+    /// same place: `canonical` cannot be relied on to notice, because it reserializes the two forms identically below
+    /// 1e17 and differently above.
+    func testIntegralDoublesChangeFormWhereJSONEncoderDoes() throws {
+        let twoTo53: Double = 9_007_199_254_740_992
+        let numbers: [Double] = [0, 1, -1, 1e15, twoTo53 - 1, twoTo53, -twoTo53, twoTo53 + 2, -(twoTo53 + 2),
+                                 1e16, -1e16, 99999999999999984, 1e17, -1e17, 1e18, 9223372036854774784,
+                                 Double(Int64.max), -Double(Int64.max), 1e20]
+
+        for number in numbers {
+            let writer = JSONWriter()
+            writer.write(number)
+
+            let expected = utf8(try JSONEncoder().encode([number]))
+            let actual = "[" + utf8(writer.data) + "]"
+
+            XCTAssertEqual(actual, expected, "\(number) written in a different form")
+        }
+    }
+
+    /// The places the writer's bytes differ from `JSONEncoder`'s on purpose, pinned so a change to either is noticed.
+    ///
+    /// Each pair is the same JSON value; the writer skips an escape JSON does not require, and writes zero without a
+    /// sign.
+    func testKnownByteDifferencesFromJSONEncoderAreEqualJSON() throws {
+        let slash = JSONWriter()
+        slash.write("a/b")
+        XCTAssertEqual(utf8(slash.data), "\"a/b\"")
+        XCTAssertEqual(utf8(try JSONEncoder().encode("a/b")), "\"a\\/b\"")
+        XCTAssertEqual(try canonical(slash.data), try canonical(try JSONEncoder().encode("a/b")))
+
+        let negativeZero = JSONWriter()
+        negativeZero.write(-0.0)
+        XCTAssertEqual(utf8(negativeZero.data), "0")
+        XCTAssertEqual(utf8(try JSONEncoder().encode(-0.0)), "-0")
+        XCTAssertEqual(try canonical(negativeZero.data), try canonical(try JSONEncoder().encode(-0.0)))
+    }
+
     /// The reporter's own path, so the switch is covered rather than just the writer behind it.
-    func testReporterProducesIdenticalBytesEitherWay() throws {
+    func testReporterProducesEqualJSONEitherWay() throws {
         let context = richContext()
         var config = LDConfig.stub
         config.privateContextAttributes = [Reference("email")]
@@ -446,6 +492,10 @@ final class EventJSONWriterTests: XCTestCase {
             try container.encode(date.millisSince1970)
         }
         return encoder
+    }
+
+    private func utf8(_ data: Data) -> String {
+        String(bytes: data, encoding: .utf8) ?? ""
     }
 
     private func canonical(_ data: Data) throws -> String {
