@@ -101,12 +101,16 @@ final class JSONWriter {
         needsSeparator = true
     }
 
-    /// Integral values are written without a fractional part, which is what `JSONEncoder` does and what the service
-    /// already receives. Anything else takes Swift's shortest round-trip description, which is valid JSON.
+    /// Integral values up to 2^53 are written as plain integers and everything else as Swift's shortest round-trip
+    /// description, which is where `JSONEncoder` draws the same line: above 2^53 it writes `1e+17`, not
+    /// `100000000000000000`. The two spellings are the same number, but only matching the boundary keeps a value from
+    /// changing form depending on which encoder wrote it.
+    ///
+    /// `-0.0` is written as `0`, where `JSONEncoder` writes `-0`. Both parse to a value equal to zero.
     func write(_ value: Double) {
         separate()
-        if value.isFinite, value.rounded() == value, let exact = Int64(exactly: value.rounded()) {
-            writeInteger(exact)
+        if value.isFinite, value.rounded() == value, value.magnitude <= JSONWriter.largestPlainInteger {
+            writeInteger(Int64(value))
         } else if value.isFinite {
             bytes.append(contentsOf: String(value).utf8)
         } else {
@@ -154,6 +158,10 @@ final class JSONWriter {
     private static let nullBytes = Array("null".utf8)
     private static let hexDigits = Array("0123456789abcdef".utf8)
 
+    /// 2^53: every integer up to here is exactly representable as a `Double`, and it is the largest `JSONEncoder`
+    /// writes without an exponent.
+    private static let largestPlainInteger: Double = 9_007_199_254_740_992
+
     private func separate() {
         if needsSeparator {
             bytes.append(UInt8(ascii: ","))
@@ -188,7 +196,8 @@ final class JSONWriter {
     }
 
     /// Escapes exactly what JSON requires. Multi-byte UTF-8 passes through untouched, because every continuation byte
-    /// has its high bit set and so is above the escape range.
+    /// has its high bit set and so is above the escape range. That leaves `/` unescaped, where `JSONEncoder` writes
+    /// `\/`; JSON allows either and they decode to the same string.
     ///
     /// Keys and values almost never contain a byte needing an escape, so the loop finds runs that need none and copies
     /// each in one go rather than appending a byte at a time. `withContiguousStorageIfAvailable` succeeds for native
