@@ -2,10 +2,23 @@ import Foundation
 import OSLog
 
 /// Manages per-context summary events by tracking separate FlagRequestTracker instances for each unique context.
-/// Each context is identified by its hash, and summaries are generated separately for each context during flush.
+/// Each context gets its own tracker, and summaries are generated separately for each context during flush.
 class ContextSummarizer {
-    private var trackers: [String: TrackerWithContext] = [:]
+    private var trackers: [ContextKey: TrackerWithContext] = [:]
     private let logger: OSLog
+
+    /// A context used as a dictionary key.
+    ///
+    /// Hashes only the fully qualified key, which the context already stores; `LDContext.contextHash()` would encode
+    /// the whole context on every evaluation. Equal contexts share that key, so the `Hashable` contract holds, and
+    /// contexts that collide are separated by `==`.
+    struct ContextKey: Hashable {
+        let context: LDContext
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(context.fullyQualifiedKey())
+        }
+    }
 
     struct TrackerWithContext {
         var tracker: FlagRequestTracker
@@ -19,10 +32,10 @@ class ContextSummarizer {
     /// Tracks a flag evaluation request for a specific context.
     /// Creates a new tracker for the context if one doesn't exist, or reuses the existing one.
     func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue, context: LDContext) {
-        let contextHashKey = context.contextHash()
-        ensureTrackerExists(for: context, hashKey: contextHashKey)
+        let key = ContextKey(context: context)
+        ensureTrackerExists(for: context, key: key)
 
-        trackers[contextHashKey]?.tracker.trackRequest(
+        trackers[key]?.tracker.trackRequest(
             flagKey: flagKey,
             reportedValue: reportedValue,
             featureFlag: featureFlag,
@@ -31,17 +44,14 @@ class ContextSummarizer {
         )
     }
 
-    /// Ensures a tracker exists for the context hash, creating one if needed.
-    private func ensureTrackerExists(for context: LDContext, hashKey: String) {
-        guard trackers[hashKey] == nil else { return }
+    /// Ensures a tracker exists for the context, creating one if needed.
+    private func ensureTrackerExists(for context: LDContext, key: ContextKey) {
+        guard trackers[key] == nil else { return }
 
-        // Create filtered context for privacy
-        var filteredContext = LDContext(copyFrom: context)
-        filteredContext.redactAnonymousAttributes = true
-
-        trackers[hashKey] = TrackerWithContext(
+        // Redaction is applied when the summary is encoded; see `Event.redactsAnonymousAttributes`.
+        trackers[key] = TrackerWithContext(
             tracker: FlagRequestTracker(logger: logger),
-            context: filteredContext
+            context: context
         )
     }
 

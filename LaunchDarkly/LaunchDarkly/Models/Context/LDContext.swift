@@ -37,26 +37,8 @@ public struct LDContext: Encodable, Equatable {
     fileprivate var canonicalizedKey: String
     internal var attributes: [String: LDValue] = [:]
 
-    // Internal property used to control encoding.
-    //
-    // Normally we would control this encoding mechanism through the use of userKeys.
-    // However, the anonymous redaction mechanism has to vary on a per event basis,
-    // and so we cannot affect the entire JSON encoder in this way.
-    internal var redactAnonymousAttributes: Bool = false
-
     fileprivate init(canonicalizedKey: String) {
         self.canonicalizedKey = canonicalizedKey
-    }
-
-    internal init(copyFrom: LDContext) {
-        kind = copyFrom.kind
-        contexts = copyFrom.contexts.map { c in LDContext(copyFrom: c) }
-        name = copyFrom.name
-        anonymous = copyFrom.anonymous
-        privateAttributes = copyFrom.privateAttributes
-        key = copyFrom.key
-        canonicalizedKey = copyFrom.canonicalizedKey
-        attributes = copyFrom.attributes
     }
 
     init() {
@@ -137,7 +119,7 @@ public struct LDContext: Encodable, Equatable {
             let reference = Reference(key)
             if let value = context.getValue(reference) {
                 if redactAll {
-                    redactedAttributes.append(reference.raw())
+                    redactedAttributes.append(reference.canonical())
                     continue
                 }
 
@@ -149,7 +131,10 @@ public struct LDContext: Encodable, Equatable {
 
         let meta = Meta(privateAttributes: context.privateAttributes, redactedAttributes: redactedAttributes)
 
-        if !meta.isEmpty {
+        // Redacted output writes `_meta` only when something was redacted, as Android does. Unredacted output still
+        // writes it whenever the context has private attributes: `contextHash()` digests that output to validate
+        // cached flags, so changing it would discard them.
+        if redactAttributes ? !redactedAttributes.isEmpty : !meta.isEmpty {
             try container.encodeIfPresent(meta, forKey: DynamicCodingKeys(string: "_meta"))
         }
 
@@ -189,7 +174,7 @@ public struct LDContext: Encodable, Equatable {
         var (reactedAttrReference, nestedPropertiesAreRedacted) = LDContext.checkGlobalPrivateAttributeReferences(context: context, parentPath: parentPath, globalPrivateAttributes: globalPrivateAttributes)
 
         if let reactedAttrReference = reactedAttrReference {
-            redactedAttributes.append(reactedAttrReference.raw())
+            redactedAttributes.append(reactedAttrReference.canonical())
             return (true, false)
         }
 
@@ -225,7 +210,7 @@ public struct LDContext: Encodable, Equatable {
 
             if hasMatch {
                 if depth == parentPath.count {
-                    redactedAttributes.append(privateAttribute.raw())
+                    redactedAttributes.append(privateAttribute.canonical())
                     return (true, false)
                 }
 
@@ -258,6 +243,12 @@ public struct LDContext: Encodable, Equatable {
     }
 
     public func encode(to encoder: Encoder) throws {
+        try encode(to: encoder, redactAnonymousAttributes: false)
+    }
+
+    /// `redactAnonymousAttributes` applies to every part of a multi-context. It is an argument rather than an
+    /// encoder `userInfo` key because it varies per event, while `userInfo` is fixed for the whole encoder.
+    internal func encode(to encoder: Encoder, redactAnonymousAttributes: Bool) throws {
         var container = encoder.container(keyedBy: DynamicCodingKeys.self)
 
         let allAttributesPrivate = encoder.userInfo[UserInfoKeys.allAttributesPrivate] as? Bool ?? false
@@ -609,6 +600,28 @@ extension LDContext: Decodable {
 
 extension LDContext: TypeIdentifying {}
 
+/// Access to file-private state and redaction logic for `LDContextJSONWriter`, so both encoders redact through the
+/// same `maybeRedact`.
+extension LDContext {
+    internal var writableKey: String? { key }
+    internal var isAnonymous: Bool { anonymous }
+
+    internal static func privateAttributeLookup(for references: [Reference]) -> SharedDictionary<String, PrivateAttributeLookupNode> {
+        makePrivateAttributeLookupData(references: references)
+    }
+
+    internal func redactionDecision(parentPath: [String],
+                                    value: LDValue,
+                                    redactedAttributes: inout [String],
+                                    globalPrivateAttributes: SharedDictionary<String, PrivateAttributeLookupNode>) -> (Bool, Bool) {
+        LDContext.maybeRedact(context: self,
+                              parentPath: parentPath,
+                              value: value,
+                              redactedAttributes: &redactedAttributes,
+                              globalPrivateAttributes: globalPrivateAttributes)
+    }
+}
+
 enum LDContextBuilderKey {
     case generateKey
     case key(String)
@@ -708,6 +721,8 @@ public struct LDContextBuilder {
     ///
     /// - "anonymous": Must be a boolean. See `LDContextBuilder.anonymous(_:)`.
     ///
+    /// - "_meta": Reserved for the context's metadata, and cannot be set with any value.
+    ///
     /// Values that are JSON arrays or objects have special behavior when referenced in
     /// flag/segment rules.
     ///
@@ -739,6 +754,8 @@ public struct LDContextBuilder {
         case ("anonymous", .bool(let val)):
             self.anonymous(val)
         case ("anonymous", _):
+            return false
+        case ("_meta", _):
             return false
         case (_, .null):
             self.attributes.removeValue(forKey: name)

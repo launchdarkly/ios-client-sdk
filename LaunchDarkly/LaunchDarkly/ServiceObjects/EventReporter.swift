@@ -51,10 +51,19 @@ class EventReporter: EventReporting {
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
-    init(service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) {
+    /// Shared across concurrent flushes, so it must not be mutated after `init`.
+    private let encoder: JSONEncoder
+
+    let encoding: Encoding
+
+    init(service: DarklyServiceProvider,
+         onSyncComplete: EventSyncCompleteClosure?,
+         encoding: Encoding = .handWritten) {
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.lastEventResponseDate = Date()
+        self.encoding = encoding
+        self.encoder = EventReporter.makeEncoder(config: service.config)
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
     }
 
@@ -150,20 +159,9 @@ class EventReporter: EventReporting {
     }
 
     private func publish(_ events: [Event], _ payloadId: String, _ completion: CompletionClosure?) {
-        let encodingConfig: [CodingUserInfoKey: Any] =
-            [
-                LDContext.UserInfoKeys.allAttributesPrivate: service.config.allContextAttributesPrivate,
-                LDContext.UserInfoKeys.globalPrivateAttributes: service.config.privateContextAttributes.map { $0 }
-            ]
-        let encoder = JSONEncoder()
-        encoder.userInfo = encodingConfig
-        encoder.dateEncodingStrategy = .custom { date, encoder in
-            var container = encoder.singleValueContainer()
-            try container.encode(date.millisSince1970)
-        }
-        guard let eventData = try? encoder.encode(events)
+        guard let eventData = encode(events)
         else {
-            os_log("%s Failed to serialize event(s) for publication: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: events))
+            os_log("%s Failed to serialize event(s) for publication: %s", log: service.config.logger, type: .error, typeName(and: #function), String(describing: events))
             completion?()
             return
         }
@@ -181,6 +179,58 @@ class EventReporter: EventReporting {
                 completion?()
             }
         }
+    }
+
+    /// Encodes a run of events as the array the events endpoint takes.
+    ///
+    /// If the run cannot be encoded as a whole, each event is retried on its own. Events that fail are dropped rather
+    /// than put back, because encoding is deterministic and they would fail every later flush too.
+    private func encode(_ events: [Event]) -> Data? {
+        guard encoding != .codable
+        else {
+            if let data = try? encoder.encode(events) {
+                return data
+            }
+            return encodeSkippingFailures(events, using: { try encoder.encode($0) })
+        }
+
+        let eventJSONWriter = EventJSONWriter(config: service.config)
+        return encodeSkippingFailures(events, using: { event in
+            guard let encoded = eventJSONWriter.encode(event)
+            else { throw EventEncodingError.handWritten }
+            return encoded
+        })
+    }
+
+    private func encodeSkippingFailures(_ events: [Event], using encodeOne: (Event) throws -> Data) -> Data? {
+        var payload = Data([UInt8(ascii: "[")])
+        var written = 0
+        for event in events {
+            let encoded: Data
+            do {
+                encoded = try encodeOne(event)
+            } catch {
+                os_log("%s dropping unserializable event: %s",
+                       log: service.config.logger,
+                       type: .error,
+                       typeName(and: #function),
+                       String(describing: event))
+                continue
+            }
+            if written > 0 {
+                payload.append(UInt8(ascii: ","))
+            }
+            payload.append(encoded)
+            written += 1
+        }
+        guard written > 0
+        else { return nil }
+        payload.append(UInt8(ascii: "]"))
+        return payload
+    }
+
+    private enum EventEncodingError: Error {
+        case handWritten
     }
 
     private func processEventResponse(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> Bool {
@@ -224,6 +274,30 @@ class EventReporter: EventReporting {
         DispatchQueue.main.async {
             onSyncComplete(result)
         }
+    }
+}
+
+extension EventReporter {
+    /// Which encoder recorded events go through.
+    ///
+    /// `.codable` is the reference `.handWritten` is tested against. The two produce equal JSON but not identical
+    /// bytes: key order differs, as do `/` against `\/` and `0` against `-0`.
+    enum Encoding {
+        case codable
+        case handWritten
+    }
+
+    fileprivate static func makeEncoder(config: LDConfig) -> JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.userInfo = [
+            LDContext.UserInfoKeys.allAttributesPrivate: config.allContextAttributesPrivate,
+            LDContext.UserInfoKeys.globalPrivateAttributes: config.privateContextAttributes.map { $0 }
+        ]
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(date.millisSince1970)
+        }
+        return encoder
     }
 }
 
