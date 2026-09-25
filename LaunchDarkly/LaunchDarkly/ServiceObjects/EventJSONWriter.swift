@@ -33,12 +33,12 @@ struct EventJSONWriter {
 
     func encode(_ event: Event) -> Data? {
         writer.reset()
-        guard write(event, into: writer)
+        guard write(event)
         else { return nil }
         return writer.data
     }
 
-    private func write(_ event: Event, into writer: JSONWriter) -> Bool {
+    private func write(_ event: Event) -> Bool {
         writer.beginObject()
         writer.key("kind")
         writer.write(event.kind.rawValue)
@@ -46,26 +46,26 @@ struct EventJSONWriter {
         switch event.kind {
         case .feature, .debug:
             guard let event = event as? FeatureEvent else { return false }
-            write(feature: event, into: writer)
+            write(feature: event)
         case .custom:
             guard let event = event as? CustomEvent else { return false }
-            write(custom: event, into: writer)
+            write(custom: event)
         case .identify:
             guard let event = event as? IdentifyEvent else { return false }
-            write(identify: event, into: writer)
+            write(identify: event)
         case .summary:
             guard let event = event as? SummaryEvent else { return false }
-            write(summary: event, into: writer)
+            write(summary: event)
         }
 
         writer.endObject()
         return true
     }
 
-    private func write(feature event: FeatureEvent, into writer: JSONWriter) {
+    private func write(feature event: FeatureEvent) {
         writer.key("key")
         writer.write(event.key)
-        writeContext(event.context, of: event, into: writer)
+        writeContext(event.context, of: event)
 
         if let variation = event.featureFlag?.variation {
             writer.key("variation")
@@ -96,10 +96,10 @@ struct EventJSONWriter {
         writer.write(event.creationDate.millisSince1970)
     }
 
-    private func write(custom event: CustomEvent, into writer: JSONWriter) {
+    private func write(custom event: CustomEvent) {
         writer.key("key")
         writer.write(event.key)
-        writeContext(event.context, of: event, into: writer)
+        writeContext(event.context, of: event)
 
         if event.data != .null {
             writer.key("data")
@@ -114,15 +114,15 @@ struct EventJSONWriter {
         writer.write(event.creationDate.millisSince1970)
     }
 
-    private func write(identify event: IdentifyEvent, into writer: JSONWriter) {
+    private func write(identify event: IdentifyEvent) {
         writer.key("key")
         writer.write(event.context.fullyQualifiedKey())
-        writeContext(event.context, of: event, into: writer)
+        writeContext(event.context, of: event)
         writer.key("creationDate")
         writer.write(event.creationDate.millisSince1970)
     }
 
-    private func write(summary event: SummaryEvent, into writer: JSONWriter) {
+    private func write(summary event: SummaryEvent) {
         writer.key("startDate")
         writer.write(event.flagRequestTracker.startDate.millisSince1970)
         writer.key("endDate")
@@ -132,16 +132,16 @@ struct EventJSONWriter {
         writer.beginObject()
         for (flagKey, counter) in event.flagRequestTracker.flagCounters {
             writer.key(flagKey)
-            write(counter: counter, into: writer)
+            write(counter: counter)
         }
         writer.endObject()
 
         if let context = event.context {
-            writeContext(context, of: event, into: writer)
+            writeContext(context, of: event)
         }
     }
 
-    private func write(counter: FlagCounter, into writer: JSONWriter) {
+    private func write(counter: FlagCounter) {
         writer.beginObject()
 
         if counter.defaultValue != .null {
@@ -185,7 +185,7 @@ struct EventJSONWriter {
 
     /// The redaction directive comes from the event rather than the context, so every event can carry the caller's
     /// context value unchanged -- which is also what keeps the cache's `==` on its identity fast path.
-    private func writeContext(_ context: LDContext, of event: Event, into writer: JSONWriter) {
+    private func writeContext(_ context: LDContext, of event: Event) {
         writer.key("context")
         // The event is the source of the directive. The context's own flag is folded in only so that this path cannot
         // disagree with `Codable` -- which reads that flag and has no way not to -- for a context that arrives with it
