@@ -37,6 +37,41 @@ final class SynchronizingErrorSpec: XCTestCase {
             XCTAssertFalse(testValue.isClientUnauthorized, "\(testValue) should not be unauthorized")
         }
     }
+
+    private func httpURLResponse(_ statusCode: Int) -> HTTPURLResponse {
+        HTTPURLResponse(url: LDConfig.stub.streamUrl, statusCode: statusCode, httpVersion: "1.1", headerFields: nil)!
+    }
+
+    func testErrorShouldBeTerminal() {
+        let terminalCases: [SynchronizingError] = [
+            .response(httpURLResponse(401)),
+            .response(httpURLResponse(403)),
+            .response(httpURLResponse(404)),
+            .streamError(UnsuccessfulResponseError(responseCode: 401)),
+            .streamError(UnsuccessfulResponseError(responseCode: 403))
+        ]
+        terminalCases.forEach { testValue in
+            XCTAssertTrue(testValue.isTerminal, "\(testValue) should be terminal")
+        }
+    }
+
+    func testErrorShouldNotBeTerminal() {
+        let nonTerminalCases: [SynchronizingError] = [
+            .isOffline,
+            .streamEventWhilePolling,
+            .data(nil),
+            .request(DummyError()),
+            .unknownEventType("update"),
+            .response(httpURLResponse(400)),
+            .response(httpURLResponse(429)),
+            .response(httpURLResponse(500)),
+            .streamError(UnsuccessfulResponseError(responseCode: 408)),
+            .streamError(UnsuccessfulResponseError(responseCode: 500))
+        ]
+        nonTerminalCases.forEach { testValue in
+            XCTAssertFalse(testValue.isTerminal, "\(testValue) should not be terminal")
+        }
+    }
 }
 
 struct DummyError: Error { }

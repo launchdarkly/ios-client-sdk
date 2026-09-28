@@ -628,6 +628,40 @@ final class EventReporterSpec: QuickSpec {
                             expect(error as NSError?) == DarklyServiceMock.Constants.error
                         }
                     }
+                    context("non-retriable response") {
+                        beforeEach {
+                            waitUntil(timeout: .seconds(10)) { syncComplete in
+                                testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
+                                    testContext.syncResult = result
+                                    syncComplete()
+                                })
+                                let unauthorized = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
+                                                                   statusCode: HTTPURLResponse.StatusCodes.unauthorized,
+                                                                   httpVersion: DarklyServiceMock.Constants.httpVersion,
+                                                                   headerFields: nil)
+                                testContext.serviceMock.stubbedEventResponse = (nil, unauthorized, nil, nil)
+                                testContext.eventReporter.isOnline = true
+                                testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
+                                testContext.eventReporter.flush(completion: nil)
+                            }
+                        }
+                        it("drops events and stops reporting") {
+                            expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                            expect(testContext.eventReporter.eventStore).to(beEmpty())
+                            expect(testContext.eventReporter.isOnline).to(beFalse())
+                            expect(testContext.eventReporter.isReportingActive).to(beFalse())
+                            if case let .response(error) = testContext.syncResult {
+                                expect((error as? HTTPURLResponse)?.statusCode) == HTTPURLResponse.StatusCodes.unauthorized
+                            } else {
+                                fail("Expected response error result for event send")
+                            }
+                        }
+                        it("can be brought back online") {
+                            testContext.eventReporter.isOnline = true
+                            expect(testContext.eventReporter.isOnline).to(beTrue())
+                            expect(testContext.eventReporter.isReportingActive).to(beTrue())
+                        }
+                    }
                 }
             }
             context("offline") {
