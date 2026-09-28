@@ -23,14 +23,22 @@ enum SynchronizingError: Error {
     case unknownEventType(String)
 
     var isClientUnauthorized: Bool {
+        httpStatusCode == HTTPURLResponse.StatusCodes.unauthorized
+    }
+
+    var isTerminal: Bool {
+        guard let statusCode = httpStatusCode
+        else { return false }
+        return HTTPURLResponse.StatusCodes.isTerminalStatusCode(statusCode)
+    }
+
+    var httpStatusCode: Int? {
         switch self {
         case .response(let urlResponse):
-            guard let httpResponse = urlResponse as? HTTPURLResponse
-            else { return false }
-            return httpResponse.statusCode == HTTPURLResponse.StatusCodes.unauthorized
+            return (urlResponse as? HTTPURLResponse)?.statusCode
         case .streamError(let error as UnsuccessfulResponseError):
-            return error.responseCode == HTTPURLResponse.StatusCodes.unauthorized
-        default: return false
+            return error.responseCode
+        default: return nil
         }
     }
 }
@@ -161,7 +169,11 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             fireAt = lastTime.addingTimeInterval(pollingInterval)
             // If we do consider the cached values already fresh enough, we should
             // signal completion immediately
-            syncQueue.async { [self] in reportSyncComplete(.upToDate) }
+            syncQueue.async { [self] in
+                guard isOnline
+                else { return }
+                reportSyncComplete(.upToDate)
+            }
         }
         flagRequestTimer = LDTimer(withTimeInterval: pollingInterval, fireQueue: syncQueue, fireAt: fireAt, execute: processTimer)
         os_log("%s", log: service.config.logger, type: .debug, typeName(and: #function))
@@ -219,6 +231,13 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     }
 
     private func processFlagResponse(serviceResponse: ServiceResponse) {
+        guard isOnline
+        else {
+            os_log("%s aborted. Flag Synchronizer is offline.", log: service.config.logger, type: .debug, typeName(and: #function))
+            // The service already advanced its etag for this response, so clear it to refetch on the next poll.
+            service.resetFlagResponseCache(etag: nil)
+            return
+        }
         if let serviceResponseError = serviceResponse.error {
             os_log("%s error: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: serviceResponseError))
             reportSyncComplete(.error(.request(serviceResponseError)))
@@ -275,9 +294,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         else { return .proceed }
         // Now we know that we received an error HTTP response code
         let responseCode: Int = unsuccessfulResponseError.responseCode
-        if (400..<500).contains(responseCode) && ![400, 408, 429].contains(responseCode) {
-            // Not a invalid request, timeout, or too many requests error
-            // We will not retry in this case
+        if HTTPURLResponse.StatusCodes.isTerminalStatusCode(responseCode) {
             reportSyncComplete(.error(.streamError(error)))
             return .shutdown
         }
@@ -389,6 +406,10 @@ extension FlagSynchronizer {
 
     func testStreamOnMessage(event: String, messageEvent: MessageEvent) {
         onMessage(eventType: event, messageEvent: messageEvent)
+    }
+
+    func testProcessFlagResponse(serviceResponse: ServiceResponse) {
+        processFlagResponse(serviceResponse: serviceResponse)
     }
 }
 

@@ -101,19 +101,29 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
             case .request(let error):
                 let errorString = error.localizedDescription.isEmpty ? Constants.unknownError : error.localizedDescription
                 connectionInformationVar.lastConnectionFailureReason = .unknownError(errorString)
-            case .response(let urlResponse):
-                let statusCode = (urlResponse as? HTTPURLResponse)?.statusCode
-                connectionInformationVar.lastConnectionFailureReason = .httpError(statusCode ?? ConnectionInformation.Constants.noCode)
+            case .response:
+                connectionInformationVar.lastConnectionFailureReason = .httpError(synchronizingError.httpStatusCode ?? ConnectionInformation.Constants.noCode)
+            case .streamError:
+                if let statusCode = synchronizingError.httpStatusCode {
+                    connectionInformationVar.lastConnectionFailureReason = .httpError(statusCode)
+                }
             default: break
             }
         }
         connectionInformationVar.lastFailedConnection = Date()
+        if synchronizingError.isTerminal {
+            connectionInformationVar.currentConnectionMode = .offline
+        }
         return connectionInformationVar
     }
 
-    // This function is used to ensure we switch from establishing a streaming connection to streaming once we are connected.
-    static func checkEstablishingStreaming(connectionInformation: ConnectionInformation) -> ConnectionInformation {
+    // Reconciles the connection mode and flag validity after a successful sync.
+    static func checkEstablishingStreaming(connectionInformation: ConnectionInformation, streamingMode: LDStreamingMode) -> ConnectionInformation {
         var connectionInformationVar = connectionInformation
+        // Recover a terminal-error offline into the connecting mode. The checks below finish the transition.
+        if connectionInformationVar.currentConnectionMode == .offline {
+            connectionInformationVar.currentConnectionMode = (streamingMode == .streaming) ? .establishingStreamingConnection : .polling
+        }
         if connectionInformationVar.currentConnectionMode == .establishingStreamingConnection {
             connectionInformationVar.currentConnectionMode = .streaming
             connectionInformationVar.lastKnownFlagValidity = nil
