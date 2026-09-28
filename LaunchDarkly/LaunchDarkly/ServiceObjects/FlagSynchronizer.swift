@@ -73,8 +73,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     let streamingMode: LDStreamingMode
 
-    // Not thread-safe, but only accessed on one queue per instance: the event source callback queue for
-    // streaming, or isOnlineQueue for polling.
+    // Not thread-safe, but only accessed on one queue per instance: the event source callback queue for streaming, or isOnlineQueue for polling.
     private let retryState: RetryState
     private static let healthyResetThreshold: TimeInterval = 60
 
@@ -478,15 +477,14 @@ extension FlagSynchronizer {
         processFlagResponse(serviceResponse: serviceResponse)
     }
 
-    // connectedAt is set on the event source callback queue; a test uses this on the
-    // thread where it drives eventSourceErrorHandler.
+    // connectedAt is set on the event source callback queue.
+    // A test uses this on the thread where it drives eventSourceErrorHandler.
     var testConnectedAt: Date? {
         get { connectedAt }
         set { connectedAt = newValue }
     }
 
-    // Marks the synchronizer online without starting a data source, so a test can
-    // drive pollDidComplete without real polls racing the assertions.
+    // Marks the synchronizer online without starting a data source, so a test can drive pollDidComplete without real polls racing the assertions.
     func testForceOnline() {
         isOnlineQueue.sync { _isOnline = true }
     }

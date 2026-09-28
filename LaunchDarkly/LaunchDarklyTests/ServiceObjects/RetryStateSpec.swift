@@ -4,8 +4,8 @@ import XCTest
 @testable import LaunchDarkly
 
 final class RetryStateSpec: XCTestCase {
-    // nextDelay applies random jitter. Each result is asserted to fall within a
-    // range over many samples rather than against a fixed value.
+    // nextDelay applies random jitter.
+    // Each result is asserted to fall within a range over many samples rather than against a fixed value.
     private func assertDelay(_ retry: RetryState,
                              inClosedRange range: ClosedRange<TimeInterval>,
                              file: StaticString = #filePath,
