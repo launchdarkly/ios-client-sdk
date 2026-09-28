@@ -35,8 +35,8 @@ final class RetryStateSpec: XCTestCase {
             assertDelay(retry, inClosedRange: range)
         }
 
-        // A reset returns to the normal regime, backing off from the initial delay again.
-        retry.reset()
+        // One healthy stream clears the backoff, so the next failure backs off from the initial delay again.
+        retry.recordSuccess()
         retry.recordFailure(unexpected: false)
         assertDelay(retry, inClosedRange: 0.5...1)
     }
@@ -60,10 +60,27 @@ final class RetryStateSpec: XCTestCase {
             assertDelay(retry, inClosedRange: range)
         }
 
-        // A reset returns to the poll interval.
-        retry.reset()
+        // Two successful polls clear the backoff, so the next failure holds the poll interval again.
+        retry.recordSuccess()
+        retry.recordSuccess()
         retry.recordFailure(unexpected: false)
         assertDelay(retry, inClosedRange: 30...30)
+    }
+
+    func testPollingSuccessUsesPollIntervalBeforeBackoffClears() {
+        let retry = RetryState.forPolling(pollInterval: 30)
+
+        // An unexpected failure switches to the extended regime.
+        retry.recordFailure(unexpected: true)
+        assertDelay(retry, inClosedRange: 150...300)
+
+        // One success is short of the reset threshold, but the next poll still waits only the poll interval.
+        retry.recordSuccess()
+        assertDelay(retry, inClosedRange: 30...30)
+
+        // The backoff has not cleared, so a failure returns to the extended regime.
+        retry.recordFailure(unexpected: false)
+        assertDelay(retry, inClosedRange: 300...600)
     }
 
     func testPollingWaitFloorRaisesToPollInterval() {

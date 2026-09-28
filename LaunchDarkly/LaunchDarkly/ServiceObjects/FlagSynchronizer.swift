@@ -101,8 +101,6 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     private var connectedAt: Date?
     // Only accessed on isOnlineQueue.
     private var reconnectTimer: TimeResponding?
-    // Consecutive successful polls, toward the reset threshold. Only accessed on isOnlineQueue.
-    private var consecutivePollSuccesses = 0
 
     init(streamingMode: LDStreamingMode,
          pollingInterval: TimeInterval,
@@ -230,15 +228,10 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             else { return }
             if failed {
                 self.retryState.recordFailure(unexpected: unexpected)
-                self.consecutivePollSuccesses = 0
-                self.scheduleNextPoll(after: self.retryState.nextDelay())
             } else {
-                self.consecutivePollSuccesses += 1
-                if self.consecutivePollSuccesses == 2 {
-                    self.retryState.reset()
-                }
-                self.scheduleNextPoll(after: self.pollingInterval)
+                self.retryState.recordSuccess()
             }
+            self.scheduleNextPoll(after: self.retryState.nextDelay())
         }
     }
 
@@ -350,9 +343,9 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         }
         eventSourceStarted = now
 
-        // If the stream stayed healthy long enough before failing, reset the backoff.
+        // A stream that stayed up long enough before failing is a success.
         if let connectedAt = connectedAt, now.timeIntervalSince(connectedAt) >= FlagSynchronizer.healthyResetThreshold {
-            retryState.reset()
+            retryState.recordSuccess()
         }
         connectedAt = nil
 
