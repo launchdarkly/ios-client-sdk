@@ -6,6 +6,13 @@ import OSLog
 class ContextSummarizer {
     private var trackers: [ContextKey: TrackerWithContext] = [:]
     private let logger: OSLog
+    /// How many distinct contexts may be counted between two calls to `clear()`.
+    ///
+    /// Each one retains its context and its own counters, and nothing clears them while the client is offline, so
+    /// without a bound the only limit on their memory is how long the outage lasts.
+    private let maxContexts: Int
+    /// Whether reaching `maxContexts` has been logged since the last `clear()`, so it is logged once per delivery.
+    private var hasLoggedContextsExceeded = false
 
     /// A context used as a dictionary key.
     ///
@@ -35,14 +42,26 @@ class ContextSummarizer {
         let context: LDContext
     }
 
-    init(logger: OSLog) {
+    init(logger: OSLog, maxContexts: Int = .max) {
         self.logger = logger
+        self.maxContexts = maxContexts
     }
 
     /// Tracks a flag evaluation request for a specific context.
     /// Creates a new tracker for the context if one doesn't exist, or reuses the existing one.
-    func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue, context: LDContext) {
+    ///
+    /// - Returns: false if the evaluation was not counted, because its context is not counted yet and `maxContexts`
+    ///   already are. A context already being counted is never turned away.
+    @discardableResult
+    func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue, context: LDContext) -> Bool {
         let key = ContextKey(context: context)
+        if trackers[key] == nil && trackers.count >= maxContexts {
+            if !hasLoggedContextsExceeded {
+                hasLoggedContextsExceeded = true
+                os_log("Exceeded the number of contexts that can be summarized at once. Increase eventCapacity to avoid dropping evaluations.", log: logger, type: .default)
+            }
+            return false
+        }
         ensureTrackerExists(for: context, key: key)
 
         trackers[key]?.tracker.trackRequest(
@@ -52,6 +71,7 @@ class ContextSummarizer {
             defaultValue: defaultValue,
             context: context
         )
+        return true
     }
 
     /// Ensures a tracker exists for the context, creating one if needed.
@@ -75,8 +95,9 @@ class ContextSummarizer {
         return trackers.values.contains { $0.tracker.hasLoggedRequests }
     }
 
-    /// Clears all trackers.
+    /// Clears all trackers, which makes room for `maxContexts` new contexts.
     func clear() {
         trackers.removeAll()
+        hasLoggedContextsExceeded = false
     }
 }

@@ -64,7 +64,7 @@ class EventReporter: EventReporting {
         self.lastEventResponseDate = Date()
         self.encoding = encoding
         self.encoder = EventReporter.makeEncoder(config: service.config)
-        self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
+        self.contextSummarizer = ContextSummarizer(logger: service.config.logger, maxContexts: service.config.eventCapacity)
     }
 
     func record(_ event: Event) {
@@ -87,7 +87,11 @@ class EventReporter: EventReporting {
         let recordingDebugEvent = featureFlag?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
 
         eventQueue.sync {
-            contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
+            // A refused evaluation is a loss like a refused event, since nothing later reconstructs its counter. Its
+            // full event is still decided by the event capacity alone.
+            if !contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context) {
+                service.diagnosticCache?.incrementDroppedEventCount()
+            }
             if recordingFeatureEvent {
                 let featureEvent = FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false)
                 recordNoSync(featureEvent)
