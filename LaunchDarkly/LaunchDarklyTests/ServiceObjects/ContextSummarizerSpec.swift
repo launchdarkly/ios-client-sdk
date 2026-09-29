@@ -143,6 +143,112 @@ final class ContextSummarizerSpec: QuickSpec {
                         expect(encoded.contains("anon@example.com")) == false
                         expect(encoded.contains("redactedAttributes")) == true
                     }
+
+                    // Neither `==` nor `contextHash()`, which the summarizer used to key by, tells these apart, so they
+                    // share the summary of whichever arrived first.
+                    it("shares one summary between contexts that spell a private attribute differently") {
+                        func context(privateAttribute: String) -> LDContext {
+                            var builder = LDContextBuilder(key: "user-key")
+                            _ = builder.trySetValue("email", "a@example.com")
+                            builder.addPrivateAttribute(Reference(privateAttribute))
+                            return try! builder.build().get()
+                        }
+                        let plain = context(privateAttribute: "email")
+                        let slashed = context(privateAttribute: "/email")
+                        expect(plain) == slashed
+                        expect(plain.contextHash()) == slashed.contextHash()
+
+                        for context in [slashed, plain, slashed] {
+                            summarizer.trackRequest(flagKey: "flag1", reportedValue: .bool(true), featureFlag: featureFlag,
+                                                    defaultValue: .bool(false), context: context)
+                        }
+
+                        let summaries = summarizer.getSummaries()
+                        expect(summaries.count) == 1
+                        expect(summaries[0].context.privateAttributes.map { $0.raw() }) == ["/email"]
+                    }
+
+                    // `contextHash()` saw only whether there are private attributes, not which.
+                    it("separates contexts by whether they have private attributes, not by which") {
+                        func context(privateAttributes: [String]) -> LDContext {
+                            var builder = LDContextBuilder(key: "user-key")
+                            builder.name("a")
+                            _ = builder.trySetValue("email", "a@example.com")
+                            privateAttributes.forEach { builder.addPrivateAttribute(Reference($0)) }
+                            return try! builder.build().get()
+                        }
+                        let none = context(privateAttributes: [])
+                        let email = context(privateAttributes: ["email"])
+                        let name = context(privateAttributes: ["name"])
+                        expect(email) != name
+                        expect(email.contextHash()) == name.contextHash()
+                        expect(none.contextHash()) != email.contextHash()
+
+                        for context in [email, none, name] {
+                            summarizer.trackRequest(flagKey: "flag1", reportedValue: .bool(true), featureFlag: featureFlag,
+                                                    defaultValue: .bool(false), context: context)
+                        }
+
+                        let privateSets = summarizer.getSummaries().map { Set($0.context.privateAttributes.map { $0.raw() }) }
+                        expect(Set(privateSets)) == [[], ["email"]]
+                    }
+                }
+
+                // JSON cannot represent these, so `contextHash()` fell back to the fully qualified key.
+                context("attributes holding NaN or an infinity") {
+                    func context(key: String = "user-key", name: String, score: Double) -> LDContext {
+                        var builder = LDContextBuilder(key: key)
+                        builder.name(name)
+                        _ = builder.trySetValue("score", .number(score))
+                        return try! builder.build().get()
+                    }
+                    func track(_ contexts: [LDContext]) {
+                        for context in contexts {
+                            summarizer.trackRequest(flagKey: "flag1", reportedValue: .bool(true), featureFlag: featureFlag,
+                                                    defaultValue: .bool(false), context: context)
+                        }
+                    }
+
+                    it("keeps one summary for a context holding NaN, though separately built copies are not equal") {
+                        let copies = (0..<3).map { _ in context(name: "a", score: .nan) }
+                        expect(copies[0]) != copies[1]
+
+                        track(copies)
+
+                        expect(summarizer.getSummaries().count) == 1
+                    }
+
+                    it("shares one summary between unrepresentable contexts with the same key") {
+                        let nan = context(name: "a", score: .nan)
+                        let infinity = context(name: "b", score: .infinity)
+                        expect(nan.contextHash()) == infinity.contextHash()
+
+                        track([nan, infinity])
+
+                        let summaries = summarizer.getSummaries()
+                        expect(summaries.count) == 1
+                        expect(summaries[0].context.getValue(Reference("name"))) == .string("a")
+                    }
+
+                    it("separates unrepresentable contexts with different keys") {
+                        let first = context(key: "key-1", name: "a", score: .nan)
+                        let second = context(key: "key-2", name: "a", score: .nan)
+                        expect(first.contextHash()) != second.contextHash()
+
+                        track([first, second])
+
+                        expect(summarizer.getSummaries().count) == 2
+                    }
+
+                    it("separates an unrepresentable context from a representable one with the same key") {
+                        let nan = context(name: "a", score: .nan)
+                        let finite = context(name: "a", score: 1)
+                        expect(nan.contextHash()) != finite.contextHash()
+
+                        track([nan, finite, nan])
+
+                        expect(summarizer.getSummaries().count) == 2
+                    }
                 }
             }
 

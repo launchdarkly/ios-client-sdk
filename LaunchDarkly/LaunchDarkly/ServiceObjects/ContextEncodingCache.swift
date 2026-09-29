@@ -8,10 +8,10 @@ import Foundation
 /// single entry on every event.
 ///
 /// Serving one context's bytes for another would leak attributes that should have been redacted, so the key is the
-/// context value itself, compared with `==`. That covers everything redaction depends on: the context's stored
-/// properties are all part of `==`, the directive selects the entry, and `allAttributesPrivate` and
-/// `globalPrivateAttributes` are fixed for the lifetime of the owning `EventJSONWriter`. Redacted attributes are
-/// written from `Reference.canonical()`, so private attributes that are `==` but spelled differently encode the same.
+/// context value itself: `==`, plus the spelling of its private attributes, which `==` ignores but the output
+/// includes. That covers everything redaction depends on: the context's stored properties are all part of `==`, the
+/// directive selects the entry, and `allAttributesPrivate` and `globalPrivateAttributes` are fixed for the lifetime of
+/// the owning `EventJSONWriter`.
 ///
 /// `==` returns without reading attributes when both sides share storage, which is the case for copies of one
 /// context. A hit therefore replaces the stored context with the caller's, so that after an equal but separately built
@@ -29,7 +29,7 @@ final class ContextEncodingCache {
     /// The encoded bytes for `context` under `redactAnonymous`, or nil if that entry holds a different context.
     func encodedContext(for context: LDContext, redactAnonymous: Bool) -> [UInt8]? {
         let slot = ContextEncodingCache.slot(redactAnonymous)
-        guard let entry = entries[slot], entry.context == context
+        guard let entry = entries[slot], entry.context == context, entry.context.spellsPrivateAttributesLike(context)
         else { return nil }
 
         entries[slot] = Entry(context: context, encoded: entry.encoded)

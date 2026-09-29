@@ -9,14 +9,24 @@ class ContextSummarizer {
 
     /// A context used as a dictionary key.
     ///
-    /// Hashes only the fully qualified key, which the context already stores; `LDContext.contextHash()` would encode
-    /// the whole context on every evaluation. Equal contexts share that key, so the `Hashable` contract holds, and
-    /// contexts that collide are separated by `==`.
+    /// Groups contexts as keying by `LDContext.contextHash()` did, without encoding the whole context on every
+    /// evaluation. That hash saw only whether a context has private attributes, not which, and a context JSON cannot
+    /// represent, because an attribute holds NaN or an infinity, fell back to its fully qualified key. Equal keys share a
+    /// fully qualified key, so hashing only that, which the context already stores, keeps the `Hashable` contract.
     struct ContextKey: Hashable {
         let context: LDContext
 
         func hash(into hasher: inout Hasher) {
             hasher.combine(context.fullyQualifiedKey())
+        }
+
+        static func == (lhs: ContextKey, rhs: ContextKey) -> Bool {
+            if lhs.context.equalsIgnoringWhichAttributesArePrivate(rhs.context) {
+                return true
+            }
+            // Attributes that compare equal are equally representable, so only a mismatch needs this walk.
+            return lhs.context.fullyQualifiedKey() == rhs.context.fullyQualifiedKey()
+                && lhs.context.containsNonFiniteNumber() && rhs.context.containsNonFiniteNumber()
         }
     }
 
