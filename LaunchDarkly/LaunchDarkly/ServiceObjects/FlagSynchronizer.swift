@@ -73,8 +73,10 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
 
     let streamingMode: LDStreamingMode
 
-    // Not thread-safe, but only accessed on one queue per instance: the event source callback queue for streaming, or isOnlineQueue for polling.
-    private let retryState: RetryState
+    // Only accessed on the event source callback queue.
+    private let streamingRetry: StreamingRetryState
+    // Only accessed on isOnlineQueue.
+    private let pollingRetry: PollingRetryState
     private static let healthyResetThreshold: TimeInterval = 60
 
     var isOnline: Bool {
@@ -109,9 +111,8 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
          onSyncComplete: FlagSyncCompleteClosure?) {
         self.streamingMode = streamingMode
         self.pollingInterval = pollingInterval
-        self.retryState = (streamingMode == .streaming)
-            ? RetryState.forStreaming()
-            : RetryState.forPolling(pollInterval: pollingInterval)
+        self.streamingRetry = StreamingRetryState()
+        self.pollingRetry = PollingRetryState(pollInterval: pollingInterval)
         self.useReport = useReport
         self.lastCachedRequestedTime = lastUpdated
         self.service = service
@@ -226,11 +227,11 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             guard let self = self, self._isOnline, self.streamingMode == .polling
             else { return }
             if failed {
-                self.retryState.recordFailure(unexpected: unexpected)
+                self.pollingRetry.recordFailure(unexpected: unexpected)
             } else {
-                self.retryState.recordSuccess()
+                self.pollingRetry.recordSuccess()
             }
-            self.scheduleNextPoll(after: self.retryState.nextDelay())
+            self.scheduleNextPoll(after: self.pollingRetry.nextDelay())
         }
     }
 
@@ -342,14 +343,14 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         }
         eventSourceStarted = now
 
-        // A stream that stayed up long enough before failing is a success.
+        // A stream that stayed up long enough before failing clears the backoff.
         if let connectedAt = connectedAt, now.timeIntervalSince(connectedAt) >= FlagSynchronizer.healthyResetThreshold {
-            retryState.recordSuccess()
+            streamingRetry.reset()
         }
         connectedAt = nil
 
-        retryState.recordFailure(unexpected: SynchronizingError.streamError(error).isTerminal)
-        let delay = retryState.nextDelay()
+        streamingRetry.recordFailure(unexpected: SynchronizingError.streamError(error).isTerminal)
+        let delay = streamingRetry.nextDelay()
         os_log("%s stream error; reconnecting in %.3fs. error: %s", log: service.config.logger, type: .debug, typeName(and: #function), delay, String(describing: error))
         reportSyncComplete(.error(.streamError(error)))
 
@@ -495,7 +496,7 @@ extension FlagSynchronizer {
 
     // Reads the poll delay on isOnlineQueue so it serializes after a pending pollDidComplete.
     var testNextPollDelay: TimeInterval {
-        isOnlineQueue.sync { retryState.nextDelay() }
+        isOnlineQueue.sync { pollingRetry.nextDelay() }
     }
 
     func testReconnect() {

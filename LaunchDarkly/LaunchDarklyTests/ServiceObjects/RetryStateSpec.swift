@@ -6,7 +6,17 @@ import XCTest
 final class RetryStateSpec: XCTestCase {
     // nextDelay applies random jitter.
     // Each result is asserted to fall within a range over many samples rather than against a fixed value.
-    private func assertDelay(_ retry: RetryState,
+    private func assertDelay(_ retry: StreamingRetryState,
+                             inClosedRange range: ClosedRange<TimeInterval>,
+                             file: StaticString = #filePath,
+                             line: UInt = #line) {
+        for _ in 0..<50 {
+            let delay = retry.nextDelay()
+            XCTAssertTrue(range.contains(delay), "\(delay) is outside \(range)", file: file, line: line)
+        }
+    }
+
+    private func assertDelay(_ retry: PollingRetryState,
                              inClosedRange range: ClosedRange<TimeInterval>,
                              file: StaticString = #filePath,
                              line: UInt = #line) {
@@ -17,7 +27,7 @@ final class RetryStateSpec: XCTestCase {
     }
 
     func testStreamingRetryLifecycle() {
-        let retry = RetryState.forStreaming()
+        let retry = StreamingRetryState()
 
         // Normal failures back off from the initial delay and double to the 30s ceiling.
         for range in [0.5...1, 1...2, 2...4, 4...8, 8...16, 15...30, 15...30] as [ClosedRange<TimeInterval>] {
@@ -35,14 +45,14 @@ final class RetryStateSpec: XCTestCase {
             assertDelay(retry, inClosedRange: range)
         }
 
-        // One healthy stream clears the backoff, so the next failure backs off from the initial delay again.
-        retry.recordSuccess()
+        // A reset returns to the normal regime, so the next failure backs off from the initial delay again.
+        retry.reset()
         retry.recordFailure(unexpected: false)
         assertDelay(retry, inClosedRange: 0.5...1)
     }
 
     func testPollingRetryLifecycle() {
-        let retry = RetryState.forPolling(pollInterval: 30)
+        let retry = PollingRetryState(pollInterval: 30)
 
         // Normal failures hold the poll interval with no escalation.
         for _ in 0..<3 {
@@ -68,7 +78,7 @@ final class RetryStateSpec: XCTestCase {
     }
 
     func testPollingSuccessUsesPollIntervalBeforeBackoffClears() {
-        let retry = RetryState.forPolling(pollInterval: 30)
+        let retry = PollingRetryState(pollInterval: 30)
 
         // An unexpected failure switches to the extended regime.
         retry.recordFailure(unexpected: true)
@@ -85,7 +95,7 @@ final class RetryStateSpec: XCTestCase {
 
     func testPollingWaitFloorRaisesToPollInterval() {
         // A poll interval above the 5 minute extended base floors every delay at the interval.
-        let retry = RetryState.forPolling(pollInterval: 600)
+        let retry = PollingRetryState(pollInterval: 600)
         retry.recordFailure(unexpected: false)
         assertDelay(retry, inClosedRange: 600...600)
         retry.recordFailure(unexpected: true)
