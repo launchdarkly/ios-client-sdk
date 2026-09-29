@@ -193,9 +193,9 @@ final class EventJSONWriterTests: XCTestCase {
         XCTAssertEqual(compared, 2 * privacySettings.count * contexts.count * events(context: simpleContext()).count)
     }
 
-    /// Contexts that differ only in how a private attribute is spelled are `==`, so they share a cache entry, and must
-    /// therefore encode the same.
-    func testPrivateAttributeSpellingDoesNotReachTheOutput() throws {
+    /// Contexts that differ only in how a private attribute is spelled are `==`, but each reports the spelling it was
+    /// given, so the cache must not serve one for the other.
+    func testEachContextReportsItsOwnPrivateAttributeSpelling() throws {
         func context(privateAttribute: String) throws -> LDContext {
             var builder = LDContextBuilder(key: "user-key")
             builder.name("Spelling")
@@ -221,18 +221,19 @@ final class EventJSONWriterTests: XCTestCase {
             return try XCTUnwrap(writer.encode(event))
         }
 
-        let slashedData = try encodeAlone(slashedEvent)
-        let slashedJSON = try canonical(slashedData)
-        XCTAssertEqual(try canonical(try encodeAlone(plainEvent)), slashedJSON)
+        let slashedJSON = try canonical(try encodeAlone(slashedEvent))
+        let plainJSON = try canonical(try encodeAlone(plainEvent))
+        XCTAssertTrue(slashedJSON.contains("\"redactedAttributes\":[\"\\/email\"]"), slashedJSON)
+        XCTAssertTrue(plainJSON.contains("\"redactedAttributes\":[\"email\"]"), plainJSON)
 
-        let written = try XCTUnwrap(String(data: slashedData, encoding: .utf8))
-        XCTAssertTrue(written.contains("\"redactedAttributes\":[\"/email\"]"),
-                      "expected the canonical spelling, got \(written)")
+        let codable = Self.makeCodableEncoder(allAttributesPrivate: false, globalPrivateAttributes: [])
+        XCTAssertEqual(try canonical(try codable.encode(slashedEvent)), slashedJSON)
+        XCTAssertEqual(try canonical(try codable.encode(plainEvent)), plainJSON)
 
-        // And the same through one writer, where the second event does come from the first's entry.
+        // And through one writer, where each event would be served the other's entry if the cache ignored spelling.
         let shared = EventJSONWriter(allAttributesPrivate: false, globalPrivateAttributes: [])
-        for event in [slashedEvent, plainEvent, slashedEvent, plainEvent] {
-            XCTAssertEqual(try canonical(try XCTUnwrap(shared.encode(event))), slashedJSON)
+        for (event, expected) in [(slashedEvent, slashedJSON), (plainEvent, plainJSON), (slashedEvent, slashedJSON), (plainEvent, plainJSON)] {
+            XCTAssertEqual(try canonical(try XCTUnwrap(shared.encode(event))), expected)
         }
     }
 

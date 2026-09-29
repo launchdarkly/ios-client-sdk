@@ -60,7 +60,7 @@ extension LDContext {
             else { continue }
 
             if redactAll {
-                redaction.redactedAttributes.append(reference.canonical())
+                redaction.redactedAttributes.append(reference.raw())
                 continue
             }
 
