@@ -115,11 +115,11 @@ public struct LDContext: Encodable, Equatable {
 
         let redactAll = allAttributesPrivate || (context.anonymous && redactAnonymousAttributes)
 
+        // Attribute names are looked up literally, not parsed as references, so an attribute named `/foo` is written.
         for key in optionalAttributeNames {
-            let reference = Reference(key)
-            if let value = context.getValue(reference) {
+            if let value = context.getTopLevelAddressableAttributeSingleKind(key) {
                 if redactAll {
-                    redactedAttributes.append(reference.raw())
+                    redactedAttributes.append(key)
                     continue
                 }
 
