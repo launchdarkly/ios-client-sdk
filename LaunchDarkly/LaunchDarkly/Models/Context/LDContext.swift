@@ -119,7 +119,7 @@ public struct LDContext: Encodable, Equatable {
             let reference = Reference(key)
             if let value = context.getValue(reference) {
                 if redactAll {
-                    redactedAttributes.append(reference.canonical())
+                    redactedAttributes.append(reference.raw())
                     continue
                 }
 
@@ -174,7 +174,7 @@ public struct LDContext: Encodable, Equatable {
         var (reactedAttrReference, nestedPropertiesAreRedacted) = LDContext.checkGlobalPrivateAttributeReferences(context: context, parentPath: parentPath, globalPrivateAttributes: globalPrivateAttributes)
 
         if let reactedAttrReference = reactedAttrReference {
-            redactedAttributes.append(reactedAttrReference.canonical())
+            redactedAttributes.append(reactedAttrReference.raw())
             return (true, false)
         }
 
@@ -210,7 +210,7 @@ public struct LDContext: Encodable, Equatable {
 
             if hasMatch {
                 if depth == parentPath.count {
-                    redactedAttributes.append(privateAttribute.canonical())
+                    redactedAttributes.append(privateAttribute.raw())
                     return (true, false)
                 }
 
@@ -619,6 +619,48 @@ extension LDContext {
                               value: value,
                               redactedAttributes: &redactedAttributes,
                               globalPrivateAttributes: globalPrivateAttributes)
+    }
+}
+
+extension LDContext {
+    /// Whether `other`, already known to be `==`, also spells its private attributes the same way.
+    ///
+    /// `Reference`'s `==` ignores spelling, so `Reference("email")` equals `Reference("/email")`, but redaction writes
+    /// each private attribute as it was spelled. Whatever reuses a context's encoding, or stands one context in for
+    /// another, has to check this as well as `==`.
+    internal func spellsPrivateAttributesLike(_ other: LDContext) -> Bool {
+        if !(privateAttributes.isEmpty && other.privateAttributes.isEmpty) {
+            guard Set(privateAttributes.map { $0.raw() }) == Set(other.privateAttributes.map { $0.raw() })
+            else { return false }
+        }
+        return zip(contexts, other.contexts).allSatisfy { $0.spellsPrivateAttributesLike($1) }
+    }
+
+    /// `==`, except that of the private attributes only whether there are any is compared. That is all
+    /// `contextHash()` saw of them: it omits them from `_meta`, but writes an empty `_meta` when there are some.
+    internal func equalsIgnoringWhichAttributesArePrivate(_ other: LDContext) -> Bool {
+        kind == other.kind && canonicalizedKey == other.canonicalizedKey && key == other.key && name == other.name
+            && anonymous == other.anonymous && privateAttributes.isEmpty == other.privateAttributes.isEmpty
+            && attributes == other.attributes
+            && contexts.count == other.contexts.count
+            && zip(contexts, other.contexts).allSatisfy { $0.equalsIgnoringWhichAttributesArePrivate($1) }
+    }
+
+    /// Whether any attribute holds NaN or an infinity, which JSON cannot represent, so `contextHash()` fell back to
+    /// `fullyQualifiedHashedKey()`.
+    internal func containsNonFiniteNumber() -> Bool {
+        attributes.values.contains { $0.containsNonFiniteNumber } || contexts.contains { $0.containsNonFiniteNumber() }
+    }
+}
+
+private extension LDValue {
+    var containsNonFiniteNumber: Bool {
+        switch self {
+        case .number(let number): return !number.isFinite
+        case .array(let values): return values.contains { $0.containsNonFiniteNumber }
+        case .object(let values): return values.values.contains { $0.containsNonFiniteNumber }
+        case .null, .bool, .string: return false
+        }
     }
 }
 
