@@ -21,12 +21,12 @@ class ContextSummarizer {
         }
 
         static func == (lhs: ContextKey, rhs: ContextKey) -> Bool {
-            if lhs.context.equalsIgnoringWhichAttributesArePrivate(rhs.context) {
-                return true
-            }
+            guard lhs.context.fullyQualifiedKey() == rhs.context.fullyQualifiedKey()
+            else { return false }
+
             // Attributes that compare equal are equally representable, so only a mismatch needs this walk.
-            return lhs.context.fullyQualifiedKey() == rhs.context.fullyQualifiedKey()
-                && lhs.context.containsNonFiniteNumber() && rhs.context.containsNonFiniteNumber()
+            return lhs.context.equalsIgnoringWhichAttributesArePrivate(rhs.context)
+                || (lhs.context.containsNonFiniteNumber() && rhs.context.containsNonFiniteNumber())
         }
     }
 
