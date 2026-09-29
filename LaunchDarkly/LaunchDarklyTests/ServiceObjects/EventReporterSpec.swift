@@ -752,6 +752,32 @@ final class EventReporterSpec: QuickSpec {
         }
 
         describe("recordFlagEvaluationEvents") {
+            it("counts an evaluation the summarizer turns away as dropped, and still keeps its full event") {
+                var config = LDConfig.stub
+                config.eventCapacity = 2
+                let service = DarklyServiceMock()
+                service.config = config
+                let diagnosticCache = DiagnosticCachingMock()
+                service.diagnosticCache = diagnosticCache
+                let store = EventStore.temporary(capacity: config.eventCapacity)
+                defer { store.deleteEverything() }
+                let reporter = EventReporter(service: service, onSyncComplete: nil, store: store)
+                let untracked = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                let tracked = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+
+                // Capacity bounds the number of contexts counted as well as the number of events held.
+                for key in ["a", "b"] {
+                    reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: untracked, context: LDContext.stub(key: key), includeReason: false)
+                }
+                expect(diagnosticCache.incrementDroppedEventCountCallCount) == 0
+
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: tracked, context: LDContext.stub(key: "c"), includeReason: false)
+
+                expect(diagnosticCache.incrementDroppedEventCountCallCount) == 1
+                expect(reporter.contextSummarizer.getSummaries().count) == 2
+                reporter.commitRecordedEvents()
+                expect(recordedEvents(store).compactMap { $0.kindField }) == ["feature", "summary", "summary"]
+            }
             it("unknown flag") {
                 let (reporter, store) = makeReporter()
                 defer { store.deleteEverything() }

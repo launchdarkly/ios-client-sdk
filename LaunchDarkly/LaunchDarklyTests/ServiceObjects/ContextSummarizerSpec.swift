@@ -320,6 +320,42 @@ final class ContextSummarizerSpec: QuickSpec {
                 }
             }
 
+            describe("maxContexts") {
+                func track(_ summarizer: ContextSummarizer, key: String) -> Bool {
+                    summarizer.trackRequest(flagKey: "flag1", reportedValue: .bool(true), featureFlag: featureFlag,
+                                            defaultValue: .bool(false), context: LDContext.stub(key: key))
+                }
+
+                it("turns away an evaluation for a new context once the limit is reached") {
+                    let bounded = ContextSummarizer(logger: logger, maxContexts: 2)
+                    expect(track(bounded, key: "a")) == true
+                    expect(track(bounded, key: "b")) == true
+
+                    expect(track(bounded, key: "c")) == false
+                    expect(bounded.getSummaries().map { $0.context.fullyQualifiedKey() }.sorted()) == ["a", "b"]
+                }
+
+                it("still counts evaluations for a context already counted") {
+                    let bounded = ContextSummarizer(logger: logger, maxContexts: 1)
+                    expect(track(bounded, key: "a")) == true
+                    expect(track(bounded, key: "b")) == false
+
+                    expect(track(bounded, key: "a")) == true
+                    let counters = bounded.getSummaries().first?.tracker.flagCounters["flag1"]?.flagValueCounters
+                    expect(counters?.values.reduce(0) { $0 + $1.count }) == 2
+                }
+
+                it("makes room again once cleared") {
+                    let bounded = ContextSummarizer(logger: logger, maxContexts: 1)
+                    expect(track(bounded, key: "a")) == true
+                    expect(track(bounded, key: "b")) == false
+
+                    bounded.clear()
+
+                    expect(track(bounded, key: "b")) == true
+                }
+            }
+
             describe("clear") {
                 it("removes all trackers") {
                     summarizer.trackRequest(

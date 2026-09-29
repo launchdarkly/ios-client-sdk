@@ -204,7 +204,7 @@ class EventReporter: EventReporting {
         self.capacity = service.config.eventCapacity
         self.commitQueue = commitQueue
         self.encoder = EventReporter.makeEncoder(config: service.config)
-        self.contextSummarizer = ContextSummarizer(logger: service.config.logger)
+        self.contextSummarizer = ContextSummarizer(logger: service.config.logger, maxContexts: service.config.eventCapacity)
         self.store = store ?? EventReporter.makeStore(config: service.config)
 
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
@@ -256,13 +256,18 @@ class EventReporter: EventReporting {
 
         var dropped = 0
         pendingLock.lock()
-        contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
+        let counted = contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
         for event in [featureEvent, debugEvent].compactMap({ $0 }) where !holdHoldingPendingLock(event) {
             dropped += 1
         }
         let needsCommit = pending.count >= EventReporter.pendingCommitThreshold
         pendingLock.unlock()
 
+        // A refused evaluation is a loss like a refused event, since nothing later reconstructs its counter. Its full
+        // event is still decided by the event capacity alone.
+        if !counted {
+            service.diagnosticCache?.incrementDroppedEventCount()
+        }
         for _ in 0..<dropped {
             reportDropped()
         }
