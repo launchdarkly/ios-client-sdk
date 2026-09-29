@@ -265,7 +265,7 @@ public class LDClient {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
         // A backgrounded application is one the OS may kill without warning, so whatever it has recorded is made
         // durable now rather than waiting for the next report interval to come around.
-        eventReporter.commitRecordedEvents()
+        eventReporter.commitAtCommitPoint()
         // The commit above makes the events survivable; this tries to make surviving unnecessary. A backgrounded
         // process is suspended as soon as it goes idle, so a delivery started here reaches the network only inside an
         // activity assertion. If it does not get out, the bytes are on disk and the next launch sends them.

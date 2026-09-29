@@ -19,14 +19,27 @@ struct EventBatch: Equatable {
 }
 
 protocol EventStoring {
-    /// Encoded events that have been recorded but not yet accepted by LaunchDarkly, whether they are still staged in
-    /// memory, written to the open log, or sitting in a closed batch.
+    /// Events that have been recorded but not yet accepted by LaunchDarkly, whether they are reserved while being
+    /// encoded, staged in memory, written to the open log, or sitting in a closed batch.
     var pendingEventCount: Int { get }
+
+    /// Whether a commit writes anything, which is false where persistence is off and once a write has failed and the
+    /// store has given up on it.
+    var isPersisting: Bool { get }
 
     /// Stages an already encoded event, returning false if it was dropped because `capacity` is reached.
     ///
     /// Staging is a copy into a buffer; `commit()` is what makes the event outlive the process.
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool
+
+    /// Counts events that have been accepted but are still being encoded, so capacity sees them until they are staged.
+    func reserve(_ events: Int)
+
+    /// Stages an event using up one reservation, rather than checking capacity again.
+    func stageReserved(_ encodedEvent: Data) -> Bool
+
+    /// Gives back every reservation not used up by `stageReserved(_:)`, such as one for an event that failed to encode.
+    func releaseReservations()
 
     /// Hands every staged byte to the kernel, so that the events recorded so far survive the process dying.
     func commit()
@@ -88,6 +101,7 @@ final class EventStore: EventStoring {
     /// Only to be used while holding `bufferLock`.
     private var bufferData = Data()
     private var bufferedEventCount = 0
+    private var reservedEvents = 0
     private var committedEvents = 0
     private var closedEvents = 0
     /// Whether events are being written to disk, which is what the application asked for until a write fails and the
@@ -172,24 +186,59 @@ final class EventStore: EventStoring {
     var pendingEventCount: Int {
         bufferLock.lock()
         defer { bufferLock.unlock() }
-        return bufferedEventCount + committedEvents + closedEvents
+        return reservedEvents + bufferedEventCount + committedEvents + closedEvents
+    }
+
+    var isPersisting: Bool {
+        bufferLock.lock()
+        defer { bufferLock.unlock() }
+        return persistEvents
+    }
+
+    func reserve(_ events: Int) {
+        bufferLock.lock()
+        reservedEvents += events
+        bufferLock.unlock()
+    }
+
+    func releaseReservations() {
+        bufferLock.lock()
+        reservedEvents = 0
+        bufferLock.unlock()
     }
 
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool = false) -> Bool {
+        stage(encodedEvent, bypassingCapacity: bypassingCapacity, usingReservation: false)
+    }
+
+    func stageReserved(_ encodedEvent: Data) -> Bool {
+        stage(encodedEvent, bypassingCapacity: true, usingReservation: true)
+    }
+
+    private func stage(_ encodedEvent: Data, bypassingCapacity: Bool, usingReservation: Bool) -> Bool {
         guard encodedEvent.count <= EventLogFormat.maxFrameSize
         else {
             os_log("%s dropping an event larger than a log frame allows", log: logger, type: .debug, typeName(and: #function))
+            if usingReservation {
+                bufferLock.lock()
+                reservedEvents = max(0, reservedEvents - 1)
+                bufferLock.unlock()
+            }
             return false
         }
 
         bufferLock.lock()
 
-        guard bypassingCapacity || bufferedEventCount + committedEvents + closedEvents < capacity
+        guard bypassingCapacity || reservedEvents + bufferedEventCount + committedEvents + closedEvents < capacity
         else {
             bufferLock.unlock()
             return false
         }
 
+        // In the same critical section as the append, so the event is never counted twice or not at all.
+        if usingReservation {
+            reservedEvents = max(0, reservedEvents - 1)
+        }
         bufferData.append(EventLogFormat.frame(for: encodedEvent))
         bufferedEventCount += 1
         // Nothing to schedule once persistence has been given up on: there is nowhere for a commit to put these bytes,

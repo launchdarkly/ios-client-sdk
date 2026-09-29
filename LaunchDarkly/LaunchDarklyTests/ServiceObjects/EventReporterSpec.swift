@@ -97,6 +97,7 @@ final class EventReporterSpec: QuickSpec {
         unserializableEventSpec()
         reportTimerSpec()
         durabilitySpec()
+        commitSpec()
         flushReportingOutcomeSpec()
     }
 
@@ -1140,6 +1141,122 @@ extension EventReporterSpec {
         }
     }
 
+    private func commitSpec() {
+        describe("committing held events") {
+            var testContext: TestContext!
+            afterEach {
+                testContext?.cleanUp()
+                testContext = nil
+            }
+
+            it("leaves held events for the delivery to encode when they are not persisted") {
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.commits")
+                testContext = TestContext(lastEventResponseDate: Date(),
+                                          store: EventStore.temporary(capacity: .max, persistEvents: false),
+                                          eventCapacity: .max,
+                                          eventPersistence: .disabled,
+                                          commitQueue: commits)
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+
+                // Past the pending threshold and then a commit point: either would commit where events are persisted.
+                for _ in 0..<100 {
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+                }
+                testContext.eventReporter.record(CustomEvent(key: "custom", context: testContext.context))
+                testContext.eventReporter.flush(completion: nil)
+                commits.sync { }
+
+                // Encoding them early would buy nothing, since a commit here writes nothing to disk.
+                expect(testContext.store.pendingEventCount) == 0
+
+                testContext.eventReporter.isOnline = true
+                waitUntil { done in
+                    testContext.eventReporter.flush(completion: done)
+                }
+                let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
+                valueIsArray(published) { events in
+                    expect(events.compactMap { $0.kindField }.filter { $0 == "feature" }.count) == 100
+                    expect(events.compactMap { $0.kindField }.filter { $0 != "feature" }) == ["custom", "summary"]
+                }
+            }
+
+            it("commits an evaluation's counter together with its full event") {
+                testContext = TestContext(lastEventResponseDate: Date(),
+                                          store: EventStore.temporary(capacity: .max),
+                                          eventCapacity: .max)
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+                let reporter = testContext.eventReporter!
+                let context = testContext.context!
+
+                let recorded = DispatchSemaphore(value: 0)
+                DispatchQueue.global().async {
+                    for _ in 0..<2_000 {
+                        reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
+                    }
+                    recorded.signal()
+                }
+                while recorded.wait(timeout: .now()) == .timedOut {
+                    reporter.commitRecordedEvents()
+                }
+                reporter.commitRecordedEvents()
+
+                // A commit stages its run and then its summary, so each summary has to count exactly the feature
+                // events since the one before it; a commit that caught an evaluation half recorded would not.
+                var featuresSinceSummary = 0
+                var summaries = 0
+                for event in recordedEvents(testContext.store) {
+                    switch event.kindField {
+                    case "feature":
+                        featuresSinceSummary += 1
+                    case "summary":
+                        summaries += 1
+                        expect(summaryCount(event)) == featuresSinceSummary
+                        featuresSinceSummary = 0
+                    default:
+                        break
+                    }
+                }
+                expect(featuresSinceSummary) == 0
+                expect(summaries) > 1
+            }
+
+            it("counts a run toward capacity while it is being encoded") {
+                var config = LDConfig.stub
+                config.eventCapacity = 1
+                config.eventPersistence = .deferred
+                let serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                let diagnosticCache = DiagnosticCachingMock()
+                serviceMock.diagnosticCache = diagnosticCache
+                let store = EventStore.temporary(capacity: config.eventCapacity)
+                defer { store.deleteEverything() }
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
+                commits.suspend()
+                defer { commits.resume() }
+                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits)
+
+                let slow = EncodingGate(key: "slow", context: LDContext.stub())
+                reporter.record(slow)
+                let committed = DispatchSemaphore(value: 0)
+                DispatchQueue.global().async {
+                    reporter.commitRecordedEvents()
+                    committed.signal()
+                }
+                expect(slow.started.wait(timeout: .now() + 5)) == .success
+
+                // Neither held nor staged at this moment, the slow event is only in the commit encoding it.
+                reporter.record(CustomEvent(key: "late", context: LDContext.stub()))
+
+                slow.proceed.signal()
+                expect(committed.wait(timeout: .now() + 5)) == .success
+                reporter.commitRecordedEvents()
+
+                expect(store.pendingEventCount) == 1
+                expect(diagnosticCache.incrementDroppedEventCountCallCount) == 1
+            }
+        }
+    }
+
     private func flushReportingOutcomeSpec() {
         describe("flush reporting outcome") {
             var testContext: TestContext!
@@ -1216,6 +1333,34 @@ private func recordedEvents(_ store: EventStore) -> [LDValue] {
     store.pendingEventPayloads()
         .compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
         .map(withoutCreationDate)
+}
+
+/// How many evaluations a summary event counts, across all of its flags and variations.
+private func summaryCount(_ summary: LDValue) -> Int {
+    guard case .object(let fields) = summary, case .object(let features)? = fields["features"]
+    else { return 0 }
+    var total = 0
+    for case .object(let flag) in features.values {
+        guard case .array(let counters)? = flag["counters"] else { continue }
+        for case .object(let counter) in counters {
+            if case .number(let count)? = counter["count"] {
+                total += Int(count)
+            }
+        }
+    }
+    return total
+}
+
+/// A custom event whose encoding waits to be let through, so a test can act while a commit is encoding it.
+private final class EncodingGate: CustomEvent {
+    let started = DispatchSemaphore(value: 0)
+    let proceed = DispatchSemaphore(value: 0)
+
+    override func encode(to encoder: Encoder) throws {
+        started.signal()
+        _ = proceed.wait(timeout: .now() + 5)
+        try super.encode(to: encoder)
+    }
 }
 
 private func expectedEvents(_ events: [Event]) -> [LDValue] {

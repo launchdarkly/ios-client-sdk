@@ -237,6 +237,13 @@ final class EventReportingMock: EventReporting {
         commitRecordedEventsCallCount += 1
         try! commitRecordedEventsCallback?()
     }
+
+    var commitAtCommitPointCallCount = 0
+    var commitAtCommitPointCallback: (() throws -> Void)?
+    func commitAtCommitPoint() {
+        commitAtCommitPointCallCount += 1
+        try! commitAtCommitPointCallback?()
+    }
 }
 
 // MARK: - FeatureFlagCachingMock
