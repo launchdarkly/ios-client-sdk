@@ -1275,14 +1275,14 @@ final class LDClientSpec: QuickSpec {
                                              statusCode: 403,
                                              httpVersion: DarklyServiceMock.Constants.httpVersion,
                                              headerFields: nil)
-        it("stops only the data source and marks initialized on a terminal flag error") {
+        it("keeps the data source running and reconnecting on a terminal flag error") {
             let testContext = TestContext(startOnline: true)
             testContext.start()
             testContext.onSyncComplete?(.error(.response(forbiddenError)))
 
-            expect(testContext.flagSynchronizerMock.isOnline).to(beFalse())
-            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .offline
-            expect(testContext.subject.isInitialized).to(beTrue())
+            expect(testContext.flagSynchronizerMock.isOnline).to(beTrue())
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .establishingStreamingConnection
+            expect(testContext.subject.isInitialized).to(beFalse())
             expect(testContext.subject.isOnline).to(beTrue())
             expect(testContext.eventReporterMock.isOnline).to(beTrue())
         }
@@ -1295,15 +1295,6 @@ final class LDClientSpec: QuickSpec {
             expect(testContext.flagSynchronizerMock.isOnline).to(beTrue())
             expect(testContext.subject.getConnectionInformation().currentConnectionMode) == modeBefore
             expect(testContext.subject.isOnline).to(beTrue())
-        }
-        it("restarts the data source when set online again after a terminal error") {
-            let testContext = TestContext(startOnline: true)
-            testContext.start()
-            testContext.onSyncComplete?(.error(.response(forbiddenError)))
-            expect(testContext.flagSynchronizerMock.isOnline).to(beFalse())
-
-            testContext.subject.setOnline(true)
-            expect(testContext.flagSynchronizerMock.isOnline).toEventually(beTrue())
         }
         it("event delivery errors do not affect flag delivery or connection information") {
             let testContext = TestContext(startOnline: true)
@@ -1323,7 +1314,7 @@ final class LDClientSpec: QuickSpec {
             testContext.start()
             testContext.subject.flagChangeNotifier = ClientServiceMockFactory(config: testContext.config).makeFlagChangeNotifier()
             testContext.onSyncComplete?(.error(.response(forbiddenError)))
-            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .offline
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .establishingStreamingConnection
 
             waitUntil { done in
                 testContext.changeNotifierMock.notifyObserversCallback = done
@@ -1331,12 +1322,12 @@ final class LDClientSpec: QuickSpec {
             }
             expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .streaming
         }
-        it("recovers to polling when a poll succeeds after a terminal error") {
+        it("stays in polling mode through a terminal error") {
             let testContext = TestContext(startOnline: true)
             testContext.start()
             testContext.flagSynchronizerMock.streamingMode = .polling
             testContext.onSyncComplete?(.error(.response(forbiddenError)))
-            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .offline
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .polling
 
             testContext.onSyncComplete?(.upToDate)
             expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .polling
@@ -1786,10 +1777,10 @@ final class LDClientSpec: QuickSpec {
                 NotificationCenter.default.post(name: SystemCapabilities.foregroundNotification!, object: self)
                 expect(testContext.subject.isInitialized) == false
             }
-            it("becomes true when the client is unauthorized") {
+            it("stays uninitialized when the client is unauthorized") {
                 let testContext = TestContext(startOnline: true)
                 testContext.start()
-                expect(testContext.subject.isInitialized) == false
+                expect(testContext.subject.isInitialized).to(beFalse())
 
                 let unauthorized = HTTPURLResponse(url: URL(string: "https://app.launchdarkly.com")!,
                                                    statusCode: 401,
@@ -1797,7 +1788,7 @@ final class LDClientSpec: QuickSpec {
                                                    headerFields: nil)
                 testContext.onSyncComplete?(.error(.response(unauthorized)))
 
-                expect(testContext.subject.isInitialized).toEventually(beTrue(), timeout: DispatchTimeInterval.seconds(2))
+                expect(testContext.subject.isInitialized).to(beFalse())
             }
             it("becomes true when the mobile key is empty") {
                 let config = LDConfig.stub(mobileKey: "", autoEnvAttributes: .disabled, isDebugBuild: false)
