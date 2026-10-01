@@ -57,6 +57,19 @@ class EventReporter: EventReporting {
     private(set) var eventStore: [Event] = []
     private(set) var contextSummarizer: ContextSummarizer
 
+    /// Whether a delivery is running, from the request being sent until its response has been handled.
+    ///
+    /// `eventQueue` serializes the *start* of a delivery but not the round trip it waits on, and the events it carries
+    /// have already left `eventStore`. Without this, a flush beginning inside that window would find nothing left to
+    /// send and report success while the events it was asked about were still on the wire.
+    private var isDelivering = false
+
+    /// Whether a delivery was asked for while one was already running.
+    private var hasWaitingRequest = false
+
+    /// Callers waiting on the pass that `hasWaitingRequest` will start.
+    private var waitingCompletions: [FlushOutcomeClosure] = []
+
     private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
     private var eventReportTimer: TimeResponding?
     var isReportingActive: Bool { eventReportTimer != nil }
@@ -141,6 +154,17 @@ class EventReporter: EventReporting {
     }
 
     private func reportEvents(completion: FlushOutcomeClosure?) {
+        guard !isDelivering
+        else {
+            // Answered by the pass that runs once the current delivery finishes, so a caller hears about the events
+            // on the wire as well as anything recorded since. Starting a second delivery now would not reach them.
+            hasWaitingRequest = true
+            if let completion {
+                waitingCompletions.append(completion)
+            }
+            return
+        }
+
         guard isOnline
         else {
             os_log("%s aborted. EventReporter is offline", log: service.config.logger, type: .debug, typeName(and: #function))
@@ -173,8 +197,35 @@ class EventReporter: EventReporting {
 
         service.diagnosticCache?.recordEventsInLastBatch(eventsInLastBatch: toPublish.count)
 
+        isDelivering = true
         DispatchQueue.global().async {
-            self.publish(toPublish, UUID().uuidString, completion)
+            self.publish(toPublish, UUID().uuidString) { delivered in
+                // `publish` reports from whichever queue the response arrived on.
+                self.eventQueue.async {
+                    self.finishDelivery(delivered, completion)
+                }
+            }
+        }
+    }
+
+    /// Releases the in-flight claim and, if a delivery was asked for while it was held, makes the one pass that covers
+    /// every caller that waited.
+    ///
+    /// A waiter is told what happened to this delivery as well as to that pass. Its own events may be in either, and
+    /// events this delivery failed to place are gone rather than left for the pass to retry, so a waiter that heard
+    /// only the pass's answer would be told everything went out when half of it did not.
+    private func finishDelivery(_ delivered: Bool, _ completion: FlushOutcomeClosure?) {
+        isDelivering = false
+        completion?(delivered)
+
+        guard hasWaitingRequest
+        else { return }
+
+        let waiting = waitingCompletions
+        hasWaitingRequest = false
+        waitingCompletions = []
+        reportEvents { result in
+            waiting.forEach { $0(delivered && result) }
         }
     }
 

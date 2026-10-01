@@ -1170,8 +1170,9 @@ extension LDClient {
         )
         // Slightly longer than the caller's budget so the outcome that returns is TimeoutExecutor's, not a race
         // between this wait and the executor's timer.
-        _ = finished.wait(timeout: .now() + timeout + 0.25)
-        return delivered
+        let answered = finished.wait(timeout: .now() + timeout + 0.25)
+        // Only the signal orders that write against this read, so a wait that expired first must not look at it.
+        return answered == .success && delivered
     }
 }
 

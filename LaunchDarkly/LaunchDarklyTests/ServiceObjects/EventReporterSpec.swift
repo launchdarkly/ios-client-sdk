@@ -68,8 +68,88 @@ final class EventReporterSpec: QuickSpec {
         recordEventSpec()
         testRecordFlagEvaluationEvents()
         reportEventsSpec()
+        flushReportingOutcomeSpec()
         unserializableEventSpec()
         reportTimerSpec()
+    }
+
+    private func flushReportingOutcomeSpec() {
+        describe("flushReportingOutcome") {
+            var testContext: TestContext!
+            afterEach {
+                testContext.eventReporter.isOnline = false
+            }
+
+            it("reports true when LaunchDarkly accepts the events") {
+                testContext = TestContext()
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+            }
+
+            it("reports true when there is nothing to deliver") {
+                testContext = TestContext()
+                testContext.eventReporter.isOnline = true
+
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+            }
+
+            it("reports false while offline") {
+                testContext = TestContext()
+                testContext.recordEvents(1)
+
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+            }
+
+            it("waits for a delivery already in flight rather than reporting an empty store as success") {
+                testContext = TestContext(stubResponseSuccess: false)
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                // The response is held back, so the first delivery stays in flight with the event store already
+                // emptied -- the window in which a second flush would find nothing left and call that success.
+                testContext.serviceMock.holdsEventCompletions = true
+
+                testContext.eventReporter.flushReportingOutcome { _ in }
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+
+                var delivered: Bool?
+                testContext.eventReporter.flushReportingOutcome { result in delivered = result }
+                // Nothing is answered while the events this caller asked about are still on the wire.
+                Thread.sleep(forTimeInterval: 0.2)
+                expect(delivered).to(beNil())
+
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+
+                // The delivery failed, and a tier 2 failure drops the events rather than leaving them for a later
+                // attempt, so the honest answer is that they did not get out. Long enough for the retry the first
+                // failure schedules, which is what the caller is really waiting on.
+                expect(delivered).toEventually(beFalse(), timeout: .seconds(10))
+            }
+        }
     }
 
     private func initSpec() {

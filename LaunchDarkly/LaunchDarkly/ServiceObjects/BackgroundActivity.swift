@@ -12,7 +12,7 @@ import Foundation
 /// same kind of assertion; they differ only in how it is asked for.
 ///
 /// The system may refuse the request or end it early, so this widens the window in which a delivery can finish rather
-/// than guaranteeing one. Whatever does not get out is already on disk before any of this starts.
+/// than guaranteeing one. What does not get out stays queued for the next delivery, if the process lives to make one.
 enum BackgroundActivity {
     /// The longest the assertion is held for work that never reports back. The system's own budget is much shorter in
     /// practice; this only exists so a caller that never calls `finished` cannot hold a thread indefinitely.
