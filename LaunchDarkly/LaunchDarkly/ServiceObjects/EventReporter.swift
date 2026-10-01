@@ -210,8 +210,10 @@ class EventReporter: EventReporting {
         let waiting = waitingCompletions
         hasWaitingRequest = false
         waitingCompletions = []
+        // A terminal response takes the reporter offline after settling; with nothing left, that is not a failure.
+        let nothingPending = eventStore.isEmpty && !contextSummarizer.hasLoggedRequests
         reportEvents { result in
-            waiting.forEach { $0(delivered && result) }
+            waiting.forEach { $0(delivered && (result || nothingPending)) }
         }
     }
 

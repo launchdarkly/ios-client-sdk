@@ -1670,6 +1670,15 @@ final class LDClientSpec: QuickSpec {
 
                 expect(testContext.subject.flushAndWait(timeout: 0.05)) == false
             }
+
+            it("reports false once closed") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventReporterMock, with: true)
+                testContext.subject.close()
+
+                expect(testContext.subject.flushAndWait(timeout: 1.0)) == false
+            }
         }
     }
 

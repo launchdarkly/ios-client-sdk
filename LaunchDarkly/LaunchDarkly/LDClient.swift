@@ -1125,7 +1125,11 @@ extension LDClient {
             os_log("%s LDClient.flushAndWait was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
 
-        let clients = LDClient.instancesQueue.sync { Array((LDClient.instances ?? [:]).values) }
+        guard let clients = LDClient.instancesQueue.sync(execute: { LDClient.instances.map { Array($0.values) } })
+        else {
+            os_log("%s called on a closed client", log: config.logger, type: .debug, self.typeName(and: #function))
+            return false
+        }
         let deadline = Date().addingTimeInterval(max(0, timeout))
         var delivered = true
         for client in clients {

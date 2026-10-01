@@ -145,6 +145,31 @@ final class EventReporterSpec: QuickSpec {
                 // Allows for the one-second retry; the failed events are dropped.
                 expect(delivered).toEventually(beFalse(), timeout: .seconds(10))
             }
+
+            it("reports true to a waiter when the in-flight delivery is permanently refused") {
+                testContext = TestContext()
+                let unauthorized = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
+                                                   statusCode: HTTPURLResponse.StatusCodes.unauthorized,
+                                                   httpVersion: DarklyServiceMock.Constants.httpVersion,
+                                                   headerFields: nil)
+                testContext.serviceMock.stubbedEventResponse = (nil, unauthorized, nil, nil)
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                testContext.serviceMock.holdsEventCompletions = true
+
+                testContext.eventReporter.flushReportingOutcome { _ in }
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+
+                var delivered: Bool?
+                testContext.eventReporter.flushReportingOutcome { result in delivered = result }
+                Thread.sleep(forTimeInterval: 0.2)
+
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+
+                expect(delivered).toEventually(beTrue())
+                expect(testContext.eventReporter.isOnline) == false
+            }
         }
     }
 
