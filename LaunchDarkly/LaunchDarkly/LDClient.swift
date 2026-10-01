@@ -263,9 +263,7 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
-        // A backgrounded process is suspended as soon as it goes idle, so a delivery started here reaches the network
-        // only inside an activity assertion. Without one, whatever is queued waits in memory for a foreground the
-        // process may not live to see.
+        // A backgrounded process is suspended once idle, so deliver inside an activity assertion.
         BackgroundActivity.run(reason: "LaunchDarkly event delivery") { [weak self] finished in
             guard let self = self
             else {
@@ -1110,22 +1108,16 @@ extension LDClient {
     }
 
     /**
-     Sends any currently queued events to LaunchDarkly and waits up to `timeout` seconds to find out whether they got
-     there.
+     Sends any currently queued events to LaunchDarkly and waits up to `timeout` seconds for the result.
 
-     The timeout bounds how long this call waits, not how long the delivery may run: an in-flight request is left to
-     finish so a payload already on the wire is not abandoned. With more than one environment, the environments share
-     the one budget rather than each getting a fresh copy of it.
+     The timeout bounds the wait, not the delivery: an in-flight request is left to finish. Multiple environments
+     share one budget.
 
-     This is for a caller that is about to give up control — `close()`, going into the background, winding the process
-     down. It is not a crash-time mechanism. The SDK has no crash hook of its own on Apple, and this call does not
-     change that.
-
-     Safe to call from the main thread. The wait is not free there: the watchdog terminates an application that fails
-     to return from a lifecycle callback in time. Keep the budget far below 15 seconds.
+     This is not a crash-time mechanism. It is safe to call from the main thread, but keep the budget well below
+     15 seconds there.
 
      - parameter timeout: How long to wait, in seconds.
-     - returns: Whether the pending events left the SDK's hands inside the budget.
+     - returns: Whether the pending events left the SDK's hands within the budget.
      */
     @discardableResult
     public func flushAndWait(timeout: TimeInterval) -> Bool {
@@ -1147,9 +1139,7 @@ extension LDClient {
         eventReporter.flush(completion: nil)
     }
 
-    /// Completions that feed this wait must not hop to the main queue: lifecycle callers are already on it, and
-    /// waiting for a main-queue callback from the main thread is a deadlock. They also must not run on
-    /// `EventReporter`'s delivery queue, which is why this queue exists.
+    /// Neither main (callers may be blocked on it) nor the reporter's queue, so the wait cannot deadlock.
     private static let flushWaitQueue = DispatchQueue(label: "com.launchdarkly.flushWait", qos: .userInitiated)
 
     private func internalFlushAndWait(timeout: TimeInterval) -> Bool {
@@ -1168,10 +1158,9 @@ extension LDClient {
                 finished.signal()
             }
         )
-        // Slightly longer than the caller's budget so the outcome that returns is TimeoutExecutor's, not a race
-        // between this wait and the executor's timer.
+        // A little past the budget, so TimeoutExecutor's timer decides the outcome.
         let answered = finished.wait(timeout: .now() + timeout + 0.25)
-        // Only the signal orders that write against this read, so a wait that expired first must not look at it.
+        // `delivered` is only safe to read once the semaphore was signaled.
         return answered == .success && delivered
     }
 }

@@ -16,10 +16,8 @@ protocol EventReporting {
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)
     func flush(completion: CompletionClosure?)
 
-    /// Same as `flush`, and reports whether the pending events left the SDK's hands.
-    ///
-    /// `true` if they were delivered, refused for good, or there were none. `false` if the SDK is offline or a
-    /// retryable failure means they are still waiting to be sent.
+    /// Like `flush`. Reports `true` if events were delivered, permanently refused, or absent; `false` if offline or
+    /// delivery failed.
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure)
 }
 
@@ -57,17 +55,11 @@ class EventReporter: EventReporting {
     private(set) var eventStore: [Event] = []
     private(set) var contextSummarizer: ContextSummarizer
 
-    /// Whether a delivery is running, from the request being sent until its response has been handled.
-    ///
-    /// `eventQueue` serializes the *start* of a delivery but not the round trip it waits on, and the events it carries
-    /// have already left `eventStore`. Without this, a flush beginning inside that window would find nothing left to
-    /// send and report success while the events it was asked about were still on the wire.
+    /// True from sending a request until its response is handled. Its events have already left `eventStore`.
     private var isDelivering = false
-
-    /// Whether a delivery was asked for while one was already running.
+    /// A delivery was requested while one was in flight.
     private var hasWaitingRequest = false
-
-    /// Callers waiting on the pass that `hasWaitingRequest` will start.
+    /// Callers answered by the pass after the in-flight delivery.
     private var waitingCompletions: [FlushOutcomeClosure] = []
 
     private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
@@ -156,8 +148,7 @@ class EventReporter: EventReporting {
     private func reportEvents(completion: FlushOutcomeClosure?) {
         guard !isDelivering
         else {
-            // Answered by the pass that runs once the current delivery finishes, so a caller hears about the events
-            // on the wire as well as anything recorded since. Starting a second delivery now would not reach them.
+            // Answered after the in-flight delivery, which may hold this caller's events.
             hasWaitingRequest = true
             if let completion {
                 waitingCompletions.append(completion)
@@ -200,7 +191,6 @@ class EventReporter: EventReporting {
         isDelivering = true
         DispatchQueue.global().async {
             self.publish(toPublish, UUID().uuidString) { delivered in
-                // `publish` reports from whichever queue the response arrived on.
                 self.eventQueue.async {
                     self.finishDelivery(delivered, completion)
                 }
@@ -208,12 +198,8 @@ class EventReporter: EventReporting {
         }
     }
 
-    /// Releases the in-flight claim and, if a delivery was asked for while it was held, makes the one pass that covers
-    /// every caller that waited.
-    ///
-    /// A waiter is told what happened to this delivery as well as to that pass. Its own events may be in either, and
-    /// events this delivery failed to place are gone rather than left for the pass to retry, so a waiter that heard
-    /// only the pass's answer would be told everything went out when half of it did not.
+    /// Ends the in-flight delivery and runs one pass for any waiters. Failed events are dropped, not retried, so a
+    /// waiter succeeds only if both this delivery and that pass did.
     private func finishDelivery(_ delivered: Bool, _ completion: FlushOutcomeClosure?) {
         isDelivering = false
         completion?(delivered)
@@ -233,7 +219,7 @@ class EventReporter: EventReporting {
         guard let eventData = encode(events)
         else {
             os_log("%s Failed to serialize event(s) for publication: %s", log: service.config.logger, type: .error, typeName(and: #function), String(describing: events))
-            // Nothing is left waiting to be sent: no later attempt would produce bytes this one could not.
+            // Encoding is deterministic, so no retry would succeed.
             completion?(true)
             return
         }
@@ -255,13 +241,11 @@ class EventReporter: EventReporting {
         }
     }
 
-    /// What a delivery attempt's response means for the events it carried.
     private enum DeliveryOutcome {
-        /// Accepted, or refused in a way no further attempt would get past. Either way they are off our hands.
+        /// Accepted or permanently refused.
         case settled
-        /// A failure another attempt might get past.
         case retryable
-        /// A failure with no attempt left to make.
+        /// Failed with no retry left.
         case dropped
     }
 

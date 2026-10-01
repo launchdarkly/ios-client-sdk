@@ -128,8 +128,7 @@ final class EventReporterSpec: QuickSpec {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
                 testContext.eventReporter.isOnline = true
-                // The response is held back, so the first delivery stays in flight with the event store already
-                // emptied -- the window in which a second flush would find nothing left and call that success.
+                // Keep the first delivery in flight with the event store already empty.
                 testContext.serviceMock.holdsEventCompletions = true
 
                 testContext.eventReporter.flushReportingOutcome { _ in }
@@ -137,16 +136,13 @@ final class EventReporterSpec: QuickSpec {
 
                 var delivered: Bool?
                 testContext.eventReporter.flushReportingOutcome { result in delivered = result }
-                // Nothing is answered while the events this caller asked about are still on the wire.
                 Thread.sleep(forTimeInterval: 0.2)
                 expect(delivered).to(beNil())
 
                 testContext.serviceMock.holdsEventCompletions = false
                 testContext.serviceMock.releaseHeldEventCompletions()
 
-                // The delivery failed, and a tier 2 failure drops the events rather than leaving them for a later
-                // attempt, so the honest answer is that they did not get out. Long enough for the retry the first
-                // failure schedules, which is what the caller is really waiting on.
+                // Allows for the one-second retry; the failed events are dropped.
                 expect(delivered).toEventually(beFalse(), timeout: .seconds(10))
             }
         }
