@@ -138,7 +138,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
     var publishedEventData: Data?
     /// Every payload ID used, in order, so a test can tell a retry of a delivery from a new one.
     var publishedPayloadIds: [String] = []
-    /// Holds responses back instead of answering inline, so a test can act while a delivery is in flight.
+    /// Holds responses so a test can act while a delivery is in flight.
     var holdsEventCompletions = false
     private var heldEventCompletions: [ServiceCompletionHandler] = []
     func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?) {
@@ -155,7 +155,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
         completion?(stubbedEventResponse ?? (nil, nil, nil, nil))
     }
 
-    /// Answers every held request, as the network coming back would.
+    /// Answers every held request.
     func releaseHeldEventCompletions() {
         let held = heldEventCompletions
         heldEventCompletions = []

@@ -530,9 +530,17 @@ class EventReporter: EventReporting {
         let waiting = waitingCompletions
         hasWaitingRequest = false
         waitingCompletions = []
+        // A refusal takes the reporter offline after settling; with nothing left, that is not a failure.
+        let nothingPending = hasNothingToSend
         reportEvents { result in
-            waiting.forEach { $0(result) }
+            waiting.forEach { $0(result || nothingPending) }
         }
+    }
+
+    private var hasNothingToSend: Bool {
+        pendingLock.lock()
+        defer { pendingLock.unlock() }
+        return pending.isEmpty && !contextSummarizer.hasLoggedRequests && store.pendingEventCount == 0
     }
 
     /// Delivers batches oldest first, stopping at the first one that failed in a way worth retrying.

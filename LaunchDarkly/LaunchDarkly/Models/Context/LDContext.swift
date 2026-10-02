@@ -636,14 +636,14 @@ extension LDContext {
         return zip(contexts, other.contexts).allSatisfy { $0.spellsPrivateAttributesLike($1) }
     }
 
-    /// `==`, except that of the private attributes only whether there are any is compared. That is all
-    /// `contextHash()` saw of them: it omits them from `_meta`, but writes an empty `_meta` when there are some.
-    internal func equalsIgnoringWhichAttributesArePrivate(_ other: LDContext) -> Bool {
-        kind == other.kind && canonicalizedKey == other.canonicalizedKey && key == other.key && name == other.name
-            && anonymous == other.anonymous && privateAttributes.isEmpty == other.privateAttributes.isEmpty
-            && attributes == other.attributes
-            && contexts.count == other.contexts.count
-            && zip(contexts, other.contexts).allSatisfy { $0.equalsIgnoringWhichAttributesArePrivate($1) }
+    /// Feeds `hasher` what `==` compares besides the fully qualified key, so equal contexts hash alike.
+    internal func combineComparedProperties(into hasher: inout Hasher) {
+        hasher.combine(name)
+        hasher.combine(anonymous)
+        hasher.combine(privateAttributes)
+        hasher.combine(attributes)
+        hasher.combine(contexts.count)
+        contexts.forEach { $0.combineComparedProperties(into: &hasher) }
     }
 
     /// Whether any attribute holds NaN or an infinity, which JSON cannot represent, so `contextHash()` fell back to

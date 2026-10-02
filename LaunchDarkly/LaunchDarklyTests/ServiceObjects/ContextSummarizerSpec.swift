@@ -168,8 +168,27 @@ final class ContextSummarizerSpec: QuickSpec {
                         expect(summaries[0].context.privateAttributes.map { $0.raw() }) == ["/email"]
                     }
 
-                    // `contextHash()` saw only whether there are private attributes, not which.
-                    it("separates contexts by whether they have private attributes, not by which") {
+                    it("hashes equal contexts alike, whatever order their attributes were set in") {
+                        func context(_ pairs: [(String, LDValue)], privateAttributes: [String]) -> LDContext {
+                            var builder = LDContextBuilder(key: "user-key")
+                            builder.name("a")
+                            pairs.forEach { _ = builder.trySetValue($0.0, $0.1) }
+                            privateAttributes.forEach { builder.addPrivateAttribute(Reference($0)) }
+                            return try! builder.build().get()
+                        }
+                        let nested: LDValue = ["x": 1, "y": ["z", true]]
+                        let forward = context([("email", "a@example.com"), ("plan", nested), ("score", 2)],
+                                              privateAttributes: ["email", "plan"])
+                        let backward = context([("score", 2), ("plan", nested), ("email", "a@example.com")],
+                                               privateAttributes: ["/plan", "email"])
+                        expect(forward) == backward
+
+                        let key = ContextSummarizer.ContextKey.init(context:)
+                        expect(key(forward).hashValue) == key(backward).hashValue
+                        expect(key(forward)) == key(backward)
+                    }
+
+                    it("separates contexts by which attributes are private, as Android does") {
                         func context(privateAttributes: [String]) -> LDContext {
                             var builder = LDContextBuilder(key: "user-key")
                             builder.name("a")
@@ -181,16 +200,15 @@ final class ContextSummarizerSpec: QuickSpec {
                         let email = context(privateAttributes: ["email"])
                         let name = context(privateAttributes: ["name"])
                         expect(email) != name
-                        expect(email.contextHash()) == name.contextHash()
-                        expect(none.contextHash()) != email.contextHash()
 
-                        for context in [email, none, name] {
+                        for context in [email, none, name, email] {
                             summarizer.trackRequest(flagKey: "flag1", reportedValue: .bool(true), featureFlag: featureFlag,
                                                     defaultValue: .bool(false), context: context)
                         }
 
                         let privateSets = summarizer.getSummaries().map { Set($0.context.privateAttributes.map { $0.raw() }) }
-                        expect(Set(privateSets)) == [[], ["email"]]
+                        expect(privateSets.count) == 3
+                        expect(Set(privateSets)) == [[], ["email"], ["name"]]
                     }
                 }
 
