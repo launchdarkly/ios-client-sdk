@@ -221,6 +221,15 @@ final class EventReportingMock: EventReporting {
         flushReceivedCompletion = completion
         try! flushCallback?()
     }
+
+    var flushReportingOutcomeCallCount = 0
+    var flushReportingOutcomeCallback: (() throws -> Void)?
+    var flushReportingOutcomeReceivedCompletion: (FlushOutcomeClosure)?
+    func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
+        flushReportingOutcomeCallCount += 1
+        flushReportingOutcomeReceivedCompletion = completion
+        try! flushReportingOutcomeCallback?()
+    }
 }
 
 // MARK: - FeatureFlagCachingMock
@@ -428,7 +437,7 @@ final class ThrottlingMock: Throttling {
 
     var runThrottledCallCount = 0
     var runThrottledCallback: (() throws -> Void)?
-    var runThrottledReceivedRunClosure: RunClosure?
+    var runThrottledReceivedRunClosure: (RunClosure)?
     func runThrottled(_ runClosure: @escaping RunClosure) {
         runThrottledCallCount += 1
         runThrottledReceivedRunClosure = runClosure

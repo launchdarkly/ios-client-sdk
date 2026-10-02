@@ -2,6 +2,8 @@ import Foundation
 import OSLog
 
 typealias EventSyncCompleteClosure = ((SynchronizingError?) -> Void)
+/// Reports whether the events a flush covered left the SDK's hands.
+typealias FlushOutcomeClosure = (Bool) -> Void
 // sourcery: autoMockable
 protocol EventReporting {
     // sourcery: defaultMockValue = false
@@ -13,6 +15,10 @@ protocol EventReporting {
     // swiftlint:disable:next function_parameter_count
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)
     func flush(completion: CompletionClosure?)
+
+    /// Like `flush`. Reports `true` if events were delivered, permanently refused, or absent; `false` if offline or
+    /// delivery failed.
+    func flushReportingOutcome(completion: @escaping FlushOutcomeClosure)
 }
 
 class NullEventReporter: EventReporting {
@@ -27,6 +33,10 @@ class NullEventReporter: EventReporting {
 
     func flush(completion: CompletionClosure?) {
         completion?()
+    }
+
+    func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
+        completion(true)
     }
 }
 
@@ -44,6 +54,13 @@ class EventReporter: EventReporting {
     // These fields should only be used synchronized on the eventQueue
     private(set) var eventStore: [Event] = []
     private(set) var contextSummarizer: ContextSummarizer
+
+    /// True from sending a request until its response is handled. Its events have already left `eventStore`.
+    private var isDelivering = false
+    /// A delivery was requested while one was in flight.
+    private var hasWaitingRequest = false
+    /// Callers answered by the pass after the in-flight delivery.
+    private var waitingCompletions: [FlushOutcomeClosure] = []
 
     private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
     private var eventReportTimer: TimeResponding?
@@ -115,6 +132,10 @@ class EventReporter: EventReporting {
     }
 
     func flush(completion: CompletionClosure?) {
+        flushReportingOutcome { _ in completion?() }
+    }
+
+    func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
         eventQueue.async {
             self.reportEvents(completion: completion)
         }
@@ -124,12 +145,22 @@ class EventReporter: EventReporting {
         reportEvents(completion: nil)
     }
 
-    private func reportEvents(completion: CompletionClosure?) {
+    private func reportEvents(completion: FlushOutcomeClosure?) {
+        guard !isDelivering
+        else {
+            // Answered after the in-flight delivery, which may hold this caller's events.
+            hasWaitingRequest = true
+            if let completion {
+                waitingCompletions.append(completion)
+            }
+            return
+        }
+
         guard isOnline
         else {
             os_log("%s aborted. EventReporter is offline", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(.isOffline)
-            completion?()
+            completion?(false)
             return
         }
 
@@ -146,7 +177,7 @@ class EventReporter: EventReporting {
         else {
             os_log("%s aborted. Event store is empty", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(nil)
-            completion?()
+            completion?(true)
             return
         }
 
@@ -157,32 +188,67 @@ class EventReporter: EventReporting {
 
         service.diagnosticCache?.recordEventsInLastBatch(eventsInLastBatch: toPublish.count)
 
+        isDelivering = true
         DispatchQueue.global().async {
-            self.publish(toPublish, UUID().uuidString, completion)
+            self.publish(toPublish, UUID().uuidString) { delivered in
+                self.eventQueue.async {
+                    self.finishDelivery(delivered, completion)
+                }
+            }
         }
     }
 
-    private func publish(_ events: [Event], _ payloadId: String, _ completion: CompletionClosure?) {
+    /// Ends the in-flight delivery and runs one pass for any waiters. Failed events are dropped, not retried, so a
+    /// waiter succeeds only if both this delivery and that pass did.
+    private func finishDelivery(_ delivered: Bool, _ completion: FlushOutcomeClosure?) {
+        isDelivering = false
+        completion?(delivered)
+
+        guard hasWaitingRequest
+        else { return }
+
+        let waiting = waitingCompletions
+        hasWaitingRequest = false
+        waitingCompletions = []
+        // A terminal response takes the reporter offline after settling; with nothing left, that is not a failure.
+        let nothingPending = eventStore.isEmpty && !contextSummarizer.hasLoggedRequests
+        reportEvents { result in
+            waiting.forEach { $0(delivered && (result || nothingPending)) }
+        }
+    }
+
+    private func publish(_ events: [Event], _ payloadId: String, _ completion: FlushOutcomeClosure?) {
         guard let eventData = encode(events)
         else {
             os_log("%s Failed to serialize event(s) for publication: %s", log: service.config.logger, type: .error, typeName(and: #function), String(describing: events))
-            completion?()
+            // Encoding is deterministic, so no retry would succeed.
+            completion?(true)
             return
         }
         self.service.publishEventData(eventData, payloadId) { response in
-            let shouldRetry = self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: false)
-            if shouldRetry {
+            switch self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: false) {
+            case .settled:
+                completion?(true)
+            case .dropped:
+                completion?(false)
+            case .retryable:
                 os_log("%s Retrying event post after delay.", log: self.service.config.logger, type: .debug, self.typeName(and: #function))
                 DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.0) {
                     self.service.publishEventData(eventData, payloadId) { response in
-                        _ = self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: true)
-                        completion?()
+                        let outcome = self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: true)
+                        completion?(outcome == .settled)
                     }
                 }
-            } else {
-                completion?()
             }
         }
+    }
+
+    private enum DeliveryOutcome {
+        /// Accepted or permanently refused.
+        case settled
+        case retryable
+        /// Failed with no retry left.
+        case dropped
     }
 
     /// Encodes a run of events as the array the events endpoint takes.
@@ -237,7 +303,7 @@ class EventReporter: EventReporting {
         case handWritten
     }
 
-    private func processEventResponse(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> Bool {
+    private func processEventResponse(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> DeliveryOutcome {
         if error == nil && (200..<300).contains(response?.statusCode ?? 0) {
             let serverTime = response?.headerDate ?? self.lastEventResponseDate
             if serverTime > self.lastEventResponseDate {
@@ -246,14 +312,14 @@ class EventReporter: EventReporting {
 
             os_log("%s Completed sending %d event(s)", log: service.config.logger, type: .debug, typeName(and: #function), sentEvents)
             self.reportSyncComplete(nil)
-            return false
+            return .settled
         }
 
         if let statusCode = response?.statusCode, HTTPURLResponse.StatusCodes.isTerminalStatusCode(statusCode) {
             os_log("%s dropping events due to non-retriable response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: response))
             isOnline = false
             self.reportSyncComplete(.response(response))
-            return false
+            return .settled
         }
 
         os_log("%s Sending events failed with error: %s response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: response))
@@ -265,10 +331,10 @@ class EventReporter: EventReporting {
             } else {
                 reportSyncComplete(.response(response))
             }
-            return false
+            return .dropped
         }
 
-        return true
+        return .retryable
     }
 
     private func reportSyncComplete(_ result: SynchronizingError?) {

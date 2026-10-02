@@ -76,7 +76,12 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         makeEventReporterReceivedService = service
         onEventSyncComplete = onSyncComplete
 
-        return EventReportingMock()
+        let mock = EventReportingMock()
+        // Answer by default so backgrounding does not hold its activity assertion until timeout.
+        mock.flushReportingOutcomeCallback = { [weak mock] in
+            mock?.flushReportingOutcomeReceivedCompletion?(true)
+        }
+        return mock
     }
 
     func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting {
