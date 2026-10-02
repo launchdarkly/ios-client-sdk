@@ -14,17 +14,32 @@ class ContextSummarizer {
     /// Whether reaching `maxContexts` has been logged since the last `clear()`, so it is logged once per delivery.
     private var hasLoggedContextsExceeded = false
 
+    /// The key of the context counted last, reused while evaluations arrive for an equal context.
+    private var lastKey: ContextKey?
+
     /// A context used as a dictionary key.
     ///
-    /// Groups contexts as keying by `LDContext.contextHash()` did, without encoding the whole context on every
-    /// evaluation. That hash saw only whether a context has private attributes, not which, and a context JSON cannot
-    /// represent, because an attribute holds NaN or an infinity, fell back to its fully qualified key. Equal keys share a
-    /// fully qualified key, so hashing only that, which the context already stores, keeps the `Hashable` contract.
+    /// Groups and hashes contexts by every attribute `==` compares, as Android does. A context holding NaN is not equal
+    /// even to itself, so contexts holding NaN or an infinity that share a fully qualified key are grouped together, as
+    /// keying by `LDContext.contextHash()` did, and hash by that key alone.
+    ///
+    /// The hash walks every attribute, so it is computed once, when the key is made.
     struct ContextKey: Hashable {
         let context: LDContext
+        private let hashCode: Int
+
+        init(context: LDContext) {
+            self.context = context
+            var hasher = Hasher()
+            hasher.combine(context.fullyQualifiedKey())
+            if !context.containsNonFiniteNumber() {
+                context.combineComparedProperties(into: &hasher)
+            }
+            hashCode = hasher.finalize()
+        }
 
         func hash(into hasher: inout Hasher) {
-            hasher.combine(context.fullyQualifiedKey())
+            hasher.combine(hashCode)
         }
 
         static func == (lhs: ContextKey, rhs: ContextKey) -> Bool {
@@ -32,7 +47,7 @@ class ContextSummarizer {
             else { return false }
 
             // Attributes that compare equal are equally representable, so only a mismatch needs this walk.
-            return lhs.context.equalsIgnoringWhichAttributesArePrivate(rhs.context)
+            return lhs.context == rhs.context
                 || (lhs.context.containsNonFiniteNumber() && rhs.context.containsNonFiniteNumber())
         }
     }
@@ -54,35 +69,48 @@ class ContextSummarizer {
     ///   already are. A context already being counted is never turned away.
     @discardableResult
     func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue, context: LDContext) -> Bool {
-        let key = ContextKey(context: context)
-        if trackers[key] == nil && trackers.count >= maxContexts {
+        let key = key(for: context)
+        if let index = trackers.index(forKey: key) {
+            trackers.values[index].tracker.trackRequest(
+                flagKey: flagKey,
+                reportedValue: reportedValue,
+                featureFlag: featureFlag,
+                defaultValue: defaultValue,
+                context: context
+            )
+            return true
+        }
+
+        guard trackers.count < maxContexts
+        else {
             if !hasLoggedContextsExceeded {
                 hasLoggedContextsExceeded = true
                 os_log("Exceeded the number of contexts that can be summarized at once. Increase eventCapacity to avoid dropping evaluations.", log: logger, type: .default)
             }
             return false
         }
-        ensureTrackerExists(for: context, key: key)
 
-        trackers[key]?.tracker.trackRequest(
+        var tracker = FlagRequestTracker(logger: logger)
+        tracker.trackRequest(
             flagKey: flagKey,
             reportedValue: reportedValue,
             featureFlag: featureFlag,
             defaultValue: defaultValue,
             context: context
         )
+        // Redaction is applied when the summary is encoded; see `Event.redactsAnonymousAttributes`.
+        trackers[key] = TrackerWithContext(tracker: tracker, context: context)
         return true
     }
 
-    /// Ensures a tracker exists for the context, creating one if needed.
-    private func ensureTrackerExists(for context: LDContext, key: ContextKey) {
-        guard trackers[key] == nil else { return }
-
-        // Redaction is applied when the summary is encoded; see `Event.redactsAnonymousAttributes`.
-        trackers[key] = TrackerWithContext(
-            tracker: FlagRequestTracker(logger: logger),
-            context: context
-        )
+    /// Copies of one context share storage, so comparing against the last key is cheap where hashing is not.
+    private func key(for context: LDContext) -> ContextKey {
+        if let last = lastKey, last.context == context {
+            return last
+        }
+        let key = ContextKey(context: context)
+        lastKey = key
+        return key
     }
 
     /// Returns all tracker-context pairs for summary event generation.
@@ -98,6 +126,7 @@ class ContextSummarizer {
     /// Clears all trackers, which makes room for `maxContexts` new contexts.
     func clear() {
         trackers.removeAll()
+        lastKey = nil
         hasLoggedContextsExceeded = false
     }
 }
