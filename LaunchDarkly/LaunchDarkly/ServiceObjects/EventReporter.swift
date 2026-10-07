@@ -173,11 +173,12 @@ class EventReporter: EventReporting {
     /// Only to be used on `deliveryQueue`, like the two below.
     private var isDelivering = false
 
-    /// Whether a delivery was asked for while one was already running.
-    private var hasWaitingRequest = false
+    /// A flush requested while a delivery was running, run once that delivery finishes. Later requests join it rather
+    /// than queueing another.
+    private var hasPendingFlush = false
 
-    /// Callers waiting on the pass that `hasWaitingRequest` will start.
-    private var waitingCompletions: [FlushOutcomeClosure] = []
+    /// Callers answered by the pending flush.
+    private var pendingFlushCompletions: [FlushOutcomeClosure] = []
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
@@ -488,11 +489,11 @@ class EventReporter: EventReporting {
     private func reportEvents(completion: FlushOutcomeClosure?) {
         guard !isDelivering
         else {
-            // The pass that runs once the current delivery finishes commits whatever this caller recorded, so it
-            // covers them. Starting one now would only re-send what is still in flight.
-            hasWaitingRequest = true
+            // Joins the pending flush, which commits whatever this caller recorded once the current delivery finishes,
+            // so it covers them. Starting one now would only re-send what is still in flight.
+            hasPendingFlush = true
             if let completion {
-                waitingCompletions.append(completion)
+                pendingFlushCompletions.append(completion)
             }
             return
         }
@@ -531,22 +532,22 @@ class EventReporter: EventReporting {
         }
     }
 
-    /// Releases the in-flight claim and, if a delivery was asked for while it was held, makes the one pass that covers
-    /// every caller that waited.
+    /// Releases the in-flight claim and, if a flush was requested while it was held, runs the pending flush on behalf
+    /// of every caller that joined it.
     private func finishDelivery(_ delivered: Bool, _ completion: FlushOutcomeClosure?) {
         isDelivering = false
         completion?(delivered)
 
-        guard hasWaitingRequest
+        guard hasPendingFlush
         else { return }
 
-        let waiting = waitingCompletions
-        hasWaitingRequest = false
-        waitingCompletions = []
+        let completions = pendingFlushCompletions
+        hasPendingFlush = false
+        pendingFlushCompletions = []
         // A refusal takes the reporter offline after settling; with nothing left, that is not a failure.
         let nothingPending = hasNothingToSend
         reportEvents { result in
-            waiting.forEach { $0(result || nothingPending) }
+            completions.forEach { $0(result || nothingPending) }
         }
     }
 
