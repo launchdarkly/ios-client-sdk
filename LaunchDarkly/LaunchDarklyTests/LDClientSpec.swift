@@ -76,6 +76,10 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.subject.flagSynchronizer.isOnline) == testContext.subject.isOnline
                 expect(testContext.subject.eventReporter.isOnline) == testContext.subject.isOnline
             }
+            it("creates one event reporter, so one store owns the event directory") {
+                expect(testContext.serviceFactoryMock.makeEventReporterCallCount) == 1
+                expect(testContext.serviceFactoryMock.onEventSyncComplete).toNot(beNil())
+            }
             it("saves the config") {
                 expect(testContext.subject.config) == testContext.config
                 expect(testContext.subject.service.config) == testContext.config

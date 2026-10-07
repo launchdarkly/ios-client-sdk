@@ -353,7 +353,21 @@ class EventReporter: EventReporting {
     func commitRecordedEvents() {
         commitLock.lock()
         defer { commitLock.unlock() }
+        commitRecordedEventsHoldingCommitLock()
+    }
 
+    /// Commits what is held and closes it into a batch, as one step with respect to other commits.
+    ///
+    /// Closing takes everything staged so far, and a commit stages its run one event at a time, so a commit running
+    /// between the two would be closed partway: an evaluation's event in this batch and its summary in the next.
+    private func commitAndCloseBatch() {
+        commitLock.lock()
+        defer { commitLock.unlock() }
+        commitRecordedEventsHoldingCommitLock()
+        _ = store.closeBatch()
+    }
+
+    private func commitRecordedEventsHoldingCommitLock() {
         pendingLock.lock()
         let run = pending
         pending = []
@@ -491,8 +505,7 @@ class EventReporter: EventReporting {
             return
         }
 
-        commitRecordedEvents()
-        _ = store.closeBatch()
+        commitAndCloseBatch()
 
         let batches = store.pendingBatches()
         guard !batches.isEmpty

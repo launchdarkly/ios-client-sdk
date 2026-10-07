@@ -1280,6 +1280,47 @@ extension EventReporterSpec {
                 expect(store.pendingEventCount) == 1
                 expect(diagnosticCache.incrementDroppedEventCountCallCount) == 1
             }
+
+            it("does not close a batch partway through another commit's run") {
+                var config = LDConfig.stub
+                config.eventPersistence = .deferred
+                let serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                serviceMock.stubEventResponse(success: true)
+                let inner = EventStore.temporary(capacity: config.eventCapacity)
+                defer { inner.deleteEverything() }
+                let store = ClosingHookStore(inner)
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
+                commits.suspend()
+                defer { commits.resume() }
+                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits)
+
+                let slow = EncodingGate(key: "slow", context: LDContext.stub())
+                let competingCommit = DispatchSemaphore(value: 0)
+                store.beforeClosing = {
+                    reporter.record(CustomEvent(key: "first", context: LDContext.stub()))
+                    reporter.record(slow)
+                    DispatchQueue.global().async {
+                        reporter.commitRecordedEvents()
+                        competingCommit.signal()
+                    }
+                    // Long enough for an unguarded commit to stage "first" and block encoding "slow".
+                    _ = slow.started.wait(timeout: .now() + 0.5)
+                }
+                store.afterClosing = { slow.proceed.signal() }
+
+                reporter.isOnline = true
+                waitUntil(timeout: .seconds(10)) { done in
+                    reporter.flushReportingOutcome { _ in done() }
+                }
+                expect(competingCommit.wait(timeout: .now() + 5)) == .success
+
+                for keys in store.closedKeys {
+                    expect(keys.contains("first")) == keys.contains("slow")
+                }
+                let rest = inner.closeBatch().flatMap { inner.body(of: $0) }.map(customKeys) ?? []
+                expect(rest) == ["first", "slow"]
+            }
         }
     }
 
@@ -1413,6 +1454,54 @@ private final class EncodingGate: CustomEvent {
         started.signal()
         _ = proceed.wait(timeout: .now() + 5)
         try super.encode(to: encoder)
+    }
+}
+
+/// A store that runs a hook on either side of closing a batch, and remembers the custom event keys of each batch closed.
+private final class ClosingHookStore: EventStoring {
+    let inner: EventStoring
+    var beforeClosing: (() -> Void)?
+    var afterClosing: (() -> Void)?
+    private(set) var closedKeys: [[String]] = []
+
+    init(_ inner: EventStoring) {
+        self.inner = inner
+    }
+
+    var pendingEventCount: Int { inner.pendingEventCount }
+    var isPersisting: Bool { inner.isPersisting }
+    func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
+    func reserve(_ events: Int) { inner.reserve(events) }
+    func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
+    func releaseReservations() { inner.releaseReservations() }
+    func commit() { inner.commit() }
+    func pendingBatches() -> [EventBatch] { inner.pendingBatches() }
+    func body(of batch: EventBatch) -> Data? { inner.body(of: batch) }
+    func remove(_ batch: EventBatch) { inner.remove(batch) }
+    func recoverInterruptedLog() { inner.recoverInterruptedLog() }
+
+    func closeBatch() -> EventBatch? {
+        let before = beforeClosing
+        beforeClosing = nil
+        before?()
+        let batch = inner.closeBatch()
+        if let batch, let body = inner.body(of: batch) {
+            closedKeys.append(customKeys(body))
+        }
+        let after = afterClosing
+        afterClosing = nil
+        after?()
+        return batch
+    }
+}
+
+private func customKeys(_ body: Data) -> [String] {
+    guard case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
+    else { return [] }
+    return events.compactMap { event in
+        guard event.kindField == "custom", case .object(let fields) = event, case .string(let key) = fields["key"]
+        else { return nil }
+        return key
     }
 }
 

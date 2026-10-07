@@ -1040,7 +1040,7 @@ public class LDClient {
 
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, context: context, envReporter: environmentReporter)
         diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(config: config, service: service, environmentReporter: environmentReporter)
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service, onSyncComplete: LDClient.eventSyncLogger(configuration.logger))
         connectionInformation = self.serviceFactory.makeConnectionInformation()
 
         let cachedData = flagCache.getCachedData(cacheKey: context.fullyQualifiedHashedKey(), contextHash: context.contextHash())
@@ -1059,7 +1059,6 @@ public class LDClient {
 
         NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
 
-        eventReporter = self.serviceFactory.makeEventReporter(config: configuration, service: service, onSyncComplete: onEventSyncComplete)
         service.resetFlagResponseCache(etag: cachedData.etag)
         flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
                                                                     pollingInterval: config.flagPollingInterval(runMode: runMode),
@@ -1087,16 +1086,22 @@ public class LDClient {
 
 extension LDClient: TypeIdentifying { }
 
-// MARK: - Event delivery
-extension LDClient {
-    private func onEventSyncComplete(result: SynchronizingError?) {
-        if let synchronizingError = result {
-            os_log("%s result: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: synchronizingError))
-        } else {
-            os_log("%s result: success", log: config.logger, type: .debug, typeName(and: #function))
+private extension LDClient {
+    /// Logs each event delivery's outcome. Static so it can be given to the event reporter before `self` is available,
+    /// which lets the client create a single reporter, and with it a single store for the event directory.
+    static func eventSyncLogger(_ logger: OSLog) -> EventSyncCompleteClosure {
+        return { result in
+            if let synchronizingError = result {
+                os_log("%s result: %s", log: logger, type: .debug, typeName(and: "onEventSyncComplete"), String(describing: synchronizingError))
+            } else {
+                os_log("%s result: success", log: logger, type: .debug, typeName(and: "onEventSyncComplete"))
+            }
         }
     }
+}
 
+// MARK: - Event delivery
+extension LDClient {
     /**
      Writes down all pending events and sends them to LaunchDarkly.
 
