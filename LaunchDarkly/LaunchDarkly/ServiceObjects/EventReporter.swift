@@ -57,10 +57,11 @@ class EventReporter: EventReporting {
 
     /// True from sending a request until its response is handled. Its events have already left `eventStore`.
     private var isDelivering = false
-    /// A delivery was requested while one was in flight.
-    private var hasWaitingRequest = false
-    /// Callers answered by the pass after the in-flight delivery.
-    private var waitingCompletions: [FlushOutcomeClosure] = []
+    /// A flush requested while a delivery was in flight, run once that delivery finishes. Later requests join it
+    /// rather than queueing another.
+    private var hasPendingFlush = false
+    /// Callers answered by the pending flush.
+    private var pendingFlushCompletions: [FlushOutcomeClosure] = []
 
     private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
     private var eventReportTimer: TimeResponding?
@@ -148,10 +149,11 @@ class EventReporter: EventReporting {
     private func reportEvents(completion: FlushOutcomeClosure?) {
         guard !isDelivering
         else {
-            // Answered after the in-flight delivery, which may hold this caller's events.
-            hasWaitingRequest = true
+            // Joins the pending flush rather than answering now, since the in-flight delivery may hold this caller's
+            // events.
+            hasPendingFlush = true
             if let completion {
-                waitingCompletions.append(completion)
+                pendingFlushCompletions.append(completion)
             }
             return
         }
@@ -198,22 +200,22 @@ class EventReporter: EventReporting {
         }
     }
 
-    /// Ends the in-flight delivery and runs one pass for any waiters. Failed events are dropped, not retried, so a
-    /// waiter succeeds only if both this delivery and that pass did.
+    /// Ends the in-flight delivery and runs the pending flush, if one was requested. Failed events are dropped, not
+    /// retried, so a caller of the pending flush succeeds only if both this delivery and the pending flush did.
     private func finishDelivery(_ delivered: Bool, _ completion: FlushOutcomeClosure?) {
         isDelivering = false
         completion?(delivered)
 
-        guard hasWaitingRequest
+        guard hasPendingFlush
         else { return }
 
-        let waiting = waitingCompletions
-        hasWaitingRequest = false
-        waitingCompletions = []
+        let completions = pendingFlushCompletions
+        hasPendingFlush = false
+        pendingFlushCompletions = []
         // A terminal response takes the reporter offline after settling; with nothing left, that is not a failure.
         let nothingPending = eventStore.isEmpty && !contextSummarizer.hasLoggedRequests
         reportEvents { result in
-            waiting.forEach { $0(delivered && (result || nothingPending)) }
+            completions.forEach { $0(delivered && (result || nothingPending)) }
         }
     }
 

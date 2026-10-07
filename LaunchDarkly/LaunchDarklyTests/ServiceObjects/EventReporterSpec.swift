@@ -146,7 +146,7 @@ final class EventReporterSpec: QuickSpec {
                 expect(delivered).toEventually(beFalse(), timeout: .seconds(10))
             }
 
-            it("reports true to a waiter when the in-flight delivery is permanently refused") {
+            it("reports true to a pending flush when the in-flight delivery is permanently refused") {
                 testContext = TestContext()
                 let unauthorized = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
                                                    statusCode: HTTPURLResponse.StatusCodes.unauthorized,
