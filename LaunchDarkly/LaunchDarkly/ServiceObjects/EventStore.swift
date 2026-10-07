@@ -112,6 +112,8 @@ final class EventStore: EventStoring {
 
     /// Only to be used while holding `ioLock`.
     private var descriptor: Int32 = -1
+    /// Whether a log left by a previous run has been dealt with. Only to be used while holding `ioLock`.
+    private var hasRecoveredInterruptedLog = false
 
     /// Batches held in memory because the filesystem would not take them.
     ///
@@ -410,6 +412,14 @@ final class EventStore: EventStoring {
     func recoverInterruptedLog() {
         ioLock.lock()
         defer { ioLock.unlock() }
+        recoverInterruptedLogHoldingIoLock()
+    }
+
+    /// Requires `ioLock`. Does its work once per store: after that, `current` is a log this run opened.
+    private func recoverInterruptedLogHoldingIoLock() {
+        guard !hasRecoveredInterruptedLog
+        else { return }
+        hasRecoveredInterruptedLog = true
 
         guard FileManager.default.fileExists(atPath: currentLogUrl.path),
               let events = EventLogFormat.eventCount(in: currentLogUrl)
@@ -516,6 +526,10 @@ final class EventStore: EventStoring {
         if descriptor >= 0 {
             return descriptor
         }
+
+        // Before opening, because `current` may still be the log a previous run died writing. Appended to, this run's
+        // events would sit behind that run's torn last frame, where a reader can no longer find where they start.
+        recoverInterruptedLogHoldingIoLock()
 
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

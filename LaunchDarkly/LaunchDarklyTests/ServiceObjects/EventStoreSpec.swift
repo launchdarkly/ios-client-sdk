@@ -195,6 +195,39 @@ final class EventStoreSpec: QuickSpec {
                 expect(next.pendingBatches()).to(beEmpty())
                 expect(next.pendingEventCount) == 0
             }
+
+            it("keeps this run's events out of it, even when this run commits before recovery is asked for") {
+                store = EventStore.temporary()
+                for index in 0..<2 {
+                    _ = store.stage(EventStoreSpec.payload("previous-\(index)"))
+                }
+                store.commit()
+                // The previous run died partway through writing its last frame.
+                let log = store.directory.appendingPathComponent("current")
+                try Data(contentsOf: log).dropLast(3).write(to: log)
+
+                let next = EventStoreSpec.reader(sharing: store)
+                _ = next.stage(EventStoreSpec.payload("this-run"))
+                next.commit()
+                next.recoverInterruptedLog()
+                _ = next.stage(EventStoreSpec.payload("later"))
+                next.commit()
+                _ = next.closeBatch()
+
+                let bodies = next.pendingBatches().map { EventStoreSpec.keys(ofBody: next.body(of: $0)) }
+                expect(bodies) == [["previous-0"], ["this-run", "later"]]
+                expect(next.pendingEventCount) == 3
+            }
+        }
+    }
+
+    private static func keys(ofBody body: Data?) -> [String] {
+        guard let body, case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
+        else { return [] }
+        return events.compactMap {
+            guard case .object(let fields) = $0, case .string(let key) = fields["key"]
+            else { return nil }
+            return key
         }
     }
 
