@@ -38,7 +38,7 @@ final class EventStoreSpec: QuickSpec {
 
                 expect(batch.eventCount) == 1
                 expect(store.pendingEventCount) == 1
-                expect(store.body(of: batch)) == Data("[{\"kind\":\"custom\",\"key\":\"held\"}]".utf8)
+                expect(try store.body(of: batch)) == Data("[{\"kind\":\"custom\",\"key\":\"held\"}]".utf8)
             }
         }
     }
@@ -60,8 +60,18 @@ final class EventStoreSpec: QuickSpec {
 
     /// A store reading the same directory as another, standing in for the next run of the application: it sees only
     /// what actually reached the disk, which is the whole question a crash asks.
-    private static func reader(sharing store: EventStore) -> EventStore {
-        EventStore(directory: store.directory, capacity: 100, logger: .disabled)
+    private static func reader(sharing store: EventStore,
+                               readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) }) -> EventStore {
+        EventStore(directory: store.directory, capacity: 100, logger: .disabled, readFile: readFile)
+    }
+
+    /// What a process out of file descriptors gets for a file that is perfectly intact.
+    private static func readFailing(while failing: @escaping () -> Bool) -> (URL) throws -> Data {
+        { url in
+            guard !failing()
+            else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(EMFILE)) }
+            return try Data(contentsOf: url)
+        }
     }
 
     private static func payload(_ key: String) -> Data {
@@ -179,7 +189,7 @@ final class EventStoreSpec: QuickSpec {
                 let batches = next.pendingBatches()
                 expect(batches.count) == 1
                 expect(batches.first?.eventCount) == 1
-                expect(next.body(of: batches[0])) == Data("[{\"kind\":\"custom\",\"key\":\"survived\"}]".utf8)
+                expect(try next.body(of: batches[0])) == Data("[{\"kind\":\"custom\",\"key\":\"survived\"}]".utf8)
             }
 
             it("leaves nothing behind when the log held no events") {
@@ -214,7 +224,7 @@ final class EventStoreSpec: QuickSpec {
                 next.commit()
                 _ = next.closeBatch()
 
-                let bodies = next.pendingBatches().map { EventStoreSpec.keys(ofBody: next.body(of: $0)) }
+                let bodies = next.pendingBatches().map { EventStoreSpec.keys(ofBody: try? next.body(of: $0) ?? nil) }
                 expect(bodies) == [["previous-0"], ["this-run", "later"]]
                 expect(next.pendingEventCount) == 3
             }
@@ -251,6 +261,55 @@ final class EventStoreSpec: QuickSpec {
                 try whole.dropLast(8).write(to: log)
 
                 expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["event-0", "event-1"]
+            }
+
+            it("is kept for a later listing when the read failed rather than the log") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("kept"))
+                store.commit()
+                _ = store.closeBatch()
+
+                var failing = true
+                let next = EventStoreSpec.reader(sharing: store,
+                                                 readFile: EventStoreSpec.readFailing(while: { failing }))
+                expect(next.pendingBatches()).to(beEmpty())
+
+                // A read can fail on an intact file, as it does in a process out of file descriptors, so the batch has
+                // to still be there once reads work again.
+                failing = false
+                let batches = next.pendingBatches()
+                expect(batches.count) == 1
+                expect(EventStoreSpec.keys(ofBody: try next.body(of: batches[0]))) == ["kept"]
+            }
+
+            it("is a failure to retry, not nothing to send, when a body cannot be read") {
+                var failing = false
+                store = EventStore.temporary(readFile: EventStoreSpec.readFailing(while: { failing }))
+                _ = store.stage(EventStoreSpec.payload("kept"))
+                let batch = store.closeBatch()!
+
+                failing = true
+                expect { try store.body(of: batch) }.to(throwError())
+                // Still the store's to deliver: reporting nothing to send would have it dropped.
+                expect(store.pendingBatches()) == [batch]
+            }
+
+            it("is closed off uncounted when a log a previous run left open cannot be read") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("from-the-previous-run"))
+                store.commit()
+
+                var failing = true
+                let next = EventStoreSpec.reader(sharing: store,
+                                                 readFile: EventStoreSpec.readFailing(while: { failing }))
+                next.recoverInterruptedLog()
+
+                // It cannot stay under the name this run appends to, and deleting it would lose events that are
+                // intact, so it is closed off for whichever listing first manages to read it.
+                failing = false
+                let batches = next.pendingBatches()
+                expect(batches.count) == 1
+                expect(EventStoreSpec.keys(ofBody: try next.body(of: batches[0]))) == ["from-the-previous-run"]
             }
 
             it("is discarded when it was written in a format this version does not read") {
@@ -292,7 +351,7 @@ final class EventStoreSpec: QuickSpec {
                 let batch = store.closeBatch()
                 expect(batch?.eventCount) == 2
 
-                let body = store.body(of: batch!)
+                let body = try store.body(of: batch!)
                 expect(body) == Data("[{\"kind\":\"custom\",\"key\":\"first\"},{\"kind\":\"custom\",\"key\":\"second\"}]".utf8)
             }
 
@@ -306,7 +365,7 @@ final class EventStoreSpec: QuickSpec {
 
                 expect(store.pendingBatches()) == [batch]
                 expect(store.pendingEventCount) == 1
-                expect(store.body(of: batch)).toNot(beNil())
+                expect(try store.body(of: batch)).toNot(beNil())
 
                 store.remove(batch)
 
@@ -410,7 +469,7 @@ final class EventStoreSpec: QuickSpec {
 
                 let batch = store.closeBatch()
                 expect(batch?.eventCount) == 2
-                expect(store.body(of: batch!))
+                expect(try store.body(of: batch!))
                     == Data("[{\"kind\":\"custom\",\"key\":\"first\"},{\"kind\":\"custom\",\"key\":\"second\"}]".utf8)
             }
 
@@ -423,7 +482,7 @@ final class EventStoreSpec: QuickSpec {
                 _ = store.stage(EventStoreSpec.payload("same"))
                 let held = store.closeBatch()!
 
-                expect(store.body(of: held)) == written.body(of: onDisk)
+                expect(try store.body(of: held)) == (try written.body(of: onDisk))
             }
 
             it("keeps accepting events after persistence has been given up on") {
@@ -439,8 +498,32 @@ final class EventStoreSpec: QuickSpec {
                 _ = store.stage(EventStoreSpec.payload("second"))
 
                 let batch = store.closeBatch()!
-                expect(store.body(of: batch))
+                expect(try store.body(of: batch))
                     == Data("[{\"kind\":\"custom\",\"key\":\"first\"},{\"kind\":\"custom\",\"key\":\"second\"}]".utf8)
+            }
+
+            it("delivers what memory was left holding beside what the disk already took") {
+                var writes = 0
+                let interrupted = EventStore.temporary(writeLog: { descriptor, bytes in
+                    writes += 1
+                    // The file header and the first event land; the device is full from then on.
+                    return writes > 2 ? ENOSPC : EventStore.writeAll(descriptor, bytes)
+                })
+                defer { interrupted.deleteEverything() }
+
+                _ = interrupted.stage(EventStoreSpec.payload("written"))
+                interrupted.commit()
+                _ = interrupted.stage(EventStoreSpec.payload("held"))
+                interrupted.commit()
+                expect(interrupted.isPersisting) == false
+
+                _ = interrupted.closeBatch()
+
+                // A failed write leaves events on both sides, and closing only the log would leave the rest to a
+                // delivery that reported success without them.
+                let bodies = interrupted.pendingBatches().map { EventStoreSpec.keys(ofBody: try? interrupted.body(of: $0) ?? nil) }
+                expect(bodies) == [["written"], ["held"]]
+                expect(interrupted.pendingEventCount) == 2
             }
 
             it("holds a batch until it is removed, so a failed delivery can be retried") {

@@ -1318,7 +1318,7 @@ extension EventReporterSpec {
                 for keys in store.closedKeys {
                     expect(keys.contains("first")) == keys.contains("slow")
                 }
-                let rest = inner.closeBatch().flatMap { inner.body(of: $0) }.map(customKeys) ?? []
+                let rest = try inner.closeBatch().flatMap { try inner.body(of: $0) }.map(customKeys) ?? []
                 expect(rest) == ["first", "slow"]
             }
         }
@@ -1371,6 +1371,42 @@ extension EventReporterSpec {
                 }
                 expect(delivered) == true
                 expect(testContext.store.pendingEventCount) == 0
+            }
+
+            it("reports false and keeps the batch when it could not be read, and delivers it once it can be") {
+                var failing = false
+                let store = EventStore.temporary(readFile: { url in
+                    // What a process out of file descriptors gets for a file that is perfectly intact.
+                    guard !failing
+                    else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(EMFILE)) }
+                    return try Data(contentsOf: url)
+                })
+                testContext = TestContext(store: store)
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+
+                failing = true
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+                expect(store.pendingBatches().count) == 1
+
+                failing = false
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                expect(store.pendingEventCount) == 0
             }
 
             it("reports false when a retryable failure leaves the batch on disk") {
@@ -1498,7 +1534,7 @@ private final class ClosingHookStore: EventStoring {
     func releaseReservations() { inner.releaseReservations() }
     func commit() { inner.commit() }
     func pendingBatches() -> [EventBatch] { inner.pendingBatches() }
-    func body(of batch: EventBatch) -> Data? { inner.body(of: batch) }
+    func body(of batch: EventBatch) throws -> Data? { try inner.body(of: batch) }
     func remove(_ batch: EventBatch) { inner.remove(batch) }
     func recoverInterruptedLog() { inner.recoverInterruptedLog() }
 
@@ -1507,7 +1543,7 @@ private final class ClosingHookStore: EventStoring {
         beforeClosing = nil
         before?()
         let batch = inner.closeBatch()
-        if let batch, let body = inner.body(of: batch) {
+        if let batch, let body = try? inner.body(of: batch) ?? nil {
             closedKeys.append(customKeys(body))
         }
         let after = afterClosing

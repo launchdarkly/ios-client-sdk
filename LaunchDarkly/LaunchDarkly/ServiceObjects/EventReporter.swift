@@ -570,11 +570,21 @@ class EventReporter: EventReporting {
         }
 
         let batch = remaining.removeFirst()
-        guard let body = store.body(of: batch)
+        let read: Data?
+        do {
+            read = try store.body(of: batch)
+        } catch {
+            // Kept: the batch is still there, and a read that failed may not fail next time.
+            os_log("%s could not read stored events: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error))
+            completion?(false)
+            return
+        }
+
+        guard let body = read
         else {
-            // Nothing deliverable in it, so it will never become deliverable: those events are lost.
+            // Gone, or holding nothing this version can send. Either way there is nothing to send and nothing to keep.
             store.remove(batch)
-            deliver(remaining, lostAnything: true, completion)
+            deliver(remaining, lostAnything: lostAnything, completion)
             return
         }
 
