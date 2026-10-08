@@ -430,6 +430,15 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
             try! setPollingIntervalCallback?()
         }
     }
+
+    var onSyncCompleteSetCount = 0
+    var setOnSyncCompleteCallback: (() throws -> Void)?
+    var onSyncComplete: FlagSyncCompleteClosure? = nil {
+        didSet {
+            onSyncCompleteSetCount += 1
+            try! setOnSyncCompleteCallback?()
+        }
+    }
 }
 
 // MARK: - ThrottlingMock
