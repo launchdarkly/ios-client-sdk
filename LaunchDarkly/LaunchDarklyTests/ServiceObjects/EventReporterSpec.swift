@@ -1388,7 +1388,29 @@ extension EventReporterSpec {
                 expect(testContext.store.pendingBatches().count) == 1
             }
 
-            it("reports true to a pending flush when the in-flight delivery is permanently refused") {
+            it("reports false when LaunchDarkly permanently refuses the batch, and drops it") {
+                testContext = TestContext()
+                let unauthorized = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
+                                                   statusCode: HTTPURLResponse.StatusCodes.unauthorized,
+                                                   httpVersion: DarklyServiceMock.Constants.httpVersion,
+                                                   headerFields: nil)
+                testContext.serviceMock.stubbedEventResponse = (nil, unauthorized, nil, nil)
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.eventReporter.isOnline) == false
+                // Kept off the device, since no later delivery would fare better.
+                expect(testContext.store.pendingEventCount) == 0
+            }
+
+            it("reports false to a pending flush when the in-flight delivery is permanently refused") {
                 testContext = TestContext()
                 let unauthorized = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
                                                    statusCode: HTTPURLResponse.StatusCodes.unauthorized,
@@ -1410,7 +1432,7 @@ extension EventReporterSpec {
                 testContext.serviceMock.holdsEventCompletions = false
                 testContext.serviceMock.releaseHeldEventCompletions()
 
-                expect(delivered).toEventually(beTrue())
+                expect(delivered).toEventually(beFalse())
                 expect(testContext.eventReporter.isOnline) == false
                 expect(testContext.store.pendingEventCount) == 0
             }

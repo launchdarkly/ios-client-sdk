@@ -263,11 +263,14 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
-        // The OS may kill a backgrounded application without warning, so make its events durable now.
+        // The OS may kill a backgrounded application without warning, so make its events durable now. On every
+        // platform: macOS does not suspend an application that loses focus, but it can still be quit or killed.
         eventReporter.commitAtCommitPoint()
-        // A backgrounded process is suspended once idle, so deliver inside an activity assertion. What does not get out
-        // is on disk for the next launch.
-        BackgroundActivity.run(reason: "LaunchDarkly event delivery") { [weak self] finished in
+        // A backgrounded process is suspended once idle, so deliver inside an activity assertion. Only where suspension
+        // is real: macOS posts this notification whenever the application loses focus, and never suspends it for that.
+        // What does not get out is on disk for the next launch.
+        #if os(iOS) || os(tvOS)
+        backgroundDelivery.run { [weak self] finished in
             guard let self = self
             else {
                 finished()
@@ -280,6 +283,7 @@ public class LDClient {
                 finished()
             }
         }
+        #endif
         Thread.performOnMain {
             runMode = .background
         }
@@ -291,6 +295,9 @@ public class LDClient {
             runMode = .foreground
         }
     }
+
+    /// One assertion per client, however many times the application is backgrounded while a delivery is running.
+    private let backgroundDelivery = BackgroundActivity(reason: "LaunchDarkly event delivery")
 
     let config: LDConfig
     /// Identifies this client's environment to a hook, without handing it the mobile key that identifies the

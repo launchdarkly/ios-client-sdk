@@ -2,7 +2,7 @@ import Foundation
 import OSLog
 
 typealias EventSyncCompleteClosure = ((SynchronizingError?) -> Void)
-/// Reports whether the events a flush covered left the SDK's hands.
+/// Reports whether LaunchDarkly accepted every event a flush covered.
 typealias FlushOutcomeClosure = (Bool) -> Void
 // sourcery: autoMockable
 protocol EventReporting {
@@ -16,10 +16,11 @@ protocol EventReporting {
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)
     func flush(completion: CompletionClosure?)
 
-    /// Same as `flush`, and reports whether the pending batches left the SDK's hands.
+    /// Like `flush`. Reports `true` if LaunchDarkly accepted the pending batches, or there were none to send. Reports
+    /// `false` if the reporter is offline, a batch was refused for good, or a retryable failure left batches on disk.
     ///
-    /// `true` if they were delivered, refused for good, or there were none. `false` if the SDK is offline or a
-    /// retryable failure left batches on disk.
+    /// The completion runs on the reporter's delivery queue. Keep it short: a long one holds up the deliveries behind
+    /// it, though it cannot block an evaluation, which records under a lock rather than on that queue.
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure)
 
     /// Makes everything recorded so far outlive the process, without waiting for a delivery.
@@ -544,57 +545,61 @@ class EventReporter: EventReporting {
         let completions = pendingFlushCompletions
         hasPendingFlush = false
         pendingFlushCompletions = []
-        // A refusal takes the reporter offline after settling; with nothing left, that is not a failure.
-        let nothingPending = hasNothingToSend
         reportEvents { result in
-            completions.forEach { $0(result || nothingPending) }
+            completions.forEach { $0(delivered && result) }
         }
     }
 
-    private var hasNothingToSend: Bool {
-        pendingLock.lock()
-        defer { pendingLock.unlock() }
-        return pending.isEmpty && !contextSummarizer.hasLoggedRequests && store.pendingEventCount == 0
+    private func deliver(_ batches: [EventBatch], _ completion: FlushOutcomeClosure?) {
+        deliver(batches, lostAnything: false, completion)
     }
 
     /// Delivers batches oldest first, stopping at the first one that failed in a way worth retrying.
     ///
     /// Stopping matters: the batches that are left keep their place in the log, and a later delivery attempts them
     /// again rather than the SDK spending the rest of the session's requests on a service that is refusing them.
-    private func deliver(_ batches: [EventBatch], _ completion: FlushOutcomeClosure?) {
+    ///
+    /// `lostAnything` carries whether a batch already taken in this pass was lost for good, so that the caller hears
+    /// about it even where the batches after it were accepted.
+    private func deliver(_ batches: [EventBatch], lostAnything: Bool, _ completion: FlushOutcomeClosure?) {
         var remaining = batches
         guard !remaining.isEmpty
         else {
-            completion?(true)
+            completion?(!lostAnything)
             return
         }
 
         let batch = remaining.removeFirst()
         guard let body = store.body(of: batch)
         else {
-            // Nothing deliverable in it, so it will never become deliverable.
+            // Nothing deliverable in it, so it will never become deliverable: those events are lost.
             store.remove(batch)
-            deliver(remaining, completion)
+            deliver(remaining, lostAnything: true, completion)
             return
         }
 
         service.diagnosticCache?.recordEventsInLastBatch(eventsInLastBatch: batch.eventCount)
-        publish(batch, body) { shouldContinue in
-            if shouldContinue {
-                self.deliver(remaining, completion)
-            } else {
+        publish(batch, body) { outcome in
+            switch outcome {
+            case .accepted:
+                self.deliver(remaining, lostAnything: lostAnything, completion)
+            case .refused:
+                // The rest are still attempted, so that batches LaunchDarkly will never take do not sit on the device
+                // for the rest of the session, taking up the room the capacity limit leaves for new events.
+                self.deliver(remaining, lostAnything: true, completion)
+            case .retryable:
                 completion?(false)
             }
         }
     }
 
-    private func publish(_ batch: EventBatch, _ body: Data, _ completion: @escaping FlushOutcomeClosure) {
+    private func publish(_ batch: EventBatch, _ body: Data, _ completion: @escaping (DeliveryOutcome) -> Void) {
         service.publishEventData(body, batch.payloadId) { response in
             let outcome = self.outcome(sentEvents: batch.eventCount, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: false)
             switch outcome {
             case .accepted, .refused:
                 self.store.remove(batch)
-                completion(true)
+                completion(outcome)
             case .retryable:
                 os_log("%s Retrying event post after delay.", log: self.service.config.logger, type: .debug, self.typeName(and: #function))
                 DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.0) {
@@ -603,13 +608,12 @@ class EventReporter: EventReporting {
                         switch retried {
                         case .accepted, .refused:
                             self.store.remove(batch)
-                            completion(true)
                         case .retryable:
                             // The batch stays on disk. A later delivery, in this run of the application or the next
                             // one, sends it under the same payload ID, so LaunchDarkly can tell it is not new.
                             os_log("%s Keeping %d event(s) on disk to retry later", log: self.service.config.logger, type: .debug, self.typeName(and: #function), batch.eventCount)
-                            completion(false)
                         }
+                        completion(retried)
                     }
                 }
             }

@@ -542,12 +542,15 @@ public final class ObjcLDClient: NSObject {
     /**
      Sends any currently queued events and waits up to `timeout` for the delivery to finish.
 
-     Returns `YES` if the events were delivered, or there were none to deliver. Returns `NO` if the timeout
-     expired first, or the SDK is offline, closed, or otherwise unable to deliver them.
-
      This is not a crash-time mechanism. Keep the budget far below 15 seconds when calling from the main thread.
 
      - parameter timeout: How long to wait, in seconds.
+     - returns: `YES` if LaunchDarkly accepted the events, or there were none to send. `NO` if the timeout expired
+       first, the client is offline or closed, or any of the events were lost: refused by LaunchDarkly, still failing
+       after one retry, or unable to be serialized. Lost events are not kept for a later flush, so calling this again
+       does not resend them. A refusal also stops event delivery until the client is next set online, and until then
+       this returns `NO` even with nothing to send. A `NO` because the timeout expired does not mean the events were
+       not sent: the delivery is left running, and may still arrive.
      */
     @objc public func flushAndWait(timeout: TimeInterval) -> Bool {
         ldClient.flushAndWait(timeout: timeout)
