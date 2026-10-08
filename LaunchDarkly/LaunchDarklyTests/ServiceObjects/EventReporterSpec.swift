@@ -1409,6 +1409,33 @@ extension EventReporterSpec {
                 expect(store.pendingEventCount) == 0
             }
 
+            it("delivers what memory was left holding beside what the disk took, and reports true") {
+                var writes = 0
+                let store = EventStore.temporary(writeLog: { descriptor, bytes in
+                    writes += 1
+                    // The file header and the first event land; the device is full from then on.
+                    return writes > 2 ? ENOSPC : EventStore.writeAll(descriptor, bytes)
+                })
+                testContext = TestContext(store: store)
+                testContext.eventReporter.record(CustomEvent(key: "written", context: LDContext.stub()))
+                // Its write fails, so persistence is given up with "written" in the log and this in memory.
+                testContext.eventReporter.record(CustomEvent(key: "held", context: LDContext.stub()))
+                expect(store.isPersisting) == false
+
+                testContext.eventReporter.isOnline = true
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+                // Neither left behind, and oldest first.
+                expect(testContext.serviceMock.publishedEventPayloads.flatMap(customKeys)) == ["written", "held"]
+                expect(store.pendingEventCount) == 0
+            }
+
             it("reports false when an event could not be serialized, though the rest were accepted") {
                 testContext = TestContext()
                 testContext.eventReporter.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
@@ -1439,7 +1466,7 @@ extension EventReporterSpec {
                 // Larger than a log frame holds, so the store refuses it however much room is left.
                 let oversized = String(repeating: "x", count: EventLogFormat.maxFrameSize)
                 testContext.eventReporter.record(CustomEvent(key: oversized, context: LDContext.stub()))
-                testContext.recordEvents(1)
+                testContext.eventReporter.record(CustomEvent(key: "fine", context: LDContext.stub()))
                 testContext.eventReporter.isOnline = true
                 var delivered: Bool?
                 waitUntil { done in
@@ -1450,7 +1477,7 @@ extension EventReporterSpec {
                 }
                 expect(delivered) == false
                 // The event beside it still went.
-                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                expect(testContext.serviceMock.publishedEventPayloads.flatMap(customKeys)) == ["fine"]
             }
 
             it("reports false when a retryable failure leaves the batch on disk") {

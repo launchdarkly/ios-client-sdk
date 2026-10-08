@@ -136,6 +136,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
     var stubbedEventResponse: ServiceResponse?
     var publishEventDataCallCount = 0
     var publishedEventData: Data?
+    /// Every payload published, in order, so a test can see what a delivery of several batches sent.
+    var publishedEventPayloads: [Data] = []
     /// Every payload ID used, in order, so a test can tell a retry of a delivery from a new one.
     var publishedPayloadIds: [String] = []
     /// Holds responses so a test can act while a delivery is in flight.
@@ -144,6 +146,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
     func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?) {
         publishEventDataCallCount += 1
         publishedEventData = eventData
+        publishedEventPayloads.append(eventData)
         publishedPayloadIds.append(payloadId)
         guard !holdsEventCompletions
         else {

@@ -292,6 +292,9 @@ final class EventStoreSpec: QuickSpec {
                 expect { try store.body(of: batch) }.to(throwError())
                 // Still the store's to deliver: reporting nothing to send would have it dropped.
                 expect(store.pendingBatches()) == [batch]
+
+                failing = false
+                expect(EventStoreSpec.keys(ofBody: try store.body(of: batch))) == ["kept"]
             }
 
             it("is closed off uncounted when a log a previous run left open cannot be read") {
@@ -303,13 +306,18 @@ final class EventStoreSpec: QuickSpec {
                 let next = EventStoreSpec.reader(sharing: store,
                                                  readFile: EventStoreSpec.readFailing(while: { failing }))
                 next.recoverInterruptedLog()
+                // Moved out from under the name this run appends to, and not deleted.
+                expect(FileManager.default.fileExists(atPath: store.directory.appendingPathComponent("current").path)) == false
 
-                // It cannot stay under the name this run appends to, and deleting it would lose events that are
-                // intact, so it is closed off for whichever listing first manages to read it.
+                // So this run has the name to itself, and the events that are intact are only waiting for a read that
+                // works to be counted and delivered.
+                _ = next.stage(EventStoreSpec.payload("this-run"))
+                next.commit()
                 failing = false
                 let batches = next.pendingBatches()
                 expect(batches.count) == 1
                 expect(EventStoreSpec.keys(ofBody: try next.body(of: batches[0]))) == ["from-the-previous-run"]
+                expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["from-the-previous-run", "this-run"]
             }
 
             it("is discarded when it was written in a format this version does not read") {
