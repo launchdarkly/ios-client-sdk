@@ -1686,6 +1686,19 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.subject.flushAndWait(timeout: 1.0)) == false
             }
 
+            it("reports false for a client a later start replaced, without flushing the clients that replaced it") {
+                let stale = TestContext()
+                stale.start()
+                stale.subject.close()
+                let current = TestContext()
+                current.start()
+                answer(current.eventReporterMock, with: true)
+
+                // Its own events were never attempted, so the outcome of another client's delivery says nothing of them.
+                expect(stale.subject.flushAndWait(timeout: 1.0)) == false
+                expect(current.eventReporterMock.flushReportingOutcomeCallCount) == 0
+            }
+
             it("gives every environment the whole budget rather than what the one before it left") {
                 let testContext = TestContext()
                 try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
@@ -1703,6 +1716,27 @@ final class LDClientSpec: QuickSpec {
                 }
 
                 expect(testContext.subject.flushAndWait(timeout: 0.5)) == true
+            }
+
+            it("takes no longer for several environments than the budget it was given") {
+                let testContext = TestContext()
+                try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
+                testContext.start()
+                // One answers most of the way through the budget and the other never does, so the budget the first
+                // spent is the budget the second has left. Giving each its own copy of it would take twice as long.
+                let answering = LDClient.get(environment: "alternate")?.eventReporter as? EventReportingMock
+                expect(answering).toNot(beNil())
+                answering?.flushReportingOutcomeCallback = { [weak answering] in
+                    let completion = answering?.flushReportingOutcomeReceivedCompletion
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) { completion?(true) }
+                }
+                testContext.eventReporterMock.flushReportingOutcomeCallback = nil
+
+                // Answering at 0.5s into a 0.6s budget leaves the second wait 0.1s, against the 0.6s a fresh copy
+                // would give it, so the two outcomes are 0.6s and 1.1s with room on either side of the threshold.
+                let started = Date()
+                expect(testContext.subject.flushAndWait(timeout: 0.6)) == false
+                expect(Date().timeIntervalSince(started)) < 0.85
             }
         }
     }

@@ -67,17 +67,19 @@ final class BackgroundActivity {
     private static func holdProcessAssertion(reason: String, whileHeld: @escaping Work) {
         #if os(iOS) || os(tvOS) || os(watchOS)
         let finished = DispatchSemaphore(value: 0)
+        // The work does not wait on the assertion, and does not run inside it. The system refuses one outright under
+        // the very resource pressure this is here for, and a delivery it may suspend is better than no delivery.
         ProcessInfo.processInfo.performExpiringActivity(withReason: reason) { expired in
             guard !expired
             else {
-                // Expiration: release the blocked first call.
+                // The system taking the assertion back, or declining to give one. Nothing should stay blocked on it.
                 finished.signal()
                 return
             }
-            whileHeld { finished.signal() }
-            // The assertion lasts as long as this block, which runs on a system queue, not main.
+            // The assertion lasts as long as this block, which runs on a system queue, not the caller's thread.
             _ = finished.wait(timeout: .now() + maximumDuration)
         }
+        whileHeld { finished.signal() }
         #else
         whileHeld {}
         #endif

@@ -189,7 +189,12 @@ final class DarklyService: DarklyServiceProvider {
     // MARK: Publish Events
 
     func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?) {
-        guard hasMobileKey(#function) else { return }
+        guard hasMobileKey(#function)
+        else {
+            // Answered rather than dropped: the reporter holds every later delivery until this one answers.
+            completion?((nil, nil, URLError(.userAuthenticationRequired), nil))
+            return
+        }
         let url = config.eventsUrl.appendingPathComponent(EventRequestPath.bulk)
         let headers = [HTTPHeaders.HeaderKey.eventPayloadIDHeader: payloadId].merging(httpHeaders.eventRequestHeaders) { $1 }
         doPublish(url: url, headers: headers, body: eventData, completion: completion)

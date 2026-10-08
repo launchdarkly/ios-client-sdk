@@ -540,11 +540,21 @@ public final class ObjcLDClient: NSObject {
     }
 
     /**
-     Sends any currently queued events and waits up to `timeout` for the delivery to finish.
+     Sends any currently queued events to LaunchDarkly and waits up to `timeout` seconds for the result.
 
-     This is not a crash-time mechanism. Keep the budget far below 15 seconds when calling from the main thread.
+     The timeout bounds the wait, not the delivery: an in-flight request is left to finish. Multiple environments
+     deliver at the same time and share the one budget, so the call takes no longer for several of them than for one.
 
-     - parameter timeout: How long to wait, in seconds.
+     A delivery that definitively failed is reported as a failure. Some other LaunchDarkly SDKs report that as a
+     success, on the grounds that the attempt is over, so an expectation carried from another platform may not hold
+     here.
+
+     This is not a crash-time mechanism. It is safe to call from the main thread, but keep the budget well below
+     15 seconds there.
+
+     - parameter timeout: How long to wait, in seconds. Zero or less does not wait, and so reports `NO`. There is
+       no upper limit: a delivery always ends, by its own request timeouts if nothing else, so a very long timeout
+       waits for that.
      - returns: `YES` if LaunchDarkly accepted the events, or there were none to send. `NO` if the timeout expired
        first, the client is offline or closed, or any of the events were lost: refused by LaunchDarkly, still failing
        after one retry, or unable to be serialized. Lost events are not kept for a later flush, so calling this again
