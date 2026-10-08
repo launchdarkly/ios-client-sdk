@@ -61,6 +61,23 @@ final class LDClientSpec: QuickSpec {
                 expect(kinds.contains(AutoEnvContextModifier.ldApplicationKind)) == true
             }
         }
+
+        context("when the client is built") {
+            it("builds each service once") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+
+                expect(testContext.serviceFactoryMock.makeEventReporterCallCount) == 1
+                expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == 1
+            }
+
+            it("tells the synchronizer where to report") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+
+                expect(testContext.serviceFactoryMock.madeFlagSynchronizer?.onSyncComplete).toNot(beNil())
+            }
+        }
     }
 
     private func startSpec(withTimeout: Bool) {
@@ -1279,14 +1296,14 @@ final class LDClientSpec: QuickSpec {
                                              statusCode: 403,
                                              httpVersion: DarklyServiceMock.Constants.httpVersion,
                                              headerFields: nil)
-        it("stops only the data source and marks initialized on a terminal flag error") {
+        it("keeps the data source running and reconnecting on a terminal flag error") {
             let testContext = TestContext(startOnline: true)
             testContext.start()
             testContext.onSyncComplete?(.error(.response(forbiddenError)))
 
-            expect(testContext.flagSynchronizerMock.isOnline).to(beFalse())
-            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .offline
-            expect(testContext.subject.isInitialized).to(beTrue())
+            expect(testContext.flagSynchronizerMock.isOnline).to(beTrue())
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .establishingStreamingConnection
+            expect(testContext.subject.isInitialized).to(beFalse())
             expect(testContext.subject.isOnline).to(beTrue())
             expect(testContext.eventReporterMock.isOnline).to(beTrue())
         }
@@ -1299,15 +1316,6 @@ final class LDClientSpec: QuickSpec {
             expect(testContext.flagSynchronizerMock.isOnline).to(beTrue())
             expect(testContext.subject.getConnectionInformation().currentConnectionMode) == modeBefore
             expect(testContext.subject.isOnline).to(beTrue())
-        }
-        it("restarts the data source when set online again after a terminal error") {
-            let testContext = TestContext(startOnline: true)
-            testContext.start()
-            testContext.onSyncComplete?(.error(.response(forbiddenError)))
-            expect(testContext.flagSynchronizerMock.isOnline).to(beFalse())
-
-            testContext.subject.setOnline(true)
-            expect(testContext.flagSynchronizerMock.isOnline).toEventually(beTrue())
         }
         it("event delivery errors do not affect flag delivery or connection information") {
             let testContext = TestContext(startOnline: true)
@@ -1327,7 +1335,7 @@ final class LDClientSpec: QuickSpec {
             testContext.start()
             testContext.subject.flagChangeNotifier = ClientServiceMockFactory(config: testContext.config).makeFlagChangeNotifier()
             testContext.onSyncComplete?(.error(.response(forbiddenError)))
-            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .offline
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .establishingStreamingConnection
 
             waitUntil { done in
                 testContext.changeNotifierMock.notifyObserversCallback = done
@@ -1335,12 +1343,12 @@ final class LDClientSpec: QuickSpec {
             }
             expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .streaming
         }
-        it("recovers to polling when a poll succeeds after a terminal error") {
+        it("stays in polling mode through a terminal error") {
             let testContext = TestContext(startOnline: true)
             testContext.start()
             testContext.flagSynchronizerMock.streamingMode = .polling
             testContext.onSyncComplete?(.error(.response(forbiddenError)))
-            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .offline
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .polling
 
             testContext.onSyncComplete?(.upToDate)
             expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .polling
@@ -1648,6 +1656,69 @@ final class LDClientSpec: QuickSpec {
             }
         }
 
+        describe("flush with a completion") {
+            /// Answers from another thread, because this call does not block and must not be answered inside it.
+            func answer(_ mock: EventReportingMock, with delivered: Bool, after delay: TimeInterval = 0.05) {
+                mock.flushReportingOutcomeCallback = { [weak mock] in
+                    let completion = mock?.flushReportingOutcomeReceivedCompletion
+                    DispatchQueue.global().asyncAfter(deadline: .now() + delay) { completion?(delivered) }
+                }
+            }
+
+            it("reports true when delivery succeeds") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventReporterMock, with: true)
+
+                var delivered: Bool?
+                testContext.subject.flush { delivered = $0 }
+                // Nothing has answered yet, so a call that reported now would be blocking or guessing.
+                expect(delivered).to(beNil())
+                expect(delivered).toEventually(beTrue())
+            }
+
+            it("reports false when delivery cannot finish") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventReporterMock, with: false)
+
+                var delivered: Bool?
+                testContext.subject.flush { delivered = $0 }
+                expect(delivered).toEventually(beFalse())
+            }
+
+            it("reports false for a client a later start replaced, without flushing the clients that replaced it") {
+                let stale = TestContext()
+                stale.start()
+                stale.subject.close()
+                let current = TestContext()
+                current.start()
+                answer(current.eventReporterMock, with: true)
+
+                var delivered: Bool?
+                stale.subject.flush { delivered = $0 }
+                expect(delivered) == false
+                expect(current.eventReporterMock.flushReportingOutcomeCallCount) == 0
+            }
+
+            it("reports once every environment has answered, and only once") {
+                let testContext = TestContext()
+                try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
+                testContext.start()
+                let answering = LDClient.get(environment: "alternate")?.eventReporter as? EventReportingMock
+                expect(answering).toNot(beNil())
+                // The one that fails answers last, so reporting before every environment is in would say true.
+                answer(testContext.eventReporterMock, with: true, after: 0.05)
+                answer(answering!, with: false, after: 0.2)
+
+                var answers: [Bool] = []
+                testContext.subject.flush { answers.append($0) }
+                expect(answers).toEventually(equal([false]))
+                Thread.sleep(forTimeInterval: 0.2)
+                expect(answers) == [false]
+            }
+        }
+
         describe("flushAndWait") {
             /// Answers inside the call, because `flushAndWait` blocks the test thread.
             func answer(_ mock: EventReportingMock, with delivered: Bool) {
@@ -1690,6 +1761,19 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.subject.flushAndWait(timeout: 1.0)) == false
             }
 
+            it("reports false for a client a later start replaced, without flushing the clients that replaced it") {
+                let stale = TestContext()
+                stale.start()
+                stale.subject.close()
+                let current = TestContext()
+                current.start()
+                answer(current.eventReporterMock, with: true)
+
+                // Its own events were never attempted, so the outcome of another client's delivery says nothing of them.
+                expect(stale.subject.flushAndWait(timeout: 1.0)) == false
+                expect(current.eventReporterMock.flushReportingOutcomeCallCount) == 0
+            }
+
             it("gives every environment the whole budget rather than what the one before it left") {
                 let testContext = TestContext()
                 try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
@@ -1707,6 +1791,27 @@ final class LDClientSpec: QuickSpec {
                 }
 
                 expect(testContext.subject.flushAndWait(timeout: 0.5)) == true
+            }
+
+            it("takes no longer for several environments than the budget it was given") {
+                let testContext = TestContext()
+                try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
+                testContext.start()
+                // One answers most of the way through the budget and the other never does, so the budget the first
+                // spent is the budget the second has left. Giving each its own copy of it would take twice as long.
+                let answering = LDClient.get(environment: "alternate")?.eventReporter as? EventReportingMock
+                expect(answering).toNot(beNil())
+                answering?.flushReportingOutcomeCallback = { [weak answering] in
+                    let completion = answering?.flushReportingOutcomeReceivedCompletion
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) { completion?(true) }
+                }
+                testContext.eventReporterMock.flushReportingOutcomeCallback = nil
+
+                // Answering at 0.5s into a 0.6s budget leaves the second wait 0.1s, against the 0.6s a fresh copy
+                // would give it, so the two outcomes are 0.6s and 1.1s with room on either side of the threshold.
+                let started = Date()
+                expect(testContext.subject.flushAndWait(timeout: 0.6)) == false
+                expect(Date().timeIntervalSince(started)) < 0.85
             }
         }
     }
@@ -1865,10 +1970,10 @@ final class LDClientSpec: QuickSpec {
                 NotificationCenter.default.post(name: SystemCapabilities.foregroundNotification!, object: self)
                 expect(testContext.subject.isInitialized) == false
             }
-            it("becomes true when the client is unauthorized") {
+            it("stays uninitialized when the client is unauthorized") {
                 let testContext = TestContext(startOnline: true)
                 testContext.start()
-                expect(testContext.subject.isInitialized) == false
+                expect(testContext.subject.isInitialized).to(beFalse())
 
                 let unauthorized = HTTPURLResponse(url: URL(string: "https://app.launchdarkly.com")!,
                                                    statusCode: 401,
@@ -1876,7 +1981,7 @@ final class LDClientSpec: QuickSpec {
                                                    headerFields: nil)
                 testContext.onSyncComplete?(.error(.response(unauthorized)))
 
-                expect(testContext.subject.isInitialized).toEventually(beTrue(), timeout: DispatchTimeInterval.seconds(2))
+                expect(testContext.subject.isInitialized).to(beFalse())
             }
             it("becomes true when the mobile key is empty") {
                 let config = LDConfig.stub(mobileKey: "", autoEnvAttributes: .disabled, isDebugBuild: false)

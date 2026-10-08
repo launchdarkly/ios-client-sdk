@@ -534,17 +534,47 @@ public final class ObjcLDClient: NSObject {
      There should not normally be a need to call this function. While online, the LDClient automatically reports events
      on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
      sent, it only triggers a background task to send events immediately.
+
+     Because it does not wait, it cannot report how the delivery went. Use `flushWithCompletion:` where that matters
+     but blocking does not suit, or `flushAndWait` where blocking is acceptable.
      */
     @objc public func flush() {
         ldClient.flush()
     }
 
     /**
-     Sends any currently queued events and waits up to `timeout` for the delivery to finish.
+     Sends any currently queued events to LaunchDarkly and reports how the delivery went.
 
-     This is not a crash-time mechanism. Keep the budget far below 15 seconds when calling from the main thread.
+     Like `flushAndWait`, but without blocking: the completion runs once every environment has answered. There is no
+     timeout, because a delivery always ends, by its own request timeouts if nothing else.
 
-     - parameter timeout: How long to wait, in seconds.
+     - parameter completion: Given `YES` if LaunchDarkly accepted the events, or there were none to send, and `NO` if
+       the client is offline or closed, or any of the events were lost. See `flushAndWait` for what being lost
+       covers. Runs once, on a background queue that is not the caller's thread.
+     */
+    @objc public func flush(completion: @escaping (Bool) -> Void) {
+        ldClient.flush(completion: completion)
+    }
+
+    /**
+     Sends any currently queued events to LaunchDarkly and waits up to `timeout` seconds for the result.
+
+     The timeout bounds the wait, not the delivery: an in-flight request is left to finish. Multiple environments
+     deliver at the same time and share the one budget, so the call takes no longer for several of them than for one.
+
+     A delivery that definitively failed is reported as a failure. Some other LaunchDarkly SDKs report that as a
+     success, on the grounds that the attempt is over, so an expectation carried from another platform may not hold
+     here.
+
+     This blocks the thread it is called on until the answer is in or the budget runs out, so where the answer is
+     not needed, `flush` queues the same delivery and returns at once.
+
+     This is not a crash-time mechanism. It is safe to call from the main thread, but keep the budget well below
+     15 seconds there.
+
+     - parameter timeout: How long to wait, in seconds. Zero or less does not wait, and so reports `NO`. There is
+       no upper limit: a delivery always ends, by its own request timeouts if nothing else, so a very long timeout
+       waits for that.
      - returns: `YES` if LaunchDarkly accepted the events, or there were none to send. `NO` if the timeout expired
        first, the client is offline or closed, or any of the events were lost: refused by LaunchDarkly, still failing
        after one retry, or unable to be serialized. Lost events are not kept for a later flush, so calling this again

@@ -20,8 +20,13 @@ protocol EventReporting {
     /// `false` if the reporter is offline, a batch was refused for good, a retryable failure left batches on disk, or
     /// an event the SDK had accepted could not be kept to send at all.
     ///
-    /// The completion runs on the reporter's delivery queue. Keep it short: a long one holds up the deliveries behind
-    /// it, though it cannot block an evaluation, which records under a lock rather than on that queue.
+    /// Flushes arriving faster than a delivery completes join the one that is queued, since a delivery that has not
+    /// started yet will send their events too. A delivery that has already started is not joined, so an answer is
+    /// always about the batch the caller's own delivery took, never one an earlier delivery lost.
+    ///
+    /// The completion, like `flush`'s, runs on a background queue, and never on the reporter's own: a completion is
+    /// free to record events or flush again without waiting on the queue it is running on. It is not the caller's
+    /// thread either, and two completions may run at once, so anything it touches needs to expect that.
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure)
 
     /// Makes everything recorded so far outlive the process, without waiting for a delivery.
@@ -114,6 +119,16 @@ class EventReporter: EventReporting {
     /// Only to be used while holding `stateLock`.
     private var responseDate: Date
 
+    /// Guards `queuedDelivery`. Taken on a caller's thread and on `deliveryQueue`, and never held across either.
+    private let deliveryLock = UnfairLock()
+    /// Callers waiting on a delivery that is queued and has not taken the batches yet, or nil where none is queued.
+    private var queuedDelivery: [FlushOutcomeClosure]?
+
+    #if DEBUG
+        /// How many deliveries have started, which is fewer than the flushes asked for where they were joined.
+        private var deliveryRunCount = 0
+    #endif
+
     /// Whether events the SDK accepted were dropped for good, cleared once a caller who hears an outcome has been
     /// told so. Only to be used while holding `stateLock`.
     ///
@@ -174,22 +189,16 @@ class EventReporter: EventReporting {
     /// question and the delivery that acts on it are both enqueued there, in that order.
     private var hasEventsFromPreviousRun = false
 
-    /// Whether a delivery is running, from the request being sent until its response has been handled.
+    /// Payload IDs a delivery has taken and not yet had an answer for. Only to be used while holding `stateLock`.
     ///
     /// `deliveryQueue` serializes the *start* of a delivery but not the round trip it waits on, and a batch stays on
     /// disk until its response arrives. Without this, a delivery beginning inside that window would list the same batch
     /// again and send it a second time -- under the same payload ID, leaving it to LaunchDarkly to notice that two
     /// requests arriving at once are the same one.
     ///
-    /// Only to be used on `deliveryQueue`, like the two below.
-    private var isDelivering = false
-
-    /// A flush requested while a delivery was running, run once that delivery finishes. Later requests join it rather
-    /// than queueing another.
-    private var hasPendingFlush = false
-
-    /// Callers answered by the pending flush.
-    private var pendingFlushCompletions: [FlushOutcomeClosure] = []
+    /// This bounds the overlap rather than preventing it, which is the point: a later delivery still runs, and still
+    /// sends what it closed for itself. Only the batches already on their way are left out of it.
+    private var batchesInFlight: Set<String> = []
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
@@ -486,7 +495,7 @@ class EventReporter: EventReporting {
     private func startReporting() {
         guard eventReportTimer == nil
         else { return }
-        eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: deliveryQueue, execute: reportEvents)
+        eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: deliveryQueue, execute: queueScheduledDelivery)
 
         // Events a previous run left behind are already late by however long the application was gone, so they do not
         // wait out a report interval on top of that: an application that crashed reports it as soon as it is next able
@@ -496,7 +505,7 @@ class EventReporter: EventReporting {
             guard let self, self.hasEventsFromPreviousRun
             else { return }
             self.hasEventsFromPreviousRun = false
-            self.reportEvents()
+            self.queueScheduledDelivery()
         }
     }
 
@@ -506,39 +515,83 @@ class EventReporter: EventReporting {
     }
 
     func flush(completion: CompletionClosure?) {
-        flushReportingOutcome { _ in completion?() }
+        // Nil stays nil, so a flush nobody waits on joins a queued delivery without adding to its waiters.
+        commitThenQueueDelivery(completion.map { done in { _ in done() } })
     }
 
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
-        // Flush is a commit point, so at `.immediate` everything accepted before this call is on disk before control
-        // returns, even when delivery cannot run because the client is offline.
-        commitAtCommitPoint()
-        deliveryQueue.async {
-            self.reportEvents { delivered in
-                // Committing first is what makes this the answer for everything recorded before the call: whatever
-                // could not be kept has been counted by now. Cleared as it is reported, so that the next caller is not
-                // told again about a loss this answer has already accounted for.
-                completion(delivered && !self.takeEventsLost())
-            }
-        }
+        commitThenQueueDelivery(completion)
     }
 
-    private func reportEvents() {
-        reportEvents(completion: nil)
+    /// Queues a delivery the way a caller asking for one expects, which is as a commit point.
+    ///
+    /// At `.immediate` everything accepted before the call is on disk by the time it returns, even where the delivery
+    /// itself cannot run because the client is offline. It is also what makes the answer cover the caller's own
+    /// events: they are closed into a batch here, before any delivery can take one.
+    private func commitThenQueueDelivery(_ completion: FlushOutcomeClosure?) {
+        commitAtCommitPoint()
+        queueDelivery(completion)
+    }
+
+    private func queueScheduledDelivery() {
+        queueDelivery(nil)
+    }
+
+    /// Queues a delivery, or joins one that is queued and has not started.
+    ///
+    /// A delivery that has not started yet will send everything recorded before it starts, which includes this
+    /// caller's events, so joining it is as good as queueing another. Without this, flushes arriving faster than a
+    /// post completes each queue their own, and the one that matters -- the flush at shutdown -- waits behind all of
+    /// them.
+    ///
+    /// A delivery that has already started is not joined. It has closed and taken its batches, so it cannot speak for
+    /// anything recorded since, and holding later deliveries back until it answers would leave the store growing
+    /// through a retry while nothing drained it.
+    private func queueDelivery(_ completion: FlushOutcomeClosure?) {
+        deliveryLock.lock()
+        if queuedDelivery != nil {
+            if let completion {
+                queuedDelivery?.append(completion)
+            }
+            deliveryLock.unlock()
+            return
+        }
+        queuedDelivery = completion.map { [$0] } ?? []
+        deliveryLock.unlock()
+
+        deliveryQueue.async { self.runDelivery() }
+    }
+
+    private func runDelivery() {
+        // Requests arriving from here on need a delivery of their own: this one is about to close and take its
+        // batches, and what it takes is all it can speak for.
+        deliveryLock.lock()
+        let waiters = queuedDelivery ?? []
+        queuedDelivery = nil
+        #if DEBUG
+            deliveryRunCount += 1
+        #endif
+        deliveryLock.unlock()
+
+        reportEvents { delivered in
+            guard !waiters.isEmpty
+            else { return }
+            // Taken once for the delivery rather than once per waiter, so that every caller joined to it hears about
+            // a loss instead of only whichever happened to be answered first. Left alone where nobody is waiting, so
+            // a scheduled delivery does not consume the answer a later caller is owed.
+            let kept = !self.takeEventsLost()
+            // Answered away from `deliveryQueue`, and from whichever thread the delivery ended on, so that every
+            // completion reaches its caller the same way. A completion is free to record or flush again: it is never
+            // running on the queue those wait for.
+            DispatchQueue.global().async {
+                for waiter in waiters {
+                    waiter(delivered && kept)
+                }
+            }
+        }
     }
 
     private func reportEvents(completion: FlushOutcomeClosure?) {
-        guard !isDelivering
-        else {
-            // Joins the pending flush, which commits whatever this caller recorded once the current delivery finishes,
-            // so it covers them. Starting one now would only re-send what is still in flight.
-            hasPendingFlush = true
-            if let completion {
-                pendingFlushCompletions.append(completion)
-            }
-            return
-        }
-
         guard isOnline
         else {
             os_log("%s aborted. EventReporter is offline", log: service.config.logger, type: .debug, typeName(and: #function))
@@ -549,7 +602,7 @@ class EventReporter: EventReporting {
 
         commitAndCloseBatch()
 
-        let batches = store.pendingBatches()
+        let batches = claimDeliverableBatches()
         guard !batches.isEmpty
         else {
             os_log("%s aborted. Event store is empty", log: service.config.logger, type: .debug, typeName(and: #function))
@@ -559,35 +612,31 @@ class EventReporter: EventReporting {
         }
 
         os_log("%s starting", log: service.config.logger, type: .debug, typeName(and: #function))
-        isDelivering = true
         deliver(batches) { [weak self] delivered in
-            guard let self
-            else {
-                completion?(false)
-                return
-            }
-            // `deliver` reports from whichever queue the response arrived on.
-            self.deliveryQueue.async {
-                self.finishDelivery(delivered, completion)
-            }
+            self?.releaseClaim(on: batches)
+            completion?(delivered)
         }
     }
 
-    /// Releases the in-flight claim and, if a flush was requested while it was held, runs the pending flush on behalf
-    /// of every caller that joined it.
-    private func finishDelivery(_ delivered: Bool, _ completion: FlushOutcomeClosure?) {
-        isDelivering = false
-        completion?(delivered)
+    /// Takes the batches this delivery will send, leaving out any another delivery is still waiting on a response for.
+    ///
+    /// The caller's own events are never among those left out: they were closed into a batch of their own a moment
+    /// ago, which no earlier delivery could have taken. So a delivery that finds everything already claimed has
+    /// nothing of its own to send, and `true` is the right answer for it.
+    private func claimDeliverableBatches() -> [EventBatch] {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        let deliverable = store.pendingBatches().filter { !batchesInFlight.contains($0.payloadId) }
+        batchesInFlight.formUnion(deliverable.map { $0.payloadId })
+        return deliverable
+    }
 
-        guard hasPendingFlush
-        else { return }
-
-        let completions = pendingFlushCompletions
-        hasPendingFlush = false
-        pendingFlushCompletions = []
-        reportEvents { result in
-            completions.forEach { $0(delivered && result) }
-        }
+    /// Releases the claim once the delivery has an answer, whether or not every batch was sent: `deliver` stops at the
+    /// first retryable failure, and what it did not reach has to be deliverable again.
+    private func releaseClaim(on batches: [EventBatch]) {
+        stateLock.lock()
+        batchesInFlight.subtract(batches.map { $0.payloadId })
+        stateLock.unlock()
     }
 
     private func deliver(_ batches: [EventBatch], _ completion: FlushOutcomeClosure?) {
@@ -857,6 +906,25 @@ private final class NullEventStore: EventStoring {
             stateLock.lock()
             responseDate = date
             stateLock.unlock()
+        }
+
+        /// Occupies the queue a delivery runs on, so a test can see what one that has not started yet collects.
+        func occupyQueue(until released: DispatchSemaphore) {
+            deliveryQueue.async { _ = released.wait(timeout: .now() + 10) }
+        }
+
+        /// Callers waiting on the queued delivery.
+        var queuedDeliveryWaiterCount: Int {
+            deliveryLock.lock()
+            defer { deliveryLock.unlock() }
+            return queuedDelivery?.count ?? 0
+        }
+
+        /// Deliveries started, counting one for a run of flushes that joined each other.
+        var startedDeliveryCount: Int {
+            deliveryLock.lock()
+            defer { deliveryLock.unlock() }
+            return deliveryRunCount
         }
     }
 #endif

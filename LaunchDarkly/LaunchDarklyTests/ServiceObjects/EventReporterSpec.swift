@@ -82,6 +82,27 @@ final class EventReporterSpec: QuickSpec {
             events.compactMap { encodeToLDValue($0) }
         }
 
+        /// Flushes, and answers whether recording from the completion got anywhere.
+        ///
+        /// Recording waits on the reporter's queue, so a completion run on that queue cannot record. The recording
+        /// happens on another thread against a deadline, so that a reporter answering on its own queue fails this
+        /// rather than hanging the test process on a deadlock it can never leave.
+        func recordedFromACompletion() -> Bool {
+            var recorded = false
+            waitUntil(timeout: .seconds(5)) { done in
+                eventReporter.flushReportingOutcome { _ in
+                    let finished = DispatchSemaphore(value: 0)
+                    DispatchQueue.global().async {
+                        eventReporter.record(CustomEvent(key: "recorded from a completion", context: LDContext.stub()))
+                        finished.signal()
+                    }
+                    recorded = finished.wait(timeout: .now() + 1) == .success
+                    done()
+                }
+            }
+            return recorded
+        }
+
         func cleanUp() {
             eventReporter.isOnline = false
             store.deleteEverything()
@@ -1517,13 +1538,8 @@ extension EventReporterSpec {
                 expect(testContext.store.pendingEventCount) == 0
             }
 
-            it("reports false to a pending flush when the in-flight delivery is permanently refused") {
+            it("keeps draining while a delivery is in flight, and sends each batch once") {
                 testContext = TestContext()
-                let unauthorized = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
-                                                   statusCode: HTTPURLResponse.StatusCodes.unauthorized,
-                                                   httpVersion: DarklyServiceMock.Constants.httpVersion,
-                                                   headerFields: nil)
-                testContext.serviceMock.stubbedEventResponse = (nil, unauthorized, nil, nil)
                 testContext.recordEvents(1)
                 testContext.eventReporter.isOnline = true
                 testContext.serviceMock.holdsEventCompletions = true
@@ -1531,17 +1547,94 @@ extension EventReporterSpec {
                 testContext.eventReporter.flushReportingOutcome { _ in }
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
 
-                var delivered: Bool?
-                testContext.eventReporter.flushReportingOutcome { result in delivered = result }
-                Thread.sleep(forTimeInterval: 0.2)
-                expect(delivered).to(beNil())
+                // Holding this back until the first delivery answers would let the store fill through a retry, which
+                // can run for twice the connection timeout, and events recorded past the capacity are lost.
+                testContext.recordEvents(1)
+                testContext.eventReporter.flushReportingOutcome { _ in }
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2))
+
+                // The first batch is still awaiting its response, so the second delivery left it alone rather than
+                // listing it again and sending it a second time under the same payload ID.
+                expect(Set(testContext.serviceMock.publishedPayloadIds).count) == 2
 
                 testContext.serviceMock.holdsEventCompletions = false
                 testContext.serviceMock.releaseHeldEventCompletions()
+            }
 
-                expect(delivered).toEventually(beFalse())
-                expect(testContext.eventReporter.isOnline) == false
-                expect(testContext.store.pendingEventCount) == 0
+            it("reports true to a caller with nothing of its own while a delivery is in flight") {
+                testContext = TestContext(stubResponseSuccess: false)
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                testContext.serviceMock.holdsEventCompletions = true
+
+                testContext.eventReporter.flushReportingOutcome { _ in }
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+
+                // Everything on disk belongs to the delivery already running, and this caller recorded nothing, so
+                // there is nothing of its own left unsent. It is not made to wait on, or inherit, a batch that is
+                // not its own.
+                var delivered: Bool?
+                testContext.eventReporter.flushReportingOutcome { result in delivered = result }
+                expect(delivered).toEventually(beTrue())
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+            }
+
+            it("answers away from the queue a recorded event waits on, after a delivery") {
+                testContext = TestContext()
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+
+                expect(testContext.recordedFromACompletion()) == true
+            }
+
+            it("answers away from the queue a recorded event waits on, with nothing to send") {
+                testContext = TestContext()
+                testContext.eventReporter.isOnline = true
+
+                // The path that answers without ever leaving the reporter's queue, so it is the one that would
+                // deadlock while the delivery path, answering from the response, did not.
+                expect(testContext.recordedFromACompletion()) == true
+            }
+
+            it("sends one delivery for the flushes that arrive before it starts, and answers them all") {
+                testContext = TestContext(stubResponseSuccess: false)
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                let released = DispatchSemaphore(value: 0)
+                testContext.eventReporter.occupyQueue(until: released)
+
+                // An application flushing in a loop would otherwise queue a delivery each time, leaving the flush
+                // that matters waiting behind all of them, and growing the waiter list without bound.
+                for _ in 0..<100 {
+                    testContext.eventReporter.flush(completion: nil)
+                }
+                expect(testContext.eventReporter.queuedDeliveryWaiterCount) == 0
+
+                var delivered: [Bool] = []
+                let answers = UnfairLock()
+                // Both completions run at once, and the poll below reads from a third thread.
+                let answered: () -> [Bool] = {
+                    answers.lock()
+                    defer { answers.unlock() }
+                    return delivered
+                }
+                for _ in 0..<2 {
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        answers.lock()
+                        delivered.append(result)
+                        answers.unlock()
+                    }
+                }
+                expect(testContext.eventReporter.queuedDeliveryWaiterCount) == 2
+
+                released.signal()
+                // Allows for the one-second retry, after which the batch stays on disk.
+                expect(answered()).toEventually(equal([false, false]), timeout: .seconds(10))
+                expect(testContext.eventReporter.startedDeliveryCount) == 1
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2 // the first attempt and its retry
             }
         }
     }

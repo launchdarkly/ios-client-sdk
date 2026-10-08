@@ -218,6 +218,11 @@
 		83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
 		83FEF8DF1F2667E4001CF12C /* EventReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* EventReporter.swift */; };
 		8B3D9E2F5A6C1047B2D5E9F1 /* JSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */; };
+		8E38AA8C306308E500C4C163 /* RetryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA8B306308E500C4C163 /* RetryState.swift */; };
+		8E38AA8D306308E500C4C163 /* RetryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA8B306308E500C4C163 /* RetryState.swift */; };
+		8E38AA8E306308E500C4C163 /* RetryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA8B306308E500C4C163 /* RetryState.swift */; };
+		8E38AA8F306308E500C4C163 /* RetryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA8B306308E500C4C163 /* RetryState.swift */; };
+		8E38AA913063090600C4C163 /* RetryStateSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA903063090600C4C163 /* RetryStateSpec.swift */; };
 		94C1C136BA8989F1B8AFE0A8 /* EventJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B430884DBF2E541B919C08FA /* EventJSONWriter.swift */; };
 		9A47F74A2F3D4CBF0001FD9C /* ContextSummarizerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */; };
 		9A47F74C2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
@@ -500,8 +505,8 @@
 /* Begin PBXFileReference section */
 		29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDValue.swift; sourceTree = "<group>"; };
 		29FE1297280413D4008CC918 /* Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
-		367A9182439001C3EBD68477 /* EventJSONWriterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventJSONWriterTests.swift; sourceTree = "<group>"; };
 		1BECAB38F41B30401D3CD7EA /* JSONWriterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JSONWriterTests.swift; sourceTree = "<group>"; };
+		367A9182439001C3EBD68477 /* EventJSONWriterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventJSONWriterTests.swift; sourceTree = "<group>"; };
 		3D24060F2E0D90E000F91253 /* EnvironmentMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentMetadata.swift; sourceTree = "<group>"; };
 		3D2406102E0D90E000F91253 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
 		3D2406112E0D90E000F91253 /* PluginMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginMetadata.swift; sourceTree = "<group>"; };
@@ -585,6 +590,8 @@
 		83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlagSynchronizer.swift; sourceTree = "<group>"; };
 		83FEF8DE1F2667E4001CF12C /* EventReporter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventReporter.swift; sourceTree = "<group>"; };
 		88DAB8D1864C14D9C7E06F11 /* LDContextJSONWriter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LDContextJSONWriter.swift; sourceTree = "<group>"; };
+		8E38AA8B306308E500C4C163 /* RetryState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryState.swift; sourceTree = "<group>"; };
+		8E38AA903063090600C4C163 /* RetryStateSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryStateSpec.swift; sourceTree = "<group>"; };
 		9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSummarizerSpec.swift; sourceTree = "<group>"; };
 		9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSummarizer.swift; sourceTree = "<group>"; };
 		9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackgroundActivity.swift; sourceTree = "<group>"; };
@@ -736,6 +743,7 @@
 		831D8B751F72A48900ED65E8 /* ServiceObjects */ = {
 			isa = PBXGroup;
 			children = (
+				8E38AA903063090600C4C163 /* RetryStateSpec.swift */,
 				9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */,
 				9AE1D0A52F4A1B000001FD9C /* EvaluationExposureDeduperSpec.swift */,
 				50EE85C62EA0749C007CC662 /* TimeoutExecutorSpec.swift */,
@@ -1008,6 +1016,7 @@
 		83FEF8D91F2666BF001CF12C /* ServiceObjects */ = {
 			isa = PBXGroup;
 			children = (
+				8E38AA8B306308E500C4C163 /* RetryState.swift */,
 				9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */,
 				50EE85C12EA0487F007CC662 /* TimeoutExecutor.swift */,
 				A3A8BCD12B7EAA89009A77E4 /* SheddingQueue.swift */,
@@ -1537,6 +1546,7 @@
 				A3BA7CEC2BD056920000DB28 /* Hook.swift in Sources */,
 				9AE1D0C12F4A1B000001FD9C /* DedupingHook.swift in Sources */,
 				9AE1D0B12F4A1B000001FD9C /* HookDecorator.swift in Sources */,
+				8E38AA8D306308E500C4C163 /* RetryState.swift in Sources */,
 				832D68A5224A38FC005F052A /* CacheConverter.swift in Sources */,
 				A35AD4632A619E45005A8DCB /* SystemCapabilities.swift in Sources */,
 				A358D6FA2A4DF1D500270C60 /* SDKEnvironmentReporter.swift in Sources */,
@@ -1643,6 +1653,7 @@
 				A35038792F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */,
 				121B6A1A325C9A7D5EEA2EAB /* LDClientFlush.swift in Sources */,
 				831EF36A20655E730001C643 /* ObjcLDChangedFlag.swift in Sources */,
+				8E38AA8F306308E500C4C163 /* RetryState.swift in Sources */,
 				50EE85C22EA0487F007CC662 /* TimeoutExecutor.swift in Sources */,
 				DAF5695D58E28B8CF9221213 /* LDContextJSONWriter.swift in Sources */,
 				C4AF311E4DA8C3AB7040637D /* EventJSONWriter.swift in Sources */,
@@ -1724,6 +1735,7 @@
 				A3BA7CE92BD056920000DB28 /* Hook.swift in Sources */,
 				9AE1D0C32F4A1B000001FD9C /* DedupingHook.swift in Sources */,
 				9AE1D0B32F4A1B000001FD9C /* HookDecorator.swift in Sources */,
+				8E38AA8E306308E500C4C163 /* RetryState.swift in Sources */,
 				832D68A2224A38FC005F052A /* CacheConverter.swift in Sources */,
 				A35AD4602A619E45005A8DCB /* SystemCapabilities.swift in Sources */,
 				A358D6F72A4DF1D500270C60 /* SDKEnvironmentReporter.swift in Sources */,
@@ -1784,6 +1796,7 @@
 				A3047D652A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift in Sources */,
 				83EBCBB120D9C7B5003A7142 /* FlagCounterSpec.swift in Sources */,
 				A3047D642A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift in Sources */,
+				8E38AA913063090600C4C163 /* RetryStateSpec.swift in Sources */,
 				83B8C2451FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift in Sources */,
 				8335299E1FC37727001166F8 /* FlagMaintainingMock.swift in Sources */,
 				A3047D692A606B6000F568E0 /* ApplicationInfoEnvironmentReporterSpec.swift in Sources */,
@@ -1883,6 +1896,7 @@
 				A3BA7CEA2BD056920000DB28 /* Hook.swift in Sources */,
 				9AE1D0C42F4A1B000001FD9C /* DedupingHook.swift in Sources */,
 				9AE1D0B42F4A1B000001FD9C /* HookDecorator.swift in Sources */,
+				8E38AA8C306308E500C4C163 /* RetryState.swift in Sources */,
 				83D9EC952062DEAB004D7FA6 /* Date.swift in Sources */,
 				A35AD4612A619E45005A8DCB /* SystemCapabilities.swift in Sources */,
 				A358D6F82A4DF1D500270C60 /* SDKEnvironmentReporter.swift in Sources */,
@@ -1958,12 +1972,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = NO;
 				DYLIB_COMPATIBILITY_VERSION = 11.0.0;
-				DYLIB_CURRENT_VERSION = 11.6.2;
+				DYLIB_CURRENT_VERSION = 11.7.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 11.6.2;
+				MARKETING_VERSION = 11.7.0;
 				MODULEMAP_FILE = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
 				PRODUCT_NAME = LaunchDarkly_tvOS;
@@ -1984,12 +1998,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = NO;
 				DYLIB_COMPATIBILITY_VERSION = 11.0.0;
-				DYLIB_CURRENT_VERSION = 11.6.2;
+				DYLIB_CURRENT_VERSION = 11.7.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 11.6.2;
+				MARKETING_VERSION = 11.7.0;
 				MODULEMAP_FILE = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-tvOS";
 				PRODUCT_NAME = LaunchDarkly_tvOS;
@@ -2010,13 +2024,13 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = NO;
 				DYLIB_COMPATIBILITY_VERSION = 11.0.0;
-				DYLIB_CURRENT_VERSION = 11.6.2;
+				DYLIB_CURRENT_VERSION = 11.7.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 11.6.2;
+				MARKETING_VERSION = 11.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = LaunchDarkly_macOS;
 				SDKROOT = macosx;
@@ -2034,13 +2048,13 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = NO;
 				DYLIB_COMPATIBILITY_VERSION = 11.0.0;
-				DYLIB_CURRENT_VERSION = 11.6.2;
+				DYLIB_CURRENT_VERSION = 11.7.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 11.6.2;
+				MARKETING_VERSION = 11.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-macOS";
 				PRODUCT_NAME = LaunchDarkly_macOS;
 				SDKROOT = macosx;
@@ -2084,7 +2098,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DYLIB_COMPATIBILITY_VERSION = 11.0.0;
-				DYLIB_CURRENT_VERSION = 11.6.2;
+				DYLIB_CURRENT_VERSION = 11.7.0;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_VERSION = K;
@@ -2155,7 +2169,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DYLIB_COMPATIBILITY_VERSION = 11.0.0;
-				DYLIB_CURRENT_VERSION = 11.6.2;
+				DYLIB_CURRENT_VERSION = 11.7.0;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FRAMEWORK_VERSION = K;
@@ -2191,13 +2205,13 @@
 				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = NO;
 				DYLIB_COMPATIBILITY_VERSION = 11.0.0;
-				DYLIB_CURRENT_VERSION = 11.6.2;
+				DYLIB_CURRENT_VERSION = 11.7.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
-				MARKETING_VERSION = 11.6.2;
+				MARKETING_VERSION = 11.7.0;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = LaunchDarkly;
@@ -2214,13 +2228,13 @@
 				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = NO;
 				DYLIB_COMPATIBILITY_VERSION = 11.0.0;
-				DYLIB_CURRENT_VERSION = 11.6.2;
+				DYLIB_CURRENT_VERSION = 11.7.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_DYLIB_INSTALL_NAME = "$(DYLIB_INSTALL_NAME_BASE:standardizepath)/$(EXECUTABLE_PATH)";
-				MARKETING_VERSION = 11.6.2;
+				MARKETING_VERSION = 11.7.0;
 				MODULEMAP_FILE = "$(PROJECT_DIR)/Framework/module.modulemap";
 				PRODUCT_BUNDLE_IDENTIFIER = com.launchdarkly.Darkly;
 				PRODUCT_NAME = LaunchDarkly;
@@ -2263,12 +2277,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = NO;
 				DYLIB_COMPATIBILITY_VERSION = 11.0.0;
-				DYLIB_CURRENT_VERSION = 11.6.2;
+				DYLIB_CURRENT_VERSION = 11.7.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 11.6.2;
+				MARKETING_VERSION = 11.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
 				PRODUCT_NAME = LaunchDarkly_watchOS;
 				SDKROOT = watchos;
@@ -2288,12 +2302,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = NO;
 				DYLIB_COMPATIBILITY_VERSION = 11.0.0;
-				DYLIB_CURRENT_VERSION = 11.6.2;
+				DYLIB_CURRENT_VERSION = 11.7.0;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/LaunchDarkly/LaunchDarkly/Support/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				MARKETING_VERSION = 11.6.2;
+				MARKETING_VERSION = 11.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.Darkly-watchOS";
 				PRODUCT_NAME = LaunchDarkly_watchOS;
 				SDKROOT = watchos;
@@ -2384,7 +2398,7 @@
 			repositoryURL = "https://github.com/LaunchDarkly/swift-eventsource.git";
 			requirement = {
 				kind = exactVersion;
-				version = 3.3.1;
+				version = 3.4.0;
 			};
 		};
 		B4903D9624BD61B200F087C4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */ = {
