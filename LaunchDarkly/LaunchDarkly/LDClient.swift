@@ -293,7 +293,7 @@ public class LDClient {
     }
 
     /// One assertion per client, however many times the application is backgrounded while a delivery is running.
-    private let backgroundDelivery = BackgroundActivity(reason: "LaunchDarkly event delivery")
+    private let backgroundDelivery: BackgroundActivity
 
     let config: LDConfig
     /// Identifies this client's environment to a hook, without handing it the mobile key that identifies the
@@ -1028,6 +1028,7 @@ public class LDClient {
         throttler = self.serviceFactory.makeThrottler(environmentReporter: environmentReporter)
 
         config = configuration
+        backgroundDelivery = BackgroundActivity(reason: "LaunchDarkly event delivery", logger: configuration.logger)
         context = startContext ?? LDContext()
 
         if config.autoEnvAttributes {

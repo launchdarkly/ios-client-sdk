@@ -76,5 +76,69 @@ final class BackgroundActivitySpec: QuickSpec {
                 expect(released) == 2
             }
         }
+
+        describe("an assertion from the process") {
+            /// Stands in for `performExpiringActivity`, which answers on a system queue rather than the caller's.
+            ///
+            /// Signals `ended` once the block it was given returns, which is when the real system would take the
+            /// assertion back.
+            func system(granting: Bool, ended: DispatchSemaphore) -> BackgroundActivity.ExpiringActivity {
+                { _, whileGranted in
+                    DispatchQueue.global().async {
+                        whileGranted(!granting)
+                        ended.signal()
+                    }
+                }
+            }
+
+            it("runs the work, and holds the assertion no longer, when the system grants one") {
+                let ended = DispatchSemaphore(value: 0)
+                let assertion = BackgroundActivity.processAssertion(logger: .disabled,
+                                                                    perform: system(granting: true, ended: ended),
+                                                                    maximumDuration: 30)
+
+                var ran = false
+                assertion("test") { finished in
+                    ran = true
+                    finished()
+                }
+
+                expect(ran) == true
+                // Held for as long as the work took rather than the full 30s, which this would otherwise wait out.
+                expect(ended.wait(timeout: .now() + 2)) == .success
+            }
+
+            it("runs the work even where the system refuses an assertion outright") {
+                // Refusing calls the block once with `expired`, and never with `granted`. Work that ran inside that
+                // block would never run at all, and under resource pressure that is exactly when it is needed.
+                let ended = DispatchSemaphore(value: 0)
+                let assertion = BackgroundActivity.processAssertion(logger: .disabled,
+                                                                    perform: system(granting: false, ended: ended),
+                                                                    maximumDuration: 30)
+
+                var ran = false
+                assertion("test") { finished in
+                    ran = true
+                    finished()
+                }
+
+                expect(ran) == true
+                expect(ended.wait(timeout: .now() + 2)) == .success
+            }
+
+            it("gives up the assertion at the maximum, where the work never finishes") {
+                let ended = DispatchSemaphore(value: 0)
+                let assertion = BackgroundActivity.processAssertion(logger: .disabled,
+                                                                    perform: system(granting: true, ended: ended),
+                                                                    maximumDuration: 0.3)
+
+                let started = Date()
+                assertion("test") { _ in }
+
+                expect(ended.wait(timeout: .now() + 3)) == .success
+                // Ended by the cap, rather than by the work or by never having been held.
+                expect(Date().timeIntervalSince(started)) > 0.2
+            }
+        }
     }
 }
