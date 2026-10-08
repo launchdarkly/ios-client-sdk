@@ -9,10 +9,56 @@ extension LDClient {
      There should not normally be a need to call this function. While online, the LDClient automatically reports events
      on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
      sent, it only triggers a background task to send events immediately.
+
+     Because it does not wait, it cannot report how the delivery went. Use `flush(completion:)` where that matters
+     but blocking does not suit, or `flushAndWait` where blocking is acceptable.
      */
     public func flush() {
         LDClient.instancesQueue.sync(flags: .barrier) {
             LDClient.instances?.forEach { $1.internalFlush() }
+        }
+    }
+
+    /**
+     Sends any currently queued events to LaunchDarkly and reports how the delivery went.
+
+     Like `flushAndWait`, but without blocking: the completion runs once every environment has answered. There is no
+     timeout, because a delivery always ends, by its own request timeouts if nothing else. This is the one to reach
+     for from a Swift concurrency task, where blocking is not safe.
+
+     - parameter completion: Given `true` if LaunchDarkly accepted the events, or there were none to send, and
+       `false` if the client is offline or closed, or any of the events were lost. See `flushAndWait` for what being
+       lost covers. Runs once, on a background queue that is neither the caller's thread nor the one recorded events
+       wait on, so it is free to record or flush again.
+     */
+    public func flush(completion: @escaping (Bool) -> Void) {
+        let clients = instancesIncludingThisClient()
+        guard !clients.isEmpty
+        else {
+            os_log("%s called on a closed client", log: config.logger, type: .debug, self.typeName(and: #function))
+            completion(false)
+            return
+        }
+
+        let lock = UnfairLock()
+        /// Only to be used while holding `lock`: each environment answers from whichever thread its delivery ended on.
+        var delivered = true
+        var outstanding = clients.count
+
+        for client in clients {
+            client.eventReporter.flushReportingOutcome { result in
+                lock.lock()
+                delivered = delivered && result
+                outstanding -= 1
+                // Nil until the last environment answers, so the completion runs once. A reporter answering twice
+                // takes the count past zero rather than back to it, which cannot match again.
+                let outcome = outstanding == 0 ? delivered : nil
+                lock.unlock()
+
+                if let outcome {
+                    completion(outcome)
+                }
+            }
         }
     }
 
@@ -31,6 +77,14 @@ extension LDClient {
      A delivery that definitively failed is reported as a failure. Some other LaunchDarkly SDKs report that as a
      success, on the grounds that the attempt is over, so an expectation carried from another platform may not hold
      here.
+
+     This blocks the thread it is called on until the answer is in or the budget runs out. Where the answer is not
+     needed, `flush` queues the same delivery and returns at once; where it is needed but blocking does not suit,
+     `flush(completion:)` reports it without waiting.
+
+     Do not call this from a Swift concurrency task. Blocking there holds a thread of the cooperative pool, which
+     cannot grow to replace it, and enough of them will stall every other task in the process. Use
+     `flush(completion:)` from a task, wrapped in a continuation where you want to await it.
 
      This is not a crash-time mechanism. It is safe to call from the main thread, but keep the budget well below
      15 seconds there.

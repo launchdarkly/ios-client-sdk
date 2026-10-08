@@ -1644,6 +1644,69 @@ final class LDClientSpec: QuickSpec {
             }
         }
 
+        describe("flush with a completion") {
+            /// Answers from another thread, because this call does not block and must not be answered inside it.
+            func answer(_ mock: EventReportingMock, with delivered: Bool, after delay: TimeInterval = 0.05) {
+                mock.flushReportingOutcomeCallback = { [weak mock] in
+                    let completion = mock?.flushReportingOutcomeReceivedCompletion
+                    DispatchQueue.global().asyncAfter(deadline: .now() + delay) { completion?(delivered) }
+                }
+            }
+
+            it("reports true when delivery succeeds") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventReporterMock, with: true)
+
+                var delivered: Bool?
+                testContext.subject.flush { delivered = $0 }
+                // Nothing has answered yet, so a call that reported now would be blocking or guessing.
+                expect(delivered).to(beNil())
+                expect(delivered).toEventually(beTrue())
+            }
+
+            it("reports false when delivery cannot finish") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventReporterMock, with: false)
+
+                var delivered: Bool?
+                testContext.subject.flush { delivered = $0 }
+                expect(delivered).toEventually(beFalse())
+            }
+
+            it("reports false for a client a later start replaced, without flushing the clients that replaced it") {
+                let stale = TestContext()
+                stale.start()
+                stale.subject.close()
+                let current = TestContext()
+                current.start()
+                answer(current.eventReporterMock, with: true)
+
+                var delivered: Bool?
+                stale.subject.flush { delivered = $0 }
+                expect(delivered) == false
+                expect(current.eventReporterMock.flushReportingOutcomeCallCount) == 0
+            }
+
+            it("reports once every environment has answered, and only once") {
+                let testContext = TestContext()
+                try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
+                testContext.start()
+                let answering = LDClient.get(environment: "alternate")?.eventReporter as? EventReportingMock
+                expect(answering).toNot(beNil())
+                // The one that fails answers last, so reporting before every environment is in would say true.
+                answer(testContext.eventReporterMock, with: true, after: 0.05)
+                answer(answering!, with: false, after: 0.2)
+
+                var answers: [Bool] = []
+                testContext.subject.flush { answers.append($0) }
+                expect(answers).toEventually(equal([false]))
+                Thread.sleep(forTimeInterval: 0.2)
+                expect(answers) == [false]
+            }
+        }
+
         describe("flushAndWait") {
             /// Answers inside the call, because `flushAndWait` blocks the test thread.
             func answer(_ mock: EventReportingMock, with delivered: Bool) {
