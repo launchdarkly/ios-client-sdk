@@ -1360,12 +1360,18 @@ final class LDClientSpec: QuickSpec {
                                 expect(testContext.eventReporterMock.isOnline) == true
                                 expect(testContext.flagSynchronizerMock.isOnline) == false
                             }
-                            it("tries to deliver what it has before the process is suspended") {
+                            it("tries to deliver what it has before the process is suspended, where it is suspended") {
                                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
                                 testContext.start()
                                 NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
 
+                                #if os(iOS) || os(tvOS)
                                 expect(testContext.eventReporterMock.flushReportingOutcomeCallCount).toEventually(equal(1))
+                                #else
+                                // macOS posts this on every loss of focus, which suspends nothing.
+                                expect(testContext.subject.runMode).toEventually(equal(LDClientRunMode.background))
+                                expect(testContext.eventReporterMock.flushReportingOutcomeCallCount) == 0
+                                #endif
                             }
                             it("background updates enabled") {
                                 let testContext = TestContext(startOnline: true)
@@ -1678,6 +1684,25 @@ final class LDClientSpec: QuickSpec {
                 testContext.subject.close()
 
                 expect(testContext.subject.flushAndWait(timeout: 1.0)) == false
+            }
+
+            it("gives every environment the whole budget rather than what the one before it left") {
+                let testContext = TestContext()
+                try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
+                testContext.start()
+
+                // Each takes most of the budget, so delivering them one after another would leave the second
+                // environment past the deadline before its own delivery had begun.
+                for environment in ["alternate", LDConfig.Constants.primaryEnvironmentName] {
+                    let reporter = LDClient.get(environment: environment)?.eventReporter as? EventReportingMock
+                    expect(reporter).toNot(beNil())
+                    reporter?.flushReportingOutcomeCallback = { [weak reporter] in
+                        let completion = reporter?.flushReportingOutcomeReceivedCompletion
+                        DispatchQueue.global().asyncAfter(deadline: .now() + 0.3) { completion?(true) }
+                    }
+                }
+
+                expect(testContext.subject.flushAndWait(timeout: 0.5)) == true
             }
         }
     }

@@ -146,7 +146,61 @@ final class EventReporterSpec: QuickSpec {
                 expect(delivered).toEventually(beFalse(), timeout: .seconds(10))
             }
 
-            it("reports true to a pending flush when the in-flight delivery is permanently refused") {
+            it("reports false when LaunchDarkly permanently refuses the events, and goes offline") {
+                testContext = TestContext()
+                let unauthorized = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
+                                                   statusCode: HTTPURLResponse.StatusCodes.unauthorized,
+                                                   httpVersion: DarklyServiceMock.Constants.httpVersion,
+                                                   headerFields: nil)
+                testContext.serviceMock.stubbedEventResponse = (nil, unauthorized, nil, nil)
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.eventReporter.isOnline) == false
+            }
+
+            it("reports false when no event could be serialized") {
+                testContext = TestContext()
+                testContext.eventReporter.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
+                testContext.eventReporter.isOnline = true
+
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+            }
+
+            it("reports false when some events could not be serialized, though the rest were accepted") {
+                testContext = TestContext()
+                testContext.eventReporter.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
+                testContext.eventReporter.record(CustomEvent(key: "kept", context: LDContext.stub(), metricValue: 1.0))
+                testContext.eventReporter.isOnline = true
+
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+            }
+
+            it("reports false to a pending flush when the in-flight delivery is permanently refused") {
                 testContext = TestContext()
                 let unauthorized = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
                                                    statusCode: HTTPURLResponse.StatusCodes.unauthorized,
@@ -167,7 +221,7 @@ final class EventReporterSpec: QuickSpec {
                 testContext.serviceMock.holdsEventCompletions = false
                 testContext.serviceMock.releaseHeldEventCompletions()
 
-                expect(delivered).toEventually(beTrue())
+                expect(delivered).toEventually(beFalse())
                 expect(testContext.eventReporter.isOnline) == false
             }
         }

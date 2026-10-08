@@ -20,13 +20,18 @@ extension LDClient {
      Sends any currently queued events to LaunchDarkly and waits up to `timeout` seconds for the result.
 
      The timeout bounds the wait, not the delivery: an in-flight request is left to finish. Multiple environments
-     share one budget.
+     deliver at the same time and share the one budget, so the call takes no longer for several of them than for one.
 
      This is not a crash-time mechanism. It is safe to call from the main thread, but keep the budget well below
      15 seconds there.
 
      - parameter timeout: How long to wait, in seconds.
-     - returns: Whether the pending events left the SDK's hands within the budget.
+     - returns: `true` if LaunchDarkly accepted the events, or there were none to send. `false` if the timeout expired
+       first, the client is offline or closed, or any of the events were lost: refused by LaunchDarkly, still failing
+       after one retry, or unable to be serialized. Lost events are not kept for a later flush, so calling this again
+       does not resend them. A refusal also stops event delivery until the client is next set online, and until then
+       this returns `false` even with nothing to send. A `false` because the timeout expired does not mean the events
+       were not sent: the delivery is left running, and may still arrive.
      */
     @discardableResult
     public func flushAndWait(timeout: TimeInterval) -> Bool {
@@ -39,11 +44,16 @@ extension LDClient {
             os_log("%s called on a closed client", log: config.logger, type: .debug, self.typeName(and: #function))
             return false
         }
-        let deadline = Date().addingTimeInterval(max(0, timeout))
+        let deadline = DispatchTime.now() + max(0, timeout)
+        // Every environment is started before any of them is waited on. Each has its own event reporter, so waiting on
+        // one before starting the next would spend the caller's budget on deliveries that could have been running all
+        // along, and leave the last environment with none of it.
+        let deliveries = clients.map { $0.startFlush() }
         var delivered = true
-        for client in clients {
-            let remaining = max(0, deadline.timeIntervalSinceNow)
-            delivered = client.internalFlushAndWait(timeout: remaining) && delivered
+        for delivery in deliveries {
+            // Each wait gets what is left of the one budget rather than a fresh copy of it, so that the timeout the
+            // caller asked for is the time this call can take.
+            delivered = delivery.outcome(waitingUntil: deadline) && delivered
         }
         return delivered
     }
@@ -52,28 +62,37 @@ extension LDClient {
         eventReporter.flush(completion: nil)
     }
 
-    /// Neither main (callers may be blocked on it) nor the reporter's queue, so the wait cannot deadlock.
-    private static let flushWaitQueue = DispatchQueue(label: "com.launchdarkly.flushWait", qos: .userInitiated)
+    private func startFlush() -> FlushDelivery {
+        let delivery = FlushDelivery()
+        eventReporter.flushReportingOutcome { delivery.finish($0) }
+        return delivery
+    }
+}
 
-    private func internalFlushAndWait(timeout: TimeInterval) -> Bool {
-        let timeout = max(0, timeout)
-        let finished = DispatchSemaphore(value: 0)
-        var delivered = false
-        TimeoutExecutor.run(
-            timeout: timeout,
-            queue: LDClient.flushWaitQueue,
-            operation: { done in
-                self.eventReporter.flushReportingOutcome(completion: done)
-            },
-            timeoutValue: false,
-            completion: { result in
-                delivered = result
-                finished.signal()
-            }
-        )
-        // A little past the budget, so TimeoutExecutor's timer decides the outcome.
-        let answered = finished.wait(timeout: .now() + timeout + 0.25)
-        // `delivered` is only safe to read once the semaphore was signaled.
-        return answered == .success && delivered
+/// One environment's delivery, started and not yet waited on.
+private final class FlushDelivery {
+    private let finished = DispatchSemaphore(value: 0)
+    private let lock = UnfairLock()
+    /// Only to be used while holding `lock`, because the delivery answers from whichever thread it ended on.
+    private var delivered = false
+
+    func finish(_ result: Bool) {
+        lock.lock()
+        delivered = result
+        lock.unlock()
+        finished.signal()
+    }
+
+    /// How the delivery went, or `false` if it has not answered by `deadline`.
+    ///
+    /// A delivery still running when the caller stops waiting is left to finish rather than canceled: its events are
+    /// already in flight, so abandoning it would only make losing them certain.
+    func outcome(waitingUntil deadline: DispatchTime) -> Bool {
+        guard finished.wait(timeout: deadline) == .success
+        else { return false }
+
+        lock.lock()
+        defer { lock.unlock() }
+        return delivered
     }
 }

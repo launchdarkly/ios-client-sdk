@@ -2,7 +2,7 @@ import Foundation
 import OSLog
 
 typealias EventSyncCompleteClosure = ((SynchronizingError?) -> Void)
-/// Reports whether the events a flush covered left the SDK's hands.
+/// Reports whether LaunchDarkly accepted every event a flush covered.
 typealias FlushOutcomeClosure = (Bool) -> Void
 // sourcery: autoMockable
 protocol EventReporting {
@@ -16,8 +16,12 @@ protocol EventReporting {
     func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)
     func flush(completion: CompletionClosure?)
 
-    /// Like `flush`. Reports `true` if events were delivered, permanently refused, or absent; `false` if offline or
-    /// delivery failed.
+    /// Like `flush`. Reports `true` if LaunchDarkly accepted the events, or there were none to send. Reports `false` if
+    /// the reporter is offline, or any of the events were lost: refused, still failing after the retry, or unable to
+    /// be serialized.
+    ///
+    /// The completion, like `flush`'s, runs on the reporter's queue, which every recorded event also waits on. Keep it
+    /// short, and do not record events from it: that would wait on the queue it is already running on.
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure)
 }
 
@@ -212,33 +216,31 @@ class EventReporter: EventReporting {
         let completions = pendingFlushCompletions
         hasPendingFlush = false
         pendingFlushCompletions = []
-        // A terminal response takes the reporter offline after settling; with nothing left, that is not a failure.
-        let nothingPending = eventStore.isEmpty && !contextSummarizer.hasLoggedRequests
         reportEvents { result in
-            completions.forEach { $0(delivered && (result || nothingPending)) }
+            completions.forEach { $0(delivered && result) }
         }
     }
 
     private func publish(_ events: [Event], _ payloadId: String, _ completion: FlushOutcomeClosure?) {
-        guard let eventData = encode(events)
+        guard let (eventData, isComplete) = encode(events)
         else {
             os_log("%s Failed to serialize event(s) for publication: %s", log: service.config.logger, type: .error, typeName(and: #function), String(describing: events))
-            // Encoding is deterministic, so no retry would succeed.
-            completion?(true)
+            // Encoding is deterministic, so no retry would succeed; the events are lost.
+            completion?(false)
             return
         }
         self.service.publishEventData(eventData, payloadId) { response in
             switch self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: false) {
-            case .settled:
-                completion?(true)
-            case .dropped:
+            case .accepted:
+                completion?(isComplete)
+            case .refused, .dropped:
                 completion?(false)
             case .retryable:
                 os_log("%s Retrying event post after delay.", log: self.service.config.logger, type: .debug, self.typeName(and: #function))
                 DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.0) {
                     self.service.publishEventData(eventData, payloadId) { response in
                         let outcome = self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: true)
-                        completion?(outcome == .settled)
+                        completion?(outcome == .accepted && isComplete)
                     }
                 }
             }
@@ -246,8 +248,9 @@ class EventReporter: EventReporting {
     }
 
     private enum DeliveryOutcome {
-        /// Accepted or permanently refused.
-        case settled
+        case accepted
+        /// Refused with a status that no retry would change. The events are dropped.
+        case refused
         case retryable
         /// Failed with no retry left.
         case dropped
@@ -256,12 +259,13 @@ class EventReporter: EventReporting {
     /// Encodes a run of events as the array the events endpoint takes.
     ///
     /// If the run cannot be encoded as a whole, each event is retried on its own. Events that fail are dropped rather
-    /// than put back, because encoding is deterministic and they would fail every later flush too.
-    private func encode(_ events: [Event]) -> Data? {
+    /// than put back, because encoding is deterministic and they would fail every later flush too. `isComplete` is
+    /// false when any were dropped.
+    private func encode(_ events: [Event]) -> (data: Data, isComplete: Bool)? {
         guard encoding != .codable
         else {
             if let data = try? encoder.encode(events) {
-                return data
+                return (data, true)
             }
             return encodeSkippingFailures(events, using: { try encoder.encode($0) })
         }
@@ -274,7 +278,7 @@ class EventReporter: EventReporting {
         })
     }
 
-    private func encodeSkippingFailures(_ events: [Event], using encodeOne: (Event) throws -> Data) -> Data? {
+    private func encodeSkippingFailures(_ events: [Event], using encodeOne: (Event) throws -> Data) -> (data: Data, isComplete: Bool)? {
         var payload = Data([UInt8(ascii: "[")])
         var written = 0
         for event in events {
@@ -298,7 +302,7 @@ class EventReporter: EventReporting {
         guard written > 0
         else { return nil }
         payload.append(UInt8(ascii: "]"))
-        return payload
+        return (payload, written == events.count)
     }
 
     private enum EventEncodingError: Error {
@@ -314,14 +318,14 @@ class EventReporter: EventReporting {
 
             os_log("%s Completed sending %d event(s)", log: service.config.logger, type: .debug, typeName(and: #function), sentEvents)
             self.reportSyncComplete(nil)
-            return .settled
+            return .accepted
         }
 
         if let statusCode = response?.statusCode, HTTPURLResponse.StatusCodes.isTerminalStatusCode(statusCode) {
             os_log("%s dropping events due to non-retriable response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: response))
             isOnline = false
             self.reportSyncComplete(.response(response))
-            return .settled
+            return .refused
         }
 
         os_log("%s Sending events failed with error: %s response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: response))

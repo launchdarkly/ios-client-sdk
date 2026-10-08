@@ -263,8 +263,10 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
-        // A backgrounded process is suspended once idle, so deliver inside an activity assertion.
-        BackgroundActivity.run(reason: "LaunchDarkly event delivery") { [weak self] finished in
+        // A backgrounded process is suspended once idle, so deliver inside an activity assertion. Only where suspension
+        // is real: macOS posts this notification whenever the application loses focus, and never suspends it for that.
+        #if os(iOS) || os(tvOS)
+        backgroundDelivery.run { [weak self] finished in
             guard let self = self
             else {
                 finished()
@@ -277,6 +279,7 @@ public class LDClient {
                 finished()
             }
         }
+        #endif
         Thread.performOnMain {
             runMode = .background
         }
@@ -288,6 +291,9 @@ public class LDClient {
             runMode = .foreground
         }
     }
+
+    /// One assertion per client, however many times the application is backgrounded while a delivery is running.
+    private let backgroundDelivery = BackgroundActivity(reason: "LaunchDarkly event delivery")
 
     let config: LDConfig
     /// Identifies this client's environment to a hook, without handing it the mobile key that identifies the
