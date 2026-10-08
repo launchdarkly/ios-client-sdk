@@ -92,7 +92,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
     }
 
     // Used for parsing SynchronizingError in LDClient.process
-    static func synchronizingErrorCheck(synchronizingError: SynchronizingError, connectionInformation: ConnectionInformation) -> ConnectionInformation {
+    static func recordSynchronizingError(_ synchronizingError: SynchronizingError, streamingMode: LDStreamingMode, connectionInformation: ConnectionInformation) -> ConnectionInformation {
         var connectionInformationVar = connectionInformation
         if synchronizingError.isClientUnauthorized {
             connectionInformationVar.lastConnectionFailureReason = .unauthorized
@@ -112,18 +112,14 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
         }
         connectionInformationVar.lastFailedConnection = Date()
         if synchronizingError.isTerminal {
-            connectionInformationVar.currentConnectionMode = .offline
+            connectionInformationVar.currentConnectionMode = (streamingMode == .streaming) ? .establishingStreamingConnection : .polling
         }
         return connectionInformationVar
     }
 
     // Reconciles the connection mode and flag validity after a successful sync.
-    static func checkEstablishingStreaming(connectionInformation: ConnectionInformation, streamingMode: LDStreamingMode) -> ConnectionInformation {
+    static func checkEstablishingStreaming(connectionInformation: ConnectionInformation) -> ConnectionInformation {
         var connectionInformationVar = connectionInformation
-        // Recover a terminal-error offline into the connecting mode. The checks below finish the transition.
-        if connectionInformationVar.currentConnectionMode == .offline {
-            connectionInformationVar.currentConnectionMode = (streamingMode == .streaming) ? .establishingStreamingConnection : .polling
-        }
         if connectionInformationVar.currentConnectionMode == .establishingStreamingConnection {
             connectionInformationVar.currentConnectionMode = .streaming
             connectionInformationVar.lastKnownFlagValidity = nil

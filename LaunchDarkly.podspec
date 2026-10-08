@@ -2,7 +2,7 @@
 Pod::Spec.new do |ld|
 
   ld.name         = "LaunchDarkly"
-  ld.version      = "11.6.2" # x-release-please-version
+  ld.version      = "11.7.0" # x-release-please-version
   ld.summary      = "iOS SDK for LaunchDarkly"
 
   ld.description  = <<-DESC
@@ -38,6 +38,6 @@ Pod::Spec.new do |ld|
   ld.swift_version = '5.0'
 
   ld.subspec 'Core' do |es|
-    es.dependency 'LDSwiftEventSource', '3.3.1'
+    es.dependency 'LDSwiftEventSource', '3.4.0'
   end
 end

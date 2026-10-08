@@ -676,37 +676,28 @@ public class LDClient {
         case let .flagCollection((flagCollection, etag)):
             os_log("%s: got flag collection with %d flags.", log: config.logger, type: .debug, typeName(and: #function), flagCollection.flags.count)
             let oldStoredItems = flagStore.storedItems
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.replaceStore(newStoredItems: StoredItems(items: flagCollection.flags))
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: etag)
         case let .patch(featureFlag):
             let oldStoredItems = flagStore.storedItems
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.updateStore(updatedFlag: featureFlag)
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: nil)
         case let .delete(deleteResponse):
             let oldStoredItems = flagStore.storedItems
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.deleteFlag(deleteResponse: deleteResponse)
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: nil)
         case .upToDate:
-            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation, streamingMode: flagSynchronizer.streamingMode)
+            connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagChangeNotifier.notifyUnchanged()
             // If a polling request receives a 304 not modified, we still need
             // to update the "last updated" field of the cache so subsequent
             // restarts will honor the appropriate polling delay.
             self.updateCacheFreshness(context: self.context)
         case .error(let synchronizingError):
-            process(synchronizingError: synchronizingError, logPrefix: typeName(and: #function))
-        }
-    }
-
-    private func process(synchronizingError: SynchronizingError, logPrefix: String) {
-        connectionInformation = ConnectionInformation.synchronizingErrorCheck(synchronizingError: synchronizingError, connectionInformation: connectionInformation)
-        if synchronizingError.isTerminal {
-            os_log("%s data source terminal error; stopping flag delivery", log: config.logger, type: .debug, logPrefix)
-            flagSynchronizer.isOnline = false
-            initialized = true
+            connectionInformation = ConnectionInformation.recordSynchronizingError(synchronizingError, streamingMode: flagSynchronizer.streamingMode, connectionInformation: connectionInformation)
         }
     }
 
@@ -812,11 +803,14 @@ public class LDClient {
         eventReporter.flush(completion: nil)
     }
 
-    private func onEventSyncComplete(result: SynchronizingError?) {
+    /// Static, and over a logger rather than a client, so that the event reporter can be given it while the client
+    /// that owns the reporter is still being built.
+    private static func logEventSyncComplete(_ result: SynchronizingError?, _ logger: OSLog) {
+        let name = "\(String(describing: LDClient.self)).onEventSyncComplete(result:)"
         if let synchronizingError = result {
-            os_log("%s result: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: synchronizingError))
+            os_log("%s result: %s", log: logger, type: .debug, name, String(describing: synchronizingError))
         } else {
-            os_log("%s result: success", log: config.logger, type: .debug, typeName(and: #function))
+            os_log("%s result: success", log: logger, type: .debug, name)
         }
     }
 
@@ -1048,7 +1042,12 @@ public class LDClient {
 
         service = self.serviceFactory.makeDarklyServiceProvider(config: config, context: context, envReporter: environmentReporter)
         diagnosticReporter = self.serviceFactory.makeDiagnosticReporter(config: config, service: service, environmentReporter: environmentReporter)
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service)
+        // Reports over the logger rather than over this client, which is not usable until every stored property
+        // below has a value, so that the reporter can be built once rather than built and replaced.
+        let logger = configuration.logger
+        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service) { result in
+            LDClient.logEventSyncComplete(result, logger)
+        }
         connectionInformation = self.serviceFactory.makeConnectionInformation()
 
         let cachedData = flagCache.getCachedData(cacheKey: context.fullyQualifiedHashedKey(), contextHash: context.contextHash())
@@ -1067,14 +1066,9 @@ public class LDClient {
 
         NotificationCenter.default.addObserver(self, selector: #selector(didCloseEventSource), name: Notification.Name(FlagSynchronizer.Constants.didCloseEventSourceName), object: nil)
 
-        eventReporter = self.serviceFactory.makeEventReporter(config: configuration, service: service, onSyncComplete: onEventSyncComplete)
         service.resetFlagResponseCache(etag: cachedData.etag)
-        flagSynchronizer = self.serviceFactory.makeFlagSynchronizer(streamingMode: config.allowStreamingMode ? config.streamingMode : .polling,
-                                                                    pollingInterval: config.flagPollingInterval(runMode: runMode),
-                                                                    useReport: config.useReport,
-                                                                    lastUpdated: cachedData.lastUpdated,
-                                                                    service: service,
-                                                                    onSyncComplete: onFlagSyncComplete)
+        // Reports to this client, so it could not be given at construction: `self` is only usable from here.
+        flagSynchronizer.onSyncComplete = onFlagSyncComplete
 
         if let cachedFlags = cachedData.items, !cachedFlags.isEmpty {
             flagStore.replaceStore(newStoredItems: cachedFlags)
