@@ -17,7 +17,8 @@ protocol EventReporting {
     func flush(completion: CompletionClosure?)
 
     /// Like `flush`. Reports `true` if LaunchDarkly accepted the pending batches, or there were none to send. Reports
-    /// `false` if the reporter is offline, a batch was refused for good, or a retryable failure left batches on disk.
+    /// `false` if the reporter is offline, a batch was refused for good, a retryable failure left batches on disk, or
+    /// an event the SDK had accepted could not be kept to send at all.
     ///
     /// The completion runs on the reporter's delivery queue. Keep it short: a long one holds up the deliveries behind
     /// it, though it cannot block an evaluation, which records under a lock rather than on that queue.
@@ -106,12 +107,21 @@ class EventReporter: EventReporting {
     let service: DarklyServiceProvider
     let store: EventStoring
 
-    /// Guards the last response date.
+    /// Guards the last response date and the record of what has been lost.
     private let stateLock = UnfairLock()
     /// Only to be used while holding `pendingLock`.
     private(set) var contextSummarizer: ContextSummarizer
     /// Only to be used while holding `stateLock`.
     private var responseDate: Date
+
+    /// Whether events the SDK accepted were dropped for good, cleared once a caller who hears an outcome has been
+    /// told so. Only to be used while holding `stateLock`.
+    ///
+    /// A batch LaunchDarkly refuses in a way that may pass is kept and retried, so it is not a loss. What is lost is
+    /// what the store never received: an event or a summary that could not be serialized when it was committed, or
+    /// that serialized too large to store. A delivery that finds nothing to send cannot tell those apart from events
+    /// that arrived, so without this it would report success for them.
+    private var eventsLostSinceLastAnswer = false
 
     /// Held for the whole of a commit, so that only one runs at a time.
     ///
@@ -300,6 +310,24 @@ class EventReporter: EventReporting {
         service.diagnosticCache?.incrementDroppedEventCount()
     }
 
+    /// Records the loss of an event the SDK accepted and then could not keep, which no later attempt recovers.
+    private func reportLost() {
+        os_log("%s dropping an event the store would not take", log: service.config.logger, type: .error, typeName(and: #function))
+        service.diagnosticCache?.incrementDroppedEventCount()
+        stateLock.lock()
+        eventsLostSinceLastAnswer = true
+        stateLock.unlock()
+    }
+
+    /// Whether anything has been lost since the last caller was told, which that caller is now the one to hear about.
+    private func takeEventsLost() -> Bool {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        let lost = eventsLostSinceLastAnswer
+        eventsLostSinceLastAnswer = false
+        return lost
+    }
+
     /// Commits at a commit point, on the caller's thread or off it as the application asked.
     ///
     /// Committing on the caller's thread is what lets `track` promise its event is on disk by the time it returns.
@@ -399,9 +427,13 @@ class EventReporter: EventReporting {
     private func stage(_ run: [Event]) {
         for event in run {
             guard let encoded = encode(event)
-            else { continue }
+            else {
+                reportLost()
+                continue
+            }
+            // Capacity is bypassed here, so what is left is a frame too large to store, which no later attempt fixes.
             if !store.stageReserved(encoded) {
-                reportDropped()
+                reportLost()
             }
         }
     }
@@ -427,11 +459,14 @@ class EventReporter: EventReporting {
         for summary in summaries {
             let summaryEvent = SummaryEvent(flagRequestTracker: summary.tracker, context: summary.context)
             guard let encoded = encode(summaryEvent)
-            else { continue }
+            else {
+                reportLost()
+                continue
+            }
             // Summaries are an aggregate of evaluations that were already counted, so refusing one for capacity would
             // lose evaluations the SDK promised to report rather than shed new load.
             if !store.stage(encoded, bypassingCapacity: true) {
-                reportDropped()
+                reportLost()
             }
         }
     }
@@ -479,7 +514,12 @@ class EventReporter: EventReporting {
         // returns, even when delivery cannot run because the client is offline.
         commitAtCommitPoint()
         deliveryQueue.async {
-            self.reportEvents(completion: completion)
+            self.reportEvents { delivered in
+                // Committing first is what makes this the answer for everything recorded before the call: whatever
+                // could not be kept has been counted by now. Cleared as it is reported, so that the next caller is not
+                // told again about a loss this answer has already accounted for.
+                completion(delivered && !self.takeEventsLost())
+            }
         }
     }
 

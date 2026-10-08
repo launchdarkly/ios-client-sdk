@@ -1409,6 +1409,50 @@ extension EventReporterSpec {
                 expect(store.pendingEventCount) == 0
             }
 
+            it("reports false when an event could not be serialized, though the rest were accepted") {
+                testContext = TestContext()
+                testContext.eventReporter.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+
+                // Told once, to the caller who was there to hear it.
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+            }
+
+            it("reports false when an event serialized too large to store") {
+                testContext = TestContext()
+                // Larger than a log frame holds, so the store refuses it however much room is left.
+                let oversized = String(repeating: "x", count: EventLogFormat.maxFrameSize)
+                testContext.eventReporter.record(CustomEvent(key: oversized, context: LDContext.stub()))
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                var delivered: Bool?
+                waitUntil { done in
+                    testContext.eventReporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                // The event beside it still went.
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+            }
+
             it("reports false when a retryable failure leaves the batch on disk") {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
