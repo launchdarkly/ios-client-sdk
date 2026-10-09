@@ -13,7 +13,12 @@ protocol EventReporting {
 
     func record(_ event: Event)
     // swiftlint:disable:next function_parameter_count
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey,
+                                    value: LDValue,
+                                    defaultValue: LDValue,
+                                    featureFlag: FeatureFlag?,
+                                    context: LDContext,
+                                    includeReason: Bool)
     func flush(completion: CompletionClosure?)
 
     /// Like `flush`. Reports `true` if LaunchDarkly accepted the pending batches, or there were none to send. Reports
@@ -47,7 +52,12 @@ class NullEventReporter: EventReporting {
     func record(_ event: Event) {
     }
 
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool) {
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey,
+                                    value: LDValue,
+                                    defaultValue: LDValue,
+                                    featureFlag: FeatureFlag?,
+                                    context: LDContext,
+                                    includeReason: Bool) {
     }
 
     func flush(completion: CompletionClosure?) {
@@ -268,7 +278,12 @@ class EventReporter: EventReporting {
     }
 
     // swiftlint:disable:next function_parameter_count
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool) {
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey,
+                                    value: LDValue,
+                                    defaultValue: LDValue,
+                                    featureFlag: FeatureFlag?,
+                                    context: LDContext,
+                                    includeReason: Bool) {
         let recordingFeatureEvent = featureFlag?.trackEvents == true
         let recordingDebugEvent = featureFlag?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
         // Built before the lock is taken, so that the critical section is only the writes.
