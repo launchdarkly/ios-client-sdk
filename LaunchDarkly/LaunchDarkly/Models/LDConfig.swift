@@ -26,6 +26,9 @@ public enum LDStreamingMode {
 /// disk is what closes that gap: they are delivered on a later launch instead of being lost.
 @objc(LDEventPersistence) public enum EventPersistence: Int {
     /// Events are kept in memory only, and nothing survives the process ending.
+    ///
+    /// Events an earlier launch wrote to disk with persistence turned on are left there, and delivered by the next
+    /// launch that has it turned on.
     case disabled
     /// Events are written to disk, off the thread that recorded them.
     ///

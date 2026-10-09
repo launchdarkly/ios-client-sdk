@@ -57,6 +57,10 @@ final class LDConfigSpec: XCTestCase {
          ("wrapper version", Constants.wrapperVersion, { c, v in c.wrapperVersion = v as! String? }),
          ("additional headers", Constants.additionalHeaders, { c, v in c.additionalHeaders = v as! [String: String]})]
 
+    func testEventPersistenceIsOffUnlessTheApplicationAsksForIt() {
+        XCTAssertEqual(LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled).eventPersistence, .disabled)
+    }
+
     func testInitDefault() {
         let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
         XCTAssertEqual(config.mobileKey, LDConfig.Constants.mockMobileKey)

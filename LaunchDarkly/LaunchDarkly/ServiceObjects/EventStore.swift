@@ -118,6 +118,13 @@ final class EventStore: EventStoring {
     /// Whether events are being written to disk, which is what the application asked for until a write fails and the
     /// store gives up on persistence for the rest of the session.
     private var persistEvents = true
+    /// Whether what is on the disk is this store's to recover, list, and deliver.
+    ///
+    /// False only where the application did not ask for persistence. What a run with persistence turned on left behind
+    /// waits for the next run that has it turned on, rather than being delivered by a run that was told to keep
+    /// events off the disk. A store that gave up on the disk partway through a session still reads it, since the
+    /// batches there are its own.
+    private let readsDisk: Bool
     /// Whether a commit is already on its way, so that a burst of recordings queues one write rather than one each.
     private var isCommitScheduled = false
 
@@ -167,10 +174,9 @@ final class EventStore: EventStoring {
         self.readFile = readFile
         self.writeLog = writeLog
         // An application that has not asked for persistence gets the same store running the same way it runs once a
-        // write has failed: events are held, delivered, and lost only if the process dies. Batches a run with
-        // persistence turned on left behind are still recovered and delivered, which is why this sets the runtime
-        // flag rather than skipping the store's reads.
+        // write has failed: events are held, delivered, and lost only if the process dies.
         self.persistEvents = persistEvents
+        self.readsDisk = persistEvents
     }
 
     /// The directory the store for a mobile key belongs in, or nil where the platform gave us nowhere to write.
@@ -369,11 +375,31 @@ final class EventStore: EventStoring {
         ioLock.lock()
         defer { ioLock.unlock() }
 
+        var batches = readsDisk ? batchesOnDisk() : []
+
+        // After the files, since anything held in memory was closed by this run and so is newer than whatever a
+        // previous run left on the disk.
+        batches.append(contentsOf: inMemoryBatches.map {
+            EventBatch(payloadId: $0.payloadId, eventCount: $0.eventCount)
+        })
+
+        bufferLock.lock()
+        closedEvents = batches.reduce(0) { $0 + $1.eventCount }
+        bufferLock.unlock()
+
+        return batches
+    }
+
+    /// The batch files in the directory, oldest first.
+    ///
+    /// Requires `ioLock`.
+    private func batchesOnDisk() -> [EventBatch] {
+        ioLock.assertOwned()
         let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
                                                                     includingPropertiesForKeys: [.contentModificationDateKey],
                                                                     options: [.skipsHiddenFiles])) ?? []
 
-        var batches = contents
+        let batches = contents
             .filter { $0.lastPathComponent.hasPrefix(EventStore.batchPrefix) }
             .compactMap { file -> (EventBatch, Date)? in
                 let payloadId = String(file.lastPathComponent.dropFirst(EventStore.batchPrefix.count))
@@ -391,16 +417,6 @@ final class EventStore: EventStoring {
         // would otherwise keep its count for the rest of the session.
         let listed = Set(batches.map { $0.payloadId })
         eventCounts = eventCounts.filter { listed.contains($0.key) }
-
-        // After the files, since anything held in memory was closed by this run and so is newer than whatever a
-        // previous run left on the disk.
-        batches.append(contentsOf: inMemoryBatches.map {
-            EventBatch(payloadId: $0.payloadId, eventCount: $0.eventCount)
-        })
-
-        bufferLock.lock()
-        closedEvents = batches.reduce(0) { $0 + $1.eventCount }
-        bufferLock.unlock()
 
         return batches
     }
@@ -474,7 +490,7 @@ final class EventStore: EventStoring {
     /// Requires `ioLock`. Does its work once per store: after that, `current` is a log this run opened.
     private func recoverInterruptedLogOnce() {
         ioLock.assertOwned()
-        guard !hasRecoveredInterruptedLog
+        guard readsDisk, !hasRecoveredInterruptedLog
         else { return }
         hasRecoveredInterruptedLog = true
 
@@ -845,6 +861,9 @@ extension EventStore {
 
         ioLock.lock()
         defer { ioLock.unlock() }
+
+        guard readsDisk
+        else { return [] }
 
         let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
                                                                     includingPropertiesForKeys: nil,

@@ -40,6 +40,30 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingEventCount) == 1
                 expect(try store.body(of: batch)) == Data("[{\"kind\":\"custom\",\"key\":\"held\"}]".utf8)
             }
+
+            it("leaves alone what a run that did persist left behind, for the next run that persists") {
+                let persisting = EventStore.temporary()
+                defer { persisting.deleteEverything() }
+                _ = persisting.stage(EventStoreSpec.payload("closed"))
+                persisting.commit()
+                expect(persisting.closeBatch()).toNot(beNil())
+                _ = persisting.stage(EventStoreSpec.payload("open"))
+                persisting.commit()
+
+                let withoutPersistence = EventStore(directory: persisting.directory, capacity: 100, persistEvents: false, logger: .disabled)
+                withoutPersistence.recoverInterruptedLog()
+                expect(withoutPersistence.pendingBatches()).to(beEmpty())
+                expect(withoutPersistence.pendingEventCount) == 0
+
+                _ = withoutPersistence.stage(EventStoreSpec.payload("in-memory"))
+                let own = withoutPersistence.closeBatch()
+                expect(withoutPersistence.pendingBatches().map(\.payloadId)) == [own?.payloadId]
+
+                let persistingAgain = EventStoreSpec.reader(sharing: persisting)
+                persistingAgain.recoverInterruptedLog()
+                let bodies = persistingAgain.pendingBatches().map { EventStoreSpec.keys(ofBody: try? persistingAgain.body(of: $0) ?? nil) }
+                expect(bodies) == [["closed"], ["open"]]
+            }
         }
     }
 
@@ -415,6 +439,23 @@ final class EventStoreSpec: QuickSpec {
 
                 expect(EventStoreSpec.keys(of: store)) == ["before", "after"]
                 expect(store.pendingEventCount) == 2
+            }
+
+            it("treats a batch something else already removed as nothing to send, and removing it again as harmless") {
+                _ = store.stage(EventStoreSpec.payload("delivered"))
+                let batch = store.closeBatch()!
+                _ = store.stage(EventStoreSpec.payload("still-pending"))
+                let other = store.closeBatch()!
+
+                // Delivered through a store reading the same directory, as the next run would.
+                EventStoreSpec.reader(sharing: store).remove(batch)
+
+                // Nothing, which a delivery takes as already delivered rather than as a failure to retry.
+                expect(try store.body(of: batch)).to(beNil())
+                store.remove(batch)
+
+                expect(store.pendingBatches()) == [other]
+                expect(store.pendingEventCount) == 1
             }
         }
     }

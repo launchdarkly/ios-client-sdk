@@ -103,6 +103,19 @@ final class EventReporterSpec: QuickSpec {
             return recorded
         }
 
+        /// Flushes and returns what the flush answered.
+        func flushOutcome() -> Bool? {
+            var delivered: Bool?
+            // Long enough for a refused post and its retry a second later.
+            waitUntil(timeout: .seconds(10)) { done in
+                eventReporter.flushReportingOutcome { result in
+                    delivered = result
+                    done()
+                }
+            }
+            return delivered
+        }
+
         func cleanUp() {
             eventReporter.isOnline = false
             store.deleteEverything()
@@ -120,6 +133,7 @@ final class EventReporterSpec: QuickSpec {
         durabilitySpec()
         commitSpec()
         flushReportingOutcomeSpec()
+        outageSpec()
     }
 
     private func initSpec() {
@@ -1185,6 +1199,120 @@ extension EventReporterSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
                 expect(testContext.store.pendingEventCount) == 0
             }
+
+            it("writes a deferred track while a delivery holds the delivery queue") {
+                testContext = TestContext(eventPersistence: .deferred)
+                // Stands in for a post to a network that does not answer, which holds the queue for as long as its
+                // timeouts allow.
+                let released = DispatchSemaphore(value: 0)
+                defer { released.signal() }
+                testContext.eventReporter.occupyQueue(until: released)
+
+                testContext.eventReporter.record(CustomEvent(key: "tracked", context: testContext.context))
+
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]))
+            }
+
+            it("has written everything by the time a flush returns, even while a delivery holds the delivery queue") {
+                testContext = TestContext(lastEventResponseDate: Date())
+                let released = DispatchSemaphore(value: 0)
+                defer { released.signal() }
+                testContext.eventReporter.occupyQueue(until: released)
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+
+                // What `LDClient.close()` relies on: the write is the caller's, so a delivery that never finishes
+                // cannot keep it from happening.
+                testContext.eventReporter.flush(completion: nil)
+
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["feature", "summary"]
+            }
+
+            it("shares writes between tracks recorded at once, and has each on disk when recording it returns") {
+                let trackers = 8
+                let writesLock = NSLock()
+                var writes = 0
+                // A slow disk, so that the other tracks arrive while a write is under way.
+                let store = EventStore.temporary(writeLog: { descriptor, bytes in
+                    writesLock.lock()
+                    writes += 1
+                    writesLock.unlock()
+                    Thread.sleep(forTimeInterval: 0.05)
+                    return EventStore.writeAll(descriptor, bytes)
+                })
+                testContext = TestContext(store: store, eventCapacity: 100)
+                let reporter = testContext.eventReporter!
+                let context = testContext.context!
+
+                let start = DispatchSemaphore(value: 0)
+                let finished = DispatchGroup()
+                let missingLock = NSLock()
+                var missingOnReturn: [String] = []
+                for index in 0..<trackers {
+                    let key = "event-\(index)"
+                    finished.enter()
+                    Thread {
+                        start.wait()
+                        reporter.record(CustomEvent(key: key, context: context))
+                        if !eventsLeftOnDisk().compactMap({ $0.keyField }).contains(key) {
+                            missingLock.lock()
+                            missingOnReturn.append(key)
+                            missingLock.unlock()
+                        }
+                        finished.leave()
+                    }.start()
+                }
+                for _ in 0..<trackers {
+                    start.signal()
+                }
+                expect(finished.wait(timeout: .now() + 10)) == .success
+
+                expect(missingOnReturn).to(beEmpty())
+                // One write is the log's header. A write per track would be one more for each of them.
+                writesLock.lock()
+                let totalWrites = writes
+                writesLock.unlock()
+                expect(totalWrites) < trackers + 1
+            }
+
+            it("tries a batch a previous run left once at start, with its retry, and then waits while it is still refused") {
+                testContext = TestContext()
+                testContext.serviceMock.respondToEvents(with: 503)
+                testContext.eventReporter.record(CustomEvent(key: "kept", context: testContext.context))
+
+                let recovered = EventStore(directory: testContext.store.directory, capacity: 100, logger: .disabled)
+                let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
+                nextRun.isOnline = true
+                defer { nextRun.isOnline = false }
+
+                // The delivery at start and its retry, and nothing after them until something asks.
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: .seconds(5))
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["kept"], ["kept"]]
+                waitLettingTimersFire(2)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
+            }
+
+            it("leaves a batch still refused when the run ended for the next run to deliver, under the same payload id") {
+                testContext = TestContext()
+                testContext.serviceMock.respondToEvents(with: 503)
+                testContext.eventReporter.record(CustomEvent(key: "kept", context: testContext.context))
+                testContext.eventReporter.isOnline = true
+                expect(testContext.flushOutcome()) == false
+                let payloadId = testContext.serviceMock.publishedPayloadIds.first
+                testContext.eventReporter.isOnline = false
+
+                // The same directory, as the application's next launch would find it.
+                testContext.serviceMock.stubEventResponse(success: true)
+                let recovered = EventStore(directory: testContext.store.directory, capacity: 100, logger: .disabled)
+                let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
+                nextRun.isOnline = true
+                defer { nextRun.isOnline = false }
+
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(3))
+                expect(customKeys(testContext.serviceMock.publishedEventPayloads.last!)) == ["kept"]
+                expect(testContext.serviceMock.publishedPayloadIds.last) == payloadId
+                expect(recovered.pendingEventCount).toEventually(equal(0))
+            }
         }
     }
 
@@ -1341,6 +1469,59 @@ extension EventReporterSpec {
                 }
                 let rest = try inner.closeBatch().flatMap { try inner.body(of: $0) }.map(customKeys) ?? []
                 expect(rest) == ["first", "slow"]
+            }
+
+            it("counts an event once while the commit that staged it is still running") {
+                var config = LDConfig.stub
+                config.eventCapacity = 3
+                config.eventPersistence = .deferred
+                let serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                let diagnosticCache = DiagnosticCachingMock()
+                serviceMock.diagnosticCache = diagnosticCache
+                let store = EventStore.temporary(capacity: config.eventCapacity)
+                defer { store.deleteEverything() }
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
+                commits.suspend()
+                defer { commits.resume() }
+                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits)
+
+                let slow = EncodingGate(key: "slow", context: LDContext.stub())
+                reporter.record(CustomEvent(key: "first", context: LDContext.stub()))
+                reporter.record(slow)
+                let committed = DispatchSemaphore(value: 0)
+                DispatchQueue.global().async {
+                    reporter.commitRecordedEvents()
+                    committed.signal()
+                }
+                expect(slow.started.wait(timeout: .now() + 5)) == .success
+
+                // Paused with "first" staged and "slow" still encoding. Counted once each, they leave room for one more
+                // under a capacity of three; "first" counted both as staged and as reserved would not.
+                reporter.record(CustomEvent(key: "late", context: LDContext.stub()))
+
+                slow.proceed.signal()
+                expect(committed.wait(timeout: .now() + 5)) == .success
+                reporter.commitRecordedEvents()
+
+                expect(diagnosticCache.incrementDroppedEventCountCallCount) == 0
+                expect(store.pendingEventCount) == 3
+            }
+
+            it("makes room in the summarizer at every commit point") {
+                // Counters become summary events and are reset at every commit point, so the summarizer only holds the
+                // contexts seen since the last one. Without the reset, an application identifying its way through more
+                // contexts than the capacity would start losing counts partway through.
+                testContext = TestContext(lastEventResponseDate: Date(), eventCapacity: 2)
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                let contexts = 6
+                for index in 0..<contexts {
+                    let context = LDContext.stub(key: "context-\(index)")
+                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
+                    testContext.eventReporter.record(IdentifyEvent(context: context))
+                }
+
+                expect(testContext.committedEvents().filter { $0.kindField == "summary" }.count) == contexts
             }
         }
     }
@@ -1638,6 +1819,164 @@ extension EventReporterSpec {
             }
         }
     }
+
+    private func outageSpec() {
+        describe("delivering through an outage") {
+            var testContext: TestContext!
+            afterEach {
+                testContext?.cleanUp()
+                testContext = nil
+            }
+
+            /// Refuses a batch with `status` for several flushes in a row, each of which attempts it and retries it once,
+            /// then lets the service recover and checks that the batch arrives exactly once, under the payload ID it was
+            /// first sent with.
+            func expectKeptThroughRefusals(status: Int, persistence: EventPersistence, refusedFlushes: Int) {
+                testContext = TestContext(store: EventStore.temporary(persistEvents: persistence != .disabled),
+                                          eventPersistence: persistence)
+                testContext.serviceMock.respondToEvents(with: status)
+                testContext.eventReporter.record(CustomEvent(key: "kept", context: testContext.context))
+                testContext.eventReporter.isOnline = true
+
+                for flush in 0..<refusedFlushes {
+                    expect(testContext.flushOutcome()).to(equal(false), description: "HTTP \(status), flush \(flush)")
+                }
+                // Every flush attempted the batch and retried it once, always as the same delivery.
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == Array(repeating: ["kept"], count: refusedFlushes * 2)
+                expect(Set(testContext.serviceMock.publishedPayloadIds).count) == 1
+                let payloadId = testContext.serviceMock.publishedPayloadIds.first
+
+                testContext.serviceMock.stubEventResponse(success: true)
+                expect(testContext.flushOutcome()).to(equal(true), description: "HTTP \(status): not delivered once the service recovered")
+                expect(customKeys(testContext.serviceMock.publishedEventPayloads.last!)) == ["kept"]
+                expect(testContext.serviceMock.publishedPayloadIds.last) == payloadId
+
+                // Gone once accepted: nothing is left to send again.
+                let posted = testContext.serviceMock.publishEventDataCallCount
+                expect(testContext.flushOutcome()) == true
+                expect(testContext.serviceMock.publishEventDataCallCount) == posted
+            }
+
+            it("keeps a batch through repeated refusals and delivers it once the service recovers") {
+                expectKeptThroughRefusals(status: 503, persistence: .immediate, refusedFlushes: 3)
+            }
+
+            it("keeps a batch held in memory through repeated refusals where persistence is off") {
+                expectKeptThroughRefusals(status: 503, persistence: .disabled, refusedFlushes: 3)
+            }
+
+            // The statuses worth trying again. Each has to keep the batch, not only 503.
+            for status in [400, 408, 429, 500, 502, 504] {
+                it("keeps a batch refused with HTTP \(status) past the retry") {
+                    expectKeptThroughRefusals(status: status, persistence: .immediate, refusedFlushes: 2)
+                }
+            }
+
+            for status in [400, 503] {
+                it("posts a batch refused with HTTP \(status) only for each flush and its one retry") {
+                    testContext = TestContext()
+                    testContext.serviceMock.respondToEvents(with: status)
+                    testContext.eventReporter.record(CustomEvent(key: "refused", context: testContext.context))
+                    testContext.eventReporter.isOnline = true
+
+                    for flush in 1...2 {
+                        expect(testContext.flushOutcome()) == false
+                        // Longer than the retry delay, so a second retry would have been posted by now.
+                        waitLettingTimersFire(1.5)
+                        expect(testContext.serviceMock.publishEventDataCallCount) == flush * 2
+                    }
+                }
+            }
+
+            it("delivers events recorded during an outage after the batch refused before them, oldest first and once each") {
+                testContext = TestContext()
+                testContext.serviceMock.respondToEvents(with: 503)
+                testContext.eventReporter.isOnline = true
+                testContext.eventReporter.record(CustomEvent(key: "first", context: testContext.context))
+                expect(testContext.flushOutcome()) == false
+                testContext.eventReporter.record(CustomEvent(key: "second", context: testContext.context))
+                expect(testContext.flushOutcome()) == false
+
+                // Two flushes, each an attempt and a retry, all at the first batch: delivery stops at the oldest batch
+                // that fails in a way that may pass.
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == Array(repeating: ["first"], count: 4)
+
+                testContext.serviceMock.stubEventResponse(success: true)
+                expect(testContext.flushOutcome()) == true
+
+                expect(testContext.serviceMock.publishedEventPayloads.dropFirst(4).map(customKeys)) == [["first"], ["second"]]
+            }
+
+            it("does not tell a flush its events arrived when an earlier delivery nobody waited on failed to send them") {
+                testContext = TestContext()
+                testContext.serviceMock.respondToEvents(with: 503)
+                testContext.eventReporter.record(CustomEvent(key: "kept", context: testContext.context))
+                testContext.eventReporter.isOnline = true
+
+                // Stands in for the scheduled delivery, or the one at backgrounding: it closes the event into a batch,
+                // fails to send it, and keeps it.
+                waitUntil(timeout: .seconds(10)) { done in
+                    testContext.eventReporter.flush(completion: done)
+                }
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
+
+                // There is nothing left to close, but the event is still waiting in its batch, not delivered.
+                expect(testContext.flushOutcome()) == false
+            }
+
+            it("starts another delivery while a refused post waits to retry") {
+                testContext = TestContext()
+                testContext.serviceMock.respondToEvents(with: 503)
+                testContext.eventReporter.record(CustomEvent(key: "kept", context: testContext.context))
+                testContext.eventReporter.isOnline = true
+                testContext.eventReporter.flush(completion: nil)
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+
+                // Well inside the one-second retry delay: a delivery queue sleeping through it would not get to this.
+                testContext.eventReporter.flush(completion: nil)
+                expect(testContext.eventReporter.startedDeliveryCount).toEventually(equal(2), timeout: .milliseconds(500))
+
+                // One retry and no more; the batch then waits for the next flush.
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: .seconds(3))
+                waitLettingTimersFire(1.5)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
+            }
+
+            it("sends events recorded while offline with the next scheduled delivery") {
+                testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
+                testContext.eventReporter.record(CustomEvent(key: "held", context: testContext.context))
+                waitLettingTimersFire(2 * Constants.eventFlushIntervalHalfSecond)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+
+                testContext.eventReporter.isOnline = true
+
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: .seconds(3))
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["held"]]
+            }
+
+            it("posts a refused batch at most once per report interval, and not at all once offline") {
+                let interval = 0.2
+                let window = 2.5
+                testContext = TestContext(eventFlushInterval: interval)
+                testContext.serviceMock.respondToEvents(with: 503)
+                testContext.eventReporter.record(CustomEvent(key: "refused", context: testContext.context))
+                testContext.eventReporter.isOnline = true
+                waitLettingTimersFire(window)
+
+                // One post per interval and one outstanding retry at a time; a loop would be in the hundreds by now.
+                let posts = testContext.serviceMock.publishEventDataCallCount
+                expect(posts) >= 3
+                expect(posts) <= Int(window / interval) + 1 + Int(window / 1.0) + 1
+
+                // Offline stops it entirely, kept batch or not. Waits out a retry already scheduled before counting.
+                testContext.eventReporter.isOnline = false
+                waitLettingTimersFire(1.0 + interval)
+                let whenOffline = testContext.serviceMock.publishEventDataCallCount
+                waitLettingTimersFire(interval * 3)
+                expect(testContext.serviceMock.publishEventDataCallCount) == whenOffline
+            }
+        }
+    }
 }
 
 /// The events a store is holding, as JSON with `creationDate` dropped.
@@ -1717,6 +2056,11 @@ private final class ClosingHookStore: EventStoring {
     }
 }
 
+/// Waits while letting the main run loop turn, since that is where the report timer fires.
+private func waitLettingTimersFire(_ seconds: TimeInterval) {
+    RunLoop.current.run(until: Date().addingTimeInterval(seconds))
+}
+
 private func customKeys(_ body: Data) -> [String] {
     guard case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
     else { return [] }
@@ -1743,6 +2087,22 @@ private extension LDValue {
         guard case .object(let fields) = self, case .string(let kind) = fields["kind"]
         else { return nil }
         return kind
+    }
+
+    var keyField: String? {
+        guard case .object(let fields) = self, case .string(let key) = fields["key"]
+        else { return nil }
+        return key
+    }
+}
+
+private extension DarklyServiceMock {
+    /// Answers every event post with this status and no error, the way a service that is reachable answers.
+    func respondToEvents(with status: Int) {
+        stubbedEventResponse = (nil,
+                                HTTPURLResponse(url: config.eventsUrl, statusCode: status, httpVersion: Constants.httpVersion, headerFields: nil),
+                                nil,
+                                nil)
     }
 }
 
