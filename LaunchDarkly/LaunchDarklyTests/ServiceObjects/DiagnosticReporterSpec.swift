@@ -9,7 +9,10 @@ final class DiagnosticReporterSpec: XCTestCase {
         let cachingMock = DiagnosticCachingMock()
         let diagnosticId = DiagnosticId(diagnosticId: "abc", sdkKey: "fake_mobile_key")
         var queuedResponses: [ServiceResponse] = []
-        var receivedEvents: [DiagnosticEvent] = []
+        /// Guards `receivedEvents`. A publish and its retry append from the reporter's queue back to back, so the
+        /// second append can land while the test thread, woken by the first, is removing.
+        private let receivedLock = NSLock()
+        private var receivedEvents: [DiagnosticEvent] = []
         var subject: DiagnosticReporter
         var service: DarklyServiceMock
 
@@ -26,7 +29,9 @@ final class DiagnosticReporterSpec: XCTestCase {
                     XCTFail("Unexpected request to diagnostic endpoint during test")
                 }
                 XCTAssertNotNil(self.service.stubbedDiagnosticResponse)
+                self.receivedLock.lock()
                 self.receivedEvents.append(self.service.publishedDiagnostic!)
+                self.receivedLock.unlock()
                 self.awaiter.signal()
             }
         }
@@ -48,6 +53,8 @@ final class DiagnosticReporterSpec: XCTestCase {
 
         func takeEvent() -> DiagnosticEvent {
             awaiter.wait()
+            receivedLock.lock()
+            defer { receivedLock.unlock() }
             if receivedEvents.first == nil {
                 XCTFail("Missing expected diagnostic event")
             }
@@ -56,6 +63,8 @@ final class DiagnosticReporterSpec: XCTestCase {
 
         func expectNoEvent() {
             XCTAssertEqual(awaiter.wait(timeout: DispatchTime.now() + 0.1), .timedOut)
+            receivedLock.lock()
+            defer { receivedLock.unlock() }
             XCTAssertTrue(receivedEvents.isEmpty)
         }
 
