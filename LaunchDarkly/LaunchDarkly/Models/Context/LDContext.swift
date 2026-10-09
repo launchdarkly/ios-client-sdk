@@ -37,26 +37,8 @@ public struct LDContext: Encodable, Equatable {
     fileprivate var canonicalizedKey: String
     internal var attributes: [String: LDValue] = [:]
 
-    // Internal property used to control encoding.
-    //
-    // Normally we would control this encoding mechanism through the use of userKeys.
-    // However, the anonymous redaction mechanism has to vary on a per event basis,
-    // and so we cannot affect the entire JSON encoder in this way.
-    internal var redactAnonymousAttributes: Bool = false
-
     fileprivate init(canonicalizedKey: String) {
         self.canonicalizedKey = canonicalizedKey
-    }
-
-    internal init(copyFrom: LDContext) {
-        kind = copyFrom.kind
-        contexts = copyFrom.contexts.map { c in LDContext(copyFrom: c) }
-        name = copyFrom.name
-        anonymous = copyFrom.anonymous
-        privateAttributes = copyFrom.privateAttributes
-        key = copyFrom.key
-        canonicalizedKey = copyFrom.canonicalizedKey
-        attributes = copyFrom.attributes
     }
 
     init() {
@@ -149,7 +131,10 @@ public struct LDContext: Encodable, Equatable {
 
         let meta = Meta(privateAttributes: context.privateAttributes, redactedAttributes: redactedAttributes)
 
-        if !meta.isEmpty {
+        // Redacted output writes `_meta` only when something was redacted, as Android does. Unredacted output still
+        // writes it whenever the context has private attributes: `contextHash()` digests that output to validate
+        // cached flags, so changing it would discard them.
+        if redactAttributes ? !redactedAttributes.isEmpty : !meta.isEmpty {
             try container.encodeIfPresent(meta, forKey: DynamicCodingKeys(string: "_meta"))
         }
 
@@ -258,6 +243,12 @@ public struct LDContext: Encodable, Equatable {
     }
 
     public func encode(to encoder: Encoder) throws {
+        try encode(to: encoder, redactAnonymousAttributes: false)
+    }
+
+    /// `redactAnonymousAttributes` applies to every part of a multi-context. It is an argument rather than an
+    /// encoder `userInfo` key because it varies per event, while `userInfo` is fixed for the whole encoder.
+    internal func encode(to encoder: Encoder, redactAnonymousAttributes: Bool) throws {
         var container = encoder.container(keyedBy: DynamicCodingKeys.self)
 
         let allAttributesPrivate = encoder.userInfo[UserInfoKeys.allAttributesPrivate] as? Bool ?? false
@@ -609,6 +600,70 @@ extension LDContext: Decodable {
 
 extension LDContext: TypeIdentifying {}
 
+/// Access to file-private state and redaction logic for `LDContextJSONWriter`, so both encoders redact through the
+/// same `maybeRedact`.
+extension LDContext {
+    internal var writableKey: String? { key }
+    internal var isAnonymous: Bool { anonymous }
+
+    internal static func privateAttributeLookup(for references: [Reference]) -> SharedDictionary<String, PrivateAttributeLookupNode> {
+        makePrivateAttributeLookupData(references: references)
+    }
+
+    internal func redactionDecision(parentPath: [String],
+                                    value: LDValue,
+                                    redactedAttributes: inout [String],
+                                    globalPrivateAttributes: SharedDictionary<String, PrivateAttributeLookupNode>) -> (Bool, Bool) {
+        LDContext.maybeRedact(context: self,
+                              parentPath: parentPath,
+                              value: value,
+                              redactedAttributes: &redactedAttributes,
+                              globalPrivateAttributes: globalPrivateAttributes)
+    }
+}
+
+extension LDContext {
+    /// Whether `other`, already known to be `==`, also spells its private attributes the same way.
+    ///
+    /// `Reference`'s `==` ignores spelling, so `Reference("email")` equals `Reference("/email")`, but redaction writes
+    /// each private attribute as it was spelled. Whatever reuses a context's encoding, or stands one context in for
+    /// another, has to check this as well as `==`.
+    internal func spellsPrivateAttributesLike(_ other: LDContext) -> Bool {
+        if !(privateAttributes.isEmpty && other.privateAttributes.isEmpty) {
+            guard Set(privateAttributes.map { $0.raw() }) == Set(other.privateAttributes.map { $0.raw() })
+            else { return false }
+        }
+        return zip(contexts, other.contexts).allSatisfy { $0.spellsPrivateAttributesLike($1) }
+    }
+
+    /// Feeds `hasher` what `==` compares besides the fully qualified key, so equal contexts hash alike.
+    internal func combineComparedProperties(into hasher: inout Hasher) {
+        hasher.combine(name)
+        hasher.combine(anonymous)
+        hasher.combine(privateAttributes)
+        hasher.combine(attributes)
+        hasher.combine(contexts.count)
+        contexts.forEach { $0.combineComparedProperties(into: &hasher) }
+    }
+
+    /// Whether any attribute holds NaN or an infinity, which JSON cannot represent, so `contextHash()` fell back to
+    /// `fullyQualifiedHashedKey()`.
+    internal func containsNonFiniteNumber() -> Bool {
+        attributes.values.contains { $0.containsNonFiniteNumber } || contexts.contains { $0.containsNonFiniteNumber() }
+    }
+}
+
+private extension LDValue {
+    var containsNonFiniteNumber: Bool {
+        switch self {
+        case .number(let number): return !number.isFinite
+        case .array(let values): return values.contains { $0.containsNonFiniteNumber }
+        case .object(let values): return values.values.contains { $0.containsNonFiniteNumber }
+        case .null, .bool, .string: return false
+        }
+    }
+}
+
 enum LDContextBuilderKey {
     case generateKey
     case key(String)
@@ -708,6 +763,8 @@ public struct LDContextBuilder {
     ///
     /// - "anonymous": Must be a boolean. See `LDContextBuilder.anonymous(_:)`.
     ///
+    /// - "_meta": Reserved for the context's metadata, and cannot be set with any value.
+    ///
     /// Values that are JSON arrays or objects have special behavior when referenced in
     /// flag/segment rules.
     ///
@@ -739,6 +796,8 @@ public struct LDContextBuilder {
         case ("anonymous", .bool(let val)):
             self.anonymous(val)
         case ("anonymous", _):
+            return false
+        case ("_meta", _):
             return false
         case (_, .null):
             self.attributes.removeValue(forKey: name)
