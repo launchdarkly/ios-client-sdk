@@ -290,31 +290,32 @@ final class EventStore: EventStoring {
     func commit() {
         ioLock.lock()
         defer { ioLock.unlock() }
-        commitHoldingIoLock()
+        writeStagedBytes()
     }
 
     func closeBatch() -> EventBatch? {
         ioLock.lock()
         defer { ioLock.unlock() }
 
-        commitHoldingIoLock()
+        writeStagedBytes()
 
         bufferLock.lock()
         let events = committedEvents
         let stillBuffered = bufferedEventCount
         bufferLock.unlock()
 
-        let fromLog = events > 0 ? closeOpenLogHoldingIoLock(events) : nil
+        let fromLog = events > 0 ? closeOpenLog(events) : nil
         // Closed after the log, so the older events are delivered first. Both can hold events at once: a write that
         // fails after earlier ones landed gives up on persistence with those earlier events in the log and the failed
         // ones back in memory, and closing only the log would leave the rest to a delivery that reports success
         // without them.
-        let fromMemory = stillBuffered > 0 ? closeInMemoryBatchHoldingIoLock() : nil
+        let fromMemory = stillBuffered > 0 ? closeInMemoryBatch() : nil
         return fromLog ?? fromMemory
     }
 
     /// Requires `ioLock`.
-    private func closeOpenLogHoldingIoLock(_ events: Int) -> EventBatch? {
+    private func closeOpenLog(_ events: Int) -> EventBatch? {
+        ioLock.assertOwned()
         closeDescriptor()
 
         let payloadId = UUID().uuidString
@@ -377,7 +378,7 @@ final class EventStore: EventStoring {
             .compactMap { file -> (EventBatch, Date)? in
                 let payloadId = String(file.lastPathComponent.dropFirst(EventStore.batchPrefix.count))
                 // Reading is only for a batch this process has not counted: one a previous run left behind.
-                guard let events = eventCounts[payloadId] ?? countOfEventsHoldingIoLock(in: file)
+                guard let events = eventCounts[payloadId] ?? countOfEvents(in: file)
                 else { return nil }
                 eventCounts[payloadId] = events
                 let modified = (try? file.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
@@ -407,7 +408,8 @@ final class EventStore: EventStoring {
     /// How many events a batch file holds, or nil when it is not one to list this time.
     ///
     /// Requires `ioLock`.
-    private func countOfEventsHoldingIoLock(in file: URL) -> Int? {
+    private func countOfEvents(in file: URL) -> Int? {
+        ioLock.assertOwned()
         switch read(file) {
         case .missing:
             // Gone since the directory was listed.
@@ -466,11 +468,12 @@ final class EventStore: EventStoring {
     func recoverInterruptedLog() {
         ioLock.lock()
         defer { ioLock.unlock() }
-        recoverInterruptedLogHoldingIoLock()
+        recoverInterruptedLogOnce()
     }
 
     /// Requires `ioLock`. Does its work once per store: after that, `current` is a log this run opened.
-    private func recoverInterruptedLogHoldingIoLock() {
+    private func recoverInterruptedLogOnce() {
+        ioLock.assertOwned()
         guard !hasRecoveredInterruptedLog
         else { return }
         hasRecoveredInterruptedLog = true
@@ -513,7 +516,8 @@ final class EventStore: EventStoring {
     // MARK: Writing
 
     /// Requires `ioLock`.
-    private func commitHoldingIoLock() {
+    private func writeStagedBytes() {
+        ioLock.assertOwned()
         bufferLock.lock()
         guard persistEvents, bufferedEventCount > 0
         else {
@@ -546,9 +550,10 @@ final class EventStore: EventStoring {
 
     /// Requires `ioLock`.
     private func append(_ bytes: Data) -> Bool {
+        ioLock.assertOwned()
         guard let descriptor = descriptorForAppending()
         else {
-            disablePersistenceHoldingIoLock()
+            disablePersistence()
             return false
         }
         return append(bytes, to: descriptor)
@@ -556,13 +561,14 @@ final class EventStore: EventStoring {
 
     /// Requires `ioLock`.
     private func append(_ bytes: Data, to descriptor: Int32) -> Bool {
+        ioLock.assertOwned()
         guard let failure = writeLog(descriptor, bytes)
         else { return true }
 
         // Never trap on a full disk. The SDK gives up on persistence for the rest of the session rather than taking
         // the application down with it, which is how other SDKs have crashed their hosts.
         os_log("%s giving up on persisting events: errno %d", log: logger, type: .debug, typeName(and: #function), failure)
-        disablePersistenceHoldingIoLock()
+        disablePersistence()
         return false
     }
 
@@ -590,13 +596,14 @@ final class EventStore: EventStoring {
 
     /// Requires `ioLock`.
     private func descriptorForAppending() -> Int32? {
+        ioLock.assertOwned()
         if descriptor >= 0 {
             return descriptor
         }
 
         // Before opening, because `current` may still be the log a previous run died writing. Appended to, this run's
         // events would sit behind that run's torn last frame, where a reader can no longer find where they start.
-        recoverInterruptedLogHoldingIoLock()
+        recoverInterruptedLogOnce()
 
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -632,6 +639,7 @@ final class EventStore: EventStoring {
 
     /// Requires `ioLock`.
     private func closeDescriptor() {
+        ioLock.assertOwned()
         guard descriptor >= 0
         else { return }
         closeFile(descriptor)
@@ -650,7 +658,7 @@ final class EventStore: EventStoring {
     deinit {
         // One acquisition: the lock is not recursive, and `commit()` would take it again.
         ioLock.lock()
-        commitHoldingIoLock()
+        writeStagedBytes()
         closeDescriptor()
         ioLock.unlock()
     }
@@ -672,7 +680,8 @@ private extension EventStore {
     /// Gives up on the disk for the rest of the session, leaving the events themselves alone.
     ///
     /// Requires `ioLock`.
-    func disablePersistenceHoldingIoLock() {
+    func disablePersistence() {
+        ioLock.assertOwned()
         closeDescriptor()
         bufferLock.lock()
         persistEvents = false
@@ -682,7 +691,8 @@ private extension EventStore {
     /// Closes whatever is staged into a batch that never reaches a file.
     ///
     /// Requires `ioLock`.
-    func closeInMemoryBatchHoldingIoLock() -> EventBatch? {
+    func closeInMemoryBatch() -> EventBatch? {
+        ioLock.assertOwned()
         bufferLock.lock()
         let frames = bufferData
         let events = bufferedEventCount

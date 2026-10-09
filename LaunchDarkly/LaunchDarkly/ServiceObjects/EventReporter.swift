@@ -263,7 +263,7 @@ class EventReporter: EventReporting {
 
     func record(_ event: Event) {
         pendingLock.lock()
-        let dropped = !holdHoldingPendingLock(event)
+        let dropped = !admitToPending(event)
         let needsCommit = pending.count >= EventReporter.pendingCommitThreshold
         pendingLock.unlock()
 
@@ -293,7 +293,7 @@ class EventReporter: EventReporting {
         var dropped = 0
         pendingLock.lock()
         let counted = contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
-        for event in [featureEvent, debugEvent].compactMap({ $0 }) where !holdHoldingPendingLock(event) {
+        for event in [featureEvent, debugEvent].compactMap({ $0 }) where !admitToPending(event) {
             dropped += 1
         }
         let needsCommit = pending.count >= EventReporter.pendingCommitThreshold
@@ -316,12 +316,14 @@ class EventReporter: EventReporting {
         }
     }
 
-    /// Holds an event for the next commit to encode, returning false if the SDK is already full. Requires `pendingLock`.
+    /// Adds an event to `pending` for the next commit to encode, returning false if the SDK is already full. Requires
+    /// `pendingLock`.
     ///
     /// Capacity is consulted before anything else, so an event that will not be kept is never encoded. That ordering is
     /// what bounds an application re-evaluating a tracked flag in a render loop: once the limit is reached an
     /// evaluation costs no more than its summary counter, however fast the loop runs.
-    private func holdHoldingPendingLock(_ event: Event) -> Bool {
+    private func admitToPending(_ event: Event) -> Bool {
+        pendingLock.assertOwned()
         guard pending.count + store.pendingEventCount < capacity
         else { return false }
 
@@ -407,7 +409,7 @@ class EventReporter: EventReporting {
     func commitRecordedEvents() {
         commitLock.lock()
         defer { commitLock.unlock() }
-        commitRecordedEventsHoldingCommitLock()
+        encodeAndCommitPending()
     }
 
     /// Commits what is held and closes it into a batch, as one step with respect to other commits.
@@ -417,11 +419,13 @@ class EventReporter: EventReporting {
     private func commitAndCloseBatch() {
         commitLock.lock()
         defer { commitLock.unlock() }
-        commitRecordedEventsHoldingCommitLock()
+        encodeAndCommitPending()
         _ = store.closeBatch()
     }
 
-    private func commitRecordedEventsHoldingCommitLock() {
+    /// Requires `commitLock`.
+    private func encodeAndCommitPending() {
+        commitLock.assertOwned()
         pendingLock.lock()
         let run = pending
         pending = []
@@ -449,6 +453,7 @@ class EventReporter: EventReporting {
     /// Requires `commitLock`: two threads draining separate runs would stage them in whichever order they finished
     /// encoding, which is not the order they were recorded in.
     private func stage(_ run: [Event]) {
+        commitLock.assertOwned()
         for event in run {
             guard let encoded = encode(event)
             else {
