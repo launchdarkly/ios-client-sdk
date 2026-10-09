@@ -40,7 +40,12 @@ final class ClientServiceMockFactory: ClientServiceCreating {
 
     var makeFlagSynchronizerCallCount = 0
     var makeFlagSynchronizerReceivedParameters: (streamingMode: LDStreamingMode, pollingInterval: TimeInterval, useReport: Bool, lastUpdated: Date?, service: DarklyServiceProvider)? = nil
-    var onFlagSyncComplete: FlagSyncCompleteClosure? = nil
+    var madeFlagSynchronizer: LDFlagSynchronizingMock? = nil
+    /// Read back from the synchronizer, since the client gives this at construction everywhere except in its own
+    /// initializer, where it has to assign it afterwards.
+    var onFlagSyncComplete: FlagSyncCompleteClosure? {
+        madeFlagSynchronizer?.onSyncComplete
+    }
     func makeFlagSynchronizer(streamingMode: LDStreamingMode,
                               pollingInterval: TimeInterval,
                               useReport: Bool,
@@ -49,11 +54,12 @@ final class ClientServiceMockFactory: ClientServiceCreating {
                               onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing {
         makeFlagSynchronizerCallCount += 1
         makeFlagSynchronizerReceivedParameters = (streamingMode, pollingInterval, useReport, lastUpdated, service)
-        onFlagSyncComplete = onSyncComplete
 
         let flagSynchronizingMock = LDFlagSynchronizingMock()
         flagSynchronizingMock.streamingMode = streamingMode
         flagSynchronizingMock.pollingInterval = pollingInterval
+        flagSynchronizingMock.onSyncComplete = onSyncComplete
+        madeFlagSynchronizer = flagSynchronizingMock
         return flagSynchronizingMock
     }
 

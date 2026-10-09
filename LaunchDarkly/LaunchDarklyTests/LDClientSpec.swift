@@ -61,6 +61,23 @@ final class LDClientSpec: QuickSpec {
                 expect(kinds.contains(AutoEnvContextModifier.ldApplicationKind)) == true
             }
         }
+
+        context("when the client is built") {
+            it("builds each service once") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+
+                expect(testContext.serviceFactoryMock.makeEventReporterCallCount) == 1
+                expect(testContext.serviceFactoryMock.makeFlagSynchronizerCallCount) == 1
+            }
+
+            it("tells the synchronizer where to report") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+
+                expect(testContext.serviceFactoryMock.madeFlagSynchronizer?.onSyncComplete).toNot(beNil())
+            }
+        }
     }
 
     private func startSpec(withTimeout: Bool) {

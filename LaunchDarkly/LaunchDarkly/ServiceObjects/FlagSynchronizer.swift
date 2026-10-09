@@ -11,6 +11,8 @@ protocol LDFlagSynchronizing {
     var streamingMode: LDStreamingMode { get }
     // sourcery: defaultMockValue = 60_000
     var pollingInterval: TimeInterval { get }
+    /// Set once the client this reports to exists, which is after the synchronizer it belongs to is built.
+    var onSyncComplete: FlagSyncCompleteClosure? { get set }
 }
 
 enum SynchronizingError: Error {
