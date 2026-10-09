@@ -54,13 +54,13 @@ extension LDContext {
         var redaction = Redaction(globalPrivateAttributes: globalPrivateAttributes)
         let redactAll = allAttributesPrivate || (isAnonymous && redactAnonymousAttributes)
 
+        // Attribute names are looked up literally, not parsed as references, so an attribute named `/foo` is written.
         for name in getOptionalAttributeNames() {
-            let reference = Reference(name)
-            guard let value = getValue(reference)
+            guard let value = getTopLevelAddressableAttributeSingleKind(name)
             else { continue }
 
             if redactAll {
-                redaction.redactedAttributes.append(reference.raw())
+                redaction.redactedAttributes.append(name)
                 continue
             }
 
