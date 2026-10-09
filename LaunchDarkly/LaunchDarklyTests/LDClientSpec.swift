@@ -1697,8 +1697,26 @@ final class LDClientSpec: QuickSpec {
 
                 var delivered: Bool?
                 stale.subject.flush { delivered = $0 }
-                expect(delivered) == false
+                expect(delivered).toEventually(beFalse())
                 expect(current.eventReporterMock.flushReportingOutcomeCallCount) == 0
+            }
+
+            it("answers a closed client off the caller's thread, as it does one with a delivery to wait for") {
+                let testContext = TestContext()
+                testContext.start()
+                testContext.subject.close()
+
+                // The contract holds whether or not the client turned out to be closed: a caller told its completion
+                // is elsewhere may take a lock there that it is holding now.
+                let caller = Thread.current
+                var answeredOnCaller: Bool?
+                waitUntil { done in
+                    testContext.subject.flush { _ in
+                        answeredOnCaller = Thread.current === caller
+                        done()
+                    }
+                }
+                expect(answeredOnCaller) == false
             }
 
             it("reports once every environment has answered, and only once") {
@@ -1750,6 +1768,17 @@ final class LDClientSpec: QuickSpec {
                 testContext.eventReporterMock.flushReportingOutcomeCallback = nil
 
                 expect(testContext.subject.flushAndWait(timeout: 0.05)) == false
+            }
+
+            it("does not wait without a budget, though it still starts the delivery") {
+                let testContext = TestContext()
+                testContext.start()
+                // Answers inside the call, so a zero budget that waited at all would report true.
+                answer(testContext.eventReporterMock, with: true)
+
+                expect(testContext.subject.flushAndWait(timeout: 0)) == false
+                // Still worth calling: at `.immediate` the events are on disk by the time the delivery is queued.
+                expect(testContext.eventReporterMock.flushReportingOutcomeCallCount) == 1
             }
 
             it("reports false once closed") {

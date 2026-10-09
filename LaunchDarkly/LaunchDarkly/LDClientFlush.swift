@@ -46,7 +46,9 @@ extension LDClient {
         guard !clients.isEmpty
         else {
             os_log("%s called on a closed client", log: config.logger, type: .debug, self.typeName(and: #function))
-            completion(false)
+            // Answered off the caller's thread even with nothing to wait for, so that the contract holds whether or
+            // not the client turned out to be closed.
+            DispatchQueue.global().async { completion(false) }
             return
         }
 
@@ -143,6 +145,12 @@ extension LDClient {
                 answered.signal()
             }
         }
+
+        // Started, then given up on. The deliveries are what makes a zero timeout worth calling at all: at
+        // `.immediate` the events are on disk by the time each `flushReportingOutcome` returns. Waiting is what is
+        // skipped, and a reporter that answered during the loop above must not turn that into a `true`.
+        guard timeout > 0
+        else { return false }
 
         // Every wait is against the one deadline rather than a fresh copy of it, so the timeout the caller asked for
         // is the time this call can take however many environments there are. A delivery still running when the wait

@@ -60,12 +60,17 @@ class NullEventReporter: EventReporting {
                                     includeReason: Bool) {
     }
 
+    // There is never anything to send, but a completion still answers on a background queue, as `EventReporter`'s
+    // does. Were it answered inline, the threading a caller sees would depend on whether events are turned on, and a
+    // caller doing what the contract allows -- taking a lock it already holds, say -- would deadlock only there.
     func flush(completion: CompletionClosure?) {
-        completion?()
+        guard let completion
+        else { return }
+        DispatchQueue.global().async { completion() }
     }
 
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
-        completion(true)
+        DispatchQueue.global().async { completion(true) }
     }
 
     func commitRecordedEvents() {

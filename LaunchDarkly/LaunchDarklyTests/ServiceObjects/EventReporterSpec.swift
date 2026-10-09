@@ -134,6 +134,32 @@ final class EventReporterSpec: QuickSpec {
         commitSpec()
         flushReportingOutcomeSpec()
         outageSpec()
+        nullEventReporterSpec()
+    }
+
+    private func nullEventReporterSpec() {
+        describe("NullEventReporter") {
+            it("answers every flush off the caller's thread") {
+                let reporter = NullEventReporter()
+                let caller = Thread.current
+                let lock = UnfairLock()
+                var answers: [(delivered: Bool, onCaller: Bool)] = []
+                let record: (Bool) -> Void = { delivered in
+                    lock.withLock { answers.append((delivered, Thread.current === caller)) }
+                }
+
+                // Events are off, so there is never anything to wait for. The threading a caller sees still must not
+                // depend on that: one holding a lock its completion takes would deadlock only with events off.
+                reporter.flush { record(true) }
+                reporter.flushReportingOutcome(completion: record)
+
+                expect(lock.withLock { answers.count }).toEventually(equal(2))
+                lock.withLock {
+                    expect(answers.map { $0.delivered }) == [true, true]
+                    expect(answers.contains { $0.onCaller }) == false
+                }
+            }
+        }
     }
 
     private func initSpec() {
