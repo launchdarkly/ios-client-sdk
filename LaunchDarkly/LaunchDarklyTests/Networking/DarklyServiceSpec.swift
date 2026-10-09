@@ -629,10 +629,12 @@ final class DarklyServiceSpec: QuickSpec {
                         eventsPublished = true
                     }
                 }
-                it("does not make a request") {
+                it("does not make a request, and still answers with a failure") {
                     expect(eventRequest).to(beNil())
-                    expect(eventsPublished) == false
-                    expect(responses).to(beNil())
+                    // A reporter holds every later delivery until this one answers, so it must not be left waiting.
+                    expect(eventsPublished) == true
+                    expect(responses.urlResponse).to(beNil())
+                    expect(responses.error).toNot(beNil())
                 }
             }
         }

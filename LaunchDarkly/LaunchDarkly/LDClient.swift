@@ -40,11 +40,11 @@ public class LDClient {
 
     // MARK: - State Controls and Indicators
 
-    private static var instances: [String: LDClient]?
-    private static let instancesQueue = DispatchQueue(label: "com.launchdarkly.LDClient.instancesQueue")
+    static var instances: [String: LDClient]?
+    static let instancesQueue = DispatchQueue(label: "com.launchdarkly.LDClient.instancesQueue")
 
     // If the SDK is provided a timeout value that exceeds this value, a warning will be logged.
-    private static let longTimeoutInterval: TimeInterval = 15
+    static let longTimeoutInterval: TimeInterval = 15
 
     /**
      Reports the online/offline state of the LDClient.
@@ -263,6 +263,23 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
+        // A backgrounded process is suspended once idle, so deliver inside an activity assertion. Only where suspension
+        // is real: macOS posts this notification whenever the application loses focus, and never suspends it for that.
+        #if os(iOS) || os(tvOS)
+        backgroundDelivery.run { [weak self] finished in
+            guard let self = self
+            else {
+                finished()
+                return
+            }
+            self.eventReporter.flushReportingOutcome { delivered in
+                if !delivered {
+                    os_log("%s events did not reach LaunchDarkly before suspension", log: self.config.logger, type: .debug, self.typeName(and: #function))
+                }
+                finished()
+            }
+        }
+        #endif
         Thread.performOnMain {
             runMode = .background
         }
@@ -274,6 +291,9 @@ public class LDClient {
             runMode = .foreground
         }
     }
+
+    /// One assertion per client, however many times the application is backgrounded while a delivery is running.
+    private let backgroundDelivery: BackgroundActivity
 
     let config: LDConfig
     /// Identifies this client's environment to a hook, without handing it the mobile key that identifies the
@@ -786,23 +806,6 @@ public class LDClient {
         plugin.register(client: self, metadata: environmentMetadata)
     }
 
-    /**
-     Tells the SDK to immediately send any currently queued events to LaunchDarkly.
-
-     There should not normally be a need to call this function. While online, the LDClient automatically reports events
-     on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
-     sent, it only triggers a background task to send events immediately.
-     */
-    public func flush() {
-        LDClient.instancesQueue.sync(flags: .barrier) {
-            LDClient.instances?.forEach { $1.internalFlush() }
-        }
-    }
-
-    private func internalFlush() {
-        eventReporter.flush(completion: nil)
-    }
-
     /// Static, and over a logger rather than a client, so that the event reporter can be given it while the client
     /// that owns the reporter is still being built.
     private static func logEventSyncComplete(_ result: SynchronizingError?, _ logger: OSLog) {
@@ -1027,6 +1030,7 @@ public class LDClient {
         throttler = self.serviceFactory.makeThrottler(environmentReporter: environmentReporter)
 
         config = configuration
+        backgroundDelivery = BackgroundActivity(reason: "LaunchDarkly event delivery", logger: configuration.logger)
         context = startContext ?? LDContext()
 
         if config.autoEnvAttributes {
@@ -1088,6 +1092,16 @@ public class LDClient {
 }
 
 extension LDClient: TypeIdentifying { }
+
+private extension LDClient {
+    func onEventSyncComplete(result: SynchronizingError?) {
+        if let synchronizingError = result {
+            os_log("%s result: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: synchronizingError))
+        } else {
+            os_log("%s result: success", log: config.logger, type: .debug, typeName(and: #function))
+        }
+    }
+}
 
 #if DEBUG
 extension LDClient {
