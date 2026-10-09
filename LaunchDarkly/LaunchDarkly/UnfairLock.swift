@@ -24,6 +24,14 @@ final class UnfairLock {
         os_unfair_lock_unlock(unfairLock)
     }
 
+    /// Runs `body` holding the lock. Inlined, so it costs the same as calling `lock()` and `unlock()` around it.
+    @inline(__always)
+    func withLock<T>(_ body: () throws -> T) rethrows -> T {
+        lock()
+        defer { unlock() }
+        return try body()
+    }
+
     /// Traps unless the calling thread holds the lock. Debug builds only, since it is called on recording paths.
     @inline(__always)
     func assertOwned() {
@@ -37,6 +45,12 @@ final class UnfairLock {
 typealias UnfairLock = NSLock
 
 extension NSLock {
+    func withLock<T>(_ body: () throws -> T) rethrows -> T {
+        lock()
+        defer { unlock() }
+        return try body()
+    }
+
     /// `NSLock` cannot tell which thread holds it, so there is nothing to check.
     func assertOwned() {}
 }
