@@ -62,7 +62,7 @@ protocol EventStoring {
     /// Forgets a batch, which is only correct once LaunchDarkly has accepted it or permanently refused it.
     func remove(_ batch: EventBatch)
 
-    /// Closes any log left open by a previous run of the application, so its events join the batches to deliver.
+    /// Closes any log left open by a previous run of this process, so its events join the batches to deliver.
     func recoverInterruptedLog()
 }
 
@@ -82,6 +82,8 @@ protocol EventStoring {
 final class EventStore: EventStoring {
     /// Names a log that has been closed off for delivery; the rest of the name is the batch's payload ID.
     private static let batchPrefix = "ready-"
+    /// Names the log a single process appends to; the rest of the name is that process.
+    private static let openLogPrefix = "open-"
     /// How many staged bytes are allowed to accumulate before one of them pays for a write.
     ///
     /// This is what keeps a syscall off most recordings while bounding what a crash can take with it, for an
@@ -152,7 +154,14 @@ final class EventStore: EventStoring {
     /// Only to be used while holding `ioLock`.
     private var eventCounts: [String: Int] = [:]
 
-    private var currentLogUrl: URL { directory.appendingPathComponent("current") }
+    /// The log this process appends to.
+    ///
+    /// One per process rather than one per directory, so that only one process ever writes a given log and recovery
+    /// only ever touches its own. With one shared log, a second process starting up would close off, as if a previous
+    /// run had left it, a log the first is still appending to through its open descriptor, and the first's later
+    /// events would land in a batch already sent or deleted. Another process's log is left for that process to recover
+    /// the next time it runs. Two instances of one macOS application run under one name, and so still share a log.
+    let openLogUrl: URL
 
     /// A batch is identified by its payload ID rather than by a path, so that a batch listed from the directory and the
     /// same batch as it was closed are one thing.
@@ -163,11 +172,13 @@ final class EventStore: EventStoring {
     init(directory: URL,
          capacity: Int,
          persistEvents: Bool = true,
+         processName: String = ProcessInfo.processInfo.processName,
          logger: OSLog,
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventStore.commitQueue", qos: .userInitiated),
          readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
          writeLog: @escaping (Int32, Data) -> Int32? = EventStore.writeAll) {
         self.directory = directory
+        self.openLogUrl = directory.appendingPathComponent(EventStore.openLogPrefix + EventStore.logName(for: processName))
         self.capacity = capacity
         self.logger = logger
         self.commitQueue = commitQueue
@@ -177,6 +188,26 @@ final class EventStore: EventStoring {
         // write has failed: events are held, delivered, and lost only if the process dies.
         self.persistEvents = persistEvents
         self.readsDisk = persistEvents
+    }
+
+    /// Names the log belonging to one process.
+    ///
+    /// The readable part is the process name with anything awkward in a filename replaced, which keeps a directory of
+    /// these diagnosable. That reduction is not one-to-one, and two processes sharing a log is the one thing this name
+    /// exists to prevent, so a digest of the original name is appended.
+    static func logName(for processName: String) -> String {
+        let trimmed = processName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = trimmed.isEmpty ? "unknown" : trimmed
+        let readable = String(name.unicodeScalars.map { scalar -> Character in
+            switch scalar {
+            case "a"..."z", "A"..."Z", "0"..."9", "-", "_":
+                return Character(scalar)
+            default:
+                return "_"
+            }
+        })
+        let digest = Util.sha256(name).prefix(4).map { String(format: "%02x", $0) }.joined()
+        return "\(readable)-\(digest)"
     }
 
     /// The directory the store for a mobile key belongs in, or nil where the platform gave us nowhere to write.
@@ -326,13 +357,13 @@ final class EventStore: EventStoring {
 
         let payloadId = UUID().uuidString
         do {
-            try FileManager.default.moveItem(at: currentLogUrl, to: url(of: payloadId))
+            try FileManager.default.moveItem(at: openLogUrl, to: url(of: payloadId))
         } catch {
             os_log("%s could not close the event log: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
             // The log is still there to try again with, unless it is the log that went missing -- a purged cache
             // directory on tvOS, say. Then its events are gone, and they have to stop counting against capacity or the
             // store would refuse events for the rest of the session.
-            if !FileManager.default.fileExists(atPath: currentLogUrl.path) {
+            if !FileManager.default.fileExists(atPath: openLogUrl.path) {
                 bufferLock.lock()
                 committedEvents = 0
                 bufferLock.unlock()
@@ -478,16 +509,17 @@ final class EventStore: EventStoring {
         bufferLock.unlock()
     }
 
-    /// Closes any log left open by a previous run of the application, so its events join the batches to deliver.
+    /// Closes any log left open by a previous run of this process, so its events join the batches to deliver.
     ///
-    /// The events in it were recorded by a process that is gone, so there is no one left to add to it.
+    /// The events in it were recorded by a process that is gone, so there is no one left to add to it. Only this
+    /// process's own log is touched: another process's may still be open in a process that is alive.
     func recoverInterruptedLog() {
         ioLock.lock()
         defer { ioLock.unlock() }
         recoverInterruptedLogOnce()
     }
 
-    /// Requires `ioLock`. Does its work once per store: after that, `current` is a log this run opened.
+    /// Requires `ioLock`. Does its work once per store: after that, the open log is one this run opened.
     private func recoverInterruptedLogOnce() {
         ioLock.assertOwned()
         guard readsDisk, !hasRecoveredInterruptedLog
@@ -495,7 +527,7 @@ final class EventStore: EventStoring {
         hasRecoveredInterruptedLog = true
 
         let events: Int
-        switch read(currentLogUrl) {
+        switch read(openLogUrl) {
         case .missing:
             return
         case .failed(let error):
@@ -503,13 +535,13 @@ final class EventStore: EventStoring {
             // would lose events that may be intact. Closed off uncounted instead, it is read and counted by whichever
             // listing first manages to.
             os_log("%s could not read events from a previous run, will try again later: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
-            try? FileManager.default.moveItem(at: currentLogUrl, to: url(of: UUID().uuidString))
+            try? FileManager.default.moveItem(at: openLogUrl, to: url(of: UUID().uuidString))
             return
         case .bytes(let log):
             guard let counted = EventLogFormat.eventCount(in: log)
             else {
                 // Unreadable, and a log that cannot be read cannot be appended to either.
-                try? FileManager.default.removeItem(at: currentLogUrl)
+                try? FileManager.default.removeItem(at: openLogUrl)
                 return
             }
             events = counted
@@ -517,12 +549,12 @@ final class EventStore: EventStoring {
 
         guard events > 0
         else {
-            try? FileManager.default.removeItem(at: currentLogUrl)
+            try? FileManager.default.removeItem(at: openLogUrl)
             return
         }
 
         let payloadId = UUID().uuidString
-        guard (try? FileManager.default.moveItem(at: currentLogUrl, to: url(of: payloadId))) != nil
+        guard (try? FileManager.default.moveItem(at: openLogUrl, to: url(of: payloadId))) != nil
         else { return }
 
         eventCounts[payloadId] = events
@@ -617,7 +649,7 @@ final class EventStore: EventStoring {
             return descriptor
         }
 
-        // Before opening, because `current` may still be the log a previous run died writing. Appended to, this run's
+        // Before opening, because the open log may still be the one a previous run died writing. Appended to, this run's
         // events would sit behind that run's torn last frame, where a reader can no longer find where they start.
         recoverInterruptedLogOnce()
 
@@ -631,7 +663,7 @@ final class EventStore: EventStoring {
 
         // O_APPEND is what makes each write land at the end of the file as one step, so that clients for several
         // environments writing their own logs, or a commit racing a reader, cannot produce a spliced frame.
-        let opened = currentLogUrl.withUnsafeFileSystemRepresentation { path -> Int32 in
+        let opened = openLogUrl.withUnsafeFileSystemRepresentation { path -> Int32 in
             guard let path = path
             else { return -1 }
             return openFile(path, O_WRONLY | O_APPEND | O_CREAT, 0o600)
@@ -869,8 +901,8 @@ extension EventStore {
                                                                     includingPropertiesForKeys: nil,
                                                                     options: [.skipsHiddenFiles])) ?? []
         var logs = contents.filter { $0.lastPathComponent.hasPrefix(EventStore.batchPrefix) }.sorted { $0.path < $1.path }
-        if FileManager.default.fileExists(atPath: currentLogUrl.path) {
-            logs.append(currentLogUrl)
+        if FileManager.default.fileExists(atPath: openLogUrl.path) {
+            logs.append(openLogUrl)
         }
 
         var payloads: [Data] = []

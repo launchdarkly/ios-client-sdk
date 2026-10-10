@@ -12,6 +12,85 @@ final class EventStoreSpec: QuickSpec {
         capacitySpec()
         fallbackSpec()
         optOutSpec()
+        multiProcessSpec()
+    }
+
+    private func multiProcessSpec() {
+        describe("several processes sharing a directory") {
+            var app: EventStore!
+            afterEach {
+                app.deleteEverything()
+            }
+
+            /// Another process of the same application, using the same directory under its own name.
+            func otherProcess(_ name: String = "widget") -> EventStore {
+                EventStore(directory: app.directory, capacity: 100, processName: name, logger: .disabled)
+            }
+
+            beforeEach {
+                app = EventStore(directory: EventStore.temporary().directory, capacity: 100, processName: "app", logger: .disabled)
+            }
+
+            it("leaves a log another process still has open where it is, so that process's later events reach it") {
+                _ = app.stage(EventStoreSpec.payload("before"))
+                app.commit()
+
+                // Starting up, the other process recovers what its own previous run left open, and nothing else.
+                let widget = otherProcess()
+                widget.recoverInterruptedLog()
+                expect(widget.pendingBatches()).to(beEmpty())
+
+                _ = app.stage(EventStoreSpec.payload("after"))
+                app.commit()
+                let batch = app.closeBatch()
+                expect(batch?.eventCount) == 2
+                expect(EventStoreSpec.keys(ofBody: batch.flatMap { try? app.body(of: $0) })) == ["before", "after"]
+            }
+
+            it("keeps each process's events in a log of its own") {
+                let widget = otherProcess()
+                _ = app.stage(EventStoreSpec.payload("from-app"))
+                app.commit()
+                _ = widget.stage(EventStoreSpec.payload("from-widget"))
+                widget.commit()
+
+                expect(app.openLogUrl) != widget.openLogUrl
+                let fromApp = app.closeBatch()
+                let fromWidget = widget.closeBatch()
+                expect(EventStoreSpec.keys(ofBody: fromApp.flatMap { try? app.body(of: $0) })) == ["from-app"]
+                expect(EventStoreSpec.keys(ofBody: fromWidget.flatMap { try? widget.body(of: $0) })) == ["from-widget"]
+            }
+
+            it("delivers a batch another process closed, since that process may never run again") {
+                _ = app.stage(EventStoreSpec.payload("closed-by-app"))
+                let closed = app.closeBatch()
+
+                let widget = otherProcess()
+                widget.recoverInterruptedLog()
+                expect(closed).toNot(beNil())
+                expect(widget.pendingBatches().map(\.payloadId)) == [closed?.payloadId].compactMap { $0 }
+            }
+
+            it("recovers a process's own log on its next run") {
+                _ = app.stage(EventStoreSpec.payload("left-open"))
+                app.commit()
+
+                let nextRun = otherProcess("app")
+                nextRun.recoverInterruptedLog()
+                let batches = nextRun.pendingBatches()
+                expect(batches.count) == 1
+                expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? nextRun.body(of: $0) })) == ["left-open"]
+            }
+
+            it("names logs so that process names reducing to the same characters stay apart") {
+                let colon = EventStore.logName(for: "com.app:remote")
+                let dot = EventStore.logName(for: "com.app.remote")
+                expect(colon) != dot
+                expect(colon.hasPrefix("com_app_remote-")) == true
+                expect(dot.hasPrefix("com_app_remote-")) == true
+                expect(EventStore.logName(for: "  ").hasPrefix("unknown-")) == true
+            }
+        }
     }
 
     private func optOutSpec() {
@@ -237,7 +316,7 @@ final class EventStoreSpec: QuickSpec {
                 }
                 store.commit()
                 // The previous run died partway through writing its last frame.
-                let log = store.directory.appendingPathComponent("current")
+                let log = store.openLogUrl
                 try Data(contentsOf: log).dropLast(3).write(to: log)
 
                 let next = EventStoreSpec.reader(sharing: store)
@@ -280,7 +359,7 @@ final class EventStoreSpec: QuickSpec {
                 store.commit()
 
                 // A process killed partway through a write leaves the last frame short of its declared length.
-                let log = store.directory.appendingPathComponent("current")
+                let log = store.openLogUrl
                 let whole = try Data(contentsOf: log)
                 try whole.dropLast(8).write(to: log)
 
@@ -331,7 +410,7 @@ final class EventStoreSpec: QuickSpec {
                                                  readFile: EventStoreSpec.readFailing(while: { failing }))
                 next.recoverInterruptedLog()
                 // Moved out from under the name this run appends to, and not deleted.
-                expect(FileManager.default.fileExists(atPath: store.directory.appendingPathComponent("current").path)) == false
+                expect(FileManager.default.fileExists(atPath: store.openLogUrl.path)) == false
 
                 // So this run has the name to itself, and the events that are intact are only waiting for a read that
                 // works to be counted and delivered.
