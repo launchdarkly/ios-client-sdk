@@ -53,27 +53,47 @@ extension EventStore {
     /// A store in a directory of its own under the temporary directory, so that tests neither see each other's events
     /// nor leave any in the directory a real client would use.
     ///
-    /// Unlocked unless asked, whatever the platform. Tests stand in for the next run of the application with a second
-    /// store while the first is still alive, and on a Mac a locked log would rightly be left to the live one.
+    /// Unlocked, like every store from `sharing`.
     static func temporary(
         capacity: Int = 100,
         persistEvents: Bool = true,
-        locksOpenLog: Bool = false,
         commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.commitQueue"),
         readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
-        writeLog: @escaping (Int32, Data) -> Int32? = EventStore.writeAll
+        writeLog: @escaping (Int32, Data) -> Int32? = EventLogFile.writeAll
     ) -> EventStore {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("com.launchdarkly.tests.events", isDirectory: true)
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
-        return EventStore(directory: directory,
-                          capacity: capacity,
-                          persistEvents: persistEvents,
-                          locksOpenLog: locksOpenLog,
-                          logger: .disabled,
-                          commitQueue: commitQueue,
-                          readFile: readFile,
-                          writeLog: writeLog)
+        return unlocked(EventStore(directory: directory,
+                                   capacity: capacity,
+                                   persistEvents: persistEvents,
+                                   logger: .disabled,
+                                   commitQueue: commitQueue,
+                                   readFile: readFile,
+                                   writeLog: writeLog))
+    }
+
+    /// Another store on `directory`, standing in for the next run of the application, or for another process.
+    ///
+    /// Unlocked on a Mac too. Tests open it while the first store is still alive, and a locked log would rightly be
+    /// left to the live instance holding it; the locking itself has tests of its own.
+    static func sharing(_ directory: URL,
+                        persistEvents: Bool = true,
+                        processName: String = ProcessInfo.processInfo.processName,
+                        readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) }) -> EventStore {
+        unlocked(EventStore(directory: directory,
+                            capacity: 100,
+                            persistEvents: persistEvents,
+                            processName: processName,
+                            logger: .disabled,
+                            readFile: readFile))
+    }
+
+    private static func unlocked(_ store: EventStore) -> EventStore {
+        #if os(macOS) || targetEnvironment(macCatalyst)
+        store.locksOpenLog = false
+        #endif
+        return store
     }
 
     /// Removes the store's directory, including any batch still waiting to be delivered.

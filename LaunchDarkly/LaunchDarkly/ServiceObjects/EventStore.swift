@@ -82,8 +82,6 @@ protocol EventStoring {
 final class EventStore: EventStoring {
     /// Names a log that has been closed off for delivery; the rest of the name is the batch's payload ID.
     private static let batchPrefix = "ready-"
-    /// Names the log a single process appends to; the rest of the name is that process.
-    private static let openLogPrefix = "open-"
     /// How many staged bytes are allowed to accumulate before one of them pays for a write.
     ///
     /// This is what keeps a syscall off most recordings while bounding what a crash can take with it, for an
@@ -95,9 +93,6 @@ final class EventStore: EventStoring {
     private let logger: OSLog
     /// How a stored log is read, injectable so a test can make a read fail while the file is intact.
     private let readFile: (URL) throws -> Data
-    /// How bytes reach the open log, injectable so a test can make a write fail partway through a session, as a full
-    /// disk does. Answers with the errno it stopped on, or nil where every byte landed.
-    private let writeLog: (Int32, Data) -> Int32?
     /// Where a commit runs when it was not asked for by a caller who needs it to have happened.
     ///
     /// Evaluating a flag must not put a write on whichever thread evaluated it, and that thread is usually the main one.
@@ -109,7 +104,7 @@ final class EventStore: EventStoring {
     private let bufferLock = UnfairLock()
     /// Serializes commits so that two threads committing at once cannot interleave a frame or write frames out of
     /// order. Taken before `bufferLock`, never after it.
-    private let ioLock = UnfairLock()
+    private let ioLock: UnfairLock
 
     /// Only to be used while holding `bufferLock`.
     private var bufferData = Data()
@@ -131,7 +126,7 @@ final class EventStore: EventStoring {
     private var isCommitScheduled = false
 
     /// Only to be used while holding `ioLock`.
-    private var descriptor: Int32 = -1
+    private let openLog: OpenEventLog
     /// Whether a log left by a previous run has been dealt with. Only to be used while holding `ioLock`.
     private var hasRecoveredInterruptedLog = false
 
@@ -154,38 +149,18 @@ final class EventStore: EventStoring {
     /// Only to be used while holding `ioLock`.
     private var eventCounts: [String: Int] = [:]
 
-    /// The log this process appends to.
-    ///
-    /// One per process rather than one per directory, so that only one process ever writes a given log and recovery
-    /// only ever touches its own. With one shared log, a second process starting up would close off, as if a previous
-    /// run had left it, a log the first is still appending to through its open descriptor, and the first's later
-    /// events would land in a batch already sent or deleted. Another process's log is left for that process to recover
-    /// the next time it runs.
-    ///
-    /// Named for the process, unless `locksOpenLog` found another live instance holding that name, in which case it is
-    /// named for this instance's process ID as well. Only to be used while holding `ioLock`.
-    private(set) var openLogUrl: URL
-    /// The readable, collision-proof form of the process name every log this process opens is named after.
-    private let processLogName: String
-    /// Whether the open log is locked while this store has it open, so that another live process can tell it is taken.
-    ///
-    /// Only where two live processes can run under one name, which a process name alone cannot keep apart: a Mac runs
-    /// a second instance of an application on request. Elsewhere a name is one live process, and a lock is avoided
-    /// rather than added for nothing, because iOS kills a suspended application that holds a lock on a file in a
-    /// shared container.
-    private let locksOpenLog: Bool
-
-    /// Whether this platform can run two live instances of an application under one process name. True on a Mac,
-    /// which includes an iPhone or iPad application running on one, whether built with Mac Catalyst or not.
-    static var instancesCanShareProcessName: Bool {
-        #if os(macOS)
-        return true
-        #elseif canImport(Darwin)
-        return ProcessInfo.processInfo.isMacCatalystApp
-        #else
-        return false
-        #endif
+    /// Where the log this process appends to is, for a test or a diagnosis to look at.
+    var openLogUrl: URL {
+        ioLock.withLock { openLog.url }
     }
+
+    #if os(macOS) || targetEnvironment(macCatalyst)
+    /// Whether the open log is locked while it is open. Only to be changed before the store first touches the disk.
+    var locksOpenLog: Bool {
+        get { ioLock.withLock { openLog.isLocked } }
+        set { ioLock.withLock { openLog.isLocked = newValue } }
+    }
+    #endif
 
     /// A batch is identified by its payload ID rather than by a path, so that a batch listed from the directory and the
     /// same batch as it was closed are one thing.
@@ -197,69 +172,22 @@ final class EventStore: EventStoring {
          capacity: Int,
          persistEvents: Bool = true,
          processName: String = ProcessInfo.processInfo.processName,
-         locksOpenLog: Bool = EventStore.instancesCanShareProcessName,
          logger: OSLog,
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventStore.commitQueue", qos: .userInitiated),
          readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
-         writeLog: @escaping (Int32, Data) -> Int32? = EventStore.writeAll) {
+         writeLog: @escaping (Int32, Data) -> Int32? = EventLogFile.writeAll) {
         self.directory = directory
-        self.processLogName = EventStore.logName(for: processName)
-        self.openLogUrl = directory.appendingPathComponent(EventStore.openLogPrefix + processLogName)
-        self.locksOpenLog = locksOpenLog
+        let ioLock = UnfairLock()
+        self.ioLock = ioLock
+        self.openLog = OpenEventLog(directory: directory, processName: processName, ioLock: ioLock, logger: logger, writeLog: writeLog)
         self.capacity = capacity
         self.logger = logger
         self.commitQueue = commitQueue
         self.readFile = readFile
-        self.writeLog = writeLog
         // An application that has not asked for persistence gets the same store running the same way it runs once a
         // write has failed: events are held, delivered, and lost only if the process dies.
         self.persistEvents = persistEvents
         self.readsDisk = persistEvents
-    }
-
-    /// Names the log belonging to one process.
-    ///
-    /// The readable part is the process name with anything awkward in a filename replaced, which keeps a directory of
-    /// these diagnosable. That reduction is not one-to-one, and two processes sharing a log is the one thing this name
-    /// exists to prevent, so a digest of the original name is appended.
-    static func logName(for processName: String) -> String {
-        let trimmed = processName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let name = trimmed.isEmpty ? "unknown" : trimmed
-        let readable = String(name.unicodeScalars.map { scalar -> Character in
-            switch scalar {
-            case "a"..."z", "A"..."Z", "0"..."9", "-", "_":
-                return Character(scalar)
-            default:
-                return "_"
-            }
-        })
-        let digest = Util.sha256(name).prefix(4).map { String(format: "%02x", $0) }.joined()
-        return "\(readable)-\(digest)"
-    }
-
-    /// The directory the store for a mobile key belongs in, or nil where the platform gave us nowhere to write.
-    ///
-    /// tvOS is the reason this is not simply Application Support: a tvOS application is only allowed to persist to
-    /// purgeable caches, so there the events are kept somewhere the system may reclaim, which is the most durability
-    /// the platform offers.
-    static func defaultDirectory(mobileKey: String) -> URL? {
-        #if os(tvOS)
-        let searchPath = FileManager.SearchPathDirectory.cachesDirectory
-        #else
-        let searchPath = FileManager.SearchPathDirectory.applicationSupportDirectory
-        #endif
-
-        let root = FileManager.default.urls(for: searchPath, in: .userDomainMask).first
-            ?? FileManager.default.temporaryDirectory
-
-        var keyComponent = Util.sha256(mobileKey).base64UrlEncodedString
-        if let bundleId = Bundle.main.bundleIdentifier {
-            keyComponent = "\(Util.sha256(bundleId).base64UrlEncodedString).\(keyComponent)"
-        }
-
-        return root
-            .appendingPathComponent("com.launchdarkly.events", isDirectory: true)
-            .appendingPathComponent(keyComponent, isDirectory: true)
     }
 
     // MARK: Recording
@@ -380,19 +308,15 @@ final class EventStore: EventStoring {
     /// Requires `ioLock`.
     private func closeOpenLog(_ events: Int) -> EventBatch? {
         ioLock.assertOwned()
-        // Closed after the rename rather than before it, so that a locked log is still locked while it moves. Another
-        // instance recovering unlocked logs could otherwise take it in between.
-        defer { closeDescriptor() }
-
         let payloadId = UUID().uuidString
         do {
-            try FileManager.default.moveItem(at: openLogUrl, to: url(of: payloadId))
+            try openLog.close(movingTo: url(of: payloadId))
         } catch {
             os_log("%s could not close the event log: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
             // The log is still there to try again with, unless it is the log that went missing -- a purged cache
             // directory on tvOS, say. Then its events are gone, and they have to stop counting against capacity or the
             // store would refuse events for the rest of the session.
-            if !FileManager.default.fileExists(atPath: openLogUrl.path) {
+            if !openLog.exists {
                 bufferLock.lock()
                 committedEvents = 0
                 bufferLock.unlock()
@@ -555,24 +479,7 @@ final class EventStore: EventStoring {
         guard readsDisk, !hasRecoveredInterruptedLog
         else { return }
         hasRecoveredInterruptedLog = true
-
-        guard locksOpenLog
-        else {
-            recover(logAt: openLogUrl)
-            return
-        }
-
-        // A log that can be locked is one no live process has open, so whoever wrote it is gone. That includes a log a
-        // second instance opened under its process ID, which no later run would otherwise come back for by name.
-        let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
-                                                                    includingPropertiesForKeys: nil,
-                                                                    options: [.skipsHiddenFiles])) ?? []
-        for log in contents where log.lastPathComponent.hasPrefix(EventStore.openLogPrefix) {
-            guard let held = EventStore.openLocked(log, flags: O_RDONLY)
-            else { continue }
-            recover(logAt: log)
-            closeFile(held)
-        }
+        openLog.forEachLogLeftOpen { recover(logAt: $0) }
     }
 
     /// Closes off a log nobody is writing to any more. Requires `ioLock`.
@@ -651,165 +558,26 @@ final class EventStore: EventStoring {
     /// Requires `ioLock`.
     private func append(_ bytes: Data) -> Bool {
         ioLock.assertOwned()
-        guard let descriptor = descriptorForAppending()
+        // Before the log is opened, because it may still be the one a previous run died writing. Appended to, this
+        // run's events would sit behind that run's torn last frame, where a reader can no longer find where they start.
+        if !openLog.isOpen {
+            recoverInterruptedLogOnce()
+        }
+        guard openLog.append(bytes)
         else {
+            // Never trap on a full disk. The SDK gives up on persistence for the rest of the session rather than taking
+            // the application down with it, which is how other SDKs have crashed their hosts.
             disablePersistence()
             return false
         }
-        return append(bytes, to: descriptor)
-    }
-
-    /// Requires `ioLock`.
-    private func append(_ bytes: Data, to descriptor: Int32) -> Bool {
-        ioLock.assertOwned()
-        guard let failure = writeLog(descriptor, bytes)
-        else { return true }
-
-        // Never trap on a full disk. The SDK gives up on persistence for the rest of the session rather than taking
-        // the application down with it, which is how other SDKs have crashed their hosts.
-        os_log("%s giving up on persisting events: errno %d", log: logger, type: .debug, typeName(and: #function), failure)
-        disablePersistence()
-        return false
-    }
-
-    /// Writes every byte to the log, returning the errno it stopped on or nil where they all landed.
-    static func writeAll(_ descriptor: Int32, _ bytes: Data) -> Int32? {
-        var offset = 0
-        return bytes.withUnsafeBytes { raw -> Int32? in
-            guard let base = raw.baseAddress
-            else { return nil }
-            while offset < raw.count {
-                let result = writeBytes(descriptor, base.advanced(by: offset), raw.count - offset)
-                if result > 0 {
-                    offset += result
-                    continue
-                }
-                // A signal interrupting the write is not a failure; anything else is.
-                if errno == EINTR {
-                    continue
-                }
-                return errno
-            }
-            return nil
-        }
-    }
-
-    /// Requires `ioLock`.
-    private func descriptorForAppending() -> Int32? {
-        ioLock.assertOwned()
-        if descriptor >= 0 {
-            return descriptor
-        }
-
-        // Before opening, because the open log may still be the one a previous run died writing. Appended to, this run's
-        // events would sit behind that run's torn last frame, where a reader can no longer find where they start.
-        recoverInterruptedLogOnce()
-
-        do {
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        } catch {
-            os_log("%s could not create the event directory: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
-            return nil
-        }
-        excludeFromBackup()
-
-        guard let opened = openLogForAppending()
-        else {
-            os_log("%s could not open the event log: errno %d", log: logger, type: .debug, typeName(and: #function), errno)
-            return nil
-        }
-
-        descriptor = opened
-
-        if lseek(opened, 0, SEEK_END) == 0 {
-            guard append(EventLogFormat.fileHeader, to: opened)
-            else { return nil }
-        }
-
-        return descriptor
-    }
-
-    /// Opens the log this process appends to, locked where logs are. Requires `ioLock`.
-    private func openLogForAppending() -> Int32? {
-        ioLock.assertOwned()
-        // O_APPEND is what makes each write land at the end of the file as one step, so that clients for several
-        // environments writing their own logs, or a commit racing a reader, cannot produce a spliced frame.
-        let flags = O_WRONLY | O_APPEND | O_CREAT
-        guard locksOpenLog
-        else {
-            let opened = EventStore.openDescriptor(at: openLogUrl, flags: flags)
-            return opened >= 0 ? opened : nil
-        }
-
-        if let opened = EventStore.openLocked(openLogUrl, flags: flags) {
-            return opened
-        }
-
-        // Another live instance of the application holds the log for this process name, so this one takes a log of its
-        // own. The process ID keeps it apart from every other live process, and the suffix from another store in this
-        // one, as a closed client's can be while it is still going away. Recovery finds the log by its lock rather than
-        // its name, so it is not orphaned when this instance ends.
-        let ownLog = directory.appendingPathComponent(
-            "\(EventStore.openLogPrefix)\(processLogName)-\(getpid())-\(UUID().uuidString.prefix(8))")
-        guard let opened = EventStore.openLocked(ownLog, flags: flags)
-        else { return nil }
-        openLogUrl = ownLog
-        return opened
-    }
-
-    private static func openDescriptor(at url: URL, flags: Int32) -> Int32 {
-        url.withUnsafeFileSystemRepresentation { path -> Int32 in
-            guard let path = path
-            else { return -1 }
-            return openFile(path, flags, 0o600)
-        }
-    }
-
-    /// Opens a file and takes its lock without waiting, or nil where another live process holds it.
-    ///
-    /// The lock has to be on the file that is still at `url`: one renamed or removed between the open and the lock,
-    /// by another process closing off or recovering it, is no longer a log anyone appends to.
-    private static func openLocked(_ url: URL, flags: Int32) -> Int32? {
-        for _ in 0..<3 {
-            let opened = openDescriptor(at: url, flags: flags)
-            guard opened >= 0
-            else { return nil }
-            guard lockFile(opened)
-            else {
-                closeFile(opened)
-                return nil
-            }
-            if isFile(opened, at: url) {
-                return opened
-            }
-            closeFile(opened)
-        }
-        return nil
-    }
-
-    /// Requires `ioLock`.
-    private func closeDescriptor() {
-        ioLock.assertOwned()
-        guard descriptor >= 0
-        else { return }
-        closeFile(descriptor)
-        descriptor = -1
-    }
-
-    private func excludeFromBackup() {
-        #if canImport(Darwin)
-        var url = directory
-        var values = URLResourceValues()
-        values.isExcludedFromBackup = true
-        try? url.setResourceValues(values)
-        #endif
+        return true
     }
 
     deinit {
         // One acquisition: the lock is not recursive, and `commit()` would take it again.
         ioLock.lock()
         writeStagedBytes()
-        closeDescriptor()
+        openLog.closeDescriptor()
         ioLock.unlock()
     }
 }
@@ -832,7 +600,7 @@ private extension EventStore {
     /// Requires `ioLock`.
     func disablePersistence() {
         ioLock.assertOwned()
-        closeDescriptor()
+        openLog.closeDescriptor()
         bufferLock.lock()
         persistEvents = false
         bufferLock.unlock()
@@ -868,123 +636,6 @@ private extension EventStore {
     }
 }
 
-/// The on-disk shape of an event log.
-///
-/// A log opens with a magic and a format version, and holds a sequence of frames:
-///
-///     +- 4 bytes -+- 2 bytes -+     +- 2 bytes -+-  4 bytes  -+- n bytes -+
-///     |   LDEV    |  version  | ... |   type    |  length (n) |  payload  |
-///     +-----------+-----------+     +-----------+-------------+-----------+
-///
-/// The length prefix is what makes a log recoverable: a reader can tell a frame the writer finished from one it did not,
-/// without having to parse the event to find where it ends. The version is what makes an upgrade safe -- a log this
-/// version does not understand is discarded rather than misread -- and the frame type leaves room for a later version to
-/// write something new into a log this one still reads.
-enum EventLogFormat {
-    /// Bump this whenever the framing or the meaning of a frame changes.
-    static let version: UInt16 = 1
-    static let magic = Data("LDEV".utf8)
-    static let fileHeaderSize = 6
-    static let frameHeaderSize = 6
-    /// The only frame type written today; a reader skips a frame whose type it does not know.
-    static let eventFrame: UInt16 = 1
-    /// A ceiling on a single frame, so a corrupt length cannot make recovery allocate wildly.
-    static let maxFrameSize = 8 * 1024 * 1024
-
-    static var fileHeader: Data {
-        var header = magic
-        header.append(bigEndian(version))
-        return header
-    }
-
-    static func frame(for encodedEvent: Data) -> Data {
-        var frame = Data(capacity: frameHeaderSize + encodedEvent.count)
-        frame.append(bigEndian(eventFrame))
-        frame.append(bigEndian(UInt32(encodedEvent.count)))
-        frame.append(encodedEvent)
-        return frame
-    }
-
-    /// Walks the frames of a log, stopping at the first one that is not wholly there.
-    ///
-    /// A process that died partway through a write leaves a torn frame at the end. Everything before it is intact, so
-    /// recovery keeps that and drops only the tail. Returns false when the file is not a log this version reads.
-    static func forEachFrame(in file: Data, _ visit: (UInt16, Data) -> Void) -> Bool {
-        guard file.count >= fileHeaderSize,
-              file.prefix(magic.count) == magic,
-              readUInt16(file, at: magic.count) == version
-        else { return false }
-
-        var cursor = fileHeaderSize
-        while cursor + frameHeaderSize <= file.count {
-            let type = readUInt16(file, at: cursor)
-            let length = Int(readUInt32(file, at: cursor + 2))
-            let start = cursor + frameHeaderSize
-            guard length > 0, length <= maxFrameSize, start + length <= file.count
-            else { break }
-
-            visit(type, file.subdata(in: start..<(start + length)))
-            cursor = start + length
-        }
-        return true
-    }
-
-    /// How many events a log holds, or nil where it is not one this version reads.
-    static func eventCount(in file: Data) -> Int? {
-        var events = 0
-        guard forEachFrame(in: file, { type, _ in
-            if type == eventFrame {
-                events += 1
-            }
-        })
-        else { return nil }
-        return events
-    }
-
-    /// Assembles the JSON array LaunchDarkly expects out of the frames, without parsing the events themselves: they were
-    /// serialized on the way in and are shipped exactly as they were recorded.
-    static func assembleBody(from file: Data) -> Data? {
-        var body = Data("[".utf8)
-        var isFirst = true
-        let readable = forEachFrame(in: file) { type, payload in
-            guard type == eventFrame
-            else { return }
-            if !isFirst {
-                body.append(UInt8(ascii: ","))
-            }
-            body.append(payload)
-            isFirst = false
-        }
-
-        guard readable, !isFirst
-        else { return nil }
-
-        body.append(UInt8(ascii: "]"))
-        return body
-    }
-
-    static func bigEndian(_ value: UInt16) -> Data {
-        Data([UInt8(truncatingIfNeeded: value >> 8), UInt8(truncatingIfNeeded: value)])
-    }
-
-    static func bigEndian(_ value: UInt32) -> Data {
-        Data([UInt8(truncatingIfNeeded: value >> 24),
-              UInt8(truncatingIfNeeded: value >> 16),
-              UInt8(truncatingIfNeeded: value >> 8),
-              UInt8(truncatingIfNeeded: value)])
-    }
-
-    static func readUInt16(_ data: Data, at offset: Int) -> UInt16 {
-        let start = data.startIndex + offset
-        return UInt16(data[start]) << 8 | UInt16(data[start + 1])
-    }
-
-    static func readUInt32(_ data: Data, at offset: Int) -> UInt32 {
-        let start = data.startIndex + offset
-        return UInt32(data[start]) << 24 | UInt32(data[start + 1]) << 16 | UInt32(data[start + 2]) << 8 | UInt32(data[start + 3])
-    }
-}
-
 extension EventStore {
     /// Every event the store is holding, encoded exactly as it will be sent.
     ///
@@ -1003,8 +654,8 @@ extension EventStore {
                                                                     includingPropertiesForKeys: nil,
                                                                     options: [.skipsHiddenFiles])) ?? []
         var logs = contents.filter { $0.lastPathComponent.hasPrefix(EventStore.batchPrefix) }.sorted { $0.path < $1.path }
-        if FileManager.default.fileExists(atPath: openLogUrl.path) {
-            logs.append(openLogUrl)
+        if openLog.exists {
+            logs.append(openLog.url)
         }
 
         var payloads: [Data] = []
@@ -1021,58 +672,31 @@ extension EventStore {
     }
 }
 
-extension EventStore: TypeIdentifying { }
+extension EventStore {
+    /// The directory the store for a mobile key belongs in, or nil where the platform gave us nowhere to write.
+    ///
+    /// tvOS is the reason this is not simply Application Support: a tvOS application is only allowed to persist to
+    /// purgeable caches, so there the events are kept somewhere the system may reclaim, which is the most durability
+    /// the platform offers.
+    static func defaultDirectory(mobileKey: String) -> URL? {
+        #if os(tvOS)
+        let searchPath = FileManager.SearchPathDirectory.cachesDirectory
+        #else
+        let searchPath = FileManager.SearchPathDirectory.applicationSupportDirectory
+        #endif
 
-// The POSIX calls are wrapped so that the names cannot be shadowed by a member of the type using them, and so the
-// platform differences stay in one place. Foundation's FileHandle is deliberately not used: it raises an Objective-C
-// exception when a write fails, which is not something a Swift caller can catch, and has taken host applications down
-// with it when a device ran out of space.
-#if canImport(Darwin)
-private func openFile(_ path: UnsafePointer<CChar>, _ flags: Int32, _ mode: mode_t) -> Int32 {
-    Darwin.open(path, flags, mode)
-}
+        let root = FileManager.default.urls(for: searchPath, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
 
-private func writeBytes(_ descriptor: Int32, _ bytes: UnsafeRawPointer, _ count: Int) -> Int {
-    Darwin.write(descriptor, bytes, count)
-}
+        var keyComponent = Util.sha256(mobileKey).base64UrlEncodedString
+        if let bundleId = Bundle.main.bundleIdentifier {
+            keyComponent = "\(Util.sha256(bundleId).base64UrlEncodedString).\(keyComponent)"
+        }
 
-private func closeFile(_ descriptor: Int32) {
-    _ = Darwin.close(descriptor)
-}
-
-/// Takes an exclusive lock without waiting. Released by the kernel when the descriptor closes, including when the
-/// process dies, so a crashed process never leaves one behind.
-private func lockFile(_ descriptor: Int32) -> Bool {
-    flock(descriptor, LOCK_EX | LOCK_NB) == 0
-}
-#else
-private func openFile(_ path: UnsafePointer<CChar>, _ flags: Int32, _ mode: mode_t) -> Int32 {
-    open(path, flags, mode)
-}
-
-private func writeBytes(_ descriptor: Int32, _ bytes: UnsafeRawPointer, _ count: Int) -> Int {
-    write(descriptor, bytes, count)
-}
-
-private func closeFile(_ descriptor: Int32) {
-    _ = close(descriptor)
-}
-
-private func lockFile(_ descriptor: Int32) -> Bool {
-    flock(descriptor, LOCK_EX | LOCK_NB) == 0
-}
-#endif
-
-/// Whether a descriptor is open on the file currently at `url`, rather than one since renamed or removed.
-private func isFile(_ descriptor: Int32, at url: URL) -> Bool {
-    var opened = stat()
-    var named = stat()
-    guard fstat(descriptor, &opened) == 0
-    else { return false }
-    let found = url.withUnsafeFileSystemRepresentation { path -> Bool in
-        guard let path = path
-        else { return false }
-        return stat(path, &named) == 0
+        return root
+            .appendingPathComponent("com.launchdarkly.events", isDirectory: true)
+            .appendingPathComponent(keyComponent, isDirectory: true)
     }
-    return found && opened.st_ino == named.st_ino && opened.st_dev == named.st_dev
 }
+
+extension EventStore: TypeIdentifying { }

@@ -1,0 +1,138 @@
+import Foundation
+
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#endif
+
+/// The file operations an event log is made of, on descriptors rather than Foundation's file handles.
+///
+/// Foundation's FileHandle is deliberately not used: it raises an Objective-C exception when a write fails, which is not
+/// something a Swift caller can catch, and has taken host applications down with it when a device ran out of space.
+enum EventLogFile {
+    /// Opens a file, creating it readable and writable by its owner alone. Nil where it could not, with `errno` saying
+    /// why.
+    static func openDescriptor(at url: URL, flags: Int32) -> Int32? {
+        let opened = url.withUnsafeFileSystemRepresentation { path -> Int32 in
+            guard let path = path
+            else { return -1 }
+            return openFile(path, flags, 0o600)
+        }
+        return opened >= 0 ? opened : nil
+    }
+
+    /// Writes every byte, returning the errno it stopped on or nil where they all landed.
+    static func writeAll(_ descriptor: Int32, _ bytes: Data) -> Int32? {
+        var offset = 0
+        return bytes.withUnsafeBytes { raw -> Int32? in
+            guard let base = raw.baseAddress
+            else { return nil }
+            while offset < raw.count {
+                let result = writeBytes(descriptor, base.advanced(by: offset), raw.count - offset)
+                if result > 0 {
+                    offset += result
+                    continue
+                }
+                // A signal interrupting the write is not a failure; anything else is.
+                if errno == EINTR {
+                    continue
+                }
+                return errno
+            }
+            return nil
+        }
+    }
+
+    static func isEmpty(_ descriptor: Int32) -> Bool {
+        lseek(descriptor, 0, SEEK_END) == 0
+    }
+
+    static func closeDescriptor(_ descriptor: Int32) {
+        closeFile(descriptor)
+    }
+
+    static func excludeFromBackup(_ directory: URL) {
+        #if canImport(Darwin)
+        var url = directory
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? url.setResourceValues(values)
+        #endif
+    }
+
+    #if os(macOS) || targetEnvironment(macCatalyst)
+    /// Opens a file and takes its lock without waiting, or nil where another live process holds it.
+    ///
+    /// The lock has to be on the file that is still at `url`: one renamed or removed between the open and the lock,
+    /// by another process closing off or recovering it, is no longer a log anyone appends to.
+    static func openLocked(_ url: URL, flags: Int32) -> Int32? {
+        for _ in 0..<3 {
+            guard let opened = openDescriptor(at: url, flags: flags)
+            else { return nil }
+            guard lockFile(opened)
+            else {
+                closeFile(opened)
+                return nil
+            }
+            if isFile(opened, at: url) {
+                return opened
+            }
+            closeFile(opened)
+        }
+        return nil
+    }
+    #endif
+}
+
+// The POSIX calls are wrapped so that the names cannot be shadowed by a member of the type using them, and so the
+// platform differences stay in one place.
+#if canImport(Darwin)
+private func openFile(_ path: UnsafePointer<CChar>, _ flags: Int32, _ mode: mode_t) -> Int32 {
+    Darwin.open(path, flags, mode)
+}
+
+private func writeBytes(_ descriptor: Int32, _ bytes: UnsafeRawPointer, _ count: Int) -> Int {
+    Darwin.write(descriptor, bytes, count)
+}
+
+private func closeFile(_ descriptor: Int32) {
+    _ = Darwin.close(descriptor)
+}
+#else
+private func openFile(_ path: UnsafePointer<CChar>, _ flags: Int32, _ mode: mode_t) -> Int32 {
+    open(path, flags, mode)
+}
+
+private func writeBytes(_ descriptor: Int32, _ bytes: UnsafeRawPointer, _ count: Int) -> Int {
+    write(descriptor, bytes, count)
+}
+
+private func closeFile(_ descriptor: Int32) {
+    _ = close(descriptor)
+}
+#endif
+
+#if os(macOS) || targetEnvironment(macCatalyst)
+/// Takes an exclusive lock without waiting. Released by the kernel when the descriptor closes, including when the
+/// process dies, so a crashed process never leaves one behind.
+private func lockFile(_ descriptor: Int32) -> Bool {
+    flock(descriptor, LOCK_EX | LOCK_NB) == 0
+}
+
+/// Whether a descriptor is open on the file currently at `url`, rather than one since renamed or removed.
+private func isFile(_ descriptor: Int32, at url: URL) -> Bool {
+    var opened = stat()
+    var named = stat()
+    guard fstat(descriptor, &opened) == 0
+    else { return false }
+    let found = url.withUnsafeFileSystemRepresentation { path -> Bool in
+        guard let path = path
+        else { return false }
+        return stat(path, &named) == 0
+    }
+    return found && opened.st_ino == named.st_ino && opened.st_dev == named.st_dev
+}
+#endif

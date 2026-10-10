@@ -1048,7 +1048,7 @@ extension EventReporterSpec {
 
             /// The events the next run of the application would find.
             func eventsLeftOnDisk() -> [LDValue] {
-                let reader = EventStore(directory: testContext.store.directory, capacity: 100, locksOpenLog: false, logger: .disabled)
+                let reader = EventStore.sharing(testContext.store.directory)
                 return reader.pendingEventPayloads().compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
             }
 
@@ -1132,7 +1132,7 @@ extension EventReporterSpec {
                 testContext.eventReporter.commitRecordedEvents()
 
                 // Nothing delivered them and nothing closed the log, as would be the case had the process died here.
-                let recovered = EventStore(directory: testContext.store.directory, capacity: 100, locksOpenLog: false, logger: .disabled)
+                let recovered = EventStore.sharing(testContext.store.directory)
                 let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
                 nextRun.isOnline = true
 
@@ -1154,7 +1154,7 @@ extension EventReporterSpec {
                 testContext.recordEvents(2)
                 testContext.eventReporter.commitRecordedEvents()
 
-                let recovered = EventStore(directory: testContext.store.directory, capacity: 100, locksOpenLog: false, logger: .disabled)
+                let recovered = EventStore.sharing(testContext.store.directory)
                 let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
 
                 // Nothing asks for a flush, and the report interval is several times longer than this waits, so the
@@ -1264,7 +1264,7 @@ extension EventReporterSpec {
                     writes += 1
                     writesLock.unlock()
                     Thread.sleep(forTimeInterval: 0.05)
-                    return EventStore.writeAll(descriptor, bytes)
+                    return EventLogFile.writeAll(descriptor, bytes)
                 })
                 testContext = TestContext(store: store, eventCapacity: 100)
                 let reporter = testContext.eventReporter!
@@ -1306,7 +1306,7 @@ extension EventReporterSpec {
                 testContext.serviceMock.respondToEvents(with: 503)
                 testContext.eventReporter.record(CustomEvent(key: "kept", context: testContext.context))
 
-                let recovered = EventStore(directory: testContext.store.directory, capacity: 100, locksOpenLog: false, logger: .disabled)
+                let recovered = EventStore.sharing(testContext.store.directory)
                 let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
                 nextRun.isOnline = true
                 defer { nextRun.isOnline = false }
@@ -1329,7 +1329,7 @@ extension EventReporterSpec {
 
                 // The same directory, as the application's next launch would find it.
                 testContext.serviceMock.stubEventResponse(success: true)
-                let recovered = EventStore(directory: testContext.store.directory, capacity: 100, locksOpenLog: false, logger: .disabled)
+                let recovered = EventStore.sharing(testContext.store.directory)
                 let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
                 nextRun.isOnline = true
                 defer { nextRun.isOnline = false }
@@ -1642,7 +1642,7 @@ extension EventReporterSpec {
                 let store = EventStore.temporary(writeLog: { descriptor, bytes in
                     writes += 1
                     // The file header and the first event land; the device is full from then on.
-                    return writes > 2 ? ENOSPC : EventStore.writeAll(descriptor, bytes)
+                    return writes > 2 ? ENOSPC : EventLogFile.writeAll(descriptor, bytes)
                 })
                 testContext = TestContext(store: store)
                 testContext.eventReporter.record(CustomEvent(key: "written", context: LDContext.stub()))

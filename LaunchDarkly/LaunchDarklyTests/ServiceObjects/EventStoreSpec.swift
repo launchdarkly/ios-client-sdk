@@ -13,26 +13,28 @@ final class EventStoreSpec: QuickSpec {
         fallbackSpec()
         optOutSpec()
         multiProcessSpec()
+        #if os(macOS) || targetEnvironment(macCatalyst)
         sameNameInstancesSpec()
+        #endif
     }
 
+    #if os(macOS) || targetEnvironment(macCatalyst)
     private func sameNameInstancesSpec() {
-        // As on a Mac, where a second instance of an application runs under the first one's process name.
-        describe("two live instances under one process name, where logs are locked") {
+        // A second instance of a Mac application runs under the first one's process name.
+        describe("two live instances under one process name") {
             var first: EventStore!
             afterEach {
                 first.deleteEverything()
             }
 
             func instance() -> EventStore {
-                EventStore(directory: first.directory, capacity: 100, processName: "app", locksOpenLog: true, logger: .disabled)
+                EventStore(directory: first.directory, capacity: 100, processName: "app", logger: .disabled)
             }
 
             beforeEach {
                 first = EventStore(directory: EventStore.temporary().directory,
                                    capacity: 100,
                                    processName: "app",
-                                   locksOpenLog: true,
                                    logger: .disabled)
             }
 
@@ -79,7 +81,7 @@ final class EventStoreSpec: QuickSpec {
                 first.commit()
                 let directory = first.directory
                 first = nil
-                first = EventStore(directory: directory, capacity: 100, processName: "app", locksOpenLog: true, logger: .disabled)
+                first = EventStore(directory: directory, capacity: 100, processName: "app", logger: .disabled)
 
                 first.recoverInterruptedLog()
                 let batches = first.pendingBatches()
@@ -88,6 +90,7 @@ final class EventStoreSpec: QuickSpec {
             }
         }
     }
+    #endif
 
     private func multiProcessSpec() {
         describe("several processes sharing a directory") {
@@ -99,11 +102,11 @@ final class EventStoreSpec: QuickSpec {
             /// Another process of the same application, using the same directory under its own name. Unlocked, as on an
             /// iPhone or iPad, where a process name is one live process and the name alone keeps the logs apart.
             func otherProcess(_ name: String = "widget") -> EventStore {
-                EventStore(directory: app.directory, capacity: 100, processName: name, locksOpenLog: false, logger: .disabled)
+                EventStore.sharing(app.directory, processName: name)
             }
 
             beforeEach {
-                app = EventStore(directory: EventStore.temporary().directory, capacity: 100, processName: "app", locksOpenLog: false, logger: .disabled)
+                app = EventStore.sharing(EventStore.temporary().directory, processName: "app")
             }
 
             it("leaves a log another process still has open where it is, so that process's later events reach it") {
@@ -158,12 +161,12 @@ final class EventStoreSpec: QuickSpec {
             }
 
             it("names logs so that process names reducing to the same characters stay apart") {
-                let colon = EventStore.logName(for: "com.app:remote")
-                let dot = EventStore.logName(for: "com.app.remote")
+                let colon = OpenEventLog.name(for: "com.app:remote")
+                let dot = OpenEventLog.name(for: "com.app.remote")
                 expect(colon) != dot
                 expect(colon.hasPrefix("com_app_remote-")) == true
                 expect(dot.hasPrefix("com_app_remote-")) == true
-                expect(EventStore.logName(for: "  ").hasPrefix("unknown-")) == true
+                expect(OpenEventLog.name(for: "  ").hasPrefix("unknown-")) == true
             }
         }
     }
@@ -204,7 +207,7 @@ final class EventStoreSpec: QuickSpec {
                 _ = persisting.stage(EventStoreSpec.payload("open"))
                 persisting.commit()
 
-                let withoutPersistence = EventStore(directory: persisting.directory, capacity: 100, persistEvents: false, locksOpenLog: false, logger: .disabled)
+                let withoutPersistence = EventStore.sharing(persisting.directory, persistEvents: false)
                 withoutPersistence.recoverInterruptedLog()
                 expect(withoutPersistence.pendingBatches()).to(beEmpty())
                 expect(withoutPersistence.pendingEventCount) == 0
@@ -240,7 +243,7 @@ final class EventStoreSpec: QuickSpec {
     /// what actually reached the disk, which is the whole question a crash asks.
     private static func reader(sharing store: EventStore,
                                readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) }) -> EventStore {
-        EventStore(directory: store.directory, capacity: 100, locksOpenLog: false, logger: .disabled, readFile: readFile)
+        EventStore.sharing(store.directory, readFile: readFile)
     }
 
     /// What a process out of file descriptors gets for a file that is perfectly intact.
@@ -710,7 +713,7 @@ final class EventStoreSpec: QuickSpec {
                 let interrupted = EventStore.temporary(writeLog: { descriptor, bytes in
                     writes += 1
                     // The file header and the first event land; the device is full from then on.
-                    return writes > 2 ? ENOSPC : EventStore.writeAll(descriptor, bytes)
+                    return writes > 2 ? ENOSPC : EventLogFile.writeAll(descriptor, bytes)
                 })
                 defer { interrupted.deleteEverything() }
 
