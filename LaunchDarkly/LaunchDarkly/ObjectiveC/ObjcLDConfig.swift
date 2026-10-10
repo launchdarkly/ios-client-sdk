@@ -35,10 +35,21 @@ public final class ObjcLDConfig: NSObject {
         set { config.streamUrl = newValue }
     }
 
-    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)
+    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 1000)
     @objc public var eventCapacity: Int {
         get { config.eventCapacity }
         set { config.eventCapacity = newValue }
+    }
+
+    /// How far the SDK goes to make a recorded event outlive the process that recorded it.
+    ///
+    /// Without this, an event lives in memory until it is delivered, and a process that dies before the next flush
+    /// takes everything recorded since the last one, including the crash an application was reporting when it died.
+    /// `.immediate` additionally puts the write on the thread that called `track` or `identify`, so there is no window
+    /// in which the event exists only in memory. (Default: `.disabled`)
+    @objc public var eventPersistence: EventPersistence {
+        get { config.eventPersistence }
+        set { config.eventPersistence = newValue }
     }
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)

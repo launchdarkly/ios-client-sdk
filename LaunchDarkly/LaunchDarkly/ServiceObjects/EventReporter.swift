@@ -13,12 +13,17 @@ protocol EventReporting {
 
     func record(_ event: Event)
     // swiftlint:disable:next function_parameter_count
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool)
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey,
+                                    value: LDValue,
+                                    defaultValue: LDValue,
+                                    featureFlag: FeatureFlag?,
+                                    context: LDContext,
+                                    includeReason: Bool)
     func flush(completion: CompletionClosure?)
 
-    /// Like `flush`. Reports `true` if LaunchDarkly accepted the events, or there were none to send. Reports `false` if
-    /// the reporter is offline, or any of the events were lost: refused, still failing after the retry, or unable to
-    /// be serialized.
+    /// Like `flush`. Reports `true` if LaunchDarkly accepted the pending batches, or there were none to send. Reports
+    /// `false` if the reporter is offline, a batch was refused for good, a retryable failure left batches on disk, or
+    /// an event the SDK had accepted could not be kept to send at all.
     ///
     /// Flushes arriving faster than a delivery completes join the one that is queued, since a delivery that has not
     /// started yet will send their events too. A delivery that has already started is not joined, so an answer is
@@ -28,6 +33,16 @@ protocol EventReporting {
     /// free to record events or flush again without waiting on the queue it is running on. It is not the caller's
     /// thread either, and two completions may run at once, so anything it touches needs to expect that.
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure)
+
+    /// Makes everything recorded so far outlive the process, without waiting for a delivery.
+    ///
+    /// The SDK does this itself at the points where an application is most likely to be about to die. It is worth
+    /// calling directly before deliberately terminating the process.
+    func commitRecordedEvents()
+
+    /// Commits as a commit point does: before returning at `.immediate`, on a background queue at `.deferred`, and not
+    /// at all where nothing is persisted, where a commit would only move the encode earlier.
+    func commitAtCommitPoint()
 }
 
 class NullEventReporter: EventReporting {
@@ -37,37 +52,91 @@ class NullEventReporter: EventReporting {
     func record(_ event: Event) {
     }
 
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool) {
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey,
+                                    value: LDValue,
+                                    defaultValue: LDValue,
+                                    featureFlag: FeatureFlag?,
+                                    context: LDContext,
+                                    includeReason: Bool) {
     }
 
+    // There is never anything to send, but a completion still answers on a background queue, as `EventReporter`'s
+    // does. Were it answered inline, the threading a caller sees would depend on whether events are turned on, and a
+    // caller doing what the contract allows -- taking a lock it already holds, say -- would deadlock only there.
     func flush(completion: CompletionClosure?) {
-        completion?()
+        guard let completion
+        else { return }
+        DispatchQueue.global().async { completion() }
     }
 
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
-        completion(true)
+        DispatchQueue.global().async { completion(true) }
+    }
+
+    func commitRecordedEvents() {
+    }
+
+    func commitAtCommitPoint() {
     }
 }
 
+/// Records analytics events and delivers them to LaunchDarkly.
+///
+/// Recorded events end up in an `EventStore`, an on-disk log, rather than held in memory until a delivery succeeds.
+/// That is what lets an application that dies moments after recording an event still report it: the events are on disk
+/// before the process is gone, and the next run of the application delivers them.
+///
+/// Recording an event summarizes it and, if it has to be delivered in full, holds it as an `Event`. Nothing is encoded
+/// on the thread that recorded it; a commit turns the whole held run into bytes at once. So an evaluation of an
+/// untracked flag costs a counter update, and an evaluation of a tracked one costs that plus an array append.
+///
+/// Where the line falls is between the events an application asked for by name and the ones it did not. Recording a
+/// custom or identify event is a *commit point*, because an application reporting something it chose to report is
+/// saying this matters more than the microseconds it costs, and the crash it describes may be moments away. A commit
+/// takes the whole held run with it, so the exposures leading up to the error go down alongside it. Evaluations get no
+/// such promise, and are committed once `pendingCommitThreshold` of them have accumulated, when a delivery starts, or
+/// on `flush`.
+///
+/// Whether a commit point runs on the caller's thread is the application's choice, through
+/// `LDConfig.eventPersistence`. Only at `.immediate` can `track` promise the event is on disk by the time it returns.
+/// At `.disabled` nothing commits early: the held run waits for the delivery, which encodes it.
 class EventReporter: EventReporting {
+    /// How many full events may be held unencoded before one of them pays for a commit.
+    ///
+    /// It sets two things at once. The first is how many evaluations a termination can take -- not everything a crash
+    /// could take, since an application that flushes on its way out commits the whole run, but the window for the
+    /// terminations that run nothing on the way out, such as the system reclaiming a backgrounded process. Recording a
+    /// custom or identify event closes it too, because that commits.
+    ///
+    /// The second is the worst a commit point can cost, since it encodes whatever is held before returning. The common
+    /// case is far below the bound, because the commit queue keeps the run drained; raising this trades that tail
+    /// against the number of writes.
+    private static let pendingCommitThreshold = 32
+
     var isOnline: Bool {
         get { timerQueue.sync { eventReportTimer != nil } }
         set { timerQueue.sync { newValue ? startReporting() : stopReporting() } }
     }
 
-    private(set) var lastEventResponseDate: Date
+    var lastEventResponseDate: Date {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        return responseDate
+    }
 
     let service: DarklyServiceProvider
+    let store: EventStoring
 
-    private let eventQueue = DispatchQueue(label: "com.launchdarkly.eventSyncQueue", qos: .userInitiated)
-    // These fields should only be used synchronized on the eventQueue
-    private(set) var eventStore: [Event] = []
+    /// Guards the last response date and the record of what has been lost.
+    private let stateLock = UnfairLock()
+    /// Only to be used while holding `pendingLock`.
     private(set) var contextSummarizer: ContextSummarizer
+    /// Only to be used while holding `stateLock`.
+    private var responseDate: Date
 
-    /// Guards `queuedDelivery`. Taken on a caller's thread and on `eventQueue`, and never held across either.
+    /// Guards `queuedDelivery`. Taken on a caller's thread and on `deliveryQueue`, and never held across either.
     private let deliveryLock = UnfairLock()
-    /// Callers waiting on a delivery that is queued and has not taken the event store yet, or nil where none is
-    /// queued.
+    /// Callers waiting on a delivery that is queued and has not taken the batches yet, or nil where none is queued.
     private var queuedDelivery: [FlushOutcomeClosure]?
 
     #if DEBUG
@@ -75,68 +144,394 @@ class EventReporter: EventReporting {
         private var deliveryRunCount = 0
     #endif
 
+    /// Whether events the SDK accepted were dropped for good, cleared once a caller who hears an outcome has been
+    /// told so. Only to be used while holding `stateLock`.
+    ///
+    /// A batch LaunchDarkly refuses in a way that may pass is kept and retried, so it is not a loss. What is lost is
+    /// what the store never received: an event or a summary that could not be serialized when it was committed, or
+    /// that serialized too large to store. A delivery that finds nothing to send cannot tell those apart from events
+    /// that arrived, so without this it would report success for them.
+    private var eventsLostSinceLastAnswer = false
+
+    /// Held for the whole of a commit, so that only one runs at a time.
+    ///
+    /// This is what a commit point's guarantee rests on. Without it a commit already in flight could take the caller's
+    /// event out of `pending` before the caller got there, leaving the caller nothing to write and returning while
+    /// those bytes were still being produced somewhere else. Waiting here instead means that when the call returns the
+    /// event is on disk, whichever commit put it there. It also keeps two encoders from staging their runs in
+    /// whichever order they happened to finish.
+    ///
+    /// Taken before `pendingLock` and before anything the store locks, never after.
+    private let commitLock = UnfairLock()
+
+    /// Guards everything one recording writes: the held events and the summarizer.
+    ///
+    /// One evaluation can produce a counter, a full event and a debug event, and the three have to land together. Taken
+    /// separately, a commit landing between them splits one evaluation across two payloads.
+    ///
+    /// Held for the appends and the handover of the run, never across the encoder or a syscall. It is a lock rather
+    /// than a queue because it is taken once per evaluation, and a `DispatchQueue.sync` costs enough at that rate to be
+    /// worth avoiding: the same measurement that made `EvaluationExposureDeduper` a lock applies here.
+    private let pendingLock = UnfairLock()
+
+    /// Full events recorded but not yet encoded. Only to be used while holding `pendingLock`.
+    ///
+    /// Held rather than encoded because encoding early would not make them durable: the store stages bytes into memory
+    /// too, and only a commit reaches the file. Both forms are equally lost to a crash, so the encode may as well
+    /// happen where it is cheapest.
+    private var pending: [Event] = []
+
+    /// Whether a commit is already queued, so a run of recordings past the threshold asks for one write rather than
+    /// one each. Only to be used while holding `pendingLock`.
+    private var isCommitScheduled = false
+
+    /// How many events the SDK will hold in total, across `pending` and the store.
+    private let capacity: Int
+
+    /// Where a commit runs when no caller is waiting on it.
+    private let commitQueue: DispatchQueue
+
     private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
     private var eventReportTimer: TimeResponding?
     var isReportingActive: Bool { eventReportTimer != nil }
 
+    /// Deliveries run here, off whatever thread recorded an event.
+    private let deliveryQueue = DispatchQueue(label: "com.launchdarkly.eventSyncQueue", qos: .userInitiated)
+
+    /// Whether the store held events from a previous run of the application when this reporter started.
+    ///
+    /// Only to be used on `deliveryQueue`, which is what makes it safe without a lock: the recovery that answers the
+    /// question and the delivery that acts on it are both enqueued there, in that order.
+    private var hasEventsFromPreviousRun = false
+
+    /// Payload IDs a delivery has taken and not yet had an answer for. Only to be used while holding `stateLock`.
+    ///
+    /// `deliveryQueue` serializes the *start* of a delivery but not the round trip it waits on, and a batch stays on
+    /// disk until its response arrives. Without this, a delivery beginning inside that window would list the same batch
+    /// again and send it a second time -- under the same payload ID, leaving it to LaunchDarkly to notice that two
+    /// requests arriving at once are the same one.
+    ///
+    /// This bounds the overlap rather than preventing it, which is the point: a later delivery still runs, and still
+    /// sends what it closed for itself. Only the batches already on their way are left out of it.
+    private var batchesInFlight: Set<String> = []
+
     private let onSyncComplete: EventSyncCompleteClosure?
 
-    /// Shared across concurrent flushes, so it must not be mutated after `init`.
+    /// Shared by the threads recording events, so it must not be mutated after `init`.
     private let encoder: JSONEncoder
 
     let encoding: Encoding
+    /// Outlives a commit rather than being built per commit, so that its buffer and context cache span them.
+    ///
+    /// A commit point writes a single event, so a cache that lived for one commit would never be read. It needs no
+    /// lock of its own because it is only ever reached from `encode(_:)`, which runs under `commitLock`.
+    fileprivate let eventJSONWriter: EventJSONWriter
 
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
-         encoding: Encoding = .handWritten) {
+         store: EventStoring? = nil,
+         encoding: Encoding = .handWritten,
+         commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.commitQueue", qos: .userInitiated)) {
+        self.eventJSONWriter = EventJSONWriter(config: service.config)
         self.service = service
         self.onSyncComplete = onSyncComplete
-        self.lastEventResponseDate = Date()
+        self.responseDate = Date()
         self.encoding = encoding
+        self.capacity = service.config.eventCapacity
+        self.commitQueue = commitQueue
         self.encoder = EventReporter.makeEncoder(config: service.config)
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger, maxContexts: service.config.eventCapacity)
+        self.store = store ?? EventReporter.makeStore(config: service.config)
+
+        // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
+        // doing it on the caller's thread would put file I/O in the way of the client starting up.
+        let store = self.store
+        deliveryQueue.async { [weak self] in
+            store.recoverInterruptedLog()
+            self?.hasEventsFromPreviousRun = !store.pendingBatches().isEmpty
+        }
     }
+
+    private static func makeStore(config: LDConfig) -> EventStoring {
+        guard let directory = EventStore.defaultDirectory(mobileKey: config.mobileKey)
+        else {
+            os_log("Events cannot be persisted: no writable directory was available", log: config.logger, type: .debug)
+            return NullEventStore()
+        }
+        return EventStore(directory: directory,
+                          capacity: config.eventCapacity,
+                          persistEvents: config.eventPersistence != .disabled,
+                          logger: config.logger)
+    }
+
+    // MARK: Recording
 
     func record(_ event: Event) {
-        // The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
-        eventQueue.sync { recordNoSync(event) }
-    }
+        pendingLock.lock()
+        let dropped = !admitToPending(event)
+        let needsCommit = pending.count >= EventReporter.pendingCommitThreshold
+        pendingLock.unlock()
 
-    func recordNoSync(_ event: Event) {
-        if self.eventStore.count >= self.service.config.eventCapacity {
-            os_log("%s aborted. Event store is full", log: service.config.logger, type: .debug, typeName(and: #function))
-            self.service.diagnosticCache?.incrementDroppedEventCount()
-            return
+        if dropped {
+            reportDropped()
         }
-        self.eventStore.append(event)
+        if EventReporter.isCommitPoint(event.kind) {
+            commitAtCommitPoint()
+        } else if needsCommit {
+            scheduleCommitWherePersisting()
+        }
     }
 
     // swiftlint:disable:next function_parameter_count
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey, value: LDValue, defaultValue: LDValue, featureFlag: FeatureFlag?, context: LDContext, includeReason: Bool) {
+    func recordFlagEvaluationEvents(flagKey: LDFlagKey,
+                                    value: LDValue,
+                                    defaultValue: LDValue,
+                                    featureFlag: FeatureFlag?,
+                                    context: LDContext,
+                                    includeReason: Bool) {
         let recordingFeatureEvent = featureFlag?.trackEvents == true
         let recordingDebugEvent = featureFlag?.shouldCreateDebugEvents(lastEventReportResponseTime: lastEventResponseDate) ?? false
+        // Built before the lock is taken, so that the critical section is only the writes.
+        let featureEvent = recordingFeatureEvent ? FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false) : nil
+        let debugEvent = recordingDebugEvent ? FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: true) : nil
 
-        eventQueue.sync {
-            // A refused evaluation is a loss like a refused event, since nothing later reconstructs its counter. Its
-            // full event is still decided by the event capacity alone.
-            if !contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context) {
-                service.diagnosticCache?.incrementDroppedEventCount()
+        var dropped = 0
+        pendingLock.lock()
+        let counted = contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
+        for event in [featureEvent, debugEvent].compactMap({ $0 }) where !admitToPending(event) {
+            dropped += 1
+        }
+        let needsCommit = pending.count >= EventReporter.pendingCommitThreshold
+        pendingLock.unlock()
+
+        // A refused evaluation is a loss like a refused event, since nothing later reconstructs its counter. Its full
+        // event is still decided by the event capacity alone.
+        if !counted {
+            service.diagnosticCache?.incrementDroppedEventCount()
+        }
+        for _ in 0..<dropped {
+            reportDropped()
+        }
+        // Deliberately no commit point. An evaluation is expected to cost what bookkeeping costs, and it is usually the
+        // main thread doing it; where events are persisted, the run is encoded and written on the commit queue once
+        // enough of them have piled up, and the next event recorded at a commit point makes them durable along with
+        // itself.
+        if needsCommit {
+            scheduleCommitWherePersisting()
+        }
+    }
+
+    /// Adds an event to `pending` for the next commit to encode, returning false if the SDK is already full. Requires
+    /// `pendingLock`.
+    ///
+    /// Capacity is consulted before anything else, so an event that will not be kept is never encoded. That ordering is
+    /// what bounds an application re-evaluating a tracked flag in a render loop: once the limit is reached an
+    /// evaluation costs no more than its summary counter, however fast the loop runs.
+    private func admitToPending(_ event: Event) -> Bool {
+        pendingLock.assertOwned()
+        guard pending.count + store.pendingEventCount < capacity
+        else { return false }
+
+        pending.append(event)
+        return true
+    }
+
+    private func reportDropped() {
+        os_log("%s aborted. Event store is full", log: service.config.logger, type: .debug, typeName(and: #function))
+        service.diagnosticCache?.incrementDroppedEventCount()
+    }
+
+    /// Records the loss of an event the SDK accepted and then could not keep, which no later attempt recovers.
+    private func reportLost() {
+        os_log("%s dropping an event the store would not take", log: service.config.logger, type: .error, typeName(and: #function))
+        service.diagnosticCache?.incrementDroppedEventCount()
+        stateLock.lock()
+        eventsLostSinceLastAnswer = true
+        stateLock.unlock()
+    }
+
+    /// Whether anything has been lost since the last caller was told, which that caller is now the one to hear about.
+    private func takeEventsLost() -> Bool {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        let lost = eventsLostSinceLastAnswer
+        eventsLostSinceLastAnswer = false
+        return lost
+    }
+
+    /// Commits at a commit point, on the caller's thread or off it as the application asked.
+    ///
+    /// Committing on the caller's thread is what lets `track` promise its event is on disk by the time it returns.
+    /// Scheduling it instead keeps the encode and the write off that thread, and the event is durable a moment later
+    /// rather than immediately.
+    func commitAtCommitPoint() {
+        if service.config.eventPersistence == .immediate {
+            commitRecordedEvents()
+        } else {
+            scheduleCommitWherePersisting()
+        }
+    }
+
+    /// Queues a commit where there is a disk for it to reach.
+    ///
+    /// Without persistence a commit makes nothing durable. All it would do is move the encode into the middle of the
+    /// application's evaluations, where it competes with them for the CPU and splits their counters across summaries;
+    /// left alone, the run waits for the delivery, which encodes it anyway, and capacity still bounds how much is held.
+    private func scheduleCommitWherePersisting() {
+        if store.isPersisting {
+            scheduleCommit()
+        }
+    }
+
+    /// Queues a commit unless one is already queued, so a run of recordings asks for one write rather than one each.
+    private func scheduleCommit() {
+        pendingLock.lock()
+        guard !isCommitScheduled
+        else {
+            pendingLock.unlock()
+            return
+        }
+        isCommitScheduled = true
+        pendingLock.unlock()
+
+        commitQueue.async { [weak self] in
+            guard let self
+            else { return }
+            // Cleared before the commit rather than after it, so that an event held while this one is in flight can ask
+            // for another commit instead of finding one apparently already on its way.
+            self.pendingLock.lock()
+            self.isCommitScheduled = false
+            self.pendingLock.unlock()
+
+            self.commitRecordedEvents()
+        }
+    }
+
+    /// Encodes everything recorded since the last commit, stages it, and commits it.
+    ///
+    /// The run and the counters are taken in one critical section, so that an evaluation's counter and its full event
+    /// are staged by the same commit, and encoded outside it, so recording does not wait on the encoder.
+    func commitRecordedEvents() {
+        commitLock.lock()
+        defer { commitLock.unlock() }
+        encodeAndCommitPending()
+    }
+
+    /// Commits what is held and closes it into a batch, as one step with respect to other commits.
+    ///
+    /// Closing takes everything staged so far, and a commit stages its run one event at a time, so a commit running
+    /// between the two would be closed partway: an evaluation's event in this batch and its summary in the next.
+    private func commitAndCloseBatch() {
+        commitLock.lock()
+        defer { commitLock.unlock() }
+        encodeAndCommitPending()
+        _ = store.closeBatch()
+    }
+
+    /// Requires `commitLock`.
+    private func encodeAndCommitPending() {
+        commitLock.assertOwned()
+        pendingLock.lock()
+        let run = pending
+        pending = []
+        let summaries = contextSummarizer.hasLoggedRequests ? contextSummarizer.getSummaries() : []
+        if !summaries.isEmpty {
+            contextSummarizer.clear()
+        }
+        // Reserved in the same critical section the run leaves `pending` in, so capacity counts it in one place or the
+        // other throughout the encode.
+        store.reserve(run.count)
+        pendingLock.unlock()
+
+        stage(run)
+        store.releaseReservations()
+        stageSummaries(summaries)
+        store.commit()
+    }
+
+    /// Encodes the held events as one run and stages the bytes.
+    ///
+    /// Staging uses the reservation taken with the run rather than checking capacity, because the decision to keep
+    /// these events was made when they were held, and refusing them here would drop events the SDK has already counted
+    /// as accepted.
+    ///
+    /// Requires `commitLock`: two threads draining separate runs would stage them in whichever order they finished
+    /// encoding, which is not the order they were recorded in.
+    private func stage(_ run: [Event]) {
+        commitLock.assertOwned()
+        for event in run {
+            guard let encoded = encode(event)
+            else {
+                reportLost()
+                continue
             }
-            if recordingFeatureEvent {
-                let featureEvent = FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: false)
-                recordNoSync(featureEvent)
-            }
-            if recordingDebugEvent {
-                let debugEvent = FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: true)
-                recordNoSync(debugEvent)
+            // Capacity is bypassed here, so what is left is a frame too large to store, which no later attempt fixes.
+            if !store.stageReserved(encoded) {
+                reportLost()
             }
         }
     }
+
+    /// Whether recording this kind of event should encode and write the held run before it returns.
+    ///
+    /// Custom and identify events are recorded because the application did something it chose to report, which is both
+    /// rare enough to afford a write and the moment it is least acceptable to lose. Evaluations are neither.
+    private static func isCommitPoint(_ kind: Event.Kind) -> Bool {
+        switch kind {
+        case .custom, .identify: return true
+        case .feature, .debug, .summary: return false
+        }
+    }
+
+    /// Turns the counters taken with the run into summary events and stages them.
+    ///
+    /// Counters live only in memory, so a crash takes whatever has not been summarized with it. Summarizing at each
+    /// commit point rather than only at a delivery is what bounds that loss, and it costs nothing in accuracy:
+    /// LaunchDarkly sums the counters of every summary it receives, so a session that produced several summaries is
+    /// counted the same as one that produced a single summary covering the same evaluations.
+    private func stageSummaries(_ summaries: [(tracker: FlagRequestTracker, context: LDContext)]) {
+        for summary in summaries {
+            let summaryEvent = SummaryEvent(flagRequestTracker: summary.tracker, context: summary.context)
+            guard let encoded = encode(summaryEvent)
+            else {
+                reportLost()
+                continue
+            }
+            // Summaries are an aggregate of evaluations that were already counted, so refusing one for capacity would
+            // lose evaluations the SDK promised to report rather than shed new load.
+            if !store.stage(encoded, bypassingCapacity: true) {
+                reportLost()
+            }
+        }
+    }
+
+    private func encode(_ event: Event) -> Data? {
+        let encoded: Data? = encoding == .codable ? try? encoder.encode(event) : eventJSONWriter.encode(event)
+        guard let encoded = encoded
+        else {
+            os_log("%s Failed to serialize event for publication: %s", log: service.config.logger, type: .error, typeName(and: #function), String(describing: event))
+            return nil
+        }
+        return encoded
+    }
+
+    // MARK: Reporting
 
     private func startReporting() {
         guard eventReportTimer == nil
         else { return }
-        eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: eventQueue, execute: queueScheduledDelivery)
+        eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: deliveryQueue, execute: queueScheduledDelivery)
+
+        // Events a previous run left behind are already late by however long the application was gone, so they do not
+        // wait out a report interval on top of that: an application that crashed reports it as soon as it is next able
+        // to. Only the first time online brings a delivery forward, so going online again later, as a network comes and
+        // goes, keeps to the ordinary cadence.
+        deliveryQueue.async { [weak self] in
+            guard let self, self.hasEventsFromPreviousRun
+            else { return }
+            self.hasEventsFromPreviousRun = false
+            self.queueScheduledDelivery()
+        }
     }
 
     private func stopReporting() {
@@ -146,10 +541,20 @@ class EventReporter: EventReporting {
 
     func flush(completion: CompletionClosure?) {
         // Nil stays nil, so a flush nobody waits on joins a queued delivery without adding to its waiters.
-        queueDelivery(completion.map { done in { _ in done() } })
+        commitThenQueueDelivery(completion.map { done in { _ in done() } })
     }
 
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
+        commitThenQueueDelivery(completion)
+    }
+
+    /// Queues a delivery the way a caller asking for one expects, which is as a commit point.
+    ///
+    /// At `.immediate` everything accepted before the call is on disk by the time it returns, even where the delivery
+    /// itself cannot run because the client is offline. It is also what makes the answer cover the caller's own
+    /// events: they are closed into a batch here, before any delivery can take one.
+    private func commitThenQueueDelivery(_ completion: FlushOutcomeClosure?) {
+        commitAtCommitPoint()
         queueDelivery(completion)
     }
 
@@ -164,7 +569,7 @@ class EventReporter: EventReporting {
     /// post completes each queue their own, and the one that matters -- the flush at shutdown -- waits behind all of
     /// them.
     ///
-    /// A delivery that has already started is not joined. It has taken the event store, so it cannot speak for
+    /// A delivery that has already started is not joined. It has closed and taken its batches, so it cannot speak for
     /// anything recorded since, and holding later deliveries back until it answers would leave the store growing
     /// through a retry while nothing drained it.
     private func queueDelivery(_ completion: FlushOutcomeClosure?) {
@@ -179,12 +584,12 @@ class EventReporter: EventReporting {
         queuedDelivery = completion.map { [$0] } ?? []
         deliveryLock.unlock()
 
-        eventQueue.async { self.runDelivery() }
+        deliveryQueue.async { self.runDelivery() }
     }
 
     private func runDelivery() {
-        // Requests arriving from here on need a delivery of their own: this one is about to take the event store, and
-        // what it takes is all it can speak for.
+        // Requests arriving from here on need a delivery of their own: this one is about to close and take its
+        // batches, and what it takes is all it can speak for.
         deliveryLock.lock()
         let waiters = queuedDelivery ?? []
         queuedDelivery = nil
@@ -196,12 +601,16 @@ class EventReporter: EventReporting {
         reportEvents { delivered in
             guard !waiters.isEmpty
             else { return }
-            // Answered away from `eventQueue`, and from whichever thread the delivery ended on, so that every
+            // Taken once for the delivery rather than once per waiter, so that every caller joined to it hears about
+            // a loss instead of only whichever happened to be answered first. Left alone where nobody is waiting, so
+            // a scheduled delivery does not consume the answer a later caller is owed.
+            let kept = !self.takeEventsLost()
+            // Answered away from `deliveryQueue`, and from whichever thread the delivery ended on, so that every
             // completion reaches its caller the same way. A completion is free to record or flush again: it is never
             // running on the queue those wait for.
             DispatchQueue.global().async {
                 for waiter in waiters {
-                    waiter(delivered)
+                    waiter(delivered && kept)
                 }
             }
         }
@@ -216,16 +625,10 @@ class EventReporter: EventReporting {
             return
         }
 
-        if contextSummarizer.hasLoggedRequests {
-            let summaries = contextSummarizer.getSummaries()
-            for summary in summaries {
-                let summaryEvent = SummaryEvent(flagRequestTracker: summary.tracker, context: summary.context)
-                self.eventStore.append(summaryEvent)
-            }
-            contextSummarizer.clear()
-        }
+        commitAndCloseBatch()
 
-        guard !eventStore.isEmpty
+        let batches = claimDeliverableBatches()
+        guard !batches.isEmpty
         else {
             os_log("%s aborted. Event store is empty", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(nil)
@@ -234,37 +637,107 @@ class EventReporter: EventReporting {
         }
 
         os_log("%s starting", log: service.config.logger, type: .debug, typeName(and: #function))
-
-        let toPublish = self.eventStore
-        self.eventStore = []
-
-        service.diagnosticCache?.recordEventsInLastBatch(eventsInLastBatch: toPublish.count)
-
-        DispatchQueue.global().async {
-            self.publish(toPublish, UUID().uuidString, completion)
+        deliver(batches) { [weak self] delivered in
+            self?.releaseClaim(on: batches)
+            completion?(delivered)
         }
     }
 
-    private func publish(_ events: [Event], _ payloadId: String, _ completion: FlushOutcomeClosure?) {
-        guard let (eventData, isComplete) = encode(events)
+    /// Takes the batches this delivery will send, leaving out any another delivery is still waiting on a response for.
+    ///
+    /// The caller's own events are never among those left out: they were closed into a batch of their own a moment
+    /// ago, which no earlier delivery could have taken. So a delivery that finds everything already claimed has
+    /// nothing of its own to send, and `true` is the right answer for it.
+    private func claimDeliverableBatches() -> [EventBatch] {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        let deliverable = store.pendingBatches().filter { !batchesInFlight.contains($0.payloadId) }
+        batchesInFlight.formUnion(deliverable.map { $0.payloadId })
+        return deliverable
+    }
+
+    /// Releases the claim once the delivery has an answer, whether or not every batch was sent: `deliver` stops at the
+    /// first retryable failure, and what it did not reach has to be deliverable again.
+    private func releaseClaim(on batches: [EventBatch]) {
+        stateLock.lock()
+        batchesInFlight.subtract(batches.map { $0.payloadId })
+        stateLock.unlock()
+    }
+
+    private func deliver(_ batches: [EventBatch], _ completion: FlushOutcomeClosure?) {
+        deliver(batches, lostAnything: false, completion)
+    }
+
+    /// Delivers batches oldest first, stopping at the first one that failed in a way worth retrying.
+    ///
+    /// Stopping matters: the batches that are left keep their place in the log, and a later delivery attempts them
+    /// again rather than the SDK spending the rest of the session's requests on a service that is refusing them.
+    ///
+    /// `lostAnything` carries whether a batch already taken in this pass was lost for good, so that the caller hears
+    /// about it even where the batches after it were accepted.
+    private func deliver(_ batches: [EventBatch], lostAnything: Bool, _ completion: FlushOutcomeClosure?) {
+        var remaining = batches
+        guard !remaining.isEmpty
         else {
-            os_log("%s Failed to serialize event(s) for publication: %s", log: service.config.logger, type: .error, typeName(and: #function), String(describing: events))
-            // Encoding is deterministic, so no retry would succeed; the events are lost.
+            completion?(!lostAnything)
+            return
+        }
+
+        let batch = remaining.removeFirst()
+        let read: Data?
+        do {
+            read = try store.body(of: batch)
+        } catch {
+            // Kept: the batch is still there, and a read that failed may not fail next time.
+            os_log("%s could not read stored events: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error))
             completion?(false)
             return
         }
-        self.service.publishEventData(eventData, payloadId) { response in
-            switch self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: false) {
+
+        guard let body = read
+        else {
+            // Gone, or holding nothing this version can send. Either way there is nothing to send and nothing to keep.
+            store.remove(batch)
+            deliver(remaining, lostAnything: lostAnything, completion)
+            return
+        }
+
+        service.diagnosticCache?.recordEventsInLastBatch(eventsInLastBatch: batch.eventCount)
+        publish(batch, body) { outcome in
+            switch outcome {
             case .accepted:
-                completion?(isComplete)
-            case .refused, .dropped:
+                self.deliver(remaining, lostAnything: lostAnything, completion)
+            case .refused:
+                // The rest are still attempted, so that batches LaunchDarkly will never take do not sit on the device
+                // for the rest of the session, taking up the room the capacity limit leaves for new events.
+                self.deliver(remaining, lostAnything: true, completion)
+            case .retryable:
                 completion?(false)
+            }
+        }
+    }
+
+    private func publish(_ batch: EventBatch, _ body: Data, _ completion: @escaping (DeliveryOutcome) -> Void) {
+        service.publishEventData(body, batch.payloadId) { response in
+            let outcome = self.outcome(sentEvents: batch.eventCount, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: false)
+            switch outcome {
+            case .accepted, .refused:
+                self.store.remove(batch)
+                completion(outcome)
             case .retryable:
                 os_log("%s Retrying event post after delay.", log: self.service.config.logger, type: .debug, self.typeName(and: #function))
                 DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.0) {
-                    self.service.publishEventData(eventData, payloadId) { response in
-                        let outcome = self.processEventResponse(sentEvents: events.count, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: true)
-                        completion?(outcome == .accepted && isComplete)
+                    self.service.publishEventData(body, batch.payloadId) { retryResponse in
+                        let retried = self.outcome(sentEvents: batch.eventCount, response: retryResponse.urlResponse as? HTTPURLResponse, error: retryResponse.error, isRetry: true)
+                        switch retried {
+                        case .accepted, .refused:
+                            self.store.remove(batch)
+                        case .retryable:
+                            // The batch stays on disk. A later delivery, in this run of the application or the next
+                            // one, sends it under the same payload ID, so LaunchDarkly can tell it is not new.
+                            os_log("%s Keeping %d event(s) on disk to retry later", log: self.service.config.logger, type: .debug, self.typeName(and: #function), batch.eventCount)
+                        }
+                        completion(retried)
                     }
                 }
             }
@@ -272,73 +745,22 @@ class EventReporter: EventReporting {
     }
 
     private enum DeliveryOutcome {
+        /// LaunchDarkly took the events.
         case accepted
-        /// Refused with a status that no retry would change. The events are dropped.
+        /// LaunchDarkly will never take these events, so keeping them only wastes space.
         case refused
+        /// The events may still be deliverable.
         case retryable
-        /// Failed with no retry left.
-        case dropped
     }
 
-    /// Encodes a run of events as the array the events endpoint takes.
-    ///
-    /// If the run cannot be encoded as a whole, each event is retried on its own. Events that fail are dropped rather
-    /// than put back, because encoding is deterministic and they would fail every later flush too. `isComplete` is
-    /// false when any were dropped.
-    private func encode(_ events: [Event]) -> (data: Data, isComplete: Bool)? {
-        guard encoding != .codable
-        else {
-            if let data = try? encoder.encode(events) {
-                return (data, true)
-            }
-            return encodeSkippingFailures(events, using: { try encoder.encode($0) })
-        }
-
-        let eventJSONWriter = EventJSONWriter(config: service.config)
-        return encodeSkippingFailures(events, using: { event in
-            guard let encoded = eventJSONWriter.encode(event)
-            else { throw EventEncodingError.handWritten }
-            return encoded
-        })
-    }
-
-    private func encodeSkippingFailures(_ events: [Event], using encodeOne: (Event) throws -> Data) -> (data: Data, isComplete: Bool)? {
-        var payload = Data([UInt8(ascii: "[")])
-        var written = 0
-        for event in events {
-            let encoded: Data
-            do {
-                encoded = try encodeOne(event)
-            } catch {
-                os_log("%s dropping unserializable event: %s",
-                       log: service.config.logger,
-                       type: .error,
-                       typeName(and: #function),
-                       String(describing: event))
-                continue
-            }
-            if written > 0 {
-                payload.append(UInt8(ascii: ","))
-            }
-            payload.append(encoded)
-            written += 1
-        }
-        guard written > 0
-        else { return nil }
-        payload.append(UInt8(ascii: "]"))
-        return (payload, written == events.count)
-    }
-
-    private enum EventEncodingError: Error {
-        case handWritten
-    }
-
-    private func processEventResponse(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> DeliveryOutcome {
+    private func outcome(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> DeliveryOutcome {
         if error == nil && (200..<300).contains(response?.statusCode ?? 0) {
-            let serverTime = response?.headerDate ?? self.lastEventResponseDate
-            if serverTime > self.lastEventResponseDate {
-                self.lastEventResponseDate = serverTime
+            let serverTime = response?.headerDate
+            stateLock.lock()
+            if let serverTime = serverTime, serverTime > responseDate {
+                responseDate = serverTime
             }
+            stateLock.unlock()
 
             os_log("%s Completed sending %d event(s)", log: service.config.logger, type: .debug, typeName(and: #function), sentEvents)
             self.reportSyncComplete(nil)
@@ -355,13 +777,12 @@ class EventReporter: EventReporting {
         os_log("%s Sending events failed with error: %s response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: response))
 
         if isRetry {
-            os_log("%s dropping events due to failed retry", log: service.config.logger, type: .debug, typeName(and: #function))
             if let error = error {
                 reportSyncComplete(.request(error))
             } else {
                 reportSyncComplete(.response(response))
             }
-            return .dropped
+            return .retryable
         }
 
         return .retryable
@@ -403,15 +824,118 @@ extension EventReporter {
 
 extension EventReporter: TypeIdentifying { }
 
+/// Stands in where the platform gave the SDK nowhere to write. Events are recorded and delivered from memory for the
+/// life of the process, which is the behavior the SDK had before it kept a log.
+private final class NullEventStore: EventStoring {
+    private let lock = UnfairLock()
+    private var staged: [Data] = []
+    private var reserved = 0
+    private var closed: [String: [Data]] = [:]
+
+    var pendingEventCount: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return reserved + staged.count + closed.values.reduce(0) { $0 + $1.count }
+    }
+
+    var isPersisting: Bool { false }
+
+    func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        staged.append(encodedEvent)
+        return true
+    }
+
+    func reserve(_ events: Int) {
+        lock.lock()
+        defer { lock.unlock() }
+        reserved += events
+    }
+
+    func stageReserved(_ encodedEvent: Data) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        reserved = max(0, reserved - 1)
+        staged.append(encodedEvent)
+        return true
+    }
+
+    func releaseReservations() {
+        lock.lock()
+        defer { lock.unlock() }
+        reserved = 0
+    }
+
+    func commit() {
+    }
+
+    func closeBatch() -> EventBatch? {
+        lock.lock()
+        defer { lock.unlock() }
+
+        guard !staged.isEmpty
+        else { return nil }
+
+        let payloadId = UUID().uuidString
+        let events = staged
+        staged = []
+        closed[payloadId] = events
+        return EventBatch(payloadId: payloadId, eventCount: events.count)
+    }
+
+    func pendingBatches() -> [EventBatch] {
+        lock.lock()
+        defer { lock.unlock() }
+        return closed.map { EventBatch(payloadId: $0.key, eventCount: $0.value.count) }
+    }
+
+    func body(of batch: EventBatch) -> Data? {
+        lock.lock()
+        defer { lock.unlock() }
+
+        guard let events = closed[batch.payloadId]
+        else { return nil }
+
+        var body = Data("[".utf8)
+        for (index, event) in events.enumerated() {
+            if index > 0 {
+                body.append(UInt8(ascii: ","))
+            }
+            body.append(event)
+        }
+        body.append(UInt8(ascii: "]"))
+        return body
+    }
+
+    func remove(_ batch: EventBatch) {
+        lock.lock()
+        defer { lock.unlock() }
+        closed[batch.payloadId] = nil
+    }
+
+    func recoverInterruptedLog() {
+    }
+}
+
 #if DEBUG
     extension EventReporter {
+        /// Full events accepted but not yet handed to a commit.
+        var pendingEventsForTesting: [Event] {
+            pendingLock.lock()
+            defer { pendingLock.unlock() }
+            return pending
+        }
+
         func setLastEventResponseDate(_ date: Date) {
-            lastEventResponseDate = date
+            stateLock.lock()
+            responseDate = date
+            stateLock.unlock()
         }
 
         /// Occupies the queue a delivery runs on, so a test can see what one that has not started yet collects.
         func occupyQueue(until released: DispatchSemaphore) {
-            eventQueue.async { _ = released.wait(timeout: .now() + 10) }
+            deliveryQueue.async { _ = released.wait(timeout: .now() + 10) }
         }
 
         /// Callers waiting on the queued delivery.

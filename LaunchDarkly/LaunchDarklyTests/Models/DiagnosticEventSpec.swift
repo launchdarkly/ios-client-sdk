@@ -174,7 +174,7 @@ final class DiagnosticEventSpec: QuickSpec {
         customConfig.baseUrl = URL(string: "https://clientstream.launchdarkly.com")!
         customConfig.eventsUrl = URL(string: "https://app.launchdarkly.com")!
         customConfig.streamUrl = URL(string: "https://mobile.launchdarkly.com")!
-        customConfig.eventCapacity = 1_000
+        customConfig.eventCapacity = 2_000
         customConfig.connectionTimeout = 30.0
         customConfig.eventFlushInterval = 60.0
         customConfig.streamingMode = .polling
@@ -202,7 +202,7 @@ final class DiagnosticEventSpec: QuickSpec {
                     expect(diagnosticConfig.customBaseURI) == false
                     expect(diagnosticConfig.customEventsURI) == false
                     expect(diagnosticConfig.customStreamURI) == false
-                    expect(diagnosticConfig.eventsCapacity) == 100
+                    expect(diagnosticConfig.eventsCapacity) == 1_000
                     expect(diagnosticConfig.connectTimeoutMillis) == 10_000
                     expect(diagnosticConfig.eventsFlushIntervalMillis) == 30_000
                     expect(diagnosticConfig.streamingDisabled) == false
@@ -224,7 +224,7 @@ final class DiagnosticEventSpec: QuickSpec {
                     expect(diagnosticConfig.customBaseURI) == true
                     expect(diagnosticConfig.customEventsURI) == true
                     expect(diagnosticConfig.customStreamURI) == true
-                    expect(diagnosticConfig.eventsCapacity) == 1_000
+                    expect(diagnosticConfig.eventsCapacity) == 2_000
                     expect(diagnosticConfig.connectTimeoutMillis) == 30_000
                     expect(diagnosticConfig.eventsFlushIntervalMillis) == 60_000
                     expect(diagnosticConfig.streamingDisabled) == true

@@ -263,8 +263,12 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
+        // The OS may kill a backgrounded application without warning, so make its events durable now. On every
+        // platform: macOS does not suspend an application that loses focus, but it can still be quit or killed.
+        eventReporter.commitAtCommitPoint()
         // A backgrounded process is suspended once idle, so deliver inside an activity assertion. Only where suspension
         // is real: macOS posts this notification whenever the application loses focus, and never suspends it for that.
+        // What does not get out is on disk for the next launch.
         #if os(iOS) || os(tvOS)
         backgroundDelivery.run { [weak self] finished in
             guard let self = self
@@ -274,7 +278,7 @@ public class LDClient {
             }
             self.eventReporter.flushReportingOutcome { delivered in
                 if !delivered {
-                    os_log("%s events did not reach LaunchDarkly before suspension", log: self.config.logger, type: .debug, self.typeName(and: #function))
+                    os_log("%s events did not reach LaunchDarkly before suspension; they remain on disk", log: self.config.logger, type: .debug, self.typeName(and: #function))
                 }
                 finished()
             }
@@ -1092,16 +1096,6 @@ public class LDClient {
 }
 
 extension LDClient: TypeIdentifying { }
-
-private extension LDClient {
-    func onEventSyncComplete(result: SynchronizingError?) {
-        if let synchronizingError = result {
-            os_log("%s result: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: synchronizingError))
-        } else {
-            os_log("%s result: success", log: config.logger, type: .debug, typeName(and: #function))
-        }
-    }
-}
 
 #if DEBUG
 extension LDClient {

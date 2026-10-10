@@ -139,6 +139,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
     private var _stubbedEventResponse: ServiceResponse?
     private var _publishEventDataCallCount = 0
     private var _publishedEventData: Data?
+    private var _publishedEventPayloads: [Data] = []
+    private var _publishedPayloadIds: [String] = []
     private var _holdsEventCompletions = false
     private var heldEventCompletions: [ServiceCompletionHandler] = []
 
@@ -154,6 +156,14 @@ final class DarklyServiceMock: DarklyServiceProvider {
         get { withEventLock { _publishedEventData } }
         set { withEventLock { _publishedEventData = newValue } }
     }
+    /// Every payload published, in order, so a test can see what a delivery of several batches sent.
+    var publishedEventPayloads: [Data] {
+        withEventLock { _publishedEventPayloads }
+    }
+    /// Every payload ID used, in order, so a test can tell a retry of a delivery from a new one.
+    var publishedPayloadIds: [String] {
+        withEventLock { _publishedPayloadIds }
+    }
     /// Holds responses so a test can act while a delivery is in flight.
     var holdsEventCompletions: Bool {
         get { withEventLock { _holdsEventCompletions } }
@@ -165,6 +175,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
         let response: ServiceResponse? = withEventLock {
             _publishEventDataCallCount += 1
             _publishedEventData = eventData
+            _publishedEventPayloads.append(eventData)
+            _publishedPayloadIds.append(payloadId)
             guard !_holdsEventCompletions
             else {
                 if let completion {

@@ -4,14 +4,24 @@ import OSLog
 // MARK: - Flush
 extension LDClient {
     /**
-     Tells the SDK to immediately send any currently queued events to LaunchDarkly.
+     Writes down all pending events and sends them to LaunchDarkly.
 
      There should not normally be a need to call this function. While online, the LDClient automatically reports events
      on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
-     sent, it only triggers a background task to send events immediately.
+     sent, it only triggers a background task to send them immediately.
 
      Because it does not wait, it cannot report how the delivery went. Use `flush(completion:)` where that matters
      but blocking does not suit, or `flushAndWait` where blocking is acceptable.
+
+     Where `LDConfig.eventPersistence` is on, it also writes before it returns. Recording an event does not on its own
+     make it outlive the process: events are written in runs, so one recorded shortly before the process ends may
+     never have been written at all. This call writes everything recorded so far, and those events then survive
+     whether or not the delivery does. Where it is off, events live in memory only and nothing survives the process,
+     whether or not this was called.
+
+     That is what makes it worth calling where the process is about to end deliberately. It is not a crash-time
+     mechanism — Apple gives the SDK no crash hook, and a trap or a `SIGKILL` takes whatever was recorded since the
+     last write. Those events are not lost so much as late: they reach LaunchDarkly on the next launch.
      */
     public func flush() {
         LDClient.instancesQueue.sync(flags: .barrier) {
@@ -36,7 +46,9 @@ extension LDClient {
         guard !clients.isEmpty
         else {
             os_log("%s called on a closed client", log: config.logger, type: .debug, self.typeName(and: #function))
-            completion(false)
+            // Answered off the caller's thread even with nothing to wait for, so that the contract holds whether or
+            // not the client turned out to be closed.
+            DispatchQueue.global().async { completion(false) }
             return
         }
 
@@ -133,6 +145,12 @@ extension LDClient {
                 answered.signal()
             }
         }
+
+        // Started, then given up on. The deliveries are what makes a zero timeout worth calling at all: at
+        // `.immediate` the events are on disk by the time each `flushReportingOutcome` returns. Waiting is what is
+        // skipped, and a reporter that answered during the loop above must not turn that into a `true`.
+        guard timeout > 0
+        else { return false }
 
         // Every wait is against the one deadline rather than a fresh copy of it, so the timeout the caller asked for
         // is the time this call can take however many environments there are. A delivery still running when the wait

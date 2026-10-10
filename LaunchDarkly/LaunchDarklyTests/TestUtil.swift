@@ -48,3 +48,36 @@ func valueIsArray(_ value: LDValue?, asserts: ([LDValue]) -> Void) {
     }
     asserts(arr)
 }
+
+extension EventStore {
+    /// A store in a directory of its own under the temporary directory, so that tests neither see each other's events
+    /// nor leave any in the directory a real client would use.
+    ///
+    /// Unlocked unless asked, whatever the platform. Tests stand in for the next run of the application with a second
+    /// store while the first is still alive, and on a Mac a locked log would rightly be left to the live one.
+    static func temporary(
+        capacity: Int = 100,
+        persistEvents: Bool = true,
+        locksOpenLog: Bool = false,
+        commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.commitQueue"),
+        readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
+        writeLog: @escaping (Int32, Data) -> Int32? = EventStore.writeAll
+    ) -> EventStore {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("com.launchdarkly.tests.events", isDirectory: true)
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        return EventStore(directory: directory,
+                          capacity: capacity,
+                          persistEvents: persistEvents,
+                          locksOpenLog: locksOpenLog,
+                          logger: .disabled,
+                          commitQueue: commitQueue,
+                          readFile: readFile,
+                          writeLog: writeLog)
+    }
+
+    /// Removes the store's directory, including any batch still waiting to be delivered.
+    func deleteEverything() {
+        try? FileManager.default.removeItem(at: directory)
+    }
+}
