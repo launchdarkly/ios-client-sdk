@@ -13,6 +13,80 @@ final class EventStoreSpec: QuickSpec {
         fallbackSpec()
         optOutSpec()
         multiProcessSpec()
+        sameNameInstancesSpec()
+    }
+
+    private func sameNameInstancesSpec() {
+        // As on a Mac, where a second instance of an application runs under the first one's process name.
+        describe("two live instances under one process name, where logs are locked") {
+            var first: EventStore!
+            afterEach {
+                first.deleteEverything()
+            }
+
+            func instance() -> EventStore {
+                EventStore(directory: first.directory, capacity: 100, processName: "app", locksOpenLog: true, logger: .disabled)
+            }
+
+            beforeEach {
+                first = EventStore(directory: EventStore.temporary().directory,
+                                   capacity: 100,
+                                   processName: "app",
+                                   locksOpenLog: true,
+                                   logger: .disabled)
+            }
+
+            it("gives the second a log of its own, named for its process, and leaves the first's alone") {
+                _ = first.stage(EventStoreSpec.payload("first"))
+                first.commit()
+
+                let second = instance()
+                second.recoverInterruptedLog()
+                expect(second.pendingBatches()).to(beEmpty())
+
+                _ = second.stage(EventStoreSpec.payload("second"))
+                second.commit()
+                expect(second.openLogUrl) != first.openLogUrl
+                expect(second.openLogUrl.lastPathComponent).to(contain("-\(getpid())-"))
+
+                _ = first.stage(EventStoreSpec.payload("first-again"))
+                first.commit()
+                let fromFirst = first.closeBatch()
+                let fromSecond = second.closeBatch()
+                expect(EventStoreSpec.keys(ofBody: fromFirst.flatMap { try? first.body(of: $0) })) == ["first", "first-again"]
+                expect(EventStoreSpec.keys(ofBody: fromSecond.flatMap { try? second.body(of: $0) })) == ["second"]
+            }
+
+            it("recovers the log an instance that has ended left open, though no run is named for it") {
+                _ = first.stage(EventStoreSpec.payload("first"))
+                first.commit()
+
+                var ended: EventStore? = instance()
+                _ = ended?.stage(EventStoreSpec.payload("from-the-ended-instance"))
+                ended?.commit()
+                // Going away closes its descriptor, which releases the lock, as the process dying would.
+                ended = nil
+
+                let next = instance()
+                next.recoverInterruptedLog()
+                let batches = next.pendingBatches()
+                expect(batches.count) == 1
+                expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? next.body(of: $0) })) == ["from-the-ended-instance"]
+            }
+
+            it("recovers the log a previous run under the name left open, once nothing holds it") {
+                _ = first.stage(EventStoreSpec.payload("left-open"))
+                first.commit()
+                let directory = first.directory
+                first = nil
+                first = EventStore(directory: directory, capacity: 100, processName: "app", locksOpenLog: true, logger: .disabled)
+
+                first.recoverInterruptedLog()
+                let batches = first.pendingBatches()
+                expect(batches.count) == 1
+                expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? first.body(of: $0) })) == ["left-open"]
+            }
+        }
     }
 
     private func multiProcessSpec() {
@@ -22,13 +96,14 @@ final class EventStoreSpec: QuickSpec {
                 app.deleteEverything()
             }
 
-            /// Another process of the same application, using the same directory under its own name.
+            /// Another process of the same application, using the same directory under its own name. Unlocked, as on an
+            /// iPhone or iPad, where a process name is one live process and the name alone keeps the logs apart.
             func otherProcess(_ name: String = "widget") -> EventStore {
-                EventStore(directory: app.directory, capacity: 100, processName: name, logger: .disabled)
+                EventStore(directory: app.directory, capacity: 100, processName: name, locksOpenLog: false, logger: .disabled)
             }
 
             beforeEach {
-                app = EventStore(directory: EventStore.temporary().directory, capacity: 100, processName: "app", logger: .disabled)
+                app = EventStore(directory: EventStore.temporary().directory, capacity: 100, processName: "app", locksOpenLog: false, logger: .disabled)
             }
 
             it("leaves a log another process still has open where it is, so that process's later events reach it") {
@@ -129,7 +204,7 @@ final class EventStoreSpec: QuickSpec {
                 _ = persisting.stage(EventStoreSpec.payload("open"))
                 persisting.commit()
 
-                let withoutPersistence = EventStore(directory: persisting.directory, capacity: 100, persistEvents: false, logger: .disabled)
+                let withoutPersistence = EventStore(directory: persisting.directory, capacity: 100, persistEvents: false, locksOpenLog: false, logger: .disabled)
                 withoutPersistence.recoverInterruptedLog()
                 expect(withoutPersistence.pendingBatches()).to(beEmpty())
                 expect(withoutPersistence.pendingEventCount) == 0
@@ -165,7 +240,7 @@ final class EventStoreSpec: QuickSpec {
     /// what actually reached the disk, which is the whole question a crash asks.
     private static func reader(sharing store: EventStore,
                                readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) }) -> EventStore {
-        EventStore(directory: store.directory, capacity: 100, logger: .disabled, readFile: readFile)
+        EventStore(directory: store.directory, capacity: 100, locksOpenLog: false, logger: .disabled, readFile: readFile)
     }
 
     /// What a process out of file descriptors gets for a file that is perfectly intact.

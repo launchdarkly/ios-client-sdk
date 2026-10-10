@@ -160,8 +160,32 @@ final class EventStore: EventStoring {
     /// only ever touches its own. With one shared log, a second process starting up would close off, as if a previous
     /// run had left it, a log the first is still appending to through its open descriptor, and the first's later
     /// events would land in a batch already sent or deleted. Another process's log is left for that process to recover
-    /// the next time it runs. Two instances of one macOS application run under one name, and so still share a log.
-    let openLogUrl: URL
+    /// the next time it runs.
+    ///
+    /// Named for the process, unless `locksOpenLog` found another live instance holding that name, in which case it is
+    /// named for this instance's process ID as well. Only to be used while holding `ioLock`.
+    private(set) var openLogUrl: URL
+    /// The readable, collision-proof form of the process name every log this process opens is named after.
+    private let processLogName: String
+    /// Whether the open log is locked while this store has it open, so that another live process can tell it is taken.
+    ///
+    /// Only where two live processes can run under one name, which a process name alone cannot keep apart: a Mac runs
+    /// a second instance of an application on request. Elsewhere a name is one live process, and a lock is avoided
+    /// rather than added for nothing, because iOS kills a suspended application that holds a lock on a file in a
+    /// shared container.
+    private let locksOpenLog: Bool
+
+    /// Whether this platform can run two live instances of an application under one process name. True on a Mac,
+    /// which includes an iPhone or iPad application running on one, whether built with Mac Catalyst or not.
+    static var instancesCanShareProcessName: Bool {
+        #if os(macOS)
+        return true
+        #elseif canImport(Darwin)
+        return ProcessInfo.processInfo.isMacCatalystApp
+        #else
+        return false
+        #endif
+    }
 
     /// A batch is identified by its payload ID rather than by a path, so that a batch listed from the directory and the
     /// same batch as it was closed are one thing.
@@ -173,12 +197,15 @@ final class EventStore: EventStoring {
          capacity: Int,
          persistEvents: Bool = true,
          processName: String = ProcessInfo.processInfo.processName,
+         locksOpenLog: Bool = EventStore.instancesCanShareProcessName,
          logger: OSLog,
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventStore.commitQueue", qos: .userInitiated),
          readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
          writeLog: @escaping (Int32, Data) -> Int32? = EventStore.writeAll) {
         self.directory = directory
-        self.openLogUrl = directory.appendingPathComponent(EventStore.openLogPrefix + EventStore.logName(for: processName))
+        self.processLogName = EventStore.logName(for: processName)
+        self.openLogUrl = directory.appendingPathComponent(EventStore.openLogPrefix + processLogName)
+        self.locksOpenLog = locksOpenLog
         self.capacity = capacity
         self.logger = logger
         self.commitQueue = commitQueue
@@ -353,7 +380,9 @@ final class EventStore: EventStoring {
     /// Requires `ioLock`.
     private func closeOpenLog(_ events: Int) -> EventBatch? {
         ioLock.assertOwned()
-        closeDescriptor()
+        // Closed after the rename rather than before it, so that a locked log is still locked while it moves. Another
+        // instance recovering unlocked logs could otherwise take it in between.
+        defer { closeDescriptor() }
 
         let payloadId = UUID().uuidString
         do {
@@ -512,7 +541,8 @@ final class EventStore: EventStoring {
     /// Closes any log left open by a previous run of this process, so its events join the batches to deliver.
     ///
     /// The events in it were recorded by a process that is gone, so there is no one left to add to it. Only this
-    /// process's own log is touched: another process's may still be open in a process that is alive.
+    /// process's own log is touched: another process's may still be open in a process that is alive. Where logs are
+    /// locked, any log no live process holds is recovered, whatever it is named.
     func recoverInterruptedLog() {
         ioLock.lock()
         defer { ioLock.unlock() }
@@ -526,8 +556,30 @@ final class EventStore: EventStoring {
         else { return }
         hasRecoveredInterruptedLog = true
 
+        guard locksOpenLog
+        else {
+            recover(logAt: openLogUrl)
+            return
+        }
+
+        // A log that can be locked is one no live process has open, so whoever wrote it is gone. That includes a log a
+        // second instance opened under its process ID, which no later run would otherwise come back for by name.
+        let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
+                                                                    includingPropertiesForKeys: nil,
+                                                                    options: [.skipsHiddenFiles])) ?? []
+        for log in contents where log.lastPathComponent.hasPrefix(EventStore.openLogPrefix) {
+            guard let held = EventStore.openLocked(log, flags: O_RDONLY)
+            else { continue }
+            recover(logAt: log)
+            closeFile(held)
+        }
+    }
+
+    /// Closes off a log nobody is writing to any more. Requires `ioLock`.
+    private func recover(logAt leftOpen: URL) {
+        ioLock.assertOwned()
         let events: Int
-        switch read(openLogUrl) {
+        switch read(leftOpen) {
         case .missing:
             return
         case .failed(let error):
@@ -535,13 +587,13 @@ final class EventStore: EventStoring {
             // would lose events that may be intact. Closed off uncounted instead, it is read and counted by whichever
             // listing first manages to.
             os_log("%s could not read events from a previous run, will try again later: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
-            try? FileManager.default.moveItem(at: openLogUrl, to: url(of: UUID().uuidString))
+            try? FileManager.default.moveItem(at: leftOpen, to: url(of: UUID().uuidString))
             return
         case .bytes(let log):
             guard let counted = EventLogFormat.eventCount(in: log)
             else {
                 // Unreadable, and a log that cannot be read cannot be appended to either.
-                try? FileManager.default.removeItem(at: openLogUrl)
+                try? FileManager.default.removeItem(at: leftOpen)
                 return
             }
             events = counted
@@ -549,12 +601,12 @@ final class EventStore: EventStoring {
 
         guard events > 0
         else {
-            try? FileManager.default.removeItem(at: openLogUrl)
+            try? FileManager.default.removeItem(at: leftOpen)
             return
         }
 
         let payloadId = UUID().uuidString
-        guard (try? FileManager.default.moveItem(at: openLogUrl, to: url(of: payloadId))) != nil
+        guard (try? FileManager.default.moveItem(at: leftOpen, to: url(of: payloadId))) != nil
         else { return }
 
         eventCounts[payloadId] = events
@@ -661,15 +713,7 @@ final class EventStore: EventStoring {
         }
         excludeFromBackup()
 
-        // O_APPEND is what makes each write land at the end of the file as one step, so that clients for several
-        // environments writing their own logs, or a commit racing a reader, cannot produce a spliced frame.
-        let opened = openLogUrl.withUnsafeFileSystemRepresentation { path -> Int32 in
-            guard let path = path
-            else { return -1 }
-            return openFile(path, O_WRONLY | O_APPEND | O_CREAT, 0o600)
-        }
-
-        guard opened >= 0
+        guard let opened = openLogForAppending()
         else {
             os_log("%s could not open the event log: errno %d", log: logger, type: .debug, typeName(and: #function), errno)
             return nil
@@ -683,6 +727,64 @@ final class EventStore: EventStoring {
         }
 
         return descriptor
+    }
+
+    /// Opens the log this process appends to, locked where logs are. Requires `ioLock`.
+    private func openLogForAppending() -> Int32? {
+        ioLock.assertOwned()
+        // O_APPEND is what makes each write land at the end of the file as one step, so that clients for several
+        // environments writing their own logs, or a commit racing a reader, cannot produce a spliced frame.
+        let flags = O_WRONLY | O_APPEND | O_CREAT
+        guard locksOpenLog
+        else {
+            let opened = EventStore.openDescriptor(at: openLogUrl, flags: flags)
+            return opened >= 0 ? opened : nil
+        }
+
+        if let opened = EventStore.openLocked(openLogUrl, flags: flags) {
+            return opened
+        }
+
+        // Another live instance of the application holds the log for this process name, so this one takes a log of its
+        // own. The process ID keeps it apart from every other live process, and the suffix from another store in this
+        // one, as a closed client's can be while it is still going away. Recovery finds the log by its lock rather than
+        // its name, so it is not orphaned when this instance ends.
+        let ownLog = directory.appendingPathComponent(
+            "\(EventStore.openLogPrefix)\(processLogName)-\(getpid())-\(UUID().uuidString.prefix(8))")
+        guard let opened = EventStore.openLocked(ownLog, flags: flags)
+        else { return nil }
+        openLogUrl = ownLog
+        return opened
+    }
+
+    private static func openDescriptor(at url: URL, flags: Int32) -> Int32 {
+        url.withUnsafeFileSystemRepresentation { path -> Int32 in
+            guard let path = path
+            else { return -1 }
+            return openFile(path, flags, 0o600)
+        }
+    }
+
+    /// Opens a file and takes its lock without waiting, or nil where another live process holds it.
+    ///
+    /// The lock has to be on the file that is still at `url`: one renamed or removed between the open and the lock,
+    /// by another process closing off or recovering it, is no longer a log anyone appends to.
+    private static func openLocked(_ url: URL, flags: Int32) -> Int32? {
+        for _ in 0..<3 {
+            let opened = openDescriptor(at: url, flags: flags)
+            guard opened >= 0
+            else { return nil }
+            guard lockFile(opened)
+            else {
+                closeFile(opened)
+                return nil
+            }
+            if isFile(opened, at: url) {
+                return opened
+            }
+            closeFile(opened)
+        }
+        return nil
     }
 
     /// Requires `ioLock`.
@@ -937,6 +1039,12 @@ private func writeBytes(_ descriptor: Int32, _ bytes: UnsafeRawPointer, _ count:
 private func closeFile(_ descriptor: Int32) {
     _ = Darwin.close(descriptor)
 }
+
+/// Takes an exclusive lock without waiting. Released by the kernel when the descriptor closes, including when the
+/// process dies, so a crashed process never leaves one behind.
+private func lockFile(_ descriptor: Int32) -> Bool {
+    flock(descriptor, LOCK_EX | LOCK_NB) == 0
+}
 #else
 private func openFile(_ path: UnsafePointer<CChar>, _ flags: Int32, _ mode: mode_t) -> Int32 {
     open(path, flags, mode)
@@ -949,4 +1057,22 @@ private func writeBytes(_ descriptor: Int32, _ bytes: UnsafeRawPointer, _ count:
 private func closeFile(_ descriptor: Int32) {
     _ = close(descriptor)
 }
+
+private func lockFile(_ descriptor: Int32) -> Bool {
+    flock(descriptor, LOCK_EX | LOCK_NB) == 0
+}
 #endif
+
+/// Whether a descriptor is open on the file currently at `url`, rather than one since renamed or removed.
+private func isFile(_ descriptor: Int32, at url: URL) -> Bool {
+    var opened = stat()
+    var named = stat()
+    guard fstat(descriptor, &opened) == 0
+    else { return false }
+    let found = url.withUnsafeFileSystemRepresentation { path -> Bool in
+        guard let path = path
+        else { return false }
+        return stat(path, &named) == 0
+    }
+    return found && opened.st_ino == named.st_ino && opened.st_dev == named.st_dev
+}
