@@ -129,7 +129,7 @@ class EventReporter: EventReporting {
 
     /// Guards the last response date and the record of what has been lost.
     private let stateLock = UnfairLock()
-    /// Only to be used while holding `pendingLock`.
+    /// Only to be used while holding `recordLock`.
     private(set) var contextSummarizer: ContextSummarizer
     /// Only to be used while holding `stateLock`.
     private var responseDate: Date
@@ -161,7 +161,7 @@ class EventReporter: EventReporting {
     /// event is on disk, whichever commit put it there. It also keeps two encoders from staging their runs in
     /// whichever order they happened to finish.
     ///
-    /// Taken before `pendingLock` and before anything the store locks, never after.
+    /// Taken before `recordLock` and before anything the store locks, never after.
     private let commitLock = UnfairLock()
 
     /// Guards everything one recording writes: the held events and the summarizer.
@@ -172,9 +172,9 @@ class EventReporter: EventReporting {
     /// Held for the appends and the handover of the run, never across the encoder or a syscall. It is a lock rather
     /// than a queue because it is taken once per evaluation, and a `DispatchQueue.sync` costs enough at that rate to be
     /// worth avoiding: the same measurement that made `EvaluationExposureDeduper` a lock applies here.
-    private let pendingLock = UnfairLock()
+    private let recordLock = UnfairLock()
 
-    /// Full events recorded but not yet encoded. Only to be used while holding `pendingLock`.
+    /// Full events recorded but not yet encoded. Only to be used while holding `recordLock`.
     ///
     /// Held rather than encoded because encoding early would not make them durable: the store stages bytes into memory
     /// too, and only a commit reaches the file. Both forms are equally lost to a crash, so the encode may as well
@@ -182,7 +182,7 @@ class EventReporter: EventReporting {
     private var pending: [Event] = []
 
     /// Whether a commit is already queued, so a run of recordings past the threshold asks for one write rather than
-    /// one each. Only to be used while holding `pendingLock`.
+    /// one each. Only to be used while holding `recordLock`.
     private var isCommitScheduled = false
 
     /// How many events the SDK will hold in total, across `pending` and the store.
@@ -267,10 +267,10 @@ class EventReporter: EventReporting {
     // MARK: Recording
 
     func record(_ event: Event) {
-        pendingLock.lock()
+        recordLock.lock()
         let dropped = !admitToPending(event)
         let needsCommit = pending.count >= EventReporter.pendingCommitThreshold
-        pendingLock.unlock()
+        recordLock.unlock()
 
         if dropped {
             reportDropped()
@@ -296,13 +296,13 @@ class EventReporter: EventReporting {
         let debugEvent = recordingDebugEvent ? FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: true) : nil
 
         var dropped = 0
-        pendingLock.lock()
+        recordLock.lock()
         let counted = contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
         for event in [featureEvent, debugEvent].compactMap({ $0 }) where !admitToPending(event) {
             dropped += 1
         }
         let needsCommit = pending.count >= EventReporter.pendingCommitThreshold
-        pendingLock.unlock()
+        recordLock.unlock()
 
         // A refused evaluation is a loss like a refused event, since nothing later reconstructs its counter. Its full
         // event is still decided by the event capacity alone.
@@ -322,13 +322,13 @@ class EventReporter: EventReporting {
     }
 
     /// Adds an event to `pending` for the next commit to encode, returning false if the SDK is already full. Requires
-    /// `pendingLock`.
+    /// `recordLock`.
     ///
     /// Capacity is consulted before anything else, so an event that will not be kept is never encoded. That ordering is
     /// what bounds an application re-evaluating a tracked flag in a render loop: once the limit is reached an
     /// evaluation costs no more than its summary counter, however fast the loop runs.
     private func admitToPending(_ event: Event) -> Bool {
-        pendingLock.assertOwned()
+        recordLock.assertOwned()
         guard pending.count + store.pendingEventCount < capacity
         else { return false }
 
@@ -385,23 +385,23 @@ class EventReporter: EventReporting {
 
     /// Queues a commit unless one is already queued, so a run of recordings asks for one write rather than one each.
     private func scheduleCommit() {
-        pendingLock.lock()
+        recordLock.lock()
         guard !isCommitScheduled
         else {
-            pendingLock.unlock()
+            recordLock.unlock()
             return
         }
         isCommitScheduled = true
-        pendingLock.unlock()
+        recordLock.unlock()
 
         commitQueue.async { [weak self] in
             guard let self
             else { return }
             // Cleared before the commit rather than after it, so that an event held while this one is in flight can ask
             // for another commit instead of finding one apparently already on its way.
-            self.pendingLock.lock()
+            self.recordLock.lock()
             self.isCommitScheduled = false
-            self.pendingLock.unlock()
+            self.recordLock.unlock()
 
             self.commitRecordedEvents()
         }
@@ -431,7 +431,7 @@ class EventReporter: EventReporting {
     /// Requires `commitLock`.
     private func encodeAndCommitPending() {
         commitLock.assertOwned()
-        pendingLock.lock()
+        recordLock.lock()
         let run = pending
         pending = []
         let summaries = contextSummarizer.hasLoggedRequests ? contextSummarizer.getSummaries() : []
@@ -441,7 +441,7 @@ class EventReporter: EventReporting {
         // Reserved in the same critical section the run leaves `pending` in, so capacity counts it in one place or the
         // other throughout the encode.
         store.reserve(run.count)
-        pendingLock.unlock()
+        recordLock.unlock()
 
         stage(run)
         store.releaseReservations()
@@ -922,8 +922,8 @@ private final class NullEventStore: EventStoring {
     extension EventReporter {
         /// Full events accepted but not yet handed to a commit.
         var pendingEventsForTesting: [Event] {
-            pendingLock.lock()
-            defer { pendingLock.unlock() }
+            recordLock.lock()
+            defer { recordLock.unlock() }
             return pending
         }
 
