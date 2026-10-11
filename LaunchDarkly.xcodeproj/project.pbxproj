@@ -19,6 +19,7 @@
 		2CA9D36B3566D78850D6F0AF /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */; };
 		B8F228923BE11E444D1ECB8E /* OpenEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* OpenEventLog.swift */; };
 		3C55384C9E3485B493E1F86A /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
+		C3F7E502BD916C40AE238F64 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
 		AB4827D11084D58661E24B05 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
 		3D2406142E0D90E000F91253 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406102E0D90E000F91253 /* Plugin.swift */; };
 		3D2406152E0D90E000F91253 /* PluginMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406112E0D90E000F91253 /* PluginMetadata.swift */; };
@@ -54,6 +55,7 @@
 		5AEA1F832DCA974314E07D21 /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */; };
 		D4225F1F05F2C55E9518941B /* OpenEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* OpenEventLog.swift */; };
 		DDA788E3056F8AC3CA203933 /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
+		D4080613CEA27D51BF349075 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
 		ECBE45806B470ACC5187B7D6 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
 		7185A3C30E7FFC4F725769F1 /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */; };
 		830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
@@ -386,6 +388,7 @@
 		B0B1AD7CADE8DBB596C2DE9B /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */; };
 		DAA2C9B9C144F129217A7C55 /* OpenEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* OpenEventLog.swift */; };
 		44E0BE449714952A68628CEB /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
+		E5191724DFB38E62C0451086 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
 		CA2ADB3D20A229D70CA34F73 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
@@ -440,6 +443,7 @@
 		CF9A1EB116D8AA3B7B5535B2 /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */; };
 		E2F8080AB2B3CD6E9A9C1FCC /* OpenEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* OpenEventLog.swift */; };
 		F0F504E5EC32223905356098 /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
+		B2E6D4F1AC805B3F9D127E53 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
 		625ADAC0CCFE3BE324C45752 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
 		D7A500FCA04E3412F931003F /* ContextEncodingCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93B7F5F6CF5C3DE79FB4286 /* ContextEncodingCache.swift */; };
 		DAF5695D58E28B8CF9221213 /* LDContextJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88DAB8D1864C14D9C7E06F11 /* LDContextJSONWriter.swift */; };
@@ -668,6 +672,7 @@
 		C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventStore.swift; sourceTree = "<group>"; };
 		E21BC7A0E0F8D272785D7985 /* OpenEventLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OpenEventLog.swift; sourceTree = "<group>"; };
 		03F6C30CC57DF77870B421F9 /* EventLogFile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventLogFile.swift; sourceTree = "<group>"; };
+		A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DeliveryClaims.swift; sourceTree = "<group>"; };
 		B58551BB165F28784C785720 /* EventLogFormat.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventLogFormat.swift; sourceTree = "<group>"; };
 		C408884623033B3600420721 /* ConnectionInformationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionInformationStore.swift; sourceTree = "<group>"; };
 		C408884823033B7500420721 /* ConnectionInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionInformation.swift; sourceTree = "<group>"; };
@@ -1056,6 +1061,7 @@
 				C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */,
 				E21BC7A0E0F8D272785D7985 /* OpenEventLog.swift */,
 				03F6C30CC57DF77870B421F9 /* EventLogFile.swift */,
+				A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */,
 				B58551BB165F28784C785720 /* EventLogFormat.swift */,
 			);
 			path = ServiceObjects;
@@ -1586,6 +1592,7 @@
 				CF9A1EB116D8AA3B7B5535B2 /* EventStore.swift in Sources */,
 				E2F8080AB2B3CD6E9A9C1FCC /* OpenEventLog.swift in Sources */,
 				F0F504E5EC32223905356098 /* EventLogFile.swift in Sources */,
+				B2E6D4F1AC805B3F9D127E53 /* DeliveryClaims.swift in Sources */,
 				625ADAC0CCFE3BE324C45752 /* EventLogFormat.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1684,6 +1691,7 @@
 				2CA9D36B3566D78850D6F0AF /* EventStore.swift in Sources */,
 				B8F228923BE11E444D1ECB8E /* OpenEventLog.swift in Sources */,
 				3C55384C9E3485B493E1F86A /* EventLogFile.swift in Sources */,
+				C3F7E502BD916C40AE238F64 /* DeliveryClaims.swift in Sources */,
 				AB4827D11084D58661E24B05 /* EventLogFormat.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1781,6 +1789,7 @@
 				5AEA1F832DCA974314E07D21 /* EventStore.swift in Sources */,
 				D4225F1F05F2C55E9518941B /* OpenEventLog.swift in Sources */,
 				DDA788E3056F8AC3CA203933 /* EventLogFile.swift in Sources */,
+				D4080613CEA27D51BF349075 /* DeliveryClaims.swift in Sources */,
 				ECBE45806B470ACC5187B7D6 /* EventLogFormat.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1945,6 +1954,7 @@
 				B0B1AD7CADE8DBB596C2DE9B /* EventStore.swift in Sources */,
 				DAA2C9B9C144F129217A7C55 /* OpenEventLog.swift in Sources */,
 				44E0BE449714952A68628CEB /* EventLogFile.swift in Sources */,
+				E5191724DFB38E62C0451086 /* DeliveryClaims.swift in Sources */,
 				CA2ADB3D20A229D70CA34F73 /* EventLogFormat.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

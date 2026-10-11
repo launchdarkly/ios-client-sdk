@@ -142,14 +142,21 @@ class EventReporter: EventReporting {
         private var deliveryRunCount = 0
     #endif
 
-    /// Whether events the SDK accepted were dropped for good, cleared once a caller who hears an outcome has been
-    /// told so. Only to be used while holding `stateLock`.
+    /// How many events the SDK accepted and then dropped for good. Only to be used while holding `stateLock`.
     ///
     /// A batch LaunchDarkly refuses in a way that may pass is kept and retried, so it is not a loss. What is lost is
     /// what the store never received: an event or a summary that could not be serialized when it was committed, or
     /// that serialized too large to store. A delivery that finds nothing to send cannot tell those apart from events
     /// that arrived, so without this it would report success for them.
-    private var eventsLostSinceLastAnswer = false
+    ///
+    /// A count rather than a flag because deliveries overlap. Each takes the count as it closes its batch, and
+    /// answers for the losses up to that mark, so a loss is told to the caller whose delivery it happened before
+    /// rather than to whichever response arrived first.
+    private var lostEvents: UInt64 = 0
+
+    /// The mark up to which losses have already been reported to a caller, so that none is told twice. Only to be
+    /// used while holding `stateLock`.
+    private var reportedLostEvents: UInt64 = 0
 
     /// Held for the whole of a commit, so that only one runs at a time.
     ///
@@ -202,7 +209,14 @@ class EventReporter: EventReporting {
     /// question and the delivery that acts on it are both enqueued there, in that order.
     private var hasEventsFromPreviousRun = false
 
-    /// Payload IDs a delivery has taken and not yet had an answer for. Only to be used while holding `stateLock`.
+    /// Guards `batchesInFlight`.
+    ///
+    /// Its own lock rather than `stateLock`, which an evaluating thread takes to read `lastEventResponseDate`: a claim
+    /// is made next to a listing of the store, and nothing a flag evaluation waits on may be held near the disk.
+    private let claimLock = UnfairLock()
+
+    /// The batches a delivery has taken and not yet had an answer for, by payload ID. Only to be used while holding
+    /// `claimLock`.
     ///
     /// `deliveryQueue` serializes the *start* of a delivery but not the round trip it waits on, and a batch stays on
     /// disk until its response arrives. Without this, a delivery beginning inside that window would list the same batch
@@ -210,8 +224,9 @@ class EventReporter: EventReporting {
     /// requests arriving at once are the same one.
     ///
     /// This bounds the overlap rather than preventing it, which is the point: a later delivery still runs, and still
-    /// sends what it closed for itself. Only the batches already on their way are left out of it.
-    private var batchesInFlight: Set<String> = []
+    /// sends what it closed for itself. Only the batches already on their way are left out of it, and a caller waiting
+    /// on that later delivery hears their outcome too.
+    private var batchesInFlight: [String: Claim] = [:]
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
@@ -342,14 +357,20 @@ class EventReporter: EventReporting {
     private func reportLost() {
         os_log("%s dropping an event the store would not take", log: service.config.logger, type: .error, typeName(and: #function))
         service.diagnosticCache?.incrementDroppedEventCount()
-        stateLock.withLock { eventsLostSinceLastAnswer = true }
+        stateLock.withLock { lostEvents += 1 }
     }
 
-    /// Whether anything has been lost since the last caller was told, which that caller is now the one to hear about.
-    private func takeEventsLost() -> Bool {
+    /// Whether anything was lost up to `mark` that no caller has been told about, which this caller is now the one to
+    /// hear about.
+    ///
+    /// Marks it reported, so the next caller is not told about the same loss. A delivery that nobody is waiting on
+    /// never asks, so a scheduled delivery does not consume the answer a later caller is owed.
+    private func takeEventsLost(upTo mark: UInt64) -> Bool {
         stateLock.withLock {
-            defer { eventsLostSinceLastAnswer = false }
-            return eventsLostSinceLastAnswer
+            guard mark > reportedLostEvents
+            else { return false }
+            reportedLostEvents = mark
+            return true
         }
     }
 
@@ -409,10 +430,14 @@ class EventReporter: EventReporting {
     ///
     /// Closing takes everything staged so far, and a commit stages its run one event at a time, so a commit running
     /// between the two would be closed partway: an evaluation's event in this batch and its summary in the next.
-    private func commitAndCloseBatch() {
+    ///
+    /// - Returns: the loss count as of the close, which is the mark this delivery answers for. Taken under the same
+    ///   lock, so it covers every loss the closed batch could have suffered and nothing a later commit suffers.
+    private func commitAndCloseBatch() -> UInt64 {
         commitLock.withLock {
             encodeAndCommitPending()
             _ = store.closeBatch()
+            return stateLock.withLock { lostEvents }
         }
     }
 
@@ -540,8 +565,9 @@ class EventReporter: EventReporting {
     /// Queues a delivery the way a caller asking for one expects, which is as a commit point.
     ///
     /// At `.immediate` everything accepted before the call is on disk by the time it returns, even where the delivery
-    /// itself cannot run because the client is offline. It is also what makes the answer cover the caller's own
-    /// events: they are closed into a batch here, before any delivery can take one.
+    /// itself cannot run because the client is offline. What it does not do is close those events into a batch: only
+    /// a delivery does that, so a delivery already under way may be the one holding them. That is why the answer
+    /// waits on the claims it skips rather than only on what it sent itself.
     private func commitThenQueueDelivery(_ completion: FlushOutcomeClosure?) {
         commitAtCommitPoint()
         queueDelivery(completion)
@@ -587,16 +613,15 @@ class EventReporter: EventReporting {
         #endif
         deliveryLock.unlock()
 
-        reportEvents { delivered in
+        reportEvents { delivered, lossMark in
             guard !waiters.isEmpty
             else { return }
             // Taken once for the delivery rather than once per waiter, so that every caller joined to it hears about
-            // a loss instead of only whichever happened to be answered first. Left alone where nobody is waiting, so
-            // a scheduled delivery does not consume the answer a later caller is owed.
-            let kept = !self.takeEventsLost()
+            // a loss instead of only whichever happened to be answered first.
+            let kept = !self.takeEventsLost(upTo: lossMark)
             // Answered away from `deliveryQueue`, and from whichever thread the delivery ended on, so that every
-            // completion reaches its caller the same way. A completion is free to record or flush again: it is never
-            // running on the queue those wait for.
+            // completion reaches its caller the same way. A completion is free to flush again: it is never running
+            // on the queue the delivery it asks for would be queued on.
             DispatchQueue.global().async {
                 for waiter in waiters {
                     waiter(delivered && kept)
@@ -605,50 +630,103 @@ class EventReporter: EventReporting {
         }
     }
 
-    private func reportEvents(completion: FlushOutcomeClosure?) {
+    private func reportEvents(completion: ((_ delivered: Bool, _ lossMark: UInt64) -> Void)?) {
         guard isOnline
         else {
             os_log("%s aborted. EventReporter is offline", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(.isOffline)
-            completion?(false)
+            completion?(false, 0)
             return
         }
 
-        commitAndCloseBatch()
+        let lossMark = commitAndCloseBatch()
 
-        let batches = claimDeliverableBatches()
+        let (batches, waitingOn) = claimDeliverableBatches()
+        // This delivery's own outcome, plus that of every batch another delivery is already sending. The caller's
+        // events may be in either: a delivery that started after they were recorded closed them into its batch.
+        let answer = DeliveryAnswer(outstanding: waitingOn.count + 1) { delivered in
+            completion?(delivered, lossMark)
+        }
+        for claim in waitingOn {
+            whenSettled(claim, answer.report)
+        }
+
         guard !batches.isEmpty
         else {
             os_log("%s aborted. Event store is empty", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(nil)
-            completion?(true)
+            answer.report(true)
             return
         }
 
         os_log("%s starting", log: service.config.logger, type: .debug, typeName(and: #function))
         deliver(batches) { [weak self] delivered in
-            self?.releaseClaim(on: batches)
-            completion?(delivered)
+            self?.releaseClaim(on: batches, delivered: delivered)
+            answer.report(delivered)
         }
     }
 
     /// Takes the batches this delivery will send, leaving out any another delivery is still waiting on a response for.
     ///
-    /// The caller's own events are never among those left out: they were closed into a batch of their own a moment
-    /// ago, which no earlier delivery could have taken. So a delivery that finds everything already claimed has
-    /// nothing of its own to send, and `true` is the right answer for it.
-    private func claimDeliverableBatches() -> [EventBatch] {
-        stateLock.withLock {
-            let deliverable = store.pendingBatches().filter { !batchesInFlight.contains($0.payloadId) }
-            batchesInFlight.formUnion(deliverable.map { $0.payloadId })
-            return deliverable
+    /// - Returns: the batches to send, and the claims on the ones left out. A batch left out may hold this caller's
+    ///   events -- `commitRecordedEvents` only stages them, and whichever delivery runs next is what closes them into
+    ///   a batch -- so the answer has to wait for those claims rather than assume they are someone else's business.
+    private func claimDeliverableBatches() -> (deliverable: [EventBatch], waitingOn: [Claim]) {
+        // Listed before the lock is taken, because listing reads the disk. Taking what appeared after it is the next
+        // delivery's business; all this has to be atomic is deciding which of these batches are this delivery's.
+        let pending = store.pendingBatches()
+        return claimLock.withLock {
+            var deliverable: [EventBatch] = []
+            var waitingOn: [Claim] = []
+            for batch in pending {
+                if let claimed = batchesInFlight[batch.payloadId] {
+                    waitingOn.append(claimed)
+                } else {
+                    batchesInFlight[batch.payloadId] = Claim()
+                    deliverable.append(batch)
+                }
+            }
+            return (deliverable, waitingOn)
         }
     }
 
-    /// Releases the claim once the delivery has an answer, whether or not every batch was sent: `deliver` stops at the
+    /// Releases the claims once the delivery has an answer, whether or not every batch was sent: `deliver` stops at the
     /// first retryable failure, and what it did not reach has to be deliverable again.
-    private func releaseClaim(on batches: [EventBatch]) {
-        stateLock.withLock { batchesInFlight.subtract(batches.map { $0.payloadId }) }
+    ///
+    /// Every batch in the pass is settled with the pass's own result, rather than its own. A pass that stopped partway
+    /// did not hear back about what it never reached, so the batches it is giving up are not known to have arrived.
+    private func releaseClaim(on batches: [EventBatch], delivered: Bool) {
+        let waiters = claimLock.withLock { () -> [FlushOutcomeClosure] in
+            batches.flatMap { batch -> [FlushOutcomeClosure] in
+                guard let claimed = batchesInFlight.removeValue(forKey: batch.payloadId)
+                else { return [] }
+                claimed.outcome = delivered
+                return claimed.waiters
+            }
+        }
+
+        for waiter in waiters {
+            waiter(delivered)
+        }
+    }
+
+    /// Calls back with a claimed batch's outcome, once there is one.
+    ///
+    /// Settling and registering both happen under `claimLock`, so a claim released between the listing and this call
+    /// answers from what it recorded rather than leaving a waiter nobody will ever come back to.
+    private func whenSettled(_ claim: Claim, _ completion: @escaping FlushOutcomeClosure) {
+        let settled = claimLock.withLock { () -> Bool? in
+            guard let outcome = claim.outcome
+            else {
+                claim.waiters.append(completion)
+                return nil
+            }
+            return outcome
+        }
+
+        if let settled {
+            completion(settled)
+        }
     }
 
     private func deliver(_ batches: [EventBatch], _ completion: FlushOutcomeClosure?) {

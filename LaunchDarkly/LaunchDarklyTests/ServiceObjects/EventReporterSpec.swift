@@ -82,25 +82,23 @@ final class EventReporterSpec: QuickSpec {
             events.compactMap { encodeToLDValue($0) }
         }
 
-        /// Flushes, and answers whether recording from the completion got anywhere.
+        /// Flushes, and answers whether a flush made from the completion got anywhere.
         ///
-        /// Recording waits on the reporter's queue, so a completion run on that queue cannot record. The recording
-        /// happens on another thread against a deadline, so that a reporter answering on its own queue fails this
-        /// rather than hanging the test process on a deadlock it can never leave.
-        func recordedFromACompletion() -> Bool {
-            var recorded = false
+        /// A completion is free to flush again, which only works where it is not running on the queue deliveries go
+        /// through: from there the delivery it asks for would be queued behind the completion asking for it. Waited
+        /// on against a deadline, so a reporter answering on its own queue fails this rather than hanging the test
+        /// process on a deadlock it can never leave.
+        func flushedFromACompletion() -> Bool {
+            var flushed = false
             waitUntil(timeout: .seconds(5)) { done in
                 eventReporter.flushReportingOutcome { _ in
                     let finished = DispatchSemaphore(value: 0)
-                    DispatchQueue.global().async {
-                        eventReporter.record(CustomEvent(key: "recorded from a completion", context: LDContext.stub()))
-                        finished.signal()
-                    }
-                    recorded = finished.wait(timeout: .now() + 1) == .success
+                    eventReporter.flush { finished.signal() }
+                    flushed = finished.wait(timeout: .now() + 1) == .success
                     done()
                 }
             }
-            return recorded
+            return flushed
         }
 
         /// Flushes and returns what the flush answered.
@@ -1205,12 +1203,13 @@ extension EventReporterSpec {
                 // the window in which a second delivery would find that batch and send it again.
                 testContext.serviceMock.holdsEventCompletions = true
 
-                var firstFinished = false
-                testContext.eventReporter.flush { firstFinished = true }
+                // Answered from the delivery's own threads and polled from this one.
+                let first = Answer()
+                testContext.eventReporter.flush { first.record(true) }
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
 
-                var secondFinished = false
-                testContext.eventReporter.flush { secondFinished = true }
+                let second = Answer()
+                testContext.eventReporter.flush { second.record(true) }
                 // Nothing more goes out while the first delivery is unanswered.
                 Thread.sleep(forTimeInterval: 0.3)
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
@@ -1218,12 +1217,38 @@ extension EventReporterSpec {
                 testContext.serviceMock.holdsEventCompletions = false
                 testContext.serviceMock.releaseHeldEventCompletions()
 
-                // The second caller is answered by the pass that runs once the first delivery is done. It finds an
-                // empty store, so the batch is sent once in total.
-                expect(firstFinished).toEventually(beTrue())
-                expect(secondFinished).toEventually(beTrue())
+                // The second caller finds the only batch claimed by the first delivery, so it waits on that claim
+                // rather than sending anything. The batch goes out once in total.
+                expect(first.value()).toEventually(beTrue())
+                expect(second.value()).toEventually(beTrue())
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
                 expect(testContext.store.pendingEventCount) == 0
+            }
+
+            it("answers an evaluating thread while a delivery is listing the store") {
+                testContext = TestContext()
+                // Standing in for the listing a delivery makes on a device whose disk is busy, which on the first one
+                // after launch reads every batch a previous run left behind.
+                let store = SlowListingStore(testContext.store)
+                defer { store.release.signal() }
+                let reporter = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: store)
+                reporter.isOnline = true
+
+                reporter.record(CustomEvent(key: "tracked", context: testContext.context))
+                reporter.flush(completion: nil)
+                expect(store.listing.wait(timeout: .now() + 5)) == .success
+
+                // Read on the evaluating thread for every flag with debug events turned on, so it must not end up
+                // behind whatever the delivery is holding while it lists.
+                let answered = DispatchSemaphore(value: 0)
+                DispatchQueue.global().async {
+                    _ = reporter.lastEventResponseDate
+                    answered.signal()
+                }
+                expect(answered.wait(timeout: .now() + 2)) == .success
+
+                store.release.signal()
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
             }
 
             it("writes a deferred track while a delivery holds the delivery queue") {
@@ -1602,10 +1627,11 @@ extension EventReporterSpec {
             }
 
             it("reports false and keeps the batch when it could not be read, and delivers it once it can be") {
-                var failing = false
+                // Set from this thread and read on the reporter's, which reads files from the moment it is built.
+                let failing = Answer()
                 let store = EventStore.temporary(readFile: { url in
                     // What a process out of file descriptors gets for a file that is perfectly intact.
-                    guard !failing
+                    guard failing.value() != true
                     else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(EMFILE)) }
                     return try Data(contentsOf: url)
                 })
@@ -1613,7 +1639,7 @@ extension EventReporterSpec {
                 testContext.recordEvents(1)
                 testContext.eventReporter.isOnline = true
 
-                failing = true
+                failing.record(true)
                 var delivered: Bool?
                 waitUntil { done in
                     testContext.eventReporter.flushReportingOutcome { result in
@@ -1625,7 +1651,7 @@ extension EventReporterSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 0
                 expect(store.pendingBatches().count) == 1
 
-                failing = false
+                failing.record(false)
                 waitUntil { done in
                     testContext.eventReporter.flushReportingOutcome { result in
                         delivered = result
@@ -1768,7 +1794,7 @@ extension EventReporterSpec {
                 testContext.serviceMock.releaseHeldEventCompletions()
             }
 
-            it("reports true to a caller with nothing of its own while a delivery is in flight") {
+            it("inherits the outcome of a delivery holding the batch it would have sent") {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
                 testContext.eventReporter.isOnline = true
@@ -1777,33 +1803,65 @@ extension EventReporterSpec {
                 testContext.eventReporter.flushReportingOutcome { _ in }
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
 
-                // Everything on disk belongs to the delivery already running, and this caller recorded nothing, so
-                // there is nothing of its own left unsent. It is not made to wait on, or inherit, a batch that is
-                // not its own.
-                var delivered: Bool?
-                testContext.eventReporter.flushReportingOutcome { result in delivered = result }
-                expect(delivered).toEventually(beTrue())
+                // Everything on disk belongs to the delivery already running, and that may include this caller's
+                // events: a commit only stages them, and whichever delivery runs next is what closes them into a
+                // batch. So this caller is answered by that delivery rather than told its events arrived.
+                let answer = Answer()
+                testContext.eventReporter.flushReportingOutcome(completion: answer.record)
+                Thread.sleep(forTimeInterval: 0.3)
+                expect(answer.value()).to(beNil())
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
 
                 testContext.serviceMock.holdsEventCompletions = false
                 testContext.serviceMock.releaseHeldEventCompletions()
+                // Allows for the one-second retry, after which the batch stays on disk and nobody was told it went.
+                expect(answer.value()).toEventually(beFalse(), timeout: .seconds(10))
             }
 
-            it("answers away from the queue a recorded event waits on, after a delivery") {
+            it("tells the caller whose delivery the loss happened before, not whichever answers first") {
+                testContext = TestContext()
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                testContext.serviceMock.holdsEventCompletions = true
+
+                // A closes a batch of its own and waits on it. Nothing has been lost at the point it closed.
+                let first = Answer()
+                testContext.eventReporter.flushReportingOutcome(completion: first.record)
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+
+                // B closes a batch of its own, dropping an event the store will never take as it does, so the loss
+                // falls between the two closes. B has a post of its own outstanding, which is what leaves A to be
+                // answered first.
+                testContext.eventReporter.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
+                testContext.recordEvents(1)
+                let second = Answer()
+                testContext.eventReporter.flushReportingOutcome(completion: second.record)
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2))
+
+                // Responses land in the order they were made, so A is answered while B's post is still out. With
+                // one shared flag A would take B's loss here, and B would report success for the event it dropped.
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+
+                expect(first.value()).toEventually(beTrue())
+                expect(second.value()).toEventually(beFalse())
+            }
+
+            it("answers away from the queue a delivery runs on, after a delivery") {
                 testContext = TestContext()
                 testContext.recordEvents(1)
                 testContext.eventReporter.isOnline = true
 
-                expect(testContext.recordedFromACompletion()) == true
+                expect(testContext.flushedFromACompletion()) == true
             }
 
-            it("answers away from the queue a recorded event waits on, with nothing to send") {
+            it("answers away from the queue a delivery runs on, with nothing to send") {
                 testContext = TestContext()
                 testContext.eventReporter.isOnline = true
 
                 // The path that answers without ever leaving the reporter's queue, so it is the one that would
                 // deadlock while the delivery path, answering from the response, did not.
-                expect(testContext.recordedFromACompletion()) == true
+                expect(testContext.flushedFromACompletion()) == true
             }
 
             it("sends one delivery for the flushes that arrive before it starts, and answers them all") {
@@ -1820,28 +1878,42 @@ extension EventReporterSpec {
                 }
                 expect(testContext.eventReporter.queuedDeliveryWaiterCount) == 0
 
-                var delivered: [Bool] = []
-                let answers = UnfairLock()
                 // Both completions run at once, and the poll below reads from a third thread.
-                let answered: () -> [Bool] = {
-                    answers.lock()
-                    defer { answers.unlock() }
-                    return delivered
-                }
+                let answers = Answers()
                 for _ in 0..<2 {
-                    testContext.eventReporter.flushReportingOutcome { result in
-                        answers.lock()
-                        delivered.append(result)
-                        answers.unlock()
-                    }
+                    testContext.eventReporter.flushReportingOutcome(completion: answers.record)
                 }
                 expect(testContext.eventReporter.queuedDeliveryWaiterCount) == 2
 
                 released.signal()
                 // Allows for the one-second retry, after which the batch stays on disk.
-                expect(answered()).toEventually(equal([false, false]), timeout: .seconds(10))
+                expect(answers.value()).toEventually(equal([false, false]), timeout: .seconds(10))
                 expect(testContext.eventReporter.startedDeliveryCount) == 1
                 expect(testContext.serviceMock.publishEventDataCallCount) == 2 // the first attempt and its retry
+            }
+
+            it("answers every flush that arrived during a refused delivery with its outcome") {
+                testContext = TestContext(stubResponseSuccess: false)
+                testContext.recordEvents(1)
+                testContext.eventReporter.isOnline = true
+                testContext.serviceMock.holdsEventCompletions = true
+
+                let answers = Answers()
+                testContext.eventReporter.flushReportingOutcome(completion: answers.record)
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+
+                // Held on the first post, each of these finds the only batch claimed by it. None of them is told
+                // its events arrived on the strength of having nothing left of its own to send.
+                for _ in 0..<20 {
+                    testContext.eventReporter.flushReportingOutcome(completion: answers.record)
+                }
+
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+
+                // Allows for the one-second retry the second delivery makes.
+                expect(answers.value().count).toEventually(equal(21), timeout: .seconds(10))
+                expect(answers.value().contains(true)) == false
             }
         }
     }
@@ -2079,6 +2151,81 @@ private final class ClosingHookStore: EventStoring {
         afterClosing = nil
         after?()
         return batch
+    }
+}
+
+/// What a flush was told, written from whichever thread answered it and read from the test's.
+private final class Answer {
+    private let lock = UnfairLock()
+    private var answered: Bool?
+
+    /// Pass as a `FlushOutcomeClosure`.
+    func record(_ delivered: Bool) {
+        lock.withLock { answered = delivered }
+    }
+
+    /// Nil until the flush has been answered.
+    func value() -> Bool? {
+        lock.withLock { answered }
+    }
+}
+
+/// What a run of flushes were told, written from whichever threads answered them and read from the test's.
+private final class Answers {
+    private let lock = UnfairLock()
+    private var answered: [Bool] = []
+
+    /// Pass as a `FlushOutcomeClosure`.
+    func record(_ delivered: Bool) {
+        lock.withLock { answered.append(delivered) }
+    }
+
+    /// In the order the flushes were answered, which is not the order they were asked in.
+    func value() -> [Bool] {
+        lock.withLock { answered }
+    }
+}
+
+/// A store that holds a listing open, so a test can see what else is waiting while one is under way.
+private final class SlowListingStore: EventStoring {
+    let inner: EventStoring
+    /// Signalled once a listing is being held.
+    let listing = DispatchSemaphore(value: 0)
+    /// Signal to let it finish.
+    let release = DispatchSemaphore(value: 0)
+
+    private let lock = UnfairLock()
+    private var listings = 0
+
+    init(_ inner: EventStoring) {
+        self.inner = inner
+    }
+
+    var pendingEventCount: Int { inner.pendingEventCount }
+    var isPersisting: Bool { inner.isPersisting }
+    func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
+    func reserve(_ events: Int) { inner.reserve(events) }
+    func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
+    func releaseReservations() { inner.releaseReservations() }
+    func commit() { inner.commit() }
+    func closeBatch() -> EventBatch? { inner.closeBatch() }
+    func body(of batch: EventBatch) throws -> Data? { try inner.body(of: batch) }
+    func remove(_ batch: EventBatch) { inner.remove(batch) }
+    func recoverInterruptedLog() { inner.recoverInterruptedLog() }
+
+    /// Every listing but the first is held, the first being the one the reporter makes as it starts up.
+    func pendingBatches() -> [EventBatch] {
+        let held = lock.withLock { () -> Bool in
+            listings += 1
+            return listings > 1
+        }
+        if held {
+            listing.signal()
+            _ = release.wait(timeout: .now() + 5)
+            // Once opened the gate stays open.
+            release.signal()
+        }
+        return inner.pendingBatches()
     }
 }
 
