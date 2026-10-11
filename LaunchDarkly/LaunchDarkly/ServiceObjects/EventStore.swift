@@ -136,8 +136,15 @@ final class EventStore: EventStoring {
     /// it kept a log: hold the events, deliver them, lose them only if the process dies. Kept in the order they were
     /// closed, so delivery still goes oldest first.
     ///
-    /// Only to be used while holding `ioLock`.
+    /// Only to be used while holding `heldLock`.
     private var inMemoryBatches: [HeldBatch] = []
+
+    /// Guards `inMemoryBatches`.
+    ///
+    /// Its own lock rather than `ioLock`, so that a store the application told to keep off the disk -- where held
+    /// batches are the only ones there are -- never waits on the lock disk I/O is serialized under. Taken inside
+    /// `ioLock` where there is a disk, never the other way round.
+    private let heldLock = UnfairLock()
 
     /// How many events are in each batch this process closed or recovered, so that listing them does not have to read
     /// them back.
@@ -268,10 +275,16 @@ final class EventStore: EventStoring {
     }
 
     func commit() {
+        // Where the application asked for no disk there is nothing for a commit to reach, and so nothing to serialize.
+        guard readsDisk
+        else { return }
         ioLock.withLock { writeStagedBytes() }
     }
 
     func closeBatch() -> EventBatch? {
+        guard readsDisk
+        else { return closeInMemoryBatch() }
+
         ioLock.lock()
         defer { ioLock.unlock() }
 
@@ -337,20 +350,21 @@ final class EventStore: EventStoring {
     }
 
     func pendingBatches() -> [EventBatch] {
-        ioLock.lock()
-        defer { ioLock.unlock() }
-
-        var batches = readsDisk ? batchesOnDisk() : []
-
-        // After the files, since anything held in memory was closed by this run and so is newer than whatever a
-        // previous run left on the disk.
-        batches.append(contentsOf: inMemoryBatches.map {
-            EventBatch(payloadId: $0.payloadId, eventCount: $0.eventCount)
-        })
+        // Listed in one critical section where there is a disk, so that the files and what is held cannot be counted
+        // either side of a close that moves events between them.
+        let batches = readsDisk ? ioLock.withLock { batchesOnDisk() + heldBatches() } : heldBatches()
 
         bufferLock.withLock { closedEvents = batches.reduce(0) { $0 + $1.eventCount } }
 
         return batches
+    }
+
+    /// The batches the filesystem would not take, after the files: anything held was closed by this run and so is
+    /// newer than whatever a previous run left on the disk.
+    private func heldBatches() -> [EventBatch] {
+        heldLock.withLock {
+            inMemoryBatches.map { EventBatch(payloadId: $0.payloadId, eventCount: $0.eventCount) }
+        }
     }
 
     /// The batch files in the directory, oldest first.
@@ -411,29 +425,37 @@ final class EventStore: EventStoring {
     }
 
     func body(of batch: EventBatch) throws -> Data? {
-        ioLock.lock()
-        defer { ioLock.unlock() }
-
-        if let held = inMemoryBatches.first(where: { $0.payloadId == batch.payloadId }) {
+        if let held = heldLock.withLock({ inMemoryBatches.first { $0.payloadId == batch.payloadId } }) {
             return held.body
         }
 
-        switch read(url(of: batch.payloadId)) {
-        case .missing: return nil
-        case .failed(let error): throw error
-        case .bytes(let file): return EventLogFormat.assembleBody(from: file)
+        // A batch is either held or on the disk, never both and never moved between them, so a batch that is not held
+        // in a store with no disk does not exist.
+        guard readsDisk
+        else { return nil }
+
+        return try ioLock.withLock {
+            switch read(url(of: batch.payloadId)) {
+            case .missing: return nil
+            case .failed(let error): throw error
+            case .bytes(let file): return EventLogFormat.assembleBody(from: file)
+            }
         }
     }
 
     func remove(_ batch: EventBatch) {
-        ioLock.lock()
-        defer { ioLock.unlock() }
-
-        if let index = inMemoryBatches.firstIndex(where: { $0.payloadId == batch.payloadId }) {
+        let wasHeld = heldLock.withLock { () -> Bool in
+            guard let index = inMemoryBatches.firstIndex(where: { $0.payloadId == batch.payloadId })
+            else { return false }
             inMemoryBatches.remove(at: index)
-        } else {
-            try? FileManager.default.removeItem(at: url(of: batch.payloadId))
-            eventCounts[batch.payloadId] = nil
+            return true
+        }
+
+        if !wasHeld, readsDisk {
+            ioLock.withLock {
+                try? FileManager.default.removeItem(at: url(of: batch.payloadId))
+                eventCounts[batch.payloadId] = nil
+            }
         }
 
         bufferLock.withLock { closedEvents = max(0, closedEvents - batch.eventCount) }
@@ -577,9 +599,9 @@ private extension EventStore {
 
     /// Closes whatever is staged into a batch that never reaches a file.
     ///
-    /// Requires `ioLock`.
+    /// Called under `ioLock` where there is a disk, so that it and the log are closed as one step, and on its own
+    /// where there is not.
     func closeInMemoryBatch() -> EventBatch? {
-        ioLock.assertOwned()
         let (frames, events) = bufferLock.withLock { () -> (Data, Int) in
             defer {
                 bufferData = Data()
@@ -596,7 +618,7 @@ private extension EventStore {
         else { return nil }
 
         let payloadId = UUID().uuidString
-        inMemoryBatches.append(HeldBatch(payloadId: payloadId, body: body, eventCount: events))
+        heldLock.withLock { inMemoryBatches.append(HeldBatch(payloadId: payloadId, body: body, eventCount: events)) }
 
         bufferLock.withLock { closedEvents += events }
 
@@ -612,11 +634,11 @@ extension EventStore {
     func pendingEventPayloads() -> [Data] {
         commit()
 
-        ioLock.lock()
-        defer { ioLock.unlock() }
-
         guard readsDisk
         else { return [] }
+
+        ioLock.lock()
+        defer { ioLock.unlock() }
 
         let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
                                                                     includingPropertiesForKeys: nil,

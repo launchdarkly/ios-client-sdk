@@ -198,6 +198,30 @@ final class EventStoreSpec: QuickSpec {
                 expect(try store.body(of: batch)) == Data("[{\"kind\":\"custom\",\"key\":\"held\"}]".utf8)
             }
 
+            it("asks the filesystem nothing, even about a batch it does not hold") {
+                var reads = 0
+                let store = EventStore.temporary(persistEvents: false, readFile: { _ in
+                    reads += 1
+                    return Data()
+                })
+                defer { store.deleteEverything() }
+
+                _ = store.stage(EventStoreSpec.payload("held"))
+                let batch = store.closeBatch()
+                expect(store.pendingBatches().map(\.payloadId)) == [batch?.payloadId]
+                expect(EventStoreSpec.keys(ofBody: batch.flatMap { try? store.body(of: $0) })) == ["held"]
+                batch.map(store.remove)
+
+                // A batch this store never closed, which is what sends the paths that form a file URL down the branch
+                // that would otherwise ask the filesystem about it.
+                let stranger = EventBatch(payloadId: UUID().uuidString, eventCount: 1)
+                expect(try store.body(of: stranger)).to(beNil())
+                store.remove(stranger)
+
+                expect(reads) == 0
+                expect(FileManager.default.fileExists(atPath: store.directory.path)) == false
+            }
+
             it("leaves alone what a run that did persist left behind, for the next run that persists") {
                 let persisting = EventStore.temporary()
                 defer { persisting.deleteEverything() }
