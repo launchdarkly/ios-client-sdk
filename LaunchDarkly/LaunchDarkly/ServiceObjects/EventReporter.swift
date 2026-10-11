@@ -119,9 +119,7 @@ class EventReporter: EventReporting {
     }
 
     var lastEventResponseDate: Date {
-        stateLock.lock()
-        defer { stateLock.unlock() }
-        return responseDate
+        stateLock.withLock { responseDate }
     }
 
     let service: DarklyServiceProvider
@@ -267,10 +265,9 @@ class EventReporter: EventReporting {
     // MARK: Recording
 
     func record(_ event: Event) {
-        recordLock.lock()
-        let dropped = !admitToPending(event)
-        let needsCommit = pending.count >= EventReporter.pendingCommitThreshold
-        recordLock.unlock()
+        let (dropped, needsCommit) = recordLock.withLock {
+            (!admitToPending(event), pending.count >= EventReporter.pendingCommitThreshold)
+        }
 
         if dropped {
             reportDropped()
@@ -296,13 +293,13 @@ class EventReporter: EventReporting {
         let debugEvent = recordingDebugEvent ? FeatureEvent(key: flagKey, context: context, value: value, defaultValue: defaultValue, featureFlag: featureFlag, includeReason: includeReason, isDebug: true) : nil
 
         var dropped = 0
-        recordLock.lock()
-        let counted = contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
-        for event in [featureEvent, debugEvent].compactMap({ $0 }) where !admitToPending(event) {
-            dropped += 1
+        let (counted, needsCommit) = recordLock.withLock { () -> (Bool, Bool) in
+            let counted = contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
+            for event in [featureEvent, debugEvent].compactMap({ $0 }) where !admitToPending(event) {
+                dropped += 1
+            }
+            return (counted, pending.count >= EventReporter.pendingCommitThreshold)
         }
-        let needsCommit = pending.count >= EventReporter.pendingCommitThreshold
-        recordLock.unlock()
 
         // A refused evaluation is a loss like a refused event, since nothing later reconstructs its counter. Its full
         // event is still decided by the event capacity alone.
@@ -345,18 +342,15 @@ class EventReporter: EventReporting {
     private func reportLost() {
         os_log("%s dropping an event the store would not take", log: service.config.logger, type: .error, typeName(and: #function))
         service.diagnosticCache?.incrementDroppedEventCount()
-        stateLock.lock()
-        eventsLostSinceLastAnswer = true
-        stateLock.unlock()
+        stateLock.withLock { eventsLostSinceLastAnswer = true }
     }
 
     /// Whether anything has been lost since the last caller was told, which that caller is now the one to hear about.
     private func takeEventsLost() -> Bool {
-        stateLock.lock()
-        defer { stateLock.unlock() }
-        let lost = eventsLostSinceLastAnswer
-        eventsLostSinceLastAnswer = false
-        return lost
+        stateLock.withLock {
+            defer { eventsLostSinceLastAnswer = false }
+            return eventsLostSinceLastAnswer
+        }
     }
 
     /// Commits at a commit point, on the caller's thread or off it as the application asked.
@@ -385,23 +379,19 @@ class EventReporter: EventReporting {
 
     /// Queues a commit unless one is already queued, so a run of recordings asks for one write rather than one each.
     private func scheduleCommit() {
-        recordLock.lock()
-        guard !isCommitScheduled
-        else {
-            recordLock.unlock()
-            return
+        let alreadyScheduled = recordLock.withLock { () -> Bool in
+            defer { isCommitScheduled = true }
+            return isCommitScheduled
         }
-        isCommitScheduled = true
-        recordLock.unlock()
+        guard !alreadyScheduled
+        else { return }
 
         commitQueue.async { [weak self] in
             guard let self
             else { return }
             // Cleared before the commit rather than after it, so that an event held while this one is in flight can ask
             // for another commit instead of finding one apparently already on its way.
-            self.recordLock.lock()
-            self.isCommitScheduled = false
-            self.recordLock.unlock()
+            self.recordLock.withLock { self.isCommitScheduled = false }
 
             self.commitRecordedEvents()
         }
@@ -412,9 +402,7 @@ class EventReporter: EventReporting {
     /// The run and the counters are taken in one critical section, so that an evaluation's counter and its full event
     /// are staged by the same commit, and encoded outside it, so recording does not wait on the encoder.
     func commitRecordedEvents() {
-        commitLock.lock()
-        defer { commitLock.unlock() }
-        encodeAndCommitPending()
+        commitLock.withLock { encodeAndCommitPending() }
     }
 
     /// Commits what is held and closes it into a batch, as one step with respect to other commits.
@@ -422,26 +410,27 @@ class EventReporter: EventReporting {
     /// Closing takes everything staged so far, and a commit stages its run one event at a time, so a commit running
     /// between the two would be closed partway: an evaluation's event in this batch and its summary in the next.
     private func commitAndCloseBatch() {
-        commitLock.lock()
-        defer { commitLock.unlock() }
-        encodeAndCommitPending()
-        _ = store.closeBatch()
+        commitLock.withLock {
+            encodeAndCommitPending()
+            _ = store.closeBatch()
+        }
     }
 
     /// Requires `commitLock`.
     private func encodeAndCommitPending() {
         commitLock.assertOwned()
-        recordLock.lock()
-        let run = pending
-        pending = []
-        let summaries = contextSummarizer.hasLoggedRequests ? contextSummarizer.getSummaries() : []
-        if !summaries.isEmpty {
-            contextSummarizer.clear()
+        let (run, summaries) = recordLock.withLock { () -> ([Event], [(tracker: FlagRequestTracker, context: LDContext)]) in
+            let run = pending
+            pending = []
+            let summaries = contextSummarizer.hasLoggedRequests ? contextSummarizer.getSummaries() : []
+            if !summaries.isEmpty {
+                contextSummarizer.clear()
+            }
+            // Reserved in the same critical section the run leaves `pending` in, so capacity counts it in one place or
+            // the other throughout the encode.
+            store.reserve(run.count)
+            return (run, summaries)
         }
-        // Reserved in the same critical section the run leaves `pending` in, so capacity counts it in one place or the
-        // other throughout the encode.
-        store.reserve(run.count)
-        recordLock.unlock()
 
         stage(run)
         store.releaseReservations()
@@ -649,19 +638,17 @@ class EventReporter: EventReporting {
     /// ago, which no earlier delivery could have taken. So a delivery that finds everything already claimed has
     /// nothing of its own to send, and `true` is the right answer for it.
     private func claimDeliverableBatches() -> [EventBatch] {
-        stateLock.lock()
-        defer { stateLock.unlock() }
-        let deliverable = store.pendingBatches().filter { !batchesInFlight.contains($0.payloadId) }
-        batchesInFlight.formUnion(deliverable.map { $0.payloadId })
-        return deliverable
+        stateLock.withLock {
+            let deliverable = store.pendingBatches().filter { !batchesInFlight.contains($0.payloadId) }
+            batchesInFlight.formUnion(deliverable.map { $0.payloadId })
+            return deliverable
+        }
     }
 
     /// Releases the claim once the delivery has an answer, whether or not every batch was sent: `deliver` stops at the
     /// first retryable failure, and what it did not reach has to be deliverable again.
     private func releaseClaim(on batches: [EventBatch]) {
-        stateLock.lock()
-        batchesInFlight.subtract(batches.map { $0.payloadId })
-        stateLock.unlock()
+        stateLock.withLock { batchesInFlight.subtract(batches.map { $0.payloadId }) }
     }
 
     private func deliver(_ batches: [EventBatch], _ completion: FlushOutcomeClosure?) {
@@ -756,11 +743,11 @@ class EventReporter: EventReporting {
     private func outcome(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> DeliveryOutcome {
         if error == nil && (200..<300).contains(response?.statusCode ?? 0) {
             let serverTime = response?.headerDate
-            stateLock.lock()
-            if let serverTime = serverTime, serverTime > responseDate {
-                responseDate = serverTime
+            stateLock.withLock {
+                if let serverTime = serverTime, serverTime > responseDate {
+                    responseDate = serverTime
+                }
             }
-            stateLock.unlock()
 
             os_log("%s Completed sending %d event(s)", log: service.config.logger, type: .debug, typeName(and: #function), sentEvents)
             self.reportSyncComplete(nil)
@@ -833,68 +820,54 @@ private final class NullEventStore: EventStoring {
     private var closed: [String: [Data]] = [:]
 
     var pendingEventCount: Int {
-        lock.lock()
-        defer { lock.unlock() }
-        return reserved + staged.count + closed.values.reduce(0) { $0 + $1.count }
+        lock.withLock { reserved + staged.count + closed.values.reduce(0) { $0 + $1.count } }
     }
 
     var isPersisting: Bool { false }
 
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        staged.append(encodedEvent)
+        lock.withLock { staged.append(encodedEvent) }
         return true
     }
 
     func reserve(_ events: Int) {
-        lock.lock()
-        defer { lock.unlock() }
-        reserved += events
+        lock.withLock { reserved += events }
     }
 
     func stageReserved(_ encodedEvent: Data) -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        reserved = max(0, reserved - 1)
-        staged.append(encodedEvent)
+        lock.withLock {
+            reserved = max(0, reserved - 1)
+            staged.append(encodedEvent)
+        }
         return true
     }
 
     func releaseReservations() {
-        lock.lock()
-        defer { lock.unlock() }
-        reserved = 0
+        lock.withLock { reserved = 0 }
     }
 
     func commit() {
     }
 
     func closeBatch() -> EventBatch? {
-        lock.lock()
-        defer { lock.unlock() }
+        lock.withLock {
+            guard !staged.isEmpty
+            else { return nil }
 
-        guard !staged.isEmpty
-        else { return nil }
-
-        let payloadId = UUID().uuidString
-        let events = staged
-        staged = []
-        closed[payloadId] = events
-        return EventBatch(payloadId: payloadId, eventCount: events.count)
+            let payloadId = UUID().uuidString
+            let events = staged
+            staged = []
+            closed[payloadId] = events
+            return EventBatch(payloadId: payloadId, eventCount: events.count)
+        }
     }
 
     func pendingBatches() -> [EventBatch] {
-        lock.lock()
-        defer { lock.unlock() }
-        return closed.map { EventBatch(payloadId: $0.key, eventCount: $0.value.count) }
+        lock.withLock { closed.map { EventBatch(payloadId: $0.key, eventCount: $0.value.count) } }
     }
 
     func body(of batch: EventBatch) -> Data? {
-        lock.lock()
-        defer { lock.unlock() }
-
-        guard let events = closed[batch.payloadId]
+        guard let events = lock.withLock({ closed[batch.payloadId] })
         else { return nil }
 
         var body = Data("[".utf8)
@@ -909,9 +882,7 @@ private final class NullEventStore: EventStoring {
     }
 
     func remove(_ batch: EventBatch) {
-        lock.lock()
-        defer { lock.unlock() }
-        closed[batch.payloadId] = nil
+        lock.withLock { closed[batch.payloadId] = nil }
     }
 
     func recoverInterruptedLog() {
@@ -922,15 +893,11 @@ private final class NullEventStore: EventStoring {
     extension EventReporter {
         /// Full events accepted but not yet handed to a commit.
         var pendingEventsForTesting: [Event] {
-            recordLock.lock()
-            defer { recordLock.unlock() }
-            return pending
+            recordLock.withLock { pending }
         }
 
         func setLastEventResponseDate(_ date: Date) {
-            stateLock.lock()
-            responseDate = date
-            stateLock.unlock()
+            stateLock.withLock { responseDate = date }
         }
 
         /// Occupies the queue a delivery runs on, so a test can see what one that has not started yet collects.

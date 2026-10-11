@@ -193,27 +193,19 @@ final class EventStore: EventStoring {
     // MARK: Recording
 
     var pendingEventCount: Int {
-        bufferLock.lock()
-        defer { bufferLock.unlock() }
-        return reservedEvents + bufferedEventCount + committedEvents + closedEvents
+        bufferLock.withLock { reservedEvents + bufferedEventCount + committedEvents + closedEvents }
     }
 
     var isPersisting: Bool {
-        bufferLock.lock()
-        defer { bufferLock.unlock() }
-        return persistEvents
+        bufferLock.withLock { persistEvents }
     }
 
     func reserve(_ events: Int) {
-        bufferLock.lock()
-        reservedEvents += events
-        bufferLock.unlock()
+        bufferLock.withLock { reservedEvents += events }
     }
 
     func releaseReservations() {
-        bufferLock.lock()
-        reservedEvents = 0
-        bufferLock.unlock()
+        bufferLock.withLock { reservedEvents = 0 }
     }
 
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool = false) -> Bool {
@@ -229,34 +221,32 @@ final class EventStore: EventStoring {
         else {
             os_log("%s dropping an event larger than a log frame allows", log: logger, type: .debug, typeName(and: #function))
             if usingReservation {
-                bufferLock.lock()
-                reservedEvents = max(0, reservedEvents - 1)
-                bufferLock.unlock()
+                bufferLock.withLock { reservedEvents = max(0, reservedEvents - 1) }
             }
             return false
         }
 
-        bufferLock.lock()
+        // Whether the staged bytes are due a write, or nil where the event was refused for capacity.
+        let needsCommit = bufferLock.withLock { () -> Bool? in
+            guard bypassingCapacity || reservedEvents + bufferedEventCount + committedEvents + closedEvents < capacity
+            else { return nil }
 
-        guard bypassingCapacity || reservedEvents + bufferedEventCount + committedEvents + closedEvents < capacity
-        else {
-            bufferLock.unlock()
-            return false
+            // In the same critical section as the append, so the event is never counted twice or not at all.
+            if usingReservation {
+                reservedEvents = max(0, reservedEvents - 1)
+            }
+            bufferData.append(EventLogFormat.frame(for: encodedEvent))
+            bufferedEventCount += 1
+            // Nothing to schedule once persistence has been given up on: there is nowhere for a commit to put these
+            // bytes, so they stay in memory until a delivery closes them into a batch.
+            let due = persistEvents && bufferData.count >= EventStore.stagingThreshold && !isCommitScheduled
+            if due {
+                isCommitScheduled = true
+            }
+            return due
         }
-
-        // In the same critical section as the append, so the event is never counted twice or not at all.
-        if usingReservation {
-            reservedEvents = max(0, reservedEvents - 1)
-        }
-        bufferData.append(EventLogFormat.frame(for: encodedEvent))
-        bufferedEventCount += 1
-        // Nothing to schedule once persistence has been given up on: there is nowhere for a commit to put these bytes,
-        // so they stay in memory until a delivery closes them into a batch.
-        let needsCommit = persistEvents && bufferData.count >= EventStore.stagingThreshold && !isCommitScheduled
-        if needsCommit {
-            isCommitScheduled = true
-        }
-        bufferLock.unlock()
+        guard let needsCommit
+        else { return false }
 
         // Handed to another thread rather than done here. Recording an event is something a flag evaluation does, and an
         // evaluation is expected to be a memory operation: the caller is usually the main thread, where a write that
@@ -272,17 +262,13 @@ final class EventStore: EventStoring {
     private func commitScheduled() {
         // Cleared before the commit rather than after it, so that an event staged while this write is in flight can ask
         // for another one instead of finding a commit apparently already on its way and waiting for a commit point.
-        bufferLock.lock()
-        isCommitScheduled = false
-        bufferLock.unlock()
+        bufferLock.withLock { isCommitScheduled = false }
 
         commit()
     }
 
     func commit() {
-        ioLock.lock()
-        defer { ioLock.unlock() }
-        writeStagedBytes()
+        ioLock.withLock { writeStagedBytes() }
     }
 
     func closeBatch() -> EventBatch? {
@@ -291,10 +277,7 @@ final class EventStore: EventStoring {
 
         writeStagedBytes()
 
-        bufferLock.lock()
-        let events = committedEvents
-        let stillBuffered = bufferedEventCount
-        bufferLock.unlock()
+        let (events, stillBuffered) = bufferLock.withLock { (committedEvents, bufferedEventCount) }
 
         let fromLog = events > 0 ? closeOpenLog(events) : nil
         // Closed after the log, so the older events are delivered first. Both can hold events at once: a write that
@@ -317,19 +300,17 @@ final class EventStore: EventStoring {
             // directory on tvOS, say. Then its events are gone, and they have to stop counting against capacity or the
             // store would refuse events for the rest of the session.
             if !openLog.exists {
-                bufferLock.lock()
-                committedEvents = 0
-                bufferLock.unlock()
+                bufferLock.withLock { committedEvents = 0 }
             }
             return nil
         }
 
         eventCounts[payloadId] = events
 
-        bufferLock.lock()
-        committedEvents = 0
-        closedEvents += events
-        bufferLock.unlock()
+        bufferLock.withLock {
+            committedEvents = 0
+            closedEvents += events
+        }
 
         return EventBatch(payloadId: payloadId, eventCount: events)
     }
@@ -367,9 +348,7 @@ final class EventStore: EventStoring {
             EventBatch(payloadId: $0.payloadId, eventCount: $0.eventCount)
         })
 
-        bufferLock.lock()
-        closedEvents = batches.reduce(0) { $0 + $1.eventCount }
-        bufferLock.unlock()
+        bufferLock.withLock { closedEvents = batches.reduce(0) { $0 + $1.eventCount } }
 
         return batches
     }
@@ -457,9 +436,7 @@ final class EventStore: EventStoring {
             eventCounts[batch.payloadId] = nil
         }
 
-        bufferLock.lock()
-        closedEvents = max(0, closedEvents - batch.eventCount)
-        bufferLock.unlock()
+        bufferLock.withLock { closedEvents = max(0, closedEvents - batch.eventCount) }
     }
 
     /// Closes any log left open by a previous run of this process, so its events join the batches to deliver.
@@ -468,9 +445,7 @@ final class EventStore: EventStoring {
     /// process's own log is touched: another process's may still be open in a process that is alive. Where logs are
     /// locked, any log no live process holds is recovered, whatever it is named.
     func recoverInterruptedLog() {
-        ioLock.lock()
-        defer { ioLock.unlock() }
-        recoverInterruptedLogOnce()
+        ioLock.withLock { recoverInterruptedLogOnce() }
     }
 
     /// Requires `ioLock`. Does its work once per store: after that, the open log is one this run opened.
@@ -525,33 +500,29 @@ final class EventStore: EventStoring {
     /// Requires `ioLock`.
     private func writeStagedBytes() {
         ioLock.assertOwned()
-        bufferLock.lock()
-        guard persistEvents, bufferedEventCount > 0
-        else {
+        let taken = bufferLock.withLock { () -> (bytes: Data, events: Int)? in
             // Staged bytes are left where they are. With nowhere durable to put them, memory is better than dropping
             // them: a delivery can still close them into a batch and send them.
-            bufferLock.unlock()
-            return
+            guard persistEvents, bufferedEventCount > 0
+            else { return nil }
+            defer {
+                bufferData = Data()
+                bufferedEventCount = 0
+            }
+            return (bufferData, bufferedEventCount)
         }
-        let bytes = bufferData
-        let events = bufferedEventCount
-        bufferData = Data()
-        bufferedEventCount = 0
-        bufferLock.unlock()
+        guard let taken
+        else { return }
 
-        if append(bytes) {
-            bufferLock.lock()
-            committedEvents += events
-            bufferLock.unlock()
+        if append(taken.bytes) {
+            bufferLock.withLock { committedEvents += taken.events }
         } else {
             // Put back, to be delivered from memory rather than lost. Ahead of anything staged while the write was in
             // flight, so the events keep the order they were recorded in.
-            bufferLock.lock()
-            let laterFrames = bufferData
-            bufferData = bytes
-            bufferData.append(laterFrames)
-            bufferedEventCount += events
-            bufferLock.unlock()
+            bufferLock.withLock {
+                bufferData = taken.bytes + bufferData
+                bufferedEventCount += taken.events
+            }
         }
     }
 
@@ -575,10 +546,10 @@ final class EventStore: EventStoring {
 
     deinit {
         // One acquisition: the lock is not recursive, and `commit()` would take it again.
-        ioLock.lock()
-        writeStagedBytes()
-        openLog.closeDescriptor()
-        ioLock.unlock()
+        ioLock.withLock {
+            writeStagedBytes()
+            openLog.closeDescriptor()
+        }
     }
 }
 
@@ -601,9 +572,7 @@ private extension EventStore {
     func disablePersistence() {
         ioLock.assertOwned()
         openLog.closeDescriptor()
-        bufferLock.lock()
-        persistEvents = false
-        bufferLock.unlock()
+        bufferLock.withLock { persistEvents = false }
     }
 
     /// Closes whatever is staged into a batch that never reaches a file.
@@ -611,12 +580,13 @@ private extension EventStore {
     /// Requires `ioLock`.
     func closeInMemoryBatch() -> EventBatch? {
         ioLock.assertOwned()
-        bufferLock.lock()
-        let frames = bufferData
-        let events = bufferedEventCount
-        bufferData = Data()
-        bufferedEventCount = 0
-        bufferLock.unlock()
+        let (frames, events) = bufferLock.withLock { () -> (Data, Int) in
+            defer {
+                bufferData = Data()
+                bufferedEventCount = 0
+            }
+            return (bufferData, bufferedEventCount)
+        }
 
         // Assembled through the same reader a batch on disk goes through, so a held batch and a written one produce
         // byte-identical request bodies.
@@ -628,9 +598,7 @@ private extension EventStore {
         let payloadId = UUID().uuidString
         inMemoryBatches.append(HeldBatch(payloadId: payloadId, body: body, eventCount: events))
 
-        bufferLock.lock()
-        closedEvents += events
-        bufferLock.unlock()
+        bufferLock.withLock { closedEvents += events }
 
         return EventBatch(payloadId: payloadId, eventCount: events)
     }
