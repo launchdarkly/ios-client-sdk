@@ -90,14 +90,27 @@ final class OpenEventLog {
         return FileManager.default.fileExists(atPath: url.path)
     }
 
-    /// Appends to the log, opening it first where it is not open. False where it could not be opened or written to.
+    /// Appends to the log, opening it first where it is not open. False where it could not be opened or written to, in
+    /// which case none of `bytes` is left in the log.
     ///
     /// Requires `ioLock`.
     func append(_ bytes: Data) -> Bool {
         ioLock.assertOwned()
         guard let descriptor = descriptorForAppending()
         else { return false }
-        return write(bytes, to: descriptor)
+
+        let start = EventLogFile.size(descriptor)
+        guard write(bytes, to: descriptor)
+        else {
+            // A write that fails partway can leave whole frames behind. The caller keeps every one of `bytes` in memory
+            // to deliver from there, so frames left here as well would be sent twice: beside the memory copy when the
+            // log is closed this session, or by recovery on the next launch.
+            if let start, !EventLogFile.truncate(descriptor, to: start) {
+                os_log("%s could not cut back a failed write: errno %d", log: logger, type: .debug, typeName(and: #function), errno)
+            }
+            return false
+        }
+        return true
     }
 
     /// Moves the log to `destination` and closes it, so that the next append starts a new one. The descriptor is closed

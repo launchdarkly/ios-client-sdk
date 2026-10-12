@@ -756,6 +756,57 @@ final class EventStoreSpec: QuickSpec {
                 expect(interrupted.pendingEventCount) == 2
             }
 
+            it("sends the frames a write landed before it failed once, not from the log and memory both") {
+                var writes = 0
+                let interrupted = EventStore.temporary(writeLog: { descriptor, bytes in
+                    writes += 1
+                    // The file header and the first event land. The next write gets a whole frame and part of another
+                    // onto the disk before the device is full.
+                    guard writes > 2
+                    else { return EventLogFile.writeAll(descriptor, bytes) }
+                    _ = EventLogFile.writeAll(descriptor, bytes.dropLast(3))
+                    return ENOSPC
+                })
+                defer { interrupted.deleteEverything() }
+
+                _ = interrupted.stage(EventStoreSpec.payload("written"))
+                interrupted.commit()
+                _ = interrupted.stage(EventStoreSpec.payload("landed"))
+                _ = interrupted.stage(EventStoreSpec.payload("torn"))
+                interrupted.commit()
+                expect(interrupted.isPersisting) == false
+
+                _ = interrupted.closeBatch()
+
+                let bodies = interrupted.pendingBatches().map { EventStoreSpec.keys(ofBody: try? interrupted.body(of: $0)) }
+                expect(bodies) == [["written"], ["landed", "torn"]]
+                expect(interrupted.pendingEventCount) == 3
+            }
+
+            it("leaves the next run nothing to recover from a first write that failed partway") {
+                var writes = 0
+                let interrupted = EventStore.temporary(writeLog: { descriptor, bytes in
+                    writes += 1
+                    // The file header lands, and then a whole frame and part of another before the device is full.
+                    guard writes > 1
+                    else { return EventLogFile.writeAll(descriptor, bytes) }
+                    _ = EventLogFile.writeAll(descriptor, bytes.dropLast(3))
+                    return ENOSPC
+                })
+                defer { interrupted.deleteEverything() }
+
+                _ = interrupted.stage(EventStoreSpec.payload("landed"))
+                _ = interrupted.stage(EventStoreSpec.payload("torn"))
+                interrupted.commit()
+                let fromMemory = interrupted.closeBatch()
+                expect(EventStoreSpec.keys(ofBody: fromMemory.flatMap { try? interrupted.body(of: $0) })) == ["landed", "torn"]
+
+                // Delivered from memory this run, so the next must not find any of it again in the log.
+                let next = EventStoreSpec.reader(sharing: interrupted)
+                next.recoverInterruptedLog()
+                expect(next.pendingBatches()).to(beEmpty())
+            }
+
             it("holds a batch until it is removed, so a failed delivery can be retried") {
                 _ = store.stage(EventStoreSpec.payload("retry-me"))
                 let batch = store.closeBatch()!

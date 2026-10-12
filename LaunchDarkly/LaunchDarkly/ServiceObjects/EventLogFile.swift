@@ -50,6 +50,17 @@ enum EventLogFile {
         lseek(descriptor, 0, SEEK_END) == 0
     }
 
+    /// How long the file is, or nil where that could not be found.
+    static func size(_ descriptor: Int32) -> off_t? {
+        let end = lseek(descriptor, 0, SEEK_END)
+        return end >= 0 ? end : nil
+    }
+
+    /// Cuts the file back to `length`. False where it could not, with `errno` saying why.
+    static func truncate(_ descriptor: Int32, to length: off_t) -> Bool {
+        truncateFile(descriptor, length) == 0
+    }
+
     static func closeDescriptor(_ descriptor: Int32) {
         closeFile(descriptor)
     }
@@ -98,6 +109,10 @@ private func writeBytes(_ descriptor: Int32, _ bytes: UnsafeRawPointer, _ count:
     Darwin.write(descriptor, bytes, count)
 }
 
+private func truncateFile(_ descriptor: Int32, _ length: off_t) -> Int32 {
+    Darwin.ftruncate(descriptor, length)
+}
+
 private func closeFile(_ descriptor: Int32) {
     _ = Darwin.close(descriptor)
 }
@@ -108,6 +123,10 @@ private func openFile(_ path: UnsafePointer<CChar>, _ flags: Int32, _ mode: mode
 
 private func writeBytes(_ descriptor: Int32, _ bytes: UnsafeRawPointer, _ count: Int) -> Int {
     write(descriptor, bytes, count)
+}
+
+private func truncateFile(_ descriptor: Int32, _ length: off_t) -> Int32 {
+    ftruncate(descriptor, length)
 }
 
 private func closeFile(_ descriptor: Int32) {
