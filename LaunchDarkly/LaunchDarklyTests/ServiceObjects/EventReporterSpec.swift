@@ -1284,12 +1284,12 @@ extension EventReporterSpec {
                 let writesLock = NSLock()
                 var writes = 0
                 // A slow disk, so that the other tracks arrive while a write is under way.
-                let store = EventStore.temporary(writeLog: { descriptor, bytes in
+                let store = EventStore.temporary(writeLog: { file, bytes in
                     writesLock.lock()
                     writes += 1
                     writesLock.unlock()
                     Thread.sleep(forTimeInterval: 0.05)
-                    return EventLogFile.writeAll(descriptor, bytes)
+                    return file.writeAll(bytes)
                 })
                 testContext = TestContext(store: store, eventCapacity: 100)
                 let reporter = testContext.eventReporter!
@@ -1665,10 +1665,10 @@ extension EventReporterSpec {
 
             it("delivers what memory was left holding beside what the disk took, and reports true") {
                 var writes = 0
-                let store = EventStore.temporary(writeLog: { descriptor, bytes in
+                let store = EventStore.temporary(writeLog: { file, bytes in
                     writes += 1
                     // The file header and the first event land; the device is full from then on.
-                    return writes > 2 ? ENOSPC : EventLogFile.writeAll(descriptor, bytes)
+                    return writes > 2 ? ENOSPC : file.writeAll(bytes)
                 })
                 testContext = TestContext(store: store)
                 testContext.eventReporter.record(CustomEvent(key: "written", context: LDContext.stub()))

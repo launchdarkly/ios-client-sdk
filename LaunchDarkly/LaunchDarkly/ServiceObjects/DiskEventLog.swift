@@ -9,7 +9,7 @@ import Glibc
 import Musl
 #endif
 
-/// The log this process appends to.
+/// The file of events on disk this process appends to, not to be confused with diagnostic logging.
 ///
 /// One per process rather than one per directory, so that only one process ever writes a given log and recovery only
 /// ever touches its own. With one shared log, a second process starting up would close off, as if a previous run had
@@ -18,7 +18,7 @@ import Musl
 ///
 /// Belongs to an `EventStore`, which makes every call holding its `ioLock`. The lock is handed in so that each call can
 /// check it is held, rather than this taking a lock of its own that would have to be ordered against the store's.
-final class OpenEventLog {
+final class DiskEventLog {
     /// Names a log a single process appends to; the rest of the name is that process.
     static let prefix = "open-"
 
@@ -27,12 +27,13 @@ final class OpenEventLog {
     private let logger: OSLog
     /// How bytes reach the log, injectable so a test can make a write fail partway through a session, as a full disk
     /// does. Answers with the errno it stopped on, or nil where every byte landed.
-    private let writeLog: (Int32, Data) -> Int32?
+    private let writeLog: (EventLogFile, Data) -> Int32?
 
     /// Named for the process, unless on a Mac `isLocked` found another live instance holding that name, in which case
     /// it is named for this instance's process ID as well.
     private(set) var url: URL
-    private var descriptor: Int32 = -1
+    /// Nil until the first append opens it, and again once it is closed.
+    private var file: EventLogFile?
 
     #if os(macOS) || targetEnvironment(macCatalyst)
     /// The readable, collision-proof form of the process name every log this process opens is named after.
@@ -46,13 +47,13 @@ final class OpenEventLog {
     var isLocked = true
     #endif
 
-    init(directory: URL, processName: String, ioLock: UnfairLock, logger: OSLog, writeLog: @escaping (Int32, Data) -> Int32?) {
+    init(directory: URL, processName: String, ioLock: UnfairLock, logger: OSLog, writeLog: @escaping (EventLogFile, Data) -> Int32?) {
         self.directory = directory
         self.ioLock = ioLock
         self.logger = logger
         self.writeLog = writeLog
-        let processLogName = OpenEventLog.name(for: processName)
-        self.url = directory.appendingPathComponent(OpenEventLog.prefix + processLogName)
+        let processLogName = DiskEventLog.name(for: processName)
+        self.url = directory.appendingPathComponent(DiskEventLog.prefix + processLogName)
         #if os(macOS) || targetEnvironment(macCatalyst)
         self.processLogName = processLogName
         #endif
@@ -81,7 +82,7 @@ final class OpenEventLog {
     /// Requires `ioLock`.
     var isOpen: Bool {
         ioLock.assertOwned()
-        return descriptor >= 0
+        return file != nil
     }
 
     /// Requires `ioLock`.
@@ -96,16 +97,16 @@ final class OpenEventLog {
     /// Requires `ioLock`.
     func append(_ bytes: Data) -> Bool {
         ioLock.assertOwned()
-        guard let descriptor = descriptorForAppending()
+        guard let file = fileForAppending()
         else { return false }
 
-        let start = EventLogFile.size(descriptor)
-        guard write(bytes, to: descriptor)
+        let start = file.size
+        guard write(bytes, to: file)
         else {
             // A write that fails partway can leave whole frames behind. The caller keeps every one of `bytes` in memory
             // to deliver from there, so frames left here as well would be sent twice: beside the memory copy when the
             // log is closed this session, or by recovery on the next launch.
-            if let start, !EventLogFile.truncate(descriptor, to: start) {
+            if let start, !file.truncate(to: start) {
                 os_log("%s could not cut back a failed write: errno %d", log: logger, type: .debug, typeName(and: #function), errno)
             }
             return false
@@ -128,10 +129,8 @@ final class OpenEventLog {
     /// Closes the descriptor, leaving the log where it is. Requires `ioLock`.
     func closeDescriptor() {
         ioLock.assertOwned()
-        guard descriptor >= 0
-        else { return }
-        EventLogFile.closeDescriptor(descriptor)
-        descriptor = -1
+        file?.close()
+        file = nil
     }
 
     /// Hands `recover` each log left open by a process that is gone, which it has to move or remove.
@@ -152,10 +151,10 @@ final class OpenEventLog {
     }
 
     /// Requires `ioLock`.
-    private func descriptorForAppending() -> Int32? {
+    private func fileForAppending() -> EventLogFile? {
         ioLock.assertOwned()
-        if descriptor >= 0 {
-            return descriptor
+        if let file {
+            return file
         }
 
         do {
@@ -172,25 +171,25 @@ final class OpenEventLog {
             return nil
         }
 
-        descriptor = opened
+        file = opened
 
-        if EventLogFile.isEmpty(opened) {
+        if opened.isEmpty {
             guard write(EventLogFormat.fileHeader, to: opened)
             else { return nil }
         }
 
-        return descriptor
+        return opened
     }
 
-    private func write(_ bytes: Data, to descriptor: Int32) -> Bool {
-        guard let failure = writeLog(descriptor, bytes)
+    private func write(_ bytes: Data, to file: EventLogFile) -> Bool {
+        guard let failure = writeLog(file, bytes)
         else { return true }
         os_log("%s could not write to the event log: errno %d", log: logger, type: .debug, typeName(and: #function), failure)
         return false
     }
 
     /// Opens the log, locked where logs are. Requires `ioLock`.
-    private func open() -> Int32? {
+    private func open() -> EventLogFile? {
         ioLock.assertOwned()
         // O_APPEND is what makes each write land at the end of the file as one step, so that clients for several
         // environments writing their own logs, or a commit racing a reader, cannot produce a spliced frame.
@@ -200,13 +199,13 @@ final class OpenEventLog {
             return openLocked(flags: flags)
         }
         #endif
-        return EventLogFile.openDescriptor(at: url, flags: flags)
+        return EventLogFile.open(at: url, flags: flags)
     }
 
     #if os(macOS) || targetEnvironment(macCatalyst)
     /// Opens the log for this process name locked, or one of this instance's own where another live instance holds
     /// it. Requires `ioLock`.
-    private func openLocked(flags: Int32) -> Int32? {
+    private func openLocked(flags: Int32) -> EventLogFile? {
         ioLock.assertOwned()
         if let opened = EventLogFile.openLocked(url, flags: flags) {
             return opened
@@ -217,7 +216,7 @@ final class OpenEventLog {
         // one, as a closed client's can be while it is still going away. Recovery finds the log by its lock rather than
         // its name, so it is not orphaned when this instance ends.
         let ownLog = directory.appendingPathComponent(
-            "\(OpenEventLog.prefix)\(processLogName)-\(getpid())-\(UUID().uuidString.prefix(8))")
+            "\(DiskEventLog.prefix)\(processLogName)-\(getpid())-\(UUID().uuidString.prefix(8))")
         guard let opened = EventLogFile.openLocked(ownLog, flags: flags)
         else { return nil }
         url = ownLog
@@ -233,14 +232,14 @@ final class OpenEventLog {
         let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
                                                                     includingPropertiesForKeys: nil,
                                                                     options: [.skipsHiddenFiles])) ?? []
-        for log in contents where log.lastPathComponent.hasPrefix(OpenEventLog.prefix) {
+        for log in contents where log.lastPathComponent.hasPrefix(DiskEventLog.prefix) {
             guard let held = EventLogFile.openLocked(log, flags: O_RDONLY)
             else { continue }
             recover(log)
-            EventLogFile.closeDescriptor(held)
+            held.close()
         }
     }
     #endif
 }
 
-extension OpenEventLog: TypeIdentifying { }
+extension DiskEventLog: TypeIdentifying { }

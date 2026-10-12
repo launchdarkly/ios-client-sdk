@@ -59,7 +59,7 @@ extension EventStore {
         persistEvents: Bool = true,
         commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.commitQueue"),
         readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
-        writeLog: @escaping (Int32, Data) -> Int32? = EventLogFile.writeAll
+        writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }
     ) -> EventStore {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("com.launchdarkly.tests.events", isDirectory: true)

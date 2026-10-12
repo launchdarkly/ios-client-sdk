@@ -8,24 +8,60 @@ import Glibc
 import Musl
 #endif
 
-/// The file operations an event log is made of, on descriptors rather than Foundation's file handles.
+/// An open file an event log is written through, on a descriptor rather than Foundation's file handles.
 ///
 /// Foundation's FileHandle is deliberately not used: it raises an Objective-C exception when a write fails, which is not
 /// something a Swift caller can catch, and has taken host applications down with it when a device ran out of space.
-enum EventLogFile {
+///
+/// A value, so a copy names the same open file. Whoever opened it closes it once, and uses no copy after that.
+struct EventLogFile {
+    let descriptor: Int32
+
     /// Opens a file, creating it readable and writable by its owner alone. Nil where it could not, with `errno` saying
     /// why.
-    static func openDescriptor(at url: URL, flags: Int32) -> Int32? {
+    static func open(at url: URL, flags: Int32) -> EventLogFile? {
         let opened = url.withUnsafeFileSystemRepresentation { path -> Int32 in
             guard let path = path
             else { return -1 }
             return openFile(path, flags, 0o600)
         }
-        return opened >= 0 ? opened : nil
+        return opened >= 0 ? EventLogFile(descriptor: opened) : nil
+    }
+
+    #if os(macOS) || targetEnvironment(macCatalyst)
+    /// Opens a file and takes its lock without waiting, or nil where another live process holds it.
+    ///
+    /// The lock has to be on the file that is still at `url`: one renamed or removed between the open and the lock,
+    /// by another process closing off or recovering it, is no longer a log anyone appends to.
+    static func openLocked(_ url: URL, flags: Int32) -> EventLogFile? {
+        for _ in 0..<3 {
+            guard let opened = open(at: url, flags: flags)
+            else { return nil }
+            guard lockFile(opened.descriptor)
+            else {
+                opened.close()
+                return nil
+            }
+            if isFile(opened.descriptor, at: url) {
+                return opened
+            }
+            opened.close()
+        }
+        return nil
+    }
+    #endif
+
+    static func excludeFromBackup(_ directory: URL) {
+        #if canImport(Darwin)
+        var url = directory
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? url.setResourceValues(values)
+        #endif
     }
 
     /// Writes every byte, returning the errno it stopped on or nil where they all landed.
-    static func writeAll(_ descriptor: Int32, _ bytes: Data) -> Int32? {
+    func writeAll(_ bytes: Data) -> Int32? {
         var offset = 0
         return bytes.withUnsafeBytes { raw -> Int32? in
             guard let base = raw.baseAddress
@@ -46,56 +82,24 @@ enum EventLogFile {
         }
     }
 
-    static func isEmpty(_ descriptor: Int32) -> Bool {
+    var isEmpty: Bool {
         lseek(descriptor, 0, SEEK_END) == 0
     }
 
     /// How long the file is, or nil where that could not be found.
-    static func size(_ descriptor: Int32) -> off_t? {
+    var size: off_t? {
         let end = lseek(descriptor, 0, SEEK_END)
         return end >= 0 ? end : nil
     }
 
     /// Cuts the file back to `length`. False where it could not, with `errno` saying why.
-    static func truncate(_ descriptor: Int32, to length: off_t) -> Bool {
+    func truncate(to length: off_t) -> Bool {
         truncateFile(descriptor, length) == 0
     }
 
-    static func closeDescriptor(_ descriptor: Int32) {
+    func close() {
         closeFile(descriptor)
     }
-
-    static func excludeFromBackup(_ directory: URL) {
-        #if canImport(Darwin)
-        var url = directory
-        var values = URLResourceValues()
-        values.isExcludedFromBackup = true
-        try? url.setResourceValues(values)
-        #endif
-    }
-
-    #if os(macOS) || targetEnvironment(macCatalyst)
-    /// Opens a file and takes its lock without waiting, or nil where another live process holds it.
-    ///
-    /// The lock has to be on the file that is still at `url`: one renamed or removed between the open and the lock,
-    /// by another process closing off or recovering it, is no longer a log anyone appends to.
-    static func openLocked(_ url: URL, flags: Int32) -> Int32? {
-        for _ in 0..<3 {
-            guard let opened = openDescriptor(at: url, flags: flags)
-            else { return nil }
-            guard lockFile(opened)
-            else {
-                closeFile(opened)
-                return nil
-            }
-            if isFile(opened, at: url) {
-                return opened
-            }
-            closeFile(opened)
-        }
-        return nil
-    }
-    #endif
 }
 
 // The POSIX calls are wrapped so that the names cannot be shadowed by a member of the type using them, and so the

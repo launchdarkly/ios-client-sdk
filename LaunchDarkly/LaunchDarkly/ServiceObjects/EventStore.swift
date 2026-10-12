@@ -126,7 +126,7 @@ final class EventStore: EventStoring {
     private var isCommitScheduled = false
 
     /// Only to be used while holding `ioLock`.
-    private let openLog: OpenEventLog
+    private let diskLog: DiskEventLog
     /// Whether a log left by a previous run has been dealt with. Only to be used while holding `ioLock`.
     private var hasRecoveredInterruptedLog = false
 
@@ -158,14 +158,14 @@ final class EventStore: EventStoring {
 
     /// Where the log this process appends to is, for a test or a diagnosis to look at.
     var openLogUrl: URL {
-        ioLock.withLock { openLog.url }
+        ioLock.withLock { diskLog.url }
     }
 
     #if os(macOS) || targetEnvironment(macCatalyst)
     /// Whether the open log is locked while it is open. Only to be changed before the store first touches the disk.
     var locksOpenLog: Bool {
-        get { ioLock.withLock { openLog.isLocked } }
-        set { ioLock.withLock { openLog.isLocked = newValue } }
+        get { ioLock.withLock { diskLog.isLocked } }
+        set { ioLock.withLock { diskLog.isLocked = newValue } }
     }
     #endif
 
@@ -182,11 +182,11 @@ final class EventStore: EventStoring {
          logger: OSLog,
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventStore.commitQueue", qos: .userInitiated),
          readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
-         writeLog: @escaping (Int32, Data) -> Int32? = EventLogFile.writeAll) {
+         writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }) {
         self.directory = directory
         let ioLock = UnfairLock()
         self.ioLock = ioLock
-        self.openLog = OpenEventLog(directory: directory, processName: processName, ioLock: ioLock, logger: logger, writeLog: writeLog)
+        self.diskLog = DiskEventLog(directory: directory, processName: processName, ioLock: ioLock, logger: logger, writeLog: writeLog)
         self.capacity = capacity
         self.logger = logger
         self.commitQueue = commitQueue
@@ -306,13 +306,13 @@ final class EventStore: EventStoring {
         ioLock.assertOwned()
         let payloadId = UUID().uuidString
         do {
-            try openLog.close(movingTo: url(of: payloadId))
+            try diskLog.close(movingTo: url(of: payloadId))
         } catch {
             os_log("%s could not close the event log: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
             // The log is still there to try again with, unless it is the log that went missing -- a purged cache
             // directory on tvOS, say. Then its events are gone, and they have to stop counting against capacity or the
             // store would refuse events for the rest of the session.
-            if !openLog.exists {
+            if !diskLog.exists {
                 bufferLock.withLock { committedEvents = 0 }
             }
             return nil
@@ -476,7 +476,7 @@ final class EventStore: EventStoring {
         guard readsDisk, !hasRecoveredInterruptedLog
         else { return }
         hasRecoveredInterruptedLog = true
-        openLog.forEachLogLeftOpen { recover(logAt: $0) }
+        diskLog.forEachLogLeftOpen { recover(logAt: $0) }
     }
 
     /// Closes off a log nobody is writing to any more. Requires `ioLock`.
@@ -552,10 +552,10 @@ final class EventStore: EventStoring {
         ioLock.assertOwned()
         // Before the log is opened, because it may still be the one a previous run died writing. Appended to, this
         // run's events would sit behind that run's torn last frame, where a reader can no longer find where they start.
-        if !openLog.isOpen {
+        if !diskLog.isOpen {
             recoverInterruptedLogOnce()
         }
-        guard openLog.append(bytes)
+        guard diskLog.append(bytes)
         else {
             // Never trap on a full disk. The SDK gives up on persistence for the rest of the session rather than taking
             // the application down with it, which is how other SDKs have crashed their hosts.
@@ -569,7 +569,7 @@ final class EventStore: EventStoring {
         // One acquisition: the lock is not recursive, and `commit()` would take it again.
         ioLock.withLock {
             writeStagedBytes()
-            openLog.closeDescriptor()
+            diskLog.closeDescriptor()
         }
     }
 }
@@ -592,7 +592,7 @@ private extension EventStore {
     /// Requires `ioLock`.
     func disablePersistence() {
         ioLock.assertOwned()
-        openLog.closeDescriptor()
+        diskLog.closeDescriptor()
         bufferLock.withLock { persistEvents = false }
     }
 
@@ -642,8 +642,8 @@ extension EventStore {
                                                                     includingPropertiesForKeys: nil,
                                                                     options: [.skipsHiddenFiles])) ?? []
         var logs = contents.filter { $0.lastPathComponent.hasPrefix(EventStore.batchPrefix) }.sorted { $0.path < $1.path }
-        if openLog.exists {
-            logs.append(openLog.url)
+        if diskLog.exists {
+            logs.append(diskLog.url)
         }
 
         var payloads: [Data] = []

@@ -161,12 +161,12 @@ final class EventStoreSpec: QuickSpec {
             }
 
             it("names logs so that process names reducing to the same characters stay apart") {
-                let colon = OpenEventLog.name(for: "com.app:remote")
-                let dot = OpenEventLog.name(for: "com.app.remote")
+                let colon = DiskEventLog.name(for: "com.app:remote")
+                let dot = DiskEventLog.name(for: "com.app.remote")
                 expect(colon) != dot
                 expect(colon.hasPrefix("com_app_remote-")) == true
                 expect(dot.hasPrefix("com_app_remote-")) == true
-                expect(OpenEventLog.name(for: "  ").hasPrefix("unknown-")) == true
+                expect(DiskEventLog.name(for: "  ").hasPrefix("unknown-")) == true
             }
         }
     }
@@ -734,10 +734,10 @@ final class EventStoreSpec: QuickSpec {
 
             it("delivers what memory was left holding beside what the disk already took") {
                 var writes = 0
-                let interrupted = EventStore.temporary(writeLog: { descriptor, bytes in
+                let interrupted = EventStore.temporary(writeLog: { file, bytes in
                     writes += 1
                     // The file header and the first event land; the device is full from then on.
-                    return writes > 2 ? ENOSPC : EventLogFile.writeAll(descriptor, bytes)
+                    return writes > 2 ? ENOSPC : file.writeAll(bytes)
                 })
                 defer { interrupted.deleteEverything() }
 
@@ -758,13 +758,13 @@ final class EventStoreSpec: QuickSpec {
 
             it("sends the frames a write landed before it failed once, not from the log and memory both") {
                 var writes = 0
-                let interrupted = EventStore.temporary(writeLog: { descriptor, bytes in
+                let interrupted = EventStore.temporary(writeLog: { file, bytes in
                     writes += 1
                     // The file header and the first event land. The next write gets a whole frame and part of another
                     // onto the disk before the device is full.
                     guard writes > 2
-                    else { return EventLogFile.writeAll(descriptor, bytes) }
-                    _ = EventLogFile.writeAll(descriptor, bytes.dropLast(3))
+                    else { return file.writeAll(bytes) }
+                    _ = file.writeAll(bytes.dropLast(3))
                     return ENOSPC
                 })
                 defer { interrupted.deleteEverything() }
@@ -785,12 +785,12 @@ final class EventStoreSpec: QuickSpec {
 
             it("leaves the next run nothing to recover from a first write that failed partway") {
                 var writes = 0
-                let interrupted = EventStore.temporary(writeLog: { descriptor, bytes in
+                let interrupted = EventStore.temporary(writeLog: { file, bytes in
                     writes += 1
                     // The file header lands, and then a whole frame and part of another before the device is full.
                     guard writes > 1
-                    else { return EventLogFile.writeAll(descriptor, bytes) }
-                    _ = EventLogFile.writeAll(descriptor, bytes.dropLast(3))
+                    else { return file.writeAll(bytes) }
+                    _ = file.writeAll(bytes.dropLast(3))
                     return ENOSPC
                 })
                 defer { interrupted.deleteEverything() }
