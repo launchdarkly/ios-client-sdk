@@ -18,6 +18,7 @@
 		29FE129B280413D4008CC918 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FE1297280413D4008CC918 /* Util.swift */; };
 		2CA9D36B3566D78850D6F0AF /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */; };
 		B8F228923BE11E444D1ECB8E /* DiskEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */; };
+		513F2EA8711D6DA3DA7AE41B /* NullEventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3ED412A285F54822108659 /* NullEventStore.swift */; };
 		3C55384C9E3485B493E1F86A /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
 		C3F7E502BD916C40AE238F64 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
 		AB4827D11084D58661E24B05 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
@@ -54,6 +55,7 @@
 		50EE85C72EA0749C007CC662 /* TimeoutExecutorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EE85C62EA0749C007CC662 /* TimeoutExecutorSpec.swift */; };
 		5AEA1F832DCA974314E07D21 /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */; };
 		D4225F1F05F2C55E9518941B /* DiskEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */; };
+		BCB7C8017479FD22963B3BB2 /* NullEventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3ED412A285F54822108659 /* NullEventStore.swift */; };
 		DDA788E3056F8AC3CA203933 /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
 		D4080613CEA27D51BF349075 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
 		ECBE45806B470ACC5187B7D6 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
@@ -387,6 +389,7 @@
 		AFCE752CB1A75DEBABC23034 /* LDContextJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88DAB8D1864C14D9C7E06F11 /* LDContextJSONWriter.swift */; };
 		B0B1AD7CADE8DBB596C2DE9B /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */; };
 		DAA2C9B9C144F129217A7C55 /* DiskEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */; };
+		99050D62DBD6A90685F6E28C /* NullEventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3ED412A285F54822108659 /* NullEventStore.swift */; };
 		44E0BE449714952A68628CEB /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
 		E5191724DFB38E62C0451086 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
 		CA2ADB3D20A229D70CA34F73 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
@@ -442,6 +445,7 @@
 		C4AF311E4DA8C3AB7040637D /* EventJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B430884DBF2E541B919C08FA /* EventJSONWriter.swift */; };
 		CF9A1EB116D8AA3B7B5535B2 /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */; };
 		E2F8080AB2B3CD6E9A9C1FCC /* DiskEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */; };
+		9DAA86F524C6D802D69B8553 /* NullEventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3ED412A285F54822108659 /* NullEventStore.swift */; };
 		F0F504E5EC32223905356098 /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
 		B2E6D4F1AC805B3F9D127E53 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
 		625ADAC0CCFE3BE324C45752 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
@@ -671,6 +675,7 @@
 		B4F689132497B2FC004D3CE0 /* DiagnosticEventSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticEventSpec.swift; sourceTree = "<group>"; };
 		C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventStore.swift; sourceTree = "<group>"; };
 		E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiskEventLog.swift; sourceTree = "<group>"; };
+		BA3ED412A285F54822108659 /* NullEventStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NullEventStore.swift; sourceTree = "<group>"; };
 		03F6C30CC57DF77870B421F9 /* EventLogFile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventLogFile.swift; sourceTree = "<group>"; };
 		A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DeliveryClaims.swift; sourceTree = "<group>"; };
 		B58551BB165F28784C785720 /* EventLogFormat.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventLogFormat.swift; sourceTree = "<group>"; };
@@ -1060,6 +1065,7 @@
 				9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */,
 				C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */,
 				E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */,
+				BA3ED412A285F54822108659 /* NullEventStore.swift */,
 				03F6C30CC57DF77870B421F9 /* EventLogFile.swift */,
 				A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */,
 				B58551BB165F28784C785720 /* EventLogFormat.swift */,
@@ -1591,6 +1597,7 @@
 				A32FCDB22D53263851DDB727 /* BackgroundActivity.swift in Sources */,
 				CF9A1EB116D8AA3B7B5535B2 /* EventStore.swift in Sources */,
 				E2F8080AB2B3CD6E9A9C1FCC /* DiskEventLog.swift in Sources */,
+				9DAA86F524C6D802D69B8553 /* NullEventStore.swift in Sources */,
 				F0F504E5EC32223905356098 /* EventLogFile.swift in Sources */,
 				B2E6D4F1AC805B3F9D127E53 /* DeliveryClaims.swift in Sources */,
 				625ADAC0CCFE3BE324C45752 /* EventLogFormat.swift in Sources */,
@@ -1690,6 +1697,7 @@
 				7185A3C30E7FFC4F725769F1 /* BackgroundActivity.swift in Sources */,
 				2CA9D36B3566D78850D6F0AF /* EventStore.swift in Sources */,
 				B8F228923BE11E444D1ECB8E /* DiskEventLog.swift in Sources */,
+				513F2EA8711D6DA3DA7AE41B /* NullEventStore.swift in Sources */,
 				3C55384C9E3485B493E1F86A /* EventLogFile.swift in Sources */,
 				C3F7E502BD916C40AE238F64 /* DeliveryClaims.swift in Sources */,
 				AB4827D11084D58661E24B05 /* EventLogFormat.swift in Sources */,
@@ -1788,6 +1796,7 @@
 				A20146E7AF098560627C614E /* BackgroundActivity.swift in Sources */,
 				5AEA1F832DCA974314E07D21 /* EventStore.swift in Sources */,
 				D4225F1F05F2C55E9518941B /* DiskEventLog.swift in Sources */,
+				BCB7C8017479FD22963B3BB2 /* NullEventStore.swift in Sources */,
 				DDA788E3056F8AC3CA203933 /* EventLogFile.swift in Sources */,
 				D4080613CEA27D51BF349075 /* DeliveryClaims.swift in Sources */,
 				ECBE45806B470ACC5187B7D6 /* EventLogFormat.swift in Sources */,
@@ -1953,6 +1962,7 @@
 				3D34EEEF37158657D49335BB /* BackgroundActivity.swift in Sources */,
 				B0B1AD7CADE8DBB596C2DE9B /* EventStore.swift in Sources */,
 				DAA2C9B9C144F129217A7C55 /* DiskEventLog.swift in Sources */,
+				99050D62DBD6A90685F6E28C /* NullEventStore.swift in Sources */,
 				44E0BE449714952A68628CEB /* EventLogFile.swift in Sources */,
 				E5191724DFB38E62C0451086 /* DeliveryClaims.swift in Sources */,
 				CA2ADB3D20A229D70CA34F73 /* EventLogFormat.swift in Sources */,
