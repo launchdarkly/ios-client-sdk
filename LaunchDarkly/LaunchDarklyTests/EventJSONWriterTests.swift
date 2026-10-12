@@ -28,13 +28,13 @@ final class EventJSONWriterTests: XCTestCase {
         _ = builder.trySetValue("firstName", "Ada")
         _ = builder.trySetValue("lastName", "Lovelace")
         _ = builder.trySetValue("email", "ada@example.com")
-        _ = builder.trySetValue("age", 36)
+        _ = builder.trySetValue("age", .number(36))
         _ = builder.trySetValue("score", 12.5)
-        _ = builder.trySetValue("negative", -17)
+        _ = builder.trySetValue("negative", .number(-17))
         _ = builder.trySetValue("verified", true)
         _ = builder.trySetValue("nothing", .null)
         _ = builder.trySetValue("tags", ["a", "b", "c"])
-        _ = builder.trySetValue("address", ["street": "1 Main St", "city": "Springfield", "zip": 12345])
+        _ = builder.trySetValue("address", ["street": "1 Main St", "city": "Springfield", "zip": .number(12345)])
         _ = builder.trySetValue("deep", ["a": ["b": ["c": "d"]]])
         return try! builder.build().get()
     }
@@ -97,7 +97,7 @@ final class EventJSONWriterTests: XCTestCase {
         var device = LDContextBuilder(key: "device-key")
         device.kind("device")
         device.anonymous(true)
-        _ = device.trySetValue("os", ["name": "iOS", "version": 18])
+        _ = device.trySetValue("os", ["name": "iOS", "version": .number(18)])
 
         var builder = LDMultiContextBuilder()
         builder.addContext(try! user.build().get())
@@ -132,7 +132,7 @@ final class EventJSONWriterTests: XCTestCase {
                                      variation: 2,
                                      version: 11,
                                      trackEvents: true,
-                                     reason: ["kind": "RULE_MATCH", "ruleIndex": 1, "ruleId": "rule-id"],
+                                     reason: ["kind": "RULE_MATCH", "ruleIndex": .number(1), "ruleId": "rule-id"],
                                      trackReason: true)
         let unknownFlag = FeatureFlag(flagKey: "flag-key", value: true)
 
@@ -144,11 +144,11 @@ final class EventJSONWriterTests: XCTestCase {
         return [
             ("feature", FeatureEvent(key: "flag-key", context: context, value: true, defaultValue: false, featureFlag: plainFlag, includeReason: false, isDebug: false)),
             ("feature, reason", FeatureEvent(key: "flag-key", context: context, value: "v", defaultValue: "d", featureFlag: reasonFlag, includeReason: true, isDebug: false)),
-            ("feature, no flag", FeatureEvent(key: "flag-key", context: context, value: .null, defaultValue: [1, 2], featureFlag: nil, includeReason: false, isDebug: false)),
+            ("feature, no flag", FeatureEvent(key: "flag-key", context: context, value: .null, defaultValue: [.number(1), .number(2)], featureFlag: nil, includeReason: false, isDebug: false)),
             ("debug", FeatureEvent(key: "flag-key", context: context, value: true, defaultValue: false, featureFlag: plainFlag, includeReason: false, isDebug: true)),
             ("identify", IdentifyEvent(context: context)),
             ("custom, bare", CustomEvent(key: "custom-key", context: context)),
-            ("custom, data", CustomEvent(key: "custom \"key\"", context: context, data: ["a": 1, "b": [true, .null, "x"]])),
+            ("custom, data", CustomEvent(key: "custom \"key\"", context: context, data: ["a": .number(1), "b": [true, .null, "x"]])),
             ("custom, metric", CustomEvent(key: "custom-key", context: context, data: "payload", metricValue: 3.25)),
             ("summary", SummaryEvent(flagRequestTracker: tracker, context: context))
         ]
@@ -465,7 +465,7 @@ final class EventJSONWriterTests: XCTestCase {
 
     func testNumberFormatting() throws {
         let numbers: [Double] = [0, -0, 1, -1, 17, -17, 0.5, -0.5, 1.25, 3.141592653589793,
-                                 1e10, 1e-10, 1e20, -1e20, Double(Int32.max), Double(Int64.max), 9007199254740993,
+                                 1e10, 1e-10, 1e20, -1e20, Double(Int32.max), Double(Int64.max), 9007199254740992,
                                  1e16, 1e17, -1e17, 1.5e17, 1e18, 9.2e18, -9.2e18, 9223372036854774784]
 
         for number in numbers {
