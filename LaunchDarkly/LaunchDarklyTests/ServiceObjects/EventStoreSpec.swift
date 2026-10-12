@@ -242,7 +242,7 @@ final class EventStoreSpec: QuickSpec {
 
                 let persistingAgain = EventStoreSpec.reader(sharing: persisting)
                 persistingAgain.recoverInterruptedLog()
-                let bodies = persistingAgain.pendingBatches().map { EventStoreSpec.keys(ofBody: try? persistingAgain.body(of: $0) ?? nil) }
+                let bodies = persistingAgain.pendingBatches().map { EventStoreSpec.keys(ofBody: try? persistingAgain.body(of: $0)) }
                 expect(bodies) == [["closed"], ["open"]]
             }
         }
@@ -429,7 +429,7 @@ final class EventStoreSpec: QuickSpec {
                 next.commit()
                 _ = next.closeBatch()
 
-                let bodies = next.pendingBatches().map { EventStoreSpec.keys(ofBody: try? next.body(of: $0) ?? nil) }
+                let bodies = next.pendingBatches().map { EventStoreSpec.keys(ofBody: try? next.body(of: $0)) }
                 expect(bodies) == [["previous-0"], ["this-run", "later"]]
                 expect(next.pendingEventCount) == 3
             }
@@ -783,7 +783,7 @@ final class EventStoreSpec: QuickSpec {
 
                 // A failed write leaves events on both sides, and closing only the log would leave the rest to a
                 // delivery that reported success without them.
-                let bodies = interrupted.pendingBatches().map { EventStoreSpec.keys(ofBody: try? interrupted.body(of: $0) ?? nil) }
+                let bodies = interrupted.pendingBatches().map { EventStoreSpec.keys(ofBody: try? interrupted.body(of: $0)) }
                 expect(bodies) == [["written"], ["held"]]
                 expect(interrupted.pendingEventCount) == 2
             }

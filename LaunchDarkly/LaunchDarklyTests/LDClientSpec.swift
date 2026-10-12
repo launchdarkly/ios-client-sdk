@@ -86,7 +86,11 @@ final class LDClientSpec: QuickSpec {
         context("when configured to start online") {
             beforeEach {
                 testContext = TestContext(startOnline: true)
-                withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
+                if withTimeout {
+                    testContext.start(timeOut: 10.0)
+                } else {
+                    testContext.start()
+                }
             }
             it("takes the client and service objects online") {
                 expect(testContext.subject.isOnline) == true
@@ -133,7 +137,11 @@ final class LDClientSpec: QuickSpec {
         context("when configured to start offline") {
             beforeEach {
                 testContext = TestContext()
-                withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
+                if withTimeout {
+                    testContext.start(timeOut: 10.0)
+                } else {
+                    testContext.start()
+                }
             }
             it("leaves the client and service objects offline") {
                 expect(testContext.subject.isOnline) == false
@@ -177,7 +185,11 @@ final class LDClientSpec: QuickSpec {
             context("after setting context") {
                 beforeEach {
                     testContext = TestContext(startOnline: true).withContext(nil)
-                    withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
+                    if withTimeout {
+                        testContext.start(timeOut: 10.0)
+                    } else {
+                        testContext.start()
+                    }
 
                     testContext.context = LDContext.stub()
                     testContext.subject.internalIdentify(newContext: testContext.context, useCache: .yes)
@@ -215,7 +227,11 @@ final class LDClientSpec: QuickSpec {
             context("without setting context") {
                 beforeEach {
                     testContext = TestContext(startOnline: true).withContext(nil)
-                    withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
+                    if withTimeout {
+                        testContext.start(timeOut: 10.0)
+                    } else {
+                        testContext.start()
+                    }
                 }
                 it("saves the config") {
                     expect(testContext.subject.config) == testContext.config
@@ -248,7 +264,11 @@ final class LDClientSpec: QuickSpec {
         it("when called with cached flags for the context and environment") {
             let cachedFlags = ["test-flag": StorageItem.item(FeatureFlag(flagKey: "test-flag"))]
             let testContext = TestContext().withCached(flags: cachedFlags.featureFlags)
-            withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
+            if withTimeout {
+                testContext.start(timeOut: 10.0)
+            } else {
+                testContext.start()
+            }
 
             expect(testContext.featureFlagCachingMock.getCachedDataCallCount) == 1
             expect(testContext.featureFlagCachingMock.getCachedDataReceivedArguments?.cacheKey) == testContext.context.fullyQualifiedHashedKey()
@@ -261,7 +281,11 @@ final class LDClientSpec: QuickSpec {
         }
         it("when called without cached flags for the context") {
             let testContext = TestContext()
-            withTimeout ? testContext.start(timeOut: 10.0) : testContext.start()
+            if withTimeout {
+                testContext.start(timeOut: 10.0)
+            } else {
+                testContext.start()
+            }
 
             expect(testContext.featureFlagCachingMock.getCachedDataCallCount) == 1
             expect(testContext.featureFlagCachingMock.getCachedDataReceivedArguments?.cacheKey) == testContext.context.fullyQualifiedHashedKey()

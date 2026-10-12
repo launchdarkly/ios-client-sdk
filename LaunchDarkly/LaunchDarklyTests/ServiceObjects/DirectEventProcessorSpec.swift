@@ -2144,7 +2144,7 @@ private final class ClosingHookStore: EventStoring {
         beforeClosing = nil
         before?()
         let batch = inner.closeBatch()
-        if let batch, let body = try? inner.body(of: batch) ?? nil {
+        if let batch, let body = try? inner.body(of: batch) {
             closedKeys.append(customKeys(body))
         }
         let after = afterClosing

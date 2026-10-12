@@ -7,6 +7,7 @@ class NullEventProcessor: EventProcessor {
     func record(_ event: Event) {
     }
 
+    // swiftlint:disable:next function_parameter_count
     func recordFlagEvaluationEvents(flagKey: LDFlagKey,
                                     value: LDValue,
                                     defaultValue: LDValue,

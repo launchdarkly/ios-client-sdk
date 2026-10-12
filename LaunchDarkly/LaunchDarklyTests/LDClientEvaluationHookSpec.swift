@@ -147,7 +147,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
 
         // The evaluation returns the default value, and the event it records reports that value under no variation and
         // no version, so that is the result the hook is told about too.
-        guard let key = keys.first ?? nil
+        guard let key = keys.first.flatMap({ $0 })
         else {
             fail("The hook was not told about the evaluation.")
             return

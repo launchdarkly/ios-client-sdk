@@ -170,7 +170,7 @@ extension LDClient {
     }
 
     private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool, methodName: String) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
-        var visited: Set<String>? = nil
+        var visited: Set<String>?
         return variationDetailInternal(flagKey, defaultValue, needsReason: needsReason, methodName: methodName, visited: &visited)
     }
 

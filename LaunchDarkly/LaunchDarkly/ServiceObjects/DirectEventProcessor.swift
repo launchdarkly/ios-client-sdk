@@ -441,9 +441,11 @@ class DirectEventProcessor: EventProcessor {
             }
         }
     }
+}
 
-    // MARK: Reporting
+// MARK: Reporting
 
+extension DirectEventProcessor {
     private func startReporting() {
         guard eventReportTimer == nil
         else { return }

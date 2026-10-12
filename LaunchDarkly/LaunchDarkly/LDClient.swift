@@ -1041,7 +1041,7 @@ public class LDClient {
             context = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(context)
         }
 
-        var hookState: IdentifyHookState? = nil
+        var hookState: IdentifyHookState?
         if !hooks.isEmpty {
             let seriesContext = IdentifySeriesContext(context: context, methodName: "init")
             let seriesData = hooks.map { hook in hook.beforeIdentify(seriesContext: seriesContext, seriesData: EvaluationSeriesData()) }

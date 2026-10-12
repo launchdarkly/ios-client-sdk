@@ -521,8 +521,18 @@ final class EventStore: EventStoring {
         os_log("%s recovered %d event(s) from a previous run", log: logger, type: .debug, typeName(and: #function), events)
     }
 
-    // MARK: Writing
+    deinit {
+        // One acquisition: the lock is not recursive, and `commit()` would take it again.
+        ioLock.withLock {
+            writeStagedBytes()
+            diskLog.closeDescriptor()
+        }
+    }
+}
 
+// MARK: Writing
+
+extension EventStore {
     /// Requires `ioLock`.
     private func writeStagedBytes() {
         ioLock.assertOwned()
@@ -572,14 +582,6 @@ final class EventStore: EventStoring {
             return false
         }
         return true
-    }
-
-    deinit {
-        // One acquisition: the lock is not recursive, and `commit()` would take it again.
-        ioLock.withLock {
-            writeStagedBytes()
-            diskLog.closeDescriptor()
-        }
     }
 }
 
