@@ -3,7 +3,18 @@ import Quick
 import Nimble
 @testable import LaunchDarkly
 
-final class DirectEventProcessorSpec: QuickSpec {
+class DirectEventProcessorSpec: QuickSpec {
+    /// The persistence a `TestContext` gets where it names neither one nor a store. Immediate here, as the durable
+    /// behaviour is what most of these are about; `DirectEventProcessorWithoutPersistenceSpec` runs them all again with
+    /// it off, which is what an application gets.
+    class var persistence: EventPersistence { .immediate }
+
+    /// `persistence` of the spec whose examples are running, for the `TestContext` default, which cannot see the class.
+    fileprivate static var runningPersistence: EventPersistence = .immediate
+
+    /// Whether the spec runs with a disk, for examples whose subject is the disk.
+    var persists: Bool { type(of: self).persistence != .disabled }
+
     struct Constants {
         static let eventFlushInterval: TimeInterval = 10.0
         static let eventFlushIntervalHalfSecond: TimeInterval = 0.5
@@ -34,14 +45,16 @@ final class DirectEventProcessorSpec: QuickSpec {
              onSyncComplete: EventSyncCompleteClosure? = nil,
              store: EventStore? = nil,
              eventCapacity: Int = Event.Kind.allKinds.count,
-             eventPersistence: EventPersistence = .immediate,
+             eventPersistence: EventPersistence? = nil,
              commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.DirectEventProcessor.commitQueue")) {
 
             config = LDConfig.stub
             config.eventCapacity = eventCapacity
-            // The durable behaviour is what most of these are about, so it is the default here even though an
-            // application has to ask for it.
-            config.eventPersistence = eventPersistence
+            // A store a test brings decides, so the processor is never configured for a disk its store does not have.
+            let persistence = eventPersistence
+                ?? store.map { $0.isPersisting ? .immediate : .disabled }
+                ?? DirectEventProcessorSpec.runningPersistence
+            config.eventPersistence = persistence
             config.eventFlushInterval = eventFlushInterval ?? Constants.eventFlushInterval
 
             context = LDContext.stub()
@@ -55,7 +68,7 @@ final class DirectEventProcessorSpec: QuickSpec {
             serviceMock.diagnosticCache = diagnosticCache
 
             self.lastEventResponseDate = lastEventResponseDate.adjustedForHttpUrlHeaderUse
-            self.store = store ?? EventStore.temporary(capacity: config.eventCapacity)
+            self.store = store ?? EventStore.temporary(capacity: config.eventCapacity, persistEvents: persistence != .disabled)
             eventProcessor = DirectEventProcessor(service: serviceMock, onSyncComplete: onSyncComplete,
                                           store: self.store, commitQueue: commitQueue)
             (0..<eventCount).forEach {
@@ -124,6 +137,9 @@ final class DirectEventProcessorSpec: QuickSpec {
     }
 
     override func spec() {
+        let persistence = type(of: self).persistence
+        beforeEach { DirectEventProcessorSpec.runningPersistence = persistence }
+
         initSpec()
         isOnlineSpec()
         recordEventSpec()
@@ -136,6 +152,162 @@ final class DirectEventProcessorSpec: QuickSpec {
         flushReportingOutcomeSpec()
         outageSpec()
         nullEventProcessorSpec()
+        if !persists {
+            withoutPersistenceSpec()
+        }
+    }
+
+    /// The situations where holding events only in memory is hardest, which the examples shared with persistence do
+    /// not set out to reach.
+    private func withoutPersistenceSpec() {
+        describe("without persistence") {
+            var testContext: TestContext!
+            afterEach {
+                testContext?.cleanUp()
+                testContext = nil
+            }
+
+            /// The custom event keys LaunchDarkly took, once per payload ID however often it was sent, in the order taken.
+            func acceptedKeys() -> [String] {
+                let mock = testContext.serviceMock!
+                var payloadIds = Set<String>()
+                var keys: [String] = []
+                for (index, status) in mock.publishedEventStatuses.enumerated() where status == 202 {
+                    if payloadIds.insert(mock.publishedPayloadIds[index]).inserted {
+                        keys += customKeys(mock.publishedEventPayloads[index])
+                    }
+                }
+                return keys
+            }
+
+            func record(_ key: String) {
+                testContext.eventProcessor.record(CustomEvent(key: key, context: testContext.context))
+            }
+
+            it("never touches its directory through refusals, a retry, deliveries and a refusal that takes it offline") {
+                testContext = TestContext()
+                // Refused and refused again on the retry; then the batch held from that and the next one are accepted;
+                // then the service says the key is no good.
+                testContext.serviceMock.eventStatusForPost = { post in post <= 2 ? 503 : post <= 4 ? 202 : 401 }
+                testContext.eventProcessor.isOnline = true
+
+                record("refused")
+                expect(testContext.flushOutcome()) == false
+                record("accepted")
+                expect(testContext.flushOutcome()) == true
+                record("refused-for-good")
+                _ = testContext.flushOutcome()
+                expect(testContext.eventProcessor.isOnline) == false
+                record("while-offline")
+                testContext.eventProcessor.flush(completion: nil)
+                // Longer than the retry delay, so anything still on its way would have been posted by now.
+                waitLettingTimersFire(1.5)
+
+                expect(testContext.serviceMock.publishEventDataCallCount) == 5
+                expect(acceptedKeys()) == ["refused", "accepted"]
+                expect(FileManager.default.fileExists(atPath: testContext.store.directory.path)) == false
+            }
+
+            it("keeps the oldest events up to capacity through an outage, and delivers each once in order") {
+                // A batch refused twice used to be dropped. Now it waits in memory, still counted against capacity, so
+                // an outage costs the newest events rather than the oldest and memory stays bounded however long it lasts.
+                let capacity = 20
+                testContext = TestContext(eventCapacity: capacity)
+                testContext.serviceMock.respondToEvents(with: 503)
+                testContext.eventProcessor.isOnline = true
+
+                (0..<10).forEach { record("e-\($0)") }
+                expect(testContext.flushOutcome()) == false
+                (10..<100).forEach { record("e-\($0)") }
+                expect(testContext.flushOutcome()) == false
+
+                testContext.serviceMock.stubEventResponse(success: true)
+                testContext.serviceMock.eventStatusForPost = { _ in 202 }
+                expect(testContext.flushOutcome()) == true
+
+                expect(acceptedKeys()) == (0..<capacity).map { "e-\($0)" }
+                expect(testContext.store.pendingEventCount) == 0
+            }
+
+            it("delivers each event once when it is recorded and flushed from many threads through refusals") {
+                let recorders = 4
+                let eventsEach = 150
+                testContext = TestContext(eventCapacity: 100_000)
+                // Every third post refused, so retries, batches held for the next delivery and flushes overlapping one
+                // another all happen while the recorders are still going.
+                testContext.serviceMock.eventStatusForPost = { post in post % 3 == 0 ? 503 : 202 }
+                testContext.eventProcessor.isOnline = true
+                let processor = testContext.eventProcessor!
+                let context = testContext.context!
+
+                let recorded = DispatchGroup()
+                for recorder in 0..<recorders {
+                    DispatchQueue.global().async(group: recorded) {
+                        for index in 0..<eventsEach {
+                            processor.record(CustomEvent(key: "r\(recorder)-\(index)", context: context))
+                        }
+                    }
+                }
+                let lock = UnfairLock()
+                var recording = true
+                let flusherDone = DispatchSemaphore(value: 0)
+                DispatchQueue.global().async {
+                    while lock.withLock({ recording }) {
+                        processor.flush(completion: nil)
+                        usleep(2_000)
+                    }
+                    flusherDone.signal()
+                }
+                expect(recorded.wait(timeout: .now() + 20)) == .success
+                lock.withLock { recording = false }
+                expect(flusherDone.wait(timeout: .now() + 5)) == .success
+
+                testContext.serviceMock.eventStatusForPost = { _ in 202 }
+                // Lets retries already scheduled land before the flush that has to take whatever is still held.
+                waitLettingTimersFire(1.5)
+                expect(testContext.flushOutcome()) == true
+
+                let delivered = acceptedKeys()
+                expect(Set(delivered).count).to(equal(delivered.count),
+                                                description: "an event arrived under two payload IDs, so LaunchDarkly counts it twice")
+                let expected = (0..<recorders).flatMap { recorder in (0..<eventsEach).map { "r\(recorder)-\($0)" } }
+                expect(Set(delivered)) == Set(expected)
+            }
+
+            it("summarizes at most capacity contexts between deliveries, and starts over after each") {
+                // Without a disk there are no commit points to drain the summarizer, so between two deliveries it
+                // counts evaluations for at most capacity contexts and turns the rest away. Before the bound, evaluating
+                // across many contexts while offline grew memory without limit.
+                let capacity = 10
+                testContext = TestContext(lastEventResponseDate: Date(), eventCapacity: capacity)
+                testContext.eventProcessor.isOnline = true
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+
+                for round in 0..<2 {
+                    let posted = testContext.serviceMock.publishEventDataCallCount
+                    for index in 0..<(capacity * 3) {
+                        let context = LDContext.stub(key: "round-\(round)-context-\(index)")
+                        testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b",
+                                                                              featureFlag: flag, context: context, includeReason: false)
+                    }
+                    expect(testContext.flushOutcome()) == true
+
+                    let summaries = testContext.serviceMock.publishedEventPayloads.dropFirst(posted).flatMap { body -> [LDValue] in
+                        guard case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
+                        else { return [] }
+                        return events.filter { $0.kindField == "summary" }
+                    }
+                    expect(summaries.count).to(equal(capacity), description: "round \(round)")
+                }
+            }
+        }
+    }
+
+    /// An example whose subject is the disk, left out where the spec runs without one.
+    private func itPersisting(_ description: String, file: FileString = #file, line: UInt = #line, closure: @escaping () throws -> Void) {
+        guard persists
+        else { return }
+        it(description, file: file, line: line, closure: closure)
     }
 
     private func nullEventProcessorSpec() {
@@ -1104,7 +1276,7 @@ extension DirectEventProcessorSpec {
                 return reader.pendingEventPayloads().compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
             }
 
-            it("has written a tracked event by the time recording it returns") {
+            itPersisting("has written a tracked event by the time recording it returns") {
                 testContext = TestContext()
 
                 // The sequence that loses events today: something is tracked and the process ends immediately after.
@@ -1115,7 +1287,7 @@ extension DirectEventProcessorSpec {
                 expect(onDisk.first?.kindField) == "custom"
             }
 
-            it("still writes a tracked event when the write is not on the caller's thread") {
+            itPersisting("still writes a tracked event when the write is not on the caller's thread") {
                 testContext = TestContext(eventPersistence: .deferred)
 
                 testContext.eventProcessor.record(CustomEvent(key: "fatal-error", context: testContext.context, data: ["message": "boom"]))
@@ -1125,7 +1297,7 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]), timeout: Constants.deliveryTimeout)
             }
 
-            it("has written the evaluations that came before a tracked event") {
+            itPersisting("has written the evaluations that came before a tracked event") {
                 // A response date of its own, because the distant past that a fresh context defaults to also satisfies
                 // the debug window comparison and would add a debug event to what is asserted below.
                 testContext = TestContext(lastEventResponseDate: Date())
@@ -1139,7 +1311,7 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom", "summary"]
             }
 
-            it("persists feature and summary events synchronously on flush") {
+            itPersisting("persists feature and summary events synchronously on flush") {
                 testContext = TestContext(lastEventResponseDate: Date())
                 let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
 
@@ -1180,7 +1352,7 @@ extension DirectEventProcessorSpec {
                     .toEventually(equal(400), timeout: Constants.deliveryTimeout, pollInterval: .milliseconds(200))
             }
 
-            it("reports the events a previous run left behind") {
+            itPersisting("reports the events a previous run left behind") {
                 testContext = TestContext()
                 testContext.recordEvents(2)
                 testContext.eventProcessor.commitRecordedEvents()
@@ -1203,7 +1375,7 @@ extension DirectEventProcessorSpec {
                 nextRun.isOnline = false
             }
 
-            it("delivers what a previous run left behind as soon as it is online, without waiting for a report interval") {
+            itPersisting("delivers what a previous run left behind as soon as it is online, without waiting for a report interval") {
                 testContext = TestContext()
                 testContext.recordEvents(2)
                 testContext.eventProcessor.commitRecordedEvents()
@@ -1232,7 +1404,7 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 0
             }
 
-            it("delivers a batch a failed run left behind under the same payload id") {
+            itPersisting("delivers a batch a failed run left behind under the same payload id") {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
 
@@ -1331,7 +1503,7 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
             }
 
-            it("writes a deferred track while a delivery holds the delivery queue") {
+            itPersisting("writes a deferred track while a delivery holds the delivery queue") {
                 testContext = TestContext(eventPersistence: .deferred)
                 // Stands in for a post to a network that does not answer, which holds the queue for as long as its
                 // timeouts allow.
@@ -1344,7 +1516,7 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]), timeout: Constants.deliveryTimeout)
             }
 
-            it("has written everything by the time a flush returns, even while a delivery holds the delivery queue") {
+            itPersisting("has written everything by the time a flush returns, even while a delivery holds the delivery queue") {
                 testContext = TestContext(lastEventResponseDate: Date())
                 let released = DispatchSemaphore(value: 0)
                 defer { released.signal() }
@@ -1359,7 +1531,7 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["feature", "summary"]
             }
 
-            it("shares writes between tracks recorded at once, and has each on disk when recording it returns") {
+            itPersisting("shares writes between tracks recorded at once, and has each on disk when recording it returns") {
                 let trackers = 8
                 let writesLock = NSLock()
                 var writes = 0
@@ -1406,7 +1578,7 @@ extension DirectEventProcessorSpec {
                 expect(totalWrites) < trackers + 1
             }
 
-            it("tries a batch a previous run left once at start, with its retry, and then waits while it is still refused") {
+            itPersisting("tries a batch a previous run left once at start, with its retry, and then waits while it is still refused") {
                 testContext = TestContext()
                 testContext.serviceMock.respondToEvents(with: 503)
                 testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
@@ -1423,7 +1595,7 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 2
             }
 
-            it("leaves a batch still refused when the run ended for the next run to deliver, under the same payload id") {
+            itPersisting("leaves a batch still refused when the run ended for the next run to deliver, under the same payload id") {
                 testContext = TestContext()
                 testContext.serviceMock.respondToEvents(with: 503)
                 testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
@@ -1639,7 +1811,7 @@ extension DirectEventProcessorSpec {
                 expect(store.pendingEventCount) == 3
             }
 
-            it("makes room in the summarizer at every commit point") {
+            itPersisting("makes room in the summarizer at every commit point") {
                 // Counters become summary events and are reset at every commit point, so the summarizer only holds the
                 // contexts seen since the last one. Without the reset, an application identifying its way through more
                 // contexts than the capacity would start losing counts partway through.
@@ -2375,4 +2547,9 @@ extension Event.Kind {
     static var nonSummaryKinds: [Event.Kind] {
         [feature, debug, identify, custom]
     }
+}
+
+/// `DirectEventProcessorSpec` with persistence off, which is what an application gets by default.
+final class DirectEventProcessorWithoutPersistenceSpec: DirectEventProcessorSpec {
+    override class var persistence: EventPersistence { .disabled }
 }

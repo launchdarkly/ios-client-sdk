@@ -99,7 +99,10 @@ final class EventStore: EventStoring {
     /// application that only evaluates flags and so never reaches a commit point of its own.
     private static let stagingThreshold = 16 * 1024
 
-    let directory: URL
+    /// Where the batches are kept.
+    var directory: URL {
+        ioLock.withLock { disk.directory }
+    }
     private let capacity: Int
     private let logger: OSLog
     /// How a stored log is read, injectable so a test can make a read fail while the file is intact.
@@ -146,8 +149,28 @@ final class EventStore: EventStoring {
     /// Whether a commit is already on its way, so that a burst of recordings queues one write rather than one each.
     private var isCommitScheduled = false
 
+    private let locateDirectory: () -> URL
+    private let processName: String
+    private let writeLog: (EventLogFile, Data) -> Int32?
     /// Only to be used while holding `ioLock`.
-    private let diskLog: DiskEventLog
+    private var located: (directory: URL, log: DiskEventLog)?
+
+    /// The directory and the log in it, worked out the first time the disk is reached for, so that a store told to keep
+    /// off the disk makes no filesystem call at all, not even to find out where it would have written. Requires `ioLock`.
+    private var disk: (directory: URL, log: DiskEventLog) {
+        ioLock.assertOwned()
+        if let located {
+            return located
+        }
+        let directory = locateDirectory()
+        let disk = (directory: directory,
+                    log: DiskEventLog(directory: directory, processName: processName, ioLock: ioLock, logger: logger, writeLog: writeLog))
+        located = disk
+        return disk
+    }
+
+    /// Requires `ioLock`.
+    private var diskLog: DiskEventLog { disk.log }
     /// Whether a log left by a previous run has been dealt with. Only to be used while holding `ioLock`.
     private var hasRecoveredInterruptedLog = false
 
@@ -711,12 +734,29 @@ extension EventStore {
     func pendingEventPayloads() -> [Data] {
         commit()
 
-        guard readsDisk
-        else { return [] }
-
         ioLock.lock()
         defer { ioLock.unlock() }
 
+        var payloads = readsDisk ? payloadsOnDisk() : []
+        // After the disk, which is older: a store that gave up on persistence holds what came later in memory.
+        let held = heldLock.withLock { inMemoryBatches.map { $0.body } }
+        for body in held {
+            let events = (try? JSONDecoder().decode([LDValue].self, from: body)) ?? []
+            payloads.append(contentsOf: events.compactMap { try? JSONEncoder().encode($0) })
+        }
+        var staged = EventLogFormat.fileHeader
+        staged.append(bufferLock.withLock { bufferData })
+        _ = EventLogFormat.forEachFrame(in: staged) { type, payload in
+            if type == EventLogFormat.eventFrame {
+                payloads.append(payload)
+            }
+        }
+        return payloads
+    }
+
+    /// Requires `ioLock`.
+    private func payloadsOnDisk() -> [Data] {
+        ioLock.assertOwned()
         let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
                                                                     includingPropertiesForKeys: nil,
                                                                     options: [.skipsHiddenFiles])) ?? []
@@ -740,12 +780,13 @@ extension EventStore {
 }
 
 extension EventStore {
-    /// The directory the store for a mobile key belongs in, or nil where the platform gave us nowhere to write.
+    /// The directory the store for a mobile key belongs in.
     ///
     /// tvOS is the reason this is not simply Application Support: a tvOS application is only allowed to persist to
     /// purgeable caches, so there the events are kept somewhere the system may reclaim, which is the most durability
-    /// the platform offers.
-    static func defaultDirectory(mobileKey: String) -> URL? {
+    /// the platform offers. A directory that turns out not to be writable is no different from a full device: the store
+    /// gives up on the disk and holds events in memory.
+    static func defaultDirectory(mobileKey: String) -> URL {
         #if os(tvOS)
         let searchPath = FileManager.SearchPathDirectory.cachesDirectory
         #else

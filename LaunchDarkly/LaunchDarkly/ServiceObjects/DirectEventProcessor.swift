@@ -194,12 +194,7 @@ class DirectEventProcessor: EventProcessor {
     }
 
     private static func makeStore(config: LDConfig) -> EventStoring {
-        guard let directory = EventStore.defaultDirectory(mobileKey: config.mobileKey)
-        else {
-            os_log("Events cannot be persisted: no writable directory was available", log: config.logger, type: .debug)
-            return NullEventStore()
-        }
-        return EventStore(directory: directory,
+        EventStore(directory: EventStore.defaultDirectory(mobileKey: config.mobileKey),
                           capacity: config.eventCapacity,
                           persistEvents: config.eventPersistence != .disabled,
                           logger: config.logger)

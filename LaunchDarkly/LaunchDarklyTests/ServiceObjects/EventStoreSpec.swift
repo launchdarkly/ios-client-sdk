@@ -13,7 +13,7 @@ final class EventStoreSpec: QuickSpec {
         fallbackSpec()
         optOutSpec()
         multiProcessSpec()
-        nullStoreSpec()
+        withoutPersistenceSpec()
         #if os(macOS) || targetEnvironment(macCatalyst)
         sameNameInstancesSpec()
         #endif
@@ -642,10 +642,10 @@ final class EventStoreSpec: QuickSpec {
         }
     }
 
-    private func nullStoreSpec() {
-        describe("the store used where there is nowhere to write") {
+    private func withoutPersistenceSpec() {
+        describe("the store without persistence") {
             it("lists its batches oldest first, as the store with a disk does") {
-                let store = NullEventStore()
+                let store = EventStore.temporary(persistEvents: false)
                 var closed: [String] = []
                 // Enough that hash order coming out right by chance is not a worry.
                 for index in 0..<20 {
@@ -660,7 +660,7 @@ final class EventStoreSpec: QuickSpec {
                 store.remove(EventBatch(payloadId: closed[3], eventCount: 1))
                 closed.remove(at: 3)
                 expect(store.pendingBatches().map(\.payloadId)) == closed
-                expect(EventStoreSpec.keys(ofBody: store.body(of: EventBatch(payloadId: closed[3], eventCount: 1)))) == ["event-4"]
+                expect(EventStoreSpec.keys(ofBody: try store.body(of: EventBatch(payloadId: closed[3], eventCount: 1)))) == ["event-4"]
             }
         }
     }
@@ -719,18 +719,22 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingEventCount) == 1
             }
 
-            it("does the same for the store used where there is nowhere to write") {
-                let nullStore = NullEventStore()
-                expect(nullStore.stage(EventStoreSpec.payload("first"), bypassingCapacity: false)) == true
-                let batch = nullStore.closeBatch()!
+            it("does the same without persistence") {
+                store = EventStore.temporary(capacity: 1, persistEvents: false)
+                expect(store.stage(EventStoreSpec.payload("first"))) == true
+                let batch = store.closeBatch()!
 
-                nullStore.startedSending(batch)
-                expect(nullStore.pendingEventCount) == 0
-                nullStore.stoppedSending(batch)
-                expect(nullStore.pendingEventCount) == 1
-                nullStore.startedSending(batch)
-                nullStore.remove(batch)
-                expect(nullStore.pendingEventCount) == 0
+                store.startedSending(batch)
+                expect(store.pendingEventCount) == 0
+                expect(store.stage(EventStoreSpec.payload("while-sending"))) == true
+                store.stoppedSending(batch)
+                expect(store.pendingEventCount) == 2
+                expect(store.stage(EventStoreSpec.payload("after-retryable"))) == false
+                store.startedSending(batch)
+                store.remove(batch)
+                expect(store.pendingEventCount) == 1
+                store.stoppedSending(batch)
+                expect(store.pendingEventCount) == 1
             }
 
             // The bound `LDConfig.eventCapacity` documents: the reporter reads the disk in the background after starting,

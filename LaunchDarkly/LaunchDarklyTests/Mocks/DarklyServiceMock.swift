@@ -143,6 +143,18 @@ final class DarklyServiceMock: DarklyServiceProvider {
     private var _publishedPayloadIds: [String] = []
     private var _holdsEventCompletions = false
     private var heldEventCompletions: [ServiceCompletionHandler] = []
+    private var _eventStatusForPost: ((Int) -> Int)?
+    private var _publishedEventStatuses: [Int?] = []
+
+    /// The status to answer the nth post with, counting from 1, in place of `stubbedEventResponse`.
+    var eventStatusForPost: ((Int) -> Int)? {
+        get { withEventLock { _eventStatusForPost } }
+        set { withEventLock { _eventStatusForPost = newValue } }
+    }
+    /// The status each post was answered with, in the order of `publishedEventPayloads`; nil where it had none.
+    var publishedEventStatuses: [Int?] {
+        withEventLock { _publishedEventStatuses }
+    }
 
     var stubbedEventResponse: ServiceResponse? {
         get { withEventLock { _stubbedEventResponse } }
@@ -179,12 +191,22 @@ final class DarklyServiceMock: DarklyServiceProvider {
             _publishedPayloadIds.append(payloadId)
             guard !_holdsEventCompletions
             else {
+                _publishedEventStatuses.append(nil)
                 if let completion {
                     heldEventCompletions.append(completion)
                 }
                 return nil
             }
-            return _stubbedEventResponse ?? (nil, nil, nil, nil)
+            var response = _stubbedEventResponse ?? (nil, nil, nil, nil)
+            if let statusForPost = _eventStatusForPost {
+                response = (nil,
+                            HTTPURLResponse(url: config.eventsUrl, statusCode: statusForPost(_publishEventDataCallCount),
+                                            httpVersion: Constants.httpVersion, headerFields: nil),
+                            nil,
+                            nil)
+            }
+            _publishedEventStatuses.append((response.urlResponse as? HTTPURLResponse)?.statusCode)
+            return response
         }
         if let response {
             completion?(response)
