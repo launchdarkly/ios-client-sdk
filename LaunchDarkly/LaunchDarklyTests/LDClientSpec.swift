@@ -104,7 +104,7 @@ final class LDClientSpec: QuickSpec {
             it("saves the config") {
                 expect(testContext.subject.config) == testContext.config
                 expect(testContext.subject.service.config) == testContext.config
-                expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.streamingMode
+                expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.effectiveStreamingMode
                 expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                 expect(testContext.serviceFactoryMock.makeEventProcessorReceivedService?.config) == testContext.config
             }
@@ -151,7 +151,7 @@ final class LDClientSpec: QuickSpec {
             it("saves the config") {
                 expect(testContext.subject.config) == testContext.config
                 expect(testContext.subject.service.config) == testContext.config
-                expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.streamingMode
+                expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.effectiveStreamingMode
                 expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                 expect(testContext.serviceFactoryMock.makeEventProcessorReceivedService?.config) == testContext.config
             }
@@ -197,7 +197,7 @@ final class LDClientSpec: QuickSpec {
                 it("saves the config") {
                     expect(testContext.subject.config) == testContext.config
                     expect(testContext.subject.service.config) == testContext.config
-                    expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.streamingMode
+                    expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.effectiveStreamingMode
                     expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                     expect(testContext.serviceFactoryMock.makeEventProcessorReceivedService?.config) == testContext.config
                 }
@@ -236,7 +236,7 @@ final class LDClientSpec: QuickSpec {
                 it("saves the config") {
                     expect(testContext.subject.config) == testContext.config
                     expect(testContext.subject.service.config) == testContext.config
-                    expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.streamingMode
+                    expect(testContext.makeFlagSynchronizerStreamingMode) == testContext.config.effectiveStreamingMode
                     expect(testContext.makeFlagSynchronizerPollingInterval) == testContext.config.flagPollingInterval(runMode: testContext.subject.runMode)
                     expect(testContext.serviceFactoryMock.makeEventProcessorReceivedService?.config) == testContext.config
                 }
@@ -656,7 +656,7 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.subject.isInitialized) == false
                 expect(completed).toEventually(beTrue())
             }
-            it("takes the client back online at the foreground notification") {
+            it("takes the client back online at the foreground notification", onlyWhere: platformPostsLifecycleNotifications) {
                 let testContext = backgroundedOnlineClient()
                 testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
 
@@ -665,7 +665,7 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.subject.isOnline).toEventually(beTrue())
                 expect(testContext.flagSynchronizerMock.isOnline).toEventually(beTrue())
             }
-            it("recovers after repeated identifies while backgrounded") {
+            it("recovers after repeated identifies while backgrounded", onlyWhere: platformPostsLifecycleNotifications) {
                 let testContext = backgroundedOnlineClient()
                 testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
                 testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
@@ -728,7 +728,7 @@ final class LDClientSpec: QuickSpec {
                 expect(isOnlineDuringSwap) == true
                 expect(eventProcessorOnlineDuringSwap) == true
             }
-            it("recovers when the app backgrounds midway through an identify") {
+            it("recovers when the app backgrounds midway through an identify", onlyWhere: platformPostsLifecycleNotifications) {
                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
                 testContext.start()
                 let original = testContext.featureFlagCachingMock.getCachedDataCallback
@@ -750,7 +750,7 @@ final class LDClientSpec: QuickSpec {
             // The mirror image of the background-then-identify cases above: identify then
             // background must end in the same state, so the two transitions compose in either
             // order.
-            it("stays online with the data source down when backgrounded after an identify") {
+            it("stays online with the data source down when backgrounded after an identify", onlyWhere: platformPostsLifecycleNotifications) {
                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
                 testContext.start()
                 testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .no)
@@ -800,7 +800,7 @@ final class LDClientSpec: QuickSpec {
                 waitUntil { done in DispatchQueue.main.async { done() } }
                 expect(count) == 1
             }
-            it("leaves a client the application set offline offline") {
+            it("leaves a client the application set offline offline", onlyWhere: platformPostsLifecycleNotifications) {
                 let testContext = TestContext(startOnline: false, enableBackgroundUpdates: false)
                 testContext.start()
                 testContext.subject.setRunMode(.background)
@@ -1326,7 +1326,7 @@ final class LDClientSpec: QuickSpec {
             testContext.onSyncComplete?(.error(.response(forbiddenError)))
 
             expect(testContext.flagSynchronizerMock.isOnline).to(beTrue())
-            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == .establishingStreamingConnection
+            expect(testContext.subject.getConnectionInformation().currentConnectionMode) == (platformStreams ? .establishingStreamingConnection : .polling)
             expect(testContext.subject.isInitialized).to(beFalse())
             expect(testContext.subject.isOnline).to(beTrue())
             expect(testContext.eventProcessorMock.isOnline).to(beTrue())
@@ -1354,7 +1354,7 @@ final class LDClientSpec: QuickSpec {
             expect(after.lastConnectionFailureReason.description) == before.lastConnectionFailureReason.description
             expect(after.lastFailedConnection) == before.lastFailedConnection
         }
-        it("recovers the connection mode when a streaming sync succeeds after a terminal error") {
+        it("recovers the connection mode when a streaming sync succeeds after a terminal error", onlyWhere: platformStreams) {
             let testContext = TestContext(startOnline: true)
             testContext.start()
             testContext.subject.flagChangeNotifier = ClientServiceMockFactory(config: testContext.config).makeFlagChangeNotifier()
@@ -1385,7 +1385,7 @@ final class LDClientSpec: QuickSpec {
                 context("when online") {
                     OperatingSystem.allOperatingSystems.forEach { os in
                         context("on \(os)") {
-                            it("background updates disabled") {
+                            it("background updates disabled", onlyWhere: platformPostsLifecycleNotifications) {
                                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
                                 testContext.start()
                                 NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
@@ -1396,7 +1396,7 @@ final class LDClientSpec: QuickSpec {
                                 expect(testContext.eventProcessorMock.isOnline) == true
                                 expect(testContext.flagSynchronizerMock.isOnline) == false
                             }
-                            it("tries to deliver what it has before the process is suspended, where it is suspended") {
+                            it("tries to deliver what it has before the process is suspended, where it is suspended", onlyWhere: platformPostsLifecycleNotifications) {
                                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
                                 testContext.start()
                                 NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
@@ -1409,7 +1409,7 @@ final class LDClientSpec: QuickSpec {
                                 expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount) == 0
                                 #endif
                             }
-                            it("background updates enabled") {
+                            it("background updates enabled", onlyWhere: platformPostsLifecycleNotifications) {
                                 let testContext = TestContext(startOnline: true)
                                 testContext.start()
 
@@ -1431,7 +1431,7 @@ final class LDClientSpec: QuickSpec {
                         }
                     }
                 }
-                it("when offline") {
+                it("when offline", onlyWhere: platformPostsLifecycleNotifications) {
                     let testContext = TestContext()
                     testContext.start()
                     NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
@@ -1448,7 +1448,7 @@ final class LDClientSpec: QuickSpec {
             context("after starting client") {
                 OperatingSystem.allOperatingSystems.forEach { os in
                     context("on \(os)") {
-                        it("when online at foreground notification") {
+                        it("when online at foreground notification", onlyWhere: platformPostsLifecycleNotifications) {
                             let testContext = TestContext(startOnline: true)
                             testContext.start(runMode: .background)
                             NotificationCenter.default.post(name: SystemCapabilities.foregroundNotification!, object: self)
@@ -1458,7 +1458,7 @@ final class LDClientSpec: QuickSpec {
                             expect(testContext.eventProcessorMock.isOnline) == true
                             expect(testContext.flagSynchronizerMock.isOnline) == true
                         }
-                        it("when offline at foreground notification") {
+                        it("when offline at foreground notification", onlyWhere: platformPostsLifecycleNotifications) {
                             let testContext = TestContext()
                             testContext.start(runMode: .background)
                             NotificationCenter.default.post(name: SystemCapabilities.foregroundNotification!, object: self)
@@ -1657,8 +1657,10 @@ final class LDClientSpec: QuickSpec {
         describe("flag synchronizer streaming mode") {
             OperatingSystem.allOperatingSystems.forEach { os in
                 it("on \(os) sets the flag synchronizer streaming mode") {
-                    // TODO(os-tests): We need to expand this to the other OSs
-                    if os == .watchOS {
+                    // TODO(os-tests): We need to expand this to the other OSs. The client runs as the platform the
+                    // tests do, whatever `os` says.
+                    guard os == SystemCapabilities.operatingSystem
+                    else {
                         return
                     }
 
@@ -1892,7 +1894,7 @@ final class LDClientSpec: QuickSpec {
                 let testContext = TestContext(startOnline: true)
                 testContext.start()
                 expect(testContext.subject.isOnline) == true
-                expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.establishingStreamingConnection))
+                expect(testContext.subject.connectionInformation.currentConnectionMode) == (platformStreams ? .establishingStreamingConnection : .polling)
             }
             it("when client was started in background") {
                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
@@ -2000,7 +2002,7 @@ final class LDClientSpec: QuickSpec {
                 testContext.subject.internalIdentify(newContext: LDContext.stub(), useCache: .yes)
                 expect(testContext.subject.isInitialized) == true
             }
-            it("becomes true when setOnline(true) is refused in the background") {
+            it("becomes true when setOnline(true) is refused in the background", onlyWhere: platformPostsLifecycleNotifications) {
                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
                 testContext.start()
                 testContext.subject.setRunMode(.background)
@@ -2012,7 +2014,7 @@ final class LDClientSpec: QuickSpec {
                 NotificationCenter.default.post(name: SystemCapabilities.foregroundNotification!, object: self)
                 expect(testContext.subject.isInitialized) == true
             }
-            it("remains false across a background and foreground cycle without flags") {
+            it("remains false across a background and foreground cycle without flags", onlyWhere: platformPostsLifecycleNotifications) {
                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
                 testContext.start()
                 expect(testContext.subject.isInitialized) == false
@@ -2061,6 +2063,33 @@ extension OperatingSystem {
     var backgroundStreamingMode: LDStreamingMode {
         self == .macOS ? .streaming : .polling
     }
+}
+
+private extension LDConfig {
+    /// The mode a foreground client connects in. Platforms that cannot stream, watchOS among them, poll whatever the
+    /// config asks for.
+    var effectiveStreamingMode: LDStreamingMode {
+        allowStreamingMode ? streamingMode : .polling
+    }
+}
+
+/// watchOS posts no lifecycle notifications, and does not stream.
+private let platformPostsLifecycleNotifications = SystemCapabilities.foregroundNotification != nil
+    && SystemCapabilities.backgroundNotification != nil
+private let platformStreams = SystemCapabilities.operatingSystem.isStreamingEnabled
+
+/// `it`, for a spec that only applies where `condition` holds. Elsewhere the spec is reported pending rather than run.
+private func it(_ description: String,
+                onlyWhere condition: Bool,
+                file: FileString = #file,
+                line: UInt = #line,
+                closure: @escaping () throws -> Void) {
+    guard condition
+    else {
+        pending(description) { }
+        return
+    }
+    it(description, file: file, line: line, closure: closure)
 }
 
 private class ErrorMock: Error { }
