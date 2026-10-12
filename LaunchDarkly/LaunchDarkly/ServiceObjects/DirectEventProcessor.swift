@@ -195,7 +195,7 @@ class DirectEventProcessor: EventProcessor {
 
     private static func makeStore(config: LDConfig) -> EventStoring {
         let mobileKey = config.mobileKey
-        return EventStore(locatingDirectory: { EventStore.defaultDirectory(mobileKey: mobileKey) },
+        return EventStore(locatingDirectory: { EventDirectory.defaultUrl(mobileKey: mobileKey) },
                           capacity: config.eventCapacity,
                           persistEvents: config.eventPersistence != .disabled,
                           logger: config.logger)

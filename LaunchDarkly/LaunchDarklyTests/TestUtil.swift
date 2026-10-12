@@ -61,9 +61,7 @@ extension EventStore {
         readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
         writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }
     ) -> EventStore {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("com.launchdarkly.tests.events", isDirectory: true)
-            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let directory = temporaryDirectory()
         return unlocked(EventStore(directory: directory,
                                    capacity: capacity,
                                    persistEvents: persistEvents,
@@ -71,6 +69,16 @@ extension EventStore {
                                    commitQueue: commitQueue,
                                    readFile: readFile,
                                    writeLog: writeLog))
+    }
+
+    /// A directory of a test's own under the temporary directory.
+    ///
+    /// Handed in where the test has to look at the place a store would have written, which a store told to keep events
+    /// off the disk will not tell it: that store has no directory at all.
+    static func temporaryDirectory() -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent("com.launchdarkly.tests.events", isDirectory: true)
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
     }
 
     /// Another store on `directory`, standing in for the next run of the application, or for another process.
@@ -96,8 +104,11 @@ extension EventStore {
         return store
     }
 
-    /// Removes the store's directory, including any batch still waiting to be delivered.
+    /// Removes the store's directory, including any batch still waiting to be delivered. A store told to keep events
+    /// off the disk has no directory, and so nothing to remove.
     func deleteEverything() {
+        guard let directory
+        else { return }
         try? FileManager.default.removeItem(at: directory)
     }
 }

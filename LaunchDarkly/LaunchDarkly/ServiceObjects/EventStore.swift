@@ -1,14 +1,6 @@
 import Foundation
 import OSLog
 
-#if canImport(Darwin)
-import Darwin
-#elseif canImport(Glibc)
-import Glibc
-#elseif canImport(Musl)
-import Musl
-#endif
-
 /// A group of encoded events that has been closed off for delivery.
 ///
 /// The identifier doubles as the payload ID sent to LaunchDarkly, so a batch that is retried after the process died
@@ -90,23 +82,26 @@ protocol EventStoring {
 /// event, which costs milliseconds where this costs microseconds. The trade that buys is stated where the SDK records
 /// events: a commit point is a point where staged bytes are committed, and the events an application cares most
 /// about are recorded at one.
+///
+/// What a log looks like on disk is `EventLogFormat`; the directory of them, and the log this process appends to, are
+/// `EventDirectory` and `DiskEventLog`. This is what decides when events move between memory, that log, and the
+/// batches closed off for delivery, and what counts them against capacity on the way.
 final class EventStore: EventStoring {
-    /// Names a log that has been closed off for delivery; the rest of the name is the batch's payload ID.
-    private static let batchPrefix = "ready-"
     /// How many staged bytes are allowed to accumulate before one of them pays for a write.
     ///
     /// This is what keeps a syscall off most recordings while bounding what a crash can take with it, for an
     /// application that only evaluates flags and so never reaches a commit point of its own.
     private static let stagingThreshold = 16 * 1024
 
-    /// Where the batches are kept.
-    var directory: URL {
-        ioLock.withLock { disk.directory }
-    }
+    /// Where the events are kept, or nil where the application asked for them to be kept off the disk.
+    ///
+    /// Nil rather than a directory this store is careful never to use, so that there is nowhere for it to write and
+    /// nothing for it to read: what a run with persistence turned on left behind waits for the next run that has it
+    /// turned on. A store that gave up on the disk partway through a session keeps its directory, since the batches
+    /// there are its own.
+    private let disk: EventDirectory?
     private let capacity: Int
     private let logger: OSLog
-    /// How a stored log is read, injectable so a test can make a read fail while the file is intact.
-    private let readFile: (URL) throws -> Data
     /// Where a commit runs when it was not asked for by a caller who needs it to have happened.
     ///
     /// Evaluating a flag must not put a write on whichever thread evaluated it, and that thread is usually the main one.
@@ -128,9 +123,9 @@ final class EventStore: EventStoring {
     /// capacity for events the store is still holding.
     private var writingEvents = 0
     private var committedEvents = 0
-    /// Events in closed batches: the sum of `eventCounts` and `inMemoryBatches`. Changed only in the critical section
-    /// that changes one of those, so that it cannot drift from them; a total worked out from them and written
-    /// afterwards would overwrite a close or a removal in between.
+    /// Events in closed batches: the sum of what the directory holds and `inMemoryBatches`. Changed only in the
+    /// critical section that changes one of those, so that it cannot drift from them; a total worked out from them and
+    /// written afterwards would overwrite a close or a removal in between.
     private var closedEvents = 0
     /// Closed batches whose request is out, by payload ID, and the events in them. Every one is also in `closedEvents`,
     /// and leaves both in the same critical section.
@@ -139,42 +134,10 @@ final class EventStore: EventStoring {
     /// Whether events are being written to disk, which is what the application asked for until a write fails and the
     /// store gives up on persistence for the rest of the session.
     private var persistEvents = true
-    /// Whether what is on the disk is this store's to recover, list, and deliver.
-    ///
-    /// False only where the application did not ask for persistence. What a run with persistence turned on left behind
-    /// waits for the next run that has it turned on, rather than being delivered by a run that was told to keep
-    /// events off the disk. A store that gave up on the disk partway through a session still reads it, since the
-    /// batches there are its own.
-    private let readsDisk: Bool
     /// Whether a commit is already on its way, so that a burst of recordings queues one write rather than one each.
     private var isCommitScheduled = false
 
-    private let locateDirectory: () -> URL
-    private let processName: String
-    private let writeLog: (EventLogFile, Data) -> Int32?
-    /// Only to be used while holding `ioLock`.
-    private var located: (directory: URL, log: DiskEventLog)?
-
-    /// The directory and the log in it, worked out the first time the disk is reached for, so that a store told to keep
-    /// off the disk makes no filesystem call at all, not even to find out where it would have written. Requires `ioLock`.
-    private var disk: (directory: URL, log: DiskEventLog) {
-        ioLock.assertOwned()
-        if let located {
-            return located
-        }
-        let directory = locateDirectory()
-        let disk = (directory: directory,
-                    log: DiskEventLog(directory: directory, processName: processName, ioLock: ioLock, logger: logger, writeLog: writeLog))
-        located = disk
-        return disk
-    }
-
-    /// Requires `ioLock`.
-    private var diskLog: DiskEventLog { disk.log }
-    /// Whether a log left by a previous run has been dealt with. Only to be used while holding `ioLock`.
-    private var hasRecoveredInterruptedLog = false
-
-    /// Batches held in memory because the filesystem would not take them.
+    /// Batches held in memory because the filesystem would not take them, or because it was never asked.
     ///
     /// Persistence failing should cost durability and nothing else, so the store falls back to what the SDK did before
     /// it kept a log: hold the events, deliver them, lose them only if the process dies. Kept in the order they were
@@ -190,35 +153,23 @@ final class EventStore: EventStoring {
     /// `ioLock` where there is a disk, never the other way round, and taken before `bufferLock`, never after it.
     private let heldLock = UnfairLock()
 
-    /// How many events are in each batch this process closed or recovered, so that listing them does not have to read
-    /// them back.
-    ///
-    /// A batch is never appended to once it is closed, so a count taken at the close holds until the batch is
-    /// delivered. Without this, listing reads every batch file in full while holding `ioLock`, and a commit at a
-    /// commit point can end up waiting behind those reads.
-    ///
-    /// Only to be used while holding `ioLock`.
-    private var eventCounts: [String: Int] = [:]
+    /// Where the batches are kept, or nil for a store told to keep events off the disk.
+    var directory: URL? {
+        ioLock.withLock { disk?.url }
+    }
 
     /// Where the log this process appends to is, for a test or a diagnosis to look at.
-    var openLogUrl: URL {
-        ioLock.withLock { diskLog.url }
+    var openLogUrl: URL? {
+        ioLock.withLock { disk?.openLogUrl }
     }
 
     #if os(macOS) || targetEnvironment(macCatalyst)
     /// Whether the open log is locked while it is open. Only to be changed before the store first touches the disk.
     var locksOpenLog: Bool {
-        get { ioLock.withLock { diskLog.isLocked } }
-        set { ioLock.withLock { diskLog.isLocked = newValue } }
+        get { ioLock.withLock { disk?.locksOpenLog ?? false } }
+        set { ioLock.withLock { disk?.locksOpenLog = newValue } }
     }
     #endif
-
-    /// A batch is identified by its payload ID rather than by a path, so that a batch listed from the directory and the
-    /// same batch as it was closed are one thing.
-    /// Requires `ioLock`.
-    private func url(of payloadId: String) -> URL {
-        disk.directory.appendingPathComponent("\(EventStore.batchPrefix)\(payloadId)")
-    }
 
     convenience init(directory: URL,
                      capacity: Int,
@@ -242,18 +193,22 @@ final class EventStore: EventStoring {
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventStore.commitQueue", qos: .userInitiated),
          readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
          writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }) {
-        self.locateDirectory = locatingDirectory
-        self.processName = processName
-        self.writeLog = writeLog
-        self.ioLock = UnfairLock()
+        let ioLock = UnfairLock()
+        self.ioLock = ioLock
         self.capacity = capacity
         self.logger = logger
         self.commitQueue = commitQueue
-        self.readFile = readFile
         // An application that has not asked for persistence gets the same store running the same way it runs once a
-        // write has failed: events are held, delivered, and lost only if the process dies.
+        // write has failed: events are held, delivered, and lost only if the process dies. It gets no directory at
+        // all, so there is nothing for it to write to and nothing of a previous run's for it to read.
         self.persistEvents = persistEvents
-        self.readsDisk = persistEvents
+        self.disk = persistEvents ? EventDirectory(locatingDirectory: locatingDirectory,
+                                                   processName: processName,
+                                                   ioLock: ioLock,
+                                                   logger: logger,
+                                                   readFile: readFile,
+                                                   writeLog: writeLog)
+                                  : nil
     }
 
     // MARK: Recording
@@ -341,13 +296,13 @@ final class EventStore: EventStoring {
 
     func commit() {
         // Where the application asked for no disk there is nothing for a commit to reach, and so nothing to serialize.
-        guard readsDisk
+        guard disk != nil
         else { return }
         ioLock.withLock { writeStagedBytes() }
     }
 
     func closeBatch() -> EventBatch? {
-        guard readsDisk
+        guard let disk
         else { return closeInMemoryBatch() }
 
         ioLock.lock()
@@ -357,7 +312,7 @@ final class EventStore: EventStoring {
 
         let (events, stillBuffered) = bufferLock.withLock { (committedEvents, bufferedEventCount) }
 
-        let fromLog = events > 0 ? closeOpenLog(events) : nil
+        let fromLog = events > 0 ? closeOpenLog(of: disk, holding: events) : nil
         // Closed after the log, so the older events are delivered first. Both can hold events at once: a write that
         // fails after earlier ones landed gives up on persistence with those earlier events in the log and the failed
         // ones back in memory, and closing only the log would leave the rest to a delivery that reports success
@@ -367,57 +322,33 @@ final class EventStore: EventStoring {
     }
 
     /// Requires `ioLock`.
-    private func closeOpenLog(_ events: Int) -> EventBatch? {
+    private func closeOpenLog(of disk: EventDirectory, holding events: Int) -> EventBatch? {
         ioLock.assertOwned()
-        let payloadId = UUID().uuidString
-        do {
-            try diskLog.close(movingTo: url(of: payloadId))
-        } catch {
-            os_log("%s could not close the event log: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
-            // The log is still there to try again with, unless it is the log that went missing -- a purged cache
-            // directory on tvOS, say. Then its events are gone, and they have to stop counting against capacity or the
-            // store would refuse events for the rest of the session.
-            if !diskLog.exists {
+        switch disk.closeLog(holding: events) {
+        case .failed(let logSurvives):
+            // Where the log went with its events, they have to stop counting against capacity or the store would
+            // refuse events for the rest of the session.
+            if !logSurvives {
                 bufferLock.withLock { committedEvents = 0 }
             }
             return nil
+        case .closed(let batch):
+            bufferLock.withLock {
+                committedEvents = 0
+                closedEvents += events
+            }
+            return batch
         }
-
-        eventCounts[payloadId] = events
-
-        bufferLock.withLock {
-            committedEvents = 0
-            closedEvents += events
-        }
-
-        return EventBatch(payloadId: payloadId, eventCount: events)
     }
 
     // MARK: Delivery
 
-    /// What reading a stored log produced.
-    ///
-    /// A read that failed is kept apart from a file that is not there, because the two arrive the same way: a process
-    /// out of file descriptors fails to open a file that is perfectly intact with the error a missing one gets. Only
-    /// what is missing, or what this version cannot make sense of, is gone for good.
-    private enum LogRead {
-        case bytes(Data)
-        case missing
-        case failed(Error)
-    }
-
-    private func read(_ url: URL) -> LogRead {
-        do {
-            return .bytes(try readFile(url))
-        } catch {
-            return FileManager.default.fileExists(atPath: url.path) ? .failed(error) : .missing
-        }
-    }
-
     func pendingBatches() -> [EventBatch] {
         // Listed in one critical section where there is a disk, so that the files and what is held cannot be counted
         // either side of a close that moves events between them.
-        readsDisk ? ioLock.withLock { heldBatchesAndRecount(after: batchesOnDisk()) } : heldBatchesAndRecount(after: [])
+        guard let disk
+        else { return heldBatchesAndRecount(after: []) }
+        return ioLock.withLock { heldBatchesAndRecount(after: disk.listBatches()) }
     }
 
     /// Adds the batches the filesystem would not take, after the files: anything held was closed by this run and so is
@@ -438,63 +369,6 @@ final class EventStore: EventStoring {
         }
     }
 
-    /// The batch files in the directory, oldest first.
-    ///
-    /// Requires `ioLock`.
-    private func batchesOnDisk() -> [EventBatch] {
-        ioLock.assertOwned()
-        let contents = (try? FileManager.default.contentsOfDirectory(at: disk.directory,
-                                                                    includingPropertiesForKeys: [.contentModificationDateKey],
-                                                                    options: [.skipsHiddenFiles])) ?? []
-
-        let batches = contents
-            .filter { $0.lastPathComponent.hasPrefix(EventStore.batchPrefix) }
-            .compactMap { file -> (EventBatch, Date)? in
-                let payloadId = String(file.lastPathComponent.dropFirst(EventStore.batchPrefix.count))
-                // Reading is only for a batch this process has not counted: one a previous run left behind.
-                guard let events = eventCounts[payloadId] ?? countOfEvents(in: file)
-                else { return nil }
-                eventCounts[payloadId] = events
-                let modified = (try? file.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
-                return (EventBatch(payloadId: payloadId, eventCount: events), modified ?? Date.distantPast)
-            }
-            .sorted { $0.1 < $1.1 }
-            .map { $0.0 }
-
-        // A batch that left the directory without going through `remove` -- a purged cache directory on tvOS, say --
-        // would otherwise keep its count for the rest of the session.
-        let listed = Set(batches.map { $0.payloadId })
-        eventCounts = eventCounts.filter { listed.contains($0.key) }
-
-        return batches
-    }
-
-    /// How many events a batch file holds, or nil when it is not one to list this time.
-    ///
-    /// Requires `ioLock`.
-    private func countOfEvents(in file: URL) -> Int? {
-        ioLock.assertOwned()
-        switch read(file) {
-        case .missing:
-            // Gone since the directory was listed.
-            return nil
-        case .failed(let error):
-            // Left for a later listing rather than deleted: the read may pass then, and the events in it may have been
-            // intact all along. Without a count it cannot be delivered now.
-            os_log("%s could not read stored events, will try again later: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
-            return nil
-        case .bytes(let log):
-            guard let events = EventLogFormat.eventCount(in: log)
-            else {
-                // Written by a version of the SDK whose format this one does not read, or damaged beyond what the
-                // torn tail recovery tolerates. Either way it can never be delivered, so it is not kept.
-                try? FileManager.default.removeItem(at: file)
-                return nil
-            }
-            return events
-        }
-    }
-
     func body(of batch: EventBatch) throws -> Data? {
         if let held = heldLock.withLock({ inMemoryBatches.first { $0.payloadId == batch.payloadId } }) {
             return held.body
@@ -502,16 +376,10 @@ final class EventStore: EventStoring {
 
         // A batch is either held or on the disk, never both and never moved between them, so a batch that is not held
         // in a store with no disk does not exist.
-        guard readsDisk
+        guard let disk
         else { return nil }
 
-        return try ioLock.withLock {
-            switch read(url(of: batch.payloadId)) {
-            case .missing: return nil
-            case .failed(let error): throw error
-            case .bytes(let file): return EventLogFormat.assembleBody(from: file)
-            }
-        }
+        return try ioLock.withLock { try disk.body(of: batch) }
     }
 
     func remove(_ batch: EventBatch) {
@@ -530,14 +398,13 @@ final class EventStore: EventStoring {
 
         guard !wasHeld
         else { return }
-        guard readsDisk
+        guard let disk
         else {
             bufferLock.withLock { forgetSending(batch.payloadId) }
             return
         }
         ioLock.withLock {
-            try? FileManager.default.removeItem(at: url(of: batch.payloadId))
-            let counted = eventCounts.removeValue(forKey: batch.payloadId) ?? 0
+            let counted = disk.remove(batch.payloadId)
             bufferLock.withLock {
                 closedEvents -= counted
                 forgetSending(batch.payloadId)
@@ -545,68 +412,25 @@ final class EventStore: EventStoring {
         }
     }
 
-    /// Closes any log left open by a previous run of this process, so its events join the batches to deliver.
-    ///
-    /// The events in it were recorded by a process that is gone, so there is no one left to add to it. Only this
-    /// process's own log is touched: another process's may still be open in a process that is alive. Where logs are
-    /// locked, any log no live process holds is recovered, whatever it is named.
     func recoverInterruptedLog() {
-        ioLock.withLock { recoverInterruptedLogOnce() }
-    }
-
-    /// Requires `ioLock`. Does its work once per store: after that, the open log is one this run opened.
-    private func recoverInterruptedLogOnce() {
-        ioLock.assertOwned()
-        guard readsDisk, !hasRecoveredInterruptedLog
+        guard let disk
         else { return }
-        hasRecoveredInterruptedLog = true
-        diskLog.forEachLogLeftOpen { recover(logAt: $0) }
+        ioLock.withLock { countRecovered(disk.recoverInterruptedLog()) }
     }
 
-    /// Closes off a log nobody is writing to any more. Requires `ioLock`.
-    private func recover(logAt leftOpen: URL) {
+    /// Counts events a recovery closed off into batches of their own. Requires `ioLock`.
+    private func countRecovered(_ events: Int) {
         ioLock.assertOwned()
-        let events: Int
-        switch read(leftOpen) {
-        case .missing:
-            return
-        case .failed(let error):
-            // It cannot stay under this name, which this run is about to append its own events to, and deleting it
-            // would lose events that may be intact. Closed off uncounted instead, it is read and counted by whichever
-            // listing first manages to.
-            os_log("%s could not read events from a previous run, will try again later: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
-            try? FileManager.default.moveItem(at: leftOpen, to: url(of: UUID().uuidString))
-            return
-        case .bytes(let log):
-            guard let counted = EventLogFormat.eventCount(in: log)
-            else {
-                // Unreadable, and a log that cannot be read cannot be appended to either.
-                try? FileManager.default.removeItem(at: leftOpen)
-                return
-            }
-            events = counted
-        }
-
         guard events > 0
-        else {
-            try? FileManager.default.removeItem(at: leftOpen)
-            return
-        }
-
-        let payloadId = UUID().uuidString
-        guard (try? FileManager.default.moveItem(at: leftOpen, to: url(of: payloadId))) != nil
         else { return }
-
-        eventCounts[payloadId] = events
         bufferLock.withLock { closedEvents += events }
-        os_log("%s recovered %d event(s) from a previous run", log: logger, type: .debug, typeName(and: #function), events)
     }
 
     deinit {
         // One acquisition: the lock is not recursive, and `commit()` would take it again.
         ioLock.withLock {
             writeStagedBytes()
-            diskLog.closeDescriptor()
+            disk?.closeOpenLog()
         }
     }
 }
@@ -674,12 +498,12 @@ extension EventStore {
     /// Requires `ioLock`.
     private func append(_ bytes: Data) -> Bool {
         ioLock.assertOwned()
-        // Before the log is opened, because it may still be the one a previous run died writing. Appended to, this
-        // run's events would sit behind that run's torn last frame, where a reader can no longer find where they start.
-        if !diskLog.isOpen {
-            recoverInterruptedLogOnce()
-        }
-        guard diskLog.append(bytes)
+        guard let disk
+        else { return false }
+
+        let (recovered, written) = disk.append(bytes)
+        countRecovered(recovered)
+        guard written
         else {
             // Never trap on a full disk. The SDK gives up on persistence for the rest of the session rather than taking
             // the application down with it, which is how other SDKs have crashed their hosts.
@@ -708,7 +532,7 @@ private extension EventStore {
     /// Requires `ioLock`.
     func disablePersistence() {
         ioLock.assertOwned()
-        diskLog.closeDescriptor()
+        disk?.closeOpenLog()
         bufferLock.withLock { persistEvents = false }
     }
 
@@ -752,7 +576,7 @@ extension EventStore {
         ioLock.lock()
         defer { ioLock.unlock() }
 
-        var payloads = readsDisk ? payloadsOnDisk() : []
+        var payloads = disk?.storedPayloads() ?? []
         // After the disk, which is older: a store that gave up on persistence holds what came later in memory.
         let held = heldLock.withLock { inMemoryBatches.map { $0.body } }
         for body in held {
@@ -767,58 +591,6 @@ extension EventStore {
             }
         }
         return payloads
-    }
-
-    /// Requires `ioLock`.
-    private func payloadsOnDisk() -> [Data] {
-        ioLock.assertOwned()
-        let contents = (try? FileManager.default.contentsOfDirectory(at: disk.directory,
-                                                                    includingPropertiesForKeys: nil,
-                                                                    options: [.skipsHiddenFiles])) ?? []
-        var logs = contents.filter { $0.lastPathComponent.hasPrefix(EventStore.batchPrefix) }.sorted { $0.path < $1.path }
-        if diskLog.exists {
-            logs.append(diskLog.url)
-        }
-
-        var payloads: [Data] = []
-        for log in logs {
-            guard let file = try? Data(contentsOf: log)
-            else { continue }
-            _ = EventLogFormat.forEachFrame(in: file) { type, payload in
-                if type == EventLogFormat.eventFrame {
-                    payloads.append(payload)
-                }
-            }
-        }
-        return payloads
-    }
-}
-
-extension EventStore {
-    /// The directory the store for a mobile key belongs in.
-    ///
-    /// tvOS is the reason this is not simply Application Support: a tvOS application is only allowed to persist to
-    /// purgeable caches, so there the events are kept somewhere the system may reclaim, which is the most durability
-    /// the platform offers. A directory that turns out not to be writable is no different from a full device: the store
-    /// gives up on the disk and holds events in memory.
-    static func defaultDirectory(mobileKey: String) -> URL {
-        #if os(tvOS)
-        let searchPath = FileManager.SearchPathDirectory.cachesDirectory
-        #else
-        let searchPath = FileManager.SearchPathDirectory.applicationSupportDirectory
-        #endif
-
-        let root = FileManager.default.urls(for: searchPath, in: .userDomainMask).first
-            ?? FileManager.default.temporaryDirectory
-
-        var keyComponent = Util.sha256(mobileKey).base64UrlEncodedString
-        if let bundleId = Bundle.main.bundleIdentifier {
-            keyComponent = "\(Util.sha256(bundleId).base64UrlEncodedString).\(keyComponent)"
-        }
-
-        return root
-            .appendingPathComponent("com.launchdarkly.events", isDirectory: true)
-            .appendingPathComponent(keyComponent, isDirectory: true)
     }
 }
 

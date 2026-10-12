@@ -1284,7 +1284,7 @@ extension DirectEventProcessorSpec {
 
             /// The events the next run of the application would find.
             func eventsLeftOnDisk() -> [LDValue] {
-                let reader = EventStore.sharing(testContext.store.directory)
+                let reader = EventStore.sharing(testContext.store.directory!)
                 return reader.pendingEventPayloads().compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
             }
 
@@ -1370,7 +1370,7 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.commitRecordedEvents()
 
                 // Nothing delivered them and nothing closed the log, as would be the case had the process died here.
-                let recovered = EventStore.sharing(testContext.store.directory)
+                let recovered = EventStore.sharing(testContext.store.directory!)
                 let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
                 nextRun.isOnline = true
 
@@ -1392,7 +1392,7 @@ extension DirectEventProcessorSpec {
                 testContext.recordEvents(2)
                 testContext.eventProcessor.commitRecordedEvents()
 
-                let recovered = EventStore.sharing(testContext.store.directory)
+                let recovered = EventStore.sharing(testContext.store.directory!)
                 let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
 
                 // Nothing asks for a flush, and the report interval is several times longer than this waits, so the
@@ -1595,7 +1595,7 @@ extension DirectEventProcessorSpec {
                 testContext.serviceMock.respondToEvents(with: 503)
                 testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
 
-                let recovered = EventStore.sharing(testContext.store.directory)
+                let recovered = EventStore.sharing(testContext.store.directory!)
                 let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
                 nextRun.isOnline = true
                 defer { nextRun.isOnline = false }
@@ -1618,7 +1618,7 @@ extension DirectEventProcessorSpec {
 
                 // The same directory, as the application's next launch would find it.
                 testContext.serviceMock.stubEventResponse(success: true)
-                let recovered = EventStore.sharing(testContext.store.directory)
+                let recovered = EventStore.sharing(testContext.store.directory!)
                 let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
                 nextRun.isOnline = true
                 defer { nextRun.isOnline = false }

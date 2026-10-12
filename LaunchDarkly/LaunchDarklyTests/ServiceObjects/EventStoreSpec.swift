@@ -29,11 +29,11 @@ final class EventStoreSpec: QuickSpec {
             }
 
             func instance() -> EventStore {
-                EventStore(directory: first.directory, capacity: 100, processName: "app", logger: .disabled)
+                EventStore(directory: first.directory!, capacity: 100, processName: "app", logger: .disabled)
             }
 
             beforeEach {
-                first = EventStore(directory: EventStore.temporary().directory,
+                first = EventStore(directory: EventStore.temporary().directory!,
                                    capacity: 100,
                                    processName: "app",
                                    logger: .disabled)
@@ -49,8 +49,8 @@ final class EventStoreSpec: QuickSpec {
 
                 _ = second.stage(EventStoreSpec.payload("second"))
                 second.commit()
-                expect(second.openLogUrl) != first.openLogUrl
-                expect(second.openLogUrl.lastPathComponent).to(contain("-\(getpid())-"))
+                expect(second.openLogUrl!) != first.openLogUrl!
+                expect(second.openLogUrl!.lastPathComponent).to(contain("-\(getpid())-"))
 
                 _ = first.stage(EventStoreSpec.payload("first-again"))
                 first.commit()
@@ -80,7 +80,7 @@ final class EventStoreSpec: QuickSpec {
             it("recovers the log a previous run under the name left open, once nothing holds it") {
                 _ = first.stage(EventStoreSpec.payload("left-open"))
                 first.commit()
-                let directory = first.directory
+                let directory = first.directory!
                 first = nil
                 first = EventStore(directory: directory, capacity: 100, processName: "app", logger: .disabled)
 
@@ -103,11 +103,11 @@ final class EventStoreSpec: QuickSpec {
             /// Another process of the same application, using the same directory under its own name. Unlocked, as on an
             /// iPhone or iPad, where a process name is one live process and the name alone keeps the logs apart.
             func otherProcess(_ name: String = "widget") -> EventStore {
-                EventStore.sharing(app.directory, processName: name)
+                EventStore.sharing(app.directory!, processName: name)
             }
 
             beforeEach {
-                app = EventStore.sharing(EventStore.temporary().directory, processName: "app")
+                app = EventStore.sharing(EventStore.temporary().directory!, processName: "app")
             }
 
             it("leaves a log another process still has open where it is, so that process's later events reach it") {
@@ -133,7 +133,7 @@ final class EventStoreSpec: QuickSpec {
                 _ = widget.stage(EventStoreSpec.payload("from-widget"))
                 widget.commit()
 
-                expect(app.openLogUrl) != widget.openLogUrl
+                expect(app.openLogUrl!) != widget.openLogUrl!
                 let fromApp = app.closeBatch()
                 let fromWidget = widget.closeBatch()
                 expect(EventStoreSpec.keys(ofBody: fromApp.flatMap { try? app.body(of: $0) })) == ["from-app"]
@@ -183,11 +183,18 @@ final class EventStoreSpec: QuickSpec {
             }
 
             it("writes nothing to the disk, so the directory is never even created") {
+                // Given the directory rather than asked for it, because this store has none to give: it is told to
+                // keep events off the disk, and so is built without anywhere to put them.
+                let directory = EventStore.temporaryDirectory()
+                let store = EventStore(directory: directory, capacity: 100, persistEvents: false, logger: .disabled)
+                defer { try? FileManager.default.removeItem(at: directory) }
+
                 _ = store.stage(EventStoreSpec.payload("held"))
                 store.commit()
 
-                expect(FileManager.default.fileExists(atPath: store.directory.path)) == false
-                expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))).to(beEmpty())
+                expect(store.directory).to(beNil())
+                expect(FileManager.default.fileExists(atPath: directory.path)) == false
+                expect(EventStoreSpec.keys(of: EventStore.sharing(directory))).to(beEmpty())
             }
 
             it("delivers the events from memory, so opting out costs durability and nothing else") {
@@ -201,11 +208,16 @@ final class EventStoreSpec: QuickSpec {
 
             it("asks the filesystem nothing, even about a batch it does not hold") {
                 var reads = 0
-                let store = EventStore.temporary(persistEvents: false, readFile: { _ in
-                    reads += 1
-                    return Data()
-                })
-                defer { store.deleteEverything() }
+                let directory = EventStore.temporaryDirectory()
+                let store = EventStore(directory: directory,
+                                       capacity: 100,
+                                       persistEvents: false,
+                                       logger: .disabled,
+                                       readFile: { _ in
+                                           reads += 1
+                                           return Data()
+                                       })
+                defer { try? FileManager.default.removeItem(at: directory) }
 
                 _ = store.stage(EventStoreSpec.payload("held"))
                 let batch = store.closeBatch()
@@ -220,7 +232,8 @@ final class EventStoreSpec: QuickSpec {
                 store.remove(stranger)
 
                 expect(reads) == 0
-                expect(FileManager.default.fileExists(atPath: store.directory.path)) == false
+                expect(store.directory).to(beNil())
+                expect(FileManager.default.fileExists(atPath: directory.path)) == false
             }
 
             it("leaves alone what a run that did persist left behind, for the next run that persists") {
@@ -232,7 +245,7 @@ final class EventStoreSpec: QuickSpec {
                 _ = persisting.stage(EventStoreSpec.payload("open"))
                 persisting.commit()
 
-                let withoutPersistence = EventStore.sharing(persisting.directory, persistEvents: false)
+                let withoutPersistence = EventStore.sharing(persisting.directory!, persistEvents: false)
                 withoutPersistence.recoverInterruptedLog()
                 expect(withoutPersistence.pendingBatches()).to(beEmpty())
                 expect(withoutPersistence.pendingEventCount) == 0
@@ -268,7 +281,7 @@ final class EventStoreSpec: QuickSpec {
     /// what actually reached the disk, which is the whole question a crash asks.
     private static func reader(sharing store: EventStore,
                                readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) }) -> EventStore {
-        EventStore.sharing(store.directory, readFile: readFile)
+        EventStore.sharing(store.directory!, readFile: readFile)
     }
 
     /// What a process out of file descriptors gets for a file that is perfectly intact.
@@ -419,7 +432,7 @@ final class EventStoreSpec: QuickSpec {
                 }
                 store.commit()
                 // The previous run died partway through writing its last frame.
-                let log = store.openLogUrl
+                let log = store.openLogUrl!
                 try Data(contentsOf: log).dropLast(3).write(to: log)
 
                 let next = EventStoreSpec.reader(sharing: store)
@@ -462,7 +475,7 @@ final class EventStoreSpec: QuickSpec {
                 store.commit()
 
                 // A process killed partway through a write leaves the last frame short of its declared length.
-                let log = store.openLogUrl
+                let log = store.openLogUrl!
                 let whole = try Data(contentsOf: log)
                 try whole.dropLast(8).write(to: log)
 
@@ -513,7 +526,7 @@ final class EventStoreSpec: QuickSpec {
                                                  readFile: EventStoreSpec.readFailing(while: { failing }))
                 next.recoverInterruptedLog()
                 // Moved out from under the name this run appends to, and not deleted.
-                expect(FileManager.default.fileExists(atPath: store.openLogUrl.path)) == false
+                expect(FileManager.default.fileExists(atPath: store.openLogUrl!.path)) == false
 
                 // So this run has the name to itself, and the events that are intact are only waiting for a read that
                 // works to be counted and delivered.
@@ -533,7 +546,7 @@ final class EventStoreSpec: QuickSpec {
                 _ = store.closeBatch()
 
                 let batchUrl = try FileManager.default
-                    .contentsOfDirectory(at: store.directory, includingPropertiesForKeys: nil)
+                    .contentsOfDirectory(at: store.directory!, includingPropertiesForKeys: nil)
                     .first { $0.lastPathComponent.hasPrefix("ready-") }
                 var corrupted = try Data(contentsOf: batchUrl!)
                 corrupted[4] = 0xFF
@@ -595,7 +608,7 @@ final class EventStoreSpec: QuickSpec {
                 // Nothing appends to a batch once it is closed, so the count taken at the close still holds and
                 // listing it has no reason to go to the disk. Damaging the file is how the test tells the two apart:
                 // a listing that read would refuse this batch, which is exactly what the store below does.
-                let batchUrl = store.directory.appendingPathComponent("ready-\(batch.payloadId)")
+                let batchUrl = store.directory!.appendingPathComponent("ready-\(batch.payloadId)")
                 try Data("not an event log".utf8).write(to: batchUrl)
 
                 expect(store.pendingBatches()) == [batch]
@@ -784,7 +797,7 @@ final class EventStoreSpec: QuickSpec {
                 _ = earlier.stage(EventStoreSpec.payload("earlier-1"))
                 _ = earlier.stage(EventStoreSpec.payload("earlier-2"))
                 expect(earlier.closeBatch()).toNot(beNil())
-                store = EventStore(directory: earlier.directory, capacity: 2, logger: .disabled)
+                store = EventStore(directory: earlier.directory!, capacity: 2, logger: .disabled)
 
                 expect(store.stage(EventStoreSpec.payload("before-listing"))) == true
 
@@ -911,7 +924,7 @@ final class EventStoreSpec: QuickSpec {
             }
             afterEach {
                 // The blocking file, which is the parent of the directory the store never got to create.
-                try? FileManager.default.removeItem(at: store.directory.deletingLastPathComponent())
+                try? FileManager.default.removeItem(at: store.directory!.deletingLastPathComponent())
             }
 
             it("delivers the events from memory rather than dropping them") {
@@ -1047,7 +1060,7 @@ final class EventStoreSpec: QuickSpec {
 
             it("still refuses events once capacity is reached, so memory stays bounded") {
                 let bounded = EventStoreSpec.unwritableStore(capacity: 2)
-                defer { try? FileManager.default.removeItem(at: bounded.directory.deletingLastPathComponent()) }
+                defer { try? FileManager.default.removeItem(at: bounded.directory!.deletingLastPathComponent()) }
 
                 expect(bounded.stage(EventStoreSpec.payload("first"))) == true
                 bounded.commit()
