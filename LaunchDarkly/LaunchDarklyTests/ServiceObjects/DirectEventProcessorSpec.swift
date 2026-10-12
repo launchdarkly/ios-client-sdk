@@ -7,6 +7,9 @@ final class DirectEventProcessorSpec: QuickSpec {
     struct Constants {
         static let eventFlushInterval: TimeInterval = 10.0
         static let eventFlushIntervalHalfSecond: TimeInterval = 0.5
+        /// How long a flush or delivery may take before a test gives up on it. A wait ends as soon as what it waits
+        /// for happens, so this costs a passing test nothing, and a loaded CI simulator can take over a second.
+        static let deliveryTimeout: DispatchTimeInterval = .seconds(10)
     }
 
     struct TestContext {
@@ -151,7 +154,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                 reporter.flush { record(true) }
                 reporter.flushReportingOutcome(completion: record)
 
-                expect(lock.withLock { answers.count }).toEventually(equal(2))
+                expect(lock.withLock { answers.count }).toEventually(equal(2), timeout: Constants.deliveryTimeout)
                 lock.withLock {
                     expect(answers.map { $0.delivered }) == [true, true]
                     expect(answers.contains { $0.onCaller }) == false
@@ -322,14 +325,14 @@ final class DirectEventProcessorSpec: QuickSpec {
                         reporter.isOnline = true
                     }
                     it("drops the poisoned batch and delivers a later event") {
-                        waitUntil { done in
+                        waitUntil(timeout: Constants.deliveryTimeout) { done in
                             reporter.record(CustomEvent(key: "poison", context: ldContext, metricValue: .nan))
                             reporter.flush(completion: done)
                         }
                         expect(serviceMock.publishEventDataCallCount) == 0
                         expect(store.pendingEventCount) == 0
 
-                        waitUntil { done in
+                        waitUntil(timeout: Constants.deliveryTimeout) { done in
                             reporter.record(CustomEvent(key: "after-poison", context: ldContext, metricValue: 1.0))
                             reporter.flush(completion: done)
                         }
@@ -350,7 +353,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                         reporter.isOnline = true
                     }
                     it("drops only the poisoned event") {
-                        waitUntil { done in
+                        waitUntil(timeout: Constants.deliveryTimeout) { done in
                             reporter.record(CustomEvent(key: "poison", context: ldContext, metricValue: .nan))
                             reporter.record(CustomEvent(key: "kept", context: ldContext, metricValue: 1.0))
                             reporter.flush(completion: done)
@@ -372,7 +375,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                         reporter.isOnline = true
                     }
                     it("drops only the poisoned summary") {
-                        waitUntil { done in
+                        waitUntil(timeout: Constants.deliveryTimeout) { done in
                             reporter.recordFlagEvaluationEvents(flagKey: "poison-flag",
                                                                 value: .number(.nan),
                                                                 defaultValue: .number(0),
@@ -399,7 +402,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                         reporter.isOnline = true
                     }
                     it("drops the poisoned summary and delivers a later one") {
-                        waitUntil { done in
+                        waitUntil(timeout: Constants.deliveryTimeout) { done in
                             reporter.recordFlagEvaluationEvents(flagKey: "poison-flag",
                                                                 value: .number(.nan),
                                                                 defaultValue: .number(0),
@@ -412,7 +415,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                         expect(store.pendingEventCount) == 0
                         expect(reporter.eventBuffer.contextSummarizer.hasLoggedRequests) == false
 
-                        waitUntil { done in
+                        waitUntil(timeout: Constants.deliveryTimeout) { done in
                             reporter.recordFlagEvaluationEvents(flagKey: "after-poison",
                                                                 value: .bool(true),
                                                                 defaultValue: .bool(false),
@@ -456,7 +459,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                 context("success") {
                     context("with events and tracked requests") {
                         beforeEach {
-                            waitUntil { syncComplete in
+                            waitUntil(timeout: Constants.deliveryTimeout) { syncComplete in
                                 testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -496,7 +499,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                     }
                     context("with events only") {
                         beforeEach {
-                            waitUntil { syncComplete in
+                            waitUntil(timeout: Constants.deliveryTimeout) { syncComplete in
                                 testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -521,7 +524,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                     }
                     context("with tracked requests only") {
                         beforeEach {
-                            waitUntil { syncComplete in
+                            waitUntil(timeout: Constants.deliveryTimeout) { syncComplete in
                                 testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -559,7 +562,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                     }
                     context("without events or tracked requests") {
                         beforeEach {
-                            waitUntil { syncComplete in
+                            waitUntil(timeout: Constants.deliveryTimeout) { syncComplete in
                                 testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -606,7 +609,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                             testContext.serviceMock.holdsEventCompletions = true
                             reporter.record(CustomEvent(key: "delivered", context: context))
                             reporter.flush(completion: nil)
-                            expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+                            expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
 
                             blockLock.lock()
                             blockNextWrite = true
@@ -619,12 +622,12 @@ final class DirectEventProcessorSpec: QuickSpec {
                                 testContext.serviceMock.releaseHeldEventCompletions()
                             }
                             // Long enough for an announcement made ahead of the removal to reach the main thread.
-                            waitUntil { done in
+                            waitUntil(timeout: Constants.deliveryTimeout) { done in
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: done)
                             }
                             finishWrite.signal()
 
-                            expect(pendingWhenTold).toEventuallyNot(beNil())
+                            expect(pendingWhenTold).toEventuallyNot(beNil(), timeout: Constants.deliveryTimeout)
                             // Only the event still being written. The delivered one was gone before anyone heard.
                             expect(pendingWhenTold) == 1
                         }
@@ -791,7 +794,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                         }
                         it("drops events and stops reporting") {
                             expect(testContext.serviceMock.publishEventDataCallCount) == 1
-                            expect(testContext.store.pendingEventCount).toEventually(equal(0))
+                            expect(testContext.store.pendingEventCount).toEventually(equal(0), timeout: Constants.deliveryTimeout)
                             expect(testContext.eventProcessor.isOnline).to(beFalse())
                             expect(testContext.eventProcessor.isReportingActive).to(beFalse())
                             if case let .response(error) = testContext.syncResult {
@@ -810,7 +813,7 @@ final class DirectEventProcessorSpec: QuickSpec {
             }
             context("offline") {
                 beforeEach {
-                    waitUntil { syncComplete in
+                    waitUntil(timeout: Constants.deliveryTimeout) { syncComplete in
                         testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                             testContext.syncResult = result
                             syncComplete()
@@ -1044,10 +1047,10 @@ final class DirectEventProcessorSpec: QuickSpec {
                     testContext.recordEvents(Event.Kind.allKinds.count)
                 }
                 it("reports events") {
-                    expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
-                    expect(testContext.store.pendingEventCount).toEventually(equal(0))
-                    expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount).toEventually(equal(1))
-                    expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch).toEventually(equal(testContext.events.count))
+                    expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+                    expect(testContext.store.pendingEventCount).toEventually(equal(0), timeout: Constants.deliveryTimeout)
+                    expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+                    expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch).toEventually(equal(testContext.events.count), timeout: Constants.deliveryTimeout)
                     let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                     valueIsArray(published) { valueArray in
                         expect(valueArray.count) == testContext.events.count
@@ -1062,7 +1065,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                     testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
                 }
                 it("publishes events recorded after the first fire") {
-                    expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+                    expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
                     testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
                     expect(testContext.serviceMock.publishEventDataCallCount)
                         .toEventually(equal(2), timeout: .seconds(2))
@@ -1072,7 +1075,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                 testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
                 testContext.eventProcessor.isOnline = true
 
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Constants.eventFlushIntervalHalfSecond) {
                         expect(testContext.serviceMock.publishEventDataCallCount) == 0
                         done()
@@ -1119,7 +1122,7 @@ extension DirectEventProcessorSpec {
 
                 // The promise is weaker by exactly one scheduling hop: the event reaches the disk, just not before
                 // recording it returned.
-                expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]))
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]), timeout: Constants.deliveryTimeout)
             }
 
             it("has written the evaluations that came before a tracked event") {
@@ -1171,8 +1174,10 @@ extension DirectEventProcessorSpec {
 
                 commits.resume()
 
+                // Each poll reads and decodes every event on this thread, so polling often keeps the run loop too busy
+                // to notice the count is already there.
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }.filter { $0 == "feature" }.count)
-                    .toEventually(equal(400))
+                    .toEventually(equal(400), timeout: Constants.deliveryTimeout, pollInterval: .milliseconds(200))
             }
 
             it("reports the events a previous run left behind") {
@@ -1185,7 +1190,7 @@ extension DirectEventProcessorSpec {
                 let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
                 nextRun.isOnline = true
 
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     nextRun.flush(completion: done)
                 }
 
@@ -1210,8 +1215,8 @@ extension DirectEventProcessorSpec {
                 // only thing that can deliver these is the reporter coming online.
                 nextRun.isOnline = true
 
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
-                expect(recovered.pendingEventCount).toEventually(equal(0))
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+                expect(recovered.pendingEventCount).toEventually(equal(0), timeout: Constants.deliveryTimeout)
                 nextRun.isOnline = false
             }
 
@@ -1257,7 +1262,7 @@ extension DirectEventProcessorSpec {
                 // Answered from the delivery's own threads and polled from this one.
                 let first = Answer()
                 testContext.eventProcessor.flush { first.record(true) }
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
 
                 let second = Answer()
                 testContext.eventProcessor.flush { second.record(true) }
@@ -1270,8 +1275,8 @@ extension DirectEventProcessorSpec {
 
                 // The second caller finds the only batch claimed by the first delivery, so it waits on that claim
                 // rather than sending anything. The batch goes out once in total.
-                expect(first.value()).toEventually(beTrue())
-                expect(second.value()).toEventually(beTrue())
+                expect(first.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
+                expect(second.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
                 expect(testContext.store.pendingEventCount) == 0
             }
@@ -1299,7 +1304,7 @@ extension DirectEventProcessorSpec {
                 expect(answered.wait(timeout: .now() + 2)) == .success
 
                 store.release.signal()
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
             }
 
             it("writes a deferred track while a delivery holds the delivery queue") {
@@ -1312,7 +1317,7 @@ extension DirectEventProcessorSpec {
 
                 testContext.eventProcessor.record(CustomEvent(key: "tracked", context: testContext.context))
 
-                expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]))
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]), timeout: Constants.deliveryTimeout)
             }
 
             it("has written everything by the time a flush returns, even while a delivery holds the delivery queue") {
@@ -1410,10 +1415,10 @@ extension DirectEventProcessorSpec {
                 nextRun.isOnline = true
                 defer { nextRun.isOnline = false }
 
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(3))
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(3), timeout: Constants.deliveryTimeout)
                 expect(customKeys(testContext.serviceMock.publishedEventPayloads.last!)) == ["kept"]
                 expect(testContext.serviceMock.publishedPayloadIds.last) == payloadId
-                expect(recovered.pendingEventCount).toEventually(equal(0))
+                expect(recovered.pendingEventCount).toEventually(equal(0), timeout: Constants.deliveryTimeout)
             }
         }
     }
@@ -1447,7 +1452,7 @@ extension DirectEventProcessorSpec {
                 expect(testContext.store.pendingEventCount) == 0
 
                 testContext.eventProcessor.isOnline = true
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flush(completion: done)
                 }
                 let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
@@ -1639,7 +1644,7 @@ extension DirectEventProcessorSpec {
                 testContext = TestContext()
                 testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
@@ -1652,7 +1657,7 @@ extension DirectEventProcessorSpec {
                 testContext = TestContext()
                 testContext.recordEvents(1)
                 var delivered: Bool?
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
@@ -1667,7 +1672,7 @@ extension DirectEventProcessorSpec {
                 testContext.recordEvents(1)
                 testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
@@ -1692,7 +1697,7 @@ extension DirectEventProcessorSpec {
 
                 failing.record(true)
                 var delivered: Bool?
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
@@ -1703,7 +1708,7 @@ extension DirectEventProcessorSpec {
                 expect(store.pendingBatches().count) == 1
 
                 failing.record(false)
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
@@ -1729,7 +1734,7 @@ extension DirectEventProcessorSpec {
 
                 testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
@@ -1747,7 +1752,7 @@ extension DirectEventProcessorSpec {
                 testContext.recordEvents(1)
                 testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
@@ -1757,7 +1762,7 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
 
                 // Told once, to the caller who was there to hear it.
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
@@ -1774,7 +1779,7 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.record(CustomEvent(key: "fine", context: LDContext.stub()))
                 testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
@@ -1810,7 +1815,7 @@ extension DirectEventProcessorSpec {
                 testContext.recordEvents(1)
                 testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
-                waitUntil { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
@@ -1829,13 +1834,13 @@ extension DirectEventProcessorSpec {
                 testContext.serviceMock.holdsEventCompletions = true
 
                 testContext.eventProcessor.flushReportingOutcome { _ in }
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
 
                 // Holding this back until the first delivery answers would let the store fill through a retry, which
                 // can run for twice the connection timeout, and events recorded past the capacity are lost.
                 testContext.recordEvents(1)
                 testContext.eventProcessor.flushReportingOutcome { _ in }
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2))
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: Constants.deliveryTimeout)
 
                 // The first batch is still awaiting its response, so the second delivery left it alone rather than
                 // listing it again and sending it a second time under the same payload ID.
@@ -1852,7 +1857,7 @@ extension DirectEventProcessorSpec {
                 testContext.serviceMock.holdsEventCompletions = true
 
                 testContext.eventProcessor.flushReportingOutcome { _ in }
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
 
                 // Everything on disk belongs to the delivery already running, and that may include this caller's
                 // events: a commit only stages them, and whichever delivery runs next is what closes them into a
@@ -1878,7 +1883,7 @@ extension DirectEventProcessorSpec {
                 // A closes a batch of its own and waits on it. Nothing has been lost at the point it closed.
                 let first = Answer()
                 testContext.eventProcessor.flushReportingOutcome(completion: first.record)
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
 
                 // B closes a batch of its own, dropping an event the store will never take as it does, so the loss
                 // falls between the two closes. B has a post of its own outstanding, which is what leaves A to be
@@ -1887,15 +1892,15 @@ extension DirectEventProcessorSpec {
                 testContext.recordEvents(1)
                 let second = Answer()
                 testContext.eventProcessor.flushReportingOutcome(completion: second.record)
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2))
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: Constants.deliveryTimeout)
 
                 // Responses land in the order they were made, so A is answered while B's post is still out. With
                 // one shared flag A would take B's loss here, and B would report success for the event it dropped.
                 testContext.serviceMock.holdsEventCompletions = false
                 testContext.serviceMock.releaseHeldEventCompletions()
 
-                expect(first.value()).toEventually(beTrue())
-                expect(second.value()).toEventually(beFalse())
+                expect(first.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
+                expect(second.value()).toEventually(beFalse(), timeout: Constants.deliveryTimeout)
             }
 
             it("answers away from the queue a delivery runs on, after a delivery") {
@@ -1951,7 +1956,7 @@ extension DirectEventProcessorSpec {
 
                 let answers = Answers()
                 testContext.eventProcessor.flushReportingOutcome(completion: answers.record)
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
 
                 // Held on the first post, each of these finds the only batch claimed by it. None of them is told
                 // its events arrived on the strength of having nothing left of its own to send.
@@ -2079,7 +2084,7 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
                 testContext.eventProcessor.isOnline = true
                 testContext.eventProcessor.flush(completion: nil)
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
 
                 // Well inside the one-second retry delay: a delivery queue sleeping through it would not get to this.
                 testContext.eventProcessor.flush(completion: nil)
