@@ -113,34 +113,79 @@ class EventReporter: EventReporting {
     /// against the number of writes.
     private static let pendingCommitThreshold = 32
 
-    var isOnline: Bool {
-        get { timerQueue.sync { eventReportTimer != nil } }
-        set { timerQueue.sync { newValue ? startReporting() : stopReporting() } }
-    }
+    // MARK: Set in init and never changed
+
+    let service: DarklyServiceProvider
+    let store: EventStoring
+
+    /// How many events the SDK will hold in total, across `pending` and the store.
+    private let capacity: Int
+
+    /// Where a commit runs when no caller is waiting on it.
+    private let commitQueue: DispatchQueue
+
+    private let onSyncComplete: EventSyncCompleteClosure?
+
+    /// Shared by the threads recording events, so it must not be mutated after `init`.
+    private let encoder: JSONEncoder
+
+    let encoding: Encoding
+
+    // MARK: Guarded by commitLock
+
+    /// Held for the whole of a commit, so that only one runs at a time.
+    ///
+    /// This is what a commit point's guarantee rests on. Without it a commit already in flight could take the caller's
+    /// event out of `pending` before the caller got there, leaving the caller nothing to write and returning while
+    /// those bytes were still being produced somewhere else. Waiting here instead means that when the call returns the
+    /// event is on disk, whichever commit put it there. It also keeps two encoders from staging their runs in
+    /// whichever order they happened to finish.
+    ///
+    /// Taken before `recordLock` and before anything the store locks, never after.
+    private let commitLock = UnfairLock()
+
+    /// Outlives a commit rather than being built per commit, so that its buffer and context cache span them.
+    ///
+    /// A commit point writes a single event, so a cache that lived for one commit would never be read. It needs no
+    /// lock of its own because it is only ever reached from `encode(_:)`, which runs under `commitLock`.
+    fileprivate let eventJSONWriter: EventJSONWriter
+
+    // MARK: Guarded by recordLock
+
+    /// Guards everything one recording writes: the held events and the summarizer.
+    ///
+    /// One evaluation can produce a counter, a full event and a debug event, and the three have to land together. Taken
+    /// separately, a commit landing between them splits one evaluation across two payloads.
+    ///
+    /// Held for the appends and the handover of the run, never across the encoder or a syscall. It is a lock rather
+    /// than a queue because it is taken once per evaluation, and a `DispatchQueue.sync` costs enough at that rate to be
+    /// worth avoiding: the same measurement that made `EvaluationExposureDeduper` a lock applies here.
+    private let recordLock = UnfairLock()
+
+    /// Only to be used while holding `recordLock`.
+    private(set) var contextSummarizer: ContextSummarizer
+
+    /// Full events recorded but not yet encoded. Only to be used while holding `recordLock`.
+    ///
+    /// Held rather than encoded because encoding early would not make them durable: the store stages bytes into memory
+    /// too, and only a commit reaches the file. Both forms are equally lost to a crash, so the encode may as well
+    /// happen where it is cheapest.
+    private var pending: [Event] = []
+
+    /// Whether a commit is already queued, so a run of recordings past the threshold asks for one write rather than
+    /// one each. Only to be used while holding `recordLock`.
+    private var isCommitScheduled = false
+
+    // MARK: Guarded by stateLock
 
     var lastEventResponseDate: Date {
         stateLock.withLock { responseDate }
     }
 
-    let service: DarklyServiceProvider
-    let store: EventStoring
-
     /// Guards the last response date and the record of what has been lost.
     private let stateLock = UnfairLock()
-    /// Only to be used while holding `recordLock`.
-    private(set) var contextSummarizer: ContextSummarizer
     /// Only to be used while holding `stateLock`.
     private var responseDate: Date
-
-    /// Guards `queuedDelivery`. Taken on a caller's thread and on `deliveryQueue`, and never held across either.
-    private let deliveryLock = UnfairLock()
-    /// Callers waiting on a delivery that is queued and has not taken the batches yet, or nil where none is queued.
-    private var queuedDelivery: [FlushOutcomeClosure]?
-
-    #if DEBUG
-        /// How many deliveries have started, which is fewer than the flushes asked for where they were joined.
-        private var deliveryRunCount = 0
-    #endif
 
     /// How many events the SDK accepted and then dropped for good. Only to be used while holding `stateLock`.
     ///
@@ -158,56 +203,19 @@ class EventReporter: EventReporting {
     /// used while holding `stateLock`.
     private var reportedLostEvents: UInt64 = 0
 
-    /// Held for the whole of a commit, so that only one runs at a time.
-    ///
-    /// This is what a commit point's guarantee rests on. Without it a commit already in flight could take the caller's
-    /// event out of `pending` before the caller got there, leaving the caller nothing to write and returning while
-    /// those bytes were still being produced somewhere else. Waiting here instead means that when the call returns the
-    /// event is on disk, whichever commit put it there. It also keeps two encoders from staging their runs in
-    /// whichever order they happened to finish.
-    ///
-    /// Taken before `recordLock` and before anything the store locks, never after.
-    private let commitLock = UnfairLock()
+    // MARK: Guarded by deliveryLock
 
-    /// Guards everything one recording writes: the held events and the summarizer.
-    ///
-    /// One evaluation can produce a counter, a full event and a debug event, and the three have to land together. Taken
-    /// separately, a commit landing between them splits one evaluation across two payloads.
-    ///
-    /// Held for the appends and the handover of the run, never across the encoder or a syscall. It is a lock rather
-    /// than a queue because it is taken once per evaluation, and a `DispatchQueue.sync` costs enough at that rate to be
-    /// worth avoiding: the same measurement that made `EvaluationExposureDeduper` a lock applies here.
-    private let recordLock = UnfairLock()
+    /// Guards `queuedDelivery`. Taken on a caller's thread and on `deliveryQueue`, and never held across either.
+    private let deliveryLock = UnfairLock()
+    /// Callers waiting on a delivery that is queued and has not taken the batches yet, or nil where none is queued.
+    private var queuedDelivery: [FlushOutcomeClosure]?
 
-    /// Full events recorded but not yet encoded. Only to be used while holding `recordLock`.
-    ///
-    /// Held rather than encoded because encoding early would not make them durable: the store stages bytes into memory
-    /// too, and only a commit reaches the file. Both forms are equally lost to a crash, so the encode may as well
-    /// happen where it is cheapest.
-    private var pending: [Event] = []
+    #if DEBUG
+        /// How many deliveries have started, which is fewer than the flushes asked for where they were joined.
+        private var deliveryRunCount = 0
+    #endif
 
-    /// Whether a commit is already queued, so a run of recordings past the threshold asks for one write rather than
-    /// one each. Only to be used while holding `recordLock`.
-    private var isCommitScheduled = false
-
-    /// How many events the SDK will hold in total, across `pending` and the store.
-    private let capacity: Int
-
-    /// Where a commit runs when no caller is waiting on it.
-    private let commitQueue: DispatchQueue
-
-    private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
-    private var eventReportTimer: TimeResponding?
-    var isReportingActive: Bool { eventReportTimer != nil }
-
-    /// Deliveries run here, off whatever thread recorded an event.
-    private let deliveryQueue = DispatchQueue(label: "com.launchdarkly.eventSyncQueue", qos: .userInitiated)
-
-    /// Whether the store held events from a previous run of the application when this reporter started.
-    ///
-    /// Only to be used on `deliveryQueue`, which is what makes it safe without a lock: the recovery that answers the
-    /// question and the delivery that acts on it are both enqueued there, in that order.
-    private var hasEventsFromPreviousRun = false
+    // MARK: Guarded by claimLock
 
     /// Guards `batchesInFlight`.
     ///
@@ -228,17 +236,27 @@ class EventReporter: EventReporting {
     /// on that later delivery hears their outcome too.
     private var batchesInFlight: [String: Claim] = [:]
 
-    private let onSyncComplete: EventSyncCompleteClosure?
+    // MARK: Confined to timerQueue
 
-    /// Shared by the threads recording events, so it must not be mutated after `init`.
-    private let encoder: JSONEncoder
+    var isOnline: Bool {
+        get { timerQueue.sync { eventReportTimer != nil } }
+        set { timerQueue.sync { newValue ? startReporting() : stopReporting() } }
+    }
 
-    let encoding: Encoding
-    /// Outlives a commit rather than being built per commit, so that its buffer and context cache span them.
+    private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
+    private var eventReportTimer: TimeResponding?
+    var isReportingActive: Bool { eventReportTimer != nil }
+
+    // MARK: Confined to deliveryQueue
+
+    /// Deliveries run here, off whatever thread recorded an event.
+    private let deliveryQueue = DispatchQueue(label: "com.launchdarkly.eventSyncQueue", qos: .userInitiated)
+
+    /// Whether the store held events from a previous run of the application when this reporter started.
     ///
-    /// A commit point writes a single event, so a cache that lived for one commit would never be read. It needs no
-    /// lock of its own because it is only ever reached from `encode(_:)`, which runs under `commitLock`.
-    fileprivate let eventJSONWriter: EventJSONWriter
+    /// Only to be used on `deliveryQueue`, which is what makes it safe without a lock: the recovery that answers the
+    /// question and the delivery that acts on it are both enqueued there, in that order.
+    private var hasEventsFromPreviousRun = false
 
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
