@@ -70,18 +70,7 @@ class ContextSummarizer {
     @discardableResult
     func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue, context: LDContext) -> Bool {
         let key = key(for: context)
-        if let index = trackers.index(forKey: key) {
-            trackers.values[index].tracker.trackRequest(
-                flagKey: flagKey,
-                reportedValue: reportedValue,
-                featureFlag: featureFlag,
-                defaultValue: defaultValue,
-                context: context
-            )
-            return true
-        }
-
-        guard trackers.count < maxContexts
+        guard trackers.count < maxContexts || trackers[key] != nil
         else {
             if !hasLoggedContextsExceeded {
                 hasLoggedContextsExceeded = true
@@ -90,16 +79,15 @@ class ContextSummarizer {
             return false
         }
 
-        var tracker = FlagRequestTracker(logger: logger)
-        tracker.trackRequest(
-            flagKey: flagKey,
-            reportedValue: reportedValue,
-            featureFlag: featureFlag,
-            defaultValue: defaultValue,
-            context: context
-        )
         // Redaction is applied when the summary is encoded; see `Event.redactsAnonymousAttributes`.
-        trackers[key] = TrackerWithContext(tracker: tracker, context: context)
+        trackers[key, default: TrackerWithContext(tracker: FlagRequestTracker(logger: logger), context: context)]
+            .tracker.trackRequest(
+                flagKey: flagKey,
+                reportedValue: reportedValue,
+                featureFlag: featureFlag,
+                defaultValue: defaultValue,
+                context: context
+            )
         return true
     }
 
