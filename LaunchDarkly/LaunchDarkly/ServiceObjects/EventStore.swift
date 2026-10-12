@@ -215,11 +215,26 @@ final class EventStore: EventStoring {
 
     /// A batch is identified by its payload ID rather than by a path, so that a batch listed from the directory and the
     /// same batch as it was closed are one thing.
+    /// Requires `ioLock`.
     private func url(of payloadId: String) -> URL {
-        directory.appendingPathComponent("\(EventStore.batchPrefix)\(payloadId)")
+        disk.directory.appendingPathComponent("\(EventStore.batchPrefix)\(payloadId)")
     }
 
-    init(directory: URL,
+    convenience init(directory: URL,
+                     capacity: Int,
+                     persistEvents: Bool = true,
+                     processName: String = ProcessInfo.processInfo.processName,
+                     logger: OSLog,
+                     commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventStore.commitQueue", qos: .userInitiated),
+                     readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
+                     writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }) {
+        self.init(locatingDirectory: { directory }, capacity: capacity, persistEvents: persistEvents, processName: processName,
+                  logger: logger, commitQueue: commitQueue, readFile: readFile, writeLog: writeLog)
+    }
+
+    /// - Parameter locatingDirectory: answers where the batches go. Asked once, and only if the store reaches for the
+    ///   disk, which one told not to persist events never does.
+    init(locatingDirectory: @escaping () -> URL,
          capacity: Int,
          persistEvents: Bool = true,
          processName: String = ProcessInfo.processInfo.processName,
@@ -227,10 +242,10 @@ final class EventStore: EventStoring {
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventStore.commitQueue", qos: .userInitiated),
          readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
          writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }) {
-        self.directory = directory
-        let ioLock = UnfairLock()
-        self.ioLock = ioLock
-        self.diskLog = DiskEventLog(directory: directory, processName: processName, ioLock: ioLock, logger: logger, writeLog: writeLog)
+        self.locateDirectory = locatingDirectory
+        self.processName = processName
+        self.writeLog = writeLog
+        self.ioLock = UnfairLock()
         self.capacity = capacity
         self.logger = logger
         self.commitQueue = commitQueue
@@ -428,7 +443,7 @@ final class EventStore: EventStoring {
     /// Requires `ioLock`.
     private func batchesOnDisk() -> [EventBatch] {
         ioLock.assertOwned()
-        let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
+        let contents = (try? FileManager.default.contentsOfDirectory(at: disk.directory,
                                                                     includingPropertiesForKeys: [.contentModificationDateKey],
                                                                     options: [.skipsHiddenFiles])) ?? []
 
@@ -757,7 +772,7 @@ extension EventStore {
     /// Requires `ioLock`.
     private func payloadsOnDisk() -> [Data] {
         ioLock.assertOwned()
-        let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
+        let contents = (try? FileManager.default.contentsOfDirectory(at: disk.directory,
                                                                     includingPropertiesForKeys: nil,
                                                                     options: [.skipsHiddenFiles])) ?? []
         var logs = contents.filter { $0.lastPathComponent.hasPrefix(EventStore.batchPrefix) }.sorted { $0.path < $1.path }

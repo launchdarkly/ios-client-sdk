@@ -184,8 +184,19 @@ class DirectEventProcessorSpec: QuickSpec {
                 testContext.eventProcessor.record(CustomEvent(key: key, context: testContext.context))
             }
 
-            it("never touches its directory through refusals, a retry, deliveries and a refusal that takes it offline") {
-                testContext = TestContext()
+            it("never works out where its directory is through refusals, a retry, deliveries and a refusal that takes it offline") {
+                let lock = UnfairLock()
+                var located = 0
+                let store = EventStore(locatingDirectory: {
+                                           lock.withLock { located += 1 }
+                                           return FileManager.default.temporaryDirectory
+                                               .appendingPathComponent("com.launchdarkly.tests.events", isDirectory: true)
+                                               .appendingPathComponent(UUID().uuidString, isDirectory: true)
+                                       },
+                                       capacity: Event.Kind.allKinds.count,
+                                       persistEvents: false,
+                                       logger: .disabled)
+                testContext = TestContext(store: store)
                 // Refused and refused again on the retry; then the batch held from that and the next one are accepted;
                 // then the service says the key is no good.
                 testContext.serviceMock.eventStatusForPost = { post in post <= 2 ? 503 : post <= 4 ? 202 : 401 }
@@ -205,7 +216,8 @@ class DirectEventProcessorSpec: QuickSpec {
 
                 expect(testContext.serviceMock.publishEventDataCallCount) == 5
                 expect(acceptedKeys()) == ["refused", "accepted"]
-                expect(FileManager.default.fileExists(atPath: testContext.store.directory.path)) == false
+                testContext.eventProcessor.isOnline = false
+                expect(lock.withLock { located }) == 0
             }
 
             it("keeps the oldest events up to capacity through an outage, and delivers each once in order") {

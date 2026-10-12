@@ -643,6 +643,45 @@ final class EventStoreSpec: QuickSpec {
     }
 
     private func withoutPersistenceSpec() {
+        describe("finding its directory") {
+            for persistEvents in [false, true] {
+                it(persistEvents ? "works out where its directory is once, when it first reaches for the disk"
+                                 : "never works out where its directory is") {
+                    let lock = UnfairLock()
+                    var located = 0
+                    let directory = FileManager.default.temporaryDirectory
+                        .appendingPathComponent("com.launchdarkly.tests.events", isDirectory: true)
+                        .appendingPathComponent(UUID().uuidString, isDirectory: true)
+                    let store = EventStore(locatingDirectory: { lock.withLock { located += 1 }; return directory },
+                                           capacity: 100,
+                                           persistEvents: persistEvents,
+                                           logger: .disabled)
+                    defer { try? FileManager.default.removeItem(at: directory) }
+                    expect(lock.withLock { located }) == 0
+                    #if os(macOS) || targetEnvironment(macCatalyst)
+                    if persistEvents {
+                        store.locksOpenLog = false
+                    }
+                    #endif
+
+                    store.recoverInterruptedLog()
+                    _ = store.stage(EventStoreSpec.payload("first"))
+                    store.commit()
+                    let batch = store.closeBatch()!
+                    _ = store.stage(EventStoreSpec.payload("second"))
+                    expect(store.pendingBatches().map(\.payloadId)) == [batch.payloadId]
+                    expect(EventStoreSpec.keys(ofBody: try store.body(of: batch))) == ["first"]
+                    store.startedSending(batch)
+                    store.stoppedSending(batch)
+                    store.remove(batch)
+                    expect(store.pendingEventPayloads().count) == 1
+                    expect(store.pendingEventCount) == 1
+
+                    expect(lock.withLock { located }) == (persistEvents ? 1 : 0)
+                }
+            }
+        }
+
         describe("the store without persistence") {
             it("lists its batches oldest first, as the store with a disk does") {
                 let store = EventStore.temporary(persistEvents: false)
