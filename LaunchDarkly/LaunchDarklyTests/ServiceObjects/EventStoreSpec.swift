@@ -13,6 +13,7 @@ final class EventStoreSpec: QuickSpec {
         fallbackSpec()
         optOutSpec()
         multiProcessSpec()
+        nullStoreSpec()
         #if os(macOS) || targetEnvironment(macCatalyst)
         sameNameInstancesSpec()
         #endif
@@ -637,6 +638,29 @@ final class EventStoreSpec: QuickSpec {
 
                 expect(store.pendingBatches()) == [other]
                 expect(store.pendingEventCount) == 1
+            }
+        }
+    }
+
+    private func nullStoreSpec() {
+        describe("the store used where there is nowhere to write") {
+            it("lists its batches oldest first, as the store with a disk does") {
+                let store = NullEventStore()
+                var closed: [String] = []
+                // Enough that hash order coming out right by chance is not a worry.
+                for index in 0..<20 {
+                    _ = store.stage(EventStoreSpec.payload("event-\(index)"), bypassingCapacity: false)
+                    if let batch = store.closeBatch() {
+                        closed.append(batch.payloadId)
+                    }
+                }
+
+                expect(store.pendingBatches().map(\.payloadId)) == closed
+
+                store.remove(EventBatch(payloadId: closed[3], eventCount: 1))
+                closed.remove(at: 3)
+                expect(store.pendingBatches().map(\.payloadId)) == closed
+                expect(EventStoreSpec.keys(ofBody: store.body(of: EventBatch(payloadId: closed[3], eventCount: 1)))) == ["event-4"]
             }
         }
     }

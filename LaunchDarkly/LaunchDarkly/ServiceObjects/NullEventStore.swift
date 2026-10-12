@@ -6,10 +6,11 @@ final class NullEventStore: EventStoring {
     private let lock = UnfairLock()
     private var staged: [Data] = []
     private var reserved = 0
-    private var closed: [String: [Data]] = [:]
+    /// Oldest first, as the store with a disk lists its batches, so that delivery goes in the order events were closed.
+    private var closed: [(payloadId: String, events: [Data])] = []
 
     var pendingEventCount: Int {
-        lock.withLock { reserved + staged.count + closed.values.reduce(0) { $0 + $1.count } }
+        lock.withLock { reserved + staged.count + closed.reduce(0) { $0 + $1.events.count } }
     }
 
     var isPersisting: Bool { false }
@@ -46,17 +47,17 @@ final class NullEventStore: EventStoring {
             let payloadId = UUID().uuidString
             let events = staged
             staged = []
-            closed[payloadId] = events
+            closed.append((payloadId, events))
             return EventBatch(payloadId: payloadId, eventCount: events.count)
         }
     }
 
     func pendingBatches() -> [EventBatch] {
-        lock.withLock { closed.map { EventBatch(payloadId: $0.key, eventCount: $0.value.count) } }
+        lock.withLock { closed.map { EventBatch(payloadId: $0.payloadId, eventCount: $0.events.count) } }
     }
 
     func body(of batch: EventBatch) -> Data? {
-        guard let events = lock.withLock({ closed[batch.payloadId] })
+        guard let events = lock.withLock({ closed.first { $0.payloadId == batch.payloadId }?.events })
         else { return nil }
 
         var body = Data("[".utf8)
@@ -71,7 +72,7 @@ final class NullEventStore: EventStoring {
     }
 
     func remove(_ batch: EventBatch) {
-        lock.withLock { closed[batch.payloadId] = nil }
+        lock.withLock { closed.removeAll { $0.payloadId == batch.payloadId } }
     }
 
     func recoverInterruptedLog() {
