@@ -431,6 +431,59 @@ final class EventJSONWriterTests: XCTestCase {
         }
     }
 
+    /// An attribute name is a literal name, not an attribute reference: `/foo` names an attribute called `/foo`, not the
+    /// path `foo`. Only private attributes are references, and they match the name as one component.
+    func testAttributeNamesStartingWithASlashAreWrittenAndRedactedByName() throws {
+        var builder = LDContextBuilder(key: "user-key")
+        _ = builder.trySetValue("/foo", "bar")
+        _ = builder.trySetValue("/secret", "hidden")
+        _ = builder.trySetValue("plain", 1)
+        builder.addPrivateAttribute(Reference("/~1secret"))
+        builder.addPrivateAttribute(Reference("/foo"))
+        let context = try builder.build().get()
+        let event = IdentifyEvent(context: context, creationDate: Date(timeIntervalSince1970: 1_700_000_000))
+
+        func writtenContext(_ data: Data?) throws -> [String: Any] {
+            let object = try JSONSerialization.jsonObject(with: try XCTUnwrap(data)) as? [String: Any]
+            return try XCTUnwrap(object?["context"] as? [String: Any])
+        }
+        func redacted(_ context: [String: Any]) -> [String] {
+            ((context["_meta"] as? [String: Any])?["redactedAttributes"] as? [String]) ?? []
+        }
+
+        for allAttributesPrivate in [false, true] {
+            let codable = Self.makeCodableEncoder(allAttributesPrivate: allAttributesPrivate, globalPrivateAttributes: [])
+            let handWritten = EventJSONWriter(allAttributesPrivate: allAttributesPrivate, globalPrivateAttributes: [])
+            let encoders: [(String, (Event) throws -> Data?)] = [
+                ("Codable", { try codable.encode($0) }),
+                ("hand-written", { handWritten.encode($0) })
+            ]
+            for (name, encode) in encoders {
+                let written = try writtenContext(try encode(event))
+                let label = "\(name), allAttributesPrivate \(allAttributesPrivate)"
+
+                if allAttributesPrivate {
+                    XCTAssertNil(written["/foo"], label)
+                    XCTAssertNil(written["plain"], label)
+                    XCTAssertEqual(Set(redacted(written)), ["/foo", "/secret", "plain"], label)
+                } else {
+                    // `Reference("/foo")` is the path `foo`, which names no attribute here.
+                    XCTAssertEqual(written["/foo"] as? String, "bar", label)
+                    XCTAssertEqual(written["plain"] as? Int, 1, label)
+                    XCTAssertEqual(redacted(written), ["/~1secret"], label)
+                }
+                XCTAssertNil(written["/secret"], label)
+            }
+        }
+
+        // The unredacted form, which `contextHash()` digests, includes the attribute too.
+        let unredacted = JSONEncoder()
+        unredacted.userInfo[LDContext.UserInfoKeys.redactAttributes] = false
+        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: unredacted.encode(context)) as? [String: Any])
+        XCTAssertEqual(json["/foo"] as? String, "bar")
+        XCTAssertEqual(json["/secret"] as? String, "hidden")
+    }
+
     /// Escaping in isolation, over every code point the writer treats specially plus a sample of those it does not.
     func testStringEscaping() throws {
         var scalars: [String] = ["", "plain", "\"", "\\", "/", "\u{07}", "\u{0B}", "\u{7F}", "é", "→", "🎉", "𝄞"]

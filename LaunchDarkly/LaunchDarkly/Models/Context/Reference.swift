@@ -185,8 +185,13 @@ public struct Reference: Codable {
         }
 
         self.init()
-        let str = value.replacingOccurrences(of: "~", with: "~0").replacingOccurrences(of: "/", with: "~1")
-        self.rawPath = str
+        // Without a leading slash a name is already a literal reference, which does not escape. With one, it has to be
+        // written as a one-component path, or it would parse as a path of its own.
+        if value.first == "/" {
+            self.rawPath = "/" + value.replacingOccurrences(of: "~", with: "~0").replacingOccurrences(of: "/", with: "~1")
+        } else {
+            self.rawPath = value
+        }
         self.components = [value]
         self.error = nil
     }
