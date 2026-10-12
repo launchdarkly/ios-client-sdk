@@ -22,7 +22,7 @@ final class OutboundEventBuffer {
     /// Only to be used while holding the processor's `recordLock`.
     private(set) var contextSummarizer: ContextSummarizer
 
-    /// Shared by the threads recording events, so it must not be mutated after `init`.
+    /// Only to be used while holding the processor's `commitLock`.
     private let encoder: JSONEncoder
 
     /// Outlives a commit rather than being built per commit, so that its buffer and context cache span them.
