@@ -666,6 +666,24 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.stage(EventStoreSpec.payload("second"))) == false
             }
 
+            // The bound `LDConfig.eventCapacity` documents: the reporter reads the disk in the background after starting,
+            // so what an earlier run left only counts from that listing on.
+            it("counts what an earlier run left undelivered from the first listing on") {
+                let earlier = EventStore.temporary(capacity: 2)
+                defer { earlier.deleteEverything() }
+                _ = earlier.stage(EventStoreSpec.payload("earlier-1"))
+                _ = earlier.stage(EventStoreSpec.payload("earlier-2"))
+                expect(earlier.closeBatch()).toNot(beNil())
+                store = EventStore(directory: earlier.directory, capacity: 2, logger: .disabled)
+
+                expect(store.stage(EventStoreSpec.payload("before-listing"))) == true
+
+                store.recoverInterruptedLog()
+                expect(store.pendingBatches().count) == 1
+                expect(store.pendingEventCount) == 3
+                expect(store.stage(EventStoreSpec.payload("after-listing"))) == false
+            }
+
             it("counts the events a commit is still writing, so a slow write does not make room") {
                 let writing = DispatchSemaphore(value: 0)
                 let resume = DispatchSemaphore(value: 0)

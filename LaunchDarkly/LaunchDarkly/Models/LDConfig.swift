@@ -342,6 +342,10 @@ public struct LDConfig {
     public var sendEvents: Bool = Defaults.sendEvents
 
     /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 1000)
+    ///
+    /// Where `eventPersistence` keeps events across launches, this includes the events an earlier launch left undelivered, from the
+    /// moment the SDK has read them, which it does in the background just after starting. Events recorded before then are
+    /// counted without them, so for that moment the SDK can hold up to this many on top of what the earlier launch left.
     public var eventCapacity: Int = Defaults.eventCapacity
 
     /// How far the SDK goes to make a recorded event outlive the process that recorded it.
