@@ -527,11 +527,10 @@ final class EventStore: EventStoring {
             // them: a delivery can still close them into a batch and send them.
             guard persistEvents, bufferedEventCount > 0
             else { return nil }
-            defer {
-                bufferData = Data()
-                bufferedEventCount = 0
-            }
-            return (bufferData, bufferedEventCount)
+            let staged = (bytes: bufferData, events: bufferedEventCount)
+            bufferData = Data()
+            bufferedEventCount = 0
+            return staged
         }
         guard let taken
         else { return }
@@ -603,11 +602,10 @@ private extension EventStore {
     /// where there is not.
     func closeInMemoryBatch() -> EventBatch? {
         let (frames, events) = bufferLock.withLock { () -> (Data, Int) in
-            defer {
-                bufferData = Data()
-                bufferedEventCount = 0
-            }
-            return (bufferData, bufferedEventCount)
+            let staged = (bufferData, bufferedEventCount)
+            bufferData = Data()
+            bufferedEventCount = 0
+            return staged
         }
 
         // Assembled through the same reader a batch on disk goes through, so a held batch and a written one produce
