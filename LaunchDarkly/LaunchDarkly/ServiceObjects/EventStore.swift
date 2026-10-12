@@ -119,8 +119,9 @@ final class EventStore: EventStoring {
     private var bufferData = Data()
     private var bufferedEventCount = 0
     private var reservedEvents = 0
-    /// Taken out of the buffer by a commit and not yet in the log. Counted so a slow write cannot open room under
-    /// capacity for events the store is still holding.
+    /// Taken out of the buffer to be written to the log, or assembled into a batch held in memory, and not yet
+    /// counted where they land. Both happen outside `bufferLock`, and for as long as they take the events are in
+    /// neither place; without this they would be counted nowhere, and capacity would admit that many more.
     private var writingEvents = 0
     private var committedEvents = 0
     /// Events in closed batches: the sum of what the directory holds and `inMemoryBatches`. Changed only in the
@@ -473,7 +474,7 @@ extension EventStore {
             let staged = (bytes: bufferData, events: bufferedEventCount)
             bufferData = Data()
             bufferedEventCount = 0
-            writingEvents = staged.events
+            writingEvents += staged.events
             return staged
         }
         guard let taken
@@ -481,14 +482,14 @@ extension EventStore {
 
         if append(taken.bytes) {
             bufferLock.withLock {
-                writingEvents = 0
+                writingEvents -= taken.events
                 committedEvents += taken.events
             }
         } else {
             // Put back, to be delivered from memory rather than lost. Ahead of anything staged while the write was in
             // flight, so the events keep the order they were recorded in.
             bufferLock.withLock {
-                writingEvents = 0
+                writingEvents -= taken.events
                 bufferData = taken.bytes + bufferData
                 bufferedEventCount += taken.events
             }
@@ -541,24 +542,34 @@ private extension EventStore {
     /// Called under `ioLock` where there is a disk, so that it and the log are closed as one step, and on its own
     /// where there is not.
     func closeInMemoryBatch() -> EventBatch? {
-        let (frames, events) = bufferLock.withLock { () -> (Data, Int) in
-            let staged = (bufferData, bufferedEventCount)
+        let (frames, events) = bufferLock.withLock { () -> (frames: Data, events: Int) in
+            let staged = (frames: bufferData, events: bufferedEventCount)
             bufferData = Data()
             bufferedEventCount = 0
+            writingEvents += staged.events
             return staged
         }
 
-        // Assembled through the same reader a batch on disk goes through, so a held batch and a written one produce
-        // byte-identical request bodies.
+        // Assembled outside `bufferLock`, because it copies every staged frame; `writingEvents` is what keeps them
+        // counted meanwhile. Through the same reader a batch on disk goes through, so a held batch and a written one
+        // produce byte-identical request bodies.
         var log = EventLogFormat.fileHeader
         log.append(frames)
         guard let body = EventLogFormat.assembleBody(from: log)
-        else { return nil }
+        else {
+            bufferLock.withLock { writingEvents -= events }
+            return nil
+        }
 
         let payloadId = UUID().uuidString
         heldLock.withLock {
             inMemoryBatches.append(HeldBatch(payloadId: payloadId, body: body, eventCount: events))
-            bufferLock.withLock { closedEvents += events }
+            // Counted where they landed in the same critical section that stops counting them on the way, so a
+            // capacity check never sees them in both places or in neither.
+            bufferLock.withLock {
+                writingEvents -= events
+                closedEvents += events
+            }
         }
 
         return EventBatch(payloadId: payloadId, eventCount: events)
