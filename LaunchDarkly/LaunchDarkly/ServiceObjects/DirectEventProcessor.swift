@@ -40,7 +40,7 @@ class DirectEventProcessor: EventProcessor {
     let store: EventStoring
 
     /// How many events the SDK will hold in total, across `pending` and the store.
-    private let capacity: Int
+    private let eventCapacity: Int
 
     /// Where a commit runs when no caller is waiting on it.
     private let commitQueue: DispatchQueue
@@ -189,7 +189,7 @@ class DirectEventProcessor: EventProcessor {
         self.onSyncComplete = onSyncComplete
         self.responseDate = Date()
         self.encoding = encoding
-        self.capacity = service.config.eventCapacity
+        self.eventCapacity = service.config.eventCapacity
         self.commitQueue = commitQueue
         self.encoder = DirectEventProcessor.makeEncoder(config: service.config)
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger, maxContexts: service.config.eventCapacity)
@@ -279,7 +279,7 @@ class DirectEventProcessor: EventProcessor {
     /// evaluation costs no more than its summary counter, however fast the loop runs.
     private func admitToPending(_ event: Event) -> Bool {
         recordLock.assertOwned()
-        guard pending.count + store.pendingEventCount < capacity
+        guard pending.count + store.pendingEventCount < eventCapacity
         else { return false }
 
         pending.append(event)
