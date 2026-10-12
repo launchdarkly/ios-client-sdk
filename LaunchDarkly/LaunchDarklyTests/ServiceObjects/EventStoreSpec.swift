@@ -705,6 +705,71 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.stage(EventStoreSpec.payload("summary"), bypassingCapacity: true)) == true
                 expect(store.pendingEventCount) == 2
             }
+
+            for persistEvents in [true, false] {
+                it("stops counting a batch once when two deliveries both remove it (persisting: \(persistEvents))") {
+                    store = EventStore.temporary(persistEvents: persistEvents)
+                    _ = store.stage(EventStoreSpec.payload("first"))
+                    let first = store.closeBatch()!
+                    _ = store.stage(EventStoreSpec.payload("second"))
+                    _ = store.closeBatch()
+                    _ = store.pendingBatches()
+
+                    store.remove(first)
+                    store.remove(first)
+
+                    expect(store.pendingEventCount) == 1
+                }
+            }
+
+            it("stops counting a batch once when another process delivered it and a listing came between") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("first"))
+                let first = store.closeBatch()!
+                _ = store.stage(EventStoreSpec.payload("second"))
+                _ = store.closeBatch()
+
+                EventStoreSpec.reader(sharing: store).remove(first)
+                _ = store.pendingBatches()
+                store.remove(first)
+
+                expect(store.pendingEventCount) == 1
+            }
+
+            for persistEvents in [true, false] {
+                it("neither loses nor doubles a batch closed while a listing runs (persisting: \(persistEvents))") {
+                    store = EventStore.temporary(capacity: 100_000, persistEvents: persistEvents)
+                    let listing = store!
+                    let doneLock = UnfairLock()
+                    var done = false
+                    let listerFinished = DispatchSemaphore(value: 0)
+                    DispatchQueue.global().async {
+                        while !doneLock.withLock({ done }) {
+                            _ = listing.pendingBatches()
+                            // The locks are not fair, and without this the listings can hold them so continuously that
+                            // the closes starve.
+                            sched_yield()
+                        }
+                        listerFinished.signal()
+                    }
+
+                    // Checked after every close, because the next listing would correct a miscount before the end of
+                    // the loop could see it.
+                    var miscounts: [String] = []
+                    for closed in 1...150 {
+                        _ = store.stage(EventStoreSpec.payload("event-\(closed)"))
+                        _ = store.closeBatch()
+                        let counted = store.pendingEventCount
+                        if counted != closed {
+                            miscounts.append("\(counted) after \(closed) closes")
+                        }
+                    }
+                    doneLock.withLock { done = true }
+                    listerFinished.wait()
+
+                    expect(miscounts).to(beEmpty())
+                }
+            }
         }
     }
 

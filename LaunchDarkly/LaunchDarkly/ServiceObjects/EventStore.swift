@@ -114,6 +114,9 @@ final class EventStore: EventStoring {
     /// capacity for events the store is still holding.
     private var writingEvents = 0
     private var committedEvents = 0
+    /// Events in closed batches: the sum of `eventCounts` and `inMemoryBatches`. Changed only in the critical section
+    /// that changes one of those, so that it cannot drift from them; a total worked out from them and written
+    /// afterwards would overwrite a close or a removal in between.
     private var closedEvents = 0
     /// Whether events are being written to disk, which is what the application asked for until a write fails and the
     /// store gives up on persistence for the rest of the session.
@@ -146,7 +149,7 @@ final class EventStore: EventStoring {
     ///
     /// Its own lock rather than `ioLock`, so that a store the application told to keep off the disk -- where held
     /// batches are the only ones there are -- never waits on the lock disk I/O is serialized under. Taken inside
-    /// `ioLock` where there is a disk, never the other way round.
+    /// `ioLock` where there is a disk, never the other way round, and taken before `bufferLock`, never after it.
     private let heldLock = UnfairLock()
 
     /// How many events are in each batch this process closed or recovered, so that listing them does not have to read
@@ -356,18 +359,19 @@ final class EventStore: EventStoring {
     func pendingBatches() -> [EventBatch] {
         // Listed in one critical section where there is a disk, so that the files and what is held cannot be counted
         // either side of a close that moves events between them.
-        let batches = readsDisk ? ioLock.withLock { batchesOnDisk() + heldBatches() } : heldBatches()
-
-        bufferLock.withLock { closedEvents = batches.reduce(0) { $0 + $1.eventCount } }
-
-        return batches
+        readsDisk ? ioLock.withLock { heldBatchesAndRecount(after: batchesOnDisk()) } : heldBatchesAndRecount(after: [])
     }
 
-    /// The batches the filesystem would not take, after the files: anything held was closed by this run and so is
-    /// newer than whatever a previous run left on the disk.
-    private func heldBatches() -> [EventBatch] {
+    /// Adds the batches the filesystem would not take, after the files: anything held was closed by this run and so is
+    /// newer than whatever a previous run left on the disk. Then counts everything listed as closed, which is how
+    /// batches another process closed or delivered come to be counted or not.
+    ///
+    /// Requires `ioLock` where there is a disk, so that the count is of the listing as it stands.
+    private func heldBatchesAndRecount(after onDisk: [EventBatch]) -> [EventBatch] {
         heldLock.withLock {
-            inMemoryBatches.map { EventBatch(payloadId: $0.payloadId, eventCount: $0.eventCount) }
+            let batches = onDisk + inMemoryBatches.map { EventBatch(payloadId: $0.payloadId, eventCount: $0.eventCount) }
+            bufferLock.withLock { closedEvents = batches.reduce(0) { $0 + $1.eventCount } }
+            return batches
         }
     }
 
@@ -448,21 +452,24 @@ final class EventStore: EventStoring {
     }
 
     func remove(_ batch: EventBatch) {
+        // Only a count this call takes away stops counting. Two deliveries can both get to the same batch, and a listing
+        // drops a batch another process delivered before this one gets to remove it.
         let wasHeld = heldLock.withLock { () -> Bool in
             guard let index = inMemoryBatches.firstIndex(where: { $0.payloadId == batch.payloadId })
             else { return false }
-            inMemoryBatches.remove(at: index)
+            let held = inMemoryBatches.remove(at: index)
+            bufferLock.withLock { closedEvents -= held.eventCount }
             return true
         }
 
-        if !wasHeld, readsDisk {
-            ioLock.withLock {
-                try? FileManager.default.removeItem(at: url(of: batch.payloadId))
-                eventCounts[batch.payloadId] = nil
+        guard !wasHeld, readsDisk
+        else { return }
+        ioLock.withLock {
+            try? FileManager.default.removeItem(at: url(of: batch.payloadId))
+            if let counted = eventCounts.removeValue(forKey: batch.payloadId) {
+                bufferLock.withLock { closedEvents -= counted }
             }
         }
-
-        bufferLock.withLock { closedEvents = max(0, closedEvents - batch.eventCount) }
     }
 
     /// Closes any log left open by a previous run of this process, so its events join the batches to deliver.
@@ -518,6 +525,7 @@ final class EventStore: EventStoring {
         else { return }
 
         eventCounts[payloadId] = events
+        bufferLock.withLock { closedEvents += events }
         os_log("%s recovered %d event(s) from a previous run", log: logger, type: .debug, typeName(and: #function), events)
     }
 
@@ -627,9 +635,10 @@ private extension EventStore {
         else { return nil }
 
         let payloadId = UUID().uuidString
-        heldLock.withLock { inMemoryBatches.append(HeldBatch(payloadId: payloadId, body: body, eventCount: events)) }
-
-        bufferLock.withLock { closedEvents += events }
+        heldLock.withLock {
+            inMemoryBatches.append(HeldBatch(payloadId: payloadId, body: body, eventCount: events))
+            bufferLock.withLock { closedEvents += events }
+        }
 
         return EventBatch(payloadId: payloadId, eventCount: events)
     }
