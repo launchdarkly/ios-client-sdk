@@ -328,9 +328,8 @@ class EventReporter: EventReporting {
         var dropped = 0
         let (counted, needsCommit) = recordLock.withLock { () -> (Bool, Bool) in
             let counted = contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
-            for event in [featureEvent, debugEvent].compactMap({ $0 }) where !admitToPending(event) {
-                dropped += 1
-            }
+            if let featureEvent, !admitToPending(featureEvent) { dropped += 1 }
+            if let debugEvent, !admitToPending(debugEvent) { dropped += 1 }
             return (counted, pending.count >= EventReporter.pendingCommitThreshold)
         }
 
