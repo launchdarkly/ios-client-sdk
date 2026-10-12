@@ -701,6 +701,7 @@ extension DirectEventProcessor {
     private func publish(_ batch: EventBatch,
                          _ body: Data,
                          _ completion: @escaping (AnalyticsEventSender.Outcome) -> Void) {
+        // The store is settled before observers are told, so that one looking at it on hearing the outcome sees it.
         sender.send(body, payloadId: batch.payloadId, eventCount: batch.eventCount) { outcome in
             switch outcome {
             case .accepted(let serverTime):
@@ -709,12 +710,12 @@ extension DirectEventProcessor {
                         self.responseDate = serverTime
                     }
                 }
-                self.reportSyncComplete(nil)
                 self.store.remove(batch)
+                self.reportSyncComplete(nil)
             case .refused(let response):
                 self.isOnline = false
-                self.reportSyncComplete(.response(response))
                 self.store.remove(batch)
+                self.reportSyncComplete(.response(response))
             case .retryable(let error):
                 self.reportSyncComplete(error)
                 // The batch stays on disk. A later delivery, in this run of the application or the next one, sends it

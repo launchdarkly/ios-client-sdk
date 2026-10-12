@@ -578,6 +578,57 @@ final class DirectEventProcessorSpec: QuickSpec {
                             expect(testContext.syncResult).to(beNil())
                         }
                     }
+                    context("while a commit is stuck writing") {
+                        it("takes the delivered batch out of the store before telling observers") {
+                            let writeStarted = DispatchSemaphore(value: 0)
+                            let finishWrite = DispatchSemaphore(value: 0)
+                            let blockLock = NSLock()
+                            var blockNextWrite = false
+                            // A slow disk, holding the store's I/O, which removing a delivered batch also needs.
+                            let store = EventStore.temporary(writeLog: { file, bytes in
+                                blockLock.lock()
+                                let blocks = blockNextWrite
+                                blockNextWrite = false
+                                blockLock.unlock()
+                                if blocks {
+                                    writeStarted.signal()
+                                    finishWrite.wait()
+                                }
+                                return file.writeAll(bytes)
+                            })
+                            var pendingWhenTold: Int?
+                            testContext = TestContext(onSyncComplete: { _ in
+                                pendingWhenTold = store.pendingEventCount
+                            }, store: store)
+                            let reporter = testContext.eventProcessor!
+                            let context = testContext.context!
+                            reporter.isOnline = true
+                            testContext.serviceMock.holdsEventCompletions = true
+                            reporter.record(CustomEvent(key: "delivered", context: context))
+                            reporter.flush(completion: nil)
+                            expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
+
+                            blockLock.lock()
+                            blockNextWrite = true
+                            blockLock.unlock()
+                            DispatchQueue.global().async {
+                                reporter.record(CustomEvent(key: "written", context: context))
+                            }
+                            expect(writeStarted.wait(timeout: .now() + 2)) == .success
+                            DispatchQueue.global().async {
+                                testContext.serviceMock.releaseHeldEventCompletions()
+                            }
+                            // Long enough for an announcement made ahead of the removal to reach the main thread.
+                            waitUntil { done in
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: done)
+                            }
+                            finishWrite.signal()
+
+                            expect(pendingWhenTold).toEventuallyNot(beNil())
+                            // Only the event still being written. The delivered one was gone before anyone heard.
+                            expect(pendingWhenTold) == 1
+                        }
+                    }
                 }
                 context("failure") {
                     context("server error") {
