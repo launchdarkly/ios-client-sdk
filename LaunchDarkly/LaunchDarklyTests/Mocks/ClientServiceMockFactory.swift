@@ -76,7 +76,9 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     var makeEventProcessorReceivedConfig: LDConfig? = nil
     var makeEventProcessorReceivedService: DarklyServiceProvider? = nil
     var onEventSyncComplete: EventSyncCompleteClosure? = nil
-    func makeEventProcessor(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventProcessor {
+    func makeEventProcessor(config: LDConfig,
+                            service: DarklyServiceProvider,
+                            onSyncComplete: EventSyncCompleteClosure?) -> EventProcessor {
         makeEventProcessorCallCount += 1
         makeEventProcessorReceivedConfig = config
         makeEventProcessorReceivedService = service

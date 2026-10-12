@@ -16,7 +16,9 @@ protocol ClientServiceCreating {
                               onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing
     func makeFlagChangeNotifier() -> FlagChangeNotifying
     func makeEventProcessor(config: LDConfig, service: DarklyServiceProvider) -> EventProcessor
-    func makeEventProcessor(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventProcessor
+    func makeEventProcessor(config: LDConfig,
+                            service: DarklyServiceProvider,
+                            onSyncComplete: EventSyncCompleteClosure?) -> EventProcessor
     func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func makeEnvironmentReporter(config: LDConfig) -> EnvironmentReporting
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling
@@ -70,7 +72,9 @@ final class ClientServiceFactory: ClientServiceCreating {
         makeEventProcessor(config: config, service: service, onSyncComplete: nil)
     }
 
-    func makeEventProcessor(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure? = nil) -> EventProcessor {
+    func makeEventProcessor(config: LDConfig,
+                            service: DarklyServiceProvider,
+                            onSyncComplete: EventSyncCompleteClosure? = nil) -> EventProcessor {
         if config.sendEvents {
             return DirectEventProcessor(service: service, onSyncComplete: onSyncComplete)
         } else {

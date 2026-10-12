@@ -44,7 +44,11 @@ final class OutboundEventBuffer {
     ///
     /// - Returns: false if the evaluation was not counted, because its context is not counted yet and as many contexts
     ///   as the summarizer allows already are.
-    func summarize(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue, context: LDContext) -> Bool {
+    func summarize(flagKey: LDFlagKey,
+                   reportedValue: LDValue,
+                   featureFlag: FeatureFlag?,
+                   defaultValue: LDValue,
+                   context: LDContext) -> Bool {
         contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: reportedValue, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
     }
 

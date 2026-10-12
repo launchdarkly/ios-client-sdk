@@ -47,7 +47,11 @@ final class DiskEventLog {
     var isLocked = true
     #endif
 
-    init(directory: URL, processName: String, ioLock: UnfairLock, logger: OSLog, writeLog: @escaping (EventLogFile, Data) -> Int32?) {
+    init(directory: URL,
+         processName: String,
+         ioLock: UnfairLock,
+         logger: OSLog,
+         writeLog: @escaping (EventLogFile, Data) -> Int32?) {
         self.directory = directory
         self.ioLock = ioLock
         self.logger = logger

@@ -696,7 +696,9 @@ class DirectEventProcessor: EventProcessor {
     }
 
     /// Sends one batch and acts on what LaunchDarkly made of it, before handing the outcome on.
-    private func publish(_ batch: EventBatch, _ body: Data, _ completion: @escaping (AnalyticsEventSender.Outcome) -> Void) {
+    private func publish(_ batch: EventBatch,
+                         _ body: Data,
+                         _ completion: @escaping (AnalyticsEventSender.Outcome) -> Void) {
         sender.send(body, payloadId: batch.payloadId, eventCount: batch.eventCount) { outcome in
             switch outcome {
             case .accepted(let serverTime):
