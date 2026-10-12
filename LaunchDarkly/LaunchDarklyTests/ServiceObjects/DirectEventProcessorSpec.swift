@@ -300,7 +300,7 @@ final class DirectEventProcessorSpec: QuickSpec {
             var reporter: DirectEventProcessor!
             var store: EventStore!
 
-            func makeReporter(encoding: DirectEventProcessor.Encoding) -> DirectEventProcessor {
+            func makeReporter(encoding: OutboundEventBuffer.Encoding) -> DirectEventProcessor {
                 var config = LDConfig.stub
                 config.eventCapacity = 8
                 ldContext = LDContext.stub()
@@ -315,7 +315,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                 reporter?.isOnline = false
             }
 
-            for encoding in [DirectEventProcessor.Encoding.codable, .handWritten] {
+            for encoding in [OutboundEventBuffer.Encoding.codable, .handWritten] {
                 context("\(encoding): when an event holds a non-finite metric") {
                     beforeEach {
                         reporter = makeReporter(encoding: encoding)
@@ -410,7 +410,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                         }
                         expect(serviceMock.publishEventDataCallCount) == 0
                         expect(store.pendingEventCount) == 0
-                        expect(reporter.contextSummarizer.hasLoggedRequests) == false
+                        expect(reporter.eventBuffer.contextSummarizer.hasLoggedRequests) == false
 
                         waitUntil { done in
                             reporter.recordFlagEvaluationEvents(flagKey: "after-poison",
@@ -490,7 +490,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.store.pendingEventCount) == 0
                             expect(testContext.eventProcessor.lastEventResponseDate) == testContext.eventStubResponseDate
-                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.eventBuffer.contextSummarizer.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
                         }
                     }
@@ -515,7 +515,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == testContext.events.count
                             expect(testContext.store.pendingEventCount) == 0
                             expect(testContext.eventProcessor.lastEventResponseDate) == testContext.eventStubResponseDate
-                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.eventBuffer.contextSummarizer.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
                         }
                     }
@@ -553,7 +553,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == 1
                             expect(testContext.store.pendingEventCount) == 0
                             expect(testContext.eventProcessor.lastEventResponseDate) == testContext.eventStubResponseDate
-                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.eventBuffer.contextSummarizer.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
                         }
                     }
@@ -574,7 +574,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
                             expect(testContext.store.pendingEventCount) == 0
                             expect(testContext.eventProcessor.lastEventResponseDate) == Date.distantPast
-                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.eventBuffer.contextSummarizer.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
                         }
                     }
@@ -617,7 +617,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventProcessor.lastEventResponseDate) == Date.distantPast
-                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.eventBuffer.contextSummarizer.hasLoggedRequests) == false
                             guard case let .request(error) = testContext.syncResult
                             else {
                                 fail("Expected error result for event send")
@@ -663,7 +663,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventProcessor.lastEventResponseDate) == Date.distantPast
-                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.eventBuffer.contextSummarizer.hasLoggedRequests) == false
                             let expectedError = testContext.serviceMock.errorEventHTTPURLResponse
                             guard case let .response(error) = testContext.syncResult
                             else {
@@ -712,7 +712,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.eventProcessor.lastEventResponseDate) == Date.distantPast
-                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.eventBuffer.contextSummarizer.hasLoggedRequests) == false
                             guard case let .request(error) = testContext.syncResult
                             else {
                                 fail("Expected error result for event send")
@@ -789,7 +789,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                     let pending = testContext.committedEvents()
                     expect(pending.dropLast().map { $0 }) == testContext.recordedEventsAsJSON()
                     expect(pending.last?.kindField) == "summary"
-                    expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
+                    expect(testContext.eventProcessor.eventBuffer.contextSummarizer.hasLoggedRequests) == false
                     guard case .isOffline = testContext.syncResult
                     else {
                         fail("Expected error .isOffline result for event send")
@@ -833,7 +833,7 @@ final class DirectEventProcessorSpec: QuickSpec {
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: tracked, context: LDContext.stub(key: "c"), includeReason: false)
 
                 expect(diagnosticCache.incrementDroppedEventCountCallCount) == 1
-                expect(reporter.contextSummarizer.getSummaries().count) == 2
+                expect(reporter.eventBuffer.contextSummarizer.getSummaries().count) == 2
                 reporter.commitRecordedEvents()
                 expect(recordedEvents(store).compactMap { $0.kindField }) == ["feature", "summary", "summary"]
             }
@@ -842,8 +842,8 @@ final class DirectEventProcessorSpec: QuickSpec {
                 defer { store.deleteEverything() }
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: nil, context: context, includeReason: true)
                 expect(recordedEvents(store)).to(beEmpty())
-                expect(reporter.contextSummarizer.hasLoggedRequests) == true
-                let summaries = reporter.contextSummarizer.getSummaries()
+                expect(reporter.eventBuffer.contextSummarizer.hasLoggedRequests) == true
+                let summaries = reporter.eventBuffer.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
                 let tracker = summaries[0].tracker
                 expect(tracker.flagCounters["flag-key"]?.defaultValue) == "b"
@@ -857,8 +857,8 @@ final class DirectEventProcessorSpec: QuickSpec {
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: true)
                 expect(recordedEvents(store)).to(beEmpty())
-                expect(reporter.contextSummarizer.hasLoggedRequests) == true
-                let summaries = reporter.contextSummarizer.getSummaries()
+                expect(reporter.eventBuffer.contextSummarizer.hasLoggedRequests) == true
+                let summaries = reporter.eventBuffer.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
                 let tracker = summaries[0].tracker
                 expect(tracker.flagCounters["flag-key"]?.defaultValue) == "b"
@@ -874,8 +874,8 @@ final class DirectEventProcessorSpec: QuickSpec {
                 let expected = FeatureEvent(key: "flag-key", context: context, value: "a", defaultValue: "b", featureFlag: flag, includeReason: true, isDebug: false)
                 expect(expectedEvents(reporter.pendingEventsForTesting)) == expectedEvents([expected])
                 expect(recordedEvents(store)).to(beEmpty())
-                expect(reporter.contextSummarizer.hasLoggedRequests) == true
-                let summaries = reporter.contextSummarizer.getSummaries()
+                expect(reporter.eventBuffer.contextSummarizer.hasLoggedRequests) == true
+                let summaries = reporter.eventBuffer.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
                 let tracker = summaries[0].tracker
                 expect(tracker.flagCounters["flag-key"]?.defaultValue) == "b"
@@ -889,8 +889,8 @@ final class DirectEventProcessorSpec: QuickSpec {
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(-1.0))
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: true)
                 expect(recordedEvents(store)).to(beEmpty())
-                expect(reporter.contextSummarizer.hasLoggedRequests) == true
-                let summaries = reporter.contextSummarizer.getSummaries()
+                expect(reporter.eventBuffer.contextSummarizer.hasLoggedRequests) == true
+                let summaries = reporter.eventBuffer.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
                 let tracker = summaries[0].tracker
                 expect(tracker.flagCounters["flag-key"]?.defaultValue) == "b"
@@ -906,8 +906,8 @@ final class DirectEventProcessorSpec: QuickSpec {
                 let expected = FeatureEvent(key: "flag-key", context: context, value: "a", defaultValue: "b", featureFlag: flag, includeReason: false, isDebug: true)
                 expect(expectedEvents(reporter.pendingEventsForTesting)) == expectedEvents([expected])
                 expect(recordedEvents(store)).to(beEmpty())
-                expect(reporter.contextSummarizer.hasLoggedRequests) == true
-                let summaries = reporter.contextSummarizer.getSummaries()
+                expect(reporter.eventBuffer.contextSummarizer.hasLoggedRequests) == true
+                let summaries = reporter.eventBuffer.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
                 let tracker = summaries[0].tracker
                 expect(tracker.flagCounters["flag-key"]?.defaultValue) == "b"
@@ -922,8 +922,8 @@ final class DirectEventProcessorSpec: QuickSpec {
                 let flag = FeatureFlag(flagKey: "unused", value: nil, variation: 1, flagVersion: 2, trackEvents: false, debugEventsUntilDate: Date().addingTimeInterval(3.0))
                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: true)
                 expect(recordedEvents(store)).to(beEmpty())
-                expect(reporter.contextSummarizer.hasLoggedRequests) == true
-                let summaries = reporter.contextSummarizer.getSummaries()
+                expect(reporter.eventBuffer.contextSummarizer.hasLoggedRequests) == true
+                let summaries = reporter.eventBuffer.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
                 let tracker = summaries[0].tracker
                 expect(tracker.flagCounters["flag-key"]?.defaultValue) == "b"
@@ -941,8 +941,8 @@ final class DirectEventProcessorSpec: QuickSpec {
                 let expectedDebug = FeatureEvent(key: "flag-key", context: context, value: "a", defaultValue: "b", featureFlag: flag, includeReason: false, isDebug: true)
                 expect(expectedEvents(reporter.pendingEventsForTesting)) == expectedEvents([expectedFeature, expectedDebug])
                 expect(recordedEvents(store)).to(beEmpty())
-                expect(reporter.contextSummarizer.hasLoggedRequests) == true
-                let summaries = reporter.contextSummarizer.getSummaries()
+                expect(reporter.eventBuffer.contextSummarizer.hasLoggedRequests) == true
+                let summaries = reporter.eventBuffer.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
                 let tracker = summaries[0].tracker
                 expect(tracker.flagCounters["flag-key"]?.defaultValue) == "b"
@@ -968,8 +968,8 @@ final class DirectEventProcessorSpec: QuickSpec {
                 expect(held.filter { $0.kindField == "feature" }.count) == 10
                 expect(held.filter { $0.kindField == "debug" }.count) == 10
                 expect(recordedEvents(store)).to(beEmpty())
-                expect(reporter.contextSummarizer.hasLoggedRequests) == true
-                let summaries = reporter.contextSummarizer.getSummaries()
+                expect(reporter.eventBuffer.contextSummarizer.hasLoggedRequests) == true
+                let summaries = reporter.eventBuffer.contextSummarizer.getSummaries()
                 expect(summaries.count) == 1
                 let tracker = summaries[0].tracker
                 expect(tracker.flagCounters["flag-key"]?.defaultValue) == "b"

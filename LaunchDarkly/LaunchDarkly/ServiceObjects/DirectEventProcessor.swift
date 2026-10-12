@@ -47,10 +47,8 @@ class DirectEventProcessor: EventProcessor {
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
-    /// Shared by the threads recording events, so it must not be mutated after `init`.
-    private let encoder: JSONEncoder
-
-    let encoding: Encoding
+    /// Its summarizer is guarded by `recordLock`, and its encoders are reached only under `commitLock`.
+    let eventBuffer: OutboundEventBuffer
 
     // MARK: Guarded by commitLock
 
@@ -65,12 +63,6 @@ class DirectEventProcessor: EventProcessor {
     /// Taken before `recordLock` and before anything the store locks, never after.
     private let commitLock = UnfairLock()
 
-    /// Outlives a commit rather than being built per commit, so that its buffer and context cache span them.
-    ///
-    /// A commit point writes a single event, so a cache that lived for one commit would never be read. It needs no
-    /// lock of its own because it is only ever reached from `encode(_:)`, which runs under `commitLock`.
-    fileprivate let eventJSONWriter: EventJSONWriter
-
     // MARK: Guarded by recordLock
 
     /// Guards everything one recording writes: the held events and the summarizer.
@@ -82,9 +74,6 @@ class DirectEventProcessor: EventProcessor {
     /// than a queue because it is taken once per evaluation, and a `DispatchQueue.sync` costs enough at that rate to be
     /// worth avoiding: the same measurement that made `EvaluationExposureDeduper` a lock applies here.
     private let recordLock = UnfairLock()
-
-    /// Only to be used while holding `recordLock`.
-    private(set) var contextSummarizer: ContextSummarizer
 
     /// Full events recorded but not yet encoded. Only to be used while holding `recordLock`.
     ///
@@ -182,17 +171,14 @@ class DirectEventProcessor: EventProcessor {
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
          store: EventStoring? = nil,
-         encoding: Encoding = .handWritten,
+         encoding: OutboundEventBuffer.Encoding = .handWritten,
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.DirectEventProcessor.commitQueue", qos: .userInitiated)) {
-        self.eventJSONWriter = EventJSONWriter(config: service.config)
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.responseDate = Date()
-        self.encoding = encoding
         self.eventCapacity = service.config.eventCapacity
         self.commitQueue = commitQueue
-        self.encoder = DirectEventProcessor.makeEncoder(config: service.config)
-        self.contextSummarizer = ContextSummarizer(logger: service.config.logger, maxContexts: service.config.eventCapacity)
+        self.eventBuffer = OutboundEventBuffer(config: service.config, encoding: encoding)
         self.store = store ?? DirectEventProcessor.makeStore(config: service.config)
 
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
@@ -248,7 +234,7 @@ class DirectEventProcessor: EventProcessor {
 
         var dropped = 0
         let (counted, needsCommit) = recordLock.withLock { () -> (Bool, Bool) in
-            let counted = contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
+            let counted = eventBuffer.summarize(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
             if let featureEvent, !admitToPending(featureEvent) { dropped += 1 }
             if let debugEvent, !admitToPending(debugEvent) { dropped += 1 }
             return (counted, pending.count >= DirectEventProcessor.pendingCommitThreshold)
@@ -385,10 +371,7 @@ class DirectEventProcessor: EventProcessor {
         let (run, summaries) = recordLock.withLock { () -> ([Event], [(tracker: FlagRequestTracker, context: LDContext)]) in
             let run = pending
             pending = []
-            let summaries = contextSummarizer.hasLoggedRequests ? contextSummarizer.getSummaries() : []
-            if !summaries.isEmpty {
-                contextSummarizer.clear()
-            }
+            let summaries = eventBuffer.takeSummaries()
             // Reserved in the same critical section the run leaves `pending` in, so capacity counts it in one place or
             // the other throughout the encode.
             store.reserve(run.count)
@@ -412,7 +395,7 @@ class DirectEventProcessor: EventProcessor {
     private func stage(_ run: [Event]) {
         commitLock.assertOwned()
         for event in run {
-            guard let encoded = encode(event)
+            guard let encoded = eventBuffer.encode(event)
             else {
                 reportLost()
                 continue
@@ -443,8 +426,7 @@ class DirectEventProcessor: EventProcessor {
     /// counted the same as one that produced a single summary covering the same evaluations.
     private func stageSummaries(_ summaries: [(tracker: FlagRequestTracker, context: LDContext)]) {
         for summary in summaries {
-            let summaryEvent = SummaryEvent(flagRequestTracker: summary.tracker, context: summary.context)
-            guard let encoded = encode(summaryEvent)
+            guard let encoded = eventBuffer.encodeSummary(summary)
             else {
                 reportLost()
                 continue
@@ -455,16 +437,6 @@ class DirectEventProcessor: EventProcessor {
                 reportLost()
             }
         }
-    }
-
-    private func encode(_ event: Event) -> Data? {
-        let encoded: Data? = encoding == .codable ? try? encoder.encode(event) : eventJSONWriter.encode(event)
-        guard let encoded = encoded
-        else {
-            os_log("%s Failed to serialize event for publication: %s", log: service.config.logger, type: .error, typeName(and: #function), String(describing: event))
-            return nil
-        }
-        return encoded
     }
 
     // MARK: Reporting
@@ -798,30 +770,6 @@ class DirectEventProcessor: EventProcessor {
         DispatchQueue.main.async {
             onSyncComplete(result)
         }
-    }
-}
-
-extension DirectEventProcessor {
-    /// Which encoder recorded events go through.
-    ///
-    /// `.codable` is the reference `.handWritten` is tested against. The two produce equal JSON but not identical
-    /// bytes: key order differs, as do `/` against `\/` and `0` against `-0`.
-    enum Encoding {
-        case codable
-        case handWritten
-    }
-
-    fileprivate static func makeEncoder(config: LDConfig) -> JSONEncoder {
-        let encoder = JSONEncoder()
-        encoder.userInfo = [
-            LDContext.UserInfoKeys.allAttributesPrivate: config.allContextAttributesPrivate,
-            LDContext.UserInfoKeys.globalPrivateAttributes: config.privateContextAttributes.map { $0 }
-        ]
-        encoder.dateEncodingStrategy = .custom { date, encoder in
-            var container = encoder.singleValueContainer()
-            try container.encode(date.millisSince1970)
-        }
-        return encoder
     }
 }
 
