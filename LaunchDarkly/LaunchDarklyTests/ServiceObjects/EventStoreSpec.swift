@@ -330,52 +330,20 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["committed"]
             }
 
-            it("commits without being asked once enough has been staged") {
-                // No commit point is reached and nothing is flushed, so only the staging threshold can have written these.
+            it("never writes on its own, however much is staged") {
+                // When to write is the caller's decision. 64 KB is well past what a store that wrote on its own would
+                // let build up.
                 let event = EventStoreSpec.payload(String(repeating: "p", count: 1_024))
-                for _ in 0..<32 {
+                for _ in 0..<64 {
                     _ = store.stage(event)
                 }
 
-                expect(EventStoreSpec.reader(sharing: store).pendingEventPayloads()).toEventuallyNot(beEmpty())
-            }
+                expect(EventStoreSpec.reader(sharing: store).pendingEventPayloads()).to(beEmpty())
+                expect(store.pendingEventCount) == 64
 
-            it("does not write on the thread that staged the event") {
-                // Suspended, so any write this thread was going to cause is a write that cannot happen.
-                let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
-                commits.suspend()
-                let deferring = EventStore.temporary(commitQueue: commits)
-                // Resumed in the body rather than here: a queue resumed twice traps.
-                defer { deferring.deleteEverything() }
+                store.commit()
 
-                let event = EventStoreSpec.payload(String(repeating: "p", count: 1_024))
-                for _ in 0..<64 {
-                    _ = deferring.stage(event)
-                }
-
-                expect(EventStoreSpec.reader(sharing: deferring).pendingEventPayloads()).to(beEmpty())
-                expect(deferring.pendingEventCount) == 64
-
-                commits.resume()
-
-                expect(EventStoreSpec.reader(sharing: deferring).pendingEventPayloads().count).toEventually(equal(64))
-            }
-
-            it("still writes on the caller's thread when the caller is at a commit point") {
-                // The same suspended queue, to show a commit point does not depend on it: `commit()` is the caller's
-                // guarantee that the event outlived them, so it cannot be handed to someone else.
-                let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
-                commits.suspend()
-                let committing = EventStore.temporary(commitQueue: commits)
-                defer {
-                    commits.resume()
-                    committing.deleteEverything()
-                }
-
-                _ = committing.stage(EventStoreSpec.payload("tracked"))
-                committing.commit()
-
-                expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: committing))) == ["tracked"]
+                expect(EventStoreSpec.reader(sharing: store).pendingEventPayloads().count) == 64
             }
 
             it("keeps events in the order they were recorded") {

@@ -32,6 +32,9 @@ class DirectEventProcessor: EventProcessor {
     /// The second is the worst a commit point can cost, since it encodes whatever is held before returning. The common
     /// case is far below the bound, because the commit queue keeps the run drained; raising this trades that tail
     /// against the number of writes.
+    ///
+    /// It is the only thing that writes events no caller asked to have written. The store writes only when told to, so
+    /// every staged byte reaches the disk through a commit that started here, at a commit point, or at a delivery.
     private static let pendingCommitThreshold = 32
 
     // MARK: Set in init and never changed

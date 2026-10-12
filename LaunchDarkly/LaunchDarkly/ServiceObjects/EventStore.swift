@@ -26,7 +26,8 @@ protocol EventStoring {
 
     /// Stages an already encoded event, returning false if it was dropped because `capacity` is reached.
     ///
-    /// Staging is a copy into a buffer; `commit()` is what makes the event outlive the process.
+    /// Staging is a copy into a buffer, and never writes however much is staged; `commit()` is what makes the event
+    /// outlive the process, and deciding when to call it is the caller's.
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool
 
     /// Counts events that have been accepted but are still being encoded, so capacity sees them until they are staged.
@@ -87,12 +88,6 @@ protocol EventStoring {
 /// `EventDirectory` and `DiskEventLog`. This is what decides when events move between memory, that log, and the
 /// batches closed off for delivery, and what counts them against capacity on the way.
 final class EventStore: EventStoring {
-    /// How many staged bytes are allowed to accumulate before one of them pays for a write.
-    ///
-    /// This is what keeps a syscall off most recordings while bounding what a crash can take with it, for an
-    /// application that only evaluates flags and so never reaches a commit point of its own.
-    private static let stagingThreshold = 16 * 1024
-
     /// Where the events are kept, or nil where the application asked for them to be kept off the disk.
     ///
     /// Nil rather than a directory this store is careful never to use, so that there is nowhere for it to write and
@@ -102,11 +97,6 @@ final class EventStore: EventStoring {
     private let disk: EventDirectory?
     private let capacity: Int
     private let logger: OSLog
-    /// Where a commit runs when it was not asked for by a caller who needs it to have happened.
-    ///
-    /// Evaluating a flag must not put a write on whichever thread evaluated it, and that thread is usually the main one.
-    /// A caller at a commit point still commits synchronously, because for them having returned is the guarantee.
-    private let commitQueue: DispatchQueue
 
     /// Guards the buffer and the counters. It is held for a copy and never across a syscall, so an evaluation
     /// recording an event waits on another thread's memcpy at worst, never on the disk.
@@ -135,8 +125,6 @@ final class EventStore: EventStoring {
     /// Whether events are being written to disk, which is what the application asked for until a write fails and the
     /// store gives up on persistence for the rest of the session.
     private var persistEvents = true
-    /// Whether a commit is already on its way, so that a burst of recordings queues one write rather than one each.
-    private var isCommitScheduled = false
 
     /// Batches held in memory because the filesystem would not take them, or because it was never asked.
     ///
@@ -177,11 +165,10 @@ final class EventStore: EventStoring {
                      persistEvents: Bool = true,
                      processName: String = ProcessInfo.processInfo.processName,
                      logger: OSLog,
-                     commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventStore.commitQueue", qos: .userInitiated),
                      readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
                      writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }) {
         self.init(locatingDirectory: { directory }, capacity: capacity, persistEvents: persistEvents, processName: processName,
-                  logger: logger, commitQueue: commitQueue, readFile: readFile, writeLog: writeLog)
+                  logger: logger, readFile: readFile, writeLog: writeLog)
     }
 
     /// - Parameter locatingDirectory: answers where the batches go. Asked once, and only if the store reaches for the
@@ -191,14 +178,12 @@ final class EventStore: EventStoring {
          persistEvents: Bool = true,
          processName: String = ProcessInfo.processInfo.processName,
          logger: OSLog,
-         commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventStore.commitQueue", qos: .userInitiated),
          readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
          writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }) {
         let ioLock = UnfairLock()
         self.ioLock = ioLock
         self.capacity = capacity
         self.logger = logger
-        self.commitQueue = commitQueue
         // An application that has not asked for persistence gets the same store running the same way it runs once a
         // write has failed: events are held, delivered, and lost only if the process dies. It gets no directory at
         // all, so there is nothing for it to write to and nothing of a previous run's for it to read.
@@ -254,10 +239,9 @@ final class EventStore: EventStoring {
             return false
         }
 
-        // Whether the staged bytes are due a write, or nil where the event was refused for capacity.
-        let needsCommit = bufferLock.withLock { () -> Bool? in
+        return bufferLock.withLock {
             guard bypassingCapacity || countedEvents < capacity
-            else { return nil }
+            else { return false }
 
             // In the same critical section as the append, so the event is never counted twice or not at all.
             if usingReservation {
@@ -265,34 +249,8 @@ final class EventStore: EventStoring {
             }
             bufferData.append(EventLogFormat.frame(for: encodedEvent))
             bufferedEventCount += 1
-            // Nothing to schedule once persistence has been given up on: there is nowhere for a commit to put these
-            // bytes, so they stay in memory until a delivery closes them into a batch.
-            let due = persistEvents && bufferData.count >= EventStore.stagingThreshold && !isCommitScheduled
-            if due {
-                isCommitScheduled = true
-            }
-            return due
+            return true
         }
-        guard let needsCommit
-        else { return false }
-
-        // Handed to another thread rather than done here. Recording an event is something a flag evaluation does, and an
-        // evaluation is expected to be a memory operation: the caller is usually the main thread, where a write that
-        // happens to find a busy filesystem is a stall an application cannot do anything about.
-        if needsCommit {
-            commitQueue.async { [weak self] in
-                self?.commitScheduled()
-            }
-        }
-        return true
-    }
-
-    private func commitScheduled() {
-        // Cleared before the commit rather than after it, so that an event staged while this write is in flight can ask
-        // for another one instead of finding a commit apparently already on its way and waiting for a commit point.
-        bufferLock.withLock { isCommitScheduled = false }
-
-        commit()
     }
 
     func commit() {

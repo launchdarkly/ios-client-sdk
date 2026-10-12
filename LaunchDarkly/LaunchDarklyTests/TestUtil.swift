@@ -57,7 +57,6 @@ extension EventStore {
     static func temporary(
         capacity: Int = 100,
         persistEvents: Bool = true,
-        commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.commitQueue"),
         readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
         writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }
     ) -> EventStore {
@@ -66,7 +65,6 @@ extension EventStore {
                                    capacity: capacity,
                                    persistEvents: persistEvents,
                                    logger: .disabled,
-                                   commitQueue: commitQueue,
                                    readFile: readFile,
                                    writeLog: writeLog))
     }
