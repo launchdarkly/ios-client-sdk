@@ -666,6 +666,38 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.stage(EventStoreSpec.payload("second"))) == false
             }
 
+            it("counts the events a commit is still writing, so a slow write does not make room") {
+                let writing = DispatchSemaphore(value: 0)
+                let resume = DispatchSemaphore(value: 0)
+                var blocked = false
+                store = EventStore.temporary(capacity: 2, writeLog: { file, bytes in
+                    if !blocked {
+                        blocked = true
+                        writing.signal()
+                        resume.wait()
+                    }
+                    return file.writeAll(bytes)
+                })
+                expect(store.stage(EventStoreSpec.payload("first"))) == true
+                expect(store.stage(EventStoreSpec.payload("second"))) == true
+
+                let committed = DispatchSemaphore(value: 0)
+                DispatchQueue.global().async {
+                    store.commit()
+                    committed.signal()
+                }
+                writing.wait()
+
+                expect(store.pendingEventCount) == 2
+                expect(store.stage(EventStoreSpec.payload("third"))) == false
+
+                resume.signal()
+                committed.wait()
+
+                expect(store.pendingEventCount) == 2
+                expect(store.stage(EventStoreSpec.payload("fourth"))) == false
+            }
+
             it("takes a summary even when it is full, since those evaluations were already counted") {
                 store = EventStore.temporary(capacity: 1)
 

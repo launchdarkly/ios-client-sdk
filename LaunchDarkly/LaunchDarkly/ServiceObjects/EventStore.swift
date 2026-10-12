@@ -110,6 +110,9 @@ final class EventStore: EventStoring {
     private var bufferData = Data()
     private var bufferedEventCount = 0
     private var reservedEvents = 0
+    /// Taken out of the buffer by a commit and not yet in the log. Counted so a slow write cannot open room under
+    /// capacity for events the store is still holding.
+    private var writingEvents = 0
     private var committedEvents = 0
     private var closedEvents = 0
     /// Whether events are being written to disk, which is what the application asked for until a write fails and the
@@ -200,7 +203,7 @@ final class EventStore: EventStoring {
     // MARK: Recording
 
     var pendingEventCount: Int {
-        bufferLock.withLock { reservedEvents + bufferedEventCount + committedEvents + closedEvents }
+        bufferLock.withLock { reservedEvents + bufferedEventCount + writingEvents + committedEvents + closedEvents }
     }
 
     var isPersisting: Bool {
@@ -235,7 +238,8 @@ final class EventStore: EventStoring {
 
         // Whether the staged bytes are due a write, or nil where the event was refused for capacity.
         let needsCommit = bufferLock.withLock { () -> Bool? in
-            guard bypassingCapacity || reservedEvents + bufferedEventCount + committedEvents + closedEvents < capacity
+            guard bypassingCapacity
+                    || reservedEvents + bufferedEventCount + writingEvents + committedEvents + closedEvents < capacity
             else { return nil }
 
             // In the same critical section as the append, so the event is never counted twice or not at all.
@@ -530,17 +534,22 @@ final class EventStore: EventStoring {
             let staged = (bytes: bufferData, events: bufferedEventCount)
             bufferData = Data()
             bufferedEventCount = 0
+            writingEvents = staged.events
             return staged
         }
         guard let taken
         else { return }
 
         if append(taken.bytes) {
-            bufferLock.withLock { committedEvents += taken.events }
+            bufferLock.withLock {
+                writingEvents = 0
+                committedEvents += taken.events
+            }
         } else {
             // Put back, to be delivered from memory rather than lost. Ahead of anything staged while the write was in
             // flight, so the events keep the order they were recorded in.
             bufferLock.withLock {
+                writingEvents = 0
                 bufferData = taken.bytes + bufferData
                 bufferedEventCount += taken.events
             }
