@@ -16,7 +16,15 @@ import OSLog
 /// The lock is handed down so that each call can check it is held, rather than each level taking a lock of its own
 /// that would have to be ordered against the others.
 final class EventDirectory {
-    /// Names a log that has been closed off for delivery; the rest of the name is the batch's payload ID.
+    /// Names a log that has been closed off for delivery. The rest of the name is the batch's payload ID and how many
+    /// events are in it, `ready-<payloadId>-<count>`.
+    ///
+    /// The count is in the name so that listing a batch this process did not close costs a directory entry rather than
+    /// a read of the whole file. That is what every batch is at startup: the ones a previous run left behind, and the
+    /// ones belonging to another process sharing the environment. Reading them all is done holding `ioLock`, which a
+    /// commit at a commit point then waits behind.
+    ///
+    /// A batch is never appended to once it is closed, so the count is as good as the file is.
     private static let batchPrefix = "ready-"
 
     private let locateDirectory: () -> URL
@@ -33,15 +41,21 @@ final class EventDirectory {
     /// Whether a log left by a previous run has been dealt with. Only to be used while holding `ioLock`.
     private var hasRecoveredInterruptedLog = false
 
-    /// How many events are in each batch this process closed or recovered, so that listing them does not have to read
-    /// them back.
+    /// A batch in the directory: the file it is, and how many events it holds.
+    private struct Stored {
+        let url: URL
+        let events: Int
+    }
+
+    /// What this process knows about each batch in the directory, by payload ID, which is how everything outside this
+    /// class names one.
     ///
-    /// A batch is never appended to once it is closed, so a count taken at the close holds until the batch is
-    /// delivered. Without this, listing reads every batch file in full while holding `ioLock`, and a commit at a
-    /// commit point can end up waiting behind those reads.
+    /// The file is remembered rather than composed from the payload ID, because the count is part of the name and a
+    /// batch closed by a version that did not write one has no count to compose. The count is remembered so that such
+    /// a batch is read at most once.
     ///
     /// Only to be used while holding `ioLock`.
-    private var eventCounts: [String: Int] = [:]
+    private var stored: [String: Stored] = [:]
 
     /// Batches LaunchDarkly has accepted whose file the filesystem would not let go of.
     ///
@@ -109,8 +123,32 @@ final class EventDirectory {
 
     /// A batch is identified by its payload ID rather than by a path, so that a batch listed from the directory and
     /// the same batch as it was closed are one thing. Requires `ioLock`.
-    private func url(of payloadId: String) -> URL {
-        disk.directory.appendingPathComponent("\(EventDirectory.batchPrefix)\(payloadId)")
+    ///
+    /// - Parameter events: what the caller holding the batch knows it to contain, which is what names it where this
+    ///   process has neither closed nor listed it -- as when it delivers a batch another process closed.
+    private func url(of payloadId: String, holding events: Int) -> URL {
+        stored[payloadId]?.url ?? newUrl(of: payloadId, holding: events)
+    }
+
+    /// Requires `ioLock`.
+    private func newUrl(of payloadId: String, holding events: Int) -> URL {
+        disk.directory.appendingPathComponent("\(EventDirectory.batchPrefix)\(payloadId)-\(events)")
+    }
+
+    /// A batch as its filename gives it: everything between the prefix and the count is the payload ID.
+    ///
+    /// - Returns: the payload ID, and the count the name ends with, which is nil where it has none -- how a version
+    ///   that did not write one named its batches. A payload ID cannot be mistaken for a count: it is a UUID, whose
+    ///   last group is twelve characters, and twelve digits are more than an `Int32` holds.
+    private static func parse(batchName name: String) -> (payloadId: String, events: Int?) {
+        let rest = String(name.dropFirst(batchPrefix.count))
+        guard let split = rest.lastIndex(of: "-")
+        else { return (rest, nil) }
+        let suffix = rest[rest.index(after: split)...]
+        guard !suffix.isEmpty, suffix.allSatisfy({ $0.isASCII && $0.isNumber }),
+              let events = Int32(suffix)
+        else { return (rest, nil) }
+        return (String(rest[..<split]), Int(events))
     }
 
     // MARK: Writing
@@ -145,14 +183,15 @@ final class EventDirectory {
     func closeLog(holding events: Int) -> LogClose {
         ioLock.assertOwned()
         let payloadId = UUID().uuidString
+        let file = newUrl(of: payloadId, holding: events)
         do {
-            try disk.log.close(movingTo: url(of: payloadId))
+            try disk.log.close(movingTo: file)
         } catch {
             os_log("%s could not close the event log: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
             return .failed(logSurvives: disk.log.exists)
         }
 
-        eventCounts[payloadId] = events
+        stored[payloadId] = Stored(url: file, events: events)
         return .closed(EventBatch(payloadId: payloadId, eventCount: events))
     }
 
@@ -176,13 +215,14 @@ final class EventDirectory {
         let batches = contents
             .filter { $0.lastPathComponent.hasPrefix(EventDirectory.batchPrefix) }
             .compactMap { file -> (EventBatch, Date)? in
-                let payloadId = String(file.lastPathComponent.dropFirst(EventDirectory.batchPrefix.count))
+                let (payloadId, counted) = EventDirectory.parse(batchName: file.lastPathComponent)
                 guard !isDeliveredButUndeleted(payloadId, at: file)
                 else { return nil }
-                // Reading is only for a batch this process has not counted: one a previous run left behind.
-                guard let events = eventCounts[payloadId] ?? countOfEvents(in: file)
+                // Reading is only for a batch whose name does not count it, which a version that named them without a
+                // count may have left behind, and then only the once.
+                guard let events = counted ?? stored[payloadId]?.events ?? countOfEvents(in: file)
                 else { return nil }
-                eventCounts[payloadId] = events
+                stored[payloadId] = Stored(url: file, events: events)
                 let modified = (try? file.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
                 return (EventBatch(payloadId: payloadId, eventCount: events), modified ?? Date.distantPast)
             }
@@ -192,7 +232,7 @@ final class EventDirectory {
         // A batch that left the directory without going through `remove` -- a purged cache directory on tvOS, say --
         // would otherwise keep its count for the rest of the session.
         let listed = Set(batches.map { $0.payloadId })
-        eventCounts = eventCounts.filter { listed.contains($0.key) }
+        stored = stored.filter { listed.contains($0.key) }
 
         return batches
     }
@@ -217,7 +257,7 @@ final class EventDirectory {
     /// - throws: if the batch is there but could not be read this time, which a later attempt may manage.
     func body(of batch: EventBatch) throws -> Data? {
         ioLock.assertOwned()
-        switch read(url(of: batch.payloadId)) {
+        switch read(url(of: batch.payloadId, holding: batch.eventCount)) {
         case .missing: return nil
         case .failed(let error): throw error
         case .bytes(let file): return EventLogFormat.assembleBody(from: file)
@@ -228,9 +268,9 @@ final class EventDirectory {
     ///
     /// - Returns: the events it stopped counting, which is zero for a batch that was already gone -- one another
     ///   process delivered, say, which a listing has stopped counting already.
-    func remove(_ payloadId: String) -> Int {
+    func remove(_ payloadId: String, holding events: Int) -> Int {
         ioLock.assertOwned()
-        let file = url(of: payloadId)
+        let file = url(of: payloadId, holding: events)
         try? FileManager.default.removeItem(at: file)
         if FileManager.default.fileExists(atPath: file.path) {
             // Its events stop counting all the same: LaunchDarkly has them, and holding capacity for a file this
@@ -238,7 +278,7 @@ final class EventDirectory {
             os_log("%s could not delete a delivered batch; it will not be sent again this session", log: logger, type: .debug, typeName(and: #function))
             deliveredButUndeleted.insert(payloadId)
         }
-        return eventCounts.removeValue(forKey: payloadId) ?? 0
+        return stored.removeValue(forKey: payloadId)?.events ?? 0
     }
 
     /// Every event in the directory, encoded exactly as it will be sent. Requires `ioLock`.
@@ -348,7 +388,10 @@ final class EventDirectory {
             // would lose events that may be intact. Closed off uncounted instead, it is read and counted by whichever
             // listing first manages to.
             os_log("%s could not read events from a previous run, will try again later: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
-            try? FileManager.default.moveItem(at: leftOpen, to: url(of: UUID().uuidString))
+            // Named without a count, which is what a batch whose events have never been counted is: the listing that
+            // first manages to read it is what counts it.
+            let uncounted = disk.directory.appendingPathComponent("\(EventDirectory.batchPrefix)\(UUID().uuidString)")
+            try? FileManager.default.moveItem(at: leftOpen, to: uncounted)
             return 0
         case .bytes(let log):
             guard let counted = EventLogFormat.eventCount(in: log)
@@ -367,10 +410,11 @@ final class EventDirectory {
         }
 
         let payloadId = UUID().uuidString
-        guard (try? FileManager.default.moveItem(at: leftOpen, to: url(of: payloadId))) != nil
+        let file = newUrl(of: payloadId, holding: events)
+        guard (try? FileManager.default.moveItem(at: leftOpen, to: file)) != nil
         else { return 0 }
 
-        eventCounts[payloadId] = events
+        stored[payloadId] = Stored(url: file, events: events)
         os_log("%s recovered %d event(s) from a previous run", log: logger, type: .debug, typeName(and: #function), events)
         return events
     }

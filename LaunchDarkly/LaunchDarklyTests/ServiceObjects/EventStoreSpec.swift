@@ -284,6 +284,24 @@ final class EventStoreSpec: QuickSpec {
         EventStore.sharing(store.directory!, readFile: readFile)
     }
 
+    /// The one `ready-` file in a store's directory.
+    private static func onlyBatchFile(in store: EventStore) throws -> URL {
+        try FileManager.default
+            .contentsOfDirectory(at: store.directory!, includingPropertiesForKeys: nil)
+            .first { $0.lastPathComponent.hasPrefix("ready-") }!
+    }
+
+    /// Renames a batch to the name a version that did not count them in the name gave it, which is what such a
+    /// version leaves behind for this one to deliver.
+    @discardableResult
+    private static func asUncountedName(_ batch: URL) throws -> URL {
+        let name = batch.lastPathComponent
+        let renamed = batch.deletingLastPathComponent()
+            .appendingPathComponent(String(name[..<name.lastIndex(of: "-")!]))
+        try FileManager.default.moveItem(at: batch, to: renamed)
+        return renamed
+    }
+
     /// What a process out of file descriptors gets for a file that is perfectly intact.
     private static func readFailing(while failing: @escaping () -> Bool) -> (URL) throws -> Data {
         { url in
@@ -450,11 +468,12 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["event-0", "event-1"]
             }
 
-            it("is kept for a later listing when the read failed rather than the log") {
+            it("is kept for a later listing when a batch named without a count cannot be read") {
                 store = EventStore.temporary()
                 _ = store.stage(EventStoreSpec.payload("kept"))
                 store.commit()
                 _ = store.closeBatch()
+                try EventStoreSpec.asUncountedName(EventStoreSpec.onlyBatchFile(in: store))
 
                 var failing = true
                 let next = EventStoreSpec.reader(sharing: store,
@@ -467,6 +486,22 @@ final class EventStoreSpec: QuickSpec {
                 let batches = next.pendingBatches()
                 expect(batches.count) == 1
                 expect(EventStoreSpec.keys(ofBody: try next.body(of: batches[0]))) == ["kept"]
+            }
+
+            it("is listed even while reads are failing when its name counts it") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("kept"))
+                _ = store.closeBatch()
+
+                // The read a listing used to need is the one a process out of file descriptors cannot make. With the
+                // count in the name there is nothing to read until the batch is sent, and a body that cannot be read
+                // is a delivery to retry rather than a batch that is invisible until it can be.
+                let next = EventStoreSpec.reader(sharing: store,
+                                                 readFile: EventStoreSpec.readFailing(while: { true }))
+                let batches = next.pendingBatches()
+                expect(batches.count) == 1
+                expect(batches[0].eventCount) == 1
+                expect { try next.body(of: batches[0]) }.to(throwError())
             }
 
             it("is a failure to retry, not nothing to send, when a body cannot be read") {
@@ -507,24 +542,22 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["from-the-previous-run", "this-run"]
             }
 
-            it("is discarded when it was written in a format this version does not read") {
+            it("is discarded when a batch named without a count is in a format this version does not read") {
                 store = EventStore.temporary()
                 _ = store.stage(EventStoreSpec.payload("unreadable"))
                 store.commit()
                 _ = store.closeBatch()
 
-                let batchUrl = try FileManager.default
-                    .contentsOfDirectory(at: store.directory!, includingPropertiesForKeys: nil)
-                    .first { $0.lastPathComponent.hasPrefix("ready-") }
-                var corrupted = try Data(contentsOf: batchUrl!)
+                let batchUrl = try EventStoreSpec.asUncountedName(EventStoreSpec.onlyBatchFile(in: store))
+                var corrupted = try Data(contentsOf: batchUrl)
                 corrupted[4] = 0xFF
                 corrupted[5] = 0xFF
-                try corrupted.write(to: batchUrl!)
+                try corrupted.write(to: batchUrl)
 
                 let next = EventStoreSpec.reader(sharing: store)
                 expect(next.pendingBatches()).to(beEmpty())
                 // A batch that can never be delivered is not left to occupy the device either.
-                expect(FileManager.default.fileExists(atPath: batchUrl!.path)) == false
+                expect(FileManager.default.fileExists(atPath: batchUrl.path)) == false
             }
         }
     }
@@ -568,21 +601,42 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingEventCount) == 0
             }
 
-            it("counts a batch it closed without reading the file back") {
+            it("counts a closed batch from its name without reading the file back") {
                 _ = store.stage(EventStoreSpec.payload("first"))
                 _ = store.stage(EventStoreSpec.payload("second"))
                 let batch = store.closeBatch()!
 
-                // Nothing appends to a batch once it is closed, so the count taken at the close still holds and
+                // Nothing appends to a batch once it is closed, so the count its name carries still holds and
                 // listing it has no reason to go to the disk. Damaging the file is how the test tells the two apart:
-                // a listing that read would refuse this batch, which is exactly what the store below does.
-                let batchUrl = store.directory!.appendingPathComponent("ready-\(batch.payloadId)")
+                // a listing that read would refuse this batch.
+                let batchUrl = store.directory!.appendingPathComponent("ready-\(batch.payloadId)-2")
                 try Data("not an event log".utf8).write(to: batchUrl)
 
+                // The store that closed it and one that did not both count it from the name alone.
                 expect(store.pendingBatches()) == [batch]
+                expect(EventStoreSpec.reader(sharing: store).pendingBatches()) == [batch]
 
-                // A store that did not close it has no count to go on, so it reads, and finds the damage.
-                expect(EventStoreSpec.reader(sharing: store).pendingBatches()).to(beEmpty())
+                // The damage is found where the batch is read to be sent, and reads as nothing to send rather than
+                // as a failure to retry, so the delivery removes it instead of trying it forever.
+                expect(try store.body(of: batch)).to(beNil())
+            }
+
+            it("reads a batch named without a count once and then remembers it") {
+                _ = store.stage(EventStoreSpec.payload("left-by-a-previous-version"))
+                let batch = store.closeBatch()!
+
+                // The name a version that did not count them in the name gave it, which is what such a version
+                // leaves behind for this one to deliver.
+                let counted = store.directory!.appendingPathComponent("ready-\(batch.payloadId)-1")
+                let uncounted = store.directory!.appendingPathComponent("ready-\(batch.payloadId)")
+                try FileManager.default.moveItem(at: counted, to: uncounted)
+
+                let reader = EventStoreSpec.reader(sharing: store)
+                expect(reader.pendingBatches()) == [batch]
+                // Still deliverable under the name it has, which is not the one its count would give it.
+                expect(try reader.body(of: batch)).toNot(beNil())
+                reader.remove(batch)
+                expect(FileManager.default.fileExists(atPath: uncounted.path)) == false
             }
 
             it("gives a batch its own payload id, so a retry is not read as a new delivery") {
@@ -857,7 +911,8 @@ final class EventStoreSpec: QuickSpec {
 
                 // The listing that can delete it does, rather than leaving it for a run that would send it again.
                 _ = store.pendingBatches()
-                expect(FileManager.default.fileExists(atPath: directory.appendingPathComponent("ready-\(first.payloadId)").path)) == false
+                let left = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+                expect(left.filter { $0.lastPathComponent.hasPrefix("ready-\(first.payloadId)") }).to(beEmpty())
             }
 
             it("stops counting a batch once when another process delivered it and a listing came between") {

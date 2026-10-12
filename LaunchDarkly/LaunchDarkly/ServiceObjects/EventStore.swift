@@ -363,7 +363,7 @@ final class EventStore: EventStoring {
             return
         }
         ioLock.withLock {
-            let counted = disk.remove(batch.payloadId)
+            let counted = disk.remove(batch.payloadId, holding: batch.eventCount)
             bufferLock.withLock {
                 closedEvents -= counted
                 forgetSending(batch.payloadId)
