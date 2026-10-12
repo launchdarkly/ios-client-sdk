@@ -58,7 +58,7 @@ extension LDClient {
         var outstanding = clients.count
 
         for client in clients {
-            client.eventReporter.flushReportingOutcome { result in
+            client.eventProcessor.flushReportingOutcome { result in
                 lock.lock()
                 delivered = delivered && result
                 outstanding -= 1
@@ -138,7 +138,7 @@ extension LDClient {
         // one before starting the next would spend the caller's budget on deliveries that could have been running all
         // along, and leave the last environment with none of it.
         for client in clients {
-            client.eventReporter.flushReportingOutcome { result in
+            client.eventProcessor.flushReportingOutcome { result in
                 lock.lock()
                 delivered = delivered && result
                 lock.unlock()
@@ -169,6 +169,6 @@ extension LDClient {
     }
 
     func internalFlush() {
-        eventReporter.flush(completion: nil)
+        eventProcessor.flush(completion: nil)
     }
 }

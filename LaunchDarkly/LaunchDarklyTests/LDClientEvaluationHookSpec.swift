@@ -219,7 +219,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         }
 
         // Deduplication applies to hooks only, so analytics events are unaffected.
-        XCTAssertEqual(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount, 3)
+        XCTAssertEqual(testContext.eventProcessorMock.recordFlagEvaluationEventsCallCount, 3)
     }
 
     func testEvaluationsOfDifferentFlagsReachHooksSeparately() {

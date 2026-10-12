@@ -220,7 +220,7 @@ extension LDClient {
                 result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "FLAG_NOT_FOUND"])
             }
 
-            eventReporter.recordFlagEvaluationEvents(flagKey: flagKey,
+            eventProcessor.recordFlagEvaluationEvents(flagKey: flagKey,
                                                      value: result.value.toLDValue(),
                                                      defaultValue: defaultValue.toLDValue(),
                                                      featureFlag: featureFlag,

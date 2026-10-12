@@ -3,14 +3,14 @@ import Quick
 import Nimble
 @testable import LaunchDarkly
 
-final class EventReporterSpec: QuickSpec {
+final class DirectEventProcessorSpec: QuickSpec {
     struct Constants {
         static let eventFlushInterval: TimeInterval = 10.0
         static let eventFlushIntervalHalfSecond: TimeInterval = 0.5
     }
 
     struct TestContext {
-        var eventReporter: EventReporter!
+        var eventProcessor: DirectEventProcessor!
         var config: LDConfig!
         var context: LDContext!
         var serviceMock: DarklyServiceMock!
@@ -32,7 +32,7 @@ final class EventReporterSpec: QuickSpec {
              store: EventStore? = nil,
              eventCapacity: Int = Event.Kind.allKinds.count,
              eventPersistence: EventPersistence = .immediate,
-             commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.EventReporter.commitQueue")) {
+             commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.DirectEventProcessor.commitQueue")) {
 
             config = LDConfig.stub
             config.eventCapacity = eventCapacity
@@ -53,27 +53,27 @@ final class EventReporterSpec: QuickSpec {
 
             self.lastEventResponseDate = lastEventResponseDate.adjustedForHttpUrlHeaderUse
             self.store = store ?? EventStore.temporary(capacity: config.eventCapacity)
-            eventReporter = EventReporter(service: serviceMock, onSyncComplete: onSyncComplete,
+            eventProcessor = DirectEventProcessor(service: serviceMock, onSyncComplete: onSyncComplete,
                                           store: self.store, commitQueue: commitQueue)
             (0..<eventCount).forEach {
                 let event = Event.stub(Event.eventKind(for: $0), with: context!)
                 events.append(event)
-                eventReporter.record(event)
+                eventProcessor.record(event)
             }
-            eventReporter.setLastEventResponseDate(self.lastEventResponseDate)
+            eventProcessor.setLastEventResponseDate(self.lastEventResponseDate)
         }
 
         mutating func recordEvents(_ eventCount: Int) {
             for _ in 0..<eventCount {
                 let event = Event.stub(Event.eventKind(for: events.count), with: context)
                 events.append(event)
-                eventReporter.record(event)
+                eventProcessor.record(event)
             }
         }
 
         /// Commits everything accepted so far and returns its wire representation.
         func committedEvents() -> [LDValue] {
-            eventReporter.commitRecordedEvents()
+            eventProcessor.commitRecordedEvents()
             return store.pendingEventPayloads().compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
         }
 
@@ -91,9 +91,9 @@ final class EventReporterSpec: QuickSpec {
         func flushedFromACompletion() -> Bool {
             var flushed = false
             waitUntil(timeout: .seconds(5)) { done in
-                eventReporter.flushReportingOutcome { _ in
+                eventProcessor.flushReportingOutcome { _ in
                     let finished = DispatchSemaphore(value: 0)
-                    eventReporter.flush { finished.signal() }
+                    eventProcessor.flush { finished.signal() }
                     flushed = finished.wait(timeout: .now() + 1) == .success
                     done()
                 }
@@ -106,7 +106,7 @@ final class EventReporterSpec: QuickSpec {
             var delivered: Bool?
             // Long enough for a refused post and its retry a second later.
             waitUntil(timeout: .seconds(10)) { done in
-                eventReporter.flushReportingOutcome { result in
+                eventProcessor.flushReportingOutcome { result in
                     delivered = result
                     done()
                 }
@@ -115,7 +115,7 @@ final class EventReporterSpec: QuickSpec {
         }
 
         func cleanUp() {
-            eventReporter.isOnline = false
+            eventProcessor.isOnline = false
             store.deleteEverything()
         }
     }
@@ -132,13 +132,13 @@ final class EventReporterSpec: QuickSpec {
         commitSpec()
         flushReportingOutcomeSpec()
         outageSpec()
-        nullEventReporterSpec()
+        nullEventProcessorSpec()
     }
 
-    private func nullEventReporterSpec() {
-        describe("NullEventReporter") {
+    private func nullEventProcessorSpec() {
+        describe("NullEventProcessor") {
             it("answers every flush off the caller's thread") {
-                let reporter = NullEventReporter()
+                let reporter = NullEventProcessor()
                 let caller = Thread.current
                 let lock = UnfairLock()
                 var answers: [(delivered: Bool, onCaller: Bool)] = []
@@ -165,12 +165,12 @@ final class EventReporterSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-                testContext.eventReporter = EventReporter(service: testContext.serviceMock, onSyncComplete: { _ in }, store: testContext.store)
+                testContext.eventProcessor = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: { _ in }, store: testContext.store)
             }
             it("starts offline without reporting events") {
-                expect(testContext.eventReporter.service) === testContext.serviceMock
-                expect(testContext.eventReporter.isOnline) == false
-                expect(testContext.eventReporter.isReportingActive) == false
+                expect(testContext.eventProcessor.service) === testContext.serviceMock
+                expect(testContext.eventProcessor.isOnline) == false
+                expect(testContext.eventProcessor.isReportingActive) == false
                 expect(testContext.serviceMock.publishEventDataCallCount) == 0
             }
         }
@@ -187,13 +187,13 @@ final class EventReporterSpec: QuickSpec {
             }
             context("online to offline") {
                 beforeEach {
-                    testContext.eventReporter.isOnline = true
+                    testContext.eventProcessor.isOnline = true
 
-                    testContext.eventReporter.isOnline = false
+                    testContext.eventProcessor.isOnline = false
                 }
                 it("goes offline and stops reporting") {
-                    expect(testContext.eventReporter.isOnline) == false
-                    expect(testContext.eventReporter.isReportingActive) == false
+                    expect(testContext.eventProcessor.isOnline) == false
+                    expect(testContext.eventProcessor.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
                 }
             }
@@ -202,11 +202,11 @@ final class EventReporterSpec: QuickSpec {
                     beforeEach {
                         testContext = TestContext(eventCount: Event.Kind.allKinds.count)
 
-                        testContext.eventReporter.isOnline = true
+                        testContext.eventProcessor.isOnline = true
                     }
                     it("goes online and starts reporting") {
-                        expect(testContext.eventReporter.isOnline) == true
-                        expect(testContext.eventReporter.isReportingActive) == true
+                        expect(testContext.eventProcessor.isOnline) == true
+                        expect(testContext.eventProcessor.isReportingActive) == true
                         expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     }
                 }
@@ -214,11 +214,11 @@ final class EventReporterSpec: QuickSpec {
                     beforeEach {
                         testContext = TestContext()
 
-                        testContext.eventReporter.isOnline = true
+                        testContext.eventProcessor.isOnline = true
                     }
                     it("goes online and starts reporting") {
-                        expect(testContext.eventReporter.isOnline) == true
-                        expect(testContext.eventReporter.isReportingActive) == true
+                        expect(testContext.eventProcessor.isOnline) == true
+                        expect(testContext.eventProcessor.isReportingActive) == true
                         expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     }
                 }
@@ -226,13 +226,13 @@ final class EventReporterSpec: QuickSpec {
             context("online to online") {
                 beforeEach {
                     testContext = TestContext()
-                    testContext.eventReporter.isOnline = true
+                    testContext.eventProcessor.isOnline = true
 
-                    testContext.eventReporter.isOnline = true
+                    testContext.eventProcessor.isOnline = true
                 }
                 it("stays online and continues reporting") {
-                    expect(testContext.eventReporter.isOnline) == true
-                    expect(testContext.eventReporter.isReportingActive) == true
+                    expect(testContext.eventProcessor.isOnline) == true
+                    expect(testContext.eventProcessor.isReportingActive) == true
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
                 }
             }
@@ -240,11 +240,11 @@ final class EventReporterSpec: QuickSpec {
                 beforeEach {
                     testContext = TestContext(eventCount: Event.Kind.allKinds.count)
 
-                    testContext.eventReporter.isOnline = false
+                    testContext.eventProcessor.isOnline = false
                 }
                 it("stays offline and does not start reporting") {
-                    expect(testContext.eventReporter.isOnline) == false
-                    expect(testContext.eventReporter.isReportingActive) == false
+                    expect(testContext.eventProcessor.isOnline) == false
+                    expect(testContext.eventProcessor.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     expect(testContext.committedEvents()) == testContext.recordedEventsAsJSON()
                 }
@@ -258,11 +258,11 @@ final class EventReporterSpec: QuickSpec {
             context("event store empty") {
                 beforeEach {
                     testContext = TestContext()
-                    testContext.recordEvents(Event.Kind.allKinds.count) // Stub events, call testContext.eventReporter.recordEvent, and keeps them in testContext.events
+                    testContext.recordEvents(Event.Kind.allKinds.count) // Stub events, call testContext.eventProcessor.recordEvent, and keeps them in testContext.events
                 }
                 it("records events up to event capacity") {
-                    expect(testContext.eventReporter.isOnline) == false
-                    expect(testContext.eventReporter.isReportingActive) == false
+                    expect(testContext.eventProcessor.isOnline) == false
+                    expect(testContext.eventProcessor.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     expect(testContext.committedEvents()) == testContext.recordedEventsAsJSON()
                 }
@@ -276,11 +276,11 @@ final class EventReporterSpec: QuickSpec {
                     testContext = TestContext(eventCount: Event.Kind.allKinds.count)
                     extraEvent = Event.stub(.feature, with: testContext.context)
 
-                    testContext.eventReporter.record(extraEvent)
+                    testContext.eventProcessor.record(extraEvent)
                 }
                 it("doesn't record any more events") {
-                    expect(testContext.eventReporter.isOnline) == false
-                    expect(testContext.eventReporter.isReportingActive) == false
+                    expect(testContext.eventProcessor.isOnline) == false
+                    expect(testContext.eventProcessor.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     expect(testContext.committedEvents()) == testContext.recordedEventsAsJSON()
                 }
@@ -297,10 +297,10 @@ final class EventReporterSpec: QuickSpec {
         describe("unserializable events") {
             var serviceMock: DarklyServiceMock!
             var ldContext: LDContext!
-            var reporter: EventReporter!
+            var reporter: DirectEventProcessor!
             var store: EventStore!
 
-            func makeReporter(encoding: EventReporter.Encoding) -> EventReporter {
+            func makeReporter(encoding: DirectEventProcessor.Encoding) -> DirectEventProcessor {
                 var config = LDConfig.stub
                 config.eventCapacity = 8
                 ldContext = LDContext.stub()
@@ -308,14 +308,14 @@ final class EventReporterSpec: QuickSpec {
                 serviceMock.config = config
                 serviceMock.stubEventResponse(success: true)
                 store = EventStore.temporary(capacity: config.eventCapacity)
-                return EventReporter(service: serviceMock, onSyncComplete: nil, store: store, encoding: encoding)
+                return DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: encoding)
             }
 
             afterEach {
                 reporter?.isOnline = false
             }
 
-            for encoding in [EventReporter.Encoding.codable, .handWritten] {
+            for encoding in [DirectEventProcessor.Encoding.codable, .handWritten] {
                 context("\(encoding): when an event holds a non-finite metric") {
                     beforeEach {
                         reporter = makeReporter(encoding: encoding)
@@ -449,8 +449,8 @@ final class EventReporterSpec: QuickSpec {
                 testContext.cleanUp()
             }
             let erOnline = {
-                expect(testContext.eventReporter.isOnline) == true
-                expect(testContext.eventReporter.isReportingActive) == true
+                expect(testContext.eventProcessor.isOnline) == true
+                expect(testContext.eventProcessor.isReportingActive) == true
             }
             context("online") {
                 context("success") {
@@ -461,10 +461,10 @@ final class EventReporterSpec: QuickSpec {
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
-                                testContext.eventReporter.isOnline = true
+                                testContext.eventProcessor.isOnline = true
                                 testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
                                 // Track some flag evaluations to populate the contextSummarizer
-                                testContext.eventReporter.recordFlagEvaluationEvents(
+                                testContext.eventProcessor.recordFlagEvaluationEvents(
                                     flagKey: "test-flag",
                                     value: .bool(true),
                                     defaultValue: .bool(false),
@@ -472,7 +472,7 @@ final class EventReporterSpec: QuickSpec {
                                     context: testContext.context,
                                     includeReason: false
                                 )
-                                testContext.eventReporter.flush(completion: nil)
+                                testContext.eventProcessor.flush(completion: nil)
                             }
                         }
                         it("reports events and a summary event") {
@@ -489,8 +489,8 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
                             expect(testContext.store.pendingEventCount) == 0
-                            expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
-                            expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.lastEventResponseDate) == testContext.eventStubResponseDate
+                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
                         }
                     }
@@ -501,9 +501,9 @@ final class EventReporterSpec: QuickSpec {
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
-                                testContext.eventReporter.isOnline = true
+                                testContext.eventProcessor.isOnline = true
                                 testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
-                                testContext.eventReporter.flush(completion: nil)
+                                testContext.eventProcessor.flush(completion: nil)
                             }
                         }
                         it("reports events without a summary event") {
@@ -514,8 +514,8 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == testContext.events.count
                             expect(testContext.store.pendingEventCount) == 0
-                            expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
-                            expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.lastEventResponseDate) == testContext.eventStubResponseDate
+                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
                         }
                     }
@@ -526,9 +526,9 @@ final class EventReporterSpec: QuickSpec {
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
-                                testContext.eventReporter.isOnline = true
+                                testContext.eventProcessor.isOnline = true
                                 // Track some flag evaluations to populate the contextSummarizer
-                                testContext.eventReporter.recordFlagEvaluationEvents(
+                                testContext.eventProcessor.recordFlagEvaluationEvents(
                                     flagKey: "test-flag",
                                     value: .bool(true),
                                     defaultValue: .bool(false),
@@ -536,7 +536,7 @@ final class EventReporterSpec: QuickSpec {
                                     context: testContext.context,
                                     includeReason: false
                                 )
-                                testContext.eventReporter.flush(completion: nil)
+                                testContext.eventProcessor.flush(completion: nil)
                             }
                         }
                         it("reports only a summary event") {
@@ -552,8 +552,8 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == 1
                             expect(testContext.store.pendingEventCount) == 0
-                            expect(testContext.eventReporter.lastEventResponseDate) == testContext.eventStubResponseDate
-                            expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.lastEventResponseDate) == testContext.eventStubResponseDate
+                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
                         }
                     }
@@ -564,8 +564,8 @@ final class EventReporterSpec: QuickSpec {
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
-                                testContext.eventReporter.isOnline = true
-                                testContext.eventReporter.flush(completion: nil)
+                                testContext.eventProcessor.isOnline = true
+                                testContext.eventProcessor.flush(completion: nil)
                             }
                         }
                         it("does not report events") {
@@ -573,8 +573,8 @@ final class EventReporterSpec: QuickSpec {
                             expect(testContext.serviceMock.publishEventDataCallCount) == 0
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
                             expect(testContext.store.pendingEventCount) == 0
-                            expect(testContext.eventReporter.lastEventResponseDate) == Date.distantPast
-                            expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.lastEventResponseDate) == Date.distantPast
+                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
                             expect(testContext.syncResult).to(beNil())
                         }
                     }
@@ -587,10 +587,10 @@ final class EventReporterSpec: QuickSpec {
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
-                                testContext.eventReporter.isOnline = true
+                                testContext.eventProcessor.isOnline = true
                                 testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
                                 // Track some flag evaluations to populate the contextSummarizer
-                                testContext.eventReporter.recordFlagEvaluationEvents(
+                                testContext.eventProcessor.recordFlagEvaluationEvents(
                                     flagKey: "test-flag",
                                     value: .bool(true),
                                     defaultValue: .bool(false),
@@ -598,7 +598,7 @@ final class EventReporterSpec: QuickSpec {
                                     context: testContext.context,
                                     includeReason: false
                                 )
-                                testContext.eventReporter.flush(completion: nil)
+                                testContext.eventProcessor.flush(completion: nil)
                             }
                         }
                         it("keeps the events to retry after the failure") {
@@ -616,8 +616,8 @@ final class EventReporterSpec: QuickSpec {
                             }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
-                            expect(testContext.eventReporter.lastEventResponseDate) == Date.distantPast
-                            expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.lastEventResponseDate) == Date.distantPast
+                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
                             guard case let .request(error) = testContext.syncResult
                             else {
                                 fail("Expected error result for event send")
@@ -633,10 +633,10 @@ final class EventReporterSpec: QuickSpec {
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
-                                testContext.eventReporter.isOnline = true
+                                testContext.eventProcessor.isOnline = true
                                 testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
                                 // Track some flag evaluations to populate the contextSummarizer
-                                testContext.eventReporter.recordFlagEvaluationEvents(
+                                testContext.eventProcessor.recordFlagEvaluationEvents(
                                     flagKey: "test-flag",
                                     value: .bool(true),
                                     defaultValue: .bool(false),
@@ -644,7 +644,7 @@ final class EventReporterSpec: QuickSpec {
                                     context: testContext.context,
                                     includeReason: false
                                 )
-                                testContext.eventReporter.flush(completion: nil)
+                                testContext.eventProcessor.flush(completion: nil)
                             }
                         }
                         it("keeps the events to retry after the failure") {
@@ -662,8 +662,8 @@ final class EventReporterSpec: QuickSpec {
                             }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
-                            expect(testContext.eventReporter.lastEventResponseDate) == Date.distantPast
-                            expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.lastEventResponseDate) == Date.distantPast
+                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
                             let expectedError = testContext.serviceMock.errorEventHTTPURLResponse
                             guard case let .response(error) = testContext.syncResult
                             else {
@@ -682,10 +682,10 @@ final class EventReporterSpec: QuickSpec {
                                     testContext.syncResult = result
                                     syncComplete()
                                 })
-                                testContext.eventReporter.isOnline = true
+                                testContext.eventProcessor.isOnline = true
                                 testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
                                 // Track some flag evaluations to populate the contextSummarizer
-                                testContext.eventReporter.recordFlagEvaluationEvents(
+                                testContext.eventProcessor.recordFlagEvaluationEvents(
                                     flagKey: "test-flag",
                                     value: .bool(true),
                                     defaultValue: .bool(false),
@@ -693,7 +693,7 @@ final class EventReporterSpec: QuickSpec {
                                     context: testContext.context,
                                     includeReason: false
                                 )
-                                testContext.eventReporter.flush(completion: nil)
+                                testContext.eventProcessor.flush(completion: nil)
                             }
                         }
                         it("keeps the events to retry after the failure") {
@@ -711,8 +711,8 @@ final class EventReporterSpec: QuickSpec {
                             }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
-                            expect(testContext.eventReporter.lastEventResponseDate) == Date.distantPast
-                            expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
+                            expect(testContext.eventProcessor.lastEventResponseDate) == Date.distantPast
+                            expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
                             guard case let .request(error) = testContext.syncResult
                             else {
                                 fail("Expected error result for event send")
@@ -733,16 +733,16 @@ final class EventReporterSpec: QuickSpec {
                                                                    httpVersion: DarklyServiceMock.Constants.httpVersion,
                                                                    headerFields: nil)
                                 testContext.serviceMock.stubbedEventResponse = (nil, unauthorized, nil, nil)
-                                testContext.eventReporter.isOnline = true
+                                testContext.eventProcessor.isOnline = true
                                 testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
-                                testContext.eventReporter.flush(completion: nil)
+                                testContext.eventProcessor.flush(completion: nil)
                             }
                         }
                         it("drops events and stops reporting") {
                             expect(testContext.serviceMock.publishEventDataCallCount) == 1
                             expect(testContext.store.pendingEventCount).toEventually(equal(0))
-                            expect(testContext.eventReporter.isOnline).to(beFalse())
-                            expect(testContext.eventReporter.isReportingActive).to(beFalse())
+                            expect(testContext.eventProcessor.isOnline).to(beFalse())
+                            expect(testContext.eventProcessor.isReportingActive).to(beFalse())
                             if case let .response(error) = testContext.syncResult {
                                 expect((error as? HTTPURLResponse)?.statusCode) == HTTPURLResponse.StatusCodes.unauthorized
                             } else {
@@ -750,9 +750,9 @@ final class EventReporterSpec: QuickSpec {
                             }
                         }
                         it("can be brought back online") {
-                            testContext.eventReporter.isOnline = true
-                            expect(testContext.eventReporter.isOnline).to(beTrue())
-                            expect(testContext.eventReporter.isReportingActive).to(beTrue())
+                            testContext.eventProcessor.isOnline = true
+                            expect(testContext.eventProcessor.isOnline).to(beTrue())
+                            expect(testContext.eventProcessor.isReportingActive).to(beTrue())
                         }
                     }
                 }
@@ -766,7 +766,7 @@ final class EventReporterSpec: QuickSpec {
                         })
                         testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
                         // Track some flag evaluations to populate the contextSummarizer
-                        testContext.eventReporter.recordFlagEvaluationEvents(
+                        testContext.eventProcessor.recordFlagEvaluationEvents(
                             flagKey: "test-flag",
                             value: .bool(true),
                             defaultValue: .bool(false),
@@ -774,22 +774,22 @@ final class EventReporterSpec: QuickSpec {
                             context: testContext.context,
                             includeReason: false
                         )
-                        testContext.eventReporter.flush(completion: nil)
+                        testContext.eventProcessor.flush(completion: nil)
                     }
                 }
                 it("doesn't report events, but persists them") {
-                    expect(testContext.eventReporter.isOnline) == false
-                    expect(testContext.eventReporter.isReportingActive) == false
+                    expect(testContext.eventProcessor.isOnline) == false
+                    expect(testContext.eventProcessor.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
                     expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 0
-                    expect(testContext.eventReporter.lastEventResponseDate) == Date.distantPast
+                    expect(testContext.eventProcessor.lastEventResponseDate) == Date.distantPast
 
                     // Being offline delays delivery, not durability: a flush is a commit point, so the recorded events and
                     // the evaluations counted so far are on disk even though nothing can be sent.
                     let pending = testContext.committedEvents()
                     expect(pending.dropLast().map { $0 }) == testContext.recordedEventsAsJSON()
                     expect(pending.last?.kindField) == "summary"
-                    expect(testContext.eventReporter.contextSummarizer.hasLoggedRequests) == false
+                    expect(testContext.eventProcessor.contextSummarizer.hasLoggedRequests) == false
                     guard case .isOffline = testContext.syncResult
                     else {
                         fail("Expected error .isOffline result for event send")
@@ -805,9 +805,9 @@ final class EventReporterSpec: QuickSpec {
         let serviceMock = DarklyServiceMock()
 
         /// A reporter writing to a store of its own, and that store, so a test can read back what was recorded.
-        func makeReporter() -> (EventReporter, EventStore) {
+        func makeReporter() -> (DirectEventProcessor, EventStore) {
             let store = EventStore.temporary()
-            return (EventReporter(service: serviceMock, onSyncComplete: nil, store: store), store)
+            return (DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store), store)
         }
 
         describe("recordFlagEvaluationEvents") {
@@ -820,7 +820,7 @@ final class EventReporterSpec: QuickSpec {
                 service.diagnosticCache = diagnosticCache
                 let store = EventStore.temporary(capacity: config.eventCapacity)
                 defer { store.deleteEverything() }
-                let reporter = EventReporter(service: service, onSyncComplete: nil, store: store)
+                let reporter = DirectEventProcessor(service: service, onSyncComplete: nil, store: store)
                 let untracked = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
                 let tracked = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
 
@@ -989,7 +989,7 @@ final class EventReporterSpec: QuickSpec {
             context("with events") {
                 beforeEach {
                     testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
-                    testContext.eventReporter.isOnline = true
+                    testContext.eventProcessor.isOnline = true
                     testContext.recordEvents(Event.Kind.allKinds.count)
                 }
                 it("reports events") {
@@ -1007,7 +1007,7 @@ final class EventReporterSpec: QuickSpec {
             context("on later intervals") {
                 beforeEach {
                     testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
-                    testContext.eventReporter.isOnline = true
+                    testContext.eventProcessor.isOnline = true
                     testContext.recordEvents(Event.Kind.nonSummaryKinds.count)
                 }
                 it("publishes events recorded after the first fire") {
@@ -1019,7 +1019,7 @@ final class EventReporterSpec: QuickSpec {
             }
             it("without events") {
                 testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
 
                 waitUntil { done in
                     DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Constants.eventFlushIntervalHalfSecond) {
@@ -1032,7 +1032,7 @@ final class EventReporterSpec: QuickSpec {
     }
 }
 
-extension EventReporterSpec {
+extension DirectEventProcessorSpec {
     /// What the SDK is able to report after the process it was recording in is gone.
     ///
     /// These are written against a second store reading the same directory, which is what the next run of the
@@ -1054,7 +1054,7 @@ extension EventReporterSpec {
                 testContext = TestContext()
 
                 // The sequence that loses events today: something is tracked and the process ends immediately after.
-                testContext.eventReporter.record(CustomEvent(key: "fatal-error", context: testContext.context, data: ["message": "boom"]))
+                testContext.eventProcessor.record(CustomEvent(key: "fatal-error", context: testContext.context, data: ["message": "boom"]))
 
                 let onDisk = eventsLeftOnDisk()
                 expect(onDisk.count) == 1
@@ -1064,7 +1064,7 @@ extension EventReporterSpec {
             it("still writes a tracked event when the write is not on the caller's thread") {
                 testContext = TestContext(eventPersistence: .deferred)
 
-                testContext.eventReporter.record(CustomEvent(key: "fatal-error", context: testContext.context, data: ["message": "boom"]))
+                testContext.eventProcessor.record(CustomEvent(key: "fatal-error", context: testContext.context, data: ["message": "boom"]))
 
                 // The promise is weaker by exactly one scheduling hop: the event reaches the disk, just not before
                 // recording it returned.
@@ -1079,8 +1079,8 @@ extension EventReporterSpec {
 
                 // An untracked flag is only ever reported as a summary, so this is the case where the exposure exists
                 // nowhere but in memory until something forces it out.
-                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
-                testContext.eventReporter.record(CustomEvent(key: "fatal-error", context: testContext.context, data: nil))
+                testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+                testContext.eventProcessor.record(CustomEvent(key: "fatal-error", context: testContext.context, data: nil))
 
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom", "summary"]
             }
@@ -1091,10 +1091,10 @@ extension EventReporterSpec {
 
                 // The deliberate trade: an evaluation does not pay for a write, so it is only staged until something
                 // else commits it.
-                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+                testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
                 expect(eventsLeftOnDisk()).to(beEmpty())
 
-                testContext.eventReporter.flush(completion: nil)
+                testContext.eventProcessor.flush(completion: nil)
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["feature", "summary"]
             }
 
@@ -1113,7 +1113,7 @@ extension EventReporterSpec {
                 expect(Thread.isMainThread) == true
                 // Far past the pending threshold, so one coalesced commit is waiting.
                 for _ in 0..<400 {
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+                    testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
                 }
 
                 expect(eventsLeftOnDisk()).to(beEmpty())
@@ -1127,11 +1127,11 @@ extension EventReporterSpec {
             it("reports the events a previous run left behind") {
                 testContext = TestContext()
                 testContext.recordEvents(2)
-                testContext.eventReporter.commitRecordedEvents()
+                testContext.eventProcessor.commitRecordedEvents()
 
                 // Nothing delivered them and nothing closed the log, as would be the case had the process died here.
                 let recovered = EventStore.sharing(testContext.store.directory)
-                let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
+                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
                 nextRun.isOnline = true
 
                 waitUntil { done in
@@ -1150,10 +1150,10 @@ extension EventReporterSpec {
             it("delivers what a previous run left behind as soon as it is online, without waiting for a report interval") {
                 testContext = TestContext()
                 testContext.recordEvents(2)
-                testContext.eventReporter.commitRecordedEvents()
+                testContext.eventProcessor.commitRecordedEvents()
 
                 let recovered = EventStore.sharing(testContext.store.directory)
-                let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
+                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
 
                 // Nothing asks for a flush, and the report interval is several times longer than this waits, so the
                 // only thing that can deliver these is the reporter coming online.
@@ -1167,7 +1167,7 @@ extension EventReporterSpec {
             it("does not bring a delivery forward when a previous run left nothing behind") {
                 testContext = TestContext()
 
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
 
                 // Coming online is not itself a reason to send: an ordinary start has nothing waiting, and the events
                 // this run records keep to the report interval.
@@ -1181,8 +1181,8 @@ extension EventReporterSpec {
                 testContext.recordEvents(1)
 
                 waitUntil(timeout: .seconds(10)) { done in
-                    testContext.eventReporter.isOnline = true
-                    testContext.eventReporter.flush(completion: done)
+                    testContext.eventProcessor.isOnline = true
+                    testContext.eventProcessor.flush(completion: done)
                 }
 
                 let kept = testContext.store.pendingBatches()
@@ -1198,18 +1198,18 @@ extension EventReporterSpec {
             it("does not send a batch again when a delivery is asked for while one is in flight") {
                 testContext = TestContext()
                 testContext.recordEvents(1)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 // The response is held back, so the first delivery stays in flight and its batch stays on disk --
                 // the window in which a second delivery would find that batch and send it again.
                 testContext.serviceMock.holdsEventCompletions = true
 
                 // Answered from the delivery's own threads and polled from this one.
                 let first = Answer()
-                testContext.eventReporter.flush { first.record(true) }
+                testContext.eventProcessor.flush { first.record(true) }
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
 
                 let second = Answer()
-                testContext.eventReporter.flush { second.record(true) }
+                testContext.eventProcessor.flush { second.record(true) }
                 // Nothing more goes out while the first delivery is unanswered.
                 Thread.sleep(forTimeInterval: 0.3)
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
@@ -1231,7 +1231,7 @@ extension EventReporterSpec {
                 // after launch reads every batch a previous run left behind.
                 let store = SlowListingStore(testContext.store)
                 defer { store.release.signal() }
-                let reporter = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: store)
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store)
                 reporter.isOnline = true
 
                 reporter.record(CustomEvent(key: "tracked", context: testContext.context))
@@ -1257,9 +1257,9 @@ extension EventReporterSpec {
                 // timeouts allow.
                 let released = DispatchSemaphore(value: 0)
                 defer { released.signal() }
-                testContext.eventReporter.occupyQueue(until: released)
+                testContext.eventProcessor.occupyQueue(until: released)
 
-                testContext.eventReporter.record(CustomEvent(key: "tracked", context: testContext.context))
+                testContext.eventProcessor.record(CustomEvent(key: "tracked", context: testContext.context))
 
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]))
             }
@@ -1268,13 +1268,13 @@ extension EventReporterSpec {
                 testContext = TestContext(lastEventResponseDate: Date())
                 let released = DispatchSemaphore(value: 0)
                 defer { released.signal() }
-                testContext.eventReporter.occupyQueue(until: released)
+                testContext.eventProcessor.occupyQueue(until: released)
                 let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
-                testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+                testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
 
                 // What `LDClient.close()` relies on: the write is the caller's, so a delivery that never finishes
                 // cannot keep it from happening.
-                testContext.eventReporter.flush(completion: nil)
+                testContext.eventProcessor.flush(completion: nil)
 
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["feature", "summary"]
             }
@@ -1292,7 +1292,7 @@ extension EventReporterSpec {
                     return file.writeAll(bytes)
                 })
                 testContext = TestContext(store: store, eventCapacity: 100)
-                let reporter = testContext.eventReporter!
+                let reporter = testContext.eventProcessor!
                 let context = testContext.context!
 
                 let start = DispatchSemaphore(value: 0)
@@ -1329,10 +1329,10 @@ extension EventReporterSpec {
             it("tries a batch a previous run left once at start, with its retry, and then waits while it is still refused") {
                 testContext = TestContext()
                 testContext.serviceMock.respondToEvents(with: 503)
-                testContext.eventReporter.record(CustomEvent(key: "kept", context: testContext.context))
+                testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
 
                 let recovered = EventStore.sharing(testContext.store.directory)
-                let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
+                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
                 nextRun.isOnline = true
                 defer { nextRun.isOnline = false }
 
@@ -1346,16 +1346,16 @@ extension EventReporterSpec {
             it("leaves a batch still refused when the run ended for the next run to deliver, under the same payload id") {
                 testContext = TestContext()
                 testContext.serviceMock.respondToEvents(with: 503)
-                testContext.eventReporter.record(CustomEvent(key: "kept", context: testContext.context))
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
                 expect(testContext.flushOutcome()) == false
                 let payloadId = testContext.serviceMock.publishedPayloadIds.first
-                testContext.eventReporter.isOnline = false
+                testContext.eventProcessor.isOnline = false
 
                 // The same directory, as the application's next launch would find it.
                 testContext.serviceMock.stubEventResponse(success: true)
                 let recovered = EventStore.sharing(testContext.store.directory)
-                let nextRun = EventReporter(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
+                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
                 nextRun.isOnline = true
                 defer { nextRun.isOnline = false }
 
@@ -1386,18 +1386,18 @@ extension EventReporterSpec {
 
                 // Past the pending threshold and then a commit point: either would commit where events are persisted.
                 for _ in 0..<100 {
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+                    testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
                 }
-                testContext.eventReporter.record(CustomEvent(key: "custom", context: testContext.context))
-                testContext.eventReporter.flush(completion: nil)
+                testContext.eventProcessor.record(CustomEvent(key: "custom", context: testContext.context))
+                testContext.eventProcessor.flush(completion: nil)
                 commits.sync { }
 
                 // Encoding them early would buy nothing, since a commit here writes nothing to disk.
                 expect(testContext.store.pendingEventCount) == 0
 
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 waitUntil { done in
-                    testContext.eventReporter.flush(completion: done)
+                    testContext.eventProcessor.flush(completion: done)
                 }
                 let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                 valueIsArray(published) { events in
@@ -1411,7 +1411,7 @@ extension EventReporterSpec {
                                           store: EventStore.temporary(capacity: .max),
                                           eventCapacity: .max)
                 let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
-                let reporter = testContext.eventReporter!
+                let reporter = testContext.eventProcessor!
                 let context = testContext.context!
 
                 let recorded = DispatchSemaphore(value: 0)
@@ -1459,7 +1459,7 @@ extension EventReporterSpec {
                 let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
                 commits.suspend()
                 defer { commits.resume() }
-                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits)
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits)
 
                 let slow = EncodingGate(key: "slow", context: LDContext.stub())
                 reporter.record(slow)
@@ -1493,7 +1493,7 @@ extension EventReporterSpec {
                 let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
                 commits.suspend()
                 defer { commits.resume() }
-                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits)
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits)
 
                 let slow = EncodingGate(key: "slow", context: LDContext.stub())
                 let competingCommit = DispatchSemaphore(value: 0)
@@ -1535,7 +1535,7 @@ extension EventReporterSpec {
                 let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
                 commits.suspend()
                 defer { commits.resume() }
-                let reporter = EventReporter(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits)
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits)
 
                 let slow = EncodingGate(key: "slow", context: LDContext.stub())
                 reporter.record(CustomEvent(key: "first", context: LDContext.stub()))
@@ -1568,8 +1568,8 @@ extension EventReporterSpec {
                 let contexts = 6
                 for index in 0..<contexts {
                     let context = LDContext.stub(key: "context-\(index)")
-                    testContext.eventReporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
-                    testContext.eventReporter.record(IdentifyEvent(context: context))
+                    testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
+                    testContext.eventProcessor.record(IdentifyEvent(context: context))
                 }
 
                 expect(testContext.committedEvents().filter { $0.kindField == "summary" }.count) == contexts
@@ -1586,10 +1586,10 @@ extension EventReporterSpec {
 
             it("reports true when there is nothing to deliver") {
                 testContext = TestContext()
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
                 waitUntil { done in
-                    testContext.eventReporter.flushReportingOutcome { result in
+                    testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
                     }
@@ -1602,7 +1602,7 @@ extension EventReporterSpec {
                 testContext.recordEvents(1)
                 var delivered: Bool?
                 waitUntil { done in
-                    testContext.eventReporter.flushReportingOutcome { result in
+                    testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
                     }
@@ -1614,10 +1614,10 @@ extension EventReporterSpec {
             it("reports true when LaunchDarkly accepts the batch") {
                 testContext = TestContext()
                 testContext.recordEvents(1)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
                 waitUntil { done in
-                    testContext.eventReporter.flushReportingOutcome { result in
+                    testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
                     }
@@ -1637,12 +1637,12 @@ extension EventReporterSpec {
                 })
                 testContext = TestContext(store: store)
                 testContext.recordEvents(1)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
 
                 failing.record(true)
                 var delivered: Bool?
                 waitUntil { done in
-                    testContext.eventReporter.flushReportingOutcome { result in
+                    testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
                     }
@@ -1653,7 +1653,7 @@ extension EventReporterSpec {
 
                 failing.record(false)
                 waitUntil { done in
-                    testContext.eventReporter.flushReportingOutcome { result in
+                    testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
                     }
@@ -1671,15 +1671,15 @@ extension EventReporterSpec {
                     return writes > 2 ? ENOSPC : file.writeAll(bytes)
                 })
                 testContext = TestContext(store: store)
-                testContext.eventReporter.record(CustomEvent(key: "written", context: LDContext.stub()))
+                testContext.eventProcessor.record(CustomEvent(key: "written", context: LDContext.stub()))
                 // Its write fails, so persistence is given up with "written" in the log and this in memory.
-                testContext.eventReporter.record(CustomEvent(key: "held", context: LDContext.stub()))
+                testContext.eventProcessor.record(CustomEvent(key: "held", context: LDContext.stub()))
                 expect(store.isPersisting) == false
 
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
                 waitUntil { done in
-                    testContext.eventReporter.flushReportingOutcome { result in
+                    testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
                     }
@@ -1692,12 +1692,12 @@ extension EventReporterSpec {
 
             it("reports false when an event could not be serialized, though the rest were accepted") {
                 testContext = TestContext()
-                testContext.eventReporter.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
+                testContext.eventProcessor.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
                 testContext.recordEvents(1)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
                 waitUntil { done in
-                    testContext.eventReporter.flushReportingOutcome { result in
+                    testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
                     }
@@ -1707,7 +1707,7 @@ extension EventReporterSpec {
 
                 // Told once, to the caller who was there to hear it.
                 waitUntil { done in
-                    testContext.eventReporter.flushReportingOutcome { result in
+                    testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
                     }
@@ -1719,12 +1719,12 @@ extension EventReporterSpec {
                 testContext = TestContext()
                 // Larger than a log frame holds, so the store refuses it however much room is left.
                 let oversized = String(repeating: "x", count: EventLogFormat.maxFrameSize)
-                testContext.eventReporter.record(CustomEvent(key: oversized, context: LDContext.stub()))
-                testContext.eventReporter.record(CustomEvent(key: "fine", context: LDContext.stub()))
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.record(CustomEvent(key: oversized, context: LDContext.stub()))
+                testContext.eventProcessor.record(CustomEvent(key: "fine", context: LDContext.stub()))
+                testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
                 waitUntil { done in
-                    testContext.eventReporter.flushReportingOutcome { result in
+                    testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
                     }
@@ -1737,10 +1737,10 @@ extension EventReporterSpec {
             it("reports false when a retryable failure leaves the batch on disk") {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
                 waitUntil(timeout: .seconds(10)) { done in
-                    testContext.eventReporter.flushReportingOutcome { result in
+                    testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
                     }
@@ -1757,16 +1757,16 @@ extension EventReporterSpec {
                                                    headerFields: nil)
                 testContext.serviceMock.stubbedEventResponse = (nil, unauthorized, nil, nil)
                 testContext.recordEvents(1)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
                 waitUntil { done in
-                    testContext.eventReporter.flushReportingOutcome { result in
+                    testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
                     }
                 }
                 expect(delivered) == false
-                expect(testContext.eventReporter.isOnline) == false
+                expect(testContext.eventProcessor.isOnline) == false
                 // Kept off the device, since no later delivery would fare better.
                 expect(testContext.store.pendingEventCount) == 0
             }
@@ -1774,16 +1774,16 @@ extension EventReporterSpec {
             it("keeps draining while a delivery is in flight, and sends each batch once") {
                 testContext = TestContext()
                 testContext.recordEvents(1)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 testContext.serviceMock.holdsEventCompletions = true
 
-                testContext.eventReporter.flushReportingOutcome { _ in }
+                testContext.eventProcessor.flushReportingOutcome { _ in }
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
 
                 // Holding this back until the first delivery answers would let the store fill through a retry, which
                 // can run for twice the connection timeout, and events recorded past the capacity are lost.
                 testContext.recordEvents(1)
-                testContext.eventReporter.flushReportingOutcome { _ in }
+                testContext.eventProcessor.flushReportingOutcome { _ in }
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2))
 
                 // The first batch is still awaiting its response, so the second delivery left it alone rather than
@@ -1797,17 +1797,17 @@ extension EventReporterSpec {
             it("inherits the outcome of a delivery holding the batch it would have sent") {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 testContext.serviceMock.holdsEventCompletions = true
 
-                testContext.eventReporter.flushReportingOutcome { _ in }
+                testContext.eventProcessor.flushReportingOutcome { _ in }
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
 
                 // Everything on disk belongs to the delivery already running, and that may include this caller's
                 // events: a commit only stages them, and whichever delivery runs next is what closes them into a
                 // batch. So this caller is answered by that delivery rather than told its events arrived.
                 let answer = Answer()
-                testContext.eventReporter.flushReportingOutcome(completion: answer.record)
+                testContext.eventProcessor.flushReportingOutcome(completion: answer.record)
                 Thread.sleep(forTimeInterval: 0.3)
                 expect(answer.value()).to(beNil())
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
@@ -1821,21 +1821,21 @@ extension EventReporterSpec {
             it("tells the caller whose delivery the loss happened before, not whichever answers first") {
                 testContext = TestContext()
                 testContext.recordEvents(1)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 testContext.serviceMock.holdsEventCompletions = true
 
                 // A closes a batch of its own and waits on it. Nothing has been lost at the point it closed.
                 let first = Answer()
-                testContext.eventReporter.flushReportingOutcome(completion: first.record)
+                testContext.eventProcessor.flushReportingOutcome(completion: first.record)
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
 
                 // B closes a batch of its own, dropping an event the store will never take as it does, so the loss
                 // falls between the two closes. B has a post of its own outstanding, which is what leaves A to be
                 // answered first.
-                testContext.eventReporter.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
+                testContext.eventProcessor.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
                 testContext.recordEvents(1)
                 let second = Answer()
-                testContext.eventReporter.flushReportingOutcome(completion: second.record)
+                testContext.eventProcessor.flushReportingOutcome(completion: second.record)
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2))
 
                 // Responses land in the order they were made, so A is answered while B's post is still out. With
@@ -1850,14 +1850,14 @@ extension EventReporterSpec {
             it("answers away from the queue a delivery runs on, after a delivery") {
                 testContext = TestContext()
                 testContext.recordEvents(1)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
 
                 expect(testContext.flushedFromACompletion()) == true
             }
 
             it("answers away from the queue a delivery runs on, with nothing to send") {
                 testContext = TestContext()
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
 
                 // The path that answers without ever leaving the reporter's queue, so it is the one that would
                 // deadlock while the delivery path, answering from the response, did not.
@@ -1867,45 +1867,45 @@ extension EventReporterSpec {
             it("sends one delivery for the flushes that arrive before it starts, and answers them all") {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 let released = DispatchSemaphore(value: 0)
-                testContext.eventReporter.occupyQueue(until: released)
+                testContext.eventProcessor.occupyQueue(until: released)
 
                 // An application flushing in a loop would otherwise queue a delivery each time, leaving the flush
                 // that matters waiting behind all of them, and growing the waiter list without bound.
                 for _ in 0..<100 {
-                    testContext.eventReporter.flush(completion: nil)
+                    testContext.eventProcessor.flush(completion: nil)
                 }
-                expect(testContext.eventReporter.queuedDeliveryWaiterCount) == 0
+                expect(testContext.eventProcessor.queuedDeliveryWaiterCount) == 0
 
                 // Both completions run at once, and the poll below reads from a third thread.
                 let answers = Answers()
                 for _ in 0..<2 {
-                    testContext.eventReporter.flushReportingOutcome(completion: answers.record)
+                    testContext.eventProcessor.flushReportingOutcome(completion: answers.record)
                 }
-                expect(testContext.eventReporter.queuedDeliveryWaiterCount) == 2
+                expect(testContext.eventProcessor.queuedDeliveryWaiterCount) == 2
 
                 released.signal()
                 // Allows for the one-second retry, after which the batch stays on disk.
                 expect(answers.value()).toEventually(equal([false, false]), timeout: .seconds(10))
-                expect(testContext.eventReporter.startedDeliveryCount) == 1
+                expect(testContext.eventProcessor.startedDeliveryCount) == 1
                 expect(testContext.serviceMock.publishEventDataCallCount) == 2 // the first attempt and its retry
             }
 
             it("answers every flush that arrived during a refused delivery with its outcome") {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
                 testContext.serviceMock.holdsEventCompletions = true
 
                 let answers = Answers()
-                testContext.eventReporter.flushReportingOutcome(completion: answers.record)
+                testContext.eventProcessor.flushReportingOutcome(completion: answers.record)
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
 
                 // Held on the first post, each of these finds the only batch claimed by it. None of them is told
                 // its events arrived on the strength of having nothing left of its own to send.
                 for _ in 0..<20 {
-                    testContext.eventReporter.flushReportingOutcome(completion: answers.record)
+                    testContext.eventProcessor.flushReportingOutcome(completion: answers.record)
                 }
 
                 testContext.serviceMock.holdsEventCompletions = false
@@ -1933,8 +1933,8 @@ extension EventReporterSpec {
                 testContext = TestContext(store: EventStore.temporary(persistEvents: persistence != .disabled),
                                           eventPersistence: persistence)
                 testContext.serviceMock.respondToEvents(with: status)
-                testContext.eventReporter.record(CustomEvent(key: "kept", context: testContext.context))
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
 
                 for flush in 0..<refusedFlushes {
                     expect(testContext.flushOutcome()).to(equal(false), description: "HTTP \(status), flush \(flush)")
@@ -1974,8 +1974,8 @@ extension EventReporterSpec {
                 it("posts a batch refused with HTTP \(status) only for each flush and its one retry") {
                     testContext = TestContext()
                     testContext.serviceMock.respondToEvents(with: status)
-                    testContext.eventReporter.record(CustomEvent(key: "refused", context: testContext.context))
-                    testContext.eventReporter.isOnline = true
+                    testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                    testContext.eventProcessor.isOnline = true
 
                     for flush in 1...2 {
                         expect(testContext.flushOutcome()) == false
@@ -1989,10 +1989,10 @@ extension EventReporterSpec {
             it("delivers events recorded during an outage after the batch refused before them, oldest first and once each") {
                 testContext = TestContext()
                 testContext.serviceMock.respondToEvents(with: 503)
-                testContext.eventReporter.isOnline = true
-                testContext.eventReporter.record(CustomEvent(key: "first", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                testContext.eventProcessor.record(CustomEvent(key: "first", context: testContext.context))
                 expect(testContext.flushOutcome()) == false
-                testContext.eventReporter.record(CustomEvent(key: "second", context: testContext.context))
+                testContext.eventProcessor.record(CustomEvent(key: "second", context: testContext.context))
                 expect(testContext.flushOutcome()) == false
 
                 // Two flushes, each an attempt and a retry, all at the first batch: delivery stops at the oldest batch
@@ -2008,13 +2008,13 @@ extension EventReporterSpec {
             it("does not tell a flush its events arrived when an earlier delivery nobody waited on failed to send them") {
                 testContext = TestContext()
                 testContext.serviceMock.respondToEvents(with: 503)
-                testContext.eventReporter.record(CustomEvent(key: "kept", context: testContext.context))
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
 
                 // Stands in for the scheduled delivery, or the one at backgrounding: it closes the event into a batch,
                 // fails to send it, and keeps it.
                 waitUntil(timeout: .seconds(10)) { done in
-                    testContext.eventReporter.flush(completion: done)
+                    testContext.eventProcessor.flush(completion: done)
                 }
                 expect(testContext.serviceMock.publishEventDataCallCount) == 2
 
@@ -2025,14 +2025,14 @@ extension EventReporterSpec {
             it("starts another delivery while a refused post waits to retry") {
                 testContext = TestContext()
                 testContext.serviceMock.respondToEvents(with: 503)
-                testContext.eventReporter.record(CustomEvent(key: "kept", context: testContext.context))
-                testContext.eventReporter.isOnline = true
-                testContext.eventReporter.flush(completion: nil)
+                testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                testContext.eventProcessor.flush(completion: nil)
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1))
 
                 // Well inside the one-second retry delay: a delivery queue sleeping through it would not get to this.
-                testContext.eventReporter.flush(completion: nil)
-                expect(testContext.eventReporter.startedDeliveryCount).toEventually(equal(2), timeout: .milliseconds(500))
+                testContext.eventProcessor.flush(completion: nil)
+                expect(testContext.eventProcessor.startedDeliveryCount).toEventually(equal(2), timeout: .milliseconds(500))
 
                 // One retry and no more; the batch then waits for the next flush.
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: .seconds(3))
@@ -2042,11 +2042,11 @@ extension EventReporterSpec {
 
             it("sends events recorded while offline with the next scheduled delivery") {
                 testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
-                testContext.eventReporter.record(CustomEvent(key: "held", context: testContext.context))
+                testContext.eventProcessor.record(CustomEvent(key: "held", context: testContext.context))
                 waitLettingTimersFire(2 * Constants.eventFlushIntervalHalfSecond)
                 expect(testContext.serviceMock.publishEventDataCallCount) == 0
 
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.isOnline = true
 
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: .seconds(3))
                 expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["held"]]
@@ -2057,8 +2057,8 @@ extension EventReporterSpec {
                 let window = 2.5
                 testContext = TestContext(eventFlushInterval: interval)
                 testContext.serviceMock.respondToEvents(with: 503)
-                testContext.eventReporter.record(CustomEvent(key: "refused", context: testContext.context))
-                testContext.eventReporter.isOnline = true
+                testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
                 waitLettingTimersFire(window)
 
                 // One post per interval and one outstanding retry at a time; a loop would be in the hundreds by now.
@@ -2067,7 +2067,7 @@ extension EventReporterSpec {
                 expect(posts) <= Int(window / interval) + 1 + Int(window / 1.0) + 1
 
                 // Offline stops it entirely, kept batch or not. Waits out a retry already scheduled before counting.
-                testContext.eventReporter.isOnline = false
+                testContext.eventProcessor.isOnline = false
                 waitLettingTimersFire(1.0 + interval)
                 let whenOffline = testContext.serviceMock.publishEventDataCallCount
                 waitLettingTimersFire(interval * 3)

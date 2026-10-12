@@ -6,7 +6,7 @@ import Foundation
 /// caller's events may belong to a delivery already under way, and answering that caller means hearing from it. These
 /// are the two small pieces that arrange it: a `Claim` is a batch somebody is waiting on, and a `DeliveryAnswer`
 /// gathers the claims one delivery's answer depends on.
-extension EventReporter {
+extension DirectEventProcessor {
     /// A batch one delivery has taken, which another delivery's answer may depend on.
     final class Claim {
         /// This batch's result, or nil while the delivery holding it is still waiting. Only to be used while holding

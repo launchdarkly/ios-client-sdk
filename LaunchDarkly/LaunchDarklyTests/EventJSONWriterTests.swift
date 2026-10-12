@@ -534,8 +534,8 @@ final class EventJSONWriterTests: XCTestCase {
             let service = DarklyServiceMock()
             service.config = config
 
-            let codableReporter = EventReporter(service: service, onSyncComplete: nil, store: codableStore, encoding: .codable)
-            let handWrittenReporter = EventReporter(service: service, onSyncComplete: nil, store: handWrittenStore, encoding: .handWritten)
+            let codableReporter = DirectEventProcessor(service: service, onSyncComplete: nil, store: codableStore, encoding: .codable)
+            let handWrittenReporter = DirectEventProcessor(service: service, onSyncComplete: nil, store: handWrittenStore, encoding: .handWritten)
 
             codableReporter.record(event)
             handWrittenReporter.record(event)

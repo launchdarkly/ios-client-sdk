@@ -1,85 +1,6 @@
 import Foundation
 import OSLog
 
-typealias EventSyncCompleteClosure = ((SynchronizingError?) -> Void)
-/// Reports whether LaunchDarkly accepted every event a flush covered.
-typealias FlushOutcomeClosure = (Bool) -> Void
-// sourcery: autoMockable
-protocol EventReporting {
-    // sourcery: defaultMockValue = false
-    var isOnline: Bool { get set }
-    // sourcery: defaultMockValue = Date.distantPast
-    var lastEventResponseDate: Date { get }
-
-    func record(_ event: Event)
-    // swiftlint:disable:next function_parameter_count
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey,
-                                    value: LDValue,
-                                    defaultValue: LDValue,
-                                    featureFlag: FeatureFlag?,
-                                    context: LDContext,
-                                    includeReason: Bool)
-    func flush(completion: CompletionClosure?)
-
-    /// Like `flush`. Reports `true` if LaunchDarkly accepted the pending batches, or there were none to send. Reports
-    /// `false` if the reporter is offline, a batch was refused for good, a retryable failure left batches on disk, or
-    /// an event the SDK had accepted could not be kept to send at all.
-    ///
-    /// Flushes arriving faster than a delivery completes join the one that is queued, since a delivery that has not
-    /// started yet will send their events too. A delivery that has already started is not joined, so an answer is
-    /// always about the batch the caller's own delivery took, never one an earlier delivery lost.
-    ///
-    /// The completion, like `flush`'s, runs on a background queue, and never on the reporter's own: a completion is
-    /// free to record events or flush again without waiting on the queue it is running on. It is not the caller's
-    /// thread either, and two completions may run at once, so anything it touches needs to expect that.
-    func flushReportingOutcome(completion: @escaping FlushOutcomeClosure)
-
-    /// Makes everything recorded so far outlive the process, without waiting for a delivery.
-    ///
-    /// The SDK does this itself at the points where an application is most likely to be about to die. It is worth
-    /// calling directly before deliberately terminating the process.
-    func commitRecordedEvents()
-
-    /// Commits as a commit point does: before returning at `.immediate`, on a background queue at `.deferred`, and not
-    /// at all where nothing is persisted, where a commit would only move the encode earlier.
-    func commitAtCommitPoint()
-}
-
-class NullEventReporter: EventReporting {
-    var isOnline: Bool = true
-    var lastEventResponseDate: Date = Date()
-
-    func record(_ event: Event) {
-    }
-
-    func recordFlagEvaluationEvents(flagKey: LDFlagKey,
-                                    value: LDValue,
-                                    defaultValue: LDValue,
-                                    featureFlag: FeatureFlag?,
-                                    context: LDContext,
-                                    includeReason: Bool) {
-    }
-
-    // There is never anything to send, but a completion still answers on a background queue, as `EventReporter`'s
-    // does. Were it answered inline, the threading a caller sees would depend on whether events are turned on, and a
-    // caller doing what the contract allows -- taking a lock it already holds, say -- would deadlock only there.
-    func flush(completion: CompletionClosure?) {
-        guard let completion
-        else { return }
-        DispatchQueue.global().async { completion() }
-    }
-
-    func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
-        DispatchQueue.global().async { completion(true) }
-    }
-
-    func commitRecordedEvents() {
-    }
-
-    func commitAtCommitPoint() {
-    }
-}
-
 /// Records analytics events and delivers them to LaunchDarkly.
 ///
 /// Recorded events end up in an `EventStore`, an on-disk log, rather than held in memory until a delivery succeeds.
@@ -100,7 +21,7 @@ class NullEventReporter: EventReporting {
 /// Whether a commit point runs on the caller's thread is the application's choice, through
 /// `LDConfig.eventPersistence`. Only at `.immediate` can `track` promise the event is on disk by the time it returns.
 /// At `.disabled` nothing commits early: the held run waits for the delivery, which encodes it.
-class EventReporter: EventReporting {
+class DirectEventProcessor: EventProcessor {
     /// How many full events may be held unencoded before one of them pays for a commit.
     ///
     /// It sets two things at once. The first is how many evaluations a termination can take -- not everything a crash
@@ -243,7 +164,7 @@ class EventReporter: EventReporting {
         set { timerQueue.sync { newValue ? startReporting() : stopReporting() } }
     }
 
-    private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
+    private var timerQueue = DispatchQueue(label: "com.launchdarkly.DirectEventProcessor.timerQueue")
     private var eventReportTimer: TimeResponding?
     var isReportingActive: Bool { eventReportTimer != nil }
 
@@ -262,7 +183,7 @@ class EventReporter: EventReporting {
          onSyncComplete: EventSyncCompleteClosure?,
          store: EventStoring? = nil,
          encoding: Encoding = .handWritten,
-         commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.commitQueue", qos: .userInitiated)) {
+         commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.DirectEventProcessor.commitQueue", qos: .userInitiated)) {
         self.eventJSONWriter = EventJSONWriter(config: service.config)
         self.service = service
         self.onSyncComplete = onSyncComplete
@@ -270,9 +191,9 @@ class EventReporter: EventReporting {
         self.encoding = encoding
         self.capacity = service.config.eventCapacity
         self.commitQueue = commitQueue
-        self.encoder = EventReporter.makeEncoder(config: service.config)
+        self.encoder = DirectEventProcessor.makeEncoder(config: service.config)
         self.contextSummarizer = ContextSummarizer(logger: service.config.logger, maxContexts: service.config.eventCapacity)
-        self.store = store ?? EventReporter.makeStore(config: service.config)
+        self.store = store ?? DirectEventProcessor.makeStore(config: service.config)
 
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
         // doing it on the caller's thread would put file I/O in the way of the client starting up.
@@ -299,13 +220,13 @@ class EventReporter: EventReporting {
 
     func record(_ event: Event) {
         let (dropped, needsCommit) = recordLock.withLock {
-            (!admitToPending(event), pending.count >= EventReporter.pendingCommitThreshold)
+            (!admitToPending(event), pending.count >= DirectEventProcessor.pendingCommitThreshold)
         }
 
         if dropped {
             reportDropped()
         }
-        if EventReporter.isCommitPoint(event.kind) {
+        if DirectEventProcessor.isCommitPoint(event.kind) {
             commitAtCommitPoint()
         } else if needsCommit {
             scheduleCommitWherePersisting()
@@ -330,7 +251,7 @@ class EventReporter: EventReporting {
             let counted = contextSummarizer.trackRequest(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
             if let featureEvent, !admitToPending(featureEvent) { dropped += 1 }
             if let debugEvent, !admitToPending(debugEvent) { dropped += 1 }
-            return (counted, pending.count >= EventReporter.pendingCommitThreshold)
+            return (counted, pending.count >= DirectEventProcessor.pendingCommitThreshold)
         }
 
         // A refused evaluation is a loss like a refused event, since nothing later reconstructs its counter. Its full
@@ -650,7 +571,7 @@ class EventReporter: EventReporting {
     private func reportEvents(completion: ((_ delivered: Bool, _ lossMark: UInt64) -> Void)?) {
         guard isOnline
         else {
-            os_log("%s aborted. EventReporter is offline", log: service.config.logger, type: .debug, typeName(and: #function))
+            os_log("%s aborted. DirectEventProcessor is offline", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(.isOffline)
             completion?(false, 0)
             return
@@ -871,7 +792,7 @@ class EventReporter: EventReporting {
     }
 
     private func reportSyncComplete(_ result: SynchronizingError?) {
-        // The eventReporter is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
+        // The eventProcessor is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         guard let onSyncComplete = onSyncComplete
         else { return }
         DispatchQueue.main.async {
@@ -880,7 +801,7 @@ class EventReporter: EventReporting {
     }
 }
 
-extension EventReporter {
+extension DirectEventProcessor {
     /// Which encoder recorded events go through.
     ///
     /// `.codable` is the reference `.handWritten` is tested against. The two produce equal JSON but not identical
@@ -904,10 +825,10 @@ extension EventReporter {
     }
 }
 
-extension EventReporter: TypeIdentifying { }
+extension DirectEventProcessor: TypeIdentifying { }
 
 #if DEBUG
-    extension EventReporter {
+    extension DirectEventProcessor {
         /// Full events accepted but not yet handed to a commit.
         var pendingEventsForTesting: [Event] {
             recordLock.withLock { pending }
