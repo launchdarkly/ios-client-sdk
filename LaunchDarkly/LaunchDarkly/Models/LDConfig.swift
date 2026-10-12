@@ -216,7 +216,7 @@ public struct LDConfig {
         static let sendEvents = true
 
         /// The default maximum number of events the LDClient can store
-        static let eventCapacity = 1000
+        static let eventCapacity = 2000
 
         /// The default behavior for the SDK is to keep events in memory only.
         static let eventPersistence = EventPersistence.disabled
@@ -341,7 +341,7 @@ public struct LDConfig {
     /// only the sending of client-side events, not streaming or polling for events from the server.
     public var sendEvents: Bool = Defaults.sendEvents
 
-    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 1000)
+    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. The same number bounds how many distinct contexts flag evaluations are summarized for between two reports; evaluations for contexts beyond it are not counted until the next report. (Default: 2000)
     ///
     /// Where `eventPersistence` keeps events across launches, this includes the events an earlier launch left undelivered, from the
     /// moment the SDK has read them, which it does in the background just after starting. Events recorded before then are
