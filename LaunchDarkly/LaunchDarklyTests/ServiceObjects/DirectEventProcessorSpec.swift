@@ -1336,6 +1336,21 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["feature", "summary"]
             }
 
+            itPersisting("writes on flush at .deferred too, without waiting for the queue a tracked event's write goes to") {
+                // Suspended, so that the tracked event's own write cannot run and the only write there can be is one the
+                // flush makes on this thread.
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
+                commits.suspend()
+                defer { commits.resume() }
+                testContext = TestContext(eventPersistence: .deferred, commitQueue: commits)
+
+                testContext.eventProcessor.record(CustomEvent(key: "before-exit", context: testContext.context, data: nil))
+                expect(eventsLeftOnDisk()).to(beEmpty())
+
+                testContext.eventProcessor.flush(completion: nil)
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom"]
+            }
+
             it("does not write on the main thread when a flag is evaluated there") {
                 // Suspended for the length of the evaluations, so that a write this thread was going to cause is a
                 // write that cannot happen: an evaluation is expected to be a memory operation, and the thread

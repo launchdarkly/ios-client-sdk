@@ -475,13 +475,24 @@ extension DirectEventProcessor {
 
     /// Queues a delivery the way a caller asking for one expects, which is as a commit point.
     ///
-    /// At `.immediate` everything accepted before the call is on disk by the time it returns, even where the delivery
-    /// itself cannot run because the client is offline. What it does not do is close those events into a batch: only
-    /// a delivery does that, so a delivery already under way may be the one holding them. That is why the answer
-    /// waits on the claims it skips rather than only on what it sent itself.
+    /// Wherever events persist, everything accepted before the call is on disk by the time it returns, even where the
+    /// delivery itself cannot run because the client is offline. What it does not do is close those events into a
+    /// batch: only a delivery does that, so a delivery already under way may be the one holding them. That is why the
+    /// answer waits on the claims it skips rather than only on what it sent itself.
     private func commitThenQueueDelivery(_ completion: FlushOutcomeClosure?) {
-        commitAtCommitPoint()
+        commitOnFlush()
         queueDelivery(completion)
+    }
+
+    /// Writes on the caller's thread at `.deferred` as well as at `.immediate`, unlike `track` and `identify`.
+    ///
+    /// A flush is what an application calls when it is about to end the process on purpose, and a write it only queued
+    /// is one the process may end before. Deferring is for the recordings an application makes all the time, which a
+    /// flush is not. Where nothing persists, a commit makes nothing durable, and is left to the delivery.
+    private func commitOnFlush() {
+        if service.config.eventPersistence == .immediate || store.isPersisting {
+            commitRecordedEvents()
+        }
     }
 
     private func queueScheduledDelivery() {

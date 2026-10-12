@@ -13,15 +13,15 @@ extension LDClient {
      Because it does not wait, it cannot report how the delivery went. Use `flush(completion:)` where that matters
      but blocking does not suit, or `flushAndWait` where blocking is acceptable.
 
-     Where `LDConfig.eventPersistence` is on, it also writes before it returns. Recording an event does not on its own
-     make it outlive the process: events are written in runs, so one recorded shortly before the process ends may
-     never have been written at all. This call writes everything recorded so far, and those events then survive
-     whether or not the delivery does. Where it is off, events live in memory only and nothing survives the process,
-     whether or not this was called.
+     Where `LDConfig.eventPersistence` is on, it also writes before it returns, on the calling thread, at `.deferred`
+     as well as at `.immediate`. Recording an event does not on its own make it outlive the process: events are written
+     in runs, so one recorded shortly before the process ends may never have been written at all. This call writes
+     everything recorded so far, and those events then survive whether or not the delivery does. Where it is off,
+     events live in memory only and nothing survives the process, whether or not this was called.
 
      That is what makes it worth calling where the process is about to end deliberately. It is not a crash-time
-     mechanism — Apple gives the SDK no crash hook, and a trap or a `SIGKILL` takes whatever was recorded since the
-     last write. Those events are not lost so much as late: they reach LaunchDarkly on the next launch.
+     mechanism — Apple gives the SDK no crash hook, and a trap or a `SIGKILL` loses whatever was recorded since the
+     last write. What was written before then is delivered on the next launch.
      */
     public func flush() {
         LDClient.instancesQueue.sync(flags: .barrier) {
@@ -146,8 +146,8 @@ extension LDClient {
             }
         }
 
-        // Started, then given up on. The deliveries are what makes a zero timeout worth calling at all: at
-        // `.immediate` the events are on disk by the time each `flushReportingOutcome` returns. Waiting is what is
+        // Started, then given up on. The deliveries are what makes a zero timeout worth calling at all: wherever events
+        // persist, they are on disk by the time each `flushReportingOutcome` returns. Waiting is what is
         // skipped, and a reporter that answered during the loop above must not turn that into a `true`.
         guard timeout > 0
         else { return false }
