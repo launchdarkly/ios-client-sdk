@@ -863,6 +863,35 @@ final class EventStoreSpec: QuickSpec {
                 }
             }
 
+            it("does not list a delivered batch again when its file will not delete, and deletes it when it can") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("first"))
+                let first = store.closeBatch()!
+                _ = store.stage(EventStoreSpec.payload("second"))
+                let second = store.closeBatch()!
+
+                let directory = store.directory!
+                // A directory with no write permission is one its entries cannot be unlinked from, which is what the
+                // filesystem refusing a delete looks like from here.
+                let readOnly: [FileAttributeKey: Any] = [.posixPermissions: 0o555]
+                let writable: [FileAttributeKey: Any] = [.posixPermissions: 0o755]
+                try? FileManager.default.setAttributes(readOnly, ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes(writable, ofItemAtPath: directory.path) }
+
+                store.remove(first)
+
+                // Delivered, so it neither counts against capacity nor comes back for another delivery, even though
+                // its file is still sitting there.
+                expect(store.pendingBatches().map(\.payloadId)) == [second.payloadId]
+                expect(store.pendingEventCount) == 1
+
+                try? FileManager.default.setAttributes(writable, ofItemAtPath: directory.path)
+
+                // The listing that can delete it does, rather than leaving it for a run that would send it again.
+                _ = store.pendingBatches()
+                expect(FileManager.default.fileExists(atPath: directory.appendingPathComponent("ready-\(first.payloadId)").path)) == false
+            }
+
             it("stops counting a batch once when another process delivered it and a listing came between") {
                 store = EventStore.temporary()
                 _ = store.stage(EventStoreSpec.payload("first"))

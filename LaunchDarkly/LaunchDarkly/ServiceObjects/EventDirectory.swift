@@ -43,6 +43,19 @@ final class EventDirectory {
     /// Only to be used while holding `ioLock`.
     private var eventCounts: [String: Int] = [:]
 
+    /// Batches LaunchDarkly has accepted whose file the filesystem would not let go of.
+    ///
+    /// Left out of every listing, because a batch that is delivered and merely still on the disk would otherwise be
+    /// found again by the next delivery, and the one after that, and sent each time. The delete is tried once more on
+    /// each listing, so a directory that stops being read-only clears itself.
+    ///
+    /// Only for this session: a later run, which may well be able to delete the file, treats it as it would any other
+    /// batch a previous run left behind. LaunchDarkly discards a repeated payload ID, so the cost of that is a wasted
+    /// request rather than events counted twice.
+    ///
+    /// Only to be used while holding `ioLock`.
+    private var deliveredButUndeleted: Set<String> = []
+
     #if os(macOS) || targetEnvironment(macCatalyst)
     /// Whether the open log is locked while it is open. Only to be changed before the store first touches the disk.
     ///
@@ -164,6 +177,8 @@ final class EventDirectory {
             .filter { $0.lastPathComponent.hasPrefix(EventDirectory.batchPrefix) }
             .compactMap { file -> (EventBatch, Date)? in
                 let payloadId = String(file.lastPathComponent.dropFirst(EventDirectory.batchPrefix.count))
+                guard !isDeliveredButUndeleted(payloadId, at: file)
+                else { return nil }
                 // Reading is only for a batch this process has not counted: one a previous run left behind.
                 guard let events = eventCounts[payloadId] ?? countOfEvents(in: file)
                 else { return nil }
@@ -180,6 +195,18 @@ final class EventDirectory {
         eventCounts = eventCounts.filter { listed.contains($0.key) }
 
         return batches
+    }
+
+    /// Whether a batch has already been delivered and only its file is left, trying the delete that failed once more
+    /// on the way. Requires `ioLock`.
+    private func isDeliveredButUndeleted(_ payloadId: String, at file: URL) -> Bool {
+        guard deliveredButUndeleted.contains(payloadId)
+        else { return false }
+        try? FileManager.default.removeItem(at: file)
+        if !FileManager.default.fileExists(atPath: file.path) {
+            deliveredButUndeleted.remove(payloadId)
+        }
+        return true
     }
 
     /// The `[...]` request body for a batch, or nil if it is gone or holds nothing this version can send, neither of
@@ -203,7 +230,14 @@ final class EventDirectory {
     ///   process delivered, say, which a listing has stopped counting already.
     func remove(_ payloadId: String) -> Int {
         ioLock.assertOwned()
-        try? FileManager.default.removeItem(at: url(of: payloadId))
+        let file = url(of: payloadId)
+        try? FileManager.default.removeItem(at: file)
+        if FileManager.default.fileExists(atPath: file.path) {
+            // Its events stop counting all the same: LaunchDarkly has them, and holding capacity for a file this
+            // process may never be allowed to delete would cost the session events it could still have recorded.
+            os_log("%s could not delete a delivered batch; it will not be sent again this session", log: logger, type: .debug, typeName(and: #function))
+            deliveredButUndeleted.insert(payloadId)
+        }
         return eventCounts.removeValue(forKey: payloadId) ?? 0
     }
 
