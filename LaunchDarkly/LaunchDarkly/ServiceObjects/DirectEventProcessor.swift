@@ -47,6 +47,8 @@ class DirectEventProcessor: EventProcessor {
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
+    private let sender: AnalyticsEventSender
+
     /// Its summarizer is guarded by `recordLock`, and its encoders are reached only under `commitLock`.
     let eventBuffer: OutboundEventBuffer
 
@@ -175,6 +177,7 @@ class DirectEventProcessor: EventProcessor {
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.DirectEventProcessor.commitQueue", qos: .userInitiated)) {
         self.service = service
         self.onSyncComplete = onSyncComplete
+        self.sender = AnalyticsEventSender(service: service)
         self.responseDate = Date()
         self.eventCapacity = service.config.eventCapacity
         self.commitQueue = commitQueue
@@ -692,75 +695,30 @@ class DirectEventProcessor: EventProcessor {
         }
     }
 
-    private func publish(_ batch: EventBatch, _ body: Data, _ completion: @escaping (DeliveryOutcome) -> Void) {
-        service.publishEventData(body, batch.payloadId) { response in
-            let outcome = self.outcome(sentEvents: batch.eventCount, response: response.urlResponse as? HTTPURLResponse, error: response.error, isRetry: false)
+    /// Sends one batch and acts on what LaunchDarkly made of it, before handing the outcome on.
+    private func publish(_ batch: EventBatch, _ body: Data, _ completion: @escaping (AnalyticsEventSender.Outcome) -> Void) {
+        sender.send(body, payloadId: batch.payloadId, eventCount: batch.eventCount) { outcome in
             switch outcome {
-            case .accepted, .refused:
-                self.store.remove(batch)
-                completion(outcome)
-            case .retryable:
-                os_log("%s Retrying event post after delay.", log: self.service.config.logger, type: .debug, self.typeName(and: #function))
-                DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.0) {
-                    self.service.publishEventData(body, batch.payloadId) { retryResponse in
-                        let retried = self.outcome(sentEvents: batch.eventCount, response: retryResponse.urlResponse as? HTTPURLResponse, error: retryResponse.error, isRetry: true)
-                        switch retried {
-                        case .accepted, .refused:
-                            self.store.remove(batch)
-                        case .retryable:
-                            // The batch stays on disk. A later delivery, in this run of the application or the next
-                            // one, sends it under the same payload ID, so LaunchDarkly can tell it is not new.
-                            os_log("%s Keeping %d event(s) on disk to retry later", log: self.service.config.logger, type: .debug, self.typeName(and: #function), batch.eventCount)
-                        }
-                        completion(retried)
+            case .accepted(let serverTime):
+                self.stateLock.withLock {
+                    if let serverTime = serverTime, serverTime > self.responseDate {
+                        self.responseDate = serverTime
                     }
                 }
+                self.reportSyncComplete(nil)
+                self.store.remove(batch)
+            case .refused(let response):
+                self.isOnline = false
+                self.reportSyncComplete(.response(response))
+                self.store.remove(batch)
+            case .retryable(let error):
+                self.reportSyncComplete(error)
+                // The batch stays on disk. A later delivery, in this run of the application or the next one, sends it
+                // under the same payload ID, so LaunchDarkly can tell it is not new.
+                os_log("%s Keeping %d event(s) on disk to retry later", log: self.service.config.logger, type: .debug, self.typeName(and: #function), batch.eventCount)
             }
+            completion(outcome)
         }
-    }
-
-    private enum DeliveryOutcome {
-        /// LaunchDarkly took the events.
-        case accepted
-        /// LaunchDarkly will never take these events, so keeping them only wastes space.
-        case refused
-        /// The events may still be deliverable.
-        case retryable
-    }
-
-    private func outcome(sentEvents: Int, response: HTTPURLResponse?, error: Error?, isRetry: Bool) -> DeliveryOutcome {
-        if error == nil && (200..<300).contains(response?.statusCode ?? 0) {
-            let serverTime = response?.headerDate
-            stateLock.withLock {
-                if let serverTime = serverTime, serverTime > responseDate {
-                    responseDate = serverTime
-                }
-            }
-
-            os_log("%s Completed sending %d event(s)", log: service.config.logger, type: .debug, typeName(and: #function), sentEvents)
-            self.reportSyncComplete(nil)
-            return .accepted
-        }
-
-        if let statusCode = response?.statusCode, HTTPURLResponse.StatusCodes.isTerminalStatusCode(statusCode) {
-            os_log("%s dropping events due to non-retriable response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: response))
-            isOnline = false
-            self.reportSyncComplete(.response(response))
-            return .refused
-        }
-
-        os_log("%s Sending events failed with error: %s response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: response))
-
-        if isRetry {
-            if let error = error {
-                reportSyncComplete(.request(error))
-            } else {
-                reportSyncComplete(.response(response))
-            }
-            return .retryable
-        }
-
-        return .retryable
     }
 
     private func reportSyncComplete(_ result: SynchronizingError?) {
