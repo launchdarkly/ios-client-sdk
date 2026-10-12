@@ -701,6 +701,7 @@ extension DirectEventProcessor {
     private func publish(_ batch: EventBatch,
                          _ body: Data,
                          _ completion: @escaping (AnalyticsEventSender.Outcome) -> Void) {
+        store.startedSending(batch)
         // The store is settled before observers are told, so that one looking at it on hearing the outcome sees it.
         sender.send(body, payloadId: batch.payloadId, eventCount: batch.eventCount) { outcome in
             switch outcome {
@@ -717,6 +718,7 @@ extension DirectEventProcessor {
                 self.store.remove(batch)
                 self.reportSyncComplete(.response(response))
             case .retryable(let error):
+                self.store.stoppedSending(batch)
                 self.reportSyncComplete(error)
                 // The batch stays on disk. A later delivery, in this run of the application or the next one, sends it
                 // under the same payload ID, so LaunchDarkly can tell it is not new.

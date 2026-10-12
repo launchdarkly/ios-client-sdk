@@ -346,6 +346,9 @@ public struct LDConfig {
     /// Where `eventPersistence` keeps events across launches, this includes the events an earlier launch left undelivered, from the
     /// moment the SDK has read them, which it does in the background just after starting. Events recorded before then are
     /// counted without them, so for that moment the SDK can hold up to this many on top of what the earlier launch left.
+    ///
+    /// Events being sent stop counting once the request is out, so a flush makes room straight away. If the request fails they are kept
+    /// to send again and count again, so after a failed send the SDK can hold up to this many plus the events that request carried.
     public var eventCapacity: Int = Defaults.eventCapacity
 
     /// How far the SDK goes to make a recorded event outlive the process that recorded it.

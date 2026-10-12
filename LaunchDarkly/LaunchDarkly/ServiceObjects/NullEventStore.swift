@@ -8,9 +8,13 @@ final class NullEventStore: EventStoring {
     private var reserved = 0
     /// Oldest first, as the store with a disk lists its batches, so that delivery goes in the order events were closed.
     private var closed: [(payloadId: String, events: [Data])] = []
+    /// Closed batches whose request is out, which do not count against capacity.
+    private var sending: Set<String> = []
 
     var pendingEventCount: Int {
-        lock.withLock { reserved + staged.count + closed.reduce(0) { $0 + $1.events.count } }
+        lock.withLock {
+            reserved + staged.count + closed.reduce(0) { $0 + (sending.contains($1.payloadId) ? 0 : $1.events.count) }
+        }
     }
 
     var isPersisting: Bool { false }
@@ -72,7 +76,22 @@ final class NullEventStore: EventStoring {
     }
 
     func remove(_ batch: EventBatch) {
-        lock.withLock { closed.removeAll { $0.payloadId == batch.payloadId } }
+        lock.withLock {
+            closed.removeAll { $0.payloadId == batch.payloadId }
+            sending.remove(batch.payloadId)
+        }
+    }
+
+    func startedSending(_ batch: EventBatch) {
+        lock.withLock {
+            if closed.contains(where: { $0.payloadId == batch.payloadId }) {
+                sending.insert(batch.payloadId)
+            }
+        }
+    }
+
+    func stoppedSending(_ batch: EventBatch) {
+        _ = lock.withLock { sending.remove(batch.payloadId) }
     }
 
     func recoverInterruptedLog() {

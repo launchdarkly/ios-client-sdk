@@ -1281,6 +1281,30 @@ extension DirectEventProcessorSpec {
                 expect(testContext.store.pendingEventCount) == 0
             }
 
+            // What the contract tests' "buffer is reset after flush" does: they have the payload as soon as it is sent,
+            // and record the next event before the SDK has heard back.
+            it("makes room in a full store as soon as its batch is sent") {
+                testContext = TestContext(eventCapacity: 2)
+                testContext.eventProcessor.isOnline = true
+                testContext.serviceMock.holdsEventCompletions = true
+                testContext.eventProcessor.record(CustomEvent(key: "first", context: testContext.context))
+                testContext.eventProcessor.record(CustomEvent(key: "second", context: testContext.context))
+
+                let first = Answer()
+                testContext.eventProcessor.flush { first.record(true) }
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+
+                testContext.eventProcessor.record(CustomEvent(key: "one-more", context: testContext.context))
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+                expect(first.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
+
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flush(completion: done)
+                }
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["first", "second"], ["one-more"]]
+            }
+
             it("answers an evaluating thread while a delivery is listing the store") {
                 testContext = TestContext()
                 // Standing in for the listing a delivery makes on a device whose disk is busy, which on the first one
@@ -2193,6 +2217,8 @@ private final class ClosingHookStore: EventStoring {
     func pendingBatches() -> [EventBatch] { inner.pendingBatches() }
     func body(of batch: EventBatch) throws -> Data? { try inner.body(of: batch) }
     func remove(_ batch: EventBatch) { inner.remove(batch) }
+    func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
+    func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
     func recoverInterruptedLog() { inner.recoverInterruptedLog() }
 
     func closeBatch() -> EventBatch? {
@@ -2267,6 +2293,8 @@ private final class SlowListingStore: EventStoring {
     func closeBatch() -> EventBatch? { inner.closeBatch() }
     func body(of batch: EventBatch) throws -> Data? { try inner.body(of: batch) }
     func remove(_ batch: EventBatch) { inner.remove(batch) }
+    func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
+    func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
     func recoverInterruptedLog() { inner.recoverInterruptedLog() }
 
     /// Every listing but the first is held, the first being the one the reporter makes as it starts up.

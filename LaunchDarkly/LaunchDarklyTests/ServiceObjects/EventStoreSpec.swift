@@ -690,6 +690,49 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.stage(EventStoreSpec.payload("second"))) == false
             }
 
+            it("does not count a batch while its request is out, and counts it again if the send is to be retried") {
+                store = EventStore.temporary(capacity: 1)
+                expect(store.stage(EventStoreSpec.payload("first"))) == true
+                let batch = store.closeBatch()!
+
+                store.startedSending(batch)
+                expect(store.pendingEventCount) == 0
+                expect(store.stage(EventStoreSpec.payload("while-sending"))) == true
+
+                store.stoppedSending(batch)
+                expect(store.pendingEventCount) == 2
+                expect(store.stage(EventStoreSpec.payload("after-retryable"))) == false
+            }
+
+            it("takes a sent batch out of the count only once when it is delivered") {
+                store = EventStore.temporary(capacity: 2)
+                expect(store.stage(EventStoreSpec.payload("first"))) == true
+                let batch = store.closeBatch()!
+                expect(store.stage(EventStoreSpec.payload("second"))) == true
+
+                store.startedSending(batch)
+                store.remove(batch)
+                expect(store.pendingEventCount) == 1
+                store.stoppedSending(batch)
+                expect(store.pendingEventCount) == 1
+                _ = store.pendingBatches()
+                expect(store.pendingEventCount) == 1
+            }
+
+            it("does the same for the store used where there is nowhere to write") {
+                let nullStore = NullEventStore()
+                expect(nullStore.stage(EventStoreSpec.payload("first"), bypassingCapacity: false)) == true
+                let batch = nullStore.closeBatch()!
+
+                nullStore.startedSending(batch)
+                expect(nullStore.pendingEventCount) == 0
+                nullStore.stoppedSending(batch)
+                expect(nullStore.pendingEventCount) == 1
+                nullStore.startedSending(batch)
+                nullStore.remove(batch)
+                expect(nullStore.pendingEventCount) == 0
+            }
+
             // The bound `LDConfig.eventCapacity` documents: the reporter reads the disk in the background after starting,
             // so what an earlier run left only counts from that listing on.
             it("counts what an earlier run left undelivered from the first listing on") {

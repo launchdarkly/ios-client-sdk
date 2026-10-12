@@ -19,8 +19,13 @@ struct EventBatch: Equatable {
 }
 
 protocol EventStoring {
-    /// Events that have been recorded but not yet accepted by LaunchDarkly, whether they are reserved while being
-    /// encoded, staged in memory, written to the open log, or sitting in a closed batch.
+    /// Events counted against capacity: those recorded and not yet accepted by LaunchDarkly, whether they are reserved
+    /// while being encoded, staged in memory, written to the open log, or sitting in a closed batch -- except a batch
+    /// whose request is out.
+    ///
+    /// A batch being sent is left out so that a flush makes room as soon as it sends, as it did when events were only
+    /// held in memory; otherwise an event recorded while the request is out is refused for a batch LaunchDarkly may
+    /// already have. A send that fails puts the batch back, so a full store can briefly hold capacity plus that batch.
     var pendingEventCount: Int { get }
 
     /// Whether a commit writes anything, which is false where persistence is off and once a write has failed and the
@@ -61,6 +66,12 @@ protocol EventStoring {
 
     /// Forgets a batch, which is only correct once LaunchDarkly has accepted it or permanently refused it.
     func remove(_ batch: EventBatch)
+
+    /// Stops counting a batch against capacity while its request is out. Ended by `remove(_:)` or `stoppedSending(_:)`.
+    func startedSending(_ batch: EventBatch)
+
+    /// Counts a batch against capacity again after a send that will be retried later.
+    func stoppedSending(_ batch: EventBatch)
 
     /// Closes any log left open by a previous run of this process, so its events join the batches to deliver.
     func recoverInterruptedLog()
@@ -118,6 +129,10 @@ final class EventStore: EventStoring {
     /// that changes one of those, so that it cannot drift from them; a total worked out from them and written
     /// afterwards would overwrite a close or a removal in between.
     private var closedEvents = 0
+    /// Closed batches whose request is out, by payload ID, and the events in them. Every one is also in `closedEvents`,
+    /// and leaves both in the same critical section.
+    private var sendingBatches: [String: Int] = [:]
+    private var sendingEvents = 0
     /// Whether events are being written to disk, which is what the application asked for until a write fails and the
     /// store gives up on persistence for the rest of the session.
     private var persistEvents = true
@@ -206,7 +221,13 @@ final class EventStore: EventStoring {
     // MARK: Recording
 
     var pendingEventCount: Int {
-        bufferLock.withLock { reservedEvents + bufferedEventCount + writingEvents + committedEvents + closedEvents }
+        bufferLock.withLock { countedEvents }
+    }
+
+    /// Every event counted against capacity. Only to be used while holding `bufferLock`.
+    private var countedEvents: Int {
+        // Clamped because a batch another process delivered can be marked as sending after a listing stopped counting it.
+        reservedEvents + bufferedEventCount + writingEvents + committedEvents + max(0, closedEvents - sendingEvents)
     }
 
     var isPersisting: Bool {
@@ -241,8 +262,7 @@ final class EventStore: EventStoring {
 
         // Whether the staged bytes are due a write, or nil where the event was refused for capacity.
         let needsCommit = bufferLock.withLock { () -> Bool? in
-            guard bypassingCapacity
-                    || reservedEvents + bufferedEventCount + writingEvents + committedEvents + closedEvents < capacity
+            guard bypassingCapacity || countedEvents < capacity
             else { return nil }
 
             // In the same critical section as the append, so the event is never counted twice or not at all.
@@ -370,7 +390,12 @@ final class EventStore: EventStoring {
     private func heldBatchesAndRecount(after onDisk: [EventBatch]) -> [EventBatch] {
         heldLock.withLock {
             let batches = onDisk + inMemoryBatches.map { EventBatch(payloadId: $0.payloadId, eventCount: $0.eventCount) }
-            bufferLock.withLock { closedEvents = batches.reduce(0) { $0 + $1.eventCount } }
+            bufferLock.withLock {
+                closedEvents = batches.reduce(0) { $0 + $1.eventCount }
+                // One no longer listed is no longer counted, so it cannot be left out of the count either.
+                let listed = Set(batches.map { $0.payloadId })
+                sendingBatches.keys.filter { !listed.contains($0) }.forEach(forgetSending)
+            }
             return batches
         }
     }
@@ -458,16 +483,26 @@ final class EventStore: EventStoring {
             guard let index = inMemoryBatches.firstIndex(where: { $0.payloadId == batch.payloadId })
             else { return false }
             let held = inMemoryBatches.remove(at: index)
-            bufferLock.withLock { closedEvents -= held.eventCount }
+            bufferLock.withLock {
+                closedEvents -= held.eventCount
+                forgetSending(batch.payloadId)
+            }
             return true
         }
 
-        guard !wasHeld, readsDisk
+        guard !wasHeld
         else { return }
+        guard readsDisk
+        else {
+            bufferLock.withLock { forgetSending(batch.payloadId) }
+            return
+        }
         ioLock.withLock {
             try? FileManager.default.removeItem(at: url(of: batch.payloadId))
-            if let counted = eventCounts.removeValue(forKey: batch.payloadId) {
-                bufferLock.withLock { closedEvents -= counted }
+            let counted = eventCounts.removeValue(forKey: batch.payloadId) ?? 0
+            bufferLock.withLock {
+                closedEvents -= counted
+                forgetSending(batch.payloadId)
             }
         }
     }
@@ -534,6 +569,30 @@ final class EventStore: EventStoring {
         ioLock.withLock {
             writeStagedBytes()
             diskLog.closeDescriptor()
+        }
+    }
+}
+
+// MARK: Sending
+
+extension EventStore {
+    func startedSending(_ batch: EventBatch) {
+        bufferLock.withLock {
+            guard sendingBatches[batch.payloadId] == nil
+            else { return }
+            sendingBatches[batch.payloadId] = batch.eventCount
+            sendingEvents += batch.eventCount
+        }
+    }
+
+    func stoppedSending(_ batch: EventBatch) {
+        bufferLock.withLock { forgetSending(batch.payloadId) }
+    }
+
+    /// Requires `bufferLock`.
+    fileprivate func forgetSending(_ payloadId: String) {
+        if let events = sendingBatches.removeValue(forKey: payloadId) {
+            sendingEvents -= events
         }
     }
 }
