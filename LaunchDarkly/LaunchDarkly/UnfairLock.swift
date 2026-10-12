@@ -23,8 +23,24 @@ final class UnfairLock {
     func unlock() {
         os_unfair_lock_unlock(unfairLock)
     }
+
+    /// Runs `body` holding the lock. Inlined, so it costs the same as calling `lock()` and `unlock()` around it.
+    @inline(__always)
+    func withLock<T>(_ body: () throws -> T) rethrows -> T {
+        lock()
+        defer { unlock() }
+        return try body()
+    }
 }
 #else
 /// `os_unfair_lock` is Darwin only, so elsewhere this is Foundation's mutex.
 typealias UnfairLock = NSLock
+
+extension NSLock {
+    func withLock<T>(_ body: () throws -> T) rethrows -> T {
+        lock()
+        defer { unlock() }
+        return try body()
+    }
+}
 #endif

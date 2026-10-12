@@ -16,10 +16,10 @@ protocol DiagnosticCaching {
 /// `com.launchdarkly.DiagnosticCache.diagnosticData`, forming keys of the form
 /// `com.launchdarkly.DiagnosticCache.diagnosticData.<mobileKey>`.
 final class DiagnosticCache: DiagnosticCaching {
-    private static let cacheQueueLabel = "com.launchdarkly.DiagnosticCache.cacheQueue"
-
     private let sdkKey: String
-    private var cacheQueue = DispatchQueue(label: cacheQueueLabel)
+    /// A lock rather than a queue because a full event store counts every refused evaluation here, on the thread that
+    /// evaluated, and a `DispatchQueue.sync` costs enough at that rate to be visible.
+    private let lock = UnfairLock()
 
     private var instanceId: String
     private var dataSinceDate: Int64
@@ -37,13 +37,13 @@ final class DiagnosticCache: DiagnosticCaching {
     }
 
     func getDiagnosticId() -> DiagnosticId {
-        cacheQueue.sync {
+        lock.withLock {
             DiagnosticId(diagnosticId: instanceId, sdkKey: sdkKey)
         }
     }
 
     func getCurrentStatsAndReset() -> DiagnosticStats {
-        cacheQueue.sync {
+        lock.withLock {
             let now = Date().millisSince1970
             let stats = DiagnosticStats(id: DiagnosticId(diagnosticId: instanceId, sdkKey: sdkKey),
                                         creationDate: now,
@@ -60,19 +60,19 @@ final class DiagnosticCache: DiagnosticCaching {
     }
 
     func incrementDroppedEventCount() {
-        cacheQueue.sync {
+        lock.withLock {
             droppedEvents += 1
         }
     }
 
     func recordEventsInLastBatch(eventsInLastBatch: Int) {
-        cacheQueue.sync {
+        lock.withLock {
             self.eventsInLastBatch = eventsInLastBatch
         }
     }
 
     func addStreamInit(streamInit: DiagnosticStreamInit) {
-        cacheQueue.sync {
+        lock.withLock {
             streamInits.append(streamInit)
         }
     }
