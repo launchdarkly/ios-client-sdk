@@ -47,6 +47,10 @@ class TestContext {
     var throttlerMock: ThrottlingMock? {
         subject.throttler as? ThrottlingMock
     }
+    /// Says what the network is doing. Connected unless a test sets it otherwise, which it must do before `start()`.
+    var networkReporterMock: NetworkReportingMock {
+        serviceFactoryMock.makeNetworkReporterReturnValue
+    }
 
     private(set) var cachedFlags: [String: [String: [LDFlagKey: FeatureFlag]]] = [:]
 

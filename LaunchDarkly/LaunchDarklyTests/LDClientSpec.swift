@@ -1676,6 +1676,16 @@ final class LDClientSpec: QuickSpec {
                 testContext.start()
                 expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.offline))
             }
+            it("when the device has no route to the network") {
+                let testContext = TestContext(startOnline: true)
+                testContext.networkReporterMock.isConnectedToNetworkReturnValue = false
+                testContext.start()
+
+                // Asked for and willing to be online, but with nowhere to reach, which is reported as offline rather
+                // than as a connection it is in the middle of establishing.
+                expect(testContext.subject.isOnline) == true
+                expect(testContext.subject.connectionInformation.currentConnectionMode).to(equal(.offline))
+            }
         }
     }
 

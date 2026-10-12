@@ -138,6 +138,18 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
     }
 
+    /// Connected unless a test says otherwise, which is what a test asking the client to go online means by it. Before
+    /// this was injectable the answer came from the machine running the tests, so going online only worked where the
+    /// machine itself was online.
+    var makeNetworkReporterReturnValue: NetworkReportingMock = {
+        let reporter = NetworkReportingMock()
+        reporter.isConnectedToNetworkReturnValue = true
+        return reporter
+    }()
+    func makeNetworkReporter() -> NetworkReporting {
+        return makeNetworkReporterReturnValue
+    }
+
     var makeFlagStoreReturnValue = FlagMaintainingMock()
     func makeFlagStore() -> FlagMaintaining {
         return makeFlagStoreReturnValue

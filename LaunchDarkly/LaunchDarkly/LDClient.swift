@@ -969,6 +969,10 @@ public class LDClient {
     // MARK: - Private
     let serviceFactory: ClientServiceCreating
 
+    /// Whether the device has a route to the network, which decides whether going online means connecting or means
+    /// staying offline until it does.
+    let networkReporter: NetworkReporting
+
     private(set) var flagCache: FeatureFlagCaching
     private(set) var flagSynchronizer: LDFlagSynchronizing
     var flagChangeNotifier: FlagChangeNotifying
@@ -1021,6 +1025,7 @@ public class LDClient {
         let hooks = LDClient.collectHooks(configuration: configuration, metadata: environmentMetadata)
         self.storedHooks = hooks
 
+        networkReporter = self.serviceFactory.makeNetworkReporter()
         flagCache = self.serviceFactory.makeFeatureFlagCache(mobileKey: configuration.mobileKey, maxCachedContexts: configuration.maxCachedContexts)
         flagStore = self.serviceFactory.makeFlagStore()
         flagChangeNotifier = self.serviceFactory.makeFlagChangeNotifier()
