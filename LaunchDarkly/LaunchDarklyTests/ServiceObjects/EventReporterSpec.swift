@@ -7,6 +7,9 @@ final class EventReporterSpec: QuickSpec {
     struct Constants {
         static let eventFlushInterval: TimeInterval = 10.0
         static let eventFlushIntervalHalfSecond: TimeInterval = 0.5
+        /// How long a flush or delivery may take before a test gives up on it. A wait ends as soon as what it waits
+        /// for happens, so this costs a passing test nothing, and a loaded CI simulator can take over a second.
+        static let deliveryTimeout: DispatchTimeInterval = .seconds(10)
     }
 
     struct TestContext {
@@ -435,14 +438,14 @@ final class EventReporterSpec: QuickSpec {
                         reporter.isOnline = true
                     }
                     it("drops the poisoned batch and delivers a later event") {
-                        waitUntil { done in
+                        waitUntil(timeout: Constants.deliveryTimeout) { done in
                             reporter.record(CustomEvent(key: "poison", context: ldContext, metricValue: .nan))
                             reporter.flush(completion: done)
                         }
                         expect(serviceMock.publishEventDataCallCount) == 0
                         expect(reporter.eventStore.isEmpty) == true
 
-                        waitUntil { done in
+                        waitUntil(timeout: Constants.deliveryTimeout) { done in
                             reporter.record(CustomEvent(key: "after-poison", context: ldContext, metricValue: 1.0))
                             reporter.flush(completion: done)
                         }
@@ -463,7 +466,7 @@ final class EventReporterSpec: QuickSpec {
                         reporter.isOnline = true
                     }
                     it("drops only the poisoned event") {
-                        waitUntil { done in
+                        waitUntil(timeout: Constants.deliveryTimeout) { done in
                             reporter.record(CustomEvent(key: "poison", context: ldContext, metricValue: .nan))
                             reporter.record(CustomEvent(key: "kept", context: ldContext, metricValue: 1.0))
                             reporter.flush(completion: done)
@@ -485,7 +488,7 @@ final class EventReporterSpec: QuickSpec {
                         reporter.isOnline = true
                     }
                     it("drops only the poisoned summary") {
-                        waitUntil { done in
+                        waitUntil(timeout: Constants.deliveryTimeout) { done in
                             reporter.recordFlagEvaluationEvents(flagKey: "poison-flag",
                                                                 value: .number(.nan),
                                                                 defaultValue: .number(0),
@@ -512,7 +515,7 @@ final class EventReporterSpec: QuickSpec {
                         reporter.isOnline = true
                     }
                     it("drops the poisoned summary and delivers a later one") {
-                        waitUntil { done in
+                        waitUntil(timeout: Constants.deliveryTimeout) { done in
                             reporter.recordFlagEvaluationEvents(flagKey: "poison-flag",
                                                                 value: .number(.nan),
                                                                 defaultValue: .number(0),
@@ -525,7 +528,7 @@ final class EventReporterSpec: QuickSpec {
                         expect(reporter.eventStore.isEmpty) == true
                         expect(reporter.contextSummarizer.hasLoggedRequests) == false
 
-                        waitUntil { done in
+                        waitUntil(timeout: Constants.deliveryTimeout) { done in
                             reporter.recordFlagEvaluationEvents(flagKey: "after-poison",
                                                                 value: .bool(true),
                                                                 defaultValue: .bool(false),
