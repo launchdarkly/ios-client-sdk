@@ -677,6 +677,13 @@ extension DirectEventProcessor {
         let read: Data?
         do {
             read = try store.body(of: batch)
+        } catch is UnreadableBatch {
+            // Lost like a refused batch: nothing will ever send it, so it is removed, the rest are still attempted, and
+            // the caller hears that this pass lost events.
+            os_log("%s dropping %d stored event(s) this version cannot read", log: service.config.logger, type: .error, typeName(and: #function), batch.eventCount)
+            store.remove(batch)
+            deliver(remaining, lostAnything: true, completion)
+            return
         } catch {
             // Kept: the batch is still there, and a read that failed may not fail next time.
             os_log("%s could not read stored events: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error))
@@ -686,7 +693,8 @@ extension DirectEventProcessor {
 
         guard let body = read
         else {
-            // Gone, or holding nothing this version can send. Either way there is nothing to send and nothing to keep.
+            // Gone, which is usually another process having delivered it, or holding no events. Either way nothing is
+            // lost and there is nothing to keep.
             store.remove(batch)
             deliver(remaining, lostAnything: lostAnything, completion)
             return

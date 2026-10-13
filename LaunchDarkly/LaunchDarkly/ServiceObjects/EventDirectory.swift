@@ -249,18 +249,25 @@ final class EventDirectory {
         return true
     }
 
-    /// The `[...]` request body for a batch, or nil if it is gone or holds nothing this version can send, neither of
-    /// which a later attempt changes.
+    /// The `[...]` request body for a batch, or nil if it is gone or holds no events.
     ///
     /// Requires `ioLock`.
     ///
-    /// - throws: if the batch is there but could not be read this time, which a later attempt may manage.
+    /// - throws: `UnreadableBatch` if the batch is there but holds nothing this version can send; anything else if it
+    ///   could not be read this time, which a later attempt may manage.
     func body(of batch: EventBatch) throws -> Data? {
         ioLock.assertOwned()
         switch read(url(of: batch.payloadId, holding: batch.eventCount)) {
         case .missing: return nil
         case .failed(let error): throw error
-        case .bytes(let file): return EventLogFormat.assembleBody(from: file)
+        case .bytes(let file):
+            if let body = EventLogFormat.assembleBody(from: file) {
+                return body
+            }
+            // A log this version reads that holds no events has nothing to lose.
+            guard EventLogFormat.eventCount(in: file) == 0
+            else { throw UnreadableBatch(payloadId: batch.payloadId) }
+            return nil
         }
     }
 

@@ -1942,6 +1942,31 @@ extension DirectEventProcessorSpec {
                 expect(store.pendingEventCount) == 0
             }
 
+            it("reports false and drops a stored batch this version cannot read, and still delivers the rest") {
+                let store = EventStore.temporary()
+                testContext = TestContext(store: store)
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                let damaged = store.closeBatch()!
+                // Its name still counts it, so it is listed without being read; the damage is only found on sending.
+                let damagedUrl = store.directory!.appendingPathComponent("ready-\(damaged.payloadId)-\(damaged.eventCount)")
+                try Data("not an event log".utf8).write(to: damagedUrl)
+                testContext.recordEvents(1)
+                testContext.eventProcessor.isOnline = true
+
+                var delivered: Bool?
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                expect(FileManager.default.fileExists(atPath: damagedUrl.path)) == false
+                expect(store.pendingEventCount) == 0
+            }
+
             it("delivers what memory was left holding beside what the disk took, and reports true") {
                 var writes = 0
                 let store = EventStore.temporary(writeLog: { file, bytes in

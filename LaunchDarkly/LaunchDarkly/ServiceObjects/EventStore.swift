@@ -51,10 +51,11 @@ protocol EventStoring {
     /// Batches awaiting delivery, oldest first, including any recovered from a previous run of the application.
     func pendingBatches() -> [EventBatch]
 
-    /// The `[...]` request body for a batch, or nil if it is gone or holds nothing this version can send, neither of
-    /// which a later attempt changes.
+    /// The `[...]` request body for a batch, or nil if it is gone or holds no events, neither of which loses anything.
     ///
-    /// - throws: if the batch is there but could not be read this time, which a later attempt may manage.
+    /// - throws: `UnreadableBatch` if the batch is there but holds nothing this version can send, which no later
+    ///   attempt changes and which loses its events; anything else if it could not be read this time, which a later
+    ///   attempt may manage.
     func body(of batch: EventBatch) throws -> Data?
 
     /// Forgets a batch, which is only correct once LaunchDarkly has accepted it or permanently refused it.
@@ -68,6 +69,12 @@ protocol EventStoring {
 
     /// Closes any log left open by a previous run of this process, so its events join the batches to deliver.
     func recoverInterruptedLog()
+}
+
+/// A batch that is there to read and holds nothing this version can send: damaged, or written in a format it does not
+/// read. Unlike a batch that is gone, its events are lost.
+struct UnreadableBatch: Error {
+    let payloadId: String
 }
 
 /// A crash-durable append log of encoded analytics events.

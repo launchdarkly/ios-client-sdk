@@ -616,9 +616,9 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingBatches()) == [batch]
                 expect(EventStoreSpec.reader(sharing: store).pendingBatches()) == [batch]
 
-                // The damage is found where the batch is read to be sent, and reads as nothing to send rather than
-                // as a failure to retry, so the delivery removes it instead of trying it forever.
-                expect(try store.body(of: batch)).to(beNil())
+                // The damage is found where the batch is read to be sent, and reads as a loss rather than as a failure
+                // to retry, so the delivery removes it instead of trying it forever, and says it lost events.
+                expect { try store.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
             }
 
             it("reads a batch named without a count once and then remembers it") {
