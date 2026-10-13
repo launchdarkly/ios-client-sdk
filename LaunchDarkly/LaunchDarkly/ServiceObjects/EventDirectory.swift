@@ -139,13 +139,15 @@ final class EventDirectory {
     ///
     /// - Returns: the payload ID, and the count the name ends with, which is nil where it has none -- how a version
     ///   that did not write one named its batches. A payload ID cannot be mistaken for a count: it is a UUID, whose
-    ///   last group is twelve characters, and twelve digits are more than an `Int32` holds.
+    ///   last group is twelve characters. Twelve digits are more than an `Int32` holds unless they start with a zero,
+    ///   which a count never does.
     private static func parse(batchName name: String) -> (payloadId: String, events: Int?) {
         let rest = String(name.dropFirst(batchPrefix.count))
         guard let split = rest.lastIndex(of: "-")
         else { return (rest, nil) }
         let suffix = rest[rest.index(after: split)...]
         guard !suffix.isEmpty, suffix.allSatisfy({ $0.isASCII && $0.isNumber }),
+              suffix == "0" || suffix.first != "0",
               let events = Int32(suffix)
         else { return (rest, nil) }
         return (String(rest[..<split]), Int(events))

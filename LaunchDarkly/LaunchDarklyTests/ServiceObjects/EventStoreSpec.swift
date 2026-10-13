@@ -639,6 +639,19 @@ final class EventStoreSpec: QuickSpec {
                 expect(FileManager.default.fileExists(atPath: uncounted.path)) == false
             }
 
+            it("does not take a payload id ending in zero-led digits for a count") {
+                _ = store.stage(EventStoreSpec.payload("left-by-a-previous-version"))
+                let batch = store.closeBatch()!
+
+                // Its last group fits an Int32 once the leading zeros are dropped.
+                let payloadId = "6F9619FF-8B86-D011-B42D-000012345678"
+                let counted = store.directory!.appendingPathComponent("ready-\(batch.payloadId)-1")
+                let uncounted = store.directory!.appendingPathComponent("ready-\(payloadId)")
+                try FileManager.default.moveItem(at: counted, to: uncounted)
+
+                expect(EventStoreSpec.reader(sharing: store).pendingBatches()) == [EventBatch(payloadId: payloadId, eventCount: 1)]
+            }
+
             it("gives a batch its own payload id, so a retry is not read as a new delivery") {
                 _ = store.stage(EventStoreSpec.payload("first"))
                 let first = store.closeBatch()!
