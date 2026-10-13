@@ -1693,15 +1693,28 @@ extension DirectEventProcessorSpec {
                 let reporter = testContext.eventProcessor!
                 let context = testContext.context!
 
+                // Recording pauses halfway until a commit has taken the first half, so that at least two commits land
+                // while it runs however the threads are scheduled. Otherwise the recording could finish before the
+                // first commit, and the single summary that leaves would check nothing about concurrent commits.
+                let halfway = DispatchSemaphore(value: 0)
+                let resume = DispatchSemaphore(value: 0)
                 let recorded = DispatchSemaphore(value: 0)
                 DispatchQueue.global().async {
-                    for _ in 0..<2_000 {
+                    for index in 0..<2_000 {
+                        if index == 1_000 {
+                            halfway.signal()
+                            resume.wait()
+                        }
                         reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
                     }
                     recorded.signal()
                 }
                 while recorded.wait(timeout: .now()) == .timedOut {
                     reporter.commitRecordedEvents()
+                    if halfway.wait(timeout: .now()) == .success {
+                        reporter.commitRecordedEvents()
+                        resume.signal()
+                    }
                 }
                 reporter.commitRecordedEvents()
 
