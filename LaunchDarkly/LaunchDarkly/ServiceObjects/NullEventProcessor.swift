@@ -33,6 +33,6 @@ class NullEventProcessor: EventProcessor {
     func commitRecordedEvents() {
     }
 
-    func commitAtCommitPoint() {
+    func commitWherePersisting() {
     }
 }

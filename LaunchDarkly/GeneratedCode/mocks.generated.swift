@@ -238,11 +238,11 @@ final class EventProcessorMock: EventProcessor {
         try! commitRecordedEventsCallback?()
     }
 
-    var commitAtCommitPointCallCount = 0
-    var commitAtCommitPointCallback: (() throws -> Void)?
-    func commitAtCommitPoint() {
-        commitAtCommitPointCallCount += 1
-        try! commitAtCommitPointCallback?()
+    var commitWherePersistingCallCount = 0
+    var commitWherePersistingCallback: (() throws -> Void)?
+    func commitWherePersisting() {
+        commitWherePersistingCallCount += 1
+        try! commitWherePersistingCallback?()
     }
 }
 

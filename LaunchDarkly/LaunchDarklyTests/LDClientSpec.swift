@@ -1409,6 +1409,15 @@ final class LDClientSpec: QuickSpec {
                                 expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount) == 0
                                 #endif
                             }
+                            it("writes what it has before the notification returns, on every platform", onlyWhere: platformPostsLifecycleNotifications) {
+                                let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
+                                testContext.start()
+                                NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
+
+                                // Checked without waiting: a write only queued is one a process killed in the
+                                // background may never get to, macOS included, where nothing is delivered here.
+                                expect(testContext.eventProcessorMock.commitWherePersistingCallCount) == 1
+                            }
                             it("background updates enabled", onlyWhere: platformPostsLifecycleNotifications) {
                                 let testContext = TestContext(startOnline: true)
                                 testContext.start()

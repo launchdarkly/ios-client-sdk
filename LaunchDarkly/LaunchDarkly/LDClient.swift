@@ -263,9 +263,10 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
-        // The OS may kill a backgrounded application without warning, so make its events durable now. On every
-        // platform: macOS does not suspend an application that loses focus, but it can still be quit or killed.
-        eventProcessor.commitAtCommitPoint()
+        // The OS may kill a backgrounded application without warning, so make its events durable now, before returning,
+        // at `.deferred` too. On every platform: macOS does not suspend an application that loses focus, but it can
+        // still be quit or killed.
+        eventProcessor.commitWherePersisting()
         // A backgrounded process is suspended once idle, so deliver inside an activity assertion. Only where suspension
         // is real: macOS posts this notification whenever the application loses focus, and never suspends it for that.
         // What does not get out is on disk for the next launch.

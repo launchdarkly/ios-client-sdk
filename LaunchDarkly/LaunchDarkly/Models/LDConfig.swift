@@ -37,8 +37,9 @@ public enum LDStreamingMode {
     /// it. Evaluating a flag does not schedule a write of its own: its events wait in memory until enough of them have
     /// built up, or until the next `track`, `identify`, flush or delivery writes them.
     ///
-    /// A flush is the exception. It writes on the calling thread, as `.immediate` does, so that an application ending
-    /// the process on purpose can rely on it.
+    /// A flush and entering the background are the exceptions. Both write on the calling thread, as `.immediate` does:
+    /// a flush so that an application ending the process on purpose can rely on it, and entering the background because
+    /// that is when the system is most likely to end it.
     case deferred
     /// Events are written to disk before `track` and `identify` return.
     ///

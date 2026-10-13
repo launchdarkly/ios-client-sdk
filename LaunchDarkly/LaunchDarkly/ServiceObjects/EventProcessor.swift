@@ -39,7 +39,10 @@ protocol EventProcessor {
     /// calling directly before deliberately terminating the process.
     func commitRecordedEvents()
 
-    /// Commits as a commit point does: before returning at `.immediate`, on a background queue at `.deferred`, and not
-    /// at all where nothing is persisted, where a commit would only move the encode earlier.
-    func commitAtCommitPoint()
+    /// Commits before returning wherever events persist, at `.deferred` as well as at `.immediate`, and not at all where
+    /// nothing is persisted, where a commit would only move the encode earlier.
+    ///
+    /// What a flush does, and what entering the background does: both are points the process may end soon after, where
+    /// a write that was only queued may never happen.
+    func commitWherePersisting()
 }
