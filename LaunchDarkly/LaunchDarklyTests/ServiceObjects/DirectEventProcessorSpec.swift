@@ -1945,6 +1945,14 @@ extension DirectEventProcessorSpec {
             it("reports false and drops a stored batch this version cannot read, and still delivers the rest") {
                 let store = EventStore.temporary()
                 testContext = TestContext(store: store)
+                // Online, and past the check for what a previous run left, before there is a batch for that check to
+                // find. Found, it would be delivered on going online, ahead of the flush this test asks about.
+                testContext.eventProcessor.isOnline = true
+                var delivered: Bool?
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                }
+
                 testContext.recordEvents(1)
                 testContext.eventProcessor.commitRecordedEvents()
                 let damaged = store.closeBatch()!
@@ -1952,9 +1960,7 @@ extension DirectEventProcessorSpec {
                 let damagedUrl = store.directory!.appendingPathComponent("ready-\(damaged.payloadId)-\(damaged.eventCount)")
                 try Data("not an event log".utf8).write(to: damagedUrl)
                 testContext.recordEvents(1)
-                testContext.eventProcessor.isOnline = true
 
-                var delivered: Bool?
                 waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
