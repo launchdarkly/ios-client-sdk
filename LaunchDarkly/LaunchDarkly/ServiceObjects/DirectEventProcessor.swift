@@ -788,5 +788,10 @@ extension DirectEventProcessor: TypeIdentifying { }
             defer { deliveryLock.unlock() }
             return deliveryRunCount
         }
+
+        /// Reads the summarizer under `recordLock`, which a scheduled commit may be holding to take its counters.
+        func withContextSummarizer<T>(_ read: (ContextSummarizer) -> T) -> T {
+            recordLock.withLock { read(eventBuffer.contextSummarizer) }
+        }
     }
 #endif
