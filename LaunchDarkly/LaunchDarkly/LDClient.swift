@@ -40,11 +40,11 @@ public class LDClient {
 
     // MARK: - State Controls and Indicators
 
-    private static var instances: [String: LDClient]?
-    private static let instancesQueue = DispatchQueue(label: "com.launchdarkly.LDClient.instancesQueue")
+    static var instances: [String: LDClient]?
+    static let instancesQueue = DispatchQueue(label: "com.launchdarkly.LDClient.instancesQueue")
 
     // If the SDK is provided a timeout value that exceeds this value, a warning will be logged.
-    private static let longTimeoutInterval: TimeInterval = 15
+    static let longTimeoutInterval: TimeInterval = 15
 
     /**
      Reports the online/offline state of the LDClient.
@@ -66,7 +66,7 @@ public class LDClient {
                 let oldValue = _isOnline
                 _isOnline = newValue
                 flagSynchronizer.isOnline = _isOnline
-                eventReporter.isOnline = _isOnline
+                eventProcessor.isOnline = _isOnline
                 diagnosticReporter.setMode(runMode, online: _isOnline)
                 if _isOnline != oldValue {
                     connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: connectionInformation, ldClient: self, config: config, online: _isOnline)
@@ -263,6 +263,28 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
+        // The OS may kill a backgrounded application without warning, so make its events durable now, before returning,
+        // at `.deferred` too. On every platform: macOS does not suspend an application that loses focus, but it can
+        // still be quit or killed.
+        eventProcessor.commitWherePersisting()
+        // A backgrounded process is suspended once idle, so deliver inside an activity assertion. Only where suspension
+        // is real: macOS posts this notification whenever the application loses focus, and never suspends it for that.
+        // What does not get out is on disk for the next launch.
+        #if os(iOS) || os(tvOS)
+        backgroundDelivery.run { [weak self] finished in
+            guard let self = self
+            else {
+                finished()
+                return
+            }
+            self.eventProcessor.flushReportingOutcome { delivered in
+                if !delivered {
+                    os_log("%s events did not reach LaunchDarkly before suspension; they remain on disk", log: self.config.logger, type: .debug, self.typeName(and: #function))
+                }
+                finished()
+            }
+        }
+        #endif
         Thread.performOnMain {
             runMode = .background
         }
@@ -274,6 +296,9 @@ public class LDClient {
             runMode = .foreground
         }
     }
+
+    /// One assertion per client, however many times the application is backgrounded while a delivery is running.
+    private let backgroundDelivery: BackgroundActivity
 
     let config: LDConfig
     /// Identifies this client's environment to a hook, without handing it the mobile key that identifies the
@@ -455,7 +480,7 @@ public class LDClient {
 
         internalIdentifyQueue.sync {
             if self.context == updatedContext {
-                self.eventReporter.record(IdentifyEvent(context: self.context))
+                self.eventProcessor.record(IdentifyEvent(context: self.context))
                 completion?()
                 return
             }
@@ -505,7 +530,7 @@ public class LDClient {
                                                                    onSyncComplete: self.onFlagSyncComplete)
 
             if self.hasStarted {
-                self.eventReporter.record(IdentifyEvent(context: self.context))
+                self.eventProcessor.record(IdentifyEvent(context: self.context))
             }
 
             if self.isOnline && self.isInSupportedRunMode {
@@ -749,7 +774,7 @@ public class LDClient {
             key,
             String(describing: data),
             String(describing: metricValue))
-        eventReporter.record(event)
+        eventProcessor.record(event)
 
         executeAfterTrackHooks(key: key, data: data, metricValue: metricValue)
     }
@@ -784,23 +809,6 @@ public class LDClient {
     public func registerPlugin(_ plugin: Plugin) {
         addHooks(plugin.getHooks(metadata: environmentMetadata))
         plugin.register(client: self, metadata: environmentMetadata)
-    }
-
-    /**
-     Tells the SDK to immediately send any currently queued events to LaunchDarkly.
-
-     There should not normally be a need to call this function. While online, the LDClient automatically reports events
-     on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
-     sent, it only triggers a background task to send events immediately.
-     */
-    public func flush() {
-        LDClient.instancesQueue.sync(flags: .barrier) {
-            LDClient.instances?.forEach { $1.internalFlush() }
-        }
-    }
-
-    private func internalFlush() {
-        eventReporter.flush(completion: nil)
     }
 
     /// Static, and over a logger rather than a client, so that the event reporter can be given it while the client
@@ -976,7 +984,7 @@ public class LDClient {
     private(set) var flagCache: FeatureFlagCaching
     private(set) var flagSynchronizer: LDFlagSynchronizing
     var flagChangeNotifier: FlagChangeNotifying
-    private(set) var eventReporter: EventReporting
+    private(set) var eventProcessor: EventProcessor
     private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
     private(set) var diagnosticReporter: DiagnosticReporting
@@ -1032,13 +1040,14 @@ public class LDClient {
         throttler = self.serviceFactory.makeThrottler(environmentReporter: environmentReporter)
 
         config = configuration
+        backgroundDelivery = BackgroundActivity(reason: "LaunchDarkly event delivery", logger: configuration.logger)
         context = startContext ?? LDContext()
 
         if config.autoEnvAttributes {
             context = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(context)
         }
 
-        var hookState: IdentifyHookState? = nil
+        var hookState: IdentifyHookState?
         if !hooks.isEmpty {
             let seriesContext = IdentifySeriesContext(context: context, methodName: "init")
             let seriesData = hooks.map { hook in hook.beforeIdentify(seriesContext: seriesContext, seriesData: EvaluationSeriesData()) }
@@ -1050,7 +1059,7 @@ public class LDClient {
         // Reports over the logger rather than over this client, which is not usable until every stored property
         // below has a value, so that the reporter can be built once rather than built and replaced.
         let logger = configuration.logger
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service) { result in
+        eventProcessor = self.serviceFactory.makeEventProcessor(config: config, service: service) { result in
             LDClient.logEventSyncComplete(result, logger)
         }
         connectionInformation = self.serviceFactory.makeConnectionInformation()
@@ -1079,7 +1088,7 @@ public class LDClient {
             flagStore.replaceStore(newStoredItems: cachedFlags)
         }
 
-        eventReporter.record(IdentifyEvent(context: context))
+        eventProcessor.record(IdentifyEvent(context: context))
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
         internalSetOnline(configuration.startOnline) {

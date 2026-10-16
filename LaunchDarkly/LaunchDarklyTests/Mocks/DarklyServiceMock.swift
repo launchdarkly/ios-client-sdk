@@ -46,7 +46,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
     }
 
     struct Constants {
-        static let error = NSError(domain: NSURLErrorDomain, code: Int(CFNetworkErrors.cfurlErrorResourceUnavailable.rawValue), userInfo: nil)
+        static let error = NSError(domain: NSURLErrorDomain, code: NSURLErrorResourceUnavailable, userInfo: nil)
         static let jsonErrorString = "Bad json data"
         static let errorData = jsonErrorString.data(using: .utf8)!
 
@@ -133,13 +133,100 @@ final class DarklyServiceMock: DarklyServiceProvider {
         return mock
     }
 
-    var stubbedEventResponse: ServiceResponse?
-    var publishEventDataCallCount = 0
-    var publishedEventData: Data?
+    /// Guards the event-publish state below. Publishes arrive on the reporter's threads, and the retry's, while the
+    /// test thread sets the stubs and reads the results.
+    private let eventLock = NSLock()
+    private var _stubbedEventResponse: ServiceResponse?
+    private var _publishEventDataCallCount = 0
+    private var _publishedEventData: Data?
+    private var _publishedEventPayloads: [Data] = []
+    private var _publishedPayloadIds: [String] = []
+    private var _holdsEventCompletions = false
+    private var heldEventCompletions: [ServiceCompletionHandler] = []
+    private var _eventStatusForPost: ((Int) -> Int)?
+    private var _publishedEventStatuses: [Int?] = []
+
+    /// The status to answer the nth post with, counting from 1, in place of `stubbedEventResponse`.
+    var eventStatusForPost: ((Int) -> Int)? {
+        get { withEventLock { _eventStatusForPost } }
+        set { withEventLock { _eventStatusForPost = newValue } }
+    }
+    /// The status each post was answered with, in the order of `publishedEventPayloads`; nil where it had none.
+    var publishedEventStatuses: [Int?] {
+        withEventLock { _publishedEventStatuses }
+    }
+
+    var stubbedEventResponse: ServiceResponse? {
+        get { withEventLock { _stubbedEventResponse } }
+        set { withEventLock { _stubbedEventResponse = newValue } }
+    }
+    var publishEventDataCallCount: Int {
+        get { withEventLock { _publishEventDataCallCount } }
+        set { withEventLock { _publishEventDataCallCount = newValue } }
+    }
+    var publishedEventData: Data? {
+        get { withEventLock { _publishedEventData } }
+        set { withEventLock { _publishedEventData = newValue } }
+    }
+    /// Every payload published, in order, so a test can see what a delivery of several batches sent.
+    var publishedEventPayloads: [Data] {
+        withEventLock { _publishedEventPayloads }
+    }
+    /// Every payload ID used, in order, so a test can tell a retry of a delivery from a new one.
+    var publishedPayloadIds: [String] {
+        withEventLock { _publishedPayloadIds }
+    }
+    /// Holds responses so a test can act while a delivery is in flight.
+    var holdsEventCompletions: Bool {
+        get { withEventLock { _holdsEventCompletions } }
+        set { withEventLock { _holdsEventCompletions = newValue } }
+    }
+
     func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?) {
-        publishEventDataCallCount += 1
-        publishedEventData = eventData
-        completion?(stubbedEventResponse ?? (nil, nil, nil, nil))
+        // Decided under the lock, answered outside it: the completion re-enters the reporter, which may publish again.
+        let response: ServiceResponse? = withEventLock {
+            _publishEventDataCallCount += 1
+            _publishedEventData = eventData
+            _publishedEventPayloads.append(eventData)
+            _publishedPayloadIds.append(payloadId)
+            guard !_holdsEventCompletions
+            else {
+                _publishedEventStatuses.append(nil)
+                if let completion {
+                    heldEventCompletions.append(completion)
+                }
+                return nil
+            }
+            var response = _stubbedEventResponse ?? (nil, nil, nil, nil)
+            if let statusForPost = _eventStatusForPost {
+                response = (nil,
+                            HTTPURLResponse(url: config.eventsUrl, statusCode: statusForPost(_publishEventDataCallCount),
+                                            httpVersion: Constants.httpVersion, headerFields: nil),
+                            nil,
+                            nil)
+            }
+            _publishedEventStatuses.append((response.urlResponse as? HTTPURLResponse)?.statusCode)
+            return response
+        }
+        if let response {
+            completion?(response)
+        }
+    }
+
+    /// Answers every held request.
+    func releaseHeldEventCompletions() {
+        let (held, response) = withEventLock { () -> ([ServiceCompletionHandler], ServiceResponse) in
+            let held = heldEventCompletions
+            heldEventCompletions = []
+            return (held, _stubbedEventResponse ?? (nil, nil, nil, nil))
+        }
+        held.forEach { $0(response) }
+    }
+
+    private func withEventLock<T>(_ body: () -> T) -> T {
+        eventLock.lock()
+        defer { eventLock.unlock() }
+        return body()
     }
 
     var stubbedDiagnosticResponse: ServiceResponse?

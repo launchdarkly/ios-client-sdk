@@ -174,8 +174,8 @@ final class EnvironmentReportingMock: EnvironmentReporting {
     }
 }
 
-// MARK: - EventReportingMock
-final class EventReportingMock: EventReporting {
+// MARK: - EventProcessorMock
+final class EventProcessorMock: EventProcessor {
 
     var isOnlineSetCount = 0
     var setIsOnlineCallback: (() throws -> Void)?
@@ -220,6 +220,29 @@ final class EventReportingMock: EventReporting {
         flushCallCount += 1
         flushReceivedCompletion = completion
         try! flushCallback?()
+    }
+
+    var flushReportingOutcomeCallCount = 0
+    var flushReportingOutcomeCallback: (() throws -> Void)?
+    var flushReportingOutcomeReceivedCompletion: (FlushOutcomeClosure)?
+    func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
+        flushReportingOutcomeCallCount += 1
+        flushReportingOutcomeReceivedCompletion = completion
+        try! flushReportingOutcomeCallback?()
+    }
+
+    var commitRecordedEventsCallCount = 0
+    var commitRecordedEventsCallback: (() throws -> Void)?
+    func commitRecordedEvents() {
+        commitRecordedEventsCallCount += 1
+        try! commitRecordedEventsCallback?()
+    }
+
+    var commitWherePersistingCallCount = 0
+    var commitWherePersistingCallback: (() throws -> Void)?
+    func commitWherePersisting() {
+        commitWherePersistingCallCount += 1
+        try! commitWherePersistingCallback?()
     }
 }
 
@@ -450,7 +473,7 @@ final class ThrottlingMock: Throttling {
 
     var runThrottledCallCount = 0
     var runThrottledCallback: (() throws -> Void)?
-    var runThrottledReceivedRunClosure: RunClosure?
+    var runThrottledReceivedRunClosure: (RunClosure)?
     func runThrottled(_ runClosure: @escaping RunClosure) {
         runThrottledCallCount += 1
         runThrottledReceivedRunClosure = runClosure

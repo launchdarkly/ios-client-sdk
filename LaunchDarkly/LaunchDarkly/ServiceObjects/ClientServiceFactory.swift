@@ -15,8 +15,10 @@ protocol ClientServiceCreating {
                               service: DarklyServiceProvider,
                               onSyncComplete: FlagSyncCompleteClosure?) -> LDFlagSynchronizing
     func makeFlagChangeNotifier() -> FlagChangeNotifying
-    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting
-    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting
+    func makeEventProcessor(config: LDConfig, service: DarklyServiceProvider) -> EventProcessor
+    func makeEventProcessor(config: LDConfig,
+                            service: DarklyServiceProvider,
+                            onSyncComplete: EventSyncCompleteClosure?) -> EventProcessor
     func makeStreamingProvider(url: URL, httpHeaders: [String: String], connectMethod: String, connectBody: Data?, handler: EventHandler, delegate: RequestHeaderTransform?, errorHandler: ConnectionErrorHandler?) -> DarklyStreamingProvider
     func makeEnvironmentReporter(config: LDConfig) -> EnvironmentReporting
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling
@@ -67,15 +69,17 @@ final class ClientServiceFactory: ClientServiceCreating {
         FlagChangeNotifier(logger: logger)
     }
 
-    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting {
-        makeEventReporter(config: config, service: service, onSyncComplete: nil)
+    func makeEventProcessor(config: LDConfig, service: DarklyServiceProvider) -> EventProcessor {
+        makeEventProcessor(config: config, service: service, onSyncComplete: nil)
     }
 
-    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure? = nil) -> EventReporting {
+    func makeEventProcessor(config: LDConfig,
+                            service: DarklyServiceProvider,
+                            onSyncComplete: EventSyncCompleteClosure? = nil) -> EventProcessor {
         if config.sendEvents {
-            return EventReporter(service: service, onSyncComplete: onSyncComplete)
+            return DirectEventProcessor(service: service, onSyncComplete: onSyncComplete)
         } else {
-            return NullEventReporter()
+            return NullEventProcessor()
         }
     }
 
