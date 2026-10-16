@@ -7,7 +7,7 @@
       "languages": [
         "Swift", "Objective-C"
       ],
-      "userAgents": ["iOS", "macOS", "tvOS", "watchOS"],
+      "userAgents": ["iOS", "iPadOS", "macOS", "tvOS", "visionOS", "watchOS"],
       "features": {
         "allFlags": { "introduced": "4.0" },
         "appMetadata": { "introduced": "6.2.0" },
