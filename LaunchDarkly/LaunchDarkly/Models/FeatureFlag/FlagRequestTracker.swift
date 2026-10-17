@@ -18,6 +18,9 @@ struct FlagRequestTracker {
         else { return }
         flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, context: context)
 
+        // `os_log` evaluates its arguments even when debug messages are discarded, and this runs on every evaluation.
+        guard logger.isEnabled(type: .debug)
+        else { return }
         os_log("%s \n\tflagKey: %s\n\tvariation: %s\n\tversion: %s", log: logger, type: .debug,
             typeName(and: #function),
             flagKey,
