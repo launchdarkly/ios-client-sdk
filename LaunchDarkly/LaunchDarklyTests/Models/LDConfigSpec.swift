@@ -80,16 +80,16 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.wrapperName, LDConfig.Defaults.wrapperName)
         XCTAssertEqual(config.wrapperVersion, LDConfig.Defaults.wrapperVersion)
         XCTAssertEqual(config.additionalHeaders, LDConfig.Defaults.additionalHeaders)
-        XCTAssertTrue(config.enableCompression)
+        XCTAssertFalse(config.enableCompression)
     }
 
     func testObjcEnableCompression() {
         let objcConfig = ObjcLDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
-        XCTAssertTrue(objcConfig.enableCompression)
-
-        objcConfig.enableCompression = false
         XCTAssertFalse(objcConfig.enableCompression)
-        XCTAssertFalse(objcConfig.config.enableCompression)
+
+        objcConfig.enableCompression = true
+        XCTAssertTrue(objcConfig.enableCompression)
+        XCTAssertTrue(objcConfig.config.enableCompression)
     }
 
     func testInitUpdate() {

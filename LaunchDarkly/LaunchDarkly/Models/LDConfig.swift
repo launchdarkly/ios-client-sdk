@@ -259,7 +259,7 @@ public struct LDConfig {
         static let logger: OSLog = OSLog(subsystem: "com.launchdarkly", category: "ios-client-sdk")
 
         /// The default behavior for event payload compression.
-        static let enableCompression: Bool = true
+        static let enableCompression: Bool = false
     }
 
     /// Constants relevant to setting up an `LDConfig`
@@ -420,9 +420,9 @@ public struct LDConfig {
     /// Additional headers that should be added to all HTTP requests from SDK components to LaunchDarkly services
     public var additionalHeaders: [String: String] = [:]
 
-    /// Should the event payload sent to LaunchDarkly use gzip compression. By default this is true, which reduces egress bandwidth cost.
+    /// Should the event payload sent to LaunchDarkly use gzip compression. By default this is false to prevent backward breaking compatibility issues with older versions of the relay proxy.
     ///
-    /// Customers sending events through a version of the relay proxy that does not accept gzip-encoded event payloads should set this to false.
+    /// Customers not using the relay proxy are strongly encouraged to enable this feature to reduce egress bandwidth cost.
     public var enableCompression: Bool = Defaults.enableCompression
 
     /* TODO: find a way to make delegates equatable */

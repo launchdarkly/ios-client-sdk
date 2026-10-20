@@ -604,25 +604,25 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(responses.urlResponse).toNot(beNil())
                     expect(responses.error).to(beNil())
                 }
-                it("gzips the payload by default") {
-                    expect(eventRequest?.allHTTPHeaderFields?["Content-Encoding"]) == "gzip"
-                    expect(eventRequest?.ohhttpStubs_httpBody?.gunzip()) == testData
+                it("sends the payload uncompressed by default") {
+                    expect(eventRequest?.allHTTPHeaderFields?["Content-Encoding"]).to(beNil())
+                    expect(eventRequest?.ohhttpStubs_httpBody) == testData
                 }
             }
-            context("compression disabled") {
+            context("compression enabled") {
                 beforeEach {
                     testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey,
                                               useReport: Constants.useGetMethod,
-                                              enableCompression: false)
+                                              enableCompression: true)
                     waitUntil(timeout: .seconds(5)) { done in
                         testContext.serviceMock.stubEventRequest(success: true) { eventRequest = $0 }
                         testContext.service.publishEventData(testData, UUID().uuidString) { _ in done() }
                     }
                 }
-                it("sends the payload uncompressed") {
+                it("gzips the payload") {
                     expect(eventRequest).toNot(beNil())
-                    expect(eventRequest?.allHTTPHeaderFields?["Content-Encoding"]).to(beNil())
-                    expect(eventRequest?.ohhttpStubs_httpBody) == testData
+                    expect(eventRequest?.allHTTPHeaderFields?["Content-Encoding"]) == "gzip"
+                    expect(eventRequest?.ohhttpStubs_httpBody?.gunzip()) == testData
                 }
             }
             context("failure") {
