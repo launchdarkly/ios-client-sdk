@@ -166,6 +166,14 @@ public final class ObjcLDConfig: NSObject {
         set { config.diagnosticRecordingInterval = newValue }
     }
 
+    /// Sends event payloads gzip-encoded, which reduces egress bandwidth cost. (Default: YES)
+    ///
+    /// Set to NO when sending events through a version of the relay proxy that does not accept gzip-encoded event payloads.
+    @objc public var enableCompression: Bool {
+        get { config.enableCompression }
+        set { config.enableCompression = newValue }
+    }
+
     /// For use by wrapper libraries to set an identifying name for the wrapper being used. This will be sent in the "X-LaunchDarkly-Wrapper" header on requests to the LaunchDarkly servers to allow recording metrics on the usage of these wrapper libraries.
     @objc public var wrapperName: String? {
         get { config.wrapperName }
