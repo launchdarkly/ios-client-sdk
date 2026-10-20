@@ -80,6 +80,7 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.wrapperName, LDConfig.Defaults.wrapperName)
         XCTAssertEqual(config.wrapperVersion, LDConfig.Defaults.wrapperVersion)
         XCTAssertEqual(config.additionalHeaders, LDConfig.Defaults.additionalHeaders)
+        XCTAssertTrue(config.enableCompression)
     }
 
     func testInitUpdate() {
