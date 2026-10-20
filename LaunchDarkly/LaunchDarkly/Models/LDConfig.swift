@@ -224,6 +224,12 @@ public struct LDConfig {
         /// The default maximum number of events the LDClient can store
         static let eventCapacity = 2000
 
+        /// The default maximum number of bytes of events the LDClient can persist per environment. (20 MiB)
+        static let eventCapacityBytes = 20 * 1024 * 1024
+
+        /// The default maximum age of persisted events. (7 days)
+        static let eventMaxAge: TimeInterval = 7 * 24 * 60 * 60
+
         /// The default behavior for the SDK is to keep events in memory only.
         static let eventPersistence = EventPersistence.disabled
 
@@ -364,6 +370,22 @@ public struct LDConfig {
     /// `.immediate` additionally puts the write on the thread that called `track` or `identify`, so there is no window
     /// in which the event exists only in memory. (Default: `.disabled`)
     public var eventPersistence: EventPersistence = Defaults.eventPersistence
+
+    /// The maximum number of bytes of events the SDK keeps for each environment where `eventPersistence` keeps events across launches,
+    /// on disk and in memory together. When it is reached, the SDK discards new events until it successfully reports the stored ones,
+    /// as it does when `eventCapacity` is reached; it never deletes stored events to make room. A fifth of it is kept for the summaries
+    /// of flag evaluations, so that evaluations are still counted after full events start being discarded. A value of zero or less
+    /// means the default. (Default: 20 MiB)
+    ///
+    /// It has no effect where `eventPersistence` is `.disabled`.
+    public var eventCapacityBytes: Int = Defaults.eventCapacityBytes
+
+    /// How long the SDK keeps events it has persisted but not yet reported, where `eventPersistence` keeps events across launches. Events
+    /// older than this are discarded rather than reported, and so is everything the SDK stored for an environment whose mobile key the
+    /// application stopped using. A value of zero or less means the default. (Default: 7 days)
+    ///
+    /// It has no effect where `eventPersistence` is `.disabled`.
+    public var eventMaxAge: TimeInterval = Defaults.eventMaxAge
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
     public var connectionTimeout: TimeInterval = Defaults.connectionTimeout
@@ -595,6 +617,8 @@ extension LDConfig: Equatable {
             && lhs.streamUrl == rhs.streamUrl
             && lhs.eventCapacity == rhs.eventCapacity
             && lhs.eventPersistence == rhs.eventPersistence
+            && lhs.eventCapacityBytes == rhs.eventCapacityBytes
+            && lhs.eventMaxAge == rhs.eventMaxAge
             && lhs.sendEvents == rhs.sendEvents
             && lhs.connectionTimeout == rhs.connectionTimeout
             && lhs.eventFlushInterval == rhs.eventFlushInterval

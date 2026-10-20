@@ -20,20 +20,31 @@ protocol EventStoring {
     /// already have. A send that fails puts the batch back, so a full store can briefly hold capacity plus that batch.
     var pendingEventCount: Int { get }
 
+    /// Whether a full event of any size could still be staged within the byte capacity.
+    ///
+    /// Asked before an event is accepted, when it has not been encoded and so has no size yet. An event accepted while
+    /// there is room can still be refused at `stageReserved(_:)` if it turns out not to fit.
+    var hasRoomForEventBytes: Bool { get }
+
     /// Whether a commit writes anything, which is false where persistence is off and once a write has failed and the
     /// store has given up on it.
     var isPersisting: Bool { get }
 
-    /// Stages an already encoded event, returning false if it was dropped because `capacity` is reached.
+    /// Stages an already encoded event, returning false if it was dropped because `capacity` or the byte capacity is
+    /// reached.
     ///
     /// Staging is a copy into a buffer, and never writes however much is staged; `commit()` is what makes the event
     /// outlive the process, and deciding when to call it is the caller's.
+    ///
+    /// - Parameter bypassingCapacity: true for a summary, which is not refused for `capacity` and may use the part of
+    ///   the byte capacity held back from full events, but is still refused past the byte capacity itself.
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool
 
     /// Counts events that have been accepted but are still being encoded, so capacity sees them until they are staged.
     func reserve(_ events: Int)
 
-    /// Stages an event using up one reservation, rather than checking capacity again.
+    /// Stages an event using up one reservation, rather than checking `capacity` again. Its bytes are checked, since
+    /// they were not known when it was accepted.
     func stageReserved(_ encodedEvent: Data) -> Bool
 
     /// Gives back every reservation not used up by `stageReserved(_:)`, such as one for an event that failed to encode.
@@ -69,6 +80,14 @@ protocol EventStoring {
 
     /// Closes any log left open by a previous run of this process, so its events join the batches to deliver.
     func recoverInterruptedLog()
+
+    /// Deletes what has been stored for longer than the maximum age, except a batch whose request is out.
+    ///
+    /// The first call also empties and removes the directories of other environments of this application that nothing
+    /// has written to for as long, which is what becomes of a mobile key the application stopped using.
+    ///
+    /// - Returns: how many events were discarded.
+    func discardExpired() -> Int
 }
 
 /// A batch that is there to read and holds nothing this version can send: damaged, or written in a format it does not
@@ -103,6 +122,13 @@ final class EventStore: EventStoring {
     /// there are its own.
     private let disk: EventDirectory?
     private let capacity: Int
+    /// The most bytes summaries may take the store to.
+    private let byteCapacity: Int
+    /// The most bytes full events may take the store to: the byte capacity less a fifth of it, held back so that
+    /// summaries, which bypass `capacity`, still have room once full events are being refused.
+    private let eventByteCapacity: Int
+    /// How long a batch may go unwritten before it is discarded rather than delivered.
+    private let maxAge: TimeInterval
     private let logger: OSLog
 
     /// Guards the buffer and the counters. It is held for a copy and never across a syscall, so an evaluation
@@ -125,10 +151,22 @@ final class EventStore: EventStoring {
     /// critical section that changes one of those, so that it cannot drift from them; a total worked out from them and
     /// written afterwards would overwrite a close or a removal in between.
     private var closedEvents = 0
-    /// Closed batches whose request is out, by payload ID, and the events in them. Every one is also in `closedEvents`,
+    /// Closed batches whose request is out, by payload ID, and what is in them. Every one is also in `closedEvents`,
     /// and leaves both in the same critical section.
-    private var sendingBatches: [String: Int] = [:]
+    private var sendingBatches: [String: EventTally] = [:]
     private var sendingEvents = 0
+
+    /// The bytes of the events counted above, state for state. Staged bytes are `bufferData` itself. Changed in the
+    /// same critical sections as the event counts beside them, so that bytes and events are never counted in
+    /// different places.
+    private var writingBytes = 0
+    private var committedBytes = 0
+    private var closedBytes = 0
+    private var sendingBytes = 0
+
+    /// Whether the directories of other environments have been looked at for ones nobody uses any more, which is
+    /// done once per process. Only to be used while holding `ioLock`.
+    private var hasDiscardedAbandonedEnvironments = false
     /// Whether events are being written to disk, which is what the application asked for until a write fails and the
     /// store gives up on persistence for the rest of the session.
     private var persistEvents = true
@@ -169,19 +207,24 @@ final class EventStore: EventStoring {
 
     convenience init(directory: URL,
                      capacity: Int,
+                     byteCapacity: Int = LDConfig.Defaults.eventCapacityBytes,
+                     maxAge: TimeInterval = LDConfig.Defaults.eventMaxAge,
                      persistEvents: Bool = true,
                      processName: String = ProcessInfo.processInfo.processName,
                      logger: OSLog,
                      readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
                      writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }) {
-        self.init(locatingDirectory: { directory }, capacity: capacity, persistEvents: persistEvents, processName: processName,
-                  logger: logger, readFile: readFile, writeLog: writeLog)
+        self.init(locatingDirectory: { directory }, capacity: capacity, byteCapacity: byteCapacity, maxAge: maxAge,
+                  persistEvents: persistEvents, processName: processName, logger: logger, readFile: readFile,
+                  writeLog: writeLog)
     }
 
     /// - Parameter locatingDirectory: answers where the batches go. Asked once, and only if the store reaches for the
     ///   disk, which one told not to persist events never does.
     init(locatingDirectory: @escaping () -> URL,
          capacity: Int,
+         byteCapacity: Int = LDConfig.Defaults.eventCapacityBytes,
+         maxAge: TimeInterval = LDConfig.Defaults.eventMaxAge,
          persistEvents: Bool = true,
          processName: String = ProcessInfo.processInfo.processName,
          logger: OSLog,
@@ -190,6 +233,9 @@ final class EventStore: EventStoring {
         let ioLock = UnfairLock()
         self.ioLock = ioLock
         self.capacity = capacity
+        self.byteCapacity = byteCapacity > 0 ? byteCapacity : LDConfig.Defaults.eventCapacityBytes
+        self.eventByteCapacity = self.byteCapacity - self.byteCapacity / 5
+        self.maxAge = maxAge > 0 ? maxAge : LDConfig.Defaults.eventMaxAge
         self.logger = logger
         // An application that has not asked for persistence gets the same store running the same way it runs once a
         // write has failed: events are held, delivered, and lost only if the process dies. It gets no directory at
@@ -214,6 +260,18 @@ final class EventStore: EventStoring {
     private var countedEvents: Int {
         // Clamped because a batch another process delivered can be marked as sending after a listing stopped counting it.
         reservedEvents + bufferedEventCount + writingEvents + committedEvents + max(0, closedEvents - sendingEvents)
+    }
+
+    /// Every byte counted against the byte capacity. Only to be used while holding `bufferLock`.
+    ///
+    /// Events reserved while being encoded have no bytes yet; they are counted when they are staged.
+    private var countedBytes: Int {
+        bufferData.count + writingBytes + committedBytes + max(0, closedBytes - sendingBytes)
+    }
+
+    var hasRoomForEventBytes: Bool {
+        // A store kept off the disk holds events the way the SDK did before persistence, bounded by count alone.
+        disk == nil || bufferLock.withLock { countedBytes < eventByteCapacity }
     }
 
     var isPersisting: Bool {
@@ -246,18 +304,28 @@ final class EventStore: EventStoring {
             return false
         }
 
-        return bufferLock.withLock {
-            guard bypassingCapacity || countedEvents < capacity
-            else { return false }
-
+        // Framed before the lock is taken, so that the critical section is the append.
+        let frame = EventLogFormat.frame(for: encodedEvent)
+        // Only a summary bypasses capacity without a reservation, and only a summary may use the bytes held back.
+        let isSummary = bypassingCapacity && !usingReservation
+        let boundedByBytes = disk != nil
+        let staged = bufferLock.withLock { () -> Bool in
             // In the same critical section as the append, so the event is never counted twice or not at all.
             if usingReservation {
                 reservedEvents = max(0, reservedEvents - 1)
             }
-            bufferData.append(EventLogFormat.frame(for: encodedEvent))
+            guard bypassingCapacity || countedEvents < capacity,
+                  !boundedByBytes || countedBytes + frame.count <= (isSummary ? byteCapacity : eventByteCapacity)
+            else { return false }
+
+            bufferData.append(frame)
             bufferedEventCount += 1
             return true
         }
+        if !staged {
+            os_log("%s dropping an event the store has no room for", log: logger, type: .debug, typeName(and: #function))
+        }
+        return staged
     }
 
     func commit() {
@@ -276,9 +344,11 @@ final class EventStore: EventStoring {
 
         writeStagedBytes()
 
-        let (events, stillBuffered) = bufferLock.withLock { (committedEvents, bufferedEventCount) }
+        let (committed, stillBuffered) = bufferLock.withLock {
+            (EventTally(events: committedEvents, bytes: committedBytes), bufferedEventCount)
+        }
 
-        let fromLog = events > 0 ? closeOpenLog(of: disk, holding: events) : nil
+        let fromLog = committed.events > 0 ? closeOpenLog(of: disk, holding: committed) : nil
         // Closed after the log, so the older events are delivered first. Both can hold events at once: a write that
         // fails after earlier ones landed gives up on persistence with those earlier events in the log and the failed
         // ones back in memory, and closing only the log would leave the rest to a delivery that reports success
@@ -288,20 +358,27 @@ final class EventStore: EventStoring {
     }
 
     /// Requires `ioLock`.
-    private func closeOpenLog(of disk: EventDirectory, holding events: Int) -> EventBatch? {
+    private func closeOpenLog(of disk: EventDirectory, holding committed: EventTally) -> EventBatch? {
         ioLock.assertOwned()
-        switch disk.closeLog(holding: events) {
+        // The file is the frames behind its header. A listing counts it from the file itself.
+        let closed = EventTally(events: committed.events, bytes: committed.bytes + EventLogFormat.fileHeader.count)
+        switch disk.closeLog(holding: closed) {
         case .failed(let logSurvives):
             // Where the log went with its events, they have to stop counting against capacity or the store would
             // refuse events for the rest of the session.
             if !logSurvives {
-                bufferLock.withLock { committedEvents = 0 }
+                bufferLock.withLock {
+                    committedEvents = 0
+                    committedBytes = 0
+                }
             }
             return nil
         case .closed(let batch):
             bufferLock.withLock {
                 committedEvents = 0
-                closedEvents += events
+                committedBytes = 0
+                closedEvents += closed.events
+                closedBytes += closed.bytes
             }
             return batch
         }
@@ -313,8 +390,11 @@ final class EventStore: EventStoring {
         // Listed in one critical section where there is a disk, so that the files and what is held cannot be counted
         // either side of a close that moves events between them.
         guard let disk
-        else { return heldBatchesAndRecount(after: []) }
-        return ioLock.withLock { heldBatchesAndRecount(after: disk.listBatches()) }
+        else { return heldBatchesAndRecount(after: [], storedBytes: 0) }
+        return ioLock.withLock {
+            let listed = disk.listBatches()
+            return heldBatchesAndRecount(after: listed, storedBytes: disk.storedBytes)
+        }
     }
 
     /// Adds the batches the filesystem would not take, after the files: anything held was closed by this run and so is
@@ -322,11 +402,14 @@ final class EventStore: EventStoring {
     /// batches another process closed or delivered come to be counted or not.
     ///
     /// Requires `ioLock` where there is a disk, so that the count is of the listing as it stands.
-    private func heldBatchesAndRecount(after onDisk: [EventBatch]) -> [EventBatch] {
+    ///
+    /// - Parameter storedBytes: the bytes in the batches listed from the disk.
+    private func heldBatchesAndRecount(after onDisk: [EventBatch], storedBytes: Int) -> [EventBatch] {
         heldLock.withLock {
             let batches = onDisk + inMemoryBatches.map { EventBatch(payloadId: $0.payloadId, eventCount: $0.eventCount) }
             bufferLock.withLock {
                 closedEvents = batches.reduce(0) { $0 + $1.eventCount }
+                closedBytes = inMemoryBatches.reduce(storedBytes) { $0 + $1.body.count }
                 // One no longer listed is no longer counted, so it cannot be left out of the count either.
                 let listed = Set(batches.map { $0.payloadId })
                 sendingBatches.keys.filter { !listed.contains($0) }.forEach(forgetSending)
@@ -357,6 +440,7 @@ final class EventStore: EventStoring {
             let held = inMemoryBatches.remove(at: index)
             bufferLock.withLock {
                 closedEvents -= held.eventCount
+                closedBytes -= held.body.count
                 forgetSending(batch.payloadId)
             }
             return true
@@ -372,7 +456,8 @@ final class EventStore: EventStoring {
         ioLock.withLock {
             let counted = disk.remove(batch.payloadId, holding: batch.eventCount)
             bufferLock.withLock {
-                closedEvents -= counted
+                closedEvents -= counted.events
+                closedBytes -= counted.bytes
                 forgetSending(batch.payloadId)
             }
         }
@@ -385,11 +470,38 @@ final class EventStore: EventStoring {
     }
 
     /// Counts events a recovery closed off into batches of their own. Requires `ioLock`.
-    private func countRecovered(_ events: Int) {
+    private func countRecovered(_ recovered: EventTally) {
         ioLock.assertOwned()
-        guard events > 0
+        guard recovered.events > 0
         else { return }
-        bufferLock.withLock { closedEvents += events }
+        bufferLock.withLock {
+            closedEvents += recovered.events
+            closedBytes += recovered.bytes
+        }
+    }
+
+    func discardExpired() -> Int {
+        guard let disk
+        else { return 0 }
+        let cutoff = Date().addingTimeInterval(-maxAge)
+
+        let (discarded, directory) = ioLock.withLock { () -> (Int, URL?) in
+            let sending = bufferLock.withLock { Set(sendingBatches.keys) }
+            let (events, counted) = disk.discard(lastWrittenBefore: cutoff, sparing: sending)
+            // In the same critical section as the delete, as for any other path that loses events without delivering
+            // them, so the store cannot go on counting what is gone.
+            bufferLock.withLock {
+                closedEvents -= counted.events
+                closedBytes -= counted.bytes
+            }
+            defer { hasDiscardedAbandonedEnvironments = true }
+            return (events, hasDiscardedAbandonedEnvironments ? nil : disk.url)
+        }
+
+        // Outside `ioLock`: none of it is this store's directory, and a commit point should not wait on it.
+        guard let directory
+        else { return discarded }
+        return discarded + EventDirectory.discardAbandonedEnvironments(besides: directory, lastWrittenBefore: cutoff)
     }
 
     deinit {
@@ -405,11 +517,13 @@ final class EventStore: EventStoring {
 
 extension EventStore {
     func startedSending(_ batch: EventBatch) {
+        let bytes = bytes(of: batch.payloadId)
         bufferLock.withLock {
             guard sendingBatches[batch.payloadId] == nil
             else { return }
-            sendingBatches[batch.payloadId] = batch.eventCount
+            sendingBatches[batch.payloadId] = EventTally(events: batch.eventCount, bytes: bytes)
             sendingEvents += batch.eventCount
+            sendingBytes += bytes
         }
     }
 
@@ -417,10 +531,21 @@ extension EventStore {
         bufferLock.withLock { forgetSending(batch.payloadId) }
     }
 
+    /// The bytes a closed batch is counted as, held or on the disk.
+    private func bytes(of payloadId: String) -> Int {
+        if let held = heldLock.withLock({ inMemoryBatches.first { $0.payloadId == payloadId } }) {
+            return held.body.count
+        }
+        guard let disk
+        else { return 0 }
+        return ioLock.withLock { disk.bytes(of: payloadId) }
+    }
+
     /// Requires `bufferLock`.
     fileprivate func forgetSending(_ payloadId: String) {
-        if let events = sendingBatches.removeValue(forKey: payloadId) {
-            sendingEvents -= events
+        if let sending = sendingBatches.removeValue(forKey: payloadId) {
+            sendingEvents -= sending.events
+            sendingBytes -= sending.bytes
         }
     }
 }
@@ -440,6 +565,7 @@ extension EventStore {
             bufferData = Data()
             bufferedEventCount = 0
             writingEvents += staged.events
+            writingBytes += staged.bytes.count
             return staged
         }
         guard let taken
@@ -448,13 +574,16 @@ extension EventStore {
         if append(taken.bytes) {
             bufferLock.withLock {
                 writingEvents -= taken.events
+                writingBytes -= taken.bytes.count
                 committedEvents += taken.events
+                committedBytes += taken.bytes.count
             }
         } else {
             // Put back, to be delivered from memory rather than lost. Ahead of anything staged while the write was in
             // flight, so the events keep the order they were recorded in.
             bufferLock.withLock {
                 writingEvents -= taken.events
+                writingBytes -= taken.bytes.count
                 bufferData = taken.bytes + bufferData
                 bufferedEventCount += taken.events
             }
@@ -512,6 +641,7 @@ private extension EventStore {
             bufferData = Data()
             bufferedEventCount = 0
             writingEvents += staged.events
+            writingBytes += staged.frames.count
             return staged
         }
 
@@ -522,7 +652,10 @@ private extension EventStore {
         log.append(frames)
         guard let body = EventLogFormat.assembleBody(from: log)
         else {
-            bufferLock.withLock { writingEvents -= events }
+            bufferLock.withLock {
+                writingEvents -= events
+                writingBytes -= frames.count
+            }
             return nil
         }
 
@@ -530,10 +663,13 @@ private extension EventStore {
         heldLock.withLock {
             inMemoryBatches.append(HeldBatch(payloadId: payloadId, body: body, eventCount: events))
             // Counted where they landed in the same critical section that stops counting them on the way, so a
-            // capacity check never sees them in both places or in neither.
+            // capacity check never sees them in both places or in neither. A held batch is counted as its body, which
+            // is what it keeps.
             bufferLock.withLock {
                 writingEvents -= events
+                writingBytes -= frames.count
                 closedEvents += events
+                closedBytes += body.count
             }
         }
 

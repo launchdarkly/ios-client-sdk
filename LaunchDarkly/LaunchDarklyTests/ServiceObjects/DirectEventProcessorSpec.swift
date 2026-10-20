@@ -1419,6 +1419,61 @@ extension DirectEventProcessorSpec {
                 nextRun.isOnline = false
             }
 
+            itPersisting("discards what a previous run left longer ago than the maximum age, and still answers a flush with success") {
+                testContext = TestContext()
+                testContext.recordEvents(2)
+                testContext.eventProcessor.commitRecordedEvents()
+                expect(testContext.store.closeBatch()).toNot(beNil())
+                let directory = testContext.store.directory!
+                let longAgo = Date().addingTimeInterval(-8 * 24 * 60 * 60)
+                for file in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) {
+                    try FileManager.default.setAttributes([.modificationDate: longAgo], ofItemAtPath: file.path)
+                }
+
+                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: EventStore.sharing(directory))
+                nextRun.isOnline = true
+                var delivered: Bool?
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    nextRun.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+
+                // The caller's own events all got out; the ones discarded were no one's to wait on.
+                expect(delivered) == true
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+                expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 2
+                nextRun.isOnline = false
+            }
+
+            itPersisting("refuses an event without encoding it once the stored bytes leave no room for full events") {
+                let store = EventStore.temporary(capacity: 100, byteCapacity: 1000)
+                // One frame of 800 bytes, which is all the room full events have.
+                expect(store.stage(Data(repeating: UInt8(ascii: "x"), count: 800 - EventLogFormat.frameHeaderSize))) == true
+                testContext = TestContext(store: store, eventCapacity: 100)
+
+                let refused = EncodingGate(key: "refused", context: testContext.context)
+                refused.proceed.signal()
+                testContext.eventProcessor.record(refused)
+
+                expect(refused.started.wait(timeout: .now() + 0.2)) == .timedOut
+                expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 1
+            }
+
+            itPersisting("reports a flush as failed when an accepted event turns out too large for the bytes left") {
+                let store = EventStore.temporary(capacity: 100, byteCapacity: 1000)
+                expect(store.stage(Data(repeating: UInt8(ascii: "x"), count: 700 - EventLogFormat.frameHeaderSize))) == true
+                testContext = TestContext(store: store, eventCapacity: 100)
+                testContext.eventProcessor.isOnline = true
+
+                testContext.eventProcessor.record(CustomEvent(key: "large", context: testContext.context,
+                                                              data: LDValue.string(String(repeating: "y", count: 300))))
+
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.serviceMock.publishedEventPayloads.flatMap(customKeys)).toNot(contain("large"))
+            }
+
             it("does not bring a delivery forward when a previous run left nothing behind") {
                 testContext = TestContext()
 
@@ -2451,6 +2506,7 @@ private final class ClosingHookStore: EventStoring {
     }
 
     var pendingEventCount: Int { inner.pendingEventCount }
+    var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
     var isPersisting: Bool { inner.isPersisting }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }
@@ -2463,6 +2519,7 @@ private final class ClosingHookStore: EventStoring {
     func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
     func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
     func recoverInterruptedLog() { inner.recoverInterruptedLog() }
+    func discardExpired() -> Int { inner.discardExpired() }
 
     func closeBatch() -> EventBatch? {
         let before = beforeClosing
@@ -2527,6 +2584,7 @@ private final class SlowListingStore: EventStoring {
     }
 
     var pendingEventCount: Int { inner.pendingEventCount }
+    var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
     var isPersisting: Bool { inner.isPersisting }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }
@@ -2539,6 +2597,7 @@ private final class SlowListingStore: EventStoring {
     func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
     func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
     func recoverInterruptedLog() { inner.recoverInterruptedLog() }
+    func discardExpired() -> Int { inner.discardExpired() }
 
     /// Every listing but the first is held, the first being the one the reporter makes as it starts up.
     func pendingBatches() -> [EventBatch] {

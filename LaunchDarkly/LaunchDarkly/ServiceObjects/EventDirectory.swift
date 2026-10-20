@@ -1,6 +1,17 @@
 import Foundation
 import OSLog
 
+/// How many events, and how many bytes, something stored holds: the two things capacity counts.
+struct EventTally: Equatable {
+    var events = 0
+    var bytes = 0
+
+    static func += (lhs: inout EventTally, rhs: EventTally) {
+        lhs.events += rhs.events
+        lhs.bytes += rhs.bytes
+    }
+}
+
 /// The directory one store keeps its events in: the log this process appends to, and beside it the batches that have
 /// been closed off for delivery.
 ///
@@ -41,10 +52,13 @@ final class EventDirectory {
     /// Whether a log left by a previous run has been dealt with. Only to be used while holding `ioLock`.
     private var hasRecoveredInterruptedLog = false
 
-    /// A batch in the directory: the file it is, and how many events it holds.
+    /// A batch in the directory: the file it is, how many events it holds, and how big it is.
     private struct Stored {
         let url: URL
         let events: Int
+        let bytes: Int
+
+        var tally: EventTally { EventTally(events: events, bytes: bytes) }
     }
 
     /// What this process knows about each batch in the directory, by payload ID, which is how everything outside this
@@ -159,14 +173,14 @@ final class EventDirectory {
     ///
     /// Requires `ioLock`.
     ///
-    /// - Returns: how many events that recovery found, and whether every byte landed. False means none of `bytes` is
-    ///   in the log, and that the caller should give up on the disk.
-    func append(_ bytes: Data) -> (recovered: Int, written: Bool) {
+    /// - Returns: what that recovery found, and whether every byte landed. False means none of `bytes` is in the log,
+    ///   and that the caller should give up on the disk.
+    func append(_ bytes: Data) -> (recovered: EventTally, written: Bool) {
         ioLock.assertOwned()
         // Recovered before the log is opened, because it may still be the one a previous run died writing. Appended
         // to, this run's events would sit behind that run's torn last frame, where a reader can no longer find where
         // they start.
-        let recovered = disk.log.isOpen ? 0 : recoverInterruptedLog()
+        let recovered = disk.log.isOpen ? EventTally() : recoverInterruptedLog()
         return (recovered, disk.log.append(bytes))
     }
 
@@ -181,9 +195,10 @@ final class EventDirectory {
 
     /// Closes the open log into a batch, so the next append starts a new one. Requires `ioLock`.
     ///
-    /// - Parameter events: how many events the log holds, which the caller has counted as it staged them.
-    func closeLog(holding events: Int) -> LogClose {
+    /// - Parameter held: what the log holds, which the caller has counted as it staged and wrote it.
+    func closeLog(holding held: EventTally) -> LogClose {
         ioLock.assertOwned()
+        let events = held.events
         let payloadId = UUID().uuidString
         let file = newUrl(of: payloadId, holding: events)
         do {
@@ -193,7 +208,7 @@ final class EventDirectory {
             return .failed(logSurvives: disk.log.exists)
         }
 
-        stored[payloadId] = Stored(url: file, events: events)
+        stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes)
         return .closed(EventBatch(payloadId: payloadId, eventCount: events))
     }
 
@@ -208,10 +223,12 @@ final class EventDirectory {
     // MARK: Listing and reading
 
     /// The batches in the directory, oldest first. Requires `ioLock`.
+    ///
+    /// Sizes come from the same listing, so that counting the directory's bytes reads no file either.
     func listBatches() -> [EventBatch] {
         ioLock.assertOwned()
         let contents = (try? FileManager.default.contentsOfDirectory(at: disk.directory,
-                                                                     includingPropertiesForKeys: [.contentModificationDateKey],
+                                                                     includingPropertiesForKeys: EventDirectory.listedKeys,
                                                                      options: [.skipsHiddenFiles])) ?? []
 
         let batches = contents
@@ -224,9 +241,9 @@ final class EventDirectory {
                 // count may have left behind, and then only the once.
                 guard let events = counted ?? stored[payloadId]?.events ?? countOfEvents(in: file)
                 else { return nil }
-                stored[payloadId] = Stored(url: file, events: events)
-                let modified = (try? file.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
-                return (EventBatch(payloadId: payloadId, eventCount: events), modified ?? Date.distantPast)
+                let listed = EventDirectory.listed(file)
+                stored[payloadId] = Stored(url: file, events: events, bytes: listed.bytes ?? stored[payloadId]?.bytes ?? 0)
+                return (EventBatch(payloadId: payloadId, eventCount: events), listed.modified ?? Date.distantPast)
             }
             .sorted { $0.1 < $1.1 }
             .map { $0.0 }
@@ -237,6 +254,26 @@ final class EventDirectory {
         stored = stored.filter { listed.contains($0.key) }
 
         return batches
+    }
+
+    private static let listedKeys: [URLResourceKey] = [.contentModificationDateKey, .fileSizeKey]
+
+    /// What a directory listing says about a file, without opening it.
+    private static func listed(_ file: URL) -> (bytes: Int?, modified: Date?) {
+        let values = try? file.resourceValues(forKeys: Set(listedKeys))
+        return (values?.fileSize, values?.contentModificationDate)
+    }
+
+    /// The bytes in every batch the last listing or close counted. Requires `ioLock`.
+    var storedBytes: Int {
+        ioLock.assertOwned()
+        return stored.values.reduce(0) { $0 + $1.bytes }
+    }
+
+    /// The bytes in a batch, as far as this process has counted them. Requires `ioLock`.
+    func bytes(of payloadId: String) -> Int {
+        ioLock.assertOwned()
+        return stored[payloadId]?.bytes ?? 0
     }
 
     /// Whether a batch has already been delivered and only its file is left, trying the delete that failed once more
@@ -275,9 +312,9 @@ final class EventDirectory {
 
     /// Forgets a batch. Requires `ioLock`.
     ///
-    /// - Returns: the events it stopped counting, which is zero for a batch that was already gone -- one another
-    ///   process delivered, say, which a listing has stopped counting already.
-    func remove(_ payloadId: String, holding events: Int) -> Int {
+    /// - Returns: what it stopped counting, which is nothing for a batch that was already gone -- one another process
+    ///   delivered, say, which a listing has stopped counting already.
+    func remove(_ payloadId: String, holding events: Int) -> EventTally {
         ioLock.assertOwned()
         let file = url(of: payloadId, holding: events)
         try? FileManager.default.removeItem(at: file)
@@ -287,7 +324,7 @@ final class EventDirectory {
             os_log("%s could not delete a delivered batch; it will not be sent again this session", log: logger, type: .debug, typeName(and: #function))
             deliveredButUndeleted.insert(payloadId)
         }
-        return stored.removeValue(forKey: payloadId)?.events ?? 0
+        return stored.removeValue(forKey: payloadId)?.tally ?? EventTally()
     }
 
     /// Every event in the directory, encoded exactly as it will be sent. Requires `ioLock`.
@@ -371,27 +408,28 @@ final class EventDirectory {
     ///
     /// Requires `ioLock`. Does its work once: after that, the open log is one this run opened.
     ///
-    /// - Returns: how many events it closed off, which is zero on every call after the first.
-    func recoverInterruptedLog() -> Int {
+    /// - Returns: what it closed off, which is nothing on every call after the first.
+    func recoverInterruptedLog() -> EventTally {
         ioLock.assertOwned()
         guard !hasRecoveredInterruptedLog
-        else { return 0 }
+        else { return EventTally() }
         hasRecoveredInterruptedLog = true
 
-        var recovered = 0
-        disk.log.forEachLogLeftOpen { recovered += events(recoveredFrom: $0) }
+        var recovered = EventTally()
+        disk.log.forEachLogLeftOpen { recovered += tally(recoveredFrom: $0) }
         return recovered
     }
 
     /// Closes off a log nobody is writing to any more. Requires `ioLock`.
     ///
-    /// - Returns: how many events it closed off, or zero where there was nothing to close off.
-    private func events(recoveredFrom leftOpen: URL) -> Int {
+    /// - Returns: what it closed off, or nothing where there was nothing to close off.
+    private func tally(recoveredFrom leftOpen: URL) -> EventTally {
         ioLock.assertOwned()
         let events: Int
+        let bytes: Int
         switch read(leftOpen) {
         case .missing:
-            return 0
+            return EventTally()
         case .failed(let error):
             // It cannot stay under this name, which this run is about to append its own events to, and deleting it
             // would lose events that may be intact. Closed off uncounted instead, it is read and counted by whichever
@@ -401,31 +439,142 @@ final class EventDirectory {
             // first manages to read it is what counts it.
             let uncounted = disk.directory.appendingPathComponent("\(EventDirectory.batchPrefix)\(UUID().uuidString)")
             try? FileManager.default.moveItem(at: leftOpen, to: uncounted)
-            return 0
+            return EventTally()
         case .bytes(let log):
             guard let counted = EventLogFormat.eventCount(in: log)
             else {
                 // Unreadable, and a log that cannot be read cannot be appended to either.
                 try? FileManager.default.removeItem(at: leftOpen)
-                return 0
+                return EventTally()
             }
             events = counted
+            bytes = log.count
         }
 
         guard events > 0
         else {
             try? FileManager.default.removeItem(at: leftOpen)
-            return 0
+            return EventTally()
         }
 
         let payloadId = UUID().uuidString
         let file = newUrl(of: payloadId, holding: events)
         guard (try? FileManager.default.moveItem(at: leftOpen, to: file)) != nil
-        else { return 0 }
+        else { return EventTally() }
 
-        stored[payloadId] = Stored(url: file, events: events)
+        let recovered = Stored(url: file, events: events, bytes: bytes)
+        stored[payloadId] = recovered
         os_log("%s recovered %d event(s) from a previous run", log: logger, type: .debug, typeName(and: #function), events)
+        return recovered.tally
+    }
+}
+
+// MARK: Expiry
+
+extension EventDirectory {
+    /// Deletes the batches in this directory last written before `cutoff`, and the logs of other processes that have
+    /// not been written since then either. Requires `ioLock`.
+    ///
+    /// A batch's modification time is when its newest event was written, since a batch is renamed rather than rewritten
+    /// when it is closed, so a batch is discarded only once everything in it is that old. A log another process has not
+    /// appended to for as long belongs to a process that is gone: one that is alive appends far more often than that.
+    ///
+    /// - Parameter sending: batches whose request is out, which are left alone however old they are.
+    /// - Returns: how many events were discarded, and how much of that this process had counted, which is what stops
+    ///   counting against capacity.
+    func discard(lastWrittenBefore cutoff: Date, sparing sending: Set<String>) -> (events: Int, counted: EventTally) {
+        ioLock.assertOwned()
+        let contents = (try? FileManager.default.contentsOfDirectory(at: disk.directory,
+                                                                     includingPropertiesForKeys: EventDirectory.listedKeys,
+                                                                     options: [.skipsHiddenFiles])) ?? []
+        var events = 0
+        var counted = EventTally()
+        for file in contents where EventDirectory.listed(file).modified.map({ $0 < cutoff }) ?? false {
+            let name = file.lastPathComponent
+            if name.hasPrefix(EventDirectory.batchPrefix) {
+                let (payloadId, named) = EventDirectory.parse(batchName: name)
+                guard !sending.contains(payloadId), !deliveredButUndeleted.contains(payloadId)
+                else { continue }
+                let held = named ?? stored[payloadId]?.events ?? EventDirectory.eventsReading(file)
+                guard EventDirectory.delete(file)
+                else { continue }
+                events += held
+                counted += stored.removeValue(forKey: payloadId)?.tally ?? EventTally()
+            } else if name.hasPrefix(DiskEventLog.prefix), file.standardizedFileURL != disk.log.url.standardizedFileURL {
+                events += EventDirectory.discardAbandonedLog(file)
+            }
+        }
+        return (events, counted)
+    }
+
+    /// Empties and removes the directories of other environments that nothing has written to since `cutoff`: those
+    /// of a mobile key the application no longer uses, which no client will look in again.
+    ///
+    /// Age decides rather than the keys the application configures, because another process of the same application
+    /// may be using a key this one does not configure. Nothing is touched here that this store reads or writes, so it
+    /// needs no lock. A directory is removed only if it is empty, so a log another process starts in it meanwhile
+    /// keeps the directory and itself.
+    ///
+    /// Only directories carrying this application's bundle identifier are considered. An unsandboxed Mac application
+    /// shares Application Support with every other one, whose events are not this application's to delete.
+    ///
+    /// - Returns: how many events were discarded.
+    static func discardAbandonedEnvironments(besides current: URL, lastWrittenBefore cutoff: Date) -> Int {
+        let root = current.deletingLastPathComponent()
+        let ownName = current.lastPathComponent
+        let isSameApplication: (String) -> Bool
+        if let dot = ownName.firstIndex(of: ".") {
+            let prefix = ownName[...dot]
+            isSameApplication = { $0.hasPrefix(prefix) }
+        } else {
+            isSameApplication = { !$0.contains(".") }
+        }
+
+        let siblings = (try? FileManager.default.contentsOfDirectory(at: root,
+                                                                     includingPropertiesForKeys: [.isDirectoryKey],
+                                                                     options: [.skipsHiddenFiles])) ?? []
+        var events = 0
+        for directory in siblings where directory.lastPathComponent != ownName && isSameApplication(directory.lastPathComponent) {
+            guard (try? directory.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+            else { continue }
+            let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
+                                                                         includingPropertiesForKeys: listedKeys,
+                                                                         options: [])) ?? []
+            for file in contents where listed(file).modified.map({ $0 < cutoff }) ?? false {
+                let name = file.lastPathComponent
+                if name.hasPrefix(batchPrefix) {
+                    let held = parse(batchName: name).events ?? eventsReading(file)
+                    if delete(file) {
+                        events += held
+                    }
+                } else if name.hasPrefix(DiskEventLog.prefix) {
+                    events += discardAbandonedLog(file)
+                }
+            }
+            EventLogFile.removeDirectoryIfEmpty(directory)
+        }
         return events
+    }
+
+    /// Deletes a log no live process is appending to, returning how many events it held.
+    private static func discardAbandonedLog(_ log: URL) -> Int {
+        #if os(macOS) || targetEnvironment(macCatalyst)
+        // A Mac runs second instances of an application, each holding its log locked for as long as it lives.
+        if EventLogFile.isLockedByLiveProcess(log) {
+            return 0
+        }
+        #endif
+        let held = eventsReading(log)
+        return delete(log) ? held : 0
+    }
+
+    private static func eventsReading(_ file: URL) -> Int {
+        (try? Data(contentsOf: file)).flatMap { EventLogFormat.eventCount(in: $0) } ?? 0
+    }
+
+    private static func delete(_ file: URL) -> Bool {
+        try? FileManager.default.removeItem(at: file)
+        return !FileManager.default.fileExists(atPath: file.path)
     }
 }
 

@@ -192,6 +192,7 @@ class DirectEventProcessor: EventProcessor {
         let store = self.store
         deliveryQueue.async { [weak self] in
             store.recoverInterruptedLog()
+            self?.reportDiscarded(store.discardExpired())
             self?.hasEventsFromPreviousRun = !store.pendingBatches().isEmpty
         }
     }
@@ -200,6 +201,8 @@ class DirectEventProcessor: EventProcessor {
         let mobileKey = config.mobileKey
         return EventStore(locatingDirectory: { EventDirectory.defaultUrl(mobileKey: mobileKey) },
                           capacity: config.eventCapacity,
+                          byteCapacity: config.eventCapacityBytes,
+                          maxAge: config.eventMaxAge,
                           persistEvents: config.eventPersistence != .disabled,
                           logger: config.logger)
     }
@@ -265,9 +268,12 @@ class DirectEventProcessor: EventProcessor {
     /// Capacity is consulted before anything else, so an event that will not be kept is never encoded. That ordering is
     /// what bounds an application re-evaluating a tracked flag in a render loop: once the limit is reached an
     /// evaluation costs no more than its summary counter, however fast the loop runs.
+    ///
+    /// The byte capacity can only be consulted as far as whether any room is left, since the event has no size until
+    /// it is encoded; whether it fits is decided when it is staged.
     private func admitToPending(_ event: Event) -> Bool {
         recordLock.assertOwned()
-        guard pending.count + store.pendingEventCount < eventCapacity
+        guard pending.count + store.pendingEventCount < eventCapacity, store.hasRoomForEventBytes
         else { return false }
 
         pending.append(event)
@@ -277,6 +283,19 @@ class DirectEventProcessor: EventProcessor {
     private func reportDropped() {
         os_log("%s aborted. Event store is full", log: service.config.logger, type: .debug, typeName(and: #function))
         service.diagnosticCache?.incrementDroppedEventCount()
+    }
+
+    /// Records stored events discarded for being older than the maximum age.
+    ///
+    /// Counted as dropped rather than lost: a flush is about the caller's events, and the ones discarded are long
+    /// past anything a caller is waiting on.
+    private func reportDiscarded(_ events: Int) {
+        guard events > 0
+        else { return }
+        os_log("%s discarded %d stored event(s) older than the maximum age", log: service.config.logger, type: .debug, typeName(and: #function), events)
+        for _ in 0..<events {
+            service.diagnosticCache?.incrementDroppedEventCount()
+        }
     }
 
     /// Records the loss of an event the SDK accepted and then could not keep, which no later attempt recovers.
@@ -402,7 +421,8 @@ class DirectEventProcessor: EventProcessor {
                 reportLost()
                 continue
             }
-            // Capacity is bypassed here, so what is left is a frame too large to store, which no later attempt fixes.
+            // The event capacity is bypassed here, so what is left is an event too large for a frame or for the bytes
+            // left in the store, which were not known until now. Either way it was accepted and is not kept.
             if !store.stageReserved(encoded) {
                 reportLost()
             }
@@ -434,7 +454,9 @@ class DirectEventProcessor: EventProcessor {
                 continue
             }
             // Summaries are an aggregate of evaluations that were already counted, so refusing one for capacity would
-            // lose evaluations the SDK promised to report rather than shed new load.
+            // lose evaluations the SDK promised to report rather than shed new load. Only the byte capacity refuses
+            // one, once even the room held back for summaries is used up, since nothing else bounds how many are
+            // staged while delivery keeps failing.
             if !store.stage(encoded, bypassingCapacity: true) {
                 reportLost()
             }
@@ -600,6 +622,8 @@ extension DirectEventProcessor {
     private func claimDeliverableBatches() -> (deliverable: [EventBatch], waitingOn: [Claim]) {
         // Listed before the lock is taken, because listing reads the disk. Taking what appeared after it is the next
         // delivery's business; all this has to be atomic is deciding which of these batches are this delivery's.
+        // Expired first, so that a batch too old to report is not sent.
+        reportDiscarded(store.discardExpired())
         let pending = store.pendingBatches()
         return claimLock.withLock {
             var deliverable: [EventBatch] = []

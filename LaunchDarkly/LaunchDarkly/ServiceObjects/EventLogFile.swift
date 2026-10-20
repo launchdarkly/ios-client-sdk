@@ -49,7 +49,25 @@ struct EventLogFile {
         }
         return nil
     }
+
+    /// Whether a live process holds the lock on a log, which is to say is still appending to it.
+    static func isLockedByLiveProcess(_ url: URL) -> Bool {
+        guard let opened = openLocked(url, flags: O_RDONLY)
+        else { return FileManager.default.fileExists(atPath: url.path) }
+        opened.close()
+        return false
+    }
     #endif
+
+    /// Removes a directory only if it is empty, so that nothing put there since it was last looked at goes with it.
+    @discardableResult
+    static func removeDirectoryIfEmpty(_ url: URL) -> Bool {
+        url.withUnsafeFileSystemRepresentation { path -> Bool in
+            guard let path = path
+            else { return false }
+            return removeDirectory(path) == 0
+        }
+    }
 
     static func excludeFromBackup(_ directory: URL) {
         #if canImport(Darwin)
@@ -120,6 +138,10 @@ private func truncateFile(_ descriptor: Int32, _ length: off_t) -> Int32 {
 private func closeFile(_ descriptor: Int32) {
     _ = Darwin.close(descriptor)
 }
+
+private func removeDirectory(_ path: UnsafePointer<CChar>) -> Int32 {
+    Darwin.rmdir(path)
+}
 #else
 private func openFile(_ path: UnsafePointer<CChar>, _ flags: Int32, _ mode: mode_t) -> Int32 {
     open(path, flags, mode)
@@ -135,6 +157,10 @@ private func truncateFile(_ descriptor: Int32, _ length: off_t) -> Int32 {
 
 private func closeFile(_ descriptor: Int32) {
     _ = close(descriptor)
+}
+
+private func removeDirectory(_ path: UnsafePointer<CChar>) -> Int32 {
+    rmdir(path)
 }
 #endif
 

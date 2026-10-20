@@ -56,6 +56,7 @@ extension EventStore {
     /// Unlocked, like every store from `sharing`.
     static func temporary(
         capacity: Int = 100,
+        byteCapacity: Int = LDConfig.Defaults.eventCapacityBytes,
         persistEvents: Bool = true,
         readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
         writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }
@@ -63,6 +64,7 @@ extension EventStore {
         let directory = temporaryDirectory()
         return unlocked(EventStore(directory: directory,
                                    capacity: capacity,
+                                   byteCapacity: byteCapacity,
                                    persistEvents: persistEvents,
                                    logger: .disabled,
                                    readFile: readFile,
@@ -84,11 +86,13 @@ extension EventStore {
     /// Unlocked on a Mac too. Tests open it while the first store is still alive, and a locked log would rightly be
     /// left to the live instance holding it; the locking itself has tests of its own.
     static func sharing(_ directory: URL,
+                        byteCapacity: Int = LDConfig.Defaults.eventCapacityBytes,
                         persistEvents: Bool = true,
                         processName: String = ProcessInfo.processInfo.processName,
                         readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) }) -> EventStore {
         unlocked(EventStore(directory: directory,
                             capacity: 100,
+                            byteCapacity: byteCapacity,
                             persistEvents: persistEvents,
                             processName: processName,
                             logger: .disabled,

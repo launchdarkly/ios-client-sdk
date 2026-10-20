@@ -10,6 +10,8 @@ final class EventStoreSpec: QuickSpec {
         corruptionSpec()
         batchSpec()
         capacitySpec()
+        byteCapacitySpec()
+        expirySpec()
         fallbackSpec()
         optOutSpec()
         multiProcessSpec()
@@ -313,6 +315,14 @@ final class EventStoreSpec: QuickSpec {
 
     private static func payload(_ key: String) -> Data {
         Data("{\"kind\":\"custom\",\"key\":\"\(key)\"}".utf8)
+    }
+
+    /// An event whose frame is exactly `frameBytes` long, padded out in a `data` field.
+    private static func payload(framedIn frameBytes: Int, key: String) -> Data {
+        let bare = "{\"kind\":\"custom\",\"key\":\"\(key)\",\"data\":\"\"}"
+        let padding = frameBytes - EventLogFormat.frameHeaderSize - bare.utf8.count
+        precondition(padding >= 0, "\(key) does not fit in \(frameBytes) bytes")
+        return Data("{\"kind\":\"custom\",\"key\":\"\(key)\",\"data\":\"\(String(repeating: "x", count: padding))\"}".utf8)
     }
 
     private static func keys(of store: EventStore) -> [String] {
@@ -976,6 +986,237 @@ final class EventStoreSpec: QuickSpec {
                     expect(miscounts).to(beEmpty())
                 }
             }
+        }
+    }
+
+    /// A byte capacity of 1000 lets full events take the store to 800 bytes and summaries to 1000. Every event here is
+    /// framed in exactly 100 bytes, so eight full events fill it and two summaries fill the rest.
+    private func byteCapacitySpec() {
+        describe("byte capacity") {
+            var store: EventStore!
+            afterEach {
+                store.deleteEverything()
+            }
+
+            it("refuses full events past what it holds back for summaries") {
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000)
+
+                for index in 1...8 {
+                    expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))) == true
+                }
+                expect(store.hasRoomForEventBytes) == false
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-9"))) == false
+                expect(store.pendingEventCount) == 8
+            }
+
+            it("takes summaries into what it holds back, and refuses them past the byte capacity") {
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000)
+                for index in 1...8 {
+                    _ = store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))
+                }
+
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-1"), bypassingCapacity: true)) == true
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-2"), bypassingCapacity: true)) == true
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-3"), bypassingCapacity: true)) == false
+                expect(store.pendingEventCount) == 10
+            }
+
+            it("refuses a reserved event that turns out not to fit, and gives up its reservation") {
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000)
+                for index in 1...7 {
+                    _ = store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))
+                }
+                store.reserve(1)
+
+                expect(store.stageReserved(EventStoreSpec.payload(framedIn: 200, key: "too-big"))) == false
+                expect(store.pendingEventCount) == 7
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "fits"))) == true
+            }
+
+            it("makes room again once a batch is delivered") {
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000)
+                for index in 1...8 {
+                    _ = store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))
+                }
+                let batch = store.closeBatch()!
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "while-held"))) == false
+
+                store.startedSending(batch)
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "while-sending"))) == true
+                store.remove(batch)
+                expect(store.hasRoomForEventBytes) == true
+            }
+
+            it("bounds the batches it holds in memory once it has given up on the disk") {
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000, writeLog: { _, _ in ENOSPC })
+                for index in 1...8 {
+                    _ = store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))
+                }
+                store.commit()
+                expect(store.isPersisting) == false
+                expect(store.closeBatch()).toNot(beNil())
+
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "past-capacity"))) == false
+            }
+
+            it("is not bounded by bytes where it keeps events off the disk") {
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000, persistEvents: false)
+                for index in 1...20 {
+                    expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))) == true
+                }
+                expect(store.hasRoomForEventBytes) == true
+                expect(store.pendingEventCount) == 20
+            }
+
+            it("counts committed bytes as well as staged ones") {
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000)
+                for index in 1...8 {
+                    _ = store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))
+                }
+                store.commit()
+
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "after-commit"))) == false
+            }
+
+            it("counts the bytes of a batch another process closed from the listing, without reading it") {
+                store = EventStore.temporary()
+                for index in 1...8 {
+                    _ = store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))
+                }
+                expect(store.closeBatch()).toNot(beNil())
+
+                var reads = 0
+                let other = EventStore.sharing(store.directory!, byteCapacity: 1000, processName: "other") { url in
+                    reads += 1
+                    return try Data(contentsOf: url)
+                }
+                expect(other.pendingBatches().count) == 1
+
+                expect(reads) == 0
+                expect(other.hasRoomForEventBytes) == false
+                expect(other.stage(EventStoreSpec.payload(framedIn: 100, key: "other"))) == false
+            }
+        }
+    }
+
+    /// Each store here is the current environment of an application `app` under a root of the test's own, since the
+    /// first expiry also looks at every other environment beside it.
+    private func expirySpec() {
+        describe("expiry") {
+            var root: URL!
+            var store: EventStore!
+            beforeEach {
+                root = EventStore.temporaryDirectory()
+                store = EventStore.sharing(root.appendingPathComponent("app.current", isDirectory: true))
+            }
+            afterEach {
+                try? FileManager.default.removeItem(at: root)
+            }
+
+            it("discards a batch last written longer ago than the maximum age, and stops counting it") {
+                _ = store.stage(EventStoreSpec.payload("old-1"))
+                _ = store.stage(EventStoreSpec.payload("old-2"))
+                _ = store.closeBatch()
+                try EventStoreSpec.age(try EventStoreSpec.onlyBatchFile(in: store), byDays: 8)
+
+                expect(store.discardExpired()) == 2
+
+                expect(store.pendingBatches()).to(beEmpty())
+                expect(store.pendingEventCount) == 0
+                expect(store.stage(EventStoreSpec.payload("new"))) == true
+            }
+
+            it("keeps a batch younger than the maximum age") {
+                _ = store.stage(EventStoreSpec.payload("recent"))
+                _ = store.closeBatch()
+                try EventStoreSpec.age(try EventStoreSpec.onlyBatchFile(in: store), byDays: 6)
+
+                expect(store.discardExpired()) == 0
+                expect(store.pendingBatches().count) == 1
+            }
+
+            it("keeps a batch whose request is out, however old") {
+                _ = store.stage(EventStoreSpec.payload("sending"))
+                let batch = store.closeBatch()!
+                try EventStoreSpec.age(try EventStoreSpec.onlyBatchFile(in: store), byDays: 30)
+                store.startedSending(batch)
+
+                expect(store.discardExpired()) == 0
+                expect(try store.body(of: batch)).toNot(beNil())
+            }
+
+            it("discards another process's log nobody has written to for the maximum age, and leaves a younger one") {
+                let gone = EventStore.sharing(store.directory!, processName: "gone")
+                _ = gone.stage(EventStoreSpec.payload("gone"))
+                gone.commit()
+                let alive = EventStore.sharing(store.directory!, processName: "alive")
+                _ = alive.stage(EventStoreSpec.payload("alive"))
+                alive.commit()
+                try EventStoreSpec.age(gone.openLogUrl!, byDays: 8)
+                try EventStoreSpec.age(alive.openLogUrl!, byDays: 1)
+
+                expect(store.discardExpired()) == 1
+
+                expect(FileManager.default.fileExists(atPath: gone.openLogUrl!.path)) == false
+                expect(FileManager.default.fileExists(atPath: alive.openLogUrl!.path)) == true
+            }
+
+            it("leaves its own open log alone, however long since it was written") {
+                _ = store.stage(EventStoreSpec.payload("own"))
+                store.commit()
+                try EventStoreSpec.age(store.openLogUrl!, byDays: 8)
+
+                expect(store.discardExpired()) == 0
+                expect(EventStoreSpec.keys(of: store)) == ["own"]
+            }
+
+            it("removes the directories of this application's other environments once nothing has written to them for the maximum age") {
+                let abandoned = try EventStoreSpec.environment("app.abandoned", in: root, events: 2)
+                let inUse = try EventStoreSpec.environment("app.in-use", in: root, events: 1)
+                let otherApplication = try EventStoreSpec.environment("other.abandoned", in: root, events: 1)
+                try EventStoreSpec.age(contentsOf: abandoned, byDays: 8)
+                try EventStoreSpec.age(contentsOf: inUse, byDays: 1)
+                try EventStoreSpec.age(contentsOf: otherApplication, byDays: 30)
+
+                expect(store.discardExpired()) == 2
+                // Once per process: the next call has nothing else to look at.
+                expect(store.discardExpired()) == 0
+
+                expect(FileManager.default.fileExists(atPath: abandoned.path)) == false
+                expect(try FileManager.default.contentsOfDirectory(atPath: inUse.path)).toNot(beEmpty())
+                expect(try FileManager.default.contentsOfDirectory(atPath: otherApplication.path)).toNot(beEmpty())
+            }
+
+            it("does nothing where the application did not ask for persistence") {
+                let abandoned = try EventStoreSpec.environment("app.abandoned", in: root, events: 1)
+                try EventStoreSpec.age(contentsOf: abandoned, byDays: 8)
+                store = EventStore.sharing(root.appendingPathComponent("app.current", isDirectory: true), persistEvents: false)
+
+                expect(store.discardExpired()) == 0
+                expect(try FileManager.default.contentsOfDirectory(atPath: abandoned.path)).toNot(beEmpty())
+            }
+        }
+    }
+
+    /// An environment directory under `root` holding one closed batch of `events` events.
+    private static func environment(_ name: String, in root: URL, events: Int) throws -> URL {
+        let directory = root.appendingPathComponent(name, isDirectory: true)
+        let writer = EventStore.sharing(directory)
+        for index in 0..<events {
+            _ = writer.stage(payload("\(name)-\(index)"))
+        }
+        expect(writer.closeBatch()).toNot(beNil())
+        return directory
+    }
+
+    private static func age(_ file: URL, byDays days: Double) throws {
+        let modified = Date().addingTimeInterval(-days * 24 * 60 * 60)
+        try FileManager.default.setAttributes([.modificationDate: modified], ofItemAtPath: file.path)
+    }
+
+    private static func age(contentsOf directory: URL, byDays days: Double) throws {
+        for file in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) {
+            try age(file, byDays: days)
         }
     }
 
