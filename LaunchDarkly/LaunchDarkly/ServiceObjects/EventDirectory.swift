@@ -401,6 +401,9 @@ final class EventDirectory {
         ioLock.assertOwned()
         var recovered = EventTally()
         disk.log.forEachUnheldLog { recovered += tally(recoveredFrom: $0) }
+        if recovered.events > 0 {
+            os_log("%s prepared %d event(s) from a previous run of this application for delivery", log: logger, type: .debug, typeName(and: #function), recovered.events)
+        }
         return recovered
     }
 
@@ -448,7 +451,6 @@ final class EventDirectory {
 
         let recovered = Stored(url: file, events: events, bytes: bytes)
         stored[payloadId] = recovered
-        os_log("%s recovered %d event(s) from a previous run", log: logger, type: .debug, typeName(and: #function), events)
         return recovered.tally
     }
 }
