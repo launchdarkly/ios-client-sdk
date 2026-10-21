@@ -397,10 +397,10 @@ final class EventDirectory {
     /// Requires `ioLock`.
     ///
     /// - Returns: what it closed off.
-    func recoverInterruptedLog() -> EventTally {
+    func preparePayloadsFromInterruptedLogs() -> EventTally {
         ioLock.assertOwned()
         var recovered = EventTally()
-        disk.log.forEachUnheldLog { recovered += tally(recoveredFrom: $0) }
+        disk.log.forEachUnheldLog { recovered += preparePayload(fromInterruptedLog: $0) }
         if recovered.events > 0 {
             os_log("%s prepared %d event(s) from a previous run of this application for delivery", log: logger, type: .debug, typeName(and: #function), recovered.events)
         }
@@ -410,7 +410,7 @@ final class EventDirectory {
     /// Closes off a log nobody is writing to any more. Requires `ioLock`.
     ///
     /// - Returns: what it closed off, or nothing where there was nothing to close off.
-    private func tally(recoveredFrom leftOpen: URL) -> EventTally {
+    private func preparePayload(fromInterruptedLog leftOpen: URL) -> EventTally {
         ioLock.assertOwned()
         let events: Int
         let bytes: Int

@@ -191,7 +191,7 @@ class DirectEventProcessor: EventProcessor {
         // doing it on the caller's thread would put file I/O in the way of the client starting up.
         let store = self.store
         deliveryQueue.async { [weak self] in
-            store.recoverInterruptedLog()
+            store.preparePayloadsFromInterruptedLogs()
             self?.reportDiscarded(store.discardExpired())
             self?.hasEventsFromPreviousRun = !store.pendingBatches().isEmpty
         }

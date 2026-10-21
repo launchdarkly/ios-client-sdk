@@ -2517,7 +2517,7 @@ private final class ClosingHookStore: EventStoring {
     func remove(_ batch: EventBatch) { inner.remove(batch) }
     func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
     func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
-    func recoverInterruptedLog() { inner.recoverInterruptedLog() }
+    func preparePayloadsFromInterruptedLogs() { inner.preparePayloadsFromInterruptedLogs() }
     func discardExpired() -> Int { inner.discardExpired() }
 
     func closeBatch() -> EventBatch? {
@@ -2595,7 +2595,7 @@ private final class SlowListingStore: EventStoring {
     func remove(_ batch: EventBatch) { inner.remove(batch) }
     func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
     func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
-    func recoverInterruptedLog() { inner.recoverInterruptedLog() }
+    func preparePayloadsFromInterruptedLogs() { inner.preparePayloadsFromInterruptedLogs() }
     func discardExpired() -> Int { inner.discardExpired() }
 
     /// Every listing but the first is held, the first being the one the reporter makes as it starts up.

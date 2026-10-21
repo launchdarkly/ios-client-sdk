@@ -80,7 +80,7 @@ protocol EventStoring {
 
     /// Closes every log no live process holds, so its events join the batches to deliver: one a previous run left open,
     /// or another process that has since ended.
-    func recoverInterruptedLog()
+    func preparePayloadsFromInterruptedLogs()
 
     /// Deletes what has been stored for longer than the maximum age, except a batch whose request is out.
     ///
@@ -460,11 +460,11 @@ final class EventStore: EventStoring {
         }
     }
 
-    func recoverInterruptedLog() {
+    func preparePayloadsFromInterruptedLogs() {
         guard let disk
         else { return }
         ioLock.withLock {
-            let recovered = disk.recoverInterruptedLog()
+            let recovered = disk.preparePayloadsFromInterruptedLogs()
             guard recovered.events > 0
             else { return }
             bufferLock.withLock {

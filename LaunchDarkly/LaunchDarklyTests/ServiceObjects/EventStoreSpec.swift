@@ -43,7 +43,7 @@ final class EventStoreSpec: QuickSpec {
                 first.commit()
 
                 let second = instance()
-                second.recoverInterruptedLog()
+                second.preparePayloadsFromInterruptedLogs()
                 expect(second.pendingBatches()).to(beEmpty())
 
                 _ = second.stage(EventStoreSpec.payload("second"))
@@ -67,11 +67,11 @@ final class EventStoreSpec: QuickSpec {
                 // A descriptor of its own, as another live instance's would be, so nothing in this process knows of it.
                 let held = EventLogFile.openLocked(log, flags: O_RDONLY)!
 
-                first.recoverInterruptedLog()
+                first.preparePayloadsFromInterruptedLogs()
                 expect(first.pendingBatches()).to(beEmpty())
 
                 held.close()
-                first.recoverInterruptedLog()
+                first.preparePayloadsFromInterruptedLogs()
                 expect(EventStoreSpec.keys(ofBody: first.pendingBatches().first.flatMap { try? first.body(of: $0) })) == ["held"]
             }
 
@@ -86,7 +86,7 @@ final class EventStoreSpec: QuickSpec {
                 ended = nil
 
                 let next = instance()
-                next.recoverInterruptedLog()
+                next.preparePayloadsFromInterruptedLogs()
                 let batches = next.pendingBatches()
                 expect(batches.count) == 1
                 expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? next.body(of: $0) })) == ["from-the-ended-instance"]
@@ -99,7 +99,7 @@ final class EventStoreSpec: QuickSpec {
                 first = nil
                 first = EventStore(directory: directory, capacity: 100, logger: .disabled)
 
-                first.recoverInterruptedLog()
+                first.preparePayloadsFromInterruptedLogs()
                 let batches = first.pendingBatches()
                 expect(batches.count) == 1
                 expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? first.body(of: $0) })) == ["left-open"]
@@ -131,7 +131,7 @@ final class EventStoreSpec: QuickSpec {
 
                 // Starting up, the other process recovers what no live process holds, and nothing else.
                 let widget = otherProcess()
-                widget.recoverInterruptedLog()
+                widget.preparePayloadsFromInterruptedLogs()
                 expect(widget.pendingBatches()).to(beEmpty())
 
                 _ = app.stage(EventStoreSpec.payload("after"))
@@ -160,7 +160,7 @@ final class EventStoreSpec: QuickSpec {
                 let closed = app.closeBatch()
 
                 let widget = otherProcess()
-                widget.recoverInterruptedLog()
+                widget.preparePayloadsFromInterruptedLogs()
                 expect(closed).toNot(beNil())
                 expect(widget.pendingBatches().map(\.payloadId)) == [closed?.payloadId].compactMap { $0 }
             }
@@ -172,7 +172,7 @@ final class EventStoreSpec: QuickSpec {
                 // Going away closes its log, as the process ending would.
                 widget = nil
 
-                app.recoverInterruptedLog()
+                app.preparePayloadsFromInterruptedLogs()
                 let batches = app.pendingBatches()
                 expect(batches.count) == 1
                 expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? app.body(of: $0) })) == ["left-open"]
@@ -266,7 +266,7 @@ final class EventStoreSpec: QuickSpec {
                 persisting.commit()
 
                 let withoutPersistence = EventStore.sharing(persisting.directory!, persistEvents: false)
-                withoutPersistence.recoverInterruptedLog()
+                withoutPersistence.preparePayloadsFromInterruptedLogs()
                 expect(withoutPersistence.pendingBatches()).to(beEmpty())
                 expect(withoutPersistence.pendingEventCount) == 0
 
@@ -275,7 +275,7 @@ final class EventStoreSpec: QuickSpec {
                 expect(withoutPersistence.pendingBatches().map(\.payloadId)) == [own?.payloadId]
 
                 let persistingAgain = persisting.nextRun()
-                persistingAgain.recoverInterruptedLog()
+                persistingAgain.preparePayloadsFromInterruptedLogs()
                 let bodies = persistingAgain.pendingBatches().map { EventStoreSpec.keys(ofBody: try? persistingAgain.body(of: $0)) }
                 expect(bodies) == [["closed"], ["open"]]
             }
@@ -432,7 +432,7 @@ final class EventStoreSpec: QuickSpec {
 
                 // Nothing closed the log, as nothing would if the process had died here.
                 let next = store.nextRun()
-                next.recoverInterruptedLog()
+                next.preparePayloadsFromInterruptedLogs()
 
                 let batches = next.pendingBatches()
                 expect(batches.count) == 1
@@ -448,7 +448,7 @@ final class EventStoreSpec: QuickSpec {
                 store.remove(batch!)
 
                 let next = store.nextRun()
-                next.recoverInterruptedLog()
+                next.preparePayloadsFromInterruptedLogs()
 
                 expect(next.pendingBatches()).to(beEmpty())
                 expect(next.pendingEventCount) == 0
@@ -467,7 +467,7 @@ final class EventStoreSpec: QuickSpec {
                 let next = store.nextRun()
                 _ = next.stage(EventStoreSpec.payload("this-run"))
                 next.commit()
-                next.recoverInterruptedLog()
+                next.preparePayloadsFromInterruptedLogs()
                 _ = next.stage(EventStoreSpec.payload("later"))
                 next.commit()
                 _ = next.closeBatch()
@@ -624,7 +624,7 @@ final class EventStoreSpec: QuickSpec {
                 var failing = true
                 let next = store.nextRun(readFile: EventStoreSpec.readFailing(while: { failing }))
                 let leftOpen = next.directory!.appendingPathComponent(store.openLogUrl!.lastPathComponent)
-                next.recoverInterruptedLog()
+                next.preparePayloadsFromInterruptedLogs()
                 // Moved out from under the name recovery looks for, and not deleted.
                 expect(FileManager.default.fileExists(atPath: leftOpen.path)) == false
 
@@ -814,7 +814,7 @@ final class EventStoreSpec: QuickSpec {
                     }
                     #endif
 
-                    store.recoverInterruptedLog()
+                    store.preparePayloadsFromInterruptedLogs()
                     _ = store.stage(EventStoreSpec.payload("first"))
                     store.commit()
                     let batch = store.closeBatch()!
@@ -938,7 +938,7 @@ final class EventStoreSpec: QuickSpec {
 
                 expect(store.stage(EventStoreSpec.payload("before-listing"))) == true
 
-                store.recoverInterruptedLog()
+                store.preparePayloadsFromInterruptedLogs()
                 expect(store.pendingBatches().count) == 1
                 expect(store.pendingEventCount) == 3
                 expect(store.stage(EventStoreSpec.payload("after-listing"))) == false
@@ -1463,7 +1463,7 @@ final class EventStoreSpec: QuickSpec {
 
                 // Delivered from memory this run, so the next must not find any of it again in the log.
                 let next = interrupted.nextRun()
-                next.recoverInterruptedLog()
+                next.preparePayloadsFromInterruptedLogs()
                 expect(next.pendingBatches()).to(beEmpty())
             }
 
