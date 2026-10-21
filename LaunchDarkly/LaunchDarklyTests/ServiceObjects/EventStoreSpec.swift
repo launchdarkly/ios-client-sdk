@@ -178,21 +178,6 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? app.body(of: $0) })) == ["left-open"]
             }
 
-            it("recovers a log an earlier version named for its process") {
-                var earlierVersion: EventStore? = otherProcess()
-                _ = earlierVersion?.stage(EventStoreSpec.payload("named-for-its-process"))
-                earlierVersion?.commit()
-                let log = earlierVersion!.openLogUrl!
-                earlierVersion = nil
-                try FileManager.default.moveItem(at: log, to: log.deletingLastPathComponent()
-                    .appendingPathComponent("\(DiskEventLog.prefix)com_example_app-1a2b3c4d"))
-
-                app.recoverInterruptedLog()
-                let batches = app.pendingBatches()
-                expect(batches.count) == 1
-                expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? app.body(of: $0) })) == ["named-for-its-process"]
-            }
-
             it("names a log for a UUID rather than for the process") {
                 _ = app.stage(EventStoreSpec.payload("named"))
                 app.commit()

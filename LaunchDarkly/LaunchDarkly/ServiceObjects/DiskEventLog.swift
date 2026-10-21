@@ -28,8 +28,9 @@ import Musl
 /// Belongs to an `EventStore`, which makes every call holding its `ioLock`. The lock is handed in so that each call can
 /// check it is held, rather than this taking a lock of its own that would have to be ordered against the store's.
 final class DiskEventLog {
-    /// Names a log its owner appends to; the rest of the name is the UUID it was opened under.
-    static let prefix = "open-"
+    /// Names a log whose events are not yet in a batch: one its owner is appending to, or one left by an owner that is
+    /// gone, for recovery to close off. The rest of the name is the UUID it was opened under.
+    static let prefix = "pending-"
     /// Names a log while it is being opened, before it has its header. Recovery never looks at these; one left by a
     /// process that died opening it holds no events, and expiry removes it.
     static let openingPrefix = "new-"
@@ -148,8 +149,7 @@ final class DiskEventLog {
         DiskEventLog.forget(url)
     }
 
-    /// Hands `recover` every log no live process holds, which it has to move or remove: whoever wrote it is gone,
-    /// whatever it is named, including a log an earlier version named for its process.
+    /// Hands `recover` every log no live process holds, which it has to move or remove: whoever wrote it is gone.
     ///
     /// Requires `ioLock`.
     func forEachUnheldLog(_ recover: (URL) -> Void) {
