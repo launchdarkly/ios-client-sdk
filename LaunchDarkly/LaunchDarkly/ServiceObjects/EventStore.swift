@@ -211,13 +211,11 @@ final class EventStore: EventStoring {
                      byteCapacity: Int = LDConfig.Defaults.eventCapacityBytes,
                      maxAge: TimeInterval = LDConfig.Defaults.eventMaxAge,
                      persistEvents: Bool = true,
-                     processName: String = ProcessInfo.processInfo.processName,
                      logger: OSLog,
                      readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
                      writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }) {
         self.init(locatingDirectory: { directory }, capacity: capacity, byteCapacity: byteCapacity, maxAge: maxAge,
-                  persistEvents: persistEvents, processName: processName, logger: logger, readFile: readFile,
-                  writeLog: writeLog)
+                  persistEvents: persistEvents, logger: logger, readFile: readFile, writeLog: writeLog)
     }
 
     /// - Parameter locatingDirectory: answers where the batches go. Asked once, and only if the store reaches for the
@@ -227,7 +225,6 @@ final class EventStore: EventStoring {
          byteCapacity: Int = LDConfig.Defaults.eventCapacityBytes,
          maxAge: TimeInterval = LDConfig.Defaults.eventMaxAge,
          persistEvents: Bool = true,
-         processName: String = ProcessInfo.processInfo.processName,
          logger: OSLog,
          readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
          writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }) {
@@ -243,7 +240,6 @@ final class EventStore: EventStoring {
         // all, so there is nothing for it to write to and nothing of a previous run's for it to read.
         self.persistEvents = persistEvents
         self.disk = persistEvents ? EventDirectory(locatingDirectory: locatingDirectory,
-                                                   processName: processName,
                                                    ioLock: ioLock,
                                                    logger: logger,
                                                    readFile: readFile,

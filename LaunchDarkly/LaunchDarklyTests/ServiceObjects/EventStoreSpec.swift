@@ -1193,7 +1193,7 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.closeBatch()).toNot(beNil())
 
                 var reads = 0
-                let other = EventStore.sharing(store.directory!, byteCapacity: 1000, processName: "other") { url in
+                let other = EventStore.sharing(store.directory!, byteCapacity: 1000) { url in
                     reads += 1
                     return try Data(contentsOf: url)
                 }

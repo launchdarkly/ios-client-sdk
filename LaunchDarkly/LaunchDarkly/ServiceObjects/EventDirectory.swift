@@ -39,7 +39,6 @@ final class EventDirectory {
     private static let batchPrefix = "ready-"
 
     private let locateDirectory: () -> URL
-    private let processName: String
     private let ioLock: UnfairLock
     private let logger: OSLog
     /// How a stored log is read, injectable so a test can make a read fail while the file is intact.
@@ -94,13 +93,11 @@ final class EventDirectory {
 
     /// - Parameter locatingDirectory: answers where the events go. Asked once, and only on first use.
     init(locatingDirectory: @escaping () -> URL,
-         processName: String,
          ioLock: UnfairLock,
          logger: OSLog,
          readFile: @escaping (URL) throws -> Data,
          writeLog: @escaping (EventLogFile, Data) -> Int32?) {
         self.locateDirectory = locatingDirectory
-        self.processName = processName
         self.ioLock = ioLock
         self.logger = logger
         self.readFile = readFile

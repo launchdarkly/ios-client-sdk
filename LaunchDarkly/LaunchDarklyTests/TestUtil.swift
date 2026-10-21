@@ -88,13 +88,11 @@ extension EventStore {
     static func sharing(_ directory: URL,
                         byteCapacity: Int = LDConfig.Defaults.eventCapacityBytes,
                         persistEvents: Bool = true,
-                        processName: String = ProcessInfo.processInfo.processName,
                         readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) }) -> EventStore {
         unlocked(EventStore(directory: directory,
                             capacity: 100,
                             byteCapacity: byteCapacity,
                             persistEvents: persistEvents,
-                            processName: processName,
                             logger: .disabled,
                             readFile: readFile))
     }
