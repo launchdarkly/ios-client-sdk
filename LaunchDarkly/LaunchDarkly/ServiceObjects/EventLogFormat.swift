@@ -16,13 +16,10 @@ import Foundation
 /// reads.
 enum EventLogFormat {
     /// Bump this whenever the framing or the meaning of a frame changes.
-    static let version: UInt16 = 2
-    /// The version before frames carried a checksum, which this one still reads.
-    static let versionWithoutChecksum: UInt16 = 1
+    static let version: UInt16 = 1
     static let magic = Data("LDEV".utf8)
     static let fileHeaderSize = 6
     static let frameHeaderSize = 10
-    static let frameHeaderSizeWithoutChecksum = 6
     /// The only frame type written today; a reader skips a frame whose type it does not know.
     static let eventFrame: UInt16 = 1
     /// A ceiling on a single frame, so a corrupt size cannot make recovery allocate wildly.
@@ -61,33 +58,26 @@ enum EventLogFormat {
     /// log this version reads.
     @discardableResult
     static func forEachFrame(in file: Data, _ visit: (UInt16, Data) -> Void) -> FrameWalk? {
-        guard file.count >= fileHeaderSize, file.prefix(magic.count) == magic
+        guard file.count >= fileHeaderSize,
+              file.prefix(magic.count) == magic,
+              readUInt16(file, at: magic.count) == version
         else { return nil }
-        let isChecksummed: Bool
-        switch readUInt16(file, at: magic.count) {
-        case version: isChecksummed = true
-        case versionWithoutChecksum: isChecksummed = false
-        default: return nil
-        }
-        let headerSize = isChecksummed ? frameHeaderSize : frameHeaderSizeWithoutChecksum
 
         return file.withUnsafeBytes { bytes in
             var cursor = fileHeaderSize
-            while cursor + headerSize <= bytes.count {
+            while cursor + frameHeaderSize <= bytes.count {
                 let type = UInt16(bytes[cursor]) << 8 | UInt16(bytes[cursor + 1])
                 let length = Int(readUInt32(bytes, at: cursor + 2))
-                let start = cursor + headerSize
+                let start = cursor + frameHeaderSize
                 guard length > 0, length <= maxFrameSize, start + length <= bytes.count
                 else { break }
 
                 let payload = UnsafeRawBufferPointer(rebasing: bytes[start..<(start + length)])
-                if isChecksummed {
-                    var checksum = Crc32()
-                    checksum.advance(withBytes: UnsafeRawBufferPointer(rebasing: bytes[cursor..<(cursor + 6)]))
-                    checksum.advance(withBytes: payload)
-                    guard checksum.checksum == readUInt32(bytes, at: cursor + 6)
-                    else { break }
-                }
+                var checksum = Crc32()
+                checksum.advance(withBytes: UnsafeRawBufferPointer(rebasing: bytes[cursor..<(cursor + 6)]))
+                checksum.advance(withBytes: payload)
+                guard checksum.checksum == readUInt32(bytes, at: cursor + 6)
+                else { break }
 
                 visit(type, Data(payload))
                 cursor = start + length

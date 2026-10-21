@@ -46,7 +46,8 @@ public final class ObjcLDConfig: NSObject {
     /// Without this, an event lives in memory until it is delivered, and a process that dies before the next flush
     /// takes everything recorded since the last one, including the crash an application was reporting when it died.
     /// `.immediate` additionally puts the write on the thread that called `track` or `identify`, so there is no window
-    /// in which the event exists only in memory. (Default: `.disabled`)
+    /// in which the event exists only in memory. Both levels other than `.disabled` are experimental, and not subject to
+    /// any backwards compatibility guarantees or semantic versioning. (Default: `.disabled`)
     @objc public var eventPersistence: EventPersistence {
         get { config.eventPersistence }
         set { config.eventPersistence = newValue }

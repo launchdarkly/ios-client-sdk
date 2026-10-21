@@ -24,6 +24,10 @@ public enum LDStreamingMode {
 /// An event lives in memory until it is delivered, so a process that dies before the next flush takes everything
 /// recorded since the last one — including the crash an application was reporting when it died. Writing events to
 /// disk is what closes that gap: they are delivered on a later launch instead of being lost.
+///
+/// `.deferred` and `.immediate` are not stable in this major version, and not subject to any backwards compatibility
+/// guarantees or semantic versioning. They are experimental: their behavior, their cost on the calling thread, and
+/// what they leave on disk may change in a minor release.
 @objc(LDEventPersistence) public enum EventPersistence: Int {
     /// Events are kept in memory only, and nothing survives the process ending.
     ///
@@ -40,12 +44,16 @@ public enum LDStreamingMode {
     /// A flush and entering the background are the exceptions. Both write on the calling thread, as `.immediate` does:
     /// a flush so that an application ending the process on purpose can rely on it, and entering the background because
     /// that is when the system is most likely to end it.
+    ///
+    /// This level is experimental; see `EventPersistence`.
     case deferred
     /// Events are written to disk before `track` and `identify` return.
     ///
     /// The write happens on the calling thread, costing tens of microseconds depending on how many evaluations are
     /// waiting to be encoded alongside it. In exchange there is no window: a process that dies the instant after
     /// `track` returns still reports that event on the next launch. Evaluating a flag stays in memory regardless.
+    ///
+    /// This level is experimental; see `EventPersistence`.
     case immediate
 }
 
@@ -368,7 +376,8 @@ public struct LDConfig {
     /// Anything other than `.disabled` appends events to a log under Application Support and delivers them on a later
     /// run, which is what lets the crash an application was reporting when it died reach LaunchDarkly at all.
     /// `.immediate` additionally puts the write on the thread that called `track` or `identify`, so there is no window
-    /// in which the event exists only in memory. (Default: `.disabled`)
+    /// in which the event exists only in memory. Both levels other than `.disabled` are experimental, and not subject to
+    /// any backwards compatibility guarantees or semantic versioning. (Default: `.disabled`)
     public var eventPersistence: EventPersistence = Defaults.eventPersistence
 
     /// The maximum number of bytes of events the SDK keeps for each environment where `eventPersistence` keeps events across launches,

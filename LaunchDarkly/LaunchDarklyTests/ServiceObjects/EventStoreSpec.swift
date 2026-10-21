@@ -543,29 +543,6 @@ final class EventStoreSpec: QuickSpec {
                 expect { try store.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
             }
 
-            it("still reads a log written before frames carried a checksum") {
-                store = EventStore.temporary()
-                _ = store.stage(EventStoreSpec.payload("placeholder"))
-                _ = store.closeBatch()
-                let file = try EventStoreSpec.onlyBatchFile(in: store)
-
-                var log = EventLogFormat.magic
-                log.append(EventLogFormat.bigEndian(EventLogFormat.versionWithoutChecksum))
-                for key in ["first", "second"] {
-                    let payload = EventStoreSpec.payload(key)
-                    log.append(EventLogFormat.bigEndian(EventLogFormat.eventFrame))
-                    log.append(EventLogFormat.bigEndian(UInt32(payload.count)))
-                    log.append(payload)
-                }
-                try log.write(to: file)
-                try EventStoreSpec.asUncountedName(file)
-
-                let next = EventStoreSpec.reader(sharing: store)
-                let batches = next.pendingBatches()
-                expect(batches.map(\.eventCount)) == [2]
-                expect(EventStoreSpec.keys(ofBody: try next.body(of: batches[0]))) == ["first", "second"]
-            }
-
             it("is kept for a later listing when a batch named without a count cannot be read") {
                 store = EventStore.temporary()
                 _ = store.stage(EventStoreSpec.payload("kept"))
