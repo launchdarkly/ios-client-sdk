@@ -324,6 +324,10 @@
 		A350387D2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
 		A350387E2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
 		A350387F2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
+		A35038812F4F5A380032BA9F /* Data+CRC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F5A380032BA9F /* Data+CRC.swift */; };
+		A35038822F4F5A380032BA9F /* Data+CRC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F5A380032BA9F /* Data+CRC.swift */; };
+		A35038832F4F5A380032BA9F /* Data+CRC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F5A380032BA9F /* Data+CRC.swift */; };
+		A35038842F4F5A380032BA9F /* Data+CRC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F5A380032BA9F /* Data+CRC.swift */; };
 		A35038812F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift */; };
 		A35038832F4F96680032BA9F /* LDClientEvaluationHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038822F4F96680032BA9F /* LDClientEvaluationHookSpec.swift */; };
 		A35038852F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038842F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift */; };
@@ -657,6 +661,7 @@
 		A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientIdentifyHook.swift; sourceTree = "<group>"; };
 		86CB57159BC81898DE96A352 /* LDClientFlush.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientFlush.swift; sourceTree = "<group>"; };
 		A350387B2F4F5A380032BA9F /* Data+Compression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+Compression.swift"; sourceTree = "<group>"; };
+		A35038802F4F5A380032BA9F /* Data+CRC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+CRC.swift"; sourceTree = "<group>"; };
 		A35038802F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientIdentifyHookSpec.swift; sourceTree = "<group>"; };
 		A35038822F4F96680032BA9F /* LDClientEvaluationHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientEvaluationHookSpec.swift; sourceTree = "<group>"; };
 		A35038842F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchOSEnvironmentReporterSpec.swift; sourceTree = "<group>"; };
@@ -989,6 +994,7 @@
 			isa = PBXGroup;
 			children = (
 				A350387B2F4F5A380032BA9F /* Data+Compression.swift */,
+				A35038802F4F5A380032BA9F /* Data+CRC.swift */,
 				83DDBEF51FA24A7E00E428B6 /* Data.swift */,
 				83DDBEFD1FA24F9600E428B6 /* Date.swift */,
 				831D2AAE2061AAA000B4AC3C /* Thread.swift */,
@@ -1572,6 +1578,7 @@
 				A35038772F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */,
 				99686398CCB7515A18247662 /* LDClientFlush.swift in Sources */,
 				A350387C2F4F5A380032BA9F /* Data+Compression.swift in Sources */,
+				A35038812F4F5A380032BA9F /* Data+CRC.swift in Sources */,
 				A3BA7CF62BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
 				A3470C3A2B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
@@ -1692,6 +1699,7 @@
 				831EF35A20655E730001C643 /* HTTPHeaders.swift in Sources */,
 				831EF35B20655E730001C643 /* DarklyService.swift in Sources */,
 				A350387F2F4F5A380032BA9F /* Data+Compression.swift in Sources */,
+				A35038842F4F5A380032BA9F /* Data+CRC.swift in Sources */,
 				831EF35C20655E730001C643 /* HTTPURLResponse.swift in Sources */,
 				C443A40723145FEE00145710 /* ConnectionInformationStore.swift in Sources */,
 				29FE129A280413D4008CC918 /* Util.swift in Sources */,
@@ -1775,6 +1783,7 @@
 				A35038782F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */,
 				B04B36074760CCA9F48E1851 /* LDClientFlush.swift in Sources */,
 				A350387D2F4F5A380032BA9F /* Data+Compression.swift in Sources */,
+				A35038822F4F5A380032BA9F /* Data+CRC.swift in Sources */,
 				A3BA7CF32BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
 				A3470C372B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C43C37E1236BA050003C1624 /* LDEvaluationDetail.swift in Sources */,
@@ -1945,6 +1954,7 @@
 				A350387A2F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */,
 				43DC6AA5DB0BE9A7B697C10F /* LDClientFlush.swift in Sources */,
 				A350387E2F4F5A380032BA9F /* Data+Compression.swift in Sources */,
+				A35038832F4F5A380032BA9F /* Data+CRC.swift in Sources */,
 				A3BA7CF42BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
 				A3470C382B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C43C37E6238DF22B003C1624 /* LDEvaluationDetail.swift in Sources */,
