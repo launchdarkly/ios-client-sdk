@@ -288,7 +288,9 @@ final class EventDirectory {
         case .missing: return nil
         case .failed(let error): throw error
         case .bytes(let file):
-            if let body = EventLogFormat.assembleBody(from: file) {
+            // No more than the batch was closed holding. A write that failed and could not be truncated leaves whole
+            // frames after them, whose events are delivered from memory instead, and would otherwise be sent twice.
+            if let body = EventLogFormat.assembleBody(from: file, maxEvents: batch.eventCount > 0 ? batch.eventCount : .max) {
                 return body
             }
             // A log this version reads that holds no events has nothing to lose, unless its first frame is damaged.

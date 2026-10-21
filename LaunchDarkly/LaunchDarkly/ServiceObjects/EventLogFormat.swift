@@ -110,12 +110,16 @@ enum EventLogFormat {
 
     /// Assembles the JSON array LaunchDarkly expects out of the frames, without parsing the events themselves: they were
     /// serialized on the way in and are shipped exactly as they were recorded.
-    static func assembleBody(from file: Data) -> Data? {
+    ///
+    /// Only the first `maxEvents` events go into it; any after them are left out.
+    static func assembleBody(from file: Data, maxEvents: Int = .max) -> Data? {
         var body = Data("[".utf8)
         var isFirst = true
+        var events = 0
         let readable = forEachFrame(in: file) { type, payload in
-            guard type == eventFrame
+            guard type == eventFrame, events < maxEvents
             else { return }
+            events += 1
             if !isFirst {
                 body.append(UInt8(ascii: ","))
             }

@@ -114,10 +114,10 @@ final class DiskEventLog {
         guard write(bytes, to: file)
         else {
             // A write that fails partway can leave whole frames behind. The caller keeps every one of `bytes` in memory
-            // to deliver from there, so frames left here as well would be sent twice: beside the memory copy when the
-            // log is closed this session, or by recovery on the next launch.
+            // to deliver from there, so frames left here as well would be sent twice. Where they cannot be cut back, the
+            // batch this log is closed into still delivers only the events it was closed holding.
             if let start, !file.truncate(to: start) {
-                os_log("%s could not cut back a failed write: errno %d", log: logger, type: .debug, typeName(and: #function), errno)
+                os_log("%s could not cut back a failed write: errno %d", log: logger, type: .error, typeName(and: #function), errno)
             }
             return false
         }

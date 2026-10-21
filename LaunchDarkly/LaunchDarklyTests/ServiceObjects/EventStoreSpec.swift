@@ -565,6 +565,23 @@ final class EventStoreSpec: QuickSpec {
                 expect { try store.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
             }
 
+            it("sends no frames a failed write left behind where it could not be cut back") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("written"))
+                let batch = store.closeBatch()!
+                let file = try EventStoreSpec.onlyBatchFile(in: store)
+                // Whole frames past the one the batch was closed holding, which memory delivers instead.
+                var leftBehind = try Data(contentsOf: file)
+                leftBehind.append(EventLogFormat.frame(for: EventStoreSpec.payload("from-memory")))
+                try leftBehind.write(to: file)
+
+                expect(EventStoreSpec.keys(ofBody: try? store.body(of: batch))) == ["written"]
+                let next = store.nextRun()
+                let listed = next.pendingBatches()
+                expect(listed.map { $0.eventCount }) == [1]
+                expect(EventStoreSpec.keys(ofBody: listed.first.flatMap { try? next.body(of: $0) })) == ["written"]
+            }
+
             it("is kept for a later listing when a batch named without a count cannot be read") {
                 store = EventStore.temporary()
                 _ = store.stage(EventStoreSpec.payload("kept"))
