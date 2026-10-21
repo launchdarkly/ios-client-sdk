@@ -374,7 +374,7 @@ final class EventDirectory {
         case .failed(let error):
             // Left for a later listing rather than deleted: the read may pass then, and the events in it may have been
             // intact all along. Without a count it cannot be delivered now.
-            os_log("%s could not read stored events, will try again later: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
+            os_log("%s could not read stored events, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             return nil
         case .bytes(let log):
             guard let events = EventLogFormat.eventCount(in: log)
@@ -427,7 +427,7 @@ final class EventDirectory {
             // first manages to read it is what counts it.
             let uncounted = disk.directory.appendingPathComponent("\(EventDirectory.batchPrefix)\(UUID().uuidString)")
             if (try? FileManager.default.moveItem(at: leftOpen, to: uncounted)) != nil {
-                os_log("%s could not read events from a previous run, will try again later: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
+                os_log("%s could not read events from a previous run, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             } else {
                 // Left where it is, unlocked and appended to by no one, for the next launch to recover.
                 os_log("%s could not read events from a previous run, will try again at the next launch: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
