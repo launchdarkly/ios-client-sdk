@@ -78,7 +78,8 @@ protocol EventStoring {
     /// Counts a batch against capacity again after a send that will be retried later.
     func stoppedSending(_ batch: EventBatch)
 
-    /// Closes any log left open by a previous run of this process, so its events join the batches to deliver.
+    /// Closes every log no live process holds, so its events join the batches to deliver: one a previous run left open,
+    /// or another process that has since ended.
     func recoverInterruptedLog()
 
     /// Deletes what has been stored for longer than the maximum age, except a batch whose request is out.
@@ -466,17 +467,14 @@ final class EventStore: EventStoring {
     func recoverInterruptedLog() {
         guard let disk
         else { return }
-        ioLock.withLock { countRecovered(disk.recoverInterruptedLog()) }
-    }
-
-    /// Counts events a recovery closed off into batches of their own. Requires `ioLock`.
-    private func countRecovered(_ recovered: EventTally) {
-        ioLock.assertOwned()
-        guard recovered.events > 0
-        else { return }
-        bufferLock.withLock {
-            closedEvents += recovered.events
-            closedBytes += recovered.bytes
+        ioLock.withLock {
+            let recovered = disk.recoverInterruptedLog()
+            guard recovered.events > 0
+            else { return }
+            bufferLock.withLock {
+                closedEvents += recovered.events
+                closedBytes += recovered.bytes
+            }
         }
     }
 
@@ -596,9 +594,7 @@ extension EventStore {
         guard let disk
         else { return false }
 
-        let (recovered, written) = disk.append(bytes)
-        countRecovered(recovered)
-        guard written
+        guard disk.append(bytes)
         else {
             // Never trap on a full disk. The SDK gives up on persistence for the rest of the session rather than taking
             // the application down with it, which is how other SDKs have crashed their hosts.

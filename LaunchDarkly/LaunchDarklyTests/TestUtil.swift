@@ -81,10 +81,10 @@ extension EventStore {
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
     }
 
-    /// Another store on `directory`, standing in for the next run of the application, or for another process.
+    /// Another store on `directory`, standing in for another process: it shares the batches, and leaves alone the log a
+    /// live store appends to. `nextRun` is the next run of the application.
     ///
-    /// Unlocked on a Mac too. Tests open it while the first store is still alive, and a locked log would rightly be
-    /// left to the live instance holding it; the locking itself has tests of its own.
+    /// Unlocked on a Mac too, like every store from `temporary`; the locking itself has tests of its own.
     static func sharing(_ directory: URL,
                         byteCapacity: Int = LDConfig.Defaults.eventCapacityBytes,
                         persistEvents: Bool = true,
@@ -106,11 +106,50 @@ extension EventStore {
         return store
     }
 
-    /// Removes the store's directory, including any batch still waiting to be delivered. A store told to keep events
-    /// off the disk has no directory, and so nothing to remove.
+    /// The next run of the application, had the process ended where it stands: a store on a copy of this one's
+    /// directory, which holds what reached the disk and nothing that was still in memory. No live process holds the
+    /// logs in the copy, as none would once the process was gone, so recovery takes them.
+    func nextRun(readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) }) -> EventStore {
+        let original = directory!
+        let copy = original.deletingLastPathComponent()
+            .appendingPathComponent("\(original.lastPathComponent)\(EventStore.nextRunSuffix)\(UUID().uuidString)",
+                                    isDirectory: true)
+        try? FileManager.default.copyItem(at: original, to: copy)
+        return EventStore.sharing(copy, readFile: readFile)
+    }
+
+    private static let nextRunSuffix = "-next-run-"
+
+    /// Every event in the store's directory, read straight from the files rather than through a store: the batches,
+    /// then the logs still open. What the next run of the application would find there.
+    var payloadsOnDisk: [Data] {
+        let files = ((try? FileManager.default.contentsOfDirectory(atPath: directory!.path)) ?? []).sorted()
+        let batches = files.filter { $0.hasPrefix("ready-") }
+        let logs = files.filter { $0.hasPrefix(DiskEventLog.prefix) }
+        var payloads: [Data] = []
+        for name in batches + logs {
+            guard let file = try? Data(contentsOf: directory!.appendingPathComponent(name))
+            else { continue }
+            _ = EventLogFormat.forEachFrame(in: file) { type, payload in
+                if type == EventLogFormat.eventFrame {
+                    payloads.append(payload)
+                }
+            }
+        }
+        return payloads
+    }
+
+    /// Removes the store's directory, including any batch still waiting to be delivered, and any copy `nextRun` made of
+    /// it. A store told to keep events off the disk has no directory, and so nothing to remove.
     func deleteEverything() {
         guard let directory
         else { return }
+        let parent = directory.deletingLastPathComponent()
+        let copies = ((try? FileManager.default.contentsOfDirectory(atPath: parent.path)) ?? [])
+            .filter { $0.hasPrefix(directory.lastPathComponent + EventStore.nextRunSuffix) }
+        for copy in copies {
+            try? FileManager.default.removeItem(at: parent.appendingPathComponent(copy))
+        }
         try? FileManager.default.removeItem(at: directory)
     }
 }

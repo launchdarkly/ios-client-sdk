@@ -9,18 +9,35 @@ import Glibc
 import Musl
 #endif
 
-/// The file of events on disk this process appends to, not to be confused with diagnostic logging.
+/// The file of events on disk a store appends to, not to be confused with diagnostic logging.
 ///
-/// One per process rather than one per directory, so that only one process ever writes a given log and recovery only
-/// ever touches its own. With one shared log, a second process starting up would close off, as if a previous run had
-/// left it, a log the first is still appending to through its open descriptor, and the first's later events would land
-/// in a batch already sent or deleted. Another process's log is left for that process to recover the next time it runs.
+/// One per store rather than one per directory, so that only one writer ever appends to a given log. Each is named for a
+/// UUID picked when it is opened, which is what keeps two writers apart: nothing about it comes from the application, and
+/// no two processes, or two stores in one, ever pick the same one.
+///
+/// A log nobody is appending to belongs to no one alive, whoever wrote it, and recovery takes it. The logs open in this
+/// process are remembered, which is all it takes where only this process uses the directory. On a Mac, which runs a
+/// second instance of an application over the same directory on request, the owner also holds its log locked for as
+/// long as it is open, and the kernel releases the lock when the descriptor closes, including when the process dies.
+/// Elsewhere a lock is not compiled in at all: iOS kills a suspended application that holds a lock on a file in a shared
+/// container.
+///
+/// A log is given its header under a name recovery does not look for, and only then moved to one it does, so that a log
+/// being opened is never taken for one whose owner is gone.
 ///
 /// Belongs to an `EventStore`, which makes every call holding its `ioLock`. The lock is handed in so that each call can
 /// check it is held, rather than this taking a lock of its own that would have to be ordered against the store's.
 final class DiskEventLog {
-    /// Names a log a single process appends to; the rest of the name is that process.
+    /// Names a log its owner appends to; the rest of the name is the UUID it was opened under.
     static let prefix = "open-"
+    /// Names a log while it is being opened, before it has its header. Recovery never looks at these; one left by a
+    /// process that died opening it holds no events, and expiry removes it.
+    static let openingPrefix = "new-"
+
+    /// The paths of the logs open in this process, which recovery and expiry leave alone. Guarded by
+    /// `openInThisProcessLock`.
+    private static var openInThisProcess: Set<String> = []
+    private static let openInThisProcessLock = UnfairLock()
 
     private let directory: URL
     private let ioLock: UnfairLock
@@ -29,26 +46,18 @@ final class DiskEventLog {
     /// does. Answers with the errno it stopped on, or nil where every byte landed.
     private let writeLog: (EventLogFile, Data) -> Int32?
 
-    /// Named for the process, unless on a Mac `isLocked` found another live instance holding that name, in which case
-    /// it is named for this instance's process ID as well.
+    /// Where the log is, whether or not it exists yet.
     private(set) var url: URL
     /// Nil until the first append opens it, and again once it is closed.
     private var file: EventLogFile?
 
     #if os(macOS) || targetEnvironment(macCatalyst)
-    /// The readable, collision-proof form of the process name every log this process opens is named after.
-    private let processLogName: String
-    /// Whether the log is locked while it is open, so that another live process can tell it is taken. Only to be
-    /// changed before the log is first opened or recovered.
-    ///
-    /// Only on a Mac, which runs a second instance of an application under the same process name on request, so that
-    /// a name alone cannot keep two live processes apart. Elsewhere a name is one live process, and a lock is not
-    /// compiled in at all: iOS kills a suspended application that holds a lock on a file in a shared container.
+    /// Whether the log is locked while it is open, so that another live instance can tell it is taken. Only to be
+    /// changed before the log is first opened.
     var isLocked = true
     #endif
 
     init(directory: URL,
-         processName: String,
          ioLock: UnfairLock,
          logger: OSLog,
          writeLog: @escaping (EventLogFile, Data) -> Int32?) {
@@ -56,31 +65,27 @@ final class DiskEventLog {
         self.ioLock = ioLock
         self.logger = logger
         self.writeLog = writeLog
-        let processLogName = DiskEventLog.name(for: processName)
-        self.url = directory.appendingPathComponent(DiskEventLog.prefix + processLogName)
-        #if os(macOS) || targetEnvironment(macCatalyst)
-        self.processLogName = processLogName
-        #endif
+        self.url = DiskEventLog.newUrl(in: directory)
     }
 
-    /// Names the log belonging to one process.
+    private static func newUrl(in directory: URL) -> URL {
+        directory.appendingPathComponent(prefix + UUID().uuidString)
+    }
+
+    /// Whether some live process is appending to a log, and recovery and expiry must leave it alone.
     ///
-    /// The readable part is the process name with anything awkward in a filename replaced, which keeps a directory of
-    /// these diagnosable. That reduction is not one-to-one, and two processes sharing a log is the one thing this name
-    /// exists to prevent, so a digest of the original name is appended.
-    static func name(for processName: String) -> String {
-        let trimmed = processName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let name = trimmed.isEmpty ? "unknown" : trimmed
-        let readable = String(name.unicodeScalars.map { scalar -> Character in
-            switch scalar {
-            case "a"..."z", "A"..."Z", "0"..."9", "-", "_":
-                return Character(scalar)
-            default:
-                return "_"
-            }
-        })
-        let digest = Util.sha256(name).prefix(4).map { String(format: "%02x", $0) }.joined()
-        return "\(readable)-\(digest)"
+    /// A log open in this process is answered from memory. On a Mac any other is answered by its lock, and one that
+    /// cannot be looked at counts as held: leaving a dead process's log for a later run costs nothing, while taking a
+    /// live one's would lose what it appends next.
+    static func isHeldByLiveProcess(_ log: URL) -> Bool {
+        if isOpenInThisProcess(log) {
+            return true
+        }
+        #if os(macOS) || targetEnvironment(macCatalyst)
+        return EventLogFile.isLockedByLiveProcess(log)
+        #else
+        return false
+        #endif
     }
 
     /// Requires `ioLock`.
@@ -124,34 +129,47 @@ final class DiskEventLog {
     /// Requires `ioLock`.
     func close(movingTo destination: URL) throws {
         ioLock.assertOwned()
-        // Closed after the rename rather than before it, so that a locked log is still locked while it moves. Another
-        // instance recovering unlocked logs could otherwise take it in between.
+        // Closed after the move rather than before it, so that the log is still held while it moves. Another store
+        // recovering logs could otherwise take it in between.
         defer { closeDescriptor() }
         try FileManager.default.moveItem(at: url, to: destination)
     }
 
     /// Closes the descriptor, leaving the log where it is. Requires `ioLock`.
+    ///
+    /// No longer held, it is from here on a log like one a process that died left behind, which recovery may take at
+    /// any moment. So this log is never opened again: the next append starts a new one.
     func closeDescriptor() {
         ioLock.assertOwned()
-        file?.close()
-        file = nil
+        guard let file
+        else { return }
+        file.close()
+        self.file = nil
+        DiskEventLog.forget(url)
     }
 
-    /// Hands `recover` each log left open by a process that is gone, which it has to move or remove.
-    ///
-    /// Only this process's own log, by name: another process's may still be open in a process that is alive. Where
-    /// logs are locked, any log no live process holds, whatever it is named.
+    /// Hands `recover` every log no live process holds, which it has to move or remove: whoever wrote it is gone,
+    /// whatever it is named, including a log an earlier version named for its process.
     ///
     /// Requires `ioLock`.
-    func forEachLogLeftOpen(_ recover: (URL) -> Void) {
+    func forEachUnheldLog(_ recover: (URL) -> Void) {
         ioLock.assertOwned()
-        #if os(macOS) || targetEnvironment(macCatalyst)
-        if isLocked {
-            forEachUnheldLog(recover)
-            return
+        let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
+                                                                    includingPropertiesForKeys: nil,
+                                                                    options: [.skipsHiddenFiles])) ?? []
+        for log in contents where log.lastPathComponent.hasPrefix(DiskEventLog.prefix) {
+            guard !DiskEventLog.isOpenInThisProcess(log)
+            else { continue }
+            #if os(macOS) || targetEnvironment(macCatalyst)
+            // Locked for as long as it is recovered, so that another instance recovering at the same time leaves it be.
+            guard let held = EventLogFile.openLocked(log, flags: O_RDONLY)
+            else { continue }
+            recover(log)
+            held.close()
+            #else
+            recover(log)
+            #endif
         }
-        #endif
-        recover(url)
     }
 
     /// Requires `ioLock`.
@@ -169,19 +187,13 @@ final class DiskEventLog {
         }
         EventLogFile.excludeFromBackup(directory)
 
+        if FileManager.default.fileExists(atPath: url.path) {
+            // Left by an earlier open this session and closed since, so no longer this store's to write.
+            url = DiskEventLog.newUrl(in: directory)
+        }
         guard let opened = open()
-        else {
-            os_log("%s could not open the event log: errno %d", log: logger, type: .debug, typeName(and: #function), errno)
-            return nil
-        }
-
+        else { return nil }
         file = opened
-
-        if opened.isEmpty {
-            guard write(EventLogFormat.fileHeader, to: opened)
-            else { return nil }
-        }
-
         return opened
     }
 
@@ -192,58 +204,63 @@ final class DiskEventLog {
         return false
     }
 
-    /// Opens the log, locked where logs are. Requires `ioLock`.
+    /// Opens a new log: created under `openingPrefix`, locked where logs are, given its header, and only then moved to
+    /// the name recovery looks for. Requires `ioLock`.
     private func open() -> EventLogFile? {
         ioLock.assertOwned()
-        // O_APPEND is what makes each write land at the end of the file as one step, so that clients for several
-        // environments writing their own logs, or a commit racing a reader, cannot produce a spliced frame.
-        let flags = O_WRONLY | O_APPEND | O_CREAT
+        let opening = directory.appendingPathComponent(
+            DiskEventLog.openingPrefix + url.lastPathComponent.dropFirst(DiskEventLog.prefix.count))
+        // O_APPEND is what makes each write land at the end of the file as one step, so that a commit racing a reader
+        // cannot produce a spliced frame.
+        let flags = O_WRONLY | O_APPEND | O_CREAT | O_EXCL
+        DiskEventLog.remember(url)
+        guard let opened = openFile(at: opening, flags: flags)
+        else {
+            os_log("%s could not open the event log: errno %d", log: logger, type: .debug, typeName(and: #function), errno)
+            DiskEventLog.forget(url)
+            return nil
+        }
+
+        guard write(EventLogFormat.fileHeader, to: opened)
+        else { return abandon(opened, at: opening) }
+        do {
+            try FileManager.default.moveItem(at: opening, to: url)
+        } catch {
+            os_log("%s could not name the event log: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
+            return abandon(opened, at: opening)
+        }
+        return opened
+    }
+
+    /// Closes and removes a log that never got the name recovery looks for. Requires `ioLock`.
+    private func abandon(_ opened: EventLogFile, at opening: URL) -> EventLogFile? {
+        opened.close()
+        try? FileManager.default.removeItem(at: opening)
+        DiskEventLog.forget(url)
+        return nil
+    }
+
+    /// Opens a file for a new log, locked where logs are. Requires `ioLock`.
+    private func openFile(at url: URL, flags: Int32) -> EventLogFile? {
         #if os(macOS) || targetEnvironment(macCatalyst)
         if isLocked {
-            return openLocked(flags: flags)
+            return EventLogFile.openLocked(url, flags: flags)
         }
         #endif
         return EventLogFile.open(at: url, flags: flags)
     }
 
-    #if os(macOS) || targetEnvironment(macCatalyst)
-    /// Opens the log for this process name locked, or one of this instance's own where another live instance holds
-    /// it. Requires `ioLock`.
-    private func openLocked(flags: Int32) -> EventLogFile? {
-        ioLock.assertOwned()
-        if let opened = EventLogFile.openLocked(url, flags: flags) {
-            return opened
-        }
-
-        // Another live instance of the application holds the log for this process name, so this one takes a log of its
-        // own. The process ID keeps it apart from every other live process, and the suffix from another store in this
-        // one, as a closed client's can be while it is still going away. Recovery finds the log by its lock rather than
-        // its name, so it is not orphaned when this instance ends.
-        let ownLog = directory.appendingPathComponent(
-            "\(DiskEventLog.prefix)\(processLogName)-\(getpid())-\(UUID().uuidString.prefix(8))")
-        guard let opened = EventLogFile.openLocked(ownLog, flags: flags)
-        else { return nil }
-        url = ownLog
-        return opened
+    private static func isOpenInThisProcess(_ log: URL) -> Bool {
+        openInThisProcessLock.withLock { openInThisProcess.contains(log.standardizedFileURL.path) }
     }
 
-    /// Hands `recover` every open log no live process holds. Requires `ioLock`.
-    ///
-    /// A log that can be locked is one no live process has open, so whoever wrote it is gone. That includes a log a
-    /// second instance opened under its process ID, which no later run would otherwise come back for by name.
-    private func forEachUnheldLog(_ recover: (URL) -> Void) {
-        ioLock.assertOwned()
-        let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
-                                                                    includingPropertiesForKeys: nil,
-                                                                    options: [.skipsHiddenFiles])) ?? []
-        for log in contents where log.lastPathComponent.hasPrefix(DiskEventLog.prefix) {
-            guard let held = EventLogFile.openLocked(log, flags: O_RDONLY)
-            else { continue }
-            recover(log)
-            held.close()
-        }
+    private static func remember(_ log: URL) {
+        openInThisProcessLock.withLock { _ = openInThisProcess.insert(log.standardizedFileURL.path) }
     }
-    #endif
+
+    private static func forget(_ log: URL) {
+        openInThisProcessLock.withLock { _ = openInThisProcess.remove(log.standardizedFileURL.path) }
+    }
 }
 
 extension DiskEventLog: TypeIdentifying { }

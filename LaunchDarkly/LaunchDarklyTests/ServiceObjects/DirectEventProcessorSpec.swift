@@ -1273,8 +1273,8 @@ class DirectEventProcessorSpec: QuickSpec {
 extension DirectEventProcessorSpec {
     /// What the SDK is able to report after the process it was recording in is gone.
     ///
-    /// These are written against a second store reading the same directory, which is what the next run of the
-    /// application amounts to: it sees the bytes that reached the disk and nothing that was still in memory.
+    /// These are written against what is in the directory, and a store on a copy of it, which is what the next run of
+    /// the application amounts to: it sees the bytes that reached the disk and nothing that was still in memory.
     private func durabilitySpec() {
         describe("surviving the process") {
             var testContext: TestContext!
@@ -1284,8 +1284,7 @@ extension DirectEventProcessorSpec {
 
             /// The events the next run of the application would find.
             func eventsLeftOnDisk() -> [LDValue] {
-                let reader = EventStore.sharing(testContext.store.directory!)
-                return reader.pendingEventPayloads().compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
+                testContext.store.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
             }
 
             itPersisting("has written a tracked event by the time recording it returns") {
@@ -1385,7 +1384,7 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.commitRecordedEvents()
 
                 // Nothing delivered them and nothing closed the log, as would be the case had the process died here.
-                let recovered = EventStore.sharing(testContext.store.directory!)
+                let recovered = testContext.store.nextRun()
                 let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
                 nextRun.isOnline = true
 
@@ -1407,7 +1406,7 @@ extension DirectEventProcessorSpec {
                 testContext.recordEvents(2)
                 testContext.eventProcessor.commitRecordedEvents()
 
-                let recovered = EventStore.sharing(testContext.store.directory!)
+                let recovered = testContext.store.nextRun()
                 let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
 
                 // Nothing asks for a flush, and the report interval is several times longer than this waits, so the
@@ -1665,7 +1664,7 @@ extension DirectEventProcessorSpec {
                 testContext.serviceMock.respondToEvents(with: 503)
                 testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
 
-                let recovered = EventStore.sharing(testContext.store.directory!)
+                let recovered = testContext.store.nextRun()
                 let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered)
                 nextRun.isOnline = true
                 defer { nextRun.isOnline = false }

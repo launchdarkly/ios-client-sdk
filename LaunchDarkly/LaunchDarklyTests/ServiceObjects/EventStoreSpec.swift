@@ -17,31 +17,28 @@ final class EventStoreSpec: QuickSpec {
         multiProcessSpec()
         withoutPersistenceSpec()
         #if os(macOS) || targetEnvironment(macCatalyst)
-        sameNameInstancesSpec()
+        lockedInstancesSpec()
         #endif
     }
 
     #if os(macOS) || targetEnvironment(macCatalyst)
-    private func sameNameInstancesSpec() {
-        // A second instance of a Mac application runs under the first one's process name.
-        describe("two live instances under one process name") {
+    private func lockedInstancesSpec() {
+        // A Mac runs a second instance of an application over the same directory on request.
+        describe("live instances holding their logs locked") {
             var first: EventStore!
             afterEach {
                 first.deleteEverything()
             }
 
             func instance() -> EventStore {
-                EventStore(directory: first.directory!, capacity: 100, processName: "app", logger: .disabled)
+                EventStore(directory: first.directory!, capacity: 100, logger: .disabled)
             }
 
             beforeEach {
-                first = EventStore(directory: EventStore.temporary().directory!,
-                                   capacity: 100,
-                                   processName: "app",
-                                   logger: .disabled)
+                first = EventStore(directory: EventStore.temporary().directory!, capacity: 100, logger: .disabled)
             }
 
-            it("gives the second a log of its own, named for its process, and leaves the first's alone") {
+            it("gives each a log of its own, and leaves the first's alone") {
                 _ = first.stage(EventStoreSpec.payload("first"))
                 first.commit()
 
@@ -52,7 +49,6 @@ final class EventStoreSpec: QuickSpec {
                 _ = second.stage(EventStoreSpec.payload("second"))
                 second.commit()
                 expect(second.openLogUrl!) != first.openLogUrl!
-                expect(second.openLogUrl!.lastPathComponent).to(contain("-\(getpid())-"))
 
                 _ = first.stage(EventStoreSpec.payload("first-again"))
                 first.commit()
@@ -62,7 +58,24 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(ofBody: fromSecond.flatMap { try? second.body(of: $0) })) == ["second"]
             }
 
-            it("recovers the log an instance that has ended left open, though no run is named for it") {
+            it("leaves a log another process holds locked alone until the lock is let go") {
+                var ended: EventStore? = instance()
+                _ = ended?.stage(EventStoreSpec.payload("held"))
+                ended?.commit()
+                let log = ended!.openLogUrl!
+                ended = nil
+                // A descriptor of its own, as another live instance's would be, so nothing in this process knows of it.
+                let held = EventLogFile.openLocked(log, flags: O_RDONLY)!
+
+                first.recoverInterruptedLog()
+                expect(first.pendingBatches()).to(beEmpty())
+
+                held.close()
+                first.recoverInterruptedLog()
+                expect(EventStoreSpec.keys(ofBody: first.pendingBatches().first.flatMap { try? first.body(of: $0) })) == ["held"]
+            }
+
+            it("recovers the log an instance that has ended left open") {
                 _ = first.stage(EventStoreSpec.payload("first"))
                 first.commit()
 
@@ -79,12 +92,12 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? next.body(of: $0) })) == ["from-the-ended-instance"]
             }
 
-            it("recovers the log a previous run under the name left open, once nothing holds it") {
+            it("recovers the log a previous run left open, once nothing holds it") {
                 _ = first.stage(EventStoreSpec.payload("left-open"))
                 first.commit()
                 let directory = first.directory!
                 first = nil
-                first = EventStore(directory: directory, capacity: 100, processName: "app", logger: .disabled)
+                first = EventStore(directory: directory, capacity: 100, logger: .disabled)
 
                 first.recoverInterruptedLog()
                 let batches = first.pendingBatches()
@@ -102,21 +115,21 @@ final class EventStoreSpec: QuickSpec {
                 app.deleteEverything()
             }
 
-            /// Another process of the same application, using the same directory under its own name. Unlocked, as on an
-            /// iPhone or iPad, where a process name is one live process and the name alone keeps the logs apart.
-            func otherProcess(_ name: String = "widget") -> EventStore {
-                EventStore.sharing(app.directory!, processName: name)
+            /// Another process of the same application, using the same directory. Unlocked, as on an iPhone or iPad,
+            /// where the logs a live store has open are known without one.
+            func otherProcess() -> EventStore {
+                EventStore.sharing(app.directory!)
             }
 
             beforeEach {
-                app = EventStore.sharing(EventStore.temporary().directory!, processName: "app")
+                app = EventStore.sharing(EventStore.temporary().directory!)
             }
 
             it("leaves a log another process still has open where it is, so that process's later events reach it") {
                 _ = app.stage(EventStoreSpec.payload("before"))
                 app.commit()
 
-                // Starting up, the other process recovers what its own previous run left open, and nothing else.
+                // Starting up, the other process recovers what no live process holds, and nothing else.
                 let widget = otherProcess()
                 widget.recoverInterruptedLog()
                 expect(widget.pendingBatches()).to(beEmpty())
@@ -152,24 +165,44 @@ final class EventStoreSpec: QuickSpec {
                 expect(widget.pendingBatches().map(\.payloadId)) == [closed?.payloadId].compactMap { $0 }
             }
 
-            it("recovers a process's own log on its next run") {
-                _ = app.stage(EventStoreSpec.payload("left-open"))
-                app.commit()
+            it("recovers the log a process that has ended left open, whichever process it was") {
+                var widget: EventStore? = otherProcess()
+                _ = widget?.stage(EventStoreSpec.payload("left-open"))
+                widget?.commit()
+                // Going away closes its log, as the process ending would.
+                widget = nil
 
-                let nextRun = otherProcess("app")
-                nextRun.recoverInterruptedLog()
-                let batches = nextRun.pendingBatches()
+                app.recoverInterruptedLog()
+                let batches = app.pendingBatches()
                 expect(batches.count) == 1
-                expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? nextRun.body(of: $0) })) == ["left-open"]
+                expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? app.body(of: $0) })) == ["left-open"]
             }
 
-            it("names logs so that process names reducing to the same characters stay apart") {
-                let colon = DiskEventLog.name(for: "com.app:remote")
-                let dot = DiskEventLog.name(for: "com.app.remote")
-                expect(colon) != dot
-                expect(colon.hasPrefix("com_app_remote-")) == true
-                expect(dot.hasPrefix("com_app_remote-")) == true
-                expect(DiskEventLog.name(for: "  ").hasPrefix("unknown-")) == true
+            it("recovers a log an earlier version named for its process") {
+                var earlierVersion: EventStore? = otherProcess()
+                _ = earlierVersion?.stage(EventStoreSpec.payload("named-for-its-process"))
+                earlierVersion?.commit()
+                let log = earlierVersion!.openLogUrl!
+                earlierVersion = nil
+                try FileManager.default.moveItem(at: log, to: log.deletingLastPathComponent()
+                    .appendingPathComponent("\(DiskEventLog.prefix)com_example_app-1a2b3c4d"))
+
+                app.recoverInterruptedLog()
+                let batches = app.pendingBatches()
+                expect(batches.count) == 1
+                expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? app.body(of: $0) })) == ["named-for-its-process"]
+            }
+
+            it("names a log for a UUID rather than for the process") {
+                _ = app.stage(EventStoreSpec.payload("named"))
+                app.commit()
+
+                let logs = try FileManager.default.contentsOfDirectory(atPath: app.directory!.path)
+                    .filter { $0.hasPrefix(DiskEventLog.prefix) }
+                expect(logs.count) == 1
+                expect(logs.first.flatMap { UUID(uuidString: String($0.dropFirst(DiskEventLog.prefix.count))) }).toNot(beNil())
+                expect(try FileManager.default.contentsOfDirectory(atPath: app.directory!.path)
+                    .filter { $0.hasPrefix(DiskEventLog.openingPrefix) }).to(beEmpty())
             }
         }
     }
@@ -256,7 +289,7 @@ final class EventStoreSpec: QuickSpec {
                 let own = withoutPersistence.closeBatch()
                 expect(withoutPersistence.pendingBatches().map(\.payloadId)) == [own?.payloadId]
 
-                let persistingAgain = EventStoreSpec.reader(sharing: persisting)
+                let persistingAgain = persisting.nextRun()
                 persistingAgain.recoverInterruptedLog()
                 let bodies = persistingAgain.pendingBatches().map { EventStoreSpec.keys(ofBody: try? persistingAgain.body(of: $0)) }
                 expect(bodies) == [["closed"], ["open"]]
@@ -279,8 +312,8 @@ final class EventStoreSpec: QuickSpec {
                           logger: .disabled)
     }
 
-    /// A store reading the same directory as another, standing in for the next run of the application: it sees only
-    /// what actually reached the disk, which is the whole question a crash asks.
+    /// A store reading the same directory as another, standing in for another process: it sees the batches, and leaves
+    /// alone the log the live store appends to. `nextRun()` stands in for the next run of the application.
     private static func reader(sharing store: EventStore,
                                readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) }) -> EventStore {
         EventStore.sharing(store.directory!, readFile: readFile)
@@ -337,7 +370,11 @@ final class EventStoreSpec: QuickSpec {
     }
 
     private static func keys(of store: EventStore) -> [String] {
-        store.pendingEventPayloads().compactMap {
+        keys(in: store.pendingEventPayloads())
+    }
+
+    private static func keys(in payloads: [Data]) -> [String] {
+        payloads.compactMap {
             guard case .object(let fields) = try? JSONDecoder().decode(LDValue.self, from: $0),
                   case .string(let key) = fields["key"]
             else { return nil }
@@ -358,7 +395,7 @@ final class EventStoreSpec: QuickSpec {
             it("keeps a staged event out of the log until it is committed") {
                 _ = store.stage(EventStoreSpec.payload("staged-only"))
 
-                expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))).to(beEmpty())
+                expect(EventStoreSpec.keys(in: store.payloadsOnDisk)).to(beEmpty())
                 expect(store.pendingEventCount) == 1
             }
 
@@ -366,7 +403,7 @@ final class EventStoreSpec: QuickSpec {
                 _ = store.stage(EventStoreSpec.payload("committed"))
                 store.commit()
 
-                expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["committed"]
+                expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["committed"]
             }
 
             it("never writes on its own, however much is staged") {
@@ -377,12 +414,12 @@ final class EventStoreSpec: QuickSpec {
                     _ = store.stage(event)
                 }
 
-                expect(EventStoreSpec.reader(sharing: store).pendingEventPayloads()).to(beEmpty())
+                expect(store.payloadsOnDisk).to(beEmpty())
                 expect(store.pendingEventCount) == 64
 
                 store.commit()
 
-                expect(EventStoreSpec.reader(sharing: store).pendingEventPayloads().count) == 64
+                expect(store.payloadsOnDisk.count) == 64
             }
 
             it("keeps events in the order they were recorded") {
@@ -391,7 +428,7 @@ final class EventStoreSpec: QuickSpec {
                 }
                 store.commit()
 
-                expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["event-0", "event-1", "event-2", "event-3", "event-4"]
+                expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0", "event-1", "event-2", "event-3", "event-4"]
             }
         }
     }
@@ -409,7 +446,7 @@ final class EventStoreSpec: QuickSpec {
                 store.commit()
 
                 // Nothing closed the log, as nothing would if the process had died here.
-                let next = EventStoreSpec.reader(sharing: store)
+                let next = store.nextRun()
                 next.recoverInterruptedLog()
 
                 let batches = next.pendingBatches()
@@ -425,7 +462,7 @@ final class EventStoreSpec: QuickSpec {
                 let batch = store.closeBatch()
                 store.remove(batch!)
 
-                let next = EventStoreSpec.reader(sharing: store)
+                let next = store.nextRun()
                 next.recoverInterruptedLog()
 
                 expect(next.pendingBatches()).to(beEmpty())
@@ -442,7 +479,7 @@ final class EventStoreSpec: QuickSpec {
                 let log = store.openLogUrl!
                 try Data(contentsOf: log).dropLast(3).write(to: log)
 
-                let next = EventStoreSpec.reader(sharing: store)
+                let next = store.nextRun()
                 _ = next.stage(EventStoreSpec.payload("this-run"))
                 next.commit()
                 next.recoverInterruptedLog()
@@ -486,7 +523,7 @@ final class EventStoreSpec: QuickSpec {
                 let whole = try Data(contentsOf: log)
                 try whole.dropLast(8).write(to: log)
 
-                expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["event-0", "event-1"]
+                expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0", "event-1"]
             }
 
             context("where the storage changed a frame after it was written") {
@@ -507,7 +544,7 @@ final class EventStoreSpec: QuickSpec {
                     damaged[second + EventLogFormat.frameHeaderSize + 3] ^= 0x04
                     try damaged.write(to: log)
 
-                    expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["event-0"]
+                    expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0"]
                 }
 
                 it("keeps every event before a zero-filled payload") {
@@ -517,7 +554,7 @@ final class EventStoreSpec: QuickSpec {
                     damaged.replaceSubrange(start..<(start + size), with: Data(count: size))
                     try damaged.write(to: log)
 
-                    expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["event-0"]
+                    expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0"]
                 }
 
                 it("keeps every event before a size that still fits in the file") {
@@ -527,7 +564,7 @@ final class EventStoreSpec: QuickSpec {
                     damaged[second + 5] -= 1
                     try damaged.write(to: log)
 
-                    expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["event-0"]
+                    expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0"]
                 }
             }
 
@@ -600,21 +637,20 @@ final class EventStoreSpec: QuickSpec {
                 store.commit()
 
                 var failing = true
-                let next = EventStoreSpec.reader(sharing: store,
-                                                 readFile: EventStoreSpec.readFailing(while: { failing }))
+                let next = store.nextRun(readFile: EventStoreSpec.readFailing(while: { failing }))
+                let leftOpen = next.directory!.appendingPathComponent(store.openLogUrl!.lastPathComponent)
                 next.recoverInterruptedLog()
-                // Moved out from under the name this run appends to, and not deleted.
-                expect(FileManager.default.fileExists(atPath: store.openLogUrl!.path)) == false
+                // Moved out from under the name recovery looks for, and not deleted.
+                expect(FileManager.default.fileExists(atPath: leftOpen.path)) == false
 
-                // So this run has the name to itself, and the events that are intact are only waiting for a read that
-                // works to be counted and delivered.
+                // The events that are intact are only waiting for a read that works to be counted and delivered.
                 _ = next.stage(EventStoreSpec.payload("this-run"))
                 next.commit()
                 failing = false
                 let batches = next.pendingBatches()
                 expect(batches.count) == 1
                 expect(EventStoreSpec.keys(ofBody: try next.body(of: batches[0]))) == ["from-the-previous-run"]
-                expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["from-the-previous-run", "this-run"]
+                expect(EventStoreSpec.keys(in: next.payloadsOnDisk)) == ["from-the-previous-run", "this-run"]
             }
 
             it("is discarded when a batch named without a count is in a format this version does not read") {
@@ -1216,20 +1252,44 @@ final class EventStoreSpec: QuickSpec {
                 expect(try store.body(of: batch)).toNot(beNil())
             }
 
-            it("discards another process's log nobody has written to for the maximum age, and leaves a younger one") {
-                let gone = EventStore.sharing(store.directory!, processName: "gone")
-                _ = gone.stage(EventStoreSpec.payload("gone"))
-                gone.commit()
-                let alive = EventStore.sharing(store.directory!, processName: "alive")
-                _ = alive.stage(EventStoreSpec.payload("alive"))
-                alive.commit()
-                try EventStoreSpec.age(gone.openLogUrl!, byDays: 8)
-                try EventStoreSpec.age(alive.openLogUrl!, byDays: 1)
+            it("discards a log nobody holds once nothing has written to it for the maximum age, and leaves a younger one") {
+                func logLeftBy(_ key: String) -> URL {
+                    // Going away closes its log, as its process ending would.
+                    let ended = EventStore.sharing(store.directory!)
+                    _ = ended.stage(EventStoreSpec.payload(key))
+                    ended.commit()
+                    return ended.openLogUrl!
+                }
+                let old = logLeftBy("gone")
+                let young = logLeftBy("recent")
+                try EventStoreSpec.age(old, byDays: 8)
+                try EventStoreSpec.age(young, byDays: 1)
 
                 expect(store.discardExpired()) == 1
 
-                expect(FileManager.default.fileExists(atPath: gone.openLogUrl!.path)) == false
+                expect(FileManager.default.fileExists(atPath: old.path)) == false
+                expect(FileManager.default.fileExists(atPath: young.path)) == true
+            }
+
+            it("leaves the log of another live store alone, however long since it was written") {
+                // A live process may go longer than the maximum age without an event.
+                let alive = EventStore.sharing(store.directory!)
+                _ = alive.stage(EventStoreSpec.payload("alive"))
+                alive.commit()
+                try EventStoreSpec.age(alive.openLogUrl!, byDays: 8)
+
+                expect(store.discardExpired()) == 0
                 expect(FileManager.default.fileExists(atPath: alive.openLogUrl!.path)) == true
+            }
+
+            it("discards a log a process died while opening, which holds no events") {
+                try FileManager.default.createDirectory(at: store.directory!, withIntermediateDirectories: true)
+                let opening = store.directory!.appendingPathComponent(DiskEventLog.openingPrefix + UUID().uuidString)
+                try EventLogFormat.fileHeader.write(to: opening)
+                try EventStoreSpec.age(opening, byDays: 8)
+
+                expect(store.discardExpired()) == 0
+                expect(FileManager.default.fileExists(atPath: opening.path)) == false
             }
 
             it("leaves its own open log alone, however long since it was written") {
@@ -1417,7 +1477,7 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(ofBody: fromMemory.flatMap { try? interrupted.body(of: $0) })) == ["landed", "torn"]
 
                 // Delivered from memory this run, so the next must not find any of it again in the log.
-                let next = EventStoreSpec.reader(sharing: interrupted)
+                let next = interrupted.nextRun()
                 next.recoverInterruptedLog()
                 expect(next.pendingBatches()).to(beEmpty())
             }
