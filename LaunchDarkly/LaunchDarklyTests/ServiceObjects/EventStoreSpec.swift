@@ -11,6 +11,7 @@ final class EventStoreSpec: QuickSpec {
         batchSpec()
         capacitySpec()
         byteCapacitySpec()
+        batchSizeSpec()
         expirySpec()
         fallbackSpec()
         optOutSpec()
@@ -1094,6 +1095,87 @@ final class EventStoreSpec: QuickSpec {
 
                     expect(miscounts).to(beEmpty())
                 }
+            }
+        }
+    }
+
+    /// Events framed in a quarter of a batch each: four of them and the file header are just past the batch size, so
+    /// three fit in each batch.
+    private func batchSizeSpec() {
+        describe("batch size") {
+            let quarter = EventLogFormat.maxBatchSize / 4
+            var store: EventStore!
+            afterEach {
+                store.deleteEverything()
+            }
+
+            func stage(_ indices: ClosedRange<Int>) {
+                for index in indices {
+                    expect(store.stage(EventStoreSpec.payload(framedIn: quarter, key: "event-\(index)"))) == true
+                }
+            }
+
+            func keysByBatch() -> [[String]] {
+                store.pendingBatches().map { batch -> [String] in
+                    let body = try? store.body(of: batch)
+                    expect(body?.count ?? 0) <= EventLogFormat.maxBatchSize
+                    let keys = EventStoreSpec.keys(ofBody: body)
+                    expect(keys.count) == batch.eventCount
+                    return keys
+                }
+                // Batches closed within the same instant list in either order.
+                .sorted { $0.first ?? "" < $1.first ?? "" }
+            }
+
+            func batchFileSizes() throws -> [Int] {
+                try FileManager.default
+                    .contentsOfDirectory(at: store.directory!, includingPropertiesForKeys: [.fileSizeKey])
+                    .filter { $0.lastPathComponent.hasPrefix("ready-") }
+                    .map { try $0.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0 }
+            }
+
+            it("closes a log a commit would take past the batch size, and carries on in a new one") {
+                store = EventStore.temporary()
+                stage(1...5)
+                store.commit()
+                _ = store.closeBatch()
+
+                expect(keysByBatch()) == [["event-1", "event-2", "event-3"], ["event-4", "event-5"]]
+                expect(try batchFileSizes().allSatisfy { $0 <= EventLogFormat.maxBatchSize }) == true
+                expect(store.pendingEventCount) == 5
+            }
+
+            it("closes a log a later commit would take past the batch size") {
+                store = EventStore.temporary()
+                stage(1...2)
+                store.commit()
+                stage(3...5)
+                store.commit()
+                _ = store.closeBatch()
+
+                expect(keysByBatch()) == [["event-1", "event-2", "event-3"], ["event-4", "event-5"]]
+                expect(try batchFileSizes().allSatisfy { $0 <= EventLogFormat.maxBatchSize }) == true
+            }
+
+            it("splits what it holds in memory at the batch size too") {
+                store = EventStore.temporary(persistEvents: false)
+                stage(1...5)
+                _ = store.closeBatch()
+
+                expect(keysByBatch()) == [["event-1", "event-2", "event-3"], ["event-4", "event-5"]]
+                expect(store.pendingEventCount) == 5
+            }
+
+            it("takes an event that fills a batch on its own, and refuses any larger") {
+                store = EventStore.temporary()
+                let largest = EventLogFormat.maxFrameSize + EventLogFormat.frameHeaderSize
+                expect(store.stage(EventStoreSpec.payload(framedIn: largest + 1, key: "too-large"))) == false
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-1"))) == true
+                expect(store.stage(EventStoreSpec.payload(framedIn: largest, key: "largest"))) == true
+                _ = store.closeBatch()
+
+                expect(keysByBatch()) == [["event-1"], ["largest"]]
+                expect(try batchFileSizes().allSatisfy { $0 <= EventLogFormat.maxBatchSize }) == true
             }
         }
     }

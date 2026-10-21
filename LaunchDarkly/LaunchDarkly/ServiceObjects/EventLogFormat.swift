@@ -22,8 +22,12 @@ enum EventLogFormat {
     static let frameHeaderSize = 10
     /// The only frame type written today; a reader skips a frame whose type it does not know.
     static let eventFrame: UInt16 = 1
-    /// A ceiling on a single frame, so a corrupt size cannot make recovery allocate wildly.
-    static let maxFrameSize = 8 * 1024 * 1024
+    /// The most a batch may hold, file header included, so that no request it becomes is larger than the events
+    /// service accepts.
+    static let maxBatchSize = 2 * 1024 * 1024
+    /// A ceiling on a single frame's payload: the most that still fits in a batch on its own. It is also what keeps a
+    /// corrupt size from making recovery allocate wildly.
+    static let maxFrameSize = maxBatchSize - fileHeaderSize - frameHeaderSize
 
     static var fileHeader: Data {
         var header = magic
@@ -143,6 +147,23 @@ enum EventLogFormat {
               UInt8(truncatingIfNeeded: value >> 16),
               UInt8(truncatingIfNeeded: value >> 8),
               UInt8(truncatingIfNeeded: value)])
+    }
+
+    /// The size, header included, of the frame at `start` in frames this process wrote.
+    static func frameSize(in frames: Data, at start: Int) -> Int {
+        frameHeaderSize + Int(readUInt32(frames, at: start + 2))
+    }
+
+    /// Where a run of whole frames from `start`, in frames this process wrote, ends if it is to take no more than
+    /// `room` bytes, and how many frames it takes. It takes the first frame whatever its size.
+    static func framesFitting(in frames: Data, from start: Int, room: Int) -> (end: Int, count: Int) {
+        var end = start + frameSize(in: frames, at: start)
+        var count = 1
+        while end < frames.count, end + frameSize(in: frames, at: end) - start <= room {
+            end += frameSize(in: frames, at: end)
+            count += 1
+        }
+        return (end, count)
     }
 
     static func readUInt16(_ data: Data, at offset: Int) -> UInt16 {

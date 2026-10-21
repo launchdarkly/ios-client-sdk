@@ -55,8 +55,10 @@ protocol EventStoring {
 
     /// Commits, then closes the open log into a batch to deliver, and whatever is still staged in memory into another.
     ///
-    /// Returns the batch closed from the log, or the one closed from memory where the log held nothing, and nil when
-    /// there is nothing to send.
+    /// Returns the batch closed from the log, or the first closed from memory where the log held nothing, and nil when
+    /// there is nothing to send. A log a commit filled was closed into a batch of its own as it filled, and memory is
+    /// closed into as many batches as keep each within `EventLogFormat.maxBatchSize`; `pendingBatches()` lists every
+    /// one.
     func closeBatch() -> EventBatch?
 
     /// Batches awaiting delivery, oldest first, including any recovered from a previous run of the application.
@@ -334,7 +336,7 @@ final class EventStore: EventStoring {
 
     func closeBatch() -> EventBatch? {
         guard let disk
-        else { return closeInMemoryBatch() }
+        else { return closeInMemoryBatches().first }
 
         ioLock.lock()
         defer { ioLock.unlock() }
@@ -349,8 +351,8 @@ final class EventStore: EventStoring {
         // Closed after the log, so the older events are delivered first. Both can hold events at once: a write that
         // fails after earlier ones landed gives up on persistence with those earlier events in the log and the failed
         // ones back in memory, and closing only the log would leave the rest to a delivery that reports success
-        // without them.
-        let fromMemory = stillBuffered > 0 ? closeInMemoryBatch() : nil
+        // without them. A full log that could not be closed leaves events staged too.
+        let fromMemory = stillBuffered > 0 ? closeInMemoryBatches().first : nil
         return fromLog ?? fromMemory
     }
 
@@ -548,6 +550,9 @@ extension EventStore {
 
 extension EventStore {
     /// Requires `ioLock`.
+    ///
+    /// Closes the open log into a batch wherever the next frame would take it past `EventLogFormat.maxBatchSize`, so a
+    /// commit can land in several batches.
     private func writeStagedBytes() {
         ioLock.assertOwned()
         let taken = bufferLock.withLock { () -> (bytes: Data, events: Int)? in
@@ -565,23 +570,56 @@ extension EventStore {
         guard let taken
         else { return }
 
-        if append(taken.bytes) {
-            bufferLock.withLock {
-                writingEvents -= taken.events
-                writingBytes -= taken.bytes.count
-                committedEvents += taken.events
-                committedBytes += taken.bytes.count
+        let base = taken.bytes.startIndex
+        var written = 0
+        var writtenEvents = 0
+        while written < taken.bytes.count {
+            let room = EventLogFormat.maxBatchSize - EventLogFormat.fileHeaderSize - bufferLock.withLock { committedBytes }
+            if EventLogFormat.frameSize(in: taken.bytes, at: written) > room {
+                guard closeFullLog()
+                else { break }
+                continue
             }
-        } else {
+            let (end, landing) = EventLogFormat.framesFitting(in: taken.bytes, from: written, room: room)
+            let isWhole = written == 0 && end == taken.bytes.count
+            guard append(isWhole ? taken.bytes : taken.bytes.subdata(in: (base + written)..<(base + end)))
+            else { break }
+            // Counted where they landed in the same critical section that stops counting them on the way, so a
+            // capacity check never sees them in both places or in neither.
+            bufferLock.withLock {
+                writingEvents -= landing
+                writingBytes -= end - written
+                committedEvents += landing
+                committedBytes += end - written
+            }
+            written = end
+            writtenEvents += landing
+        }
+
+        if written < taken.bytes.count {
             // Put back, to be delivered from memory rather than lost. Ahead of anything staged while the write was in
             // flight, so the events keep the order they were recorded in.
             bufferLock.withLock {
-                writingEvents -= taken.events
-                writingBytes -= taken.bytes.count
-                bufferData = taken.bytes + bufferData
-                bufferedEventCount += taken.events
+                writingEvents -= taken.events - writtenEvents
+                writingBytes -= taken.bytes.count - written
+                bufferData = taken.bytes.subdata(in: (base + written)..<taken.bytes.endIndex) + bufferData
+                bufferedEventCount += taken.events - writtenEvents
             }
         }
+    }
+
+    /// Closes an open log that has no room for the next frame, so that the frame starts a batch of its own. Requires
+    /// `ioLock`.
+    ///
+    /// Returns whether the next append starts a new log; false if this one could not be closed, which leaves the frames
+    /// to be held in memory rather than grow it past the size of a batch.
+    private func closeFullLog() -> Bool {
+        ioLock.assertOwned()
+        guard let disk
+        else { return false }
+        let committed = bufferLock.withLock { EventTally(events: committedEvents, bytes: committedBytes) }
+        _ = closeOpenLog(of: disk, holding: committed)
+        return bufferLock.withLock { committedBytes == 0 }
     }
 
     /// Requires `ioLock`.
@@ -623,11 +661,12 @@ private extension EventStore {
         bufferLock.withLock { persistEvents = false }
     }
 
-    /// Closes whatever is staged into a batch that never reaches a file.
+    /// Closes whatever is staged into batches that never reach a file, as many as it takes to keep each within
+    /// `EventLogFormat.maxBatchSize`. Returns them oldest first.
     ///
     /// Called under `ioLock` where there is a disk, so that it and the log are closed as one step, and on its own
     /// where there is not.
-    func closeInMemoryBatch() -> EventBatch? {
+    func closeInMemoryBatches() -> [EventBatch] {
         let (frames, events) = bufferLock.withLock { () -> (frames: Data, events: Int) in
             let staged = (frames: bufferData, events: bufferedEventCount)
             bufferData = Data()
@@ -640,32 +679,43 @@ private extension EventStore {
         // Assembled outside `bufferLock`, because it copies every staged frame; `writingEvents` is what keeps them
         // counted meanwhile. Through the same reader a batch on disk goes through, so a held batch and a written one
         // produce byte-identical request bodies.
-        var log = EventLogFormat.fileHeader
-        log.append(frames)
-        guard let body = EventLogFormat.assembleBody(from: log)
-        else {
-            bufferLock.withLock {
-                writingEvents -= events
-                writingBytes -= frames.count
+        let base = frames.startIndex
+        var closed: [EventBatch] = []
+        var held = 0
+        var heldEvents = 0
+        while held < frames.count {
+            let (end, batchEvents) = EventLogFormat.framesFitting(in: frames, from: held,
+                                                                  room: EventLogFormat.maxBatchSize - EventLogFormat.fileHeaderSize)
+            var log = EventLogFormat.fileHeader
+            log.append(frames.subdata(in: (base + held)..<(base + end)))
+            guard let body = EventLogFormat.assembleBody(from: log)
+            else { break }
+
+            let payloadId = UUID().uuidString
+            heldLock.withLock {
+                inMemoryBatches.append(HeldBatch(payloadId: payloadId, body: body, eventCount: batchEvents))
+                // Counted where they landed in the same critical section that stops counting them on the way, so a
+                // capacity check never sees them in both places or in neither. A held batch is counted as its body,
+                // which is what it keeps.
+                bufferLock.withLock {
+                    writingEvents -= batchEvents
+                    writingBytes -= end - held
+                    closedEvents += batchEvents
+                    closedBytes += body.count
+                }
             }
-            return nil
+            closed.append(EventBatch(payloadId: payloadId, eventCount: batchEvents))
+            held = end
+            heldEvents += batchEvents
         }
 
-        let payloadId = UUID().uuidString
-        heldLock.withLock {
-            inMemoryBatches.append(HeldBatch(payloadId: payloadId, body: body, eventCount: events))
-            // Counted where they landed in the same critical section that stops counting them on the way, so a
-            // capacity check never sees them in both places or in neither. A held batch is counted as its body, which
-            // is what it keeps.
+        if held < frames.count {
             bufferLock.withLock {
-                writingEvents -= events
-                writingBytes -= frames.count
-                closedEvents += events
-                closedBytes += body.count
+                writingEvents -= events - heldEvents
+                writingBytes -= frames.count - held
             }
         }
-
-        return EventBatch(payloadId: payloadId, eventCount: events)
+        return closed
     }
 }
 
