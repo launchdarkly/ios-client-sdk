@@ -686,8 +686,9 @@ private extension EventStore {
         while held < frames.count {
             let (end, batchEvents) = EventLogFormat.framesFitting(in: frames, from: held,
                                                                   room: EventLogFormat.maxBatchSize - EventLogFormat.fileHeaderSize)
-            var log = EventLogFormat.fileHeader
-            log.append(frames.subdata(in: (base + held)..<(base + end)))
+            var log = Data(capacity: EventLogFormat.fileHeaderSize + end - held)
+            log.append(EventLogFormat.fileHeader)
+            log.append(frames[(base + held)..<(base + end)])
             guard let body = EventLogFormat.assembleBody(from: log)
             else { break }
 

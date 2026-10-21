@@ -697,6 +697,18 @@ final class EventStoreSpec: QuickSpec {
                 expect(body) == Data("[{\"kind\":\"custom\",\"key\":\"first\"},{\"kind\":\"custom\",\"key\":\"second\"}]".utf8)
             }
 
+            it("assembles one event, and events held in memory, into the same body") {
+                _ = store.stage(EventStoreSpec.payload("only"))
+                expect(try store.body(of: store.closeBatch()!)) == Data("[{\"kind\":\"custom\",\"key\":\"only\"}]".utf8)
+
+                let inMemory = EventStore.temporary(persistEvents: false)
+                defer { inMemory.deleteEverything() }
+                _ = inMemory.stage(EventStoreSpec.payload("first"))
+                _ = inMemory.stage(EventStoreSpec.payload("second"))
+                expect(try inMemory.body(of: inMemory.closeBatch()!))
+                    == Data("[{\"kind\":\"custom\",\"key\":\"first\"},{\"kind\":\"custom\",\"key\":\"second\"}]".utf8)
+            }
+
             it("frames an event as the Android SDK does") {
                 // The checksum is zlib's CRC-32, so these bytes are what the Android SDK writes for the same event too.
                 let frame = EventLogFormat.frame(for: Data("{\"kind\":\"custom\",\"key\":\"k\"}".utf8))

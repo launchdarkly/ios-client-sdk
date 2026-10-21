@@ -62,6 +62,14 @@ enum EventLogFormat {
     /// log this version reads.
     @discardableResult
     static func forEachFrame(in file: Data, _ visit: (UInt16, Data) -> Void) -> FrameWalk? {
+        forEachFramePayload(in: file) { type, payload in
+            visit(type, file.subdata(in: (file.startIndex + payload.lowerBound)..<(file.startIndex + payload.upperBound)))
+        }
+    }
+
+    /// `forEachFrame(in:_:)` handing over where each payload is, as offsets into the file, rather than a copy of it.
+    @discardableResult
+    static func forEachFramePayload(in file: Data, _ visit: (UInt16, Range<Int>) -> Void) -> FrameWalk? {
         guard file.count >= fileHeaderSize,
               file.prefix(magic.count) == magic,
               readUInt16(file, at: magic.count) == version
@@ -83,7 +91,7 @@ enum EventLogFormat {
                 guard checksum.checksum == readUInt32(bytes, at: cursor + 6)
                 else { break }
 
-                visit(type, Data(payload))
+                visit(type, start..<(start + length))
                 cursor = start + length
             }
             return FrameWalk(reachedEnd: cursor == bytes.count)
@@ -97,7 +105,7 @@ enum EventLogFormat {
     /// How many events a log holds, or nil where it is not one this version reads.
     static func eventCount(in file: Data) -> Int? {
         var events = 0
-        guard forEachFrame(in: file, { type, _ in
+        guard forEachFramePayload(in: file, { type, _ in
             if type == eventFrame {
                 events += 1
             }
@@ -109,7 +117,7 @@ enum EventLogFormat {
     /// Whether a log holds frames that cannot be read back: torn, or failing their checksum. False for a log this
     /// version does not read at all.
     static func isDamaged(_ file: Data) -> Bool {
-        forEachFrame(in: file) { _, _ in }?.reachedEnd == false
+        forEachFramePayload(in: file) { _, _ in }?.reachedEnd == false
     }
 
     /// Assembles the JSON array LaunchDarkly expects out of the frames, without parsing the events themselves: they were
@@ -117,24 +125,24 @@ enum EventLogFormat {
     ///
     /// Only the first `maxEvents` events go into it; any after them are left out.
     static func assembleBody(from file: Data, maxEvents: Int = .max) -> Data? {
-        var body = Data("[".utf8)
-        var isFirst = true
-        var events = 0
-        let readable = forEachFrame(in: file) { type, payload in
-            guard type == eventFrame, events < maxEvents
+        // Found first so the body is allocated once at its exact size rather than grown as it is appended to.
+        var payloads: [Range<Int>] = []
+        let readable = forEachFramePayload(in: file) { type, payload in
+            guard type == eventFrame, payloads.count < maxEvents
             else { return }
-            events += 1
-            if !isFirst {
-                body.append(UInt8(ascii: ","))
-            }
-            body.append(payload)
-            isFirst = false
+            payloads.append(payload)
         }
 
-        guard readable != nil, !isFirst
+        guard readable != nil, !payloads.isEmpty
         else { return nil }
 
-        body.append(UInt8(ascii: "]"))
+        // The "[", and then each payload with the "," or "]" after it.
+        var body = Data(capacity: payloads.reduce(1) { $0 + $1.count + 1 })
+        body.append(UInt8(ascii: "["))
+        for (index, payload) in payloads.enumerated() {
+            body.append(file[(file.startIndex + payload.lowerBound)..<(file.startIndex + payload.upperBound)])
+            body.append(UInt8(ascii: index == payloads.count - 1 ? "]" : ","))
+        }
         return body
     }
 
