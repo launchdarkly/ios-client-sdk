@@ -2040,6 +2040,43 @@ extension DirectEventProcessorSpec {
                 expect(store.pendingEventCount) == 0
             }
 
+            it("tells the next flush about a stored batch a delivery nobody waited on dropped") {
+                let store = EventStore.temporary()
+                testContext = TestContext(store: store)
+                testContext.eventProcessor.isOnline = true
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                }
+
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                let damaged = store.closeBatch()!
+                let damagedUrl = store.directory!.appendingPathComponent("ready-\(damaged.payloadId)-\(damaged.eventCount)")
+                try Data("not an event log".utf8).write(to: damagedUrl)
+
+                testContext.eventProcessor.flush(completion: nil)
+                expect(FileManager.default.fileExists(atPath: damagedUrl.path)).toEventually(beFalse(), timeout: Constants.deliveryTimeout)
+
+                var delivered: Bool?
+                testContext.recordEvents(1)
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+
+                testContext.recordEvents(1)
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+            }
+
             it("delivers what memory was left holding beside what the disk took, and reports true") {
                 var writes = 0
                 let store = EventStore.temporary(writeLog: { file, bytes in

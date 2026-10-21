@@ -298,6 +298,14 @@ class DirectEventProcessor: EventProcessor {
         }
     }
 
+    /// Records a batch lost for good. The pass that lost it tells its caller, but a delivery nobody waits on -- the
+    /// periodic one, a `flush()`, the one going online starts -- has no one to tell, so the loss is also counted for the
+    /// next `flushReportingOutcome` to hear about. A caller waiting on this pass can then hear about it from the next
+    /// one too.
+    private func reportBatchLost(_ batch: EventBatch) {
+        stateLock.withLock { lostEvents += UInt64(batch.eventCount) }
+    }
+
     /// Records the loss of an event the SDK accepted and then could not keep, which no later attempt recovers.
     private func reportLost() {
         os_log("%s dropping an event the store would not take", log: service.config.logger, type: .error, typeName(and: #function))
@@ -707,6 +715,7 @@ extension DirectEventProcessor {
             // the caller hears that this pass lost events.
             os_log("%s dropping %d stored event(s) this version cannot read", log: service.config.logger, type: .error, typeName(and: #function), batch.eventCount)
             store.remove(batch)
+            reportBatchLost(batch)
             deliver(remaining, lostAnything: true, completion)
             return
         } catch {
@@ -733,6 +742,7 @@ extension DirectEventProcessor {
             case .refused:
                 // The rest are still attempted, so that batches LaunchDarkly will never take do not sit on the device
                 // for the rest of the session, taking up the room the capacity limit leaves for new events.
+                self.reportBatchLost(batch)
                 self.deliver(remaining, lostAnything: true, completion)
             case .retryable:
                 completion?(false)
