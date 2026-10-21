@@ -17,7 +17,8 @@ protocol EventStoring {
     ///
     /// A batch being sent is left out so that a flush makes room as soon as it sends, as it did when events were only
     /// held in memory; otherwise an event recorded while the request is out is refused for a batch LaunchDarkly may
-    /// already have. A send that fails puts the batch back, so a full store can briefly hold capacity plus that batch.
+    /// already have. A send that fails puts the batch back, so a full store can briefly hold capacity plus that batch:
+    /// one at a time, since deliveries run one after another, and no more than `EventLogFormat.maxBatchSize`.
     var pendingEventCount: Int { get }
 
     /// Whether a full event of any size could still be staged within the byte capacity.
@@ -154,8 +155,9 @@ final class EventStore: EventStoring {
     /// critical section that changes one of those, so that it cannot drift from them; a total worked out from them and
     /// written afterwards would overwrite a close or a removal in between.
     private var closedEvents = 0
-    /// Closed batches whose request is out, by payload ID, and what is in them. Every one is also in `closedEvents`,
-    /// and leaves both in the same critical section.
+    /// Closed batches whose request is out, by payload ID, and what is in them as `closedEvents` counts it. Every one is
+    /// also counted there: one is only added while it is counted, and leaves in the same critical section that stops
+    /// counting it, so `sendingEvents` can never exceed `closedEvents`.
     private var sendingBatches: [String: EventTally] = [:]
     private var sendingEvents = 0
 
@@ -257,15 +259,14 @@ final class EventStore: EventStoring {
 
     /// Every event counted against capacity. Only to be used while holding `bufferLock`.
     private var countedEvents: Int {
-        // Clamped because a batch another process delivered can be marked as sending after a listing stopped counting it.
-        reservedEvents + bufferedEventCount + writingEvents + committedEvents + max(0, closedEvents - sendingEvents)
+        reservedEvents + bufferedEventCount + writingEvents + committedEvents + (closedEvents - sendingEvents)
     }
 
     /// Every byte counted against the byte capacity. Only to be used while holding `bufferLock`.
     ///
     /// Events reserved while being encoded have no bytes yet; they are counted when they are staged.
     private var countedBytes: Int {
-        bufferData.count + writingBytes + committedBytes + max(0, closedBytes - sendingBytes)
+        bufferData.count + writingBytes + committedBytes + (closedBytes - sendingBytes)
     }
 
     var hasRoomForEventBytes: Bool {
@@ -512,29 +513,40 @@ final class EventStore: EventStoring {
 // MARK: Sending
 
 extension EventStore {
+    /// Stops counting a batch against capacity while its request is out. Ended by `remove(_:)` or `stoppedSending(_:)`.
+    ///
+    /// Does nothing for a batch this store no longer counts - one `remove(_:)` forgot, or a listing dropped because
+    /// another process delivered it - since leaving it out would take its events from the batches still counted.
     func startedSending(_ batch: EventBatch) {
-        let bytes = bytes(of: batch.payloadId)
-        bufferLock.withLock {
-            guard sendingBatches[batch.payloadId] == nil
+        guard let disk
+        else {
+            startedSending(batch.payloadId, disk: nil)
+            return
+        }
+        // Held across the check and the change, so that the batch cannot stop being counted in between.
+        ioLock.withLock { startedSending(batch.payloadId, disk: disk) }
+    }
+
+    /// Requires `ioLock` where there is a disk.
+    private func startedSending(_ payloadId: String, disk: EventDirectory?) {
+        heldLock.withLock {
+            let counted = inMemoryBatches.first { $0.payloadId == payloadId }
+                .map { EventTally(events: $0.eventCount, bytes: $0.body.count) }
+                ?? disk?.counted(payloadId)
+            guard let counted
             else { return }
-            sendingBatches[batch.payloadId] = EventTally(events: batch.eventCount, bytes: bytes)
-            sendingEvents += batch.eventCount
-            sendingBytes += bytes
+            bufferLock.withLock {
+                guard sendingBatches[payloadId] == nil
+                else { return }
+                sendingBatches[payloadId] = counted
+                sendingEvents += counted.events
+                sendingBytes += counted.bytes
+            }
         }
     }
 
     func stoppedSending(_ batch: EventBatch) {
         bufferLock.withLock { forgetSending(batch.payloadId) }
-    }
-
-    /// The bytes a closed batch is counted as, held or on the disk.
-    private func bytes(of payloadId: String) -> Int {
-        if let held = heldLock.withLock({ inMemoryBatches.first { $0.payloadId == payloadId } }) {
-            return held.body.count
-        }
-        guard let disk
-        else { return 0 }
-        return ioLock.withLock { disk.bytes(of: payloadId) }
     }
 
     /// Requires `bufferLock`.

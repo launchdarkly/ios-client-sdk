@@ -956,6 +956,44 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingEventCount) == 1
             }
 
+            // As when another process delivered it and a listing dropped it before this one got to it: leaving it out
+            // would take its events from the batches still counted, and admit that many more.
+            for persistEvents in [true, false] {
+                it("does not leave a batch already removed out of the count when its send starts, persisting: \(persistEvents)") {
+                    store = EventStore.temporary(capacity: 2, persistEvents: persistEvents)
+                    expect(store.stage(EventStoreSpec.payload("first"))) == true
+                    let removed = store.closeBatch()!
+                    expect(store.stage(EventStoreSpec.payload("second"))) == true
+                    _ = store.closeBatch()
+                    store.remove(removed)
+
+                    store.startedSending(removed)
+                    expect(store.pendingEventCount) == 1
+                    expect(store.stage(EventStoreSpec.payload("third"))) == true
+                    expect(store.stage(EventStoreSpec.payload("fourth"))) == false
+
+                    store.stoppedSending(removed)
+                    expect(store.pendingEventCount) == 2
+                }
+            }
+
+            it("does not leave a batch another process delivered out of the count when its send starts") {
+                store = EventStore.temporary(capacity: 2)
+                expect(store.stage(EventStoreSpec.payload("first"))) == true
+                let delivered = store.closeBatch()!
+                expect(store.stage(EventStoreSpec.payload("second"))) == true
+                _ = store.closeBatch()
+                let other = EventStore.sharing(store.directory!)
+                _ = other.pendingBatches()
+                other.remove(delivered)
+                _ = store.pendingBatches()
+
+                store.startedSending(delivered)
+                expect(store.pendingEventCount) == 1
+                expect(store.stage(EventStoreSpec.payload("third"))) == true
+                expect(store.stage(EventStoreSpec.payload("fourth"))) == false
+            }
+
             // The bound `LDConfig.eventCapacity` documents: the reporter reads the disk in the background after starting,
             // so what an earlier run left only counts from that listing on.
             it("counts what an earlier run left undelivered from the first listing on") {

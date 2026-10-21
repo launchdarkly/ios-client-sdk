@@ -258,10 +258,11 @@ final class EventDirectory {
         return stored.values.reduce(0) { $0 + $1.bytes }
     }
 
-    /// The bytes in a batch, as far as this process has counted them. Requires `ioLock`.
-    func bytes(of payloadId: String) -> Int {
+    /// What this process counts for a batch, or nil if it counts nothing for it: one removed, or dropped by a listing it
+    /// was no longer in. Requires `ioLock`.
+    func counted(_ payloadId: String) -> EventTally? {
         ioLock.assertOwned()
-        return stored[payloadId]?.bytes ?? 0
+        return stored[payloadId]?.tally
     }
 
     /// Whether a batch has already been delivered and only its file is left, trying the delete that failed once more
