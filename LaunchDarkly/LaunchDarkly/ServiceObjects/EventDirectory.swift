@@ -277,7 +277,8 @@ final class EventDirectory {
         return true
     }
 
-    /// The `[...]` request body for a batch, or nil if it is gone or holds no events.
+    /// The `[...]` payload for a batch, assembled in the bytes the file was read into; or nil if it is gone or holds no
+    /// events.
     ///
     /// Requires `ioLock`.
     ///
@@ -285,20 +286,24 @@ final class EventDirectory {
     ///   could not be read this time, which a later attempt may manage.
     func body(of batch: EventBatch) throws -> Data? {
         ioLock.assertOwned()
+        // Taken out of the read's result rather than bound inside the switch, so that nothing else refers to it and it
+        // is assembled where it is rather than copied first.
+        var file: Data
         switch read(url(of: batch.payloadId, holding: batch.eventCount)) {
         case .missing: return nil
         case .failed(let error): throw error
-        case .bytes(let file):
-            // No more than the batch was closed holding. A write that failed and could not be truncated leaves whole
-            // frames after them, whose events are delivered from memory instead, and would otherwise be sent twice.
-            if let body = EventLogFormat.assembleBody(from: file, maxEvents: batch.eventCount > 0 ? batch.eventCount : .max) {
-                return body
-            }
-            // A log this version reads that holds no events has nothing to lose, unless its first frame is damaged.
-            guard EventLogFormat.eventCount(in: file) == 0, !EventLogFormat.isDamaged(file)
-            else { throw UnreadableBatch(payloadId: batch.payloadId) }
-            return nil
+        case .bytes(let bytes): file = bytes
         }
+        // No more than the batch was closed holding. A write that failed and could not be truncated leaves whole frames
+        // after them, whose events are delivered from memory instead, and would otherwise be sent twice.
+        if EventLogFormat.assembleBody(inPlace: &file, maxEvents: batch.eventCount > 0 ? batch.eventCount : .max) {
+            return file
+        }
+        // A log this version reads that holds no events has nothing to lose, unless its first frame is damaged. Where
+        // there is no payload the log is as it was read.
+        guard EventLogFormat.eventCount(in: file) == 0, !EventLogFormat.isDamaged(file)
+        else { throw UnreadableBatch(payloadId: batch.payloadId) }
+        return nil
     }
 
     /// Forgets a batch. Requires `ioLock`.

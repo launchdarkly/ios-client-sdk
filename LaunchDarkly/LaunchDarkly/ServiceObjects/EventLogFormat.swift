@@ -70,32 +70,37 @@ enum EventLogFormat {
     /// `forEachFrame(in:_:)` handing over where each payload is, as offsets into the file, rather than a copy of it.
     @discardableResult
     static func forEachFramePayload(in file: Data, _ visit: (UInt16, Range<Int>) -> Void) -> FrameWalk? {
-        guard file.count >= fileHeaderSize,
-              file.prefix(magic.count) == magic,
-              readUInt16(file, at: magic.count) == version
+        guard isReadable(file)
         else { return nil }
+        return file.withUnsafeBytes { walkFrames($0, visit) }
+    }
 
-        return file.withUnsafeBytes { bytes in
-            var cursor = fileHeaderSize
-            while cursor + frameHeaderSize <= bytes.count {
-                let type = UInt16(bytes[cursor]) << 8 | UInt16(bytes[cursor + 1])
-                let length = Int(readUInt32(bytes, at: cursor + 2))
-                let start = cursor + frameHeaderSize
-                guard length > 0, length <= maxFrameSize, start + length <= bytes.count
-                else { break }
+    private static func isReadable(_ file: Data) -> Bool {
+        file.count >= fileHeaderSize && file.prefix(magic.count) == magic && readUInt16(file, at: magic.count) == version
+    }
 
-                let payload = UnsafeRawBufferPointer(rebasing: bytes[start..<(start + length)])
-                var checksum = Crc32()
-                checksum.advance(withBytes: UnsafeRawBufferPointer(rebasing: bytes[cursor..<(cursor + 6)]))
-                checksum.advance(withBytes: payload)
-                guard checksum.checksum == readUInt32(bytes, at: cursor + 6)
-                else { break }
+    /// Hands over each frame once it has been checked, and before the next one is read, so that `visit` may write
+    /// anywhere before where the frame ends.
+    private static func walkFrames(_ bytes: UnsafeRawBufferPointer, _ visit: (UInt16, Range<Int>) -> Void) -> FrameWalk {
+        var cursor = fileHeaderSize
+        while cursor + frameHeaderSize <= bytes.count {
+            let type = UInt16(bytes[cursor]) << 8 | UInt16(bytes[cursor + 1])
+            let length = Int(readUInt32(bytes, at: cursor + 2))
+            let start = cursor + frameHeaderSize
+            guard length > 0, length <= maxFrameSize, start + length <= bytes.count
+            else { break }
 
-                visit(type, start..<(start + length))
-                cursor = start + length
-            }
-            return FrameWalk(reachedEnd: cursor == bytes.count)
+            let payload = UnsafeRawBufferPointer(rebasing: bytes[start..<(start + length)])
+            var checksum = Crc32()
+            checksum.advance(withBytes: UnsafeRawBufferPointer(rebasing: bytes[cursor..<(cursor + 6)]))
+            checksum.advance(withBytes: payload)
+            guard checksum.checksum == readUInt32(bytes, at: cursor + 6)
+            else { break }
+
+            visit(type, start..<(start + length))
+            cursor = start + length
         }
+        return FrameWalk(reachedEnd: cursor == bytes.count)
     }
 
     private static func readUInt32(_ bytes: UnsafeRawBufferPointer, at offset: Int) -> UInt32 {
@@ -120,30 +125,49 @@ enum EventLogFormat {
         forEachFramePayload(in: file) { _, _ in }?.reachedEnd == false
     }
 
-    /// Assembles the JSON array LaunchDarkly expects out of the frames, without parsing the events themselves: they were
-    /// serialized on the way in and are shipped exactly as they were recorded.
+    /// Turns a log into the JSON array LaunchDarkly expects, in the log's own bytes, without parsing the events
+    /// themselves: they were serialized on the way in and are shipped exactly as they were recorded.
+    ///
+    /// There is always room: the file header becomes the "[", and each frame header the "," or "]" after its payload.
+    /// Each payload moves towards the start only once its frame has been checked, and never past where that frame
+    /// began, so no frame still to be checked is written over. A log nothing else refers to is changed where it is,
+    /// rather than copied first.
     ///
     /// Only the first `maxEvents` events go into it; any after them are left out.
+    ///
+    /// - Returns: whether the log held events. Where it did not, or is not one this version reads, it is left as it was.
+    static func assembleBody(inPlace file: inout Data, maxEvents: Int = .max) -> Bool {
+        guard isReadable(file)
+        else { return false }
+
+        let length = file.withUnsafeMutableBytes { bytes -> Int in
+            var cursor = 1
+            var events = 0
+            _ = walkFrames(UnsafeRawBufferPointer(bytes)) { type, payload in
+                guard type == eventFrame, events < maxEvents
+                else { return }
+                memmove(bytes.baseAddress! + cursor, bytes.baseAddress! + payload.lowerBound, payload.count)
+                cursor += payload.count
+                bytes[cursor] = UInt8(ascii: ",")
+                cursor += 1
+                events += 1
+            }
+            guard events > 0
+            else { return 0 }
+            bytes[0] = UInt8(ascii: "[")
+            bytes[cursor - 1] = UInt8(ascii: "]")
+            return cursor
+        }
+        guard length > 0
+        else { return false }
+        file.count = length
+        return true
+    }
+
+    /// `assembleBody(inPlace:maxEvents:)` into bytes of its own, leaving the log as it was.
     static func assembleBody(from file: Data, maxEvents: Int = .max) -> Data? {
-        // Found first so the body is allocated once at its exact size rather than grown as it is appended to.
-        var payloads: [Range<Int>] = []
-        let readable = forEachFramePayload(in: file) { type, payload in
-            guard type == eventFrame, payloads.count < maxEvents
-            else { return }
-            payloads.append(payload)
-        }
-
-        guard readable != nil, !payloads.isEmpty
-        else { return nil }
-
-        // The "[", and then each payload with the "," or "]" after it.
-        var body = Data(capacity: payloads.reduce(1) { $0 + $1.count + 1 })
-        body.append(UInt8(ascii: "["))
-        for (index, payload) in payloads.enumerated() {
-            body.append(file[(file.startIndex + payload.lowerBound)..<(file.startIndex + payload.upperBound)])
-            body.append(UInt8(ascii: index == payloads.count - 1 ? "]" : ","))
-        }
-        return body
+        var body = file
+        return assembleBody(inPlace: &body, maxEvents: maxEvents) ? body : nil
     }
 
     static func bigEndian(_ value: UInt16) -> Data {

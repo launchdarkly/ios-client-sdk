@@ -1216,6 +1216,21 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingEventCount) == 5
             }
 
+            it("assembles a stored batch in the bytes it was read into, rather than in a copy") {
+                var readInto: UnsafeRawPointer?
+                store = EventStore.temporary(readFile: { url in
+                    let file = try Data(contentsOf: url)
+                    readInto = file.withUnsafeBytes { $0.baseAddress }
+                    return file
+                })
+                stage(1...3)
+                let batch = store.closeBatch()!
+
+                let body = try? store.body(of: batch)
+                expect(body?.withUnsafeBytes { $0.baseAddress }) == readInto
+                expect(EventStoreSpec.keys(ofBody: body)) == ["event-1", "event-2", "event-3"]
+            }
+
             it("takes an event that fills a batch on its own, and refuses any larger") {
                 store = EventStore.temporary()
                 let largest = EventLogFormat.maxFrameSize + EventLogFormat.frameHeaderSize

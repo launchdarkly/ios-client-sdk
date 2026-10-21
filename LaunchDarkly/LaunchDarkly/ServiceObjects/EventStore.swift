@@ -698,10 +698,10 @@ private extension EventStore {
         while held < frames.count {
             let (end, batchEvents) = EventLogFormat.framesFitting(in: frames, from: held,
                                                                   room: EventLogFormat.maxBatchSize - EventLogFormat.fileHeaderSize)
-            var log = Data(capacity: EventLogFormat.fileHeaderSize + end - held)
-            log.append(EventLogFormat.fileHeader)
-            log.append(frames[(base + held)..<(base + end)])
-            guard let body = EventLogFormat.assembleBody(from: log)
+            var body = Data(capacity: EventLogFormat.fileHeaderSize + end - held)
+            body.append(EventLogFormat.fileHeader)
+            body.append(frames[(base + held)..<(base + end)])
+            guard EventLogFormat.assembleBody(inPlace: &body)
             else { break }
 
             let payloadId = UUID().uuidString
