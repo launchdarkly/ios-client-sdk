@@ -423,11 +423,15 @@ final class EventDirectory {
             // Deleting it would lose events that may be intact, and left under this name it would wait for the next
             // run's recovery. Closed off uncounted instead, it is read and counted by whichever listing first manages
             // to.
-            os_log("%s could not read events from a previous run, will try again later: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
             // Named without a count, which is what a batch whose events have never been counted is: the listing that
             // first manages to read it is what counts it.
             let uncounted = disk.directory.appendingPathComponent("\(EventDirectory.batchPrefix)\(UUID().uuidString)")
-            try? FileManager.default.moveItem(at: leftOpen, to: uncounted)
+            if (try? FileManager.default.moveItem(at: leftOpen, to: uncounted)) != nil {
+                os_log("%s could not read events from a previous run, will try again later: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
+            } else {
+                // Left where it is, unlocked and appended to by no one, for the next launch to recover.
+                os_log("%s could not read events from a previous run, will try again at the next launch: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
+            }
             return EventTally()
         case .bytes(let log):
             guard let counted = EventLogFormat.eventCount(in: log)
@@ -449,7 +453,10 @@ final class EventDirectory {
         let payloadId = UUID().uuidString
         let file = newUrl(of: payloadId, holding: events)
         guard (try? FileManager.default.moveItem(at: leftOpen, to: file)) != nil
-        else { return EventTally() }
+        else {
+            os_log("%s could not prepare %d event(s) from a previous run, will try again at the next launch", log: logger, type: .info, typeName(and: #function), events)
+            return EventTally()
+        }
 
         let recovered = Stored(url: file, events: events, bytes: bytes)
         stored[payloadId] = recovered
