@@ -4,23 +4,28 @@ import Foundation
 ///
 /// A log opens with a magic and a format version, and holds a sequence of frames:
 ///
-///     +- 4 bytes -+- 2 bytes -+     +- 2 bytes -+-  4 bytes  -+- n bytes -+
-///     |   LDEV    |  version  | ... |   type    |  length (n) |  payload  |
-///     +-----------+-----------+     +-----------+-------------+-----------+
+///     +- 4 bytes -+- 2 bytes -+     +- 2 bytes -+- 4 bytes -+- 4 bytes -+- n bytes -+
+///     |   LDEV    |  version  | ... |   type    |  size (n) |   CRC-32  |  payload  |
+///     +-----------+-----------+     +-----------+-----------+-----------+-----------+
 ///
-/// The length prefix is what makes a log recoverable: a reader can tell a frame the writer finished from one it did not,
-/// without having to parse the event to find where it ends. The version is what makes an upgrade safe -- a log this
-/// version does not understand is discarded rather than misread -- and the frame type leaves room for a later version to
-/// write something new into a log this one still reads.
+/// The size prefix is what makes a log recoverable: a reader can tell a frame the writer finished from one it did not,
+/// without having to parse the event to find where it ends. The checksum, over the type, the size and the payload, is
+/// what tells a frame the writer finished from one the storage has since damaged; a reader treats either the same way.
+/// The version is what makes an upgrade safe -- a log this version does not understand is discarded rather than
+/// misread -- and the frame type leaves room for a later version to write something new into a log this one still
+/// reads.
 enum EventLogFormat {
     /// Bump this whenever the framing or the meaning of a frame changes.
-    static let version: UInt16 = 1
+    static let version: UInt16 = 2
+    /// The version before frames carried a checksum, which this one still reads.
+    static let versionWithoutChecksum: UInt16 = 1
     static let magic = Data("LDEV".utf8)
     static let fileHeaderSize = 6
-    static let frameHeaderSize = 6
+    static let frameHeaderSize = 10
+    static let frameHeaderSizeWithoutChecksum = 6
     /// The only frame type written today; a reader skips a frame whose type it does not know.
     static let eventFrame: UInt16 = 1
-    /// A ceiling on a single frame, so a corrupt length cannot make recovery allocate wildly.
+    /// A ceiling on a single frame, so a corrupt size cannot make recovery allocate wildly.
     static let maxFrameSize = 8 * 1024 * 1024
 
     static var fileHeader: Data {
@@ -31,34 +36,68 @@ enum EventLogFormat {
 
     static func frame(for encodedEvent: Data) -> Data {
         var frame = Data(capacity: frameHeaderSize + encodedEvent.count)
-        frame.append(bigEndian(eventFrame))
-        frame.append(bigEndian(UInt32(encodedEvent.count)))
+        withUnsafeBytes(of: eventFrame.bigEndian) { frame.append(contentsOf: $0) }
+        withUnsafeBytes(of: UInt32(encodedEvent.count).bigEndian) { frame.append(contentsOf: $0) }
+        var checksum = Crc32()
+        frame.withUnsafeBytes { checksum.advance(withBytes: $0) }
+        encodedEvent.withUnsafeBytes { checksum.advance(withBytes: $0) }
+        withUnsafeBytes(of: checksum.checksum.bigEndian) { frame.append(contentsOf: $0) }
         frame.append(encodedEvent)
         return frame
     }
 
-    /// Walks the frames of a log, stopping at the first one that is not wholly there.
+    /// What walking a log's frames found.
+    struct FrameWalk {
+        /// False when the walk stopped at a frame that is torn or fails its checksum, rather than at the end of the
+        /// file.
+        let reachedEnd: Bool
+    }
+
+    /// Walks the frames of a log, stopping at the first one that is not wholly there or fails its checksum.
     ///
     /// A process that died partway through a write leaves a torn frame at the end. Everything before it is intact, so
-    /// recovery keeps that and drops only the tail. Returns false when the file is not a log this version reads.
-    static func forEachFrame(in file: Data, _ visit: (UInt16, Data) -> Void) -> Bool {
-        guard file.count >= fileHeaderSize,
-              file.prefix(magic.count) == magic,
-              readUInt16(file, at: magic.count) == version
-        else { return false }
-
-        var cursor = fileHeaderSize
-        while cursor + frameHeaderSize <= file.count {
-            let type = readUInt16(file, at: cursor)
-            let length = Int(readUInt32(file, at: cursor + 2))
-            let start = cursor + frameHeaderSize
-            guard length > 0, length <= maxFrameSize, start + length <= file.count
-            else { break }
-
-            visit(type, file.subdata(in: start..<(start + length)))
-            cursor = start + length
+    /// recovery keeps that and drops only the tail. A frame the storage damaged afterwards ends the walk the same way,
+    /// because its size can no longer be trusted to say where the next frame starts. Returns nil when the file is not a
+    /// log this version reads.
+    @discardableResult
+    static func forEachFrame(in file: Data, _ visit: (UInt16, Data) -> Void) -> FrameWalk? {
+        guard file.count >= fileHeaderSize, file.prefix(magic.count) == magic
+        else { return nil }
+        let isChecksummed: Bool
+        switch readUInt16(file, at: magic.count) {
+        case version: isChecksummed = true
+        case versionWithoutChecksum: isChecksummed = false
+        default: return nil
         }
-        return true
+        let headerSize = isChecksummed ? frameHeaderSize : frameHeaderSizeWithoutChecksum
+
+        return file.withUnsafeBytes { bytes in
+            var cursor = fileHeaderSize
+            while cursor + headerSize <= bytes.count {
+                let type = UInt16(bytes[cursor]) << 8 | UInt16(bytes[cursor + 1])
+                let length = Int(readUInt32(bytes, at: cursor + 2))
+                let start = cursor + headerSize
+                guard length > 0, length <= maxFrameSize, start + length <= bytes.count
+                else { break }
+
+                let payload = UnsafeRawBufferPointer(rebasing: bytes[start..<(start + length)])
+                if isChecksummed {
+                    var checksum = Crc32()
+                    checksum.advance(withBytes: UnsafeRawBufferPointer(rebasing: bytes[cursor..<(cursor + 6)]))
+                    checksum.advance(withBytes: payload)
+                    guard checksum.checksum == readUInt32(bytes, at: cursor + 6)
+                    else { break }
+                }
+
+                visit(type, Data(payload))
+                cursor = start + length
+            }
+            return FrameWalk(reachedEnd: cursor == bytes.count)
+        }
+    }
+
+    private static func readUInt32(_ bytes: UnsafeRawBufferPointer, at offset: Int) -> UInt32 {
+        UInt32(bytes[offset]) << 24 | UInt32(bytes[offset + 1]) << 16 | UInt32(bytes[offset + 2]) << 8 | UInt32(bytes[offset + 3])
     }
 
     /// How many events a log holds, or nil where it is not one this version reads.
@@ -68,9 +107,15 @@ enum EventLogFormat {
             if type == eventFrame {
                 events += 1
             }
-        })
+        }) != nil
         else { return nil }
         return events
+    }
+
+    /// Whether a log holds frames that cannot be read back: torn, or failing their checksum. False for a log this
+    /// version does not read at all.
+    static func isDamaged(_ file: Data) -> Bool {
+        forEachFrame(in: file) { _, _ in }?.reachedEnd == false
     }
 
     /// Assembles the JSON array LaunchDarkly expects out of the frames, without parsing the events themselves: they were
@@ -88,7 +133,7 @@ enum EventLogFormat {
             isFirst = false
         }
 
-        guard readable, !isFirst
+        guard readable != nil, !isFirst
         else { return nil }
 
         body.append(UInt8(ascii: "]"))

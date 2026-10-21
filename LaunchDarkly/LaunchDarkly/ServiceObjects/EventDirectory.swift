@@ -303,8 +303,8 @@ final class EventDirectory {
             if let body = EventLogFormat.assembleBody(from: file) {
                 return body
             }
-            // A log this version reads that holds no events has nothing to lose.
-            guard EventLogFormat.eventCount(in: file) == 0
+            // A log this version reads that holds no events has nothing to lose, unless its first frame is damaged.
+            guard EventLogFormat.eventCount(in: file) == 0, !EventLogFormat.isDamaged(file)
             else { throw UnreadableBatch(payloadId: batch.payloadId) }
             return nil
         }

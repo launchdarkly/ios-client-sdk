@@ -317,6 +317,17 @@ final class EventStoreSpec: QuickSpec {
         Data("{\"kind\":\"custom\",\"key\":\"\(key)\"}".utf8)
     }
 
+    /// Where each frame of a log written by this version starts.
+    private static func frameOffsets(in log: Data) -> [Int] {
+        var offsets: [Int] = []
+        var cursor = EventLogFormat.fileHeaderSize
+        while cursor + EventLogFormat.frameHeaderSize <= log.count {
+            offsets.append(cursor)
+            cursor += EventLogFormat.frameHeaderSize + Int(EventLogFormat.readUInt32(log, at: cursor + 2))
+        }
+        return offsets
+    }
+
     /// An event whose frame is exactly `frameBytes` long, padded out in a `data` field.
     private static func payload(framedIn frameBytes: Int, key: String) -> Data {
         let bare = "{\"kind\":\"custom\",\"key\":\"\(key)\",\"data\":\"\"}"
@@ -478,6 +489,83 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["event-0", "event-1"]
             }
 
+            context("where the storage changed a frame after it was written") {
+                var log: URL!
+                var second: Int!
+                beforeEach {
+                    store = EventStore.temporary()
+                    for index in 0..<3 {
+                        _ = store.stage(EventStoreSpec.payload("event-\(index)"))
+                    }
+                    store.commit()
+                    log = store.openLogUrl!
+                    second = EventStoreSpec.frameOffsets(in: try! Data(contentsOf: log))[1]
+                }
+
+                it("keeps every event before a payload with a flipped bit") {
+                    var damaged = try Data(contentsOf: log)
+                    damaged[second + EventLogFormat.frameHeaderSize + 3] ^= 0x04
+                    try damaged.write(to: log)
+
+                    expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["event-0"]
+                }
+
+                it("keeps every event before a zero-filled payload") {
+                    var damaged = try Data(contentsOf: log)
+                    let start = second + EventLogFormat.frameHeaderSize
+                    let size = Int(EventLogFormat.readUInt32(damaged, at: second + 2))
+                    damaged.replaceSubrange(start..<(start + size), with: Data(count: size))
+                    try damaged.write(to: log)
+
+                    expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["event-0"]
+                }
+
+                it("keeps every event before a size that still fits in the file") {
+                    // A size that is merely wrong rather than impossible passes every bound a torn tail is caught by,
+                    // and would have the reader start the next frame partway through this one's payload.
+                    var damaged = try Data(contentsOf: log)
+                    damaged[second + 5] -= 1
+                    try damaged.write(to: log)
+
+                    expect(EventStoreSpec.keys(of: EventStoreSpec.reader(sharing: store))) == ["event-0"]
+                }
+            }
+
+            it("loses a batch whose first frame is damaged, rather than taking it for one with nothing to send") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("damaged"))
+                let batch = store.closeBatch()!
+                let file = try EventStoreSpec.onlyBatchFile(in: store)
+                var damaged = try Data(contentsOf: file)
+                damaged[EventLogFormat.fileHeaderSize + EventLogFormat.frameHeaderSize] ^= 0x01
+                try damaged.write(to: file)
+
+                expect { try store.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
+            }
+
+            it("still reads a log written before frames carried a checksum") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("placeholder"))
+                _ = store.closeBatch()
+                let file = try EventStoreSpec.onlyBatchFile(in: store)
+
+                var log = EventLogFormat.magic
+                log.append(EventLogFormat.bigEndian(EventLogFormat.versionWithoutChecksum))
+                for key in ["first", "second"] {
+                    let payload = EventStoreSpec.payload(key)
+                    log.append(EventLogFormat.bigEndian(EventLogFormat.eventFrame))
+                    log.append(EventLogFormat.bigEndian(UInt32(payload.count)))
+                    log.append(payload)
+                }
+                try log.write(to: file)
+                try EventStoreSpec.asUncountedName(file)
+
+                let next = EventStoreSpec.reader(sharing: store)
+                let batches = next.pendingBatches()
+                expect(batches.map(\.eventCount)) == [2]
+                expect(EventStoreSpec.keys(ofBody: try next.body(of: batches[0]))) == ["first", "second"]
+            }
+
             it("is kept for a later listing when a batch named without a count cannot be read") {
                 store = EventStore.temporary()
                 _ = store.stage(EventStoreSpec.payload("kept"))
@@ -591,6 +679,12 @@ final class EventStoreSpec: QuickSpec {
 
                 let body = try store.body(of: batch!)
                 expect(body) == Data("[{\"kind\":\"custom\",\"key\":\"first\"},{\"kind\":\"custom\",\"key\":\"second\"}]".utf8)
+            }
+
+            it("frames an event as the Android SDK does") {
+                // The checksum is zlib's CRC-32, so these bytes are what the Android SDK writes for the same event too.
+                let frame = EventLogFormat.frame(for: Data("{\"kind\":\"custom\",\"key\":\"k\"}".utf8))
+                expect(frame.prefix(EventLogFormat.frameHeaderSize)) == Data([0x00, 0x01, 0x00, 0x00, 0x00, 0x1B, 0xCB, 0x2B, 0x5E, 0x6F])
             }
 
             it("has nothing to close when nothing was recorded") {
