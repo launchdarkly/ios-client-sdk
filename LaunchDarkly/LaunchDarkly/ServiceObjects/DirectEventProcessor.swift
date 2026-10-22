@@ -116,9 +116,9 @@ class DirectEventProcessor: EventProcessor {
     /// when it was committed, or that serialized too large to store. A delivery that finds nothing to send cannot tell
     /// those apart from events that arrived, so without this it would report success for them.
     ///
-    /// A count rather than a flag because deliveries overlap. Each takes the count as it closes its batch, and
-    /// answers for the losses up to that mark, so a loss is told to the caller whose delivery it happened before
-    /// rather than to whichever response arrived first.
+    /// A count rather than a flag. Each delivery takes the count as it closes its batch, and answers for the losses up
+    /// to that mark, so a loss is told to the caller whose delivery it happened before rather than to whichever
+    /// delivery answers next.
     private var lostEvents: UInt64 = 0
 
     /// The mark up to which losses have already been reported to a caller, so that none is told twice. Only to be
@@ -137,11 +137,17 @@ class DirectEventProcessor: EventProcessor {
 
     // MARK: Guarded by deliveryLock
 
-    /// Guards `queuedDelivery` and `isRetryScheduled`. Taken on a caller's thread and on `deliveryQueue`, and never held
-    /// across either.
+    /// Guards `queuedDelivery`, `isDelivering` and `isRetryScheduled`. Taken on a caller's thread and on `deliveryQueue`,
+    /// and never held across either.
     private let deliveryLock = UnfairLock()
     /// Callers waiting on a delivery that is queued and has not taken the batches yet, or nil where none is queued.
     private var queuedDelivery: [FlushOutcomeClosure]?
+    /// Whether a delivery has started and not yet had an answer for everything it sent, its retry included.
+    ///
+    /// A delivery returns from `deliveryQueue` as soon as its first request is out, so the queue alone does not keep two
+    /// apart. Two at once would each leave the batch it is sending out of both capacities, and a run of flushes, each
+    /// held up by a slow response, could take the store that many batches past them.
+    private var isDelivering = false
     /// Whether a delivery is already set to run when the backoff's wait ends, so a run of passes inside the wait sets
     /// one rather than one each.
     private var isRetryScheduled = false
@@ -162,14 +168,9 @@ class DirectEventProcessor: EventProcessor {
     /// The batches a delivery has taken and not yet had an answer for, by payload ID. Only to be used while holding
     /// `claimLock`.
     ///
-    /// `deliveryQueue` serializes the *start* of a delivery but not the round trip it waits on, and a batch stays on
-    /// disk until its response arrives. Without this, a delivery beginning inside that window would list the same batch
-    /// again and send it a second time -- under the same payload ID, leaving it to LaunchDarkly to notice that two
-    /// requests arriving at once are the same one.
-    ///
-    /// This bounds the overlap rather than preventing it, which is the point: a later delivery still runs, and still
-    /// sends what it closed for itself. Only the batches already on their way are left out of it, and a caller waiting
-    /// on that later delivery hears their outcome too.
+    /// A batch stays on disk until its response arrives. `isDelivering` keeps a second delivery from listing it inside
+    /// that window; this is what keeps it from being sent twice, under the same payload ID, should two ever overlap.
+    /// A delivery that finds a batch claimed waits on that claim's outcome rather than sending it.
     private var batchesInFlight: [String: Claim] = [:]
 
     // MARK: Confined to timerQueue
@@ -586,8 +587,9 @@ extension DirectEventProcessor {
     /// them.
     ///
     /// A delivery that has already started is not joined. It has closed and taken its batches, so it cannot speak for
-    /// anything recorded since, and holding later deliveries back until it answers would leave the store growing
-    /// through a retry while nothing drained it.
+    /// anything recorded since. Nor does another start beside it: the one queued waits until the running one has an
+    /// answer, then sends what that one left behind as well as what was recorded since, so its caller hears `true`
+    /// only if both got out.
     private func queueDelivery(_ completion: FlushOutcomeClosure?) {
         deliveryLock.lock()
         if queuedDelivery != nil {
@@ -598,9 +600,13 @@ extension DirectEventProcessor {
             return
         }
         queuedDelivery = completion.map { [$0] } ?? []
+        let starts = !isDelivering
+        isDelivering = true
         deliveryLock.unlock()
 
-        deliveryQueue.async { self.runDelivery() }
+        if starts {
+            deliveryQueue.async { self.runDelivery() }
+        }
     }
 
     private func runDelivery() {
@@ -615,11 +621,14 @@ extension DirectEventProcessor {
         deliveryLock.unlock()
 
         reportEvents { delivered, lossMark in
+            // Taken once for the delivery rather than once per waiter, so that every caller joined to it hears about
+            // a loss instead of only whichever happened to be answered first. Taken before the next delivery starts,
+            // which could otherwise answer first and take this one's loss with its own.
+            let kept = waiters.isEmpty || !self.takeEventsLost(upTo: lossMark)
+            // Before the waiters are answered, so a completion that flushes again finds this delivery over.
+            self.startQueuedDeliveryOrStop()
             guard !waiters.isEmpty
             else { return }
-            // Taken once for the delivery rather than once per waiter, so that every caller joined to it hears about
-            // a loss instead of only whichever happened to be answered first.
-            let kept = !self.takeEventsLost(upTo: lossMark)
             // Answered away from `deliveryQueue`, and from whichever thread the delivery ended on, so that every
             // completion reaches its caller the same way. A completion is free to flush again: it is never running
             // on the queue the delivery it asks for would be queued on.
@@ -628,6 +637,17 @@ extension DirectEventProcessor {
                     waiter(delivered && kept)
                 }
             }
+        }
+    }
+
+    /// Ends the delivery that just had its answer, starting the one queued behind it if there is one.
+    private func startQueuedDeliveryOrStop() {
+        let next = deliveryLock.withLock { () -> Bool in
+            isDelivering = queuedDelivery != nil
+            return isDelivering
+        }
+        if next {
+            deliveryQueue.async { self.runDelivery() }
         }
     }
 
@@ -654,8 +674,7 @@ extension DirectEventProcessor {
         let answer = PassAnswer(outstanding: waiting.waitingOn.count + 1) { outcome in
             completion?(outcome == .delivered && settled.accountsForEverything, settled.lossMark)
         }
-        // Waited on for the answer, but not before closing: holding back until another delivery answers, which through
-        // a retry can take twice the connection timeout, would leave the store filling with nothing draining it.
+        // Waited on for the answer, but not before closing.
         waitOn(waiting.waitingOn, answer)
 
         deliverOwn(waiting.deliverable) { waitingOutcome in

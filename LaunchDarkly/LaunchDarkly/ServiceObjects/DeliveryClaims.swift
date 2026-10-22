@@ -1,11 +1,11 @@
 import Foundation
 
-/// What one delivery's answer is made of, where deliveries overlap.
+/// What one delivery's answer is made of.
 ///
-/// A commit only stages events; whichever delivery runs next is what closes them into a batch. So the batch holding a
-/// caller's events may belong to a delivery already under way, and answering that caller means hearing from it. These
-/// are the two small pieces that arrange it: a `Claim` is a batch somebody is waiting on, and a `PassAnswer` gathers
-/// the claims one pass of a delivery depends on.
+/// A commit only stages events; whichever delivery runs next is what closes them into a batch. Deliveries run one at a
+/// time, but should a batch holding a caller's events belong to a delivery still under way, answering that caller means
+/// hearing from it. These are the two small pieces that arrange it: a `Claim` is a batch somebody is waiting on, and a
+/// `PassAnswer` gathers the outcomes one pass of a delivery depends on.
 extension DirectEventProcessor {
     /// A batch one delivery has taken, which another delivery's answer may depend on.
     final class Claim {

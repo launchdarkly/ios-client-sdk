@@ -1613,8 +1613,8 @@ extension DirectEventProcessorSpec {
                 testContext.serviceMock.holdsEventCompletions = false
                 testContext.serviceMock.releaseHeldEventCompletions()
 
-                // The second caller finds the only batch claimed by the first delivery, so it waits on that claim
-                // rather than sending anything. The batch goes out once in total.
+                // The second caller's delivery starts once the first is answered, and finds nothing left to send. The
+                // batch goes out once in total.
                 expect(first.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
                 expect(second.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
@@ -2336,7 +2336,7 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
             }
 
-            it("keeps draining while a delivery is in flight, and sends each batch once") {
+            it("starts no second request while a delivery is in flight, and sends what was recorded meanwhile after it") {
                 testContext = TestContext()
                 testContext.recordEvents(1)
                 testContext.eventProcessor.isOnline = true
@@ -2345,18 +2345,46 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.flushReportingOutcome { _ in }
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
 
-                // Holding this back until the first delivery answers would let the store fill through a retry, which
-                // can run for twice the connection timeout, and events recorded past the capacity are lost.
                 testContext.recordEvents(1)
-                testContext.eventProcessor.flushReportingOutcome { _ in }
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: Constants.deliveryTimeout)
-
-                // The first batch is still awaiting its response, so the second delivery left it alone rather than
-                // listing it again and sending it a second time under the same payload ID.
-                expect(Set(testContext.serviceMock.publishedPayloadIds).count) == 2
+                let second = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: second.record)
+                Thread.sleep(forTimeInterval: 0.3)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                expect(second.value()).to(beNil())
 
                 testContext.serviceMock.holdsEventCompletions = false
                 testContext.serviceMock.releaseHeldEventCompletions()
+                expect(second.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
+                expect(Set(testContext.serviceMock.publishedPayloadIds).count) == 2
+            }
+
+            // Every batch whose request is out stops counting against capacity. With a request per flush, a run of
+            // flushes each held up by a slow response would take the store a batch past capacity per flush.
+            it("holds the store to its capacity through flushes that each find a delivery in flight") {
+                testContext = TestContext(eventCapacity: 2)
+                testContext.eventProcessor.isOnline = true
+                testContext.serviceMock.holdsEventCompletions = true
+                testContext.eventProcessor.record(CustomEvent(key: "a-0", context: testContext.context))
+                testContext.eventProcessor.record(CustomEvent(key: "a-1", context: testContext.context))
+                testContext.eventProcessor.flush(completion: nil)
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+
+                for round in 0..<3 {
+                    testContext.eventProcessor.record(CustomEvent(key: "b\(round)-0", context: testContext.context))
+                    testContext.eventProcessor.record(CustomEvent(key: "b\(round)-1", context: testContext.context))
+                    testContext.eventProcessor.flush(completion: nil)
+                }
+                Thread.sleep(forTimeInterval: 0.3)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                }
+                // The batch out made room for one store's worth, and nothing past it was taken.
+                expect(testContext.serviceMock.publishedEventPayloads.flatMap(customKeys)) == ["a-0", "a-1", "b0-0", "b0-1"]
             }
 
             it("inherits the outcome of a delivery holding the batch it would have sent") {
@@ -2394,22 +2422,21 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.flushReportingOutcome(completion: first.record)
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
 
-                // B closes a batch of its own, dropping an event the store will never take as it does, so the loss
-                // falls between the two closes. B has a post of its own outstanding, which is what leaves A to be
-                // answered first.
+                // B is asked for while A's post is out, with an event the store will never take among what it will
+                // close. A's batch closed before that event was dropped, so the loss is B's.
                 testContext.eventProcessor.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
                 testContext.recordEvents(1)
                 let second = Answer()
                 testContext.eventProcessor.flushReportingOutcome(completion: second.record)
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: Constants.deliveryTimeout)
 
-                // Responses land in the order they were made, so A is answered while B's post is still out. With
-                // one shared flag A would take B's loss here, and B would report success for the event it dropped.
+                // With one shared flag, whichever delivery answered first would take the loss, and B would report
+                // success for the event it dropped.
                 testContext.serviceMock.holdsEventCompletions = false
                 testContext.serviceMock.releaseHeldEventCompletions()
 
                 expect(first.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
                 expect(second.value()).toEventually(beFalse(), timeout: Constants.deliveryTimeout)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
             }
 
             it("answers away from the queue a delivery runs on, after a delivery") {
@@ -2736,7 +2763,7 @@ extension DirectEventProcessorSpec {
                 expect(testContext.flushOutcome()) == false
             }
 
-            it("starts another delivery while a refused post waits to retry") {
+            it("starts a delivery asked for while a refused post waits to retry once that retry is answered") {
                 testContext = TestContext()
                 testContext.serviceMock.respondToEvents(with: 503)
                 testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
@@ -2744,12 +2771,18 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.flush(completion: nil)
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
 
-                // Well inside the one-second retry delay: a delivery queue sleeping through it would not get to this.
-                testContext.eventProcessor.flush(completion: nil)
-                expect(testContext.eventProcessor.startedDeliveryCount).toEventually(equal(2), timeout: .milliseconds(500))
+                // Well inside the one-second retry delay. The retry belongs to the delivery still running, so this
+                // one waits for it rather than posting beside it.
+                let answer = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: answer.record)
+                Thread.sleep(forTimeInterval: 0.3)
+                expect(testContext.eventProcessor.startedDeliveryCount) == 1
 
-                // One retry and no more; the batch then waits for the next flush.
+                // One retry and no more; the delivery behind it finds the backoff still waiting, and the batch then
+                // waits for the delivery that wait sets.
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: .seconds(3))
+                expect(testContext.eventProcessor.startedDeliveryCount).toEventually(equal(2), timeout: Constants.deliveryTimeout)
+                expect(answer.value()).toEventually(beFalse(), timeout: Constants.deliveryTimeout)
                 waitLettingTimersFire(1.5)
                 expect(testContext.serviceMock.publishEventDataCallCount) == 2
             }
