@@ -1186,6 +1186,62 @@ final class EventStoreSpec: QuickSpec {
 
                 expect(store.stage(EventStoreSpec.payload("first"))) == true
                 expect(store.stage(EventStoreSpec.payload("summary"), bypassingCapacity: true)) == true
+                // Kept, but not counted as an event.
+                expect(store.pendingEventCount) == 1
+            }
+
+            // Written at every commit point, summaries would otherwise fill capacity during an outage, and full events
+            // would be refused for the summaries of evaluations already counted.
+            for persistEvents in [true, false] {
+                it("leaves summaries out of the event count in every state, persisting: \(persistEvents)") {
+                    store = EventStore.temporary(capacity: 2, persistEvents: persistEvents)
+                    expect(store.stage(EventStoreSpec.payload("summary-1"), bypassingCapacity: true)) == true
+                    expect(store.stage(EventStoreSpec.payload("event-1"))) == true
+                    expect(store.pendingEventCount).to(equal(1), description: "staged")
+                    store.commit()
+                    expect(store.pendingEventCount).to(equal(1), description: "committed")
+
+                    let batch = store.closeBatch()!
+                    expect(batch.eventCount).to(equal(2), description: "the batch holds both frames")
+                    expect(store.pendingEventCount).to(equal(1), description: "closed")
+                    expect(store.pendingBatches()) == [batch]
+                    expect(store.pendingEventCount).to(equal(1), description: "listed")
+
+                    expect(store.stage(EventStoreSpec.payload("summary-2"), bypassingCapacity: true)) == true
+                    expect(store.stage(EventStoreSpec.payload("event-2"))) == true
+                    expect(store.stage(EventStoreSpec.payload("event-3"))).to(equal(false), description: "capacity still counts the events")
+
+                    store.startedSending(batch)
+                    expect(store.pendingEventCount).to(equal(1), description: "sending")
+                    store.stoppedSending(batch)
+                    expect(store.pendingEventCount).to(equal(2), description: "sent and failed")
+                    store.remove(batch)
+                    expect(store.pendingEventCount).to(equal(1), description: "delivered")
+                }
+            }
+
+            it("does not count as events the summaries a failed write left in memory") {
+                let lock = UnfairLock()
+                var failing = false
+                store = EventStore.temporary(writeLog: { file, bytes in
+                    lock.withLock { failing } ? ENOSPC : file.writeAll(bytes)
+                })
+                _ = store.stage(EventStoreSpec.payload("written"))
+                _ = store.stage(EventStoreSpec.payload("summary-written"), bypassingCapacity: true)
+                store.commit()
+                lock.withLock { failing = true }
+                _ = store.stage(EventStoreSpec.payload("put-back"))
+                _ = store.stage(EventStoreSpec.payload("summary-put-back"), bypassingCapacity: true)
+                store.commit()
+                expect(store.isPersisting) == false
+                expect(store.pendingEventCount) == 2
+
+                let fromLog = store.closeBatch()!
+                let fromMemory = store.pendingBatches().last!
+                expect(EventStoreSpec.keys(ofBody: try store.body(of: fromLog))) == ["written", "summary-written"]
+                expect(EventStoreSpec.keys(ofBody: try store.body(of: fromMemory))) == ["put-back", "summary-put-back"]
+                expect(store.pendingEventCount) == 2
+                _ = store.pendingBatches()
                 expect(store.pendingEventCount) == 2
             }
 
@@ -1411,7 +1467,8 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-1"), bypassingCapacity: true)) == true
                 expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-2"), bypassingCapacity: true)) == true
                 expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-3"), bypassingCapacity: true)) == false
-                expect(store.pendingEventCount) == 10
+                // Their bytes count, but they are not events.
+                expect(store.pendingEventCount) == 8
             }
 
             it("refuses a reserved event that turns out not to fit, and gives up its reservation") {

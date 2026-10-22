@@ -1,14 +1,18 @@
 import Foundation
 import OSLog
 
-/// How many events, and how many bytes, something stored holds: the two things capacity counts.
+/// How many events, and how many bytes, something stored holds: the two things capacity counts. With how many of the
+/// events are summaries, which capacity leaves out, where this store wrote them.
 struct EventTally: Equatable {
     var events = 0
     var bytes = 0
+    /// How many of `events` are known to be summaries; none for a batch this store did not close.
+    var summaries = 0
 
     static func += (lhs: inout EventTally, rhs: EventTally) {
         lhs.events += rhs.events
         lhs.bytes += rhs.bytes
+        lhs.summaries += rhs.summaries
     }
 }
 
@@ -51,15 +55,16 @@ final class EventDirectory {
     /// Only to be used while holding `ioLock`.
     private var located: (directory: URL, log: DiskEventLog)?
 
-    /// A batch in the directory: the file it is, how many events it holds, how big it is, and when it was last written,
-    /// which is what orders batches oldest first.
+    /// A batch in the directory: the file it is, how many events it holds, how big it is, when it was last written,
+    /// which is what orders batches oldest first, and how many of its events this store knows to be summaries.
     private struct Stored {
         let url: URL
         let events: Int
         let bytes: Int
         let modified: Date
+        var summaries = 0
 
-        var tally: EventTally { EventTally(events: events, bytes: bytes) }
+        var tally: EventTally { EventTally(events: events, bytes: bytes, summaries: summaries) }
     }
 
     /// What this process knows about each batch in the directory, by payload ID, which is how everything outside this
@@ -231,7 +236,7 @@ final class EventDirectory {
             return .failed(logSurvives: true)
         }
 
-        stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes, modified: Date())
+        stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes, modified: Date(), summaries: held.summaries)
         return .closed(EventBatch(payloadId: payloadId, eventCount: events))
     }
 
@@ -314,8 +319,11 @@ final class EventDirectory {
                 else { return nil }
                 let listed = EventDirectory.listed(file)
                 let modified = listed.modified ?? Date.distantPast
-                stored[payloadId] = Stored(url: file, events: events, bytes: listed.bytes ?? stored[payloadId]?.bytes ?? 0,
-                                           modified: modified)
+                // What the close knew of its summaries is kept; nothing in the file says.
+                let previous = stored[payloadId]
+                stored[payloadId] = Stored(url: file, events: events, bytes: listed.bytes ?? previous?.bytes ?? 0,
+                                           modified: modified,
+                                           summaries: previous.map { $0.events == events ? $0.summaries : 0 } ?? 0)
                 return (EventBatch(payloadId: payloadId, eventCount: events), modified)
             }
             .sorted { $0.1 < $1.1 }
@@ -341,6 +349,12 @@ final class EventDirectory {
     var storedBytes: Int {
         ioLock.assertOwned()
         return stored.values.reduce(0) { $0 + $1.bytes }
+    }
+
+    /// The summaries known to be in the batches the last listing or close counted. Requires `ioLock`.
+    var storedSummaries: Int {
+        ioLock.assertOwned()
+        return stored.values.reduce(0) { $0 + $1.summaries }
     }
 
     /// What this process counts for a batch, or nil if it counts nothing for it: one removed, or dropped by a listing it

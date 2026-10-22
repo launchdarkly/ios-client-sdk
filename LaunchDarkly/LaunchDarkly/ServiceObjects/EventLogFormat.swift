@@ -200,6 +200,17 @@ enum EventLogFormat {
         return (end, count)
     }
 
+    /// How many whole frames lie from `start` up to `end`, in frames this process wrote.
+    static func frameCount(in frames: Data, from start: Int, to end: Int) -> Int {
+        var count = 0
+        var at = start
+        while at < end {
+            at += frameSize(in: frames, at: at)
+            count += 1
+        }
+        return count
+    }
+
     static func readUInt16(_ data: Data, at offset: Int) -> UInt16 {
         let start = data.startIndex + offset
         return UInt16(data[start]) << 8 | UInt16(data[start + 1])

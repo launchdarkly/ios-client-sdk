@@ -842,8 +842,9 @@ class DirectEventProcessorSpec: QuickSpec {
                         it("keeps the events to retry after the failure") {
                             erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 2 // 1 retry attempt
-                            // The events are not lost by a failed delivery; they stay in the log, summary included.
-                            expect(testContext.store.pendingEventCount) == testContext.events.count + 1
+                            // The events are not lost by a failed delivery; they stay in the log, summary included,
+                            // though only the full events count against capacity.
+                            expect(testContext.store.pendingEventCount) == testContext.events.count
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             valueIsArray(published) { valueArray in
                                 expect(valueArray.count) == testContext.events.count + 1
@@ -888,8 +889,9 @@ class DirectEventProcessorSpec: QuickSpec {
                         it("keeps the events to retry after the failure") {
                             erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 2 // 1 retry attempt
-                            // The events are not lost by a failed delivery; they stay in the log, summary included.
-                            expect(testContext.store.pendingEventCount) == testContext.events.count + 1
+                            // The events are not lost by a failed delivery; they stay in the log, summary included,
+                            // though only the full events count against capacity.
+                            expect(testContext.store.pendingEventCount) == testContext.events.count
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             valueIsArray(published) { valueArray in
                                 expect(valueArray.count) == testContext.events.count + 1
@@ -937,8 +939,9 @@ class DirectEventProcessorSpec: QuickSpec {
                         it("keeps the events to retry after the failure") {
                             erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 2 // 1 retry attempt
-                            // The events are not lost by a failed delivery; they stay in the log, summary included.
-                            expect(testContext.store.pendingEventCount) == testContext.events.count + 1
+                            // The events are not lost by a failed delivery; they stay in the log, summary included,
+                            // though only the full events count against capacity.
+                            expect(testContext.store.pendingEventCount) == testContext.events.count
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             valueIsArray(published) { valueArray in
                                 expect(valueArray.count) == testContext.events.count + 1
@@ -2581,6 +2584,29 @@ extension DirectEventProcessorSpec {
                     expect(testContext.serviceMock.publishedEventPayloads.dropFirst(6).map(customKeys))
                         == [["blocked"], ["during-0", "during-1", "during-2"]]
                     expect(testContext.store.listPendingBatches().batches).to(beEmpty())
+                }
+
+                // Every flush of an outage is a commit point, and each stages a summary of the evaluations since the
+                // last. Counted as events, they would leave a long outage refusing every track.
+                it("leaves room for events beside the summaries an outage writes, persistence: \(persistence)") {
+                    testContext = TestContext(lastEventResponseDate: Date(),
+                                              store: EventStore.temporary(capacity: 2, persistEvents: persistence != .disabled),
+                                              eventCapacity: 2, eventPersistence: persistence)
+                    testContext.serviceMock.respondToEvents(with: 503)
+                    testContext.eventProcessor.isOnline = true
+                    testContext.eventProcessor.record(CustomEvent(key: "blocked", context: testContext.context))
+                    expect(testContext.flushOutcome()) == false
+                    let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                    for _ in 0..<3 {
+                        testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+                        expect(testContext.flushOutcome()) == false
+                    }
+
+                    testContext.eventProcessor.record(CustomEvent(key: "after-the-summaries", context: testContext.context))
+                    testContext.serviceMock.stubEventResponse(success: true)
+                    expect(testContext.flushOutcome()) == true
+                    expect(testContext.serviceMock.publishedEventPayloads.flatMap(customKeys))
+                        .to(contain("after-the-summaries"), description: "refused for room the summaries took")
                 }
             }
 

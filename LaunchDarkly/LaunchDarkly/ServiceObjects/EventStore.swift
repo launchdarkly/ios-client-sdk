@@ -182,8 +182,23 @@ final class EventStore: EventStoring {
     private let ioLock: UnfairLock
 
     /// Only to be used while holding `bufferLock`.
+    ///
+    /// Full events staged, `bufferedEventCount` of them.
     private var bufferData = Data()
     private var bufferedEventCount = 0
+    /// Summaries staged, `bufferedSummaryCount` of them, apart from the full events because capacity does not count
+    /// them. Everything staged is taken as the full events followed by the summaries, so that any part of it can say
+    /// how many of its frames are summaries from where the summaries start.
+    private var summaryData = Data()
+    private var bufferedSummaryCount = 0
+    /// How many of the frames counted in each state below are summaries, state for state, so capacity can leave them
+    /// out. Changed in the same critical sections as the counts beside them. A batch this store did not close -- one a
+    /// previous run or another process left -- counts none: its name says how many frames it holds, not what they are,
+    /// so every one counts as an event, which errs towards refusing.
+    private var writingSummaries = 0
+    private var committedSummaries = 0
+    private var closedSummaries = 0
+    private var sendingSummaries = 0
     private var reservedEvents = 0
     /// Taken out of the buffer to be written to the log, or assembled into a batch held in memory, and not yet
     /// counted where they land. Both happen outside `bufferLock`, and for as long as they take the events are in
@@ -298,14 +313,17 @@ final class EventStore: EventStoring {
 
     /// Every event counted against capacity. Only to be used while holding `bufferLock`.
     private var countedEvents: Int {
-        reservedEvents + bufferedEventCount + writingEvents + committedEvents + (closedEvents - sendingEvents)
+        // Summaries left out: they are not events but the record of evaluations already counted, and counting them
+        // would let the ones a long outage writes at every commit point refuse full events.
+        reservedEvents + bufferedEventCount + (writingEvents - writingSummaries) + (committedEvents - committedSummaries)
+            + ((closedEvents - closedSummaries) - (sendingEvents - sendingSummaries))
     }
 
-    /// Every byte counted against the byte capacity. Only to be used while holding `bufferLock`.
+    /// Every byte counted against the byte capacity, summaries included. Only to be used while holding `bufferLock`.
     ///
     /// Events reserved while being encoded have no bytes yet; they are counted when they are staged.
     private var countedBytes: Int {
-        bufferData.count + writingBytes + committedBytes + (closedBytes - sendingBytes)
+        bufferData.count + summaryData.count + writingBytes + committedBytes + (closedBytes - sendingBytes)
     }
 
     var hasRoomForEventBytes: Bool {
@@ -360,8 +378,13 @@ final class EventStore: EventStoring {
                   !boundedByBytes || countedBytes + frame.count <= (isSummary ? byteCapacity : eventByteCapacity)
             else { return false }
 
-            bufferData.append(frame)
-            bufferedEventCount += 1
+            if isSummary {
+                summaryData.append(frame)
+                bufferedSummaryCount += 1
+            } else {
+                bufferData.append(frame)
+                bufferedEventCount += 1
+            }
             return true
         }
         if !staged {
@@ -387,7 +410,8 @@ final class EventStore: EventStoring {
         writeStagedBytes()
 
         let (committed, stillBuffered) = bufferLock.withLock {
-            (EventTally(events: committedEvents, bytes: committedBytes), bufferedEventCount)
+            (EventTally(events: committedEvents, bytes: committedBytes, summaries: committedSummaries),
+             bufferedEventCount + bufferedSummaryCount)
         }
 
         let fromLog = committed.events > 0 ? closeOpenLog(of: disk, holding: committed) : nil
@@ -403,7 +427,8 @@ final class EventStore: EventStoring {
     private func closeOpenLog(of disk: EventDirectory, holding committed: EventTally) -> EventBatch? {
         ioLock.assertOwned()
         // The file is the frames behind its header. A listing counts it from the file itself.
-        let closed = EventTally(events: committed.events, bytes: committed.bytes + EventLogFormat.fileHeader.count)
+        let closed = EventTally(events: committed.events, bytes: committed.bytes + EventLogFormat.fileHeader.count,
+                                summaries: committed.summaries)
         switch disk.closeLog(holding: closed) {
         case .failed(let logSurvives):
             // A log that is still there is still the open one, and its events go on counting as committed until a
@@ -412,6 +437,7 @@ final class EventStore: EventStoring {
             if !logSurvives {
                 bufferLock.withLock {
                     committedEvents = 0
+                    committedSummaries = 0
                     committedBytes = 0
                 }
             }
@@ -419,8 +445,10 @@ final class EventStore: EventStoring {
         case .closed(let batch):
             bufferLock.withLock {
                 committedEvents = 0
+                committedSummaries = 0
                 committedBytes = 0
                 closedEvents += closed.events
+                closedSummaries += closed.summaries
                 closedBytes += closed.bytes
             }
             return batch
@@ -437,10 +465,13 @@ final class EventStore: EventStoring {
         // Listed in one critical section where there is a disk, so that the files and what is held cannot be counted
         // either side of a close that moves events between them.
         guard let disk
-        else { return BatchListing(batches: heldBatchesAndRecount(after: [], storedBytes: 0), isComplete: true) }
+        else {
+            return BatchListing(batches: heldBatchesAndRecount(after: [], storedSummaries: 0, storedBytes: 0), isComplete: true)
+        }
         return ioLock.withLock {
             let listing = disk.listBatches()
-            return BatchListing(batches: heldBatchesAndRecount(after: listing.batches, storedBytes: disk.storedBytes),
+            return BatchListing(batches: heldBatchesAndRecount(after: listing.batches, storedSummaries: disk.storedSummaries,
+                                                               storedBytes: disk.storedBytes),
                                 isComplete: listing.isComplete)
         }
     }
@@ -451,12 +482,15 @@ final class EventStore: EventStoring {
     ///
     /// Requires `ioLock` where there is a disk, so that the count is of the listing as it stands.
     ///
-    /// - Parameter storedBytes: the bytes in the batches listed from the disk.
-    private func heldBatchesAndRecount(after onDisk: [EventBatch], storedBytes: Int) -> [EventBatch] {
+    /// - Parameters:
+    ///   - storedSummaries: the summaries this store knows of in the batches listed from the disk.
+    ///   - storedBytes: the bytes in the batches listed from the disk.
+    private func heldBatchesAndRecount(after onDisk: [EventBatch], storedSummaries: Int, storedBytes: Int) -> [EventBatch] {
         heldLock.withLock {
             let batches = onDisk + inMemoryBatches.map { EventBatch(payloadId: $0.payloadId, eventCount: $0.eventCount) }
             bufferLock.withLock {
                 closedEvents = batches.reduce(0) { $0 + $1.eventCount }
+                closedSummaries = inMemoryBatches.reduce(storedSummaries) { $0 + $1.summaries }
                 closedBytes = inMemoryBatches.reduce(storedBytes) { $0 + $1.body.count }
                 // One no longer listed is no longer counted, so it cannot be left out of the count either.
                 let listed = Set(batches.map { $0.payloadId })
@@ -488,6 +522,7 @@ final class EventStore: EventStoring {
             let held = inMemoryBatches.remove(at: index)
             bufferLock.withLock {
                 closedEvents -= held.eventCount
+                closedSummaries -= held.summaries
                 closedBytes -= held.body.count
                 forgetSending(batch.payloadId)
             }
@@ -505,6 +540,7 @@ final class EventStore: EventStoring {
             let counted = disk.remove(batch.payloadId, holding: batch.eventCount)
             bufferLock.withLock {
                 closedEvents -= counted.events
+                closedSummaries -= counted.summaries
                 closedBytes -= counted.bytes
                 forgetSending(batch.payloadId)
             }
@@ -528,6 +564,7 @@ final class EventStore: EventStoring {
                 recovered += prepared.events
                 bufferLock.withLock {
                     closedEvents += prepared.events
+                    closedSummaries += prepared.summaries
                     closedBytes += prepared.bytes
                 }
             }
@@ -550,6 +587,7 @@ final class EventStore: EventStoring {
             // them, so the store cannot go on counting what is gone.
             bufferLock.withLock {
                 closedEvents -= counted.events
+                closedSummaries -= counted.summaries
                 closedBytes -= counted.bytes
             }
             defer { hasDiscardedAbandonedEnvironments = true }
@@ -602,7 +640,7 @@ extension EventStore {
     private func startedSending(_ payloadId: String, disk: EventDirectory?) {
         heldLock.withLock {
             let counted = inMemoryBatches.first { $0.payloadId == payloadId }
-                .map { EventTally(events: $0.eventCount, bytes: $0.body.count) }
+                .map { EventTally(events: $0.eventCount, bytes: $0.body.count, summaries: $0.summaries) }
                 ?? disk?.counted(payloadId)
             guard let counted
             else { return }
@@ -611,6 +649,7 @@ extension EventStore {
                 else { return }
                 sendingBatches[payloadId] = counted
                 sendingEvents += counted.events
+                sendingSummaries += counted.summaries
                 sendingBytes += counted.bytes
             }
         }
@@ -630,6 +669,7 @@ extension EventStore {
     fileprivate func forgetSending(_ payloadId: String) {
         if let sending = sendingBatches.removeValue(forKey: payloadId) {
             sendingEvents -= sending.events
+            sendingSummaries -= sending.summaries
             sendingBytes -= sending.bytes
         }
     }
@@ -644,57 +684,81 @@ extension EventStore {
     /// commit can land in several batches.
     private func writeStagedBytes() {
         ioLock.assertOwned()
-        let taken = bufferLock.withLock { () -> (bytes: Data, events: Int)? in
+        let taken = bufferLock.withLock { () -> StagedFrames? in
             // Staged bytes are left where they are. With nowhere durable to put them, memory is better than dropping
             // them: a delivery can still close them into a batch and send them.
-            guard persistEvents, bufferedEventCount > 0
+            guard persistEvents, bufferedEventCount + bufferedSummaryCount > 0
             else { return nil }
-            let staged = (bytes: bufferData, events: bufferedEventCount)
-            bufferData = Data()
-            bufferedEventCount = 0
-            writingEvents += staged.events
-            writingBytes += staged.bytes.count
-            return staged
+            return takeStaged()
         }
         guard let taken
         else { return }
 
-        let base = taken.bytes.startIndex
+        let bytes = taken.frames
+        let base = bytes.startIndex
         var written = 0
-        var writtenEvents = 0
-        while written < taken.bytes.count {
+        while written < bytes.count {
             let room = EventLogFormat.maxBatchSize - EventLogFormat.fileHeaderSize - bufferLock.withLock { committedBytes }
-            if EventLogFormat.frameSize(in: taken.bytes, at: written) > room {
+            if EventLogFormat.frameSize(in: bytes, at: written) > room {
                 guard closeFullLog()
                 else { break }
                 continue
             }
-            let (end, landing) = EventLogFormat.framesFitting(in: taken.bytes, from: written, room: room)
-            let isWhole = written == 0 && end == taken.bytes.count
-            guard append(isWhole ? taken.bytes : taken.bytes.subdata(in: (base + written)..<(base + end)))
+            let (end, landing) = EventLogFormat.framesFitting(in: bytes, from: written, room: room)
+            let landingSummaries = taken.summaries(from: written, to: end)
+            let isWhole = written == 0 && end == bytes.count
+            guard append(isWhole ? bytes : bytes.subdata(in: (base + written)..<(base + end)))
             else { break }
             // Counted where they landed in the same critical section that stops counting them on the way, so a
             // capacity check never sees them in both places or in neither.
             bufferLock.withLock {
                 writingEvents -= landing
+                writingSummaries -= landingSummaries
                 writingBytes -= end - written
                 committedEvents += landing
+                committedSummaries += landingSummaries
                 committedBytes += end - written
             }
             written = end
-            writtenEvents += landing
         }
 
-        if written < taken.bytes.count {
-            // Put back, to be delivered from memory rather than lost. Ahead of anything staged while the write was in
-            // flight, so the events keep the order they were recorded in.
-            bufferLock.withLock {
-                writingEvents -= taken.events - writtenEvents
-                writingBytes -= taken.bytes.count - written
-                bufferData = taken.bytes.subdata(in: (base + written)..<taken.bytes.endIndex) + bufferData
-                bufferedEventCount += taken.events - writtenEvents
-            }
+        if written < bytes.count {
+            bufferLock.withLock { putBack(taken, from: written) }
         }
+    }
+
+    /// Takes everything staged, counting it as being written until it is counted where it lands. Requires `bufferLock`.
+    private func takeStaged() -> StagedFrames {
+        let staged = StagedFrames(frames: summaryData.isEmpty ? bufferData : bufferData + summaryData,
+                                  summariesFrom: bufferData.count,
+                                  events: bufferedEventCount + bufferedSummaryCount,
+                                  summaries: bufferedSummaryCount)
+        bufferData = Data()
+        summaryData = Data()
+        bufferedEventCount = 0
+        bufferedSummaryCount = 0
+        writingEvents += staged.events
+        writingSummaries += staged.summaries
+        writingBytes += staged.frames.count
+        return staged
+    }
+
+    /// Puts back what of `staged` from `start` on never landed, to be delivered from memory rather than lost. Ahead of
+    /// anything staged while the write was in flight, so the events keep the order they were recorded in. Requires
+    /// `bufferLock`.
+    private func putBack(_ staged: StagedFrames, from start: Int) {
+        let frames = staged.frames
+        let base = frames.startIndex
+        let summariesFrom = max(start, staged.summariesFrom)
+        let events = EventLogFormat.frameCount(in: frames, from: start, to: summariesFrom)
+        let summaries = EventLogFormat.frameCount(in: frames, from: summariesFrom, to: frames.count)
+        writingEvents -= events + summaries
+        writingSummaries -= summaries
+        writingBytes -= frames.count - start
+        bufferData = frames.subdata(in: (base + start)..<(base + summariesFrom)) + bufferData
+        summaryData = frames.subdata(in: (base + summariesFrom)..<frames.endIndex) + summaryData
+        bufferedEventCount += events
+        bufferedSummaryCount += summaries
     }
 
     /// Closes an open log that has no room for the next frame, so that the frame starts a batch of its own. Requires
@@ -706,7 +770,9 @@ extension EventStore {
         ioLock.assertOwned()
         guard let disk
         else { return false }
-        let committed = bufferLock.withLock { EventTally(events: committedEvents, bytes: committedBytes) }
+        let committed = bufferLock.withLock {
+            EventTally(events: committedEvents, bytes: committedBytes, summaries: committedSummaries)
+        }
         _ = closeOpenLog(of: disk, holding: committed)
         return bufferLock.withLock { committedBytes == 0 }
     }
@@ -733,6 +799,23 @@ private struct HeldBatch {
     let payloadId: String
     let body: Data
     let eventCount: Int
+    /// How many of `eventCount` are summaries.
+    let summaries: Int
+}
+
+/// Everything staged, taken out of the buffers in one step: the full events, then the summaries.
+private struct StagedFrames {
+    let frames: Data
+    /// Where in `frames` the summaries start.
+    let summariesFrom: Int
+    /// Every frame in `frames`, summaries included.
+    let events: Int
+    let summaries: Int
+
+    /// How many of the frames from `start` up to `end` are summaries.
+    func summaries(from start: Int, to end: Int) -> Int {
+        end <= summariesFrom ? 0 : EventLogFormat.frameCount(in: frames, from: max(start, summariesFrom), to: end)
+    }
 }
 
 /// What the store does once the filesystem has refused it.
@@ -756,14 +839,8 @@ private extension EventStore {
     /// Called under `ioLock` where there is a disk, so that it and the log are closed as one step, and on its own
     /// where there is not.
     func closeInMemoryBatches() -> [EventBatch] {
-        let (frames, events) = bufferLock.withLock { () -> (frames: Data, events: Int) in
-            let staged = (frames: bufferData, events: bufferedEventCount)
-            bufferData = Data()
-            bufferedEventCount = 0
-            writingEvents += staged.events
-            writingBytes += staged.frames.count
-            return staged
-        }
+        let staged = bufferLock.withLock { takeStaged() }
+        let frames = staged.frames
 
         // Assembled outside `bufferLock`, because it copies every staged frame; `writingEvents` is what keeps them
         // counted meanwhile. Through the same reader a batch on disk goes through, so a held batch and a written one
@@ -772,9 +849,11 @@ private extension EventStore {
         var closed: [EventBatch] = []
         var held = 0
         var heldEvents = 0
+        var heldSummaries = 0
         while held < frames.count {
             let (end, batchEvents) = EventLogFormat.framesFitting(in: frames, from: held,
                                                                   room: EventLogFormat.maxBatchSize - EventLogFormat.fileHeaderSize)
+            let batchSummaries = staged.summaries(from: held, to: end)
             var body = Data(capacity: EventLogFormat.fileHeaderSize + end - held)
             body.append(EventLogFormat.fileHeader)
             body.append(frames[(base + held)..<(base + end)])
@@ -783,25 +862,30 @@ private extension EventStore {
 
             let payloadId = UUID().uuidString
             heldLock.withLock {
-                inMemoryBatches.append(HeldBatch(payloadId: payloadId, body: body, eventCount: batchEvents))
+                inMemoryBatches.append(HeldBatch(payloadId: payloadId, body: body, eventCount: batchEvents,
+                                                 summaries: batchSummaries))
                 // Counted where they landed in the same critical section that stops counting them on the way, so a
                 // capacity check never sees them in both places or in neither. A held batch is counted as its body,
                 // which is what it keeps.
                 bufferLock.withLock {
                     writingEvents -= batchEvents
+                    writingSummaries -= batchSummaries
                     writingBytes -= end - held
                     closedEvents += batchEvents
+                    closedSummaries += batchSummaries
                     closedBytes += body.count
                 }
             }
             closed.append(EventBatch(payloadId: payloadId, eventCount: batchEvents))
             held = end
             heldEvents += batchEvents
+            heldSummaries += batchSummaries
         }
 
         if held < frames.count {
             bufferLock.withLock {
-                writingEvents -= events - heldEvents
+                writingEvents -= staged.events - heldEvents
+                writingSummaries -= staged.summaries - heldSummaries
                 writingBytes -= frames.count - held
             }
         }
@@ -828,7 +912,7 @@ extension EventStore {
             payloads.append(contentsOf: events.compactMap { try? JSONEncoder().encode($0) })
         }
         var staged = EventLogFormat.fileHeader
-        staged.append(bufferLock.withLock { bufferData })
+        staged.append(bufferLock.withLock { bufferData + summaryData })
         _ = EventLogFormat.forEachFrame(in: staged) { type, payload in
             if type == EventLogFormat.eventFrame {
                 payloads.append(payload)
