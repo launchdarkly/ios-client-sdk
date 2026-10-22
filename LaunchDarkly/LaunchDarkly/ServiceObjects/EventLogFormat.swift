@@ -133,14 +133,16 @@ enum EventLogFormat {
     /// began, so no frame still to be checked is written over. A log nothing else refers to is changed where it is,
     /// rather than copied first.
     ///
-    /// Only the first `maxEvents` events go into it; any after them are left out.
+    /// Only the first `maxEvents` events go into it; any after them are left out. So is everything from a frame that is
+    /// torn or fails its checksum on, which is why the count it returns can be fewer than the log was closed holding.
     ///
-    /// - Returns: whether the log held events. Where it did not, or is not one this version reads, it is left as it was.
-    static func assembleBody(inPlace file: inout Data, maxEvents: Int = .max) -> Bool {
+    /// - Returns: how many events went into it. Where none did, or the log is not one this version reads, it is left as
+    ///   it was.
+    static func assembleBody(inPlace file: inout Data, maxEvents: Int = .max) -> Int {
         guard isReadable(file)
-        else { return false }
+        else { return 0 }
 
-        let length = file.withUnsafeMutableBytes { bytes -> Int in
+        let (length, assembled) = file.withUnsafeMutableBytes { bytes -> (Int, Int) in
             var cursor = 1
             var events = 0
             _ = walkFrames(UnsafeRawBufferPointer(bytes)) { type, payload in
@@ -153,21 +155,21 @@ enum EventLogFormat {
                 events += 1
             }
             guard events > 0
-            else { return 0 }
+            else { return (0, 0) }
             bytes[0] = UInt8(ascii: "[")
             bytes[cursor - 1] = UInt8(ascii: "]")
-            return cursor
+            return (cursor, events)
         }
-        guard length > 0
-        else { return false }
+        guard assembled > 0
+        else { return 0 }
         file.count = length
-        return true
+        return assembled
     }
 
     /// `assembleBody(inPlace:maxEvents:)` into bytes of its own, leaving the log as it was.
     static func assembleBody(from file: Data, maxEvents: Int = .max) -> Data? {
         var body = file
-        return assembleBody(inPlace: &body, maxEvents: maxEvents) ? body : nil
+        return assembleBody(inPlace: &body, maxEvents: maxEvents) > 0 ? body : nil
     }
 
     static func bigEndian(_ value: UInt16) -> Data {

@@ -18,6 +18,14 @@ struct BatchListing: Equatable {
     let isComplete: Bool
 }
 
+/// The request body for a batch, and how many events made it in.
+struct BatchPayload: Equatable {
+    let body: Data
+    /// Fewer than the batch was closed holding where a frame after the first is torn or fails its checksum: the
+    /// reader stops there, and the events from it on are not in `body`.
+    let eventCount: Int
+}
+
 protocol EventStoring {
     /// Events counted against capacity: those recorded and not yet accepted by LaunchDarkly, whether they are reserved
     /// while being encoded, staged in memory, written to the open log, or sitting in a closed batch -- except a batch
@@ -85,7 +93,7 @@ protocol EventStoring {
     /// - throws: `UnreadableBatch` if the batch is there but holds nothing this version can send, which no later
     ///   attempt changes and which loses its events; anything else if it could not be read this time, which a later
     ///   attempt may manage.
-    func body(of batch: EventBatch) throws -> Data?
+    func payload(of batch: EventBatch) throws -> BatchPayload?
 
     /// Forgets a batch, which is only correct once LaunchDarkly has accepted it or permanently refused it.
     func remove(_ batch: EventBatch)
@@ -113,6 +121,11 @@ extension EventStoring {
     /// The batches `listPendingBatches()` lists, whether or not the listing was complete.
     func pendingBatches() -> [EventBatch] {
         listPendingBatches().batches
+    }
+
+    /// The body `payload(of:)` reads, however many events made it in.
+    func body(of batch: EventBatch) throws -> Data? {
+        try payload(of: batch)?.body
     }
 }
 
@@ -446,9 +459,9 @@ final class EventStore: EventStoring {
         }
     }
 
-    func body(of batch: EventBatch) throws -> Data? {
+    func payload(of batch: EventBatch) throws -> BatchPayload? {
         if let held = heldLock.withLock({ inMemoryBatches.first { $0.payloadId == batch.payloadId } }) {
-            return held.body
+            return BatchPayload(body: held.body, eventCount: held.eventCount)
         }
 
         // A batch is either held or on the disk, never both and never moved between them, so a batch that is not held
@@ -456,7 +469,7 @@ final class EventStore: EventStoring {
         guard let disk
         else { return nil }
 
-        return try ioLock.withLock { try disk.body(of: batch) }
+        return try ioLock.withLock { try disk.payload(of: batch) }
     }
 
     func remove(_ batch: EventBatch) {
@@ -729,7 +742,7 @@ private extension EventStore {
             var body = Data(capacity: EventLogFormat.fileHeaderSize + end - held)
             body.append(EventLogFormat.fileHeader)
             body.append(frames[(base + held)..<(base + end)])
-            guard EventLogFormat.assembleBody(inPlace: &body)
+            guard EventLogFormat.assembleBody(inPlace: &body) > 0
             else { break }
 
             let payloadId = UUID().uuidString

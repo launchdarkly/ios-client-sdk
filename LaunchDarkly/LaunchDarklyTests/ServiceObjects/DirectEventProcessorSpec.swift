@@ -2079,6 +2079,36 @@ extension DirectEventProcessorSpec {
                 expect(store.pendingEventCount) == 0
             }
 
+            it("reports false when a stored batch damaged after its first frame is sent short") {
+                let store = EventStore.temporary()
+                testContext = TestContext(store: store)
+                testContext.eventProcessor.isOnline = true
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                }
+
+                testContext.recordEvents(3)
+                testContext.eventProcessor.commitRecordedEvents()
+                let damaged = store.closeBatch()!
+                let damagedUrl = store.directory!.appendingPathComponent("ready-\(damaged.payloadId).\(damaged.eventCount)")
+                var bytes = try Data(contentsOf: damagedUrl)
+                bytes[bytes.count - 1] ^= 0x01
+                try bytes.write(to: damagedUrl)
+
+                var delivered: Bool?
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == damaged.eventCount - 1
+                expect(FileManager.default.fileExists(atPath: damagedUrl.path)) == false
+                expect(store.pendingEventCount) == 0
+            }
+
             it("tells the next flush about a stored batch a delivery nobody waited on dropped") {
                 let store = EventStore.temporary()
                 testContext = TestContext(store: store)
@@ -2622,7 +2652,7 @@ private final class ClosingHookStore: EventStoring {
     func commit() { inner.commit() }
     var holdsUnclosedEvents: Bool { inner.holdsUnclosedEvents }
     func listPendingBatches() -> BatchListing { inner.listPendingBatches() }
-    func body(of batch: EventBatch) throws -> Data? { try inner.body(of: batch) }
+    func payload(of batch: EventBatch) throws -> BatchPayload? { try inner.payload(of: batch) }
     func remove(_ batch: EventBatch) { inner.remove(batch) }
     func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
     func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
@@ -2701,7 +2731,7 @@ private final class SlowListingStore: EventStoring {
     func commit() { inner.commit() }
     func closeBatch() -> EventBatch? { inner.closeBatch() }
     var holdsUnclosedEvents: Bool { inner.holdsUnclosedEvents }
-    func body(of batch: EventBatch) throws -> Data? { try inner.body(of: batch) }
+    func payload(of batch: EventBatch) throws -> BatchPayload? { try inner.payload(of: batch) }
     func remove(_ batch: EventBatch) { inner.remove(batch) }
     func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
     func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }

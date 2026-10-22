@@ -303,7 +303,12 @@ class DirectEventProcessor: EventProcessor {
     /// next `flushReportingOutcome` to hear about. A caller waiting on this pass can then hear about it from the next
     /// one too.
     private func reportBatchLost(_ batch: EventBatch) {
-        stateLock.withLock { lostEvents += UInt64(batch.eventCount) }
+        reportStoredEventsLost(batch.eventCount)
+    }
+
+    /// `reportBatchLost(_:)` for part of a batch.
+    private func reportStoredEventsLost(_ events: Int) {
+        stateLock.withLock { lostEvents += UInt64(events) }
     }
 
     /// Records the loss of an event the SDK accepted and then could not keep, which no later attempt recovers.
@@ -716,9 +721,9 @@ extension DirectEventProcessor {
         }
 
         let batch = remaining.removeFirst()
-        let read: Data?
+        let read: BatchPayload?
         do {
-            read = try store.body(of: batch)
+            read = try store.payload(of: batch)
         } catch is UnreadableBatch {
             // Lost like a refused batch: nothing will ever send it, so it is removed, the rest are still attempted, and
             // the caller hears that this pass lost events.
@@ -734,7 +739,7 @@ extension DirectEventProcessor {
             return
         }
 
-        guard let body = read
+        guard let payload = read
         else {
             // Gone, which is usually another process having delivered it, or holding no events. Either way nothing is
             // lost and there is nothing to keep.
@@ -743,11 +748,21 @@ extension DirectEventProcessor {
             return
         }
 
-        service.diagnosticCache?.recordEventsInLastBatch(eventsInLastBatch: batch.eventCount)
-        publish(batch, body) { outcome in
+        // Damage after the first frame: what came before it is sent, and the rest is gone with the file. Counted once
+        // the batch is removed rather than now, since one kept for a retry is read, and found short, again.
+        let leftOut = max(0, batch.eventCount - payload.eventCount)
+        service.diagnosticCache?.recordEventsInLastBatch(eventsInLastBatch: payload.eventCount)
+        publish(batch, payload) { outcome in
             switch outcome {
             case .accepted:
-                self.deliver(remaining, lostAnything: lostAnything, completion)
+                guard leftOut > 0
+                else {
+                    self.deliver(remaining, lostAnything: lostAnything, completion)
+                    return
+                }
+                os_log("%s dropped %d damaged stored event(s) from a batch it delivered", log: self.service.config.logger, type: .error, self.typeName(and: #function), leftOut)
+                self.reportStoredEventsLost(leftOut)
+                self.deliver(remaining, lostAnything: true, completion)
             case .refused:
                 // The rest are still attempted, so that batches LaunchDarkly will never take do not sit on the device
                 // for the rest of the session, taking up the room the capacity limit leaves for new events.
@@ -761,11 +776,11 @@ extension DirectEventProcessor {
 
     /// Sends one batch and acts on what LaunchDarkly made of it, before handing the outcome on.
     private func publish(_ batch: EventBatch,
-                         _ body: Data,
+                         _ payload: BatchPayload,
                          _ completion: @escaping (AnalyticsEventSender.Outcome) -> Void) {
         store.startedSending(batch)
         // The store is settled before observers are told, so that one looking at it on hearing the outcome sees it.
-        sender.send(body, payloadId: batch.payloadId, eventCount: batch.eventCount) { outcome in
+        sender.send(payload.body, payloadId: batch.payloadId, eventCount: payload.eventCount) { outcome in
             switch outcome {
             case .accepted(let serverTime):
                 self.stateLock.withLock {

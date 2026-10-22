@@ -566,6 +566,21 @@ final class EventStoreSpec: QuickSpec {
                 expect { try store.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
             }
 
+            it("says how many events made it into the body of a batch damaged after its first frame") {
+                store = EventStore.temporary()
+                ["first", "second", "third"].forEach { _ = store.stage(EventStoreSpec.payload($0)) }
+                let batch = store.closeBatch()!
+                let file = try EventStoreSpec.onlyBatchFile(in: store)
+                var damaged = try Data(contentsOf: file)
+                damaged[damaged.count - 1] ^= 0x01
+                try damaged.write(to: file)
+
+                let payload = try store.payload(of: batch)
+                expect(batch.eventCount) == 3
+                expect(payload?.eventCount) == 2
+                expect(EventStoreSpec.keys(ofBody: payload?.body)) == ["first", "second"]
+            }
+
             it("sends no frames a failed write left behind where it could not be cut back") {
                 store = EventStore.temporary()
                 _ = store.stage(EventStoreSpec.payload("written"))

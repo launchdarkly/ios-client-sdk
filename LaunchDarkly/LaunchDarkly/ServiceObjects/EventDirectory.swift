@@ -313,7 +313,7 @@ final class EventDirectory {
     ///
     /// - throws: `UnreadableBatch` if the batch is there but holds nothing this version can send; anything else if it
     ///   could not be read this time, which a later attempt may manage.
-    func body(of batch: EventBatch) throws -> Data? {
+    func payload(of batch: EventBatch) throws -> BatchPayload? {
         ioLock.assertOwned()
         // Taken out of the read's result rather than bound inside the switch, so that nothing else refers to it and it
         // is assembled where it is rather than copied first.
@@ -325,8 +325,9 @@ final class EventDirectory {
         }
         // No more than the batch was closed holding. A write that failed and could not be truncated leaves whole frames
         // after them, whose events are delivered from memory instead, and would otherwise be sent twice.
-        if EventLogFormat.assembleBody(inPlace: &file, maxEvents: batch.eventCount > 0 ? batch.eventCount : .max) {
-            return file
+        let assembled = EventLogFormat.assembleBody(inPlace: &file, maxEvents: batch.eventCount > 0 ? batch.eventCount : .max)
+        if assembled > 0 {
+            return BatchPayload(body: file, eventCount: assembled)
         }
         // A log this version reads that holds no events has nothing to lose, unless its first frame is damaged. Where
         // there is no payload the log is as it was read.
