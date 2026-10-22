@@ -2558,6 +2558,32 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedEventPayloads.dropFirst(4).map(customKeys)) == [["first"], ["second"]]
             }
 
+            // A batch per flush would grow without bound for as long as an outage lasts: files on the disk, or batches
+            // held in memory, each with a summary of its own.
+            for persistence in [EventPersistence.immediate, .disabled] {
+                it("closes no batch behind the one blocked during an outage, persistence: \(persistence)") {
+                    testContext = TestContext(store: EventStore.temporary(persistEvents: persistence != .disabled),
+                                              eventPersistence: persistence)
+                    testContext.serviceMock.respondToEvents(with: 503)
+                    testContext.eventProcessor.isOnline = true
+                    testContext.eventProcessor.record(CustomEvent(key: "blocked", context: testContext.context))
+                    for flush in 0..<3 {
+                        expect(testContext.flushOutcome()) == false
+                        testContext.eventProcessor.record(CustomEvent(key: "during-\(flush)", context: testContext.context))
+                    }
+                    // The attempt and its retry for each flush, all of the batch at the head.
+                    expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == Array(repeating: ["blocked"], count: 6)
+                    expect(testContext.store.listPendingBatches().batches.count) == 1
+
+                    testContext.serviceMock.stubEventResponse(success: true)
+                    expect(testContext.flushOutcome()) == true
+
+                    expect(testContext.serviceMock.publishedEventPayloads.dropFirst(6).map(customKeys))
+                        == [["blocked"], ["during-0", "during-1", "during-2"]]
+                    expect(testContext.store.listPendingBatches().batches).to(beEmpty())
+                }
+            }
+
             it("does not tell a flush its events arrived when an earlier delivery nobody waited on failed to send them") {
                 testContext = TestContext()
                 testContext.serviceMock.respondToEvents(with: 503)

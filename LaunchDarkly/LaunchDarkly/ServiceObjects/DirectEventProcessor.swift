@@ -621,51 +621,103 @@ extension DirectEventProcessor {
             return
         }
 
-        let (lossMark, closedEverything) = commitAndCloseBatch()
-
-        let (batches, waitingOn, listedEverything) = claimDeliverableBatches()
-        // Events left in a log that would not close, or in a batch a listing that failed could not see, are still on
-        // the disk for a later delivery. This one delivers what it has, and cannot say the caller's events got out.
-        let accountsForEverything = closedEverything && listedEverything
-        if !accountsForEverything {
-            os_log("%s will report failure: %s", log: service.config.logger, type: .debug, typeName(and: #function),
-                   closedEverything ? "the stored events could not be listed" : "the event log could not be closed")
-        }
+        // The batches already waiting go first, and what has been committed since is closed into a batch of its own
+        // only once none of them is left blocked. Closing first would add a batch for every pass a failure lasts: every
+        // flush, periodic delivery and trip to the background of an outage would leave one more file, or one more batch
+        // held in memory, each with the summary its commit staged. Held back, what is committed meanwhile goes on into
+        // the open log, which closes once it is full or once the batches ahead of it are gone, so an outage costs a
+        // batch per `EventLogFormat.maxBatchSize` rather than one per pass.
+        let waiting = claimDeliverableBatches(discardingExpired: true)
+        // Settled before this delivery's own outcome is reported, which is what the answer waits for last.
+        var settled = (lossMark: UInt64(0), accountsForEverything: false)
         // This delivery's own outcome, plus that of every batch another delivery is already sending. The caller's
         // events may be in either: a delivery that started after they were recorded closed them into its batch.
-        let answer = DeliveryAnswer(outstanding: waitingOn.count + 1) { delivered in
-            completion?(delivered && accountsForEverything, lossMark)
+        let answer = PassAnswer(outstanding: waiting.waitingOn.count + 1) { outcome in
+            completion?(outcome == .delivered && settled.accountsForEverything, settled.lossMark)
         }
-        for claim in waitingOn {
-            whenSettled(claim, answer.report)
-        }
+        // Waited on for the answer, but not before closing: holding back until another delivery answers, which through
+        // a retry can take twice the connection timeout, would leave the store filling with nothing draining it.
+        waitOn(waiting.waitingOn, answer)
 
+        deliverOwn(waiting.deliverable) { waitingOutcome in
+            guard waitingOutcome != .blocked
+            else {
+                // Committed all the same, since a delivery is a commit point. Nothing was closed, so the caller's events
+                // did not go, and the mark is as of this commit, the last point anything the caller recorded was staged.
+                settled = (self.commitLeavingTheLogOpen(), false)
+                os_log("%s will report failure: an earlier batch could not be delivered", log: self.service.config.logger, type: .debug, self.typeName(and: #function))
+                answer.report(.blocked)
+                return
+            }
+
+            let (lossMark, closedEverything) = self.commitAndCloseBatch()
+            let new = self.claimDeliverableBatches(discardingExpired: false)
+            // Events left in a log that would not close, or in a batch a listing that failed could not see, are still on
+            // the disk for a later delivery. This one delivers what it has, and cannot say the caller's events got out.
+            settled = (lossMark, closedEverything && waiting.isComplete && new.isComplete)
+            if !settled.accountsForEverything {
+                os_log("%s will report failure: %s", log: self.service.config.logger, type: .debug, self.typeName(and: #function),
+                       closedEverything ? "the stored events could not be listed" : "the event log could not be closed")
+            }
+            if waiting.deliverable.isEmpty && waiting.waitingOn.isEmpty && new.deliverable.isEmpty && new.waitingOn.isEmpty {
+                os_log("%s aborted. Event store is empty", log: self.service.config.logger, type: .debug, self.typeName(and: #function))
+                self.reportSyncComplete(nil)
+            }
+
+            let newAnswer = PassAnswer(outstanding: new.waitingOn.count + 1) { newOutcome in
+                answer.report(max(waitingOutcome, newOutcome))
+            }
+            self.waitOn(new.waitingOn, newAnswer)
+            self.deliverOwn(new.deliverable, newAnswer.report)
+        }
+    }
+
+    /// Delivers the batches this delivery claimed, releasing the claims once it has an outcome.
+    private func deliverOwn(_ batches: [EventBatch], _ completion: @escaping (PassOutcome) -> Void) {
         guard !batches.isEmpty
         else {
-            os_log("%s aborted. Event store is empty", log: service.config.logger, type: .debug, typeName(and: #function))
-            reportSyncComplete(nil)
-            answer.report(true)
+            completion(.delivered)
             return
         }
-
         os_log("%s starting", log: service.config.logger, type: .debug, typeName(and: #function))
-        deliver(batches) { [weak self] delivered in
-            self?.releaseClaim(on: batches, delivered: delivered)
-            answer.report(delivered)
+        deliver(batches) { outcome in
+            self.releaseClaim(on: batches, delivered: outcome == .delivered)
+            completion(outcome)
+        }
+    }
+
+    /// Reports the outcome of each batch another delivery is sending to `answer`, once it has one.
+    private func waitOn(_ claims: [Claim], _ answer: PassAnswer) {
+        for claim in claims {
+            whenSettled(claim) { answer.report($0 ? .delivered : .blocked) }
+        }
+    }
+
+    /// `commitAndCloseBatch()` for a pass that found an earlier batch blocked, and so closes nothing.
+    ///
+    /// - Returns: the loss count as of the commit.
+    private func commitLeavingTheLogOpen() -> UInt64 {
+        commitLock.withLock {
+            encodeAndCommitPending()
+            return stateLock.withLock { lostEvents }
         }
     }
 
     /// Takes the batches this delivery will send, leaving out any another delivery is still waiting on a response for.
     ///
+    /// - Parameter discardingExpired: whether to discard what is too old to report first, which a second pass moments
+    ///   after the first has no need to do again.
     /// - Returns: the batches to send, the claims on the ones left out, and whether the listing was complete. A batch
     ///   left out may hold this caller's events -- `commitRecordedEvents` only stages them, and whichever delivery runs
     ///   next is what closes them into a batch -- so the answer has to wait for those claims rather than assume they
     ///   are someone else's business.
-    private func claimDeliverableBatches() -> (deliverable: [EventBatch], waitingOn: [Claim], isComplete: Bool) {
+    private func claimDeliverableBatches(discardingExpired: Bool) -> (deliverable: [EventBatch], waitingOn: [Claim], isComplete: Bool) {
         // Listed before the lock is taken, because listing reads the disk. Taking what appeared after it is the next
         // delivery's business; all this has to be atomic is deciding which of these batches are this delivery's.
         // Expired first, so that a batch too old to report is not sent.
-        reportDiscarded(store.discardExpired())
+        if discardingExpired {
+            reportDiscarded(store.discardExpired())
+        }
         let listing = store.listPendingBatches()
         return claimLock.withLock {
             var deliverable: [EventBatch] = []
@@ -721,7 +773,22 @@ extension DirectEventProcessor {
         }
     }
 
-    private func deliver(_ batches: [EventBatch], _ completion: FlushOutcomeClosure?) {
+    /// How a pass over some batches went, from best to worst.
+    enum PassOutcome: Int, Comparable {
+        /// Every batch was accepted.
+        case delivered
+        /// Every batch was attempted, and at least one was lost for good: refused, unreadable, or damaged.
+        case lost
+        /// A batch is still there to be sent again: its request failed in a way worth retrying, or it could not be read
+        /// this time. The batches after it were not attempted.
+        case blocked
+
+        static func < (lhs: PassOutcome, rhs: PassOutcome) -> Bool {
+            lhs.rawValue < rhs.rawValue
+        }
+    }
+
+    private func deliver(_ batches: [EventBatch], _ completion: @escaping (PassOutcome) -> Void) {
         deliver(batches, lostAnything: false, completion)
     }
 
@@ -732,11 +799,11 @@ extension DirectEventProcessor {
     ///
     /// `lostAnything` carries whether a batch already taken in this pass was lost for good, so that the caller hears
     /// about it even where the batches after it were accepted.
-    private func deliver(_ batches: [EventBatch], lostAnything: Bool, _ completion: FlushOutcomeClosure?) {
+    private func deliver(_ batches: [EventBatch], lostAnything: Bool, _ completion: @escaping (PassOutcome) -> Void) {
         var remaining = batches
         guard !remaining.isEmpty
         else {
-            completion?(!lostAnything)
+            completion(lostAnything ? .lost : .delivered)
             return
         }
 
@@ -755,7 +822,7 @@ extension DirectEventProcessor {
         } catch {
             // Kept: the batch is still there, and a read that failed may not fail next time.
             os_log("%s could not read stored events: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error))
-            completion?(false)
+            completion(.blocked)
             return
         }
 
@@ -789,7 +856,7 @@ extension DirectEventProcessor {
                 self.reportBatchLost(batch)
                 self.deliver(remaining, lostAnything: true, completion)
             case .retryable:
-                completion?(false)
+                completion(.blocked)
             }
         }
     }
