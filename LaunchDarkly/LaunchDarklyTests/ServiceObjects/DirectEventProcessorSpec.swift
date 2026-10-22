@@ -2024,7 +2024,7 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.commitRecordedEvents()
                 let damaged = store.closeBatch()!
                 // Its name still counts it, so it is listed without being read; the damage is only found on sending.
-                let damagedUrl = store.directory!.appendingPathComponent("ready-\(damaged.payloadId)-\(damaged.eventCount)")
+                let damagedUrl = store.directory!.appendingPathComponent("ready-\(damaged.payloadId).\(damaged.eventCount)")
                 try Data("not an event log".utf8).write(to: damagedUrl)
                 testContext.recordEvents(1)
 
@@ -2051,7 +2051,7 @@ extension DirectEventProcessorSpec {
                 testContext.recordEvents(1)
                 testContext.eventProcessor.commitRecordedEvents()
                 let damaged = store.closeBatch()!
-                let damagedUrl = store.directory!.appendingPathComponent("ready-\(damaged.payloadId)-\(damaged.eventCount)")
+                let damagedUrl = store.directory!.appendingPathComponent("ready-\(damaged.payloadId).\(damaged.eventCount)")
                 try Data("not an event log".utf8).write(to: damagedUrl)
 
                 testContext.eventProcessor.flush(completion: nil)

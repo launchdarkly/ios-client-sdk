@@ -741,7 +741,7 @@ final class EventStoreSpec: QuickSpec {
                 // Nothing appends to a batch once it is closed, so the count its name carries still holds and
                 // listing it has no reason to go to the disk. Damaging the file is how the test tells the two apart:
                 // a listing that read would refuse this batch.
-                let batchUrl = store.directory!.appendingPathComponent("ready-\(batch.payloadId)-2")
+                let batchUrl = store.directory!.appendingPathComponent("ready-\(batch.payloadId).2")
                 try Data("not an event log".utf8).write(to: batchUrl)
 
                 // The store that closed it and one that did not both count it from the name alone.
@@ -757,9 +757,9 @@ final class EventStoreSpec: QuickSpec {
                 _ = store.stage(EventStoreSpec.payload("left-by-a-previous-version"))
                 let batch = store.closeBatch()!
 
-                // The name a version that did not count them in the name gave it, which is what such a version
-                // leaves behind for this one to deliver.
-                let counted = store.directory!.appendingPathComponent("ready-\(batch.payloadId)-1")
+                // A name without a count, which is what a recovery that could not read a log leaves behind for a
+                // listing to count.
+                let counted = store.directory!.appendingPathComponent("ready-\(batch.payloadId).1")
                 let uncounted = store.directory!.appendingPathComponent("ready-\(batch.payloadId)")
                 try FileManager.default.moveItem(at: counted, to: uncounted)
 
@@ -777,11 +777,35 @@ final class EventStoreSpec: QuickSpec {
 
                 // Its last group fits an Int32 once the leading zeros are dropped.
                 let payloadId = "6F9619FF-8B86-D011-B42D-000012345678"
-                let counted = store.directory!.appendingPathComponent("ready-\(batch.payloadId)-1")
+                let counted = store.directory!.appendingPathComponent("ready-\(batch.payloadId).1")
                 let uncounted = store.directory!.appendingPathComponent("ready-\(payloadId)")
                 try FileManager.default.moveItem(at: counted, to: uncounted)
 
                 expect(EventStoreSpec.reader(sharing: store).pendingBatches()) == [EventBatch(payloadId: payloadId, eventCount: 1)]
+            }
+
+            it("reads a name with a field after the count by position") {
+                _ = store.stage(EventStoreSpec.payload("first"))
+                _ = store.stage(EventStoreSpec.payload("second"))
+                let batch = store.closeBatch()!
+
+                // What a later version might add, which this one has no use for.
+                let counted = store.directory!.appendingPathComponent("ready-\(batch.payloadId).2")
+                let extended = store.directory!.appendingPathComponent("ready-\(batch.payloadId).2.v2-something")
+                try FileManager.default.moveItem(at: counted, to: extended)
+
+                expect(EventStoreSpec.reader(sharing: store).pendingBatches()) == [batch]
+            }
+
+            it("counts a batch whose count does not parse by reading it") {
+                _ = store.stage(EventStoreSpec.payload("only"))
+                let batch = store.closeBatch()!
+
+                let counted = store.directory!.appendingPathComponent("ready-\(batch.payloadId).1")
+                let unparseable = store.directory!.appendingPathComponent("ready-\(batch.payloadId).not-a-count")
+                try FileManager.default.moveItem(at: counted, to: unparseable)
+
+                expect(EventStoreSpec.reader(sharing: store).pendingBatches()) == [batch]
             }
 
             it("gives a batch its own payload id, so a retry is not read as a new delivery") {

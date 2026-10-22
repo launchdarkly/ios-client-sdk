@@ -28,7 +28,8 @@ struct EventTally: Equatable {
 /// that would have to be ordered against the others.
 final class EventDirectory {
     /// Names a log that has been closed off for delivery. The rest of the name is the batch's payload ID and how many
-    /// events are in it, `ready-<payloadId>-<count>`.
+    /// events are in it, `ready-<payloadId>.<count>`. Anything more a batch needs to say belongs in a frame type readers
+    /// skip, rather than in the name.
     ///
     /// The count is in the name so that listing a batch this process did not close costs a directory entry rather than
     /// a read of the whole file. That is what every batch is at startup: the ones a previous run left behind, and the
@@ -37,6 +38,7 @@ final class EventDirectory {
     ///
     /// A batch is never appended to once it is closed, so the count is as good as the file is.
     private static let batchPrefix = "ready-"
+    private static let nameFieldSeparator: Character = "."
 
     private let locateDirectory: () -> URL
     private let ioLock: UnfairLock
@@ -140,25 +142,25 @@ final class EventDirectory {
 
     /// Requires `ioLock`.
     private func newUrl(of payloadId: String, holding events: Int) -> URL {
-        disk.directory.appendingPathComponent("\(EventDirectory.batchPrefix)\(payloadId)-\(events)")
+        disk.directory.appendingPathComponent(
+            "\(EventDirectory.batchPrefix)\(payloadId)\(EventDirectory.nameFieldSeparator)\(events)")
     }
 
-    /// A batch as its filename gives it: everything between the prefix and the count is the payload ID.
+    /// A batch as its name, `ready-<payloadId>.<count>`, gives it: each field by its position.
     ///
-    /// - Returns: the payload ID, and the count the name ends with, which is nil where it has none -- how a version
-    ///   that did not write one named its batches. A payload ID cannot be mistaken for a count: it is a UUID, whose
-    ///   last group is twelve characters. Twelve digits are more than an `Int32` holds unless they start with a zero,
-    ///   which a count never does.
+    /// Fields are split at `nameFieldSeparator`, which a payload ID never contains, so nothing about the count's own
+    /// characters is needed to tell it apart. Fields after it, which a later version might add, are ignored.
+    ///
+    /// - Returns: the payload ID, and the count, which is nil where the name has none or it does not parse -- a batch a
+    ///   recovery could not read, which is read once to count it.
     private static func parse(batchName name: String) -> (payloadId: String, events: Int?) {
-        let rest = String(name.dropFirst(batchPrefix.count))
-        guard let split = rest.lastIndex(of: "-")
-        else { return (rest, nil) }
-        let suffix = rest[rest.index(after: split)...]
-        guard !suffix.isEmpty, suffix.allSatisfy({ $0.isASCII && $0.isNumber }),
-              suffix == "0" || suffix.first != "0",
-              let events = Int32(suffix)
-        else { return (rest, nil) }
-        return (String(rest[..<split]), Int(events))
+        let fields = name.dropFirst(batchPrefix.count)
+            .split(separator: nameFieldSeparator, omittingEmptySubsequences: false)
+        let payloadId = String(fields[0])
+        guard fields.count > 1, !fields[1].isEmpty, fields[1].allSatisfy({ $0.isASCII && $0.isNumber }),
+              let events = Int32(fields[1])
+        else { return (payloadId, nil) }
+        return (payloadId, Int(events))
     }
 
     // MARK: Writing
