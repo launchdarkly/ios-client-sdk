@@ -101,4 +101,84 @@ final class RetryStateSpec: XCTestCase {
         retry.recordFailure(unexpected: true)
         assertDelay(retry, inClosedRange: 600...600)
     }
+
+    func testDeliveryNothingWaitsBeforeTheFirstFailure() {
+        XCTAssertEqual(DeliveryRetryState(flushInterval: 30).remainingWait, 0)
+    }
+
+    func testDeliveryOrdinaryFailuresDoubleTheWaitUpToTheFlushInterval() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        for expected in [1, 2, 4, 8, 16, 30, 30] as [TimeInterval] {
+            XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: nil), expected)
+        }
+    }
+
+    func testDeliveryNormalCeilingIsNeverBelowASecond() {
+        let retry = DeliveryRetryState(flushInterval: 0.2)
+        retry.recordFailure(unexpected: false, retryAfter: nil)
+        XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: nil), 1)
+    }
+
+    func testDeliveryRefusalWaitsAboutEightAndAHalfMinutesAndDoublesToAnHour() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        for expected in [512, 1024, 2048, 3600] as [TimeInterval] {
+            XCTAssertEqual(retry.recordFailure(unexpected: true, retryAfter: nil), expected)
+        }
+    }
+
+    func testDeliveryOrdinaryFailureAfterARefusalKeepsTheLongerCeiling() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        retry.recordFailure(unexpected: true, retryAfter: nil)
+        XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: nil), 1024)
+    }
+
+    func testDeliveryAcceptedDeliveryPutsEverythingBack() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        retry.recordFailure(unexpected: true, retryAfter: nil)
+        retry.recordFailure(unexpected: false, retryAfter: nil)
+        retry.recordSuccess()
+        XCTAssertEqual(retry.remainingWait, 0)
+        XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: nil), 1)
+    }
+
+    func testDeliveryRetryAfterSetsTheWaitJitteredToNoLessThanHalfOfIt() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        for _ in 0..<100 {
+            let wait = retry.recordFailure(unexpected: false, retryAfter: 10)
+            XCTAssertTrue((5...10).contains(wait), "\(wait) is outside 5...10")
+        }
+    }
+
+    func testDeliveryRetryAfterIsCappedAtAnHour() {
+        let retry = DeliveryRetryState(initialDelay: 1, normalCeiling: 30, extendedCeiling: 3600, random: { 0 })
+        XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: 5 * 3600), 3600)
+    }
+
+    func testDeliveryFailureWithARetryAfterStillCountsTowardTheBackoff() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        retry.recordFailure(unexpected: false, retryAfter: nil)
+        retry.recordFailure(unexpected: false, retryAfter: 0)
+        XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: nil), 4)
+    }
+
+    func testDeliveryWaitRunsOut() {
+        let retry = DeliveryRetryState(initialDelay: 0.02, normalCeiling: 0.02, extendedCeiling: 0.02)
+        retry.recordFailure(unexpected: false, retryAfter: nil)
+        XCTAssertGreaterThan(retry.remainingWait, 0)
+        Thread.sleep(forTimeInterval: 0.04)
+        XCTAssertEqual(retry.remainingWait, 0)
+    }
+
+    func testRetryAfterHeaderIsReadAsSecondsOrAnHttpDate() {
+        func response(_ retryAfter: String?) -> HTTPURLResponse {
+            HTTPURLResponse(url: URL(string: "https://example.com")!, statusCode: 503, httpVersion: "1.1",
+                            headerFields: retryAfter.map { ["retry-after": $0] })!
+        }
+        XCTAssertNil(response(nil).headerRetryAfter)
+        XCTAssertEqual(response("120").headerRetryAfter, 120)
+        XCTAssertNil(response("soon").headerRetryAfter)
+        XCTAssertEqual(response(DateFormatter.httpUrlHeaderFormatter.string(from: Date(timeIntervalSinceNow: -60))).headerRetryAfter, 0)
+        let date = DateFormatter.httpUrlHeaderFormatter.string(from: Date(timeIntervalSinceNow: 600))
+        XCTAssertEqual(response(date).headerRetryAfter ?? 0, 600, accuracy: 2)
+    }
 }

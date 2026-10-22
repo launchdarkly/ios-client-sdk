@@ -1,20 +1,39 @@
 import Foundation
 import OSLog
 
-/// Posts a batch of events to LaunchDarkly, retrying once a second later where the failure may pass, and says what the
-/// response means. Android's `AnalyticsEventSender` plays the same part.
+/// Posts a batch of events to LaunchDarkly once and says what the response means. Android's `AnalyticsEventSender`
+/// plays the same part.
 ///
-/// It keeps no state. What an outcome means for the SDK -- the server's time, going offline, removing the batch -- is
-/// left to `DirectEventProcessor`, which owns that state.
+/// It keeps no state. What an outcome means for the SDK -- the server's time, when to post again, removing the batch --
+/// is left to `DirectEventProcessor`, which owns that state.
 final class AnalyticsEventSender {
     enum Outcome {
         /// LaunchDarkly took the events. Carries the time the response gave, if it gave one.
         case accepted(serverTime: Date?)
-        /// LaunchDarkly will never take these events, so keeping them only wastes space.
-        case refused(HTTPURLResponse?)
-        /// The events may still be deliverable. Carries why the retry failed.
-        case retryable(SynchronizingError)
+        /// The post failed. The events are kept whatever the failure; it decides only how long to wait.
+        case failed(Failure)
     }
+
+    struct Failure {
+        let error: SynchronizingError
+        /// The response's status, or nil where there was no response.
+        let statusCode: Int?
+        /// Whether the failure is unlikely to pass soon: a 4xx other than 400, 408 and 429, or a TLS or certificate
+        /// failure.
+        let unexpected: Bool
+        /// The wait the response asked for, or nil where it gave none.
+        let retryAfter: TimeInterval?
+    }
+
+    private static let tlsErrorCodes: Set<URLError.Code> = [
+        .secureConnectionFailed,
+        .serverCertificateHasBadDate,
+        .serverCertificateUntrusted,
+        .serverCertificateHasUnknownRoot,
+        .serverCertificateNotYetValid,
+        .clientCertificateRejected,
+        .clientCertificateRequired
+    ]
 
     private let service: DarklyServiceProvider
 
@@ -22,23 +41,10 @@ final class AnalyticsEventSender {
         self.service = service
     }
 
-    /// Posts `body` under `payloadId`, and once more after a second if that failed in a way that may pass. The
-    /// completion runs once, with the outcome of the last attempt.
+    /// Posts `body` under `payloadId`. The completion runs once, with the outcome.
     func send(_ body: Data, payloadId: String, eventCount: Int, completion: @escaping (Outcome) -> Void) {
         service.publishEventData(body, payloadId) { response in
-            let outcome = self.outcome(sentEvents: eventCount, response: response.urlResponse as? HTTPURLResponse, error: response.error)
-            guard case .retryable = outcome
-            else {
-                completion(outcome)
-                return
-            }
-
-            os_log("%s Retrying event post after delay.", log: self.service.config.logger, type: .debug, self.typeName(and: #function))
-            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.0) {
-                self.service.publishEventData(body, payloadId) { retryResponse in
-                    completion(self.outcome(sentEvents: eventCount, response: retryResponse.urlResponse as? HTTPURLResponse, error: retryResponse.error))
-                }
-            }
+            completion(self.outcome(sentEvents: eventCount, response: response.urlResponse as? HTTPURLResponse, error: response.error))
         }
     }
 
@@ -48,16 +54,20 @@ final class AnalyticsEventSender {
             return .accepted(serverTime: response?.headerDate)
         }
 
-        if let statusCode = response?.statusCode, HTTPURLResponse.StatusCodes.isTerminalStatusCode(statusCode) {
-            os_log("%s dropping events due to non-retriable response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: response))
-            return .refused(response)
-        }
-
         os_log("%s Sending events failed with error: %s response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: response))
-        if let error = error {
-            return .retryable(.request(error))
+        let statusCode = response?.statusCode
+        let unexpected: Bool
+        if let statusCode, (400..<600).contains(statusCode) {
+            unexpected = HTTPURLResponse.StatusCodes.isTerminalStatusCode(statusCode)
+        } else if let urlError = error as? URLError {
+            unexpected = AnalyticsEventSender.tlsErrorCodes.contains(urlError.code)
+        } else {
+            unexpected = false
         }
-        return .retryable(.response(response))
+        return .failed(Failure(error: error.map { .request($0) } ?? .response(response),
+                               statusCode: statusCode,
+                               unexpected: unexpected,
+                               retryAfter: response?.headerRetryAfter))
     }
 }
 

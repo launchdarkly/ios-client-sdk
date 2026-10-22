@@ -23,6 +23,12 @@ class DirectEventProcessorSpec: QuickSpec {
         static let deliveryTimeout: DispatchTimeInterval = .seconds(10)
     }
 
+    /// Retries at once and never waits, so every flush posts: for tests about what is kept through failures rather than
+    /// when it is posted again.
+    static func withoutBackoff() -> DeliveryRetryState {
+        DeliveryRetryState(initialDelay: 0, normalCeiling: 0, extendedCeiling: 0)
+    }
+
     struct TestContext {
         var eventProcessor: DirectEventProcessor!
         var config: LDConfig!
@@ -46,7 +52,8 @@ class DirectEventProcessorSpec: QuickSpec {
              store: EventStore? = nil,
              eventCapacity: Int = Event.Kind.allKinds.count,
              eventPersistence: EventPersistence? = nil,
-             commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.DirectEventProcessor.commitQueue")) {
+             commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.tests.DirectEventProcessor.commitQueue"),
+             retryState: DeliveryRetryState? = nil) {
 
             config = LDConfig.stub
             config.eventCapacity = eventCapacity
@@ -70,7 +77,7 @@ class DirectEventProcessorSpec: QuickSpec {
             self.lastEventResponseDate = lastEventResponseDate.adjustedForHttpUrlHeaderUse
             self.store = store ?? EventStore.temporary(capacity: config.eventCapacity, persistEvents: persistence != .disabled)
             eventProcessor = DirectEventProcessor(service: serviceMock, onSyncComplete: onSyncComplete,
-                                          store: self.store, commitQueue: commitQueue)
+                                          store: self.store, commitQueue: commitQueue, retryState: retryState)
             (0..<eventCount).forEach {
                 let event = Event.stub(Event.eventKind(for: $0), with: context!)
                 events.append(event)
@@ -184,7 +191,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 testContext.eventProcessor.record(CustomEvent(key: key, context: testContext.context))
             }
 
-            it("never works out where its directory is through refusals, a retry, deliveries and a refusal that takes it offline") {
+            it("never works out where its directory is through refusals, a retry, deliveries and a refusal that makes it wait") {
                 let lock = UnfairLock()
                 var located = 0
                 let store = EventStore(locatingDirectory: {
@@ -196,9 +203,11 @@ class DirectEventProcessorSpec: QuickSpec {
                                        capacity: Event.Kind.allKinds.count,
                                        persistEvents: false,
                                        logger: .disabled)
-                testContext = TestContext(store: store)
                 // Refused and refused again on the retry; then the batch held from that and the next one are accepted;
-                // then the service says the key is no good.
+                // then the service says the key is no good, after which nothing is posted for a while. The waits are
+                // cut to milliseconds, which makes that while about four seconds.
+                testContext = TestContext(store: store,
+                                          retryState: DeliveryRetryState(initialDelay: 0.008, normalCeiling: 0.008, extendedCeiling: 3600))
                 testContext.serviceMock.eventStatusForPost = { post in post <= 2 ? 503 : post <= 4 ? 202 : 401 }
                 testContext.eventProcessor.isOnline = true
 
@@ -207,11 +216,10 @@ class DirectEventProcessorSpec: QuickSpec {
                 record("accepted")
                 expect(testContext.flushOutcome()) == true
                 record("refused-for-good")
-                _ = testContext.flushOutcome()
-                expect(testContext.eventProcessor.isOnline) == false
-                record("while-offline")
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.eventProcessor.isOnline) == true
+                record("while-waiting")
                 testContext.eventProcessor.flush(completion: nil)
-                // Longer than the retry delay, so anything still on its way would have been posted by now.
                 waitLettingTimersFire(1.5)
 
                 expect(testContext.serviceMock.publishEventDataCallCount) == 5
@@ -224,7 +232,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 // A batch refused twice used to be dropped. Now it waits in memory, still counted against capacity, so
                 // an outage costs the newest events rather than the oldest and memory stays bounded however long it lasts.
                 let capacity = 20
-                testContext = TestContext(eventCapacity: capacity)
+                testContext = TestContext(eventCapacity: capacity, retryState: DirectEventProcessorSpec.withoutBackoff())
                 testContext.serviceMock.respondToEvents(with: 503)
                 testContext.eventProcessor.isOnline = true
 
@@ -962,7 +970,7 @@ class DirectEventProcessorSpec: QuickSpec {
                             expect(error as NSError?) == DarklyServiceMock.Constants.error
                         }
                     }
-                    context("non-retriable response") {
+                    context("unexpected response") {
                         beforeEach {
                             waitUntil(timeout: .seconds(10)) { syncComplete in
                                 testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
@@ -979,21 +987,20 @@ class DirectEventProcessorSpec: QuickSpec {
                                 testContext.eventProcessor.flush(completion: nil)
                             }
                         }
-                        it("drops events and stops reporting") {
+                        it("keeps the events and keeps reporting, without retrying soon") {
+                            // A valid key is sometimes refused for minutes during an incident, so the events wait for
+                            // the longer backoff rather than being deleted with the SDK going quiet.
                             expect(testContext.serviceMock.publishEventDataCallCount) == 1
-                            expect(testContext.store.pendingEventCount).toEventually(equal(0), timeout: Constants.deliveryTimeout)
-                            expect(testContext.eventProcessor.isOnline).to(beFalse())
-                            expect(testContext.eventProcessor.isReportingActive).to(beFalse())
+                            expect(testContext.store.pendingEventCount) == testContext.events.count
+                            expect(testContext.eventProcessor.isOnline).to(beTrue())
+                            expect(testContext.eventProcessor.isReportingActive).to(beTrue())
                             if case let .response(error) = testContext.syncResult {
                                 expect((error as? HTTPURLResponse)?.statusCode) == HTTPURLResponse.StatusCodes.unauthorized
                             } else {
                                 fail("Expected response error result for event send")
                             }
-                        }
-                        it("can be brought back online") {
-                            testContext.eventProcessor.isOnline = true
-                            expect(testContext.eventProcessor.isOnline).to(beTrue())
-                            expect(testContext.eventProcessor.isReportingActive).to(beTrue())
+                            waitLettingTimersFire(1.5)
+                            expect(testContext.serviceMock.publishEventDataCallCount) == 1
                         }
                     }
                 }
@@ -1739,7 +1746,7 @@ extension DirectEventProcessorSpec {
                 expect(totalWrites) < trackers + 1
             }
 
-            itPersisting("tries a batch a previous run left once at start, with its retry, and then waits while it is still refused") {
+            itPersisting("tries a batch a previous run left once at start, with its retry, and then waits out the backoff") {
                 testContext = TestContext()
                 testContext.serviceMock.respondToEvents(with: 503)
                 testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
@@ -1749,11 +1756,13 @@ extension DirectEventProcessorSpec {
                 nextRun.isOnline = true
                 defer { nextRun.isOnline = false }
 
-                // The delivery at start and its retry, and nothing after them until something asks.
+                // The delivery at start and its retry a second later, then nothing until the two seconds after that are
+                // up.
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: .seconds(5))
                 expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["kept"], ["kept"]]
-                waitLettingTimersFire(2)
+                waitLettingTimersFire(1.5)
                 expect(testContext.serviceMock.publishEventDataCallCount) == 2
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(3), timeout: .seconds(3))
             }
 
             itPersisting("leaves a batch still refused when the run ended for the next run to deliver, under the same payload id") {
@@ -2305,7 +2314,7 @@ extension DirectEventProcessorSpec {
                 expect(testContext.store.pendingBatches().count) == 1
             }
 
-            it("reports false when LaunchDarkly permanently refuses the batch, and drops it") {
+            it("reports false when LaunchDarkly refuses the batch with a 401, and keeps it") {
                 testContext = TestContext()
                 let unauthorized = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
                                                    statusCode: HTTPURLResponse.StatusCodes.unauthorized,
@@ -2322,9 +2331,9 @@ extension DirectEventProcessorSpec {
                     }
                 }
                 expect(delivered) == false
-                expect(testContext.eventProcessor.isOnline) == false
-                // Kept off the device, since no later delivery would fare better.
-                expect(testContext.store.pendingEventCount) == 0
+                expect(testContext.eventProcessor.isOnline) == true
+                expect(testContext.store.pendingEventCount) == 1
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
             }
 
             it("keeps draining while a delivery is in flight, and sends each batch once") {
@@ -2487,7 +2496,8 @@ extension DirectEventProcessorSpec {
             /// first sent with.
             func expectKeptThroughRefusals(status: Int, persistence: EventPersistence, refusedFlushes: Int) {
                 testContext = TestContext(store: EventStore.temporary(persistEvents: persistence != .disabled),
-                                          eventPersistence: persistence)
+                                          eventPersistence: persistence,
+                                          retryState: DirectEventProcessorSpec.withoutBackoff())
                 testContext.serviceMock.respondToEvents(with: status)
                 testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
                 testContext.eventProcessor.isOnline = true
@@ -2519,31 +2529,95 @@ extension DirectEventProcessorSpec {
                 expectKeptThroughRefusals(status: 503, persistence: .disabled, refusedFlushes: 3)
             }
 
-            // The statuses worth trying again. Each has to keep the batch, not only 503.
-            for status in [400, 408, 429, 500, 502, 504] {
+            // Each has to keep the batch, not only 503: a refusal such as a 401 only waits longer.
+            for status in [400, 401, 403, 404, 408, 413, 429, 500, 502, 504] {
                 it("keeps a batch refused with HTTP \(status) past the retry") {
                     expectKeptThroughRefusals(status: status, persistence: .immediate, refusedFlushes: 2)
                 }
             }
 
+            // Kept is not the same as resent on its own: a batch the service always refuses is posted a second after the
+            // first failure and then twice as long after each one, and a flush in between posts nothing, or it would be
+            // posted in a loop.
             for status in [400, 503] {
-                it("posts a batch refused with HTTP \(status) only for each flush and its one retry") {
+                it("posts a batch refused with HTTP \(status) only as the backoff allows") {
                     testContext = TestContext()
                     testContext.serviceMock.respondToEvents(with: status)
                     testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
                     testContext.eventProcessor.isOnline = true
 
-                    for flush in 1...2 {
-                        expect(testContext.flushOutcome()) == false
-                        // Longer than the retry delay, so a second retry would have been posted by now.
-                        waitLettingTimersFire(1.5)
-                        expect(testContext.serviceMock.publishEventDataCallCount) == flush * 2
-                    }
+                    // The attempt and the retry a second later, which the flush waits for.
+                    expect(testContext.flushOutcome()) == false
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 2
+
+                    // Two seconds now, which a flush neither posts in nor waits out.
+                    let start = Date()
+                    expect(testContext.flushOutcome()) == false
+                    expect(Date().timeIntervalSince(start)) < 1
+                    waitLettingTimersFire(1)
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 2
+
+                    // The delivery set for when the two seconds are up, and then four seconds of nothing.
+                    expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(3), timeout: .seconds(3))
+                    waitLettingTimersFire(3)
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 3
                 }
             }
 
-            it("delivers events recorded during an outage after the batch refused before them, oldest first and once each") {
+            it("keeps a refused batch and posts it again once the longer wait is over") {
+                // Cut to a second and a half here from the eight and a half minutes the SDK waits.
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedCeiling: 1.5))
+                testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
+                testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                let payloadId = testContext.serviceMock.publishedPayloadIds.first
+
+                // Recording goes on, and a flush during the wait says it failed without posting.
+                testContext.eventProcessor.record(CustomEvent(key: "recorded-meanwhile", context: testContext.context))
+                expect(testContext.flushOutcome()) == false
+                waitLettingTimersFire(0.5)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                testContext.serviceMock.stubEventResponse(success: true)
+                testContext.serviceMock.eventStatusForPost = nil
+
+                // The delivery the refusal set: the refused batch under the ID it was refused under, then what was
+                // recorded since.
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(3), timeout: Constants.deliveryTimeout)
+                expect(testContext.serviceMock.publishedEventPayloads.dropFirst().map(customKeys)) == [["refused"], ["recorded-meanwhile"]]
+                expect(testContext.serviceMock.publishedPayloadIds[1]) == payloadId
+
+                // One accepted delivery puts the backoff back: the next failure waits only the second a flush sits
+                // out, so the flush hears that its retry worked.
+                let posted = testContext.serviceMock.publishEventDataCallCount
+                testContext.serviceMock.eventStatusForPost = { post in post == posted + 1 ? 503 : 202 }
+                testContext.eventProcessor.record(CustomEvent(key: "after", context: testContext.context))
+                expect(testContext.flushOutcome()) == true
+            }
+
+            it("waits as long as a Retry-After asks before posting again") {
                 testContext = TestContext()
+                let busy = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
+                                           statusCode: 503,
+                                           httpVersion: DarklyServiceMock.Constants.httpVersion,
+                                           headerFields: [HTTPURLResponse.HeaderKeys.retryAfter: "4"])
+                testContext.serviceMock.stubbedEventResponse = (nil, busy, nil, nil)
+                testContext.eventProcessor.record(CustomEvent(key: "an-event", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+
+                // Four seconds, jittered down to no less than two, which is past the second a flush waits out.
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                testContext.serviceMock.stubEventResponse(success: true)
+                waitLettingTimersFire(1.8)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: .seconds(5))
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys).last) == ["an-event"]
+            }
+
+            it("delivers events recorded during an outage after the batch refused before them, oldest first and once each") {
+                testContext = TestContext(retryState: DirectEventProcessorSpec.withoutBackoff())
                 testContext.serviceMock.respondToEvents(with: 503)
                 testContext.eventProcessor.isOnline = true
                 testContext.eventProcessor.record(CustomEvent(key: "first", context: testContext.context))
@@ -2566,7 +2640,8 @@ extension DirectEventProcessorSpec {
             for persistence in [EventPersistence.immediate, .disabled] {
                 it("closes no batch behind the one blocked during an outage, persistence: \(persistence)") {
                     testContext = TestContext(store: EventStore.temporary(persistEvents: persistence != .disabled),
-                                              eventPersistence: persistence)
+                                              eventPersistence: persistence,
+                                              retryState: DirectEventProcessorSpec.withoutBackoff())
                     testContext.serviceMock.respondToEvents(with: 503)
                     testContext.eventProcessor.isOnline = true
                     testContext.eventProcessor.record(CustomEvent(key: "blocked", context: testContext.context))
@@ -2591,7 +2666,8 @@ extension DirectEventProcessorSpec {
                 it("leaves room for events beside the summaries an outage writes, persistence: \(persistence)") {
                     testContext = TestContext(lastEventResponseDate: Date(),
                                               store: EventStore.temporary(capacity: 2, persistEvents: persistence != .disabled),
-                                              eventCapacity: 2, eventPersistence: persistence)
+                                              eventCapacity: 2, eventPersistence: persistence,
+                                              retryState: DirectEventProcessorSpec.withoutBackoff())
                     testContext.serviceMock.respondToEvents(with: 503)
                     testContext.eventProcessor.isOnline = true
                     testContext.eventProcessor.record(CustomEvent(key: "blocked", context: testContext.context))
@@ -2657,7 +2733,7 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["held"]]
             }
 
-            it("posts a refused batch at most once per report interval, and not at all once offline") {
+            it("posts a refused batch no more often than the backoff allows, and not at all once offline") {
                 let interval = 0.2
                 let window = 2.5
                 testContext = TestContext(eventFlushInterval: interval)
@@ -2666,10 +2742,11 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.isOnline = true
                 waitLettingTimersFire(window)
 
-                // One post per interval and one outstanding retry at a time; a loop would be in the hundreds by now.
+                // At most one post a second, the backoff's ceiling where the interval is shorter; a loop would be in the
+                // hundreds by now.
                 let posts = testContext.serviceMock.publishEventDataCallCount
-                expect(posts) >= 3
-                expect(posts) <= Int(window / interval) + 1 + Int(window / 1.0) + 1
+                expect(posts) >= 2
+                expect(posts) <= Int(window / 1.0) + 1
 
                 // Offline stops it entirely, kept batch or not. Waits out a retry already scheduled before counting.
                 testContext.eventProcessor.isOnline = false
