@@ -85,6 +85,24 @@ final class EventDirectory {
     /// Only to be used while holding `ioLock`.
     private var deliveredButUndeleted: Set<String> = []
 
+    /// The batches this store has a request out for, by payload ID: the file each was locked under, so the lock is
+    /// released from that file even once the batch has been removed or dropped from a listing, and how many of this
+    /// store's deliveries are sending it.
+    ///
+    /// Only to be used while holding `ioLock`.
+    private var sending: [String: (url: URL, senders: Int)] = [:]
+
+    /// What `openInThisProcess` counts this store under, from locating the directory until closing the log, kept so
+    /// that the count is taken back under the same path even once the directory is gone. Only to be used while holding
+    /// `ioLock`.
+    private var countedAsOpen: String?
+
+    /// The directories of the stores open in this process, by resolved path, with how many stores have each open. Another
+    /// environment's sweep leaves these alone, however long since they were written: a store that is open may be about
+    /// to write, or be sending a batch older than the cutoff. Guarded by `openInThisProcessLock`.
+    private static var openInThisProcess: [String: Int] = [:]
+    private static let openInThisProcessLock = UnfairLock()
+
     #if os(macOS) || targetEnvironment(macCatalyst)
     /// Whether the open log is locked while it is open. Only to be changed before the store first touches the disk.
     ///
@@ -124,7 +142,15 @@ final class EventDirectory {
         #endif
         let disk = (directory: directory, log: log)
         located = disk
+        let path = directory.resolvingSymlinksInPath().path
+        countedAsOpen = path
+        EventDirectory.openInThisProcessLock.withLock { EventDirectory.openInThisProcess[path, default: 0] += 1 }
         return disk
+    }
+
+    private static func isOpenInThisProcess(_ directory: URL) -> Bool {
+        let path = directory.resolvingSymlinksInPath().path
+        return openInThisProcessLock.withLock { openInThisProcess[path] != nil }
     }
 
     /// Where the batches are kept. Requires `ioLock`.
@@ -209,12 +235,42 @@ final class EventDirectory {
         return .closed(EventBatch(payloadId: payloadId, eventCount: events))
     }
 
-    /// Closes the descriptor, leaving everything where it is. Requires `ioLock`.
+    /// Closes the descriptor, leaving everything where it is, and stops counting the directory as open in this process.
+    /// Requires `ioLock`.
     func closeOpenLog() {
         ioLock.assertOwned()
         // Not `disk`: a store that never wrote has never worked out where it lives, and shutting down or giving up on
         // the disk is no reason to start.
         located?.log.closeDescriptor()
+        guard let path = countedAsOpen
+        else { return }
+        countedAsOpen = nil
+        EventDirectory.openInThisProcessLock.withLock {
+            let stores = EventDirectory.openInThisProcess[path] ?? 0
+            EventDirectory.openInThisProcess[path] = stores > 1 ? stores - 1 : nil
+        }
+    }
+
+    /// Locks a batch against expiry, in this process and every other, for as long as a request for it is out. Each
+    /// call is ended by one `stoppedSending(_:)`. Requires `ioLock`.
+    ///
+    /// - Parameter events: what the caller holding the batch knows it to contain, as for `payload(of:)`.
+    func startedSending(_ payloadId: String, holding events: Int) {
+        ioLock.assertOwned()
+        var batch = sending[payloadId] ?? (url: url(of: payloadId, holding: events), senders: 0)
+        batch.senders += 1
+        sending[payloadId] = batch
+        BatchLocks.startedSending(batch.url)
+    }
+
+    /// Ends one `startedSending(_:holding:)`. Requires `ioLock`.
+    func stoppedSending(_ payloadId: String) {
+        ioLock.assertOwned()
+        guard var batch = sending[payloadId]
+        else { return }
+        BatchLocks.stoppedSending(batch.url)
+        batch.senders -= 1
+        sending[payloadId] = batch.senders > 0 ? batch : nil
     }
 
     // MARK: Listing and reading
@@ -540,9 +596,12 @@ extension EventDirectory {
     /// nothing is appending to it, however long ago it was written: a live process may have gone that long without an
     /// event.
     ///
-    /// - Parameter sending: batches whose request is out, which are left alone however old they are.
-    /// - Returns: how many events were discarded, and how much of that this process had counted, which is what stops
-    ///   counting against capacity.
+    /// A batch whose request is out is left alone however old it is, whichever store or process sent it; see
+    /// `BatchLocks`.
+    ///
+    /// - Parameter sending: batches whose request is out from this store.
+    /// - Returns: how many events were discarded, and how much this process had counted of the batches that left the
+    ///   directory, which is what stops counting against capacity.
     func discard(lastWrittenBefore cutoff: Date, sparing sending: Set<String>) -> (events: Int, counted: EventTally) {
         ioLock.assertOwned()
         let contents = (try? FileManager.default.contentsOfDirectory(at: disk.directory,
@@ -554,11 +613,18 @@ extension EventDirectory {
             let name = file.lastPathComponent
             if name.hasPrefix(EventDirectory.batchPrefix) {
                 let (payloadId, named) = EventDirectory.parse(batchName: name)
-                guard !sending.contains(payloadId), !deliveredButUndeleted.contains(payloadId)
+                guard !sending.contains(payloadId), !deliveredButUndeleted.contains(payloadId),
+                      !BatchLocks.isSentInThisProcess(file)
                 else { continue }
                 let held = named ?? stored[payloadId]?.events ?? EventDirectory.eventsReading(file)
-                guard EventDirectory.delete(file)
-                else { continue }
+                guard BatchLocks.deleteUnlessBeingSent(file)
+                else {
+                    if !FileManager.default.fileExists(atPath: file.path) {
+                        // Delivered by another process since the listing: no longer counted, and not dropped.
+                        counted += stored.removeValue(forKey: payloadId)?.tally ?? EventTally()
+                    }
+                    continue
+                }
                 events += held
                 counted += stored.removeValue(forKey: payloadId)?.tally ?? EventTally()
             } else {
@@ -579,6 +645,9 @@ extension EventDirectory {
     /// Only directories carrying this application's bundle identifier are considered. An unsandboxed Mac application
     /// shares Application Support with every other one, whose events are not this application's to delete.
     ///
+    /// The directory of a store open in this process is left alone, and so is a batch some live process is sending;
+    /// see `BatchLocks`.
+    ///
     /// - Returns: how many events were discarded.
     static func discardAbandonedEnvironments(besides current: URL, lastWrittenBefore cutoff: Date) -> Int {
         let root = current.deletingLastPathComponent()
@@ -596,7 +665,8 @@ extension EventDirectory {
                                                                      options: [.skipsHiddenFiles])) ?? []
         var events = 0
         for directory in siblings where directory.lastPathComponent != ownName && isSameApplication(directory.lastPathComponent) {
-            guard (try? directory.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+            guard (try? directory.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true,
+                  !isOpenInThisProcess(directory)
             else { continue }
             let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
                                                                          includingPropertiesForKeys: listedKeys,
@@ -604,8 +674,10 @@ extension EventDirectory {
             for file in contents where listed(file).modified.map({ $0 < cutoff }) ?? false {
                 let name = file.lastPathComponent
                 if name.hasPrefix(batchPrefix) {
+                    guard !BatchLocks.isSentInThisProcess(file)
+                    else { continue }
                     let held = parse(batchName: name).events ?? eventsReading(file)
-                    if delete(file) {
+                    if BatchLocks.deleteUnlessBeingSent(file) {
                         events += held
                     }
                 } else {
@@ -640,6 +712,103 @@ extension EventDirectory {
     private static func delete(_ file: URL) -> Bool {
         try? FileManager.default.removeItem(at: file)
         return !FileManager.default.fileExists(atPath: file.path)
+    }
+}
+
+/// What tells expiry which batches have a request out, so that it never deletes a batch someone is still sending: were
+/// that request to fail, there would be no file left to retry from.
+///
+/// On a Mac, where processes of one application can share an environment, a sender holds a shared lock on the batch
+/// for as long as its request is out, and expiry deletes a batch only while holding an exclusive lock on it, which it
+/// cannot have while anyone holds the shared one. The kernel drops a lock when its process dies, so a batch whose
+/// sender is gone is expired like any other. Elsewhere a process has its directory to itself, as it does its logs.
+///
+/// The batches sent in this process are also remembered, and expiry here asks that rather than opening the file. The
+/// lock is taken once the batch has been read for sending; a batch another process expires in the moment between is
+/// still sent from what was read, but has no file for a retry.
+enum BatchLocks {
+    /// A batch this process is sending, the descriptor its lock is held through, and how many send it.
+    private final class Held {
+        var file: EventLogFile?
+        var senders = 0
+    }
+
+    /// The batches this process has a request out for, by `key(_:)`. Guarded by `lock`, which covers the probes and
+    /// deletions below as well, so that a store in this process cannot start sending a batch another is expiring.
+    private static var heldInThisProcess: [String: Held] = [:]
+    private static let lock = UnfairLock()
+
+    /// One name for a batch however its URL was come by, from a listing or put together from the directory: only the
+    /// directory is resolved, since the batch itself may be gone by the time its send stops.
+    private static func key(_ batch: URL) -> String {
+        batch.deletingLastPathComponent().resolvingSymlinksInPath().appendingPathComponent(batch.lastPathComponent).path
+    }
+
+    /// Locks a batch for as long as a request for it is out. Each call is ended by one `stoppedSending(_:)`; a batch
+    /// two deliveries send at once stays locked until both have stopped.
+    static func startedSending(_ batch: URL) {
+        let path = key(batch)
+        lock.withLock {
+            let held = heldInThisProcess[path] ?? Held()
+            heldInThisProcess[path] = held
+            held.senders += 1
+            #if os(macOS) || targetEnvironment(macCatalyst)
+            // Only fails to open where the batch is gone already, leaving nothing for expiry to take. Still remembered
+            // where it cannot be locked, which keeps expiry in this process away from it; only other processes cannot
+            // tell.
+            guard held.file == nil, let opened = EventLogFile.open(at: batch, flags: O_RDONLY)
+            else { return }
+            if opened.tryLock(shared: true) {
+                held.file = opened
+            } else {
+                opened.close()
+            }
+            #endif
+        }
+    }
+
+    /// Ends one `startedSending(_:)`, releasing the lock once the last sender has stopped.
+    static func stoppedSending(_ batch: URL) {
+        let path = key(batch)
+        lock.withLock {
+            guard let held = heldInThisProcess[path]
+            else { return }
+            held.senders -= 1
+            guard held.senders <= 0
+            else { return }
+            heldInThisProcess[path] = nil
+            // Releases the lock with it.
+            held.file?.close()
+        }
+    }
+
+    /// Whether a store in this process is sending a batch, answered without opening the file.
+    static func isSentInThisProcess(_ batch: URL) -> Bool {
+        let path = key(batch)
+        return lock.withLock { heldInThisProcess[path] != nil }
+    }
+
+    /// Deletes a batch for expiry, unless some live process is sending it.
+    ///
+    /// - Returns: whether this call deleted it; false for one being sent, one that could not be looked at, and one
+    ///   already gone, whose events are someone else's to count.
+    static func deleteUnlessBeingSent(_ batch: URL) -> Bool {
+        let path = key(batch)
+        return lock.withLock {
+            guard heldInThisProcess[path] == nil
+            else { return false }
+            #if os(macOS) || targetEnvironment(macCatalyst)
+            // Opened without being created: a batch delivered since it was listed has to stay gone, since a delivery
+            // reading one brought back empty would report its events lost.
+            guard let probe = EventLogFile.open(at: batch, flags: O_RDONLY)
+            else { return false }
+            defer { probe.close() }
+            guard probe.tryLock(shared: false)
+            else { return false }
+            #endif
+            // Deleted while still locked, so no sender can take its lock between the look and the delete.
+            return (try? FileManager.default.removeItem(at: batch)) != nil
+        }
     }
 }
 

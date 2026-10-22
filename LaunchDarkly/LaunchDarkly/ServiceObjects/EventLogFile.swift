@@ -57,6 +57,15 @@ struct EventLogFile {
         opened.close()
         return false
     }
+
+    /// Takes the file's lock without waiting: shared, which any number can hold at once, or exclusive, which nobody
+    /// else can hold alongside it. False where someone else's lock is in the way.
+    ///
+    /// The lock belongs to this open file rather than to the process, so closing another descriptor on the same file
+    /// leaves it in place, and another descriptor in this process contends for it as another process would.
+    func tryLock(shared: Bool) -> Bool {
+        flock(descriptor, (shared ? LOCK_SH : LOCK_EX) | LOCK_NB) == 0
+    }
     #endif
 
     /// Removes a directory only if it is empty, so that nothing put there since it was last looked at goes with it.

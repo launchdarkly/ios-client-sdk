@@ -1538,6 +1538,51 @@ final class EventStoreSpec: QuickSpec {
                 expect(try store.body(of: batch)).toNot(beNil())
             }
 
+            it("leaves a batch another store in this process is sending until it stops") {
+                let sender = EventStore.sharing(store.directory!)
+                _ = sender.stage(EventStoreSpec.payload("sending"))
+                let batch = sender.closeBatch()!
+                let file = try EventStoreSpec.onlyBatchFile(in: sender)
+                try EventStoreSpec.age(file, byDays: 30)
+                sender.startedSending(batch)
+
+                expect(store.discardExpired()) == 0
+                expect(FileManager.default.fileExists(atPath: file.path)) == true
+
+                sender.stoppedSending(batch)
+                expect(store.discardExpired()) == 1
+                expect(FileManager.default.fileExists(atPath: file.path)) == false
+            }
+
+            #if os(macOS) || targetEnvironment(macCatalyst)
+            it("leaves a batch another process is sending until it stops") {
+                _ = store.stage(EventStoreSpec.payload("sending"))
+                _ = store.closeBatch()
+                let file = try EventStoreSpec.onlyBatchFile(in: store)
+                try EventStoreSpec.age(file, byDays: 30)
+                // A lock taken through a descriptor of its own contends as another process's would.
+                let otherProcess = EventLogFile.open(at: file, flags: O_RDONLY)!
+                expect(otherProcess.tryLock(shared: true)) == true
+
+                expect(store.discardExpired()) == 0
+                expect(FileManager.default.fileExists(atPath: file.path)) == true
+
+                otherProcess.close()
+                expect(store.discardExpired()) == 1
+                expect(FileManager.default.fileExists(atPath: file.path)) == false
+            }
+            #endif
+
+            it("leaves the directory of another environment open in this process") {
+                let open = EventStore.sharing(root.appendingPathComponent("app.open", isDirectory: true))
+                _ = open.stage(EventStoreSpec.payload("open"))
+                _ = open.closeBatch()
+                try EventStoreSpec.age(contentsOf: open.directory!, byDays: 30)
+
+                expect(store.discardExpired()) == 0
+                expect(open.pendingBatches().count) == 1
+            }
+
             it("discards a log nobody holds once nothing has written to it for the maximum age, and leaves a younger one") {
                 func logLeftBy(_ key: String) -> URL {
                     // Going away closes its log, as its process ending would.

@@ -809,10 +809,12 @@ extension DirectEventProcessor {
                     }
                 }
                 self.store.remove(batch)
+                self.store.stoppedSending(batch)
                 self.reportSyncComplete(nil)
             case .refused(let response):
                 self.isOnline = false
                 self.store.remove(batch)
+                self.store.stoppedSending(batch)
                 self.reportSyncComplete(.response(response))
             case .retryable(let error):
                 self.store.stoppedSending(batch)

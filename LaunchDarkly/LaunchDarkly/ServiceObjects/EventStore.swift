@@ -98,10 +98,13 @@ protocol EventStoring {
     /// Forgets a batch, which is only correct once LaunchDarkly has accepted it or permanently refused it.
     func remove(_ batch: EventBatch)
 
-    /// Stops counting a batch against capacity while its request is out. Ended by `remove(_:)` or `stoppedSending(_:)`.
+    /// Stops counting a batch against capacity while its request is out, and keeps expiry, in this process or any
+    /// other, from deleting it meanwhile. Each call is ended by one `stoppedSending(_:)`, after `remove(_:)` where the
+    /// batch was delivered or refused.
     func startedSending(_ batch: EventBatch)
 
-    /// Counts a batch against capacity again after a send that will be retried later.
+    /// Ends one `startedSending(_:)`: counts a batch against capacity again after a send that will be retried later,
+    /// and lets expiry have it once nobody is sending it.
     func stoppedSending(_ batch: EventBatch)
 
     /// Closes every log no live process holds, so its events join the batches to deliver: one a previous run left open,
@@ -567,10 +570,15 @@ final class EventStore: EventStoring {
 // MARK: Sending
 
 extension EventStore {
-    /// Stops counting a batch against capacity while its request is out. Ended by `remove(_:)` or `stoppedSending(_:)`.
+    /// Stops counting a batch against capacity while its request is out. Each call is ended by one
+    /// `stoppedSending(_:)`.
     ///
-    /// Does nothing for a batch this store no longer counts - one `remove(_:)` forgot, or a listing dropped because
-    /// another process delivered it - since leaving it out would take its events from the batches still counted.
+    /// Does nothing to the count for a batch this store no longer counts - one `remove(_:)` forgot, or a listing
+    /// dropped because another process delivered it - since leaving it out would take its events from the batches
+    /// still counted.
+    ///
+    /// A batch on the disk is also locked against expiry, by this process and any other, until `stoppedSending(_:)`:
+    /// one deleted while its request is out would leave nothing to retry from.
     func startedSending(_ batch: EventBatch) {
         guard let disk
         else {
@@ -578,7 +586,12 @@ extension EventStore {
             return
         }
         // Held across the check and the change, so that the batch cannot stop being counted in between.
-        ioLock.withLock { startedSending(batch.payloadId, disk: disk) }
+        ioLock.withLock {
+            startedSending(batch.payloadId, disk: disk)
+            if !heldLock.withLock({ inMemoryBatches.contains { $0.payloadId == batch.payloadId } }) {
+                disk.startedSending(batch.payloadId, holding: batch.eventCount)
+            }
+        }
     }
 
     /// Requires `ioLock` where there is a disk.
@@ -599,7 +612,13 @@ extension EventStore {
         }
     }
 
+    /// Counts a batch against capacity again, after a request that did not end with it removed. Does nothing to the
+    /// count for a batch `remove(_:)` already forgot. Ends every `startedSending(_:)`, removed or not, so that the lock
+    /// against expiry is released either way.
     func stoppedSending(_ batch: EventBatch) {
+        if let disk {
+            ioLock.withLock { disk.stoppedSending(batch.payloadId) }
+        }
         bufferLock.withLock { forgetSending(batch.payloadId) }
     }
 
