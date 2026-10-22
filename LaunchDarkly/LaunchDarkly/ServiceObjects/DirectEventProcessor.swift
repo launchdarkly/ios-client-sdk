@@ -29,9 +29,13 @@ class DirectEventProcessor: EventProcessor {
     /// terminations that run nothing on the way out, such as the system reclaiming a backgrounded process. Recording a
     /// custom or identify event closes it too, because that commits.
     ///
-    /// The second is the worst a commit point can cost, since it encodes whatever is held before returning. The common
-    /// case is far below the bound, because the commit queue keeps the run drained; raising this trades that tail
-    /// against the number of writes.
+    /// The second is what a commit point usually costs, since it encodes whatever is held before returning. The commit
+    /// queue keeps the run drained, so the common case is far below this; raising it trades that cost against the
+    /// number of writes.
+    ///
+    /// Neither is a ceiling. Reaching this only schedules a commit, and recording does not wait for it, so where events
+    /// arrive faster than the commit queue encodes them, or the queue is starved, the run grows up to the event
+    /// capacity, and the next commit point encodes all of it.
     ///
     /// It is the only thing that writes events no caller asked to have written. The store writes only when told to, so
     /// every staged byte reaches the disk through a commit that started here, at a commit point, or at a delivery.
