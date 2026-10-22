@@ -31,6 +31,10 @@ protocol EventProcessor {
     /// The completion, like `flush`'s, runs on a background queue, and never on the reporter's own: a completion is
     /// free to record events or flush again without waiting on the queue it is running on. It is not the caller's
     /// thread either, and two completions may run at once, so anything it touches needs to expect that.
+    ///
+    /// Unlike `flush`, it writes nothing on the caller's thread: wherever events persist, it queues that write, so a
+    /// caller with a deadline is not held by the disk before it can start waiting. A `true` still means the events
+    /// were written, since the delivery writes them before it sends.
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure)
 
     /// Makes everything recorded so far outlive the process, without waiting for a delivery.

@@ -513,7 +513,8 @@ extension DirectEventProcessor {
     }
 
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
-        commitThenQueueDelivery(completion)
+        queueCommitWherePersisting()
+        queueDelivery(completion)
     }
 
     /// Queues a delivery the way a caller asking for one expects, which is as a commit point.
@@ -536,6 +537,21 @@ extension DirectEventProcessor {
     func commitWherePersisting() {
         if service.config.eventPersistence == .immediate || store.isPersisting {
             commitRecordedEvents()
+        }
+    }
+
+    /// `commitWherePersisting()` queued on `commitQueue` rather than written on the caller's thread, for a flush whose
+    /// caller has a deadline.
+    ///
+    /// `flushAndWait` can only hold to its timeout once every environment has handed back, and each step of a commit
+    /// can block for as long as the device takes: on `commitLock` behind a commit stalled on the disk, on the store's
+    /// I/O lock, and on the write itself. Queued rather than left to the delivery, because `deliveryQueue` can be held
+    /// by a request and its retry long after the caller stopped waiting, while `commitQueue` never waits on the
+    /// network. The answer still covers the write: the delivery commits again before it sends, so `true` means the
+    /// events were written first. A commit still running when the caller stops waiting is left to finish.
+    private func queueCommitWherePersisting() {
+        if service.config.eventPersistence == .immediate || store.isPersisting {
+            scheduleCommit()
         }
     }
 

@@ -1378,6 +1378,44 @@ extension DirectEventProcessorSpec {
                     .toEventually(equal(400), timeout: Constants.deliveryTimeout, pollInterval: .milliseconds(200))
             }
 
+            itPersisting("hands back a flush that reports its outcome while a write is stalled on the disk") {
+                let lock = UnfairLock()
+                var stalling = false
+                let stalled = DispatchSemaphore(value: 0)
+                let release = DispatchSemaphore(value: 0)
+                let store = EventStore.temporary(writeLog: { file, bytes in
+                    if lock.withLock({ stalling }) {
+                        stalled.signal()
+                        _ = release.wait(timeout: .now() + 5)
+                    }
+                    return file.writeAll(bytes)
+                })
+                testContext = TestContext(store: store)
+                let processor = testContext.eventProcessor!
+                processor.isOnline = true
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    processor.flushReportingOutcome { _ in done() }
+                }
+
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+                processor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+                lock.withLock { stalling = true }
+                // A commit stalled in its write, holding the commit lock, as one on a slow disk does.
+                DispatchQueue.global().async { processor.commitRecordedEvents() }
+                expect(stalled.wait(timeout: .now() + 5)) == .success
+                lock.withLock { stalling = false }
+
+                let answer = Answer()
+                let started = Date()
+                processor.flushReportingOutcome(completion: answer.record)
+                expect(Date().timeIntervalSince(started)) < 1
+                expect(answer.value()).to(beNil())
+
+                release.signal()
+                expect(answer.value()).toEventually(equal(true), timeout: Constants.deliveryTimeout)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+            }
+
             itPersisting("reports the events a previous run left behind") {
                 testContext = TestContext()
                 testContext.recordEvents(2)

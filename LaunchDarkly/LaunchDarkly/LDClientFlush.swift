@@ -24,9 +24,10 @@ extension LDClient {
      last write. What was written before then is delivered on the next launch.
      */
     public func flush() {
-        LDClient.instancesQueue.sync(flags: .barrier) {
-            LDClient.instances?.forEach { $1.internalFlush() }
-        }
+        // Taken under the queue and flushed after it is released, since each flush writes, and every other client call
+        // in the process that reads the instances would otherwise wait behind every environment's write.
+        let clients = LDClient.instancesQueue.sync { LDClient.instances.map { Array($0.values) } } ?? []
+        clients.forEach { $0.internalFlush() }
     }
 
     /**
@@ -119,6 +120,8 @@ extension LDClient {
      */
     @discardableResult
     public func flushAndWait(timeout: TimeInterval) -> Bool {
+        // Taken first, so that the timeout covers the whole call, finding the clients included.
+        let deadline = DispatchTime.now() + max(0, timeout)
         if timeout > LDClient.longTimeoutInterval {
             os_log("%s LDClient.flushAndWait was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
@@ -131,7 +134,6 @@ extension LDClient {
             os_log("%s called on a closed client", log: config.logger, type: .debug, self.typeName(and: #function))
             return false
         }
-        let deadline = DispatchTime.now() + max(0, timeout)
         // Counts answers rather than tracking each delivery, so that a reporter answering twice costs a spare permit
         // no one reads. A DispatchGroup would fit as well, but its `leave` traps without a matching `enter`, which
         // turns a broken reporter into a crash in the application.
@@ -153,8 +155,8 @@ extension LDClient {
         }
 
         // Started, then given up on. The deliveries are what makes a zero timeout worth calling at all: wherever events
-        // persist, they are on disk by the time each `flushReportingOutcome` returns. Waiting is what is
-        // skipped, and a reporter that answered during the loop above must not turn that into a `true`.
+        // persist, each `flushReportingOutcome` has queued their write, which no longer waits on this thread. Waiting
+        // is what is skipped, and a reporter that answered during the loop above must not turn that into a `true`.
         guard timeout > 0
         else { return false }
 
