@@ -1461,6 +1461,22 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingEventCount) == 20
             }
 
+            it("bounds summaries by bytes even where it keeps events off the disk") {
+                // Nothing else bounds them: capacity never refuses a summary, and a delivery that keeps failing keeps
+                // every one it was given.
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000, persistEvents: false)
+                for index in 1...8 {
+                    _ = store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))
+                }
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-1"), bypassingCapacity: true)) == true
+                expect(store.closeBatch()?.eventCount) == 9
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-2"), bypassingCapacity: true)) == true
+
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-3"), bypassingCapacity: true)) == false
+                // Full events are still bounded by count alone.
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-9"))) == true
+            }
+
             it("counts committed bytes as well as staged ones") {
                 store = EventStore.temporary(capacity: 100, byteCapacity: 1000)
                 for index in 1...8 {

@@ -54,7 +54,8 @@ protocol EventStoring {
     /// outlive the process, and deciding when to call it is the caller's.
     ///
     /// - Parameter bypassingCapacity: true for a summary, which is not refused for `capacity` and may use the part of
-    ///   the byte capacity held back from full events, but is still refused past the byte capacity itself.
+    ///   the byte capacity held back from full events, but is still refused past the byte capacity itself, whether or
+    ///   not events are persisted.
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool
 
     /// Counts events that have been accepted but are still being encoded, so capacity sees them until they are staged.
@@ -346,7 +347,10 @@ final class EventStore: EventStoring {
         let frame = EventLogFormat.frame(for: encodedEvent)
         // Only a summary bypasses capacity without a reservation, and only a summary may use the bytes held back.
         let isSummary = bypassingCapacity && !usingReservation
-        let boundedByBytes = disk != nil
+        // Kept off the disk, full events are bounded by count alone, as they were before persistence. A summary bypasses
+        // the count wherever it is kept, so there its bytes are all that bounds it: a delivery that keeps failing would
+        // otherwise go on holding one more for the life of the process.
+        let boundedByBytes = disk != nil || isSummary
         let staged = bufferLock.withLock { () -> Bool in
             // In the same critical section as the append, so the event is never counted twice or not at all.
             if usingReservation {

@@ -389,7 +389,8 @@ public struct LDConfig {
     /// of flag evaluations, so that evaluations are still counted after full events start being discarded. A value of zero or less
     /// means the default. (Default: 20 MiB)
     ///
-    /// It has no effect where `eventPersistence` is `.disabled`.
+    /// Where `eventPersistence` is `.disabled`, full events are bounded by `eventCapacity` alone, and this bounds only the summaries,
+    /// which `eventCapacity` never refuses: a delivery that keeps failing would otherwise leave them growing for the life of the process.
     public var eventCapacityBytes: Int = Defaults.eventCapacityBytes
 
     /// How long the SDK keeps events it has persisted but not yet reported, where `eventPersistence` keeps events across launches. Events
