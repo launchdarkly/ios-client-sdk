@@ -441,6 +441,19 @@ final class LDFlagSynchronizingMock: LDFlagSynchronizing {
     }
 }
 
+// MARK: - NetworkReportingMock
+final class NetworkReportingMock: NetworkReporting {
+
+    var isConnectedToNetworkCallCount = 0
+    var isConnectedToNetworkCallback: (() throws -> Void)?
+    var isConnectedToNetworkReturnValue: Bool!
+    func isConnectedToNetwork() -> Bool {
+        isConnectedToNetworkCallCount += 1
+        try! isConnectedToNetworkCallback?()
+        return isConnectedToNetworkReturnValue
+    }
+}
+
 // MARK: - ThrottlingMock
 final class ThrottlingMock: Throttling {
 

@@ -83,7 +83,7 @@ public struct ConnectionInformation: Codable, CustomStringConvertible {
     // Used for updating ConnectionInformation inside of LDClient.setOnline
     static func onlineSetCheck(connectionInformation: ConnectionInformation, ldClient: LDClient, config: LDConfig, online: Bool) -> ConnectionInformation {
         var connectionInformationVar = connectionInformation
-        if online && NetworkReporter.isConnectedToNetwork() {
+        if online && ldClient.networkReporter.isConnectedToNetwork() {
             connectionInformationVar.currentConnectionMode = effectiveStreamingMode(config: config, ldClient: ldClient) == LDStreamingMode.streaming ? .establishingStreamingConnection : .polling
         } else {
             connectionInformationVar.currentConnectionMode = .offline
