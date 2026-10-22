@@ -384,13 +384,14 @@ class DirectEventProcessor: EventProcessor {
     /// Closing takes everything staged so far, and a commit stages its run one event at a time, so a commit running
     /// between the two would be closed partway: an evaluation's event in this batch and its summary in the next.
     ///
-    /// - Returns: the loss count as of the close, which is the mark this delivery answers for. Taken under the same
-    ///   lock, so it covers every loss the closed batch could have suffered and nothing a later commit suffers.
-    private func commitAndCloseBatch() -> UInt64 {
+    /// - Returns: the loss count as of the close, which is the mark this delivery answers for, and whether the close
+    ///   took every committed event into a batch. Both taken under the same lock, so they cover the closed batch and
+    ///   nothing a later commit does.
+    private func commitAndCloseBatch() -> (lossMark: UInt64, closedEverything: Bool) {
         commitLock.withLock {
             encodeAndCommitPending()
             _ = store.closeBatch()
-            return stateLock.withLock { lostEvents }
+            return (stateLock.withLock { lostEvents }, !store.holdsUnclosedEvents)
         }
     }
 
@@ -595,18 +596,20 @@ extension DirectEventProcessor {
             return
         }
 
-        let lossMark = commitAndCloseBatch()
+        let (lossMark, closedEverything) = commitAndCloseBatch()
 
         let (batches, waitingOn, listedEverything) = claimDeliverableBatches()
-        // Events in a batch a listing that failed could not see are still on the disk for a later delivery. This one
-        // delivers what it has, and cannot say the caller's events got out.
-        if !listedEverything {
-            os_log("%s will report failure: the stored events could not be listed", log: service.config.logger, type: .debug, typeName(and: #function))
+        // Events left in a log that would not close, or in a batch a listing that failed could not see, are still on
+        // the disk for a later delivery. This one delivers what it has, and cannot say the caller's events got out.
+        let accountsForEverything = closedEverything && listedEverything
+        if !accountsForEverything {
+            os_log("%s will report failure: %s", log: service.config.logger, type: .debug, typeName(and: #function),
+                   closedEverything ? "the stored events could not be listed" : "the event log could not be closed")
         }
         // This delivery's own outcome, plus that of every batch another delivery is already sending. The caller's
         // events may be in either: a delivery that started after they were recorded closed them into its batch.
         let answer = DeliveryAnswer(outstanding: waitingOn.count + 1) { delivered in
-            completion?(delivered && listedEverything, lossMark)
+            completion?(delivered && accountsForEverything, lossMark)
         }
         for claim in waitingOn {
             whenSettled(claim, answer.report)

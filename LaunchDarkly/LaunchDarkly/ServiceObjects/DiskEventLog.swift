@@ -124,16 +124,19 @@ final class DiskEventLog {
         return true
     }
 
-    /// Moves the log to `destination` and closes it, so that the next append starts a new one. The descriptor is closed
-    /// whether or not the move succeeds.
+    /// Moves the log to `destination` and closes it, so that the next append starts a new one.
+    ///
+    /// A move that fails leaves the log open, held and this store's, so that the next append continues it and the next
+    /// close moves all of it. Closed and forgotten instead, it would be a log recovery may take at any moment, and the
+    /// next append would start another beside it: one tally of committed events for two files.
     ///
     /// Requires `ioLock`.
     func close(movingTo destination: URL) throws {
         ioLock.assertOwned()
         // Closed after the move rather than before it, so that the log is still held while it moves. Another store
         // recovering logs could otherwise take it in between.
-        defer { closeDescriptor() }
         try FileManager.default.moveItem(at: url, to: destination)
+        closeDescriptor()
     }
 
     /// Closes the descriptor, leaving the log where it is. Requires `ioLock`.

@@ -70,6 +70,10 @@ protocol EventStoring {
     /// one.
     func closeBatch() -> EventBatch?
 
+    /// Whether committed events are outside every batch. Right after `closeBatch()`, that means it could not close the
+    /// log holding them; they stay in that log for the next close to try again.
+    var holdsUnclosedEvents: Bool { get }
+
     /// Batches awaiting delivery, oldest first, including any recovered from a previous run of the application.
     ///
     /// A directory that could not be listed leaves the batches this process last counted, and what it counts for them,
@@ -382,8 +386,9 @@ final class EventStore: EventStoring {
         let closed = EventTally(events: committed.events, bytes: committed.bytes + EventLogFormat.fileHeader.count)
         switch disk.closeLog(holding: closed) {
         case .failed(let logSurvives):
-            // Where the log went with its events, they have to stop counting against capacity or the store would
-            // refuse events for the rest of the session.
+            // A log that is still there is still the open one, and its events go on counting as committed until a
+            // later close manages it. Where the log went with its events, they have to stop counting against capacity
+            // or the store would refuse events for the rest of the session.
             if !logSurvives {
                 bufferLock.withLock {
                     committedEvents = 0
@@ -403,6 +408,10 @@ final class EventStore: EventStoring {
     }
 
     // MARK: Delivery
+
+    var holdsUnclosedEvents: Bool {
+        bufferLock.withLock { committedEvents > 0 }
+    }
 
     func listPendingBatches() -> BatchListing {
         // Listed in one critical section where there is a disk, so that the files and what is held cannot be counted

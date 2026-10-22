@@ -873,6 +873,35 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.listPendingBatches()) == BatchListing(batches: [first, second, third], isComplete: true)
             }
 
+            it("keeps a log it could not close open, and closes all of it the next time") {
+                _ = store.stage(EventStoreSpec.payload("first"))
+                store.commit()
+
+                let directory = store.directory!
+                // A directory with no write permission is one nothing in it can be renamed in.
+                let readOnly: [FileAttributeKey: Any] = [.posixPermissions: 0o555]
+                let writable: [FileAttributeKey: Any] = [.posixPermissions: 0o755]
+                try FileManager.default.setAttributes(readOnly, ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes(writable, ofItemAtPath: directory.path) }
+
+                expect(store.closeBatch()).to(beNil())
+                expect(store.holdsUnclosedEvents) == true
+                expect(store.pendingEventCount) == 1
+
+                try FileManager.default.setAttributes(writable, ofItemAtPath: directory.path)
+                _ = store.stage(EventStoreSpec.payload("second"))
+                store.commit()
+
+                // One batch holding both, named for what it holds, and no log left behind for a later launch.
+                let batch = store.closeBatch()!
+                expect(batch.eventCount) == 2
+                expect(EventStoreSpec.keys(ofBody: try? store.body(of: batch))) == ["first", "second"]
+                expect(store.holdsUnclosedEvents) == false
+                expect(store.pendingBatches()) == [batch]
+                let logs = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+                    .filter { $0.hasPrefix(DiskEventLog.prefix) }
+                expect(logs).to(beEmpty())
+            }
         }
     }
 

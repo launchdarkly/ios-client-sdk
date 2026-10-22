@@ -179,9 +179,9 @@ final class EventDirectory {
     /// What closing the open log produced.
     enum LogClose {
         case closed(EventBatch)
-        /// The log is still there to try again with, unless `logSurvives` is false -- a purged cache directory on
-        /// tvOS, say. Then its events are gone, and they have to stop counting against capacity or the store would
-        /// refuse events for the rest of the session.
+        /// The log is still there and still open, for the next append to continue and the next close to try again,
+        /// unless `logSurvives` is false -- a purged cache directory on tvOS, say. Then its events are gone, and they
+        /// have to stop counting against capacity or the store would refuse events for the rest of the session.
         case failed(logSurvives: Bool)
     }
 
@@ -196,8 +196,13 @@ final class EventDirectory {
         do {
             try disk.log.close(movingTo: file)
         } catch {
-            os_log("%s could not close the event log: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
-            return .failed(logSurvives: disk.log.exists)
+            os_log("%s could not close the event log, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
+            guard disk.log.exists
+            else {
+                disk.log.closeDescriptor()
+                return .failed(logSurvives: false)
+            }
+            return .failed(logSurvives: true)
         }
 
         stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes, modified: Date())
