@@ -3,10 +3,20 @@ import Foundation
 import SystemConfiguration
 #endif
 
-class NetworkReporter {
+// sourcery: autoMockable
+/// Answers whether the device has a route to the network at all.
+///
+/// A protocol rather than a free function so that a test can say what the network is doing, instead of asking the
+/// machine it happens to be running on. Without it, anything that reaches for the network reads differently on a
+/// laptop that is online, a laptop that is not, and a CI runner behind a proxy.
+protocol NetworkReporting {
+    func isConnectedToNetwork() -> Bool
+}
+
+class NetworkReporter: NetworkReporting {
     #if canImport(SystemConfiguration)
     // Sourced from: https://stackoverflow.com/a/39782859
-    static func isConnectedToNetwork() -> Bool {
+    func isConnectedToNetwork() -> Bool {
         var zeroAddress = sockaddr_in(sin_len: 0, sin_family: 0, sin_port: 0, sin_addr: in_addr(s_addr: 0), sin_zero: (0, 0, 0, 0, 0, 0, 0, 0))
         zeroAddress.sin_len = UInt8(MemoryLayout.size(ofValue: zeroAddress))
         zeroAddress.sin_family = sa_family_t(AF_INET)
@@ -29,6 +39,6 @@ class NetworkReporter {
         return reachability
     }
     #else
-    static func isConnectedToNetwork() -> Bool { true }
+    func isConnectedToNetwork() -> Bool { true }
     #endif
 }

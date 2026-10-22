@@ -21,6 +21,7 @@ protocol ClientServiceCreating {
     func makeEnvironmentReporter(config: LDConfig) -> EnvironmentReporting
     func makeThrottler(environmentReporter: EnvironmentReporting) -> Throttling
     func makeConnectionInformation() -> ConnectionInformation
+    func makeNetworkReporter() -> NetworkReporting
     func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching
     func makeDiagnosticReporter(config: LDConfig, service: DarklyServiceProvider, environmentReporter: EnvironmentReporting) -> DiagnosticReporting
     func makeFlagStore() -> FlagMaintaining
@@ -119,6 +120,10 @@ final class ClientServiceFactory: ClientServiceCreating {
 
     func makeConnectionInformation() -> ConnectionInformation {
         ConnectionInformation(currentConnectionMode: .offline, lastConnectionFailureReason: .none)
+    }
+
+    func makeNetworkReporter() -> NetworkReporting {
+        NetworkReporter()
     }
 
     func makeDiagnosticCache(sdkKey: String) -> DiagnosticCaching {
