@@ -118,6 +118,11 @@ final class DiskEventLog {
             // batch this log is closed into still delivers only the events it was closed holding.
             if let start, !file.truncate(to: start) {
                 os_log("%s could not cut back a failed write: errno %d", log: logger, type: .error, typeName(and: #function), errno)
+                // A log with no events before this write is never closed into a batch, and a later run recovering it
+                // would send what landed under no count that leaves it out. Memory holds all of it.
+                if start <= EventLogFormat.fileHeader.count {
+                    discardFailedFirstWrite()
+                }
             }
             return false
         }
@@ -253,6 +258,16 @@ final class DiskEventLog {
             return abandon(opened, at: opening)
         }
         return opened
+    }
+
+    /// Closes and removes a log whose only events are those of a first write that failed. Requires `ioLock`.
+    private func discardFailedFirstWrite() {
+        do {
+            try FileManager.default.removeItem(at: url)
+        } catch {
+            os_log("%s could not remove a log holding only a failed write: %s", log: logger, type: .error, typeName(and: #function), String(describing: error))
+        }
+        closeDescriptor()
     }
 
     /// Closes and removes a log that never got the name recovery looks for. Requires `ioLock`.

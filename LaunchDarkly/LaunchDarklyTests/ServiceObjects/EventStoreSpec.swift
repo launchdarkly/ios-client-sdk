@@ -332,6 +332,19 @@ final class EventStoreSpec: QuickSpec {
         }
     }
 
+    /// Puts a read-only open of the same file behind the log's descriptor, so that cutting it back fails while the file
+    /// itself can still be renamed or removed.
+    private static func refuseTruncating(_ file: EventLogFile) {
+        var path = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+        guard fcntl(file.descriptor, F_GETPATH, &path) == 0
+        else { return fail("could not find the log's path") }
+        let readOnly = open(path, O_RDONLY)
+        guard readOnly >= 0
+        else { return fail("could not reopen the log") }
+        _ = dup2(readOnly, file.descriptor)
+        _ = close(readOnly)
+    }
+
     private static func payload(_ key: String) -> Data {
         Data("{\"kind\":\"custom\",\"key\":\"\(key)\"}".utf8)
     }
@@ -1881,6 +1894,31 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(ofBody: fromMemory.flatMap { try? interrupted.body(of: $0) })) == ["landed", "torn"]
 
                 // Delivered from memory this run, so the next must not find any of it again in the log.
+                let next = interrupted.nextRun()
+                next.preparePayloadsFromInterruptedLogs()
+                expect(next.pendingBatches()).to(beEmpty())
+            }
+
+            it("leaves the next run nothing to recover from a first write that failed partway and could not be cut back") {
+                var writes = 0
+                let interrupted = EventStore.temporary(writeLog: { file, bytes in
+                    writes += 1
+                    guard writes > 1
+                    else { return file.writeAll(bytes) }
+                    _ = file.writeAll(bytes.dropLast(3))
+                    EventStoreSpec.refuseTruncating(file)
+                    return ENOSPC
+                })
+                defer { interrupted.deleteEverything() }
+
+                _ = interrupted.stage(EventStoreSpec.payload("landed"))
+                _ = interrupted.stage(EventStoreSpec.payload("torn"))
+                interrupted.commit()
+                let fromMemory = interrupted.closeBatch()
+                expect(EventStoreSpec.keys(ofBody: fromMemory.flatMap { try? interrupted.body(of: $0) })) == ["landed", "torn"]
+
+                // The whole frame that landed is in the log as well as in memory, under no count that would leave it
+                // out, so a later run recovering the log would send it a second time under another payload ID.
                 let next = interrupted.nextRun()
                 next.preparePayloadsFromInterruptedLogs()
                 expect(next.pendingBatches()).to(beEmpty())
