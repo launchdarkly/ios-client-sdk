@@ -2439,6 +2439,29 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 2
             }
 
+            it("tells the caller whose delivery lost an event, not a later one with nothing of its own to send") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
+                testContext.recordEvents(1)
+                testContext.eventProcessor.isOnline = true
+                testContext.serviceMock.holdsEventCompletions = true
+
+                // A drops the event the store will never take as it closes its batch, so the loss is A's.
+                let first = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: first.record)
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+
+                // B has nothing of its own. Answered as soon as A's batch is, it would take A's loss and leave A
+                // reporting success for the event A dropped.
+                let second = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: second.record)
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+
+                expect(first.value()).toEventually(beFalse(), timeout: Constants.deliveryTimeout)
+                expect(second.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
+            }
+
             it("answers away from the queue a delivery runs on, after a delivery") {
                 testContext = TestContext()
                 testContext.recordEvents(1)
