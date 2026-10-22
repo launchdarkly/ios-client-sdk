@@ -2529,8 +2529,9 @@ extension DirectEventProcessorSpec {
                 expectKeptThroughRefusals(status: 503, persistence: .disabled, refusedFlushes: 3)
             }
 
-            // Each has to keep the batch, not only 503: a refusal such as a 401 only waits longer.
-            for status in [400, 401, 403, 404, 408, 413, 429, 500, 502, 504] {
+            // Each has to keep the batch, not only 503: a refusal such as a 401 only waits longer. Not a 400, which drops
+            // the batch when it comes twice in a row; see below.
+            for status in [401, 403, 404, 408, 413, 429, 500, 502, 504] {
                 it("keeps a batch refused with HTTP \(status) past the retry") {
                     expectKeptThroughRefusals(status: status, persistence: .immediate, refusedFlushes: 2)
                 }
@@ -2539,7 +2540,7 @@ extension DirectEventProcessorSpec {
             // Kept is not the same as resent on its own: a batch the service always refuses is posted a second after the
             // first failure and then twice as long after each one, and a flush in between posts nothing, or it would be
             // posted in a loop.
-            for status in [400, 503] {
+            for status in [503, 429] {
                 it("posts a batch refused with HTTP \(status) only as the backoff allows") {
                     testContext = TestContext()
                     testContext.serviceMock.respondToEvents(with: status)
@@ -2562,6 +2563,38 @@ extension DirectEventProcessorSpec {
                     waitLettingTimersFire(3)
                     expect(testContext.serviceMock.publishEventDataCallCount) == 3
                 }
+            }
+
+            it("drops a batch refused with HTTP 400 twice in a row, and no longer holds the ones behind it") {
+                testContext = TestContext(retryState: DirectEventProcessorSpec.withoutBackoff())
+                testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.badRequest)
+                testContext.eventProcessor.record(CustomEvent(key: "malformed", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["malformed"], ["malformed"]]
+                expect(Set(testContext.serviceMock.publishedPayloadIds).count) == 1
+                expect(testContext.store.pendingBatches()).to(beEmpty())
+                waitLettingTimersFire(0.3)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
+                testContext.serviceMock.stubEventResponse(success: true)
+
+                // What was recorded since goes out alone, and that flush is the first a caller waits on since the loss,
+                // so it hears about it.
+                testContext.eventProcessor.record(CustomEvent(key: "next", context: testContext.context))
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.serviceMock.publishedEventPayloads.dropFirst(2).map(customKeys)) == [["next"]]
+                expect(testContext.flushOutcome()) == true
+            }
+
+            it("drops a batch only for two 400s in a row") {
+                testContext = TestContext(retryState: DirectEventProcessorSpec.withoutBackoff())
+                testContext.serviceMock.eventStatusForPost = { post in [1: 400, 2: 503, 3: 400][post] ?? 202 }
+                testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.flushOutcome()) == true
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == Array(repeating: ["kept"], count: 4)
+                expect(Set(testContext.serviceMock.publishedPayloadIds).count) == 1
             }
 
             it("keeps a refused batch and posts it again once the longer wait is over") {
