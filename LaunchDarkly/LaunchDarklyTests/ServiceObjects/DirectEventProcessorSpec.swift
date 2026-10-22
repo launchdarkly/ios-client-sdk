@@ -2148,6 +2148,38 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedEventPayloads.flatMap(customKeys)) == ["fine"]
             }
 
+            it("sends a flush of more than a batch as requests no larger than a batch, every event once") {
+                // Small enough that a batch closed at the limit is within one event of it, so a body that is short of
+                // the limit by more than that shows the split happened somewhere else.
+                let dataCharacters = EventLogFormat.maxBatchSize / 32
+                let eventCount = 100
+                testContext = TestContext(eventCapacity: eventCount)
+                let padding = LDValue.string(String(repeating: "x", count: dataCharacters))
+                for index in 1...eventCount {
+                    testContext.eventProcessor.record(CustomEvent(key: "event-\(index)", context: LDContext.stub(),
+                                                                  data: padding))
+                }
+                testContext.eventProcessor.isOnline = true
+                var delivered: Bool?
+                waitUntil(timeout: .seconds(30)) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+
+                // Before the service compresses it, so the larger of the two sizes.
+                let bodies = testContext.serviceMock.publishedEventPayloads
+                let sizes = bodies.map(\.count).sorted()
+                expect(sizes.count) > 1
+                expect(sizes.last ?? .max) <= EventLogFormat.maxBatchSize
+                // Only the batch the events ran out in may be short of full.
+                expect(sizes.dropFirst().allSatisfy { $0 > EventLogFormat.maxBatchSize - dataCharacters - 4096 }) == true
+                expect(Set(testContext.serviceMock.publishedPayloadIds).count) == bodies.count
+                expect(bodies.flatMap(customKeys).sorted()) == (1...eventCount).map { "event-\($0)" }.sorted()
+            }
+
             it("reports false when a retryable failure leaves the batch on disk") {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
