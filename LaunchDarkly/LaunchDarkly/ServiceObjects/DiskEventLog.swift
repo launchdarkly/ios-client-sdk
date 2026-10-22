@@ -152,25 +152,45 @@ final class DiskEventLog {
         DiskEventLog.forget(url)
     }
 
-    /// Hands `recover` every log no live process holds, which it has to move or remove: whoever wrote it is gone.
+    /// Every log no store in this process has open, for recovery to claim with `claimForRecovery(_:)`.
+    ///
+    /// None of them becomes open here later: a log is opened under a name of its own and never reopened once closed.
     ///
     /// Requires `ioLock`.
-    func forEachUnheldLog(_ recover: (URL) -> Void) {
+    func logsNotOpenInThisProcess() -> [URL] {
         ioLock.assertOwned()
         let contents = (try? FileManager.default.contentsOfDirectory(at: directory,
                                                                     includingPropertiesForKeys: nil,
                                                                     options: [.skipsHiddenFiles])) ?? []
-        for log in contents where log.lastPathComponent.hasPrefix(DiskEventLog.prefix) {
-            guard !DiskEventLog.isOpenInThisProcess(log)
-            else { continue }
+        return contents.filter { $0.lastPathComponent.hasPrefix(DiskEventLog.prefix) && !DiskEventLog.isOpenInThisProcess($0) }
+    }
+
+    /// Claims a log whose writer is gone, for recovery to read and then move or remove; nil where a live process holds
+    /// it. Needs no lock, so that recovery can read the log without holding `ioLock`.
+    ///
+    /// On a Mac the claim is the log's lock, held until `release()`, so that another instance recovering at the same
+    /// time leaves it be. Elsewhere every log not open in this process is its writer's no longer.
+    static func claimForRecovery(_ log: URL) -> RecoveryClaim? {
+        #if os(macOS) || targetEnvironment(macCatalyst)
+        guard let held = EventLogFile.openLocked(log, flags: O_RDONLY)
+        else { return nil }
+        return RecoveryClaim(url: log, held: held)
+        #else
+        return RecoveryClaim(url: log)
+        #endif
+    }
+
+    /// A log recovery has claimed; see `claimForRecovery(_:)`.
+    struct RecoveryClaim {
+        let url: URL
+        #if os(macOS) || targetEnvironment(macCatalyst)
+        fileprivate let held: EventLogFile
+        #endif
+
+        /// To be called once the log has been moved or removed, or left for a later run.
+        func release() {
             #if os(macOS) || targetEnvironment(macCatalyst)
-            // Locked for as long as it is recovered, so that another instance recovering at the same time leaves it be.
-            guard let held = EventLogFile.openLocked(log, flags: O_RDONLY)
-            else { continue }
-            recover(log)
             held.close()
-            #else
-            recover(log)
             #endif
         }
     }

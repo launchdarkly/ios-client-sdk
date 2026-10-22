@@ -507,14 +507,27 @@ final class EventStore: EventStoring {
     func preparePayloadsFromInterruptedLogs() {
         guard let disk
         else { return }
-        ioLock.withLock {
-            let recovered = disk.preparePayloadsFromInterruptedLogs()
-            guard recovered.events > 0
-            else { return }
-            bufferLock.withLock {
-                closedEvents += recovered.events
-                closedBytes += recovered.bytes
+        // Each log is read without `ioLock`, one at a time, and the lock taken only to move it and count it. A commit
+        // at a commit point then waits for at most one rename rather than for every log a crash left to be read.
+        var recovered = 0
+        for leftOpen in ioLock.withLock({ disk.interruptedLogs() }) {
+            guard let claim = DiskEventLog.claimForRecovery(leftOpen)
+            else { continue }
+            let interrupted = disk.read(interruptedLog: leftOpen)
+            ioLock.withLock {
+                let prepared = disk.preparePayload(from: interrupted)
+                guard prepared.events > 0
+                else { return }
+                recovered += prepared.events
+                bufferLock.withLock {
+                    closedEvents += prepared.events
+                    closedBytes += prepared.bytes
+                }
             }
+            claim.release()
+        }
+        if recovered > 0 {
+            os_log("%s prepared %d event(s) from a previous run of this application for delivery", log: logger, type: .debug, typeName(and: #function), recovered)
         }
     }
 

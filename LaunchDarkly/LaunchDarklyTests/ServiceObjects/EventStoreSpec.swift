@@ -477,6 +477,45 @@ final class EventStoreSpec: QuickSpec {
                 expect(bodies) == [["previous-0"], ["this-run", "later"]]
                 expect(next.pendingEventCount) == 3
             }
+
+            it("reads the log without holding up a commit") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("from-the-previous-run"))
+                store.commit()
+
+                let reading = DispatchSemaphore(value: 0)
+                let release = DispatchSemaphore(value: 0)
+                let next = store.nextRun(readFile: { url in
+                    if url.lastPathComponent.hasPrefix(DiskEventLog.prefix) {
+                        reading.signal()
+                        _ = release.wait(timeout: .now() + 5)
+                    }
+                    return try Data(contentsOf: url)
+                })
+                let recovered = DispatchSemaphore(value: 0)
+                DispatchQueue.global().async {
+                    next.preparePayloadsFromInterruptedLogs()
+                    recovered.signal()
+                }
+                expect(reading.wait(timeout: .now() + 5)) == .success
+
+                // Recovery is partway through reading the log, which a commit does not wait for.
+                let committed = DispatchSemaphore(value: 0)
+                DispatchQueue.global().async {
+                    _ = next.stage(EventStoreSpec.payload("this-run"))
+                    next.commit()
+                    committed.signal()
+                }
+                expect(committed.wait(timeout: .now() + 2)) == .success
+                release.signal()
+                expect(recovered.wait(timeout: .now() + 5)) == .success
+
+                expect(next.pendingEventCount) == 2
+                let batches = next.pendingBatches()
+                expect(batches.count) == 1
+                expect(EventStoreSpec.keys(ofBody: try next.body(of: batches[0]))) == ["from-the-previous-run"]
+                expect(EventStoreSpec.keys(in: next.payloadsOnDisk)) == ["from-the-previous-run", "this-run"]
+            }
         }
     }
 

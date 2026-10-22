@@ -426,33 +426,60 @@ final class EventDirectory {
 
     // MARK: Recovery
 
-    /// Closes off every log no live process holds, so its events join the batches to deliver.
-    ///
-    /// The events in it were recorded by a store that is gone, so there is no one left to add to it: a previous run of
-    /// this process, or another process that has since ended, whatever it was called. A log a live process is still
-    /// appending to is left alone.
-    ///
-    /// Requires `ioLock`.
-    ///
-    /// - Returns: what it closed off.
-    func preparePayloadsFromInterruptedLogs() -> EventTally {
-        ioLock.assertOwned()
-        var recovered = EventTally()
-        disk.log.forEachUnheldLog { recovered += preparePayload(fromInterruptedLog: $0) }
-        if recovered.events > 0 {
-            os_log("%s prepared %d event(s) from a previous run of this application for delivery", log: logger, type: .debug, typeName(and: #function), recovered.events)
+    /// A log whose writer is gone, and what reading it found.
+    struct InterruptedLog {
+        fileprivate enum Contents {
+            case missing
+            case failed(Error)
+            /// Not a log this version reads.
+            case unreadable
+            case events(EventTally)
         }
-        return recovered
+
+        fileprivate let url: URL
+        fileprivate let contents: Contents
     }
 
-    /// Closes off a log nobody is writing to any more. Requires `ioLock`.
+    /// The logs recovery is to close off, so their events join the batches to deliver: every one no store in this
+    /// process has open, of which `DiskEventLog.claimForRecovery(_:)` then takes those no live process holds.
+    ///
+    /// The events in them were recorded by a store that is gone, so there is no one left to add to them: a previous run
+    /// of this process, or another process that has since ended, whatever it was called.
+    ///
+    /// Requires `ioLock`.
+    func interruptedLogs() -> [URL] {
+        ioLock.assertOwned()
+        return disk.log.logsNotOpenInThisProcess()
+    }
+
+    /// Reads and counts a log recovery has claimed.
+    ///
+    /// Needs no lock, and is meant to be called without `ioLock`: a log can be as large as a batch, and a commit at a
+    /// commit point would otherwise wait for every log a crash left. Nothing here is this directory's state, and the
+    /// log's writer is gone, so it is not changing either.
+    func read(interruptedLog leftOpen: URL) -> InterruptedLog {
+        switch read(leftOpen) {
+        case .missing:
+            return InterruptedLog(url: leftOpen, contents: .missing)
+        case .failed(let error):
+            return InterruptedLog(url: leftOpen, contents: .failed(error))
+        case .bytes(let log):
+            guard let events = EventLogFormat.eventCount(in: log)
+            else { return InterruptedLog(url: leftOpen, contents: .unreadable) }
+            return InterruptedLog(url: leftOpen, contents: .events(EventTally(events: events, bytes: log.count)))
+        }
+    }
+
+    /// Closes off a log `read(interruptedLog:)` read. Requires `ioLock`, which is what keeps a listing from counting
+    /// the batch it becomes on its own as well.
     ///
     /// - Returns: what it closed off, or nothing where there was nothing to close off.
-    private func preparePayload(fromInterruptedLog leftOpen: URL) -> EventTally {
+    func preparePayload(from interrupted: InterruptedLog) -> EventTally {
         ioLock.assertOwned()
+        let leftOpen = interrupted.url
         let events: Int
         let bytes: Int
-        switch read(leftOpen) {
+        switch interrupted.contents {
         case .missing:
             return EventTally()
         case .failed(let error):
@@ -469,15 +496,13 @@ final class EventDirectory {
                 os_log("%s could not read events from a previous run, will try again at the next launch: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             }
             return EventTally()
-        case .bytes(let log):
-            guard let counted = EventLogFormat.eventCount(in: log)
-            else {
-                // Unreadable, and a log that cannot be read cannot be appended to either.
-                try? FileManager.default.removeItem(at: leftOpen)
-                return EventTally()
-            }
-            events = counted
-            bytes = log.count
+        case .unreadable:
+            // A log that cannot be read cannot be appended to either.
+            try? FileManager.default.removeItem(at: leftOpen)
+            return EventTally()
+        case .events(let counted):
+            events = counted.events
+            bytes = counted.bytes
         }
 
         guard events > 0
@@ -490,7 +515,11 @@ final class EventDirectory {
         let file = newUrl(of: payloadId, holding: events)
         guard (try? FileManager.default.moveItem(at: leftOpen, to: file)) != nil
         else {
-            os_log("%s could not prepare %d event(s) from a previous run, will try again at the next launch", log: logger, type: .info, typeName(and: #function), events)
+            // Gone since it was read is another store recovering it first, which where logs are not locked can be one
+            // in this process.
+            if FileManager.default.fileExists(atPath: leftOpen.path) {
+                os_log("%s could not prepare %d event(s) from a previous run, will try again at the next launch", log: logger, type: .info, typeName(and: #function), events)
+            }
             return EventTally()
         }
 
