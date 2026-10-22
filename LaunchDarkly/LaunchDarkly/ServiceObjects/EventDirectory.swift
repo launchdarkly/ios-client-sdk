@@ -51,11 +51,13 @@ final class EventDirectory {
     /// Only to be used while holding `ioLock`.
     private var located: (directory: URL, log: DiskEventLog)?
 
-    /// A batch in the directory: the file it is, how many events it holds, and how big it is.
+    /// A batch in the directory: the file it is, how many events it holds, how big it is, and when it was last written,
+    /// which is what orders batches oldest first.
     private struct Stored {
         let url: URL
         let events: Int
         let bytes: Int
+        let modified: Date
 
         var tally: EventTally { EventTally(events: events, bytes: bytes) }
     }
@@ -198,7 +200,7 @@ final class EventDirectory {
             return .failed(logSurvives: disk.log.exists)
         }
 
-        stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes)
+        stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes, modified: Date())
         return .closed(EventBatch(payloadId: payloadId, eventCount: events))
     }
 
@@ -215,11 +217,29 @@ final class EventDirectory {
     /// The batches in the directory, oldest first. Requires `ioLock`.
     ///
     /// Sizes come from the same listing, so that counting the directory's bytes reads no file either.
-    func listBatches() -> [EventBatch] {
+    ///
+    /// A directory that is not there holds nothing. One that is there and cannot be listed -- out of file descriptors,
+    /// or no longer readable -- is not empty, so it answers with the batches the last listing or close counted, as they
+    /// were counted, and says the listing is incomplete.
+    func listBatches() -> BatchListing {
         ioLock.assertOwned()
-        let contents = (try? FileManager.default.contentsOfDirectory(at: disk.directory,
-                                                                     includingPropertiesForKeys: EventDirectory.listedKeys,
-                                                                     options: [.skipsHiddenFiles])) ?? []
+        let contents: [URL]
+        do {
+            contents = try FileManager.default.contentsOfDirectory(at: disk.directory,
+                                                                   includingPropertiesForKeys: EventDirectory.listedKeys,
+                                                                   options: [.skipsHiddenFiles])
+        } catch {
+            guard FileManager.default.fileExists(atPath: disk.directory.path)
+            else {
+                stored = [:]
+                return BatchListing(batches: [], isComplete: true)
+            }
+            os_log("%s could not list stored events, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
+            let known = stored
+                .sorted { $0.value.modified < $1.value.modified }
+                .map { EventBatch(payloadId: $0.key, eventCount: $0.value.events) }
+            return BatchListing(batches: known, isComplete: false)
+        }
 
         let batches = contents
             .filter { $0.lastPathComponent.hasPrefix(EventDirectory.batchPrefix) }
@@ -232,8 +252,10 @@ final class EventDirectory {
                 guard let events = counted ?? stored[payloadId]?.events ?? countOfEvents(in: file)
                 else { return nil }
                 let listed = EventDirectory.listed(file)
-                stored[payloadId] = Stored(url: file, events: events, bytes: listed.bytes ?? stored[payloadId]?.bytes ?? 0)
-                return (EventBatch(payloadId: payloadId, eventCount: events), listed.modified ?? Date.distantPast)
+                let modified = listed.modified ?? Date.distantPast
+                stored[payloadId] = Stored(url: file, events: events, bytes: listed.bytes ?? stored[payloadId]?.bytes ?? 0,
+                                           modified: modified)
+                return (EventBatch(payloadId: payloadId, eventCount: events), modified)
             }
             .sorted { $0.1 < $1.1 }
             .map { $0.0 }
@@ -243,7 +265,7 @@ final class EventDirectory {
         let listed = Set(batches.map { $0.payloadId })
         stored = stored.filter { listed.contains($0.key) }
 
-        return batches
+        return BatchListing(batches: batches, isComplete: true)
     }
 
     private static let listedKeys: [URLResourceKey] = [.contentModificationDateKey, .fileSizeKey]
@@ -466,7 +488,7 @@ final class EventDirectory {
             return EventTally()
         }
 
-        let recovered = Stored(url: file, events: events, bytes: bytes)
+        let recovered = Stored(url: file, events: events, bytes: bytes, modified: EventDirectory.listed(file).modified ?? Date())
         stored[payloadId] = recovered
         return recovered.tally
     }

@@ -1473,6 +1473,25 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedEventPayloads.flatMap(customKeys)).toNot(contain("large"))
             }
 
+            itPersisting("reports a flush as failed when the stored events cannot be listed, and still sends the batch it closed") {
+                testContext = TestContext()
+                testContext.eventProcessor.isOnline = true
+                testContext.eventProcessor.record(CustomEvent(key: "tracked", context: testContext.context))
+                testContext.eventProcessor.commitRecordedEvents()
+
+                let directory = testContext.store.directory!
+                // Writable and searchable but not readable, so the batch can be closed and read and not listed.
+                try FileManager.default.setAttributes([.posixPermissions: 0o300], ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory.path) }
+
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.serviceMock.publishedEventPayloads.flatMap(customKeys)) == ["tracked"]
+
+                try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory.path)
+                expect(testContext.flushOutcome()) == true
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+            }
+
             it("does not bring a delivery forward when a previous run left nothing behind") {
                 testContext = TestContext()
 
@@ -2581,7 +2600,7 @@ private final class ClosingHookStore: EventStoring {
     func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
     func releaseReservations() { inner.releaseReservations() }
     func commit() { inner.commit() }
-    func pendingBatches() -> [EventBatch] { inner.pendingBatches() }
+    func listPendingBatches() -> BatchListing { inner.listPendingBatches() }
     func body(of batch: EventBatch) throws -> Data? { try inner.body(of: batch) }
     func remove(_ batch: EventBatch) { inner.remove(batch) }
     func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
@@ -2668,7 +2687,7 @@ private final class SlowListingStore: EventStoring {
     func discardExpired() -> Int { inner.discardExpired() }
 
     /// Every listing but the first is held, the first being the one the reporter makes as it starts up.
-    func pendingBatches() -> [EventBatch] {
+    func listPendingBatches() -> BatchListing {
         let held = lock.withLock { () -> Bool in
             listings += 1
             return listings > 1
@@ -2679,7 +2698,7 @@ private final class SlowListingStore: EventStoring {
             // Once opened the gate stays open.
             release.signal()
         }
-        return inner.pendingBatches()
+        return inner.listPendingBatches()
     }
 }
 

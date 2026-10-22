@@ -10,6 +10,14 @@ struct EventBatch: Equatable {
     let eventCount: Int
 }
 
+/// The batches awaiting delivery, and whether that is all of them.
+struct BatchListing: Equatable {
+    let batches: [EventBatch]
+    /// False where the directory could not be listed. `batches` are then the ones this process last knew to be there,
+    /// which includes every batch it closed itself, but can miss one another process closed or a previous run left.
+    let isComplete: Bool
+}
+
 protocol EventStoring {
     /// Events counted against capacity: those recorded and not yet accepted by LaunchDarkly, whether they are reserved
     /// while being encoded, staged in memory, written to the open log, or sitting in a closed batch -- except a batch
@@ -63,7 +71,10 @@ protocol EventStoring {
     func closeBatch() -> EventBatch?
 
     /// Batches awaiting delivery, oldest first, including any recovered from a previous run of the application.
-    func pendingBatches() -> [EventBatch]
+    ///
+    /// A directory that could not be listed leaves the batches this process last counted, and what it counts for them,
+    /// as they were. It does not empty them.
+    func listPendingBatches() -> BatchListing
 
     /// The `[...]` request body for a batch, or nil if it is gone or holds no events, neither of which loses anything.
     ///
@@ -92,6 +103,13 @@ protocol EventStoring {
     ///
     /// - Returns: how many events were discarded.
     func discardExpired() -> Int
+}
+
+extension EventStoring {
+    /// The batches `listPendingBatches()` lists, whether or not the listing was complete.
+    func pendingBatches() -> [EventBatch] {
+        listPendingBatches().batches
+    }
 }
 
 /// A batch that is there to read and holds nothing this version can send: damaged, or written in a format it does not
@@ -386,14 +404,15 @@ final class EventStore: EventStoring {
 
     // MARK: Delivery
 
-    func pendingBatches() -> [EventBatch] {
+    func listPendingBatches() -> BatchListing {
         // Listed in one critical section where there is a disk, so that the files and what is held cannot be counted
         // either side of a close that moves events between them.
         guard let disk
-        else { return heldBatchesAndRecount(after: [], storedBytes: 0) }
+        else { return BatchListing(batches: heldBatchesAndRecount(after: [], storedBytes: 0), isComplete: true) }
         return ioLock.withLock {
-            let listed = disk.listBatches()
-            return heldBatchesAndRecount(after: listed, storedBytes: disk.storedBytes)
+            let listing = disk.listBatches()
+            return BatchListing(batches: heldBatchesAndRecount(after: listing.batches, storedBytes: disk.storedBytes),
+                                isComplete: listing.isComplete)
         }
     }
 

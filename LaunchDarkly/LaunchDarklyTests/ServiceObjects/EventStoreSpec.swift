@@ -843,6 +843,36 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingBatches()) == [other]
                 expect(store.pendingEventCount) == 1
             }
+
+            it("keeps every batch it counted when the directory cannot be listed, and says the listing is incomplete") {
+                _ = store.stage(EventStoreSpec.payload("first"))
+                let first = store.closeBatch()!
+                _ = store.stage(EventStoreSpec.payload("second"))
+                let second = store.closeBatch()!
+                _ = store.pendingBatches()
+
+                let directory = store.directory!
+                // Writable and searchable but not readable: its files can be created, renamed and read by name, and
+                // the directory cannot be listed.
+                let unlistable: [FileAttributeKey: Any] = [.posixPermissions: 0o300]
+                let listable: [FileAttributeKey: Any] = [.posixPermissions: 0o755]
+                try FileManager.default.setAttributes(unlistable, ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes(listable, ofItemAtPath: directory.path) }
+
+                _ = store.stage(EventStoreSpec.payload("third"))
+                let third = store.closeBatch()!
+
+                // Not empty: the batch just closed is still there to send, and nothing stops counting.
+                let listing = store.listPendingBatches()
+                expect(listing.isComplete) == false
+                expect(listing.batches) == [first, second, third]
+                expect(store.pendingEventCount) == 3
+                expect(EventStoreSpec.keys(ofBody: try? store.body(of: third))) == ["third"]
+
+                try FileManager.default.setAttributes(listable, ofItemAtPath: directory.path)
+                expect(store.listPendingBatches()) == BatchListing(batches: [first, second, third], isComplete: true)
+            }
+
         }
     }
 

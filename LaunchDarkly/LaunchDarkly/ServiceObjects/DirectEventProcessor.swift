@@ -597,11 +597,16 @@ extension DirectEventProcessor {
 
         let lossMark = commitAndCloseBatch()
 
-        let (batches, waitingOn) = claimDeliverableBatches()
+        let (batches, waitingOn, listedEverything) = claimDeliverableBatches()
+        // Events in a batch a listing that failed could not see are still on the disk for a later delivery. This one
+        // delivers what it has, and cannot say the caller's events got out.
+        if !listedEverything {
+            os_log("%s will report failure: the stored events could not be listed", log: service.config.logger, type: .debug, typeName(and: #function))
+        }
         // This delivery's own outcome, plus that of every batch another delivery is already sending. The caller's
         // events may be in either: a delivery that started after they were recorded closed them into its batch.
         let answer = DeliveryAnswer(outstanding: waitingOn.count + 1) { delivered in
-            completion?(delivered, lossMark)
+            completion?(delivered && listedEverything, lossMark)
         }
         for claim in waitingOn {
             whenSettled(claim, answer.report)
@@ -624,19 +629,20 @@ extension DirectEventProcessor {
 
     /// Takes the batches this delivery will send, leaving out any another delivery is still waiting on a response for.
     ///
-    /// - Returns: the batches to send, and the claims on the ones left out. A batch left out may hold this caller's
-    ///   events -- `commitRecordedEvents` only stages them, and whichever delivery runs next is what closes them into
-    ///   a batch -- so the answer has to wait for those claims rather than assume they are someone else's business.
-    private func claimDeliverableBatches() -> (deliverable: [EventBatch], waitingOn: [Claim]) {
+    /// - Returns: the batches to send, the claims on the ones left out, and whether the listing was complete. A batch
+    ///   left out may hold this caller's events -- `commitRecordedEvents` only stages them, and whichever delivery runs
+    ///   next is what closes them into a batch -- so the answer has to wait for those claims rather than assume they
+    ///   are someone else's business.
+    private func claimDeliverableBatches() -> (deliverable: [EventBatch], waitingOn: [Claim], isComplete: Bool) {
         // Listed before the lock is taken, because listing reads the disk. Taking what appeared after it is the next
         // delivery's business; all this has to be atomic is deciding which of these batches are this delivery's.
         // Expired first, so that a batch too old to report is not sent.
         reportDiscarded(store.discardExpired())
-        let pending = store.pendingBatches()
+        let listing = store.listPendingBatches()
         return claimLock.withLock {
             var deliverable: [EventBatch] = []
             var waitingOn: [Claim] = []
-            for batch in pending {
+            for batch in listing.batches {
                 if let claimed = batchesInFlight[batch.payloadId] {
                     waitingOn.append(claimed)
                 } else {
@@ -644,7 +650,7 @@ extension DirectEventProcessor {
                     deliverable.append(batch)
                 }
             }
-            return (deliverable, waitingOn)
+            return (deliverable, waitingOn, listing.isComplete)
         }
     }
 
