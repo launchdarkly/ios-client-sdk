@@ -153,6 +153,7 @@ class DirectEventProcessorSpec: QuickSpec {
         testRecordFlagEvaluationEvents()
         reportEventsSpec()
         unserializableEventSpec()
+        privacySpec()
         reportTimerSpec()
         durabilitySpec()
         commitSpec()
@@ -627,6 +628,219 @@ class DirectEventProcessorSpec: QuickSpec {
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Context redaction as it reaches the payload the processor posts, configured through `LDConfig` as an application
+    /// configures it, with each encoder.
+    ///
+    /// The encoder tests pin what redaction produces. These pin that the configuration reaches the encoder, which
+    /// events inline a context and which of those also redact an anonymous context's attributes, and that a summary,
+    /// which inlines the context it counted, is redacted like any other event. Android's `EventProcessorPrivacyTest`
+    /// covers the same ground.
+    private func privacySpec() {
+        describe("context privacy") {
+            var serviceMock: DarklyServiceMock!
+            var reporter: DirectEventProcessor!
+            var store: EventStore!
+
+            let trackedFlag = FeatureFlag(flagKey: "flag-key", value: true, variation: 1, flagVersion: 2, trackEvents: true)
+
+            func person() -> LDContext {
+                var builder = LDContextBuilder(key: "user-key")
+                builder.name("Sandy")
+                _ = builder.trySetValue("email", "sandy@example.com")
+                _ = builder.trySetValue("address", ["city": "Oakland", "street": "123 Main St"])
+                return try! builder.build().get()
+            }
+
+            func makeReporter(_ encoding: OutboundEventBuffer.Encoding,
+                              configure: (inout LDConfig) -> Void = { _ in }) -> DirectEventProcessor {
+                var config = LDConfig.stub
+                config.eventCapacity = 100
+                configure(&config)
+                serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                serviceMock.stubEventResponse(success: true)
+                store = EventStore.temporary(capacity: config.eventCapacity)
+                reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: encoding)
+                reporter.isOnline = true
+                return reporter
+            }
+
+            /// Records, flushes, and answers the events in the one request the flush posted.
+            func posted(_ record: (DirectEventProcessor) -> Void) -> [[String: LDValue]] {
+                record(reporter)
+                waitUntil(timeout: Constants.deliveryTimeout) { done in reporter.flush(completion: done) }
+                expect(serviceMock.publishEventDataCallCount) == 1
+                guard let data = serviceMock.publishedEventData,
+                      case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: data)
+                else { return [] }
+                return events.map(object)
+            }
+
+            func object(_ value: LDValue?) -> [String: LDValue] {
+                guard case .object(let members)? = value
+                else { return [:] }
+                return members
+            }
+
+            func inlinedContext(ofKind kind: String, in events: [[String: LDValue]]) -> [String: LDValue] {
+                object(events.first { $0["kind"] == .string(kind) }?["context"])
+            }
+
+            /// What a context reports as redacted, sorted so the comparison is stable.
+            func redacted(_ context: [String: LDValue]) -> [String] {
+                guard case .array(let names)? = object(context["_meta"])["redactedAttributes"]
+                else { return [] }
+                return names.compactMap { name -> String? in
+                    guard case .string(let string) = name
+                    else { return nil }
+                    return string
+                }.sorted()
+            }
+
+            afterEach {
+                reporter?.isOnline = false
+                store?.deleteEverything()
+            }
+
+            for encoding in [OutboundEventBuffer.Encoding.codable, .handWritten] {
+                context("\(encoding)") {
+                    it("redacts and reports an attribute the configuration names private") {
+                        _ = makeReporter(encoding) { $0.privateContextAttributes = [Reference("email")] }
+                        let delivered = inlinedContext(ofKind: "identify", in: posted { $0.record(IdentifyEvent(context: person())) })
+
+                        expect(delivered["key"]) == "user-key"
+                        expect(delivered["email"]).to(beNil())
+                        expect(delivered["name"]) == "Sandy"
+                        expect(redacted(delivered)) == ["email"]
+                    }
+
+                    it("leaves only the key and kind where every attribute is private") {
+                        _ = makeReporter(encoding) { $0.allContextAttributesPrivate = true }
+                        let delivered = inlinedContext(ofKind: "identify", in: posted { $0.record(IdentifyEvent(context: person())) })
+
+                        expect(delivered["key"]) == "user-key"
+                        expect(delivered["kind"]) == "user"
+                        expect(delivered["name"]).to(beNil())
+                        expect(delivered["email"]).to(beNil())
+                        expect(delivered["address"]).to(beNil())
+                        expect(redacted(delivered)) == ["address", "email", "name"]
+                    }
+
+                    it("reports each name as the reference that names it where every attribute is private") {
+                        var builder = LDContextBuilder(key: "user-key")
+                        _ = builder.trySetValue("/ssn", "123-45-6789")
+                        _ = builder.trySetValue("/a~b", "secret")
+                        _ = builder.trySetValue("c/d", "value")
+                        let slashed = try! builder.build().get()
+                        _ = makeReporter(encoding) { $0.allContextAttributesPrivate = true }
+                        let delivered = inlinedContext(ofKind: "identify", in: posted { $0.record(IdentifyEvent(context: slashed)) })
+
+                        expect(delivered["/ssn"]).to(beNil())
+                        expect(redacted(delivered)) == ["/~1a~0b", "/~1ssn", "c/d"]
+                    }
+
+                    it("redacts only the property a private sub-attribute names") {
+                        _ = makeReporter(encoding) { $0.privateContextAttributes = [Reference("/address/street")] }
+                        let delivered = inlinedContext(ofKind: "identify", in: posted { $0.record(IdentifyEvent(context: person())) })
+
+                        expect(object(delivered["address"])["city"]) == "Oakland"
+                        expect(object(delivered["address"])["street"]).to(beNil())
+                        expect(redacted(delivered)) == ["/address/street"]
+                    }
+
+                    it("redacts an attribute the context itself marks private") {
+                        var builder = LDContextBuilder(key: "user-key")
+                        builder.name("Sandy")
+                        _ = builder.trySetValue("email", "sandy@example.com")
+                        builder.addPrivateAttribute(Reference("email"))
+                        let marked = try! builder.build().get()
+                        _ = makeReporter(encoding)
+                        let delivered = inlinedContext(ofKind: "identify", in: posted { $0.record(IdentifyEvent(context: marked)) })
+
+                        expect(delivered["email"]).to(beNil())
+                        expect(delivered["name"]) == "Sandy"
+                        expect(redacted(delivered)) == ["email"]
+                    }
+
+                    it("redacts an anonymous context's attributes from a feature event but not an identify event") {
+                        var builder = LDContextBuilder(key: "anon-key")
+                        builder.anonymous(true)
+                        _ = builder.trySetValue("email", "sandy@example.com")
+                        let anonymous = try! builder.build().get()
+                        _ = makeReporter(encoding)
+                        let events = posted {
+                            $0.record(IdentifyEvent(context: anonymous))
+                            $0.recordFlagEvaluationEvents(flagKey: "flag-key", value: true, defaultValue: false,
+                                                          featureFlag: trackedFlag, context: anonymous, includeReason: false)
+                        }
+
+                        // An identify event is the application deliberately registering this context.
+                        expect(inlinedContext(ofKind: "identify", in: events)["email"]) == "sandy@example.com"
+                        // A feature event redacts every attribute of an anonymous context unasked.
+                        let feature = inlinedContext(ofKind: "feature", in: events)
+                        expect(feature["key"]) == "anon-key"
+                        expect(feature["email"]).to(beNil())
+                        expect(redacted(feature)) == ["email"]
+                    }
+
+                    it("redacts the private attributes of the context a summary inlines") {
+                        _ = makeReporter(encoding) { $0.privateContextAttributes = [Reference("email")] }
+                        let events = posted {
+                            $0.recordFlagEvaluationEvents(flagKey: "flag-key", value: true, defaultValue: false,
+                                                          featureFlag: nil, context: person(), includeReason: false)
+                        }
+
+                        let summarized = inlinedContext(ofKind: "summary", in: events)
+                        expect(summarized["key"]) == "user-key"
+                        expect(summarized["email"]).to(beNil())
+                        expect(redacted(summarized)) == ["email"]
+                        expect(object(summarized["address"])["city"]) == "Oakland"
+                    }
+
+                    it("redacts every kind of a multi-context") {
+                        var multi = LDMultiContextBuilder()
+                        for (kind, email) in [("user", "sandy@example.com"), ("org", "billing@example.com")] {
+                            var part = LDContextBuilder(key: "\(kind)-key")
+                            part.kind(kind)
+                            _ = part.trySetValue("email", .string(email))
+                            multi.addContext(try! part.build().get())
+                        }
+                        let both = try! multi.build().get()
+                        _ = makeReporter(encoding) { $0.privateContextAttributes = [Reference("email")] }
+                        let delivered = inlinedContext(ofKind: "identify", in: posted { $0.record(IdentifyEvent(context: both)) })
+
+                        expect(delivered["kind"]) == "multi"
+                        for kind in ["user", "org"] {
+                            expect(object(delivered[kind])["email"]).to(beNil(), description: kind)
+                            expect(redacted(object(delivered[kind]))).to(equal(["email"]), description: kind)
+                        }
+                    }
+
+                    it("posts no private value in any event") {
+                        // Over the whole request body rather than one field, so that a private value cannot slip
+                        // through in an event kind the tests above do not name.
+                        _ = makeReporter(encoding) { $0.privateContextAttributes = [Reference("email")] }
+                        let events = posted {
+                            $0.record(IdentifyEvent(context: person()))
+                            $0.record(CustomEvent(key: "an-event", context: person()))
+                            $0.recordFlagEvaluationEvents(flagKey: "flag-key", value: true, defaultValue: false,
+                                                          featureFlag: trackedFlag, context: person(), includeReason: false)
+                        }
+
+                        let kinds = events.compactMap { event -> String? in
+                            guard case .string(let kind)? = event["kind"]
+                            else { return nil }
+                            return kind
+                        }
+                        expect(Set(kinds)) == ["identify", "custom", "feature", "summary"]
+                        let body = String(data: serviceMock.publishedEventData ?? Data(), encoding: .utf8) ?? ""
+                        expect(body.contains("sandy@example.com")) == false
                     }
                 }
             }
