@@ -100,7 +100,12 @@ final class ClientController: ObservableObject {
                     self.config = config
                     self.isRestarting = false
                     self.observeConnection()
-                    self.result = timedOut ? "\(reason); flags did not arrive in time" : reason
+                    // Starting offline also reports a timeout, without waiting for anything.
+                    if !config.startOnline {
+                        self.result = "\(reason) offline"
+                    } else {
+                        self.result = timedOut ? "\(reason); flags did not arrive in time" : reason
+                    }
                 }
             }
         }
