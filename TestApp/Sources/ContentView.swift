@@ -131,13 +131,11 @@ private struct FlagSection: View {
         let controller = self.controller
         controller.countEvaluation()
         controller.result = "\(key) = \(describe(client, key))"
-        client.observe(key: key, owner: controller) { [weak controller] changed in
-            Task { @MainActor in
-                guard let controller, let client = controller.client
-                else { return }
-                controller.countEvaluation()
-                controller.result = "\(changed.key) changed to \(describe(client, changed.key))"
-            }
+        controller.observeFlag(key) { [weak controller] changed in
+            guard let controller, let client = controller.client
+            else { return }
+            controller.countEvaluation()
+            controller.result = "\(changed) changed to \(describe(client, changed))"
         }
     }
 

@@ -33,6 +33,9 @@ final class ClientController: ObservableObject {
 
     private(set) var evaluationsRequested = 0
 
+    /// Flags the running client already reports changes of, so evaluating one again does not add another observer.
+    private var observedFlags: Set<String> = []
+
     /// What the running client was started with, for the scenarios that depend on its limits.
     private(set) var config: LDConfig?
 
@@ -98,6 +101,7 @@ final class ClientController: ObservableObject {
             LDClient.start(config: config, context: context, startWaitSeconds: Self.startWaitSeconds) { timedOut in
                 Task { @MainActor in
                     self.config = config
+                    self.observedFlags.removeAll()
                     self.isRestarting = false
                     self.observeConnection()
                     // Starting offline also reports a timeout, without waiting for anything.
@@ -126,6 +130,15 @@ final class ClientController: ObservableObject {
     func countEvaluation() {
         evaluationsRequested += 1
         refreshDedupeStatus()
+    }
+
+    /// Calls `changed` with the key of a flag each time its value changes, from the first call for that key on.
+    func observeFlag(_ key: String, changed: @escaping @MainActor (String) -> Void) {
+        guard let client, observedFlags.insert(key).inserted
+        else { return }
+        client.observe(key: key, owner: self) { change in
+            Task { @MainActor in changed(change.key) }
+        }
     }
 
     func refreshConnectionStatus() {
