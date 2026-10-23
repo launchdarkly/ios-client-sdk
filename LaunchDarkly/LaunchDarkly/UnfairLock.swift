@@ -31,6 +31,14 @@ final class UnfairLock {
         defer { unlock() }
         return try body()
     }
+
+    /// Traps unless the calling thread holds the lock. Debug builds only, since it is called on recording paths.
+    @inline(__always)
+    func assertOwned() {
+        #if DEBUG
+        os_unfair_lock_assert_owner(unfairLock)
+        #endif
+    }
 }
 #else
 /// `os_unfair_lock` is Darwin only, so elsewhere this is Foundation's mutex.
@@ -42,5 +50,8 @@ extension NSLock {
         defer { unlock() }
         return try body()
     }
+
+    /// `NSLock` cannot tell which thread holds it, so there is nothing to check.
+    func assertOwned() {}
 }
 #endif

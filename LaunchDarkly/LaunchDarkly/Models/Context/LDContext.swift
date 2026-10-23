@@ -652,18 +652,6 @@ extension LDContext {
         attributes.values.contains { $0.containsNonFiniteNumber } || contexts.contains { $0.containsNonFiniteNumber() }
     }
 }
-
-private extension LDValue {
-    var containsNonFiniteNumber: Bool {
-        switch self {
-        case .number(let number): return !number.isFinite
-        case .array(let values): return values.contains { $0.containsNonFiniteNumber }
-        case .object(let values): return values.values.contains { $0.containsNonFiniteNumber }
-        case .null, .bool, .string: return false
-        }
-    }
-}
-
 enum LDContextBuilderKey {
     case generateKey
     case key(String)

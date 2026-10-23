@@ -5,6 +5,7 @@ extension HTTPURLResponse {
     struct HeaderKeys {
         static let date = "Date"
         static let etag = "Etag"
+        static let retryAfter = "Retry-After"
     }
 
     struct StatusCodes {
@@ -37,5 +38,18 @@ extension HTTPURLResponse {
 
     var headerEtag: String? {
         self.allHeaderFields[HeaderKeys.etag] as? String
+    }
+
+    /// The wait a `Retry-After` header asks for, in delta-seconds or as an HTTP date; nil where there is none, or it
+    /// cannot be read. A date already past is no wait at all.
+    var headerRetryAfter: TimeInterval? {
+        guard let value = value(forHTTPHeaderField: HeaderKeys.retryAfter)?.trimmingCharacters(in: .whitespaces)
+        else { return nil }
+        if let seconds = Int(value) {
+            return seconds >= 0 ? TimeInterval(seconds) : nil
+        }
+        guard let date = DateFormatter.httpUrlHeaderFormatter.date(from: value)
+        else { return nil }
+        return max(0, date.timeIntervalSinceNow)
     }
 }

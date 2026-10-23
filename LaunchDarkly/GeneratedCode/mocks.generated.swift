@@ -174,8 +174,8 @@ final class EnvironmentReportingMock: EnvironmentReporting {
     }
 }
 
-// MARK: - EventReportingMock
-final class EventReportingMock: EventReporting {
+// MARK: - EventProcessorMock
+final class EventProcessorMock: EventProcessor {
 
     var isOnlineSetCount = 0
     var setIsOnlineCallback: (() throws -> Void)?
@@ -229,6 +229,20 @@ final class EventReportingMock: EventReporting {
         flushReportingOutcomeCallCount += 1
         flushReportingOutcomeReceivedCompletion = completion
         try! flushReportingOutcomeCallback?()
+    }
+
+    var commitRecordedEventsCallCount = 0
+    var commitRecordedEventsCallback: (() throws -> Void)?
+    func commitRecordedEvents() {
+        commitRecordedEventsCallCount += 1
+        try! commitRecordedEventsCallback?()
+    }
+
+    var commitWherePersistingCallCount = 0
+    var commitWherePersistingCallback: (() throws -> Void)?
+    func commitWherePersisting() {
+        commitWherePersistingCallCount += 1
+        try! commitWherePersistingCallback?()
     }
 }
 

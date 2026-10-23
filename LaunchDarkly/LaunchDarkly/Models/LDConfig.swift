@@ -19,6 +19,47 @@ public enum LDStreamingMode {
     case polling
 }
 
+/// How far the SDK goes to make a recorded event outlive the process that recorded it.
+///
+/// An event lives in memory until it is delivered, so a process that dies before the next flush takes everything
+/// recorded since the last one — including the crash an application was reporting when it died. Writing events to
+/// disk is what closes that gap: they are delivered on a later launch instead of being lost.
+///
+/// `.deferred` and `.immediate` are not stable in this major version, and not subject to any backwards compatibility
+/// guarantees or semantic versioning. They are experimental: their behavior, their cost on the calling thread, and
+/// what they leave on disk may change in a minor release.
+@objc(LDEventPersistence) public enum EventPersistence: Int {
+    /// Events are kept in memory only, and nothing survives the process ending.
+    ///
+    /// Events an earlier launch wrote to disk with persistence turned on are left there, and delivered by the next
+    /// launch that has it turned on.
+    case disabled
+    /// Events are written to disk, off the thread that recorded them.
+    ///
+    /// Recording stays as cheap as it is without persistence. An event from `track` or `identify` becomes durable a
+    /// moment after it was recorded rather than immediately, and a process that dies inside that window still loses
+    /// it. Evaluating a flag does not schedule a write of its own: its events wait in memory until enough of them have
+    /// built up, or until the next `track`, `identify`, flush or delivery writes them.
+    ///
+    /// A flush and entering the background are the exceptions. Both write on the calling thread, as `.immediate` does:
+    /// a flush so that an application ending the process on purpose can rely on it, and entering the background because
+    /// that is when the system is most likely to end it.
+    ///
+    /// This level is experimental; see `EventPersistence`.
+    case deferred
+    /// Events are written to disk before `track` and `identify` return.
+    ///
+    /// The write happens on the calling thread, costing tens of microseconds depending on how many evaluations are
+    /// waiting to be encoded alongside it. Evaluations are usually written in the background before many build up. A
+    /// burst of them faster than that can leave up to `eventCapacity` waiting, and the `track` or `identify` that
+    /// follows encodes them all, which can take milliseconds. In exchange there is no window: a process that dies the
+    /// instant after `track` returns still reports that event on the next launch. Evaluating a flag stays in memory
+    /// regardless.
+    ///
+    /// This level is experimental; see `EventPersistence`.
+    case immediate
+}
+
 /**
  Enable / disable options for Auto Environment Attributes functionality. When enabled, the SDK will automatically
  provide data about the mobile environment where the application is running. This data makes it simpler to target
@@ -192,7 +233,16 @@ public struct LDConfig {
         static let sendEvents = true
 
         /// The default maximum number of events the LDClient can store
-        static let eventCapacity = 100
+        static let eventCapacity = 2000
+
+        /// The default maximum number of bytes of events the LDClient can persist per environment. (20 MiB)
+        static let eventCapacityBytes = 20 * 1024 * 1024
+
+        /// The default maximum age of persisted events. (7 days)
+        static let eventMaxAge: TimeInterval = 7 * 24 * 60 * 60
+
+        /// The default behavior for the SDK is to keep events in memory only.
+        static let eventPersistence = EventPersistence.disabled
 
         /// The default timeout interval for flag requests and event reports. (10 seconds)
         static let connectionTimeout: TimeInterval = 10.0
@@ -314,8 +364,41 @@ public struct LDConfig {
     /// only the sending of client-side events, not streaming or polling for events from the server.
     public var sendEvents: Bool = Defaults.sendEvents
 
-    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)
+    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. The same number bounds how many distinct contexts flag evaluations are summarized for between two reports; evaluations for contexts beyond it are not counted until the next report. (Default: 2000)
+    ///
+    /// Where `eventPersistence` keeps events across launches, this includes the events an earlier launch left undelivered, from the
+    /// moment the SDK has read them, which it does in the background just after starting. Events recorded before then are
+    /// counted without them, so for that moment the SDK can hold up to this many on top of what the earlier launch left.
+    ///
+    /// Events being sent stop counting once the request is out, so a flush makes room straight away. If the request fails they are kept
+    /// to send again and count again, so after a failed send the SDK can hold up to this many plus the events that request carried.
     public var eventCapacity: Int = Defaults.eventCapacity
+
+    /// How far the SDK goes to make a recorded event outlive the process that recorded it.
+    ///
+    /// Anything other than `.disabled` appends events to a log under Application Support and delivers them on a later
+    /// run, which is what lets the crash an application was reporting when it died reach LaunchDarkly at all.
+    /// `.immediate` additionally puts the write on the thread that called `track` or `identify`, so there is no window
+    /// in which the event exists only in memory. Both levels other than `.disabled` are experimental, and not subject to
+    /// any backwards compatibility guarantees or semantic versioning. (Default: `.disabled`)
+    public var eventPersistence: EventPersistence = Defaults.eventPersistence
+
+    /// The maximum number of bytes of events the SDK keeps for each environment where `eventPersistence` keeps events across launches,
+    /// on disk and in memory together. When it is reached, the SDK discards new events until it successfully reports the stored ones,
+    /// as it does when `eventCapacity` is reached; it never deletes stored events to make room. A fifth of it is kept for the summaries
+    /// of flag evaluations, so that evaluations are still counted after full events start being discarded. A value of zero or less
+    /// means the default. (Default: 20 MiB)
+    ///
+    /// Where `eventPersistence` is `.disabled`, full events are bounded by `eventCapacity` alone, and this bounds only the summaries,
+    /// which `eventCapacity` never refuses: a delivery that keeps failing would otherwise leave them growing for the life of the process.
+    public var eventCapacityBytes: Int = Defaults.eventCapacityBytes
+
+    /// How long the SDK keeps events it has persisted but not yet reported, where `eventPersistence` keeps events across launches. Events
+    /// older than this are discarded rather than reported, and so is everything the SDK stored for an environment whose mobile key the
+    /// application stopped using. A value of zero or less means the default. (Default: 7 days)
+    ///
+    /// It has no effect where `eventPersistence` is `.disabled`.
+    public var eventMaxAge: TimeInterval = Defaults.eventMaxAge
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
     public var connectionTimeout: TimeInterval = Defaults.connectionTimeout
@@ -546,6 +629,9 @@ extension LDConfig: Equatable {
             && lhs.eventsUrl == rhs.eventsUrl
             && lhs.streamUrl == rhs.streamUrl
             && lhs.eventCapacity == rhs.eventCapacity
+            && lhs.eventPersistence == rhs.eventPersistence
+            && lhs.eventCapacityBytes == rhs.eventCapacityBytes
+            && lhs.eventMaxAge == rhs.eventMaxAge
             && lhs.sendEvents == rhs.sendEvents
             && lhs.connectionTimeout == rhs.connectionTimeout
             && lhs.eventFlushInterval == rhs.eventFlushInterval

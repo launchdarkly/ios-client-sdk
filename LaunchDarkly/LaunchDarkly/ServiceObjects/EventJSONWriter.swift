@@ -2,8 +2,8 @@ import Foundation
 
 /// Writes an `Event` as the JSON the events endpoint accepts, producing the same JSON as `Event.encode(to:)`.
 ///
-/// Create one per batch. The buffer and the context cache are reused across the events of that batch, and neither is
-/// safe to share between threads.
+/// The buffer and the context cache are reused from one event to the next, so the longer an instance lives the more
+/// they save. Neither is safe to share between threads.
 struct EventJSONWriter {
     private let allAttributesPrivate: Bool
     private let globalPrivateAttributes: [Reference]
