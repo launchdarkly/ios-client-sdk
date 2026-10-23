@@ -26,7 +26,7 @@ struct TestAppConfiguration {
     func applyEndpoints(to config: inout LDConfig) {
         guard isStaging
         else { return }
-        config.baseUrl = URL(string: "https://clientsdk.\(Self.stagingDomain)")!
+        config.baseUrl = URL(string: "https://app.\(Self.stagingDomain)")!
         config.streamUrl = URL(string: "https://clientstream.\(Self.stagingDomain)")!
         config.eventsUrl = URL(string: "https://mobile.\(Self.stagingDomain)")!
     }
