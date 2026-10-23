@@ -432,11 +432,14 @@ final class EventJSONWriterTests: XCTestCase {
     }
 
     /// An attribute name is a literal name, not an attribute reference: `/foo` names an attribute called `/foo`, not the
-    /// path `foo`. Only private attributes are references, and they match the name as one component.
+    /// path `foo`. Private attributes and `redactedAttributes` are references, so a name starting with a slash is
+    /// listed as the one-component path that refers to it, `/~1foo`.
     func testAttributeNamesStartingWithASlashAreWrittenAndRedactedByName() throws {
         var builder = LDContextBuilder(key: "user-key")
         _ = builder.trySetValue("/foo", "bar")
         _ = builder.trySetValue("/secret", "hidden")
+        _ = builder.trySetValue("/a~b/c", true)
+        _ = builder.trySetValue("x/y", 2)
         _ = builder.trySetValue("plain", 1)
         builder.addPrivateAttribute(Reference("/~1secret"))
         builder.addPrivateAttribute(Reference("/foo"))
@@ -465,7 +468,7 @@ final class EventJSONWriterTests: XCTestCase {
                 if allAttributesPrivate {
                     XCTAssertNil(written["/foo"], label)
                     XCTAssertNil(written["plain"], label)
-                    XCTAssertEqual(Set(redacted(written)), ["/foo", "/secret", "plain"], label)
+                    XCTAssertEqual(Set(redacted(written)), ["/~1foo", "/~1secret", "/~1a~0b~1c", "x/y", "plain"], label)
                 } else {
                     // `Reference("/foo")` is the path `foo`, which names no attribute here.
                     XCTAssertEqual(written["/foo"] as? String, "bar", label)
@@ -473,6 +476,12 @@ final class EventJSONWriterTests: XCTestCase {
                     XCTAssertEqual(redacted(written), ["/~1secret"], label)
                 }
                 XCTAssertNil(written["/secret"], label)
+                // Each entry, parsed back as a reference, refers to an attribute that was left out.
+                for entry in redacted(written) {
+                    let reference = Reference(entry)
+                    XCTAssertTrue(reference.isValid(), "\(label): \(entry)")
+                    XCTAssertNotNil(context.getValue(reference), "\(label): \(entry)")
+                }
             }
         }
 
