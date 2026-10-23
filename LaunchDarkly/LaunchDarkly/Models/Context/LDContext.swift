@@ -119,7 +119,7 @@ public struct LDContext: Encodable, Equatable {
         for key in optionalAttributeNames {
             if let value = context.getTopLevelAddressableAttributeSingleKind(key) {
                 if redactAll {
-                    redactedAttributes.append(key)
+                    redactedAttributes.append(Reference(literal: key).raw())
                     continue
                 }
 

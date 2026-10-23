@@ -60,7 +60,7 @@ extension LDContext {
             else { continue }
 
             if redactAll {
-                redaction.redactedAttributes.append(name)
+                redaction.redactedAttributes.append(Reference(literal: name).raw())
                 continue
             }
 
