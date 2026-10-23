@@ -353,9 +353,9 @@ final class EventStoreSpec: QuickSpec {
     private static func frameOffsets(in log: Data) -> [Int] {
         var offsets: [Int] = []
         var cursor = EventLogFormat.fileHeaderSize
-        while cursor + EventLogFormat.frameHeaderSize <= log.count {
+        while cursor + EventLogFormat.frameOverhead <= log.count {
             offsets.append(cursor)
-            cursor += EventLogFormat.frameHeaderSize + Int(EventLogFormat.readUInt32(log, at: cursor + 2))
+            cursor += EventLogFormat.frameOverhead + Int(EventLogFormat.readUInt32(log, at: cursor + 2))
         }
         return offsets
     }
@@ -363,7 +363,7 @@ final class EventStoreSpec: QuickSpec {
     /// An event whose frame is exactly `frameBytes` long, padded out in a `data` field.
     private static func payload(framedIn frameBytes: Int, key: String) -> Data {
         let bare = "{\"kind\":\"custom\",\"key\":\"\(key)\",\"data\":\"\"}"
-        let padding = frameBytes - EventLogFormat.frameHeaderSize - bare.utf8.count
+        let padding = frameBytes - EventLogFormat.frameOverhead - bare.utf8.count
         precondition(padding >= 0, "\(key) does not fit in \(frameBytes) bytes")
         return Data("{\"kind\":\"custom\",\"key\":\"\(key)\",\"data\":\"\(String(repeating: "x", count: padding))\"}".utf8)
     }
@@ -595,6 +595,15 @@ final class EventStoreSpec: QuickSpec {
                     expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0"]
                 }
 
+                it("keeps every event before a damaged checksum") {
+                    var damaged = try Data(contentsOf: log)
+                    let size = Int(EventLogFormat.readUInt32(damaged, at: second + 2))
+                    damaged[second + EventLogFormat.frameHeaderSize + size + 1] ^= 0x10
+                    try damaged.write(to: log)
+
+                    expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0"]
+                }
+
                 it("keeps every event before a size that still fits in the file") {
                     // A size that is merely wrong rather than impossible passes every bound a torn tail is caught by,
                     // and would have the reader start the next frame partway through this one's payload.
@@ -778,8 +787,9 @@ final class EventStoreSpec: QuickSpec {
 
             it("frames an event as the Android SDK does") {
                 // The checksum is zlib's CRC-32, so these bytes are what the Android SDK writes for the same event too.
-                let frame = EventLogFormat.frame(for: Data("{\"kind\":\"custom\",\"key\":\"k\"}".utf8))
-                expect(frame.prefix(EventLogFormat.frameHeaderSize)) == Data([0x00, 0x01, 0x00, 0x00, 0x00, 0x1B, 0xCB, 0x2B, 0x5E, 0x6F])
+                let event = Data("{\"kind\":\"custom\",\"key\":\"k\"}".utf8)
+                let frame = EventLogFormat.frame(for: event)
+                expect(frame) == Data([0x00, 0x01, 0x00, 0x00, 0x00, 0x1B]) + event + Data([0xCB, 0x2B, 0x5E, 0x6F])
             }
 
             it("has nothing to close when nothing was recorded") {
@@ -1581,7 +1591,7 @@ final class EventStoreSpec: QuickSpec {
 
             it("takes an event that fills a batch on its own, and refuses any larger") {
                 store = EventStore.temporary()
-                let largest = EventLogFormat.maxFrameSize + EventLogFormat.frameHeaderSize
+                let largest = EventLogFormat.maxFrameSize + EventLogFormat.frameOverhead
                 expect(store.stage(EventStoreSpec.payload(framedIn: largest + 1, key: "too-large"))) == false
                 expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-1"))) == true
                 expect(store.stage(EventStoreSpec.payload(framedIn: largest, key: "largest"))) == true

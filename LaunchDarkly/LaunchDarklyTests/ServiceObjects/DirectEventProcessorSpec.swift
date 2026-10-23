@@ -1711,7 +1711,7 @@ extension DirectEventProcessorSpec {
             itPersisting("refuses an event without encoding it once the stored bytes leave no room for full events") {
                 let store = EventStore.temporary(capacity: 100, byteCapacity: 1000)
                 // One frame of 800 bytes, which is all the room full events have.
-                expect(store.stage(Data(repeating: UInt8(ascii: "x"), count: 800 - EventLogFormat.frameHeaderSize))) == true
+                expect(store.stage(Data(repeating: UInt8(ascii: "x"), count: 800 - EventLogFormat.frameOverhead))) == true
                 testContext = TestContext(store: store, eventCapacity: 100)
 
                 let refused = EncodingGate(key: "refused", context: testContext.context)
@@ -1724,7 +1724,7 @@ extension DirectEventProcessorSpec {
 
             itPersisting("reports a flush as failed when an accepted event turns out too large for the bytes left") {
                 let store = EventStore.temporary(capacity: 100, byteCapacity: 1000)
-                expect(store.stage(Data(repeating: UInt8(ascii: "x"), count: 700 - EventLogFormat.frameHeaderSize))) == true
+                expect(store.stage(Data(repeating: UInt8(ascii: "x"), count: 700 - EventLogFormat.frameOverhead))) == true
                 testContext = TestContext(store: store, eventCapacity: 100)
                 testContext.eventProcessor.isOnline = true
 
