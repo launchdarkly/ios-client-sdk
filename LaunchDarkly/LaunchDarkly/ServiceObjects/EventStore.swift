@@ -16,6 +16,9 @@ struct BatchListing: Equatable {
     /// False where the directory could not be listed. `batches` are then the ones this process last knew to be there,
     /// which includes every batch it closed itself, but can miss one another process closed or a previous run left.
     let isComplete: Bool
+    /// The events in batches this process counted that have left the directory where nothing could have delivered
+    /// them; see `VanishedBatch`. No longer counted from this listing on, so no later listing reports them again.
+    var vanishedEvents = 0
 }
 
 /// The request body for a batch, and how many events made it in.
@@ -89,11 +92,12 @@ protocol EventStoring {
     /// as they were. It does not empty them.
     func listPendingBatches() -> BatchListing
 
-    /// The `[...]` request body for a batch, or nil if it is gone or holds no events, neither of which loses anything.
+    /// The `[...]` request body for a batch, or nil if it holds no events, or is gone where another process or store
+    /// may have delivered it, neither of which loses anything.
     ///
     /// - throws: `UnreadableBatch` if the batch is there but holds nothing this version can send, which no later
-    ///   attempt changes and which loses its events; anything else if it could not be read this time, which a later
-    ///   attempt may manage.
+    ///   attempt changes and which loses its events; `VanishedBatch` if it is gone and nothing could have delivered it;
+    ///   anything else if it could not be read this time, which a later attempt may manage.
     func payload(of batch: EventBatch) throws -> BatchPayload?
 
     /// Forgets a batch, which is only correct once LaunchDarkly has accepted it or permanently refused it.
@@ -134,8 +138,15 @@ extension EventStoring {
 }
 
 /// A batch that is there to read and holds nothing this version can send: damaged, or written in a format it does not
-/// read. Unlike a batch that is gone, its events are lost.
+/// read. Unlike a batch another process delivered, its events are lost.
 struct UnreadableBatch: Error {
+    let payloadId: String
+}
+
+/// A batch that held events and is gone where nothing could have delivered it: no other process uses the directory,
+/// and no store in this one removed it. Something deleted it unsent, such as tvOS reclaiming its caches, so its events
+/// are lost.
+struct VanishedBatch: Error {
     let payloadId: String
 }
 
@@ -263,6 +274,12 @@ final class EventStore: EventStoring {
         set { ioLock.withLock { disk?.locksOpenLog = newValue } }
     }
     #endif
+
+    /// Whether other processes of the application may use this directory, and so deliver its batches.
+    var sharesDirectoryWithOtherProcesses: Bool {
+        get { ioLock.withLock { disk?.sharesDirectoryWithOtherProcesses ?? false } }
+        set { ioLock.withLock { disk?.sharesDirectoryWithOtherProcesses = newValue } }
+    }
 
     convenience init(directory: URL,
                      capacity: Int,
@@ -472,7 +489,8 @@ final class EventStore: EventStoring {
             let listing = disk.listBatches()
             return BatchListing(batches: heldBatchesAndRecount(after: listing.batches, storedSummaries: disk.storedSummaries,
                                                                storedBytes: disk.storedBytes),
-                                isComplete: listing.isComplete)
+                                isComplete: listing.isComplete,
+                                vanishedEvents: listing.vanishedEvents)
         }
     }
 

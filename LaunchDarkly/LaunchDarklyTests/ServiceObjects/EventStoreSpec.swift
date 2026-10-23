@@ -1318,6 +1318,81 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingEventCount) == 1
             }
 
+            it("finds a batch deleted unsent lost where no other process shares the directory") {
+                store = EventStore.temporary()
+                store.sharesDirectoryWithOtherProcesses = false
+                _ = store.stage(EventStoreSpec.payload("deleted"))
+                let batch = store.closeBatch()!
+
+                try FileManager.default.removeItem(at: EventStoreSpec.onlyBatchFile(in: store))
+
+                expect { try store.body(of: batch) }.to(throwError(errorType: VanishedBatch.self))
+            }
+
+            it("finds a batch another store in this process removed delivered, where no other process shares the directory") {
+                store = EventStore.temporary()
+                store.sharesDirectoryWithOtherProcesses = false
+                _ = store.stage(EventStoreSpec.payload("delivered"))
+                let batch = store.closeBatch()!
+
+                EventStoreSpec.reader(sharing: store).remove(batch)
+
+                expect(try store.body(of: batch)).to(beNil())
+            }
+
+            it("lists the events of a batch deleted unsent as vanished, once, where no other process shares the directory") {
+                store = EventStore.temporary()
+                store.sharesDirectoryWithOtherProcesses = false
+                _ = store.stage(EventStoreSpec.payload("deleted"))
+                _ = store.stage(EventStoreSpec.payload("with it"))
+                let deleted = store.closeBatch()!
+                _ = store.stage(EventStoreSpec.payload("delivered"))
+                let delivered = store.closeBatch()!
+
+                try FileManager.default.removeItem(
+                    at: store.directory!.appendingPathComponent("ready-\(deleted.payloadId).\(deleted.eventCount)"))
+                EventStoreSpec.reader(sharing: store).remove(delivered)
+
+                expect(store.listPendingBatches().vanishedEvents) == 2
+                expect(store.listPendingBatches().vanishedEvents) == 0
+                expect(store.pendingEventCount) == 0
+            }
+
+            it("lists the events of a directory deleted whole as vanished, where no other process shares it") {
+                store = EventStore.temporary()
+                store.sharesDirectoryWithOtherProcesses = false
+                _ = store.stage(EventStoreSpec.payload("deleted"))
+                _ = store.closeBatch()
+
+                try FileManager.default.removeItem(at: store.directory!)
+
+                expect(store.listPendingBatches().vanishedEvents) == 1
+                expect(store.pendingEventCount) == 0
+            }
+
+            it("lists nothing as vanished from a directory another process shares") {
+                store = EventStore.temporary()
+                store.sharesDirectoryWithOtherProcesses = true
+                _ = store.stage(EventStoreSpec.payload("delivered"))
+                _ = store.closeBatch()
+
+                try FileManager.default.removeItem(at: EventStoreSpec.onlyBatchFile(in: store))
+
+                expect(store.listPendingBatches().vanishedEvents) == 0
+                expect(store.pendingEventCount) == 0
+            }
+
+            it("finds a batch gone from a directory another process shares delivered") {
+                store = EventStore.temporary()
+                store.sharesDirectoryWithOtherProcesses = true
+                _ = store.stage(EventStoreSpec.payload("delivered"))
+                let batch = store.closeBatch()!
+
+                try FileManager.default.removeItem(at: EventStoreSpec.onlyBatchFile(in: store))
+
+                expect(try store.body(of: batch)).to(beNil())
+            }
+
             for persistEvents in [true, false] {
                 it("neither loses nor doubles a batch closed while a listing runs (persisting: \(persistEvents))") {
                     store = EventStore.temporary(capacity: 100_000, persistEvents: persistEvents)

@@ -2159,6 +2159,37 @@ extension DirectEventProcessorSpec {
                 expect(store.pendingEventCount) == 0
             }
 
+            for shared in [false, true] {
+                it("reports \(shared ? "true" : "false") for a stored batch gone before it was sent, where other processes \(shared ? "share" : "do not share") the directory") {
+                    let store = EventStore.temporary()
+                    store.sharesDirectoryWithOtherProcesses = shared
+                    testContext = TestContext(store: store)
+                    testContext.eventProcessor.isOnline = true
+                    waitUntil(timeout: Constants.deliveryTimeout) { done in
+                        testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                    }
+
+                    testContext.recordEvents(1)
+                    testContext.eventProcessor.commitRecordedEvents()
+                    let gone = store.closeBatch()!
+                    try FileManager.default.removeItem(
+                        at: store.directory!.appendingPathComponent("ready-\(gone.payloadId).\(gone.eventCount)"))
+                    testContext.recordEvents(1)
+
+                    var delivered: Bool?
+                    waitUntil(timeout: Constants.deliveryTimeout) { done in
+                        testContext.eventProcessor.flushReportingOutcome { result in
+                            delivered = result
+                            done()
+                        }
+                    }
+                    // Where another process may have delivered it, it is taken to have been; otherwise its events are lost.
+                    expect(delivered) == shared
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                    expect(store.pendingEventCount) == 0
+                }
+            }
+
             it("tells the next flush about a stored batch a delivery nobody waited on dropped") {
                 let store = EventStore.temporary()
                 testContext = TestContext(store: store)

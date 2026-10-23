@@ -118,6 +118,36 @@ final class EventDirectory {
     }
     #endif
 
+    /// Whether other processes of the application may use this directory, and so deliver its batches. Only a Mac runs
+    /// a second instance of an application over the same directory; elsewhere a batch that is gone, and that no store
+    /// in this process removed, was deleted unsent. Only to be used while holding `ioLock`.
+    #if os(macOS) || targetEnvironment(macCatalyst)
+    var sharesDirectoryWithOtherProcesses = true
+    #else
+    var sharesDirectoryWithOtherProcesses = false
+    #endif
+
+    /// The payload IDs of the batches stores in this process last removed, delivered or expired, oldest first, so that
+    /// another store on the same directory -- one opened after `LDClient` was closed, say -- does not take a batch it
+    /// listed and then found gone for one deleted unsent. Only the most recent are kept: what matters is a removal
+    /// between another store's listing and its read, which is never many batches ago. Guarded by `removedLock`.
+    private static var removedInThisProcess: [String] = []
+    private static let removedInThisProcessLimit = 1024
+    private static let removedLock = UnfairLock()
+
+    private static func rememberRemoved(_ payloadId: String) {
+        removedLock.withLock {
+            removedInThisProcess.append(payloadId)
+            if removedInThisProcess.count > removedInThisProcessLimit {
+                removedInThisProcess.removeFirst(removedInThisProcess.count - removedInThisProcessLimit)
+            }
+        }
+    }
+
+    private static func wasRemovedInThisProcess(_ payloadId: String) -> Bool {
+        removedLock.withLock { removedInThisProcess.contains(payloadId) }
+    }
+
     /// - Parameter locatingDirectory: answers where the events go. Asked once, and only on first use.
     init(locatingDirectory: @escaping () -> URL,
          ioLock: UnfairLock,
@@ -297,8 +327,9 @@ final class EventDirectory {
         } catch {
             guard FileManager.default.fileExists(atPath: disk.directory.path)
             else {
+                let vanished = vanishedEvents(listed: [])
                 stored = [:]
-                return BatchListing(batches: [], isComplete: true)
+                return BatchListing(batches: [], isComplete: true, vanishedEvents: vanished)
             }
             os_log("%s could not list stored events, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             let known = stored
@@ -332,9 +363,21 @@ final class EventDirectory {
         // A batch that left the directory without going through `remove` -- a purged cache directory on tvOS, say --
         // would otherwise keep its count for the rest of the session.
         let listed = Set(batches.map { $0.payloadId })
+        let vanished = vanishedEvents(listed: listed)
         stored = stored.filter { listed.contains($0.key) }
 
-        return BatchListing(batches: batches, isComplete: true)
+        return BatchListing(batches: batches, isComplete: true, vanishedEvents: vanished)
+    }
+
+    /// The events in the batches counted here that are not in `listed` and that nothing could have delivered: no other
+    /// process uses the directory, and no store in this one removed them. Requires `ioLock`.
+    private func vanishedEvents(listed: Set<String>) -> Int {
+        ioLock.assertOwned()
+        guard !sharesDirectoryWithOtherProcesses
+        else { return 0 }
+        return stored
+            .filter { !listed.contains($0.key) && !EventDirectory.wasRemovedInThisProcess($0.key) }
+            .reduce(0) { $0 + $1.value.events }
     }
 
     private static let listedKeys: [URLResourceKey] = [.contentModificationDateKey, .fileSizeKey]
@@ -376,20 +419,25 @@ final class EventDirectory {
         return true
     }
 
-    /// The `[...]` payload for a batch, assembled in the bytes the file was read into; or nil if it is gone or holds no
-    /// events.
+    /// The `[...]` payload for a batch, assembled in the bytes the file was read into; or nil if it holds no events, or
+    /// is gone where another process or store may have delivered it.
     ///
     /// Requires `ioLock`.
     ///
-    /// - throws: `UnreadableBatch` if the batch is there but holds nothing this version can send; anything else if it
-    ///   could not be read this time, which a later attempt may manage.
+    /// - throws: `UnreadableBatch` if the batch is there but holds nothing this version can send; `VanishedBatch` if it
+    ///   held events and is gone where nothing could have delivered it; anything else if it could not be read this
+    ///   time, which a later attempt may manage.
     func payload(of batch: EventBatch) throws -> BatchPayload? {
         ioLock.assertOwned()
         // Taken out of the read's result rather than bound inside the switch, so that nothing else refers to it and it
         // is assembled where it is rather than copied first.
         var file: Data
         switch read(url(of: batch.payloadId, holding: batch.eventCount)) {
-        case .missing: return nil
+        case .missing:
+            guard batch.eventCount > 0, !sharesDirectoryWithOtherProcesses,
+                  !EventDirectory.wasRemovedInThisProcess(batch.payloadId)
+            else { return nil }
+            throw VanishedBatch(payloadId: batch.payloadId)
         case .failed(let error): throw error
         case .bytes(let bytes): file = bytes
         }
@@ -414,6 +462,7 @@ final class EventDirectory {
         ioLock.assertOwned()
         let file = url(of: payloadId, holding: events)
         try? FileManager.default.removeItem(at: file)
+        EventDirectory.rememberRemoved(payloadId)
         if FileManager.default.fileExists(atPath: file.path) {
             // Its events stop counting all the same: LaunchDarkly has them, and holding capacity for a file this
             // process may never be allowed to delete would cost the session events it could still have recorded.
@@ -639,6 +688,7 @@ extension EventDirectory {
                     }
                     continue
                 }
+                EventDirectory.rememberRemoved(payloadId)
                 events += held
                 counted += stored.removeValue(forKey: payloadId)?.tally ?? EventTally()
             } else {

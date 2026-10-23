@@ -217,7 +217,9 @@ class DirectEventProcessor: EventProcessor {
         deliveryQueue.async { [weak self] in
             store.preparePayloadsFromInterruptedLogs()
             self?.reportDiscarded(store.discardExpired())
-            self?.hasEventsFromPreviousRun = !store.pendingBatches().isEmpty
+            let listing = store.listPendingBatches()
+            self?.reportVanished(listing.vanishedEvents)
+            self?.hasEventsFromPreviousRun = !listing.batches.isEmpty
         }
     }
 
@@ -677,7 +679,7 @@ extension DirectEventProcessor {
         // Waited on for the answer, but not before closing.
         waitOn(waiting.waitingOn, answer)
 
-        deliverOwn(waiting.deliverable) { waitingOutcome in
+        deliverOwn(waiting.deliverable, lostAnything: waiting.lostAnything) { waitingOutcome in
             guard waitingOutcome != .blocked
             else {
                 // Committed all the same, since a delivery is a commit point. Nothing was closed, so the caller's events
@@ -706,19 +708,21 @@ extension DirectEventProcessor {
                 answer.report(max(waitingOutcome, newOutcome))
             }
             self.waitOn(new.waitingOn, newAnswer)
-            self.deliverOwn(new.deliverable, newAnswer.report)
+            self.deliverOwn(new.deliverable, lostAnything: new.lostAnything, newAnswer.report)
         }
     }
 
     /// Delivers the batches this delivery claimed, releasing the claims once it has an outcome.
-    private func deliverOwn(_ batches: [EventBatch], _ completion: @escaping (PassOutcome) -> Void) {
+    ///
+    /// - Parameter lostAnything: whether the listing that found them found other batches deleted unsent.
+    private func deliverOwn(_ batches: [EventBatch], lostAnything: Bool, _ completion: @escaping (PassOutcome) -> Void) {
         guard !batches.isEmpty
         else {
-            completion(.delivered)
+            completion(lostAnything ? .lost : .delivered)
             return
         }
         os_log("%s starting", log: service.config.logger, type: .debug, typeName(and: #function))
-        deliver(batches) { outcome in
+        deliver(batches, lostAnything: lostAnything, retried: false) { outcome in
             self.releaseClaim(on: batches, delivered: outcome == .delivered)
             completion(outcome)
         }
@@ -741,15 +745,23 @@ extension DirectEventProcessor {
         }
     }
 
+    /// What `claimDeliverableBatches(discardingExpired:)` took.
+    private struct ClaimedBatches {
+        let deliverable: [EventBatch]
+        /// The claims on the batches left out. One may hold this caller's events -- `commitRecordedEvents` only stages
+        /// them, and whichever delivery runs next is what closes them into a batch -- so the answer has to wait for
+        /// those claims rather than assume they are someone else's business.
+        let waitingOn: [Claim]
+        let isComplete: Bool
+        /// Whether the listing found batches deleted unsent.
+        let lostAnything: Bool
+    }
+
     /// Takes the batches this delivery will send, leaving out any another delivery is still waiting on a response for.
     ///
     /// - Parameter discardingExpired: whether to discard what is too old to report first, which a second pass moments
     ///   after the first has no need to do again.
-    /// - Returns: the batches to send, the claims on the ones left out, and whether the listing was complete. A batch
-    ///   left out may hold this caller's events -- `commitRecordedEvents` only stages them, and whichever delivery runs
-    ///   next is what closes them into a batch -- so the answer has to wait for those claims rather than assume they
-    ///   are someone else's business.
-    private func claimDeliverableBatches(discardingExpired: Bool) -> (deliverable: [EventBatch], waitingOn: [Claim], isComplete: Bool) {
+    private func claimDeliverableBatches(discardingExpired: Bool) -> ClaimedBatches {
         // Listed before the lock is taken, because listing reads the disk. Taking what appeared after it is the next
         // delivery's business; all this has to be atomic is deciding which of these batches are this delivery's.
         // Expired first, so that a batch too old to report is not sent.
@@ -757,6 +769,7 @@ extension DirectEventProcessor {
             reportDiscarded(store.discardExpired())
         }
         let listing = store.listPendingBatches()
+        reportVanished(listing.vanishedEvents)
         return claimLock.withLock {
             var deliverable: [EventBatch] = []
             var waitingOn: [Claim] = []
@@ -768,8 +781,17 @@ extension DirectEventProcessor {
                     deliverable.append(batch)
                 }
             }
-            return (deliverable, waitingOn, listing.isComplete)
+            return ClaimedBatches(deliverable: deliverable, waitingOn: waitingOn, isComplete: listing.isComplete,
+                                  lostAnything: listing.vanishedEvents > 0)
         }
+    }
+
+    /// Counts as lost the events of batches a listing found deleted unsent.
+    private func reportVanished(_ events: Int) {
+        guard events > 0
+        else { return }
+        os_log("%s %d stored event(s) were deleted before they could be sent", log: service.config.logger, type: .error, typeName(and: #function), events)
+        reportStoredEventsLost(events)
     }
 
     /// Releases the claims once the delivery has an answer, whether or not every batch was sent: `deliver` stops at the
@@ -815,8 +837,8 @@ extension DirectEventProcessor {
     enum PassOutcome: Int, Comparable {
         /// Every batch was accepted.
         case delivered
-        /// Every batch was attempted, and at least one was lost for good: unreadable, damaged, or refused as malformed
-        /// `badRequestsBeforeDropping` times in a row.
+        /// Every batch was attempted, and at least one was lost for good: unreadable, damaged, deleted unsent, or refused
+        /// as malformed `badRequestsBeforeDropping` times in a row.
         case lost
         /// A batch is still there to be sent again: its request failed, the backoff did not allow it to be posted yet,
         /// or it could not be read this time. The batches after it were not attempted.
@@ -825,10 +847,6 @@ extension DirectEventProcessor {
         static func < (lhs: PassOutcome, rhs: PassOutcome) -> Bool {
             lhs.rawValue < rhs.rawValue
         }
-    }
-
-    private func deliver(_ batches: [EventBatch], _ completion: @escaping (PassOutcome) -> Void) {
-        deliver(batches, lostAnything: false, retried: false, completion)
     }
 
     /// Delivers batches oldest first, stopping at the first one that failed.
@@ -877,6 +895,12 @@ extension DirectEventProcessor {
             reportBatchLost(batch)
             deliver(remaining, lostAnything: true, retried: retried, completion)
             return
+        } catch is VanishedBatch {
+            os_log("%s %d stored event(s) were deleted before they could be sent", log: service.config.logger, type: .error, typeName(and: #function), batch.eventCount)
+            store.remove(batch)
+            reportBatchLost(batch)
+            deliver(remaining, lostAnything: true, retried: retried, completion)
+            return
         } catch {
             // Kept: the batch is still there, and a read that failed may not fail next time.
             os_log("%s could not read stored events: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error))
@@ -886,8 +910,8 @@ extension DirectEventProcessor {
 
         guard let payload = read
         else {
-            // Gone, which is usually another process having delivered it, or holding no events. Either way nothing is
-            // lost and there is nothing to keep.
+            // Delivered by another process or store, or holding no events. Either way nothing is lost and there is
+            // nothing to keep.
             store.remove(batch)
             deliver(remaining, lostAnything: lostAnything, retried: retried, completion)
             return
