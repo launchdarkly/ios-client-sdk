@@ -1393,6 +1393,73 @@ final class EventStoreSpec: QuickSpec {
                 expect(try store.body(of: batch)).to(beNil())
             }
 
+            it("hands over the events of an open log deleted unsent as vanished, once, where no other process shares the directory") {
+                store = EventStore.temporary()
+                store.sharesDirectoryWithOtherProcesses = false
+                _ = store.stage(EventStoreSpec.payload("deleted"))
+                _ = store.stage(EventStoreSpec.payload("with it"))
+                store.commit()
+
+                try FileManager.default.removeItem(at: store.openLogUrl!)
+
+                expect(store.closeBatch()).to(beNil())
+                expect(store.holdsUnclosedEvents) == false
+                expect(store.pendingEventCount) == 0
+                expect(store.takeVanishedLogEvents()) == 2
+                expect(store.takeVanishedLogEvents()) == 0
+            }
+
+            #if os(macOS) || targetEnvironment(macCatalyst)
+            it("hands over the events of a locked open log deleted unsent as vanished, though another process shares the directory") {
+                store = EventStore.temporary()
+                store.sharesDirectoryWithOtherProcesses = true
+                store.locksOpenLog = true
+                _ = store.stage(EventStoreSpec.payload("deleted"))
+                store.commit()
+
+                try FileManager.default.removeItem(at: store.openLogUrl!)
+
+                expect(store.closeBatch()).to(beNil())
+                expect(store.takeVanishedLogEvents()) == 1
+            }
+
+            it("hands over nothing as vanished from an unlocked open log gone from a directory another process shares") {
+                store = EventStore.temporary()
+                store.sharesDirectoryWithOtherProcesses = true
+                _ = store.stage(EventStoreSpec.payload("recovered elsewhere"))
+                store.commit()
+
+                try FileManager.default.removeItem(at: store.openLogUrl!)
+
+                expect(store.closeBatch()).to(beNil())
+                expect(store.pendingEventCount) == 0
+                expect(store.takeVanishedLogEvents()) == 0
+            }
+            #endif
+
+            it("hands over nothing as vanished from a log persistence gave up on, which recovery may have taken") {
+                var writes = 0
+                store = EventStore.temporary(writeLog: { file, bytes in
+                    writes += 1
+                    // The file header and the first event land; the device is full from then on.
+                    return writes > 2 ? ENOSPC : file.writeAll(bytes)
+                })
+                store.sharesDirectoryWithOtherProcesses = false
+                _ = store.stage(EventStoreSpec.payload("written"))
+                store.commit()
+                _ = store.stage(EventStoreSpec.payload("held"))
+                store.commit()
+                expect(store.isPersisting) == false
+
+                // No longer held, the log is one recovery takes, as it would one a process that died left behind.
+                EventStoreSpec.reader(sharing: store).preparePayloadsFromInterruptedLogs()
+
+                _ = store.closeBatch()
+                expect(store.takeVanishedLogEvents()) == 0
+                expect(store.pendingBatches().flatMap { EventStoreSpec.keys(ofBody: try? store.body(of: $0)) }
+                    .sorted()) == ["held", "written"]
+            }
+
             for persistEvents in [true, false] {
                 it("neither loses nor doubles a batch closed while a listing runs (persisting: \(persistEvents))") {
                     store = EventStore.temporary(capacity: 100_000, persistEvents: persistEvents)

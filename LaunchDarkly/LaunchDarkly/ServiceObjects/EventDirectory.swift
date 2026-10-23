@@ -127,6 +127,16 @@ final class EventDirectory {
     var sharesDirectoryWithOtherProcesses = false
     #endif
 
+    /// Whether another process could recover the log this store holds open, and so deliver it: only one sharing the
+    /// directory, and on a Mac only where the log is not locked. Requires `ioLock`.
+    private var otherProcessesCanTakeTheOpenLog: Bool {
+        #if os(macOS) || targetEnvironment(macCatalyst)
+        sharesDirectoryWithOtherProcesses && !locksOpenLog
+        #else
+        sharesDirectoryWithOtherProcesses
+        #endif
+    }
+
     /// The payload IDs of the batches stores in this process last removed, delivered or expired, oldest first, so that
     /// another store on the same directory -- one opened after `LDClient` was closed, say -- does not take a batch it
     /// listed and then found gone for one deleted unsent. Only the most recent are kept: what matters is a removal
@@ -240,10 +250,12 @@ final class EventDirectory {
     /// What closing the open log produced.
     enum LogClose {
         case closed(EventBatch)
-        /// The log is still there and still open, for the next append to continue and the next close to try again,
-        /// unless `logSurvives` is false -- a purged cache directory on tvOS, say. Then its events are gone, and they
-        /// have to stop counting against capacity or the store would refuse events for the rest of the session.
-        case failed(logSurvives: Bool)
+        /// The log is still there and still open, for the next append to continue and the next close to try again.
+        case failed
+        /// The log is gone with its events -- a purged cache directory on tvOS, say -- and they have to stop counting
+        /// against capacity or the store would refuse events for the rest of the session. `deletedUnsent` where
+        /// nothing could have delivered them: the log was still held, and no other process could have taken it.
+        case vanished(deletedUnsent: Bool)
     }
 
     /// Closes the open log into a batch, so the next append starts a new one. Requires `ioLock`.
@@ -260,10 +272,13 @@ final class EventDirectory {
             os_log("%s could not close the event log, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             guard disk.log.exists
             else {
+                // One no longer held -- persistence given up on closes it where it is -- may have been moved into a
+                // batch by recovery, which delivers it.
+                let deletedUnsent = disk.log.isOpen && !otherProcessesCanTakeTheOpenLog
                 disk.log.closeDescriptor()
-                return .failed(logSurvives: false)
+                return .vanished(deletedUnsent: deletedUnsent)
             }
-            return .failed(logSurvives: true)
+            return .failed
         }
 
         stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes, modified: Date(), summaries: held.summaries)

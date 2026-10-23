@@ -422,6 +422,7 @@ class DirectEventProcessor: EventProcessor {
         commitLock.withLock {
             encodeAndCommitPending()
             _ = store.closeBatch()
+            reportVanished(store.takeVanishedLogEvents())
             return (stateLock.withLock { lostEvents }, !store.holdsUnclosedEvents)
         }
     }
@@ -741,6 +742,8 @@ extension DirectEventProcessor {
     private func commitLeavingTheLogOpen() -> UInt64 {
         commitLock.withLock {
             encodeAndCommitPending()
+            // A commit that fills the log closes it, and can find it gone.
+            reportVanished(store.takeVanishedLogEvents())
             return stateLock.withLock { lostEvents }
         }
     }
@@ -786,7 +789,7 @@ extension DirectEventProcessor {
         }
     }
 
-    /// Counts as lost the events of batches a listing found deleted unsent.
+    /// Counts as lost the events of batches a listing found deleted unsent, or of an open log a close found gone.
     private func reportVanished(_ events: Int) {
         guard events > 0
         else { return }

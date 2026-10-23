@@ -86,6 +86,10 @@ protocol EventStoring {
     /// log holding them; they stay in that log for the next close to try again.
     var holdsUnclosedEvents: Bool { get }
 
+    /// The committed events lost since this was last asked because the open log was deleted unsent, which a close then
+    /// finds gone: they are in no batch, and no longer counted as unclosed either.
+    func takeVanishedLogEvents() -> Int
+
     /// Batches awaiting delivery, oldest first, including any recovered from a previous run of the application.
     ///
     /// A directory that could not be listed leaves the batches this process last counted, and what it counts for them,
@@ -225,6 +229,8 @@ final class EventStore: EventStoring {
     /// counting it, so `sendingEvents` can never exceed `closedEvents`.
     private var sendingBatches: [String: EventTally] = [:]
     private var sendingEvents = 0
+    /// Committed events that left the count with an open log deleted unsent, until `takeVanishedLogEvents()` takes them.
+    private var vanishedLogEvents = 0
 
     /// The bytes of the events counted above, state for state. Staged bytes are `bufferData` itself. Changed in the
     /// same critical sections as the event counts beside them, so that bytes and events are never counted in
@@ -447,16 +453,18 @@ final class EventStore: EventStoring {
         let closed = EventTally(events: committed.events, bytes: committed.bytes + EventLogFormat.fileHeader.count,
                                 summaries: committed.summaries)
         switch disk.closeLog(holding: closed) {
-        case .failed(let logSurvives):
+        case .failed:
             // A log that is still there is still the open one, and its events go on counting as committed until a
-            // later close manages it. Where the log went with its events, they have to stop counting against capacity
-            // or the store would refuse events for the rest of the session.
-            if !logSurvives {
-                bufferLock.withLock {
-                    committedEvents = 0
-                    committedSummaries = 0
-                    committedBytes = 0
+            // later close manages it.
+            return nil
+        case .vanished(let deletedUnsent):
+            bufferLock.withLock {
+                if deletedUnsent {
+                    vanishedLogEvents += committedEvents
                 }
+                committedEvents = 0
+                committedSummaries = 0
+                committedBytes = 0
             }
             return nil
         case .closed(let batch):
@@ -476,6 +484,13 @@ final class EventStore: EventStoring {
 
     var holdsUnclosedEvents: Bool {
         bufferLock.withLock { committedEvents > 0 }
+    }
+
+    func takeVanishedLogEvents() -> Int {
+        bufferLock.withLock {
+            defer { vanishedLogEvents = 0 }
+            return vanishedLogEvents
+        }
     }
 
     func listPendingBatches() -> BatchListing {

@@ -2402,6 +2402,42 @@ extension DirectEventProcessorSpec {
                     expect(testContext.serviceMock.publishEventDataCallCount) == 1
                     expect(store.pendingEventCount) == 0
                 }
+
+                it("reports \(shared ? "true" : "false") for events whose open log was gone before it was closed, where other processes \(shared ? "may take" : "cannot take") it") {
+                    let store = EventStore.temporary()
+                    store.sharesDirectoryWithOtherProcesses = shared
+                    testContext = TestContext(store: store)
+                    testContext.eventProcessor.isOnline = true
+                    waitUntil(timeout: Constants.deliveryTimeout) { done in
+                        testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                    }
+
+                    testContext.recordEvents(1)
+                    testContext.eventProcessor.commitRecordedEvents()
+                    try FileManager.default.removeItem(at: store.openLogUrl!)
+
+                    var delivered: Bool?
+                    waitUntil(timeout: Constants.deliveryTimeout) { done in
+                        testContext.eventProcessor.flushReportingOutcome { result in
+                            delivered = result
+                            done()
+                        }
+                    }
+                    expect(delivered) == shared
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 0
+                    expect(store.pendingEventCount) == 0
+
+                    // Told once: the next flush answers for its own events.
+                    testContext.recordEvents(1)
+                    waitUntil(timeout: Constants.deliveryTimeout) { done in
+                        testContext.eventProcessor.flushReportingOutcome { result in
+                            delivered = result
+                            done()
+                        }
+                    }
+                    expect(delivered) == true
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                }
             }
 
             it("tells the next flush about a stored batch a delivery nobody waited on dropped") {
@@ -3152,6 +3188,7 @@ private final class ClosingHookStore: EventStoring {
     func releaseReservations() { inner.releaseReservations() }
     func commit() { inner.commit() }
     var holdsUnclosedEvents: Bool { inner.holdsUnclosedEvents }
+    func takeVanishedLogEvents() -> Int { inner.takeVanishedLogEvents() }
     func listPendingBatches() -> BatchListing { inner.listPendingBatches() }
     func payload(of batch: EventBatch) throws -> BatchPayload? { try inner.payload(of: batch) }
     func remove(_ batch: EventBatch) { inner.remove(batch) }
@@ -3232,6 +3269,7 @@ private final class SlowListingStore: EventStoring {
     func commit() { inner.commit() }
     func closeBatch() -> EventBatch? { inner.closeBatch() }
     var holdsUnclosedEvents: Bool { inner.holdsUnclosedEvents }
+    func takeVanishedLogEvents() -> Int { inner.takeVanishedLogEvents() }
     func payload(of batch: EventBatch) throws -> BatchPayload? { try inner.payload(of: batch) }
     func remove(_ batch: EventBatch) { inner.remove(batch) }
     func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
