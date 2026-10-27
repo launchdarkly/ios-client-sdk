@@ -43,6 +43,23 @@ final class EventDirectory {
     /// A batch is never appended to once it is closed, so the count is as good as the file is.
     private static let batchPrefix = "ready-"
     private static let nameFieldSeparator: Character = "."
+    /// Names a log whose events are not yet in a batch: one its owner is appending to, or one left by an owner that is
+    /// gone, for recovery to close off. The rest of the name is the UUID it was opened under.
+    static let logPrefix = "pending-"
+    /// Names a log while it is being opened, before it has its header. Recovery never looks at these; one left by a
+    /// process that died opening it holds no events, and expiry removes it.
+    static let openingLogPrefix = "new-"
+
+    /// A name for a new log in `directory`, under a UUID no other writer picks.
+    static func newLogUrl(in directory: URL) -> URL {
+        directory.appendingPathComponent(logPrefix + UUID().uuidString)
+    }
+
+    /// Where `log` is created and given its header, before it is moved to its own name.
+    static func openingUrl(for log: URL) -> URL {
+        log.deletingLastPathComponent()
+            .appendingPathComponent(openingLogPrefix + log.lastPathComponent.dropFirst(logPrefix.count))
+    }
 
     private let locateDirectory: () -> URL
     private let ioLock: UnfairLock
@@ -578,12 +595,18 @@ final class EventDirectory {
     /// process has open, of which `DiskEventLog.claimForRecovery(_:)` then takes those no live process holds.
     ///
     /// The events in them were recorded by a store that is gone, so there is no one left to add to them: a previous run
-    /// of this process, or another process that has since ended, whatever it was called.
+    /// of this process, or another process that has since ended, whatever it was called. None of them becomes open here
+    /// later: a log is opened under a name of its own and never reopened once closed.
     ///
     /// Requires `ioLock`.
     func interruptedLogs() -> [URL] {
         ioLock.assertOwned()
-        return disk.log.logsNotOpenInThisProcess()
+        let contents = (try? FileManager.default.contentsOfDirectory(at: disk.directory,
+                                                                    includingPropertiesForKeys: nil,
+                                                                    options: [.skipsHiddenFiles])) ?? []
+        return contents.filter {
+            $0.lastPathComponent.hasPrefix(EventDirectory.logPrefix) && !DiskEventLog.isOpenInThisProcess($0)
+        }
     }
 
     /// Reads and counts a log recovery has claimed.
@@ -772,12 +795,12 @@ extension EventDirectory {
     /// held. Anything else is left alone.
     private static func discardIfAbandonedLog(_ file: URL) -> Int {
         let name = file.lastPathComponent
-        if name.hasPrefix(DiskEventLog.openingPrefix) {
+        if name.hasPrefix(EventDirectory.openingLogPrefix) {
             // Opening a log takes moments, so one this old was never finished, and holds no events.
             delete(file)
             return 0
         }
-        guard name.hasPrefix(DiskEventLog.prefix), !DiskEventLog.isHeldByLiveProcess(file)
+        guard name.hasPrefix(EventDirectory.logPrefix), !DiskEventLog.isHeldByLiveProcess(file)
         else { return 0 }
         let held = eventsReading(file)
         return delete(file) ? held : 0

@@ -184,11 +184,11 @@ final class EventStoreSpec: QuickSpec {
                 app.commit()
 
                 let logs = try FileManager.default.contentsOfDirectory(atPath: app.directory!.path)
-                    .filter { $0.hasPrefix(DiskEventLog.prefix) }
+                    .filter { $0.hasPrefix(EventDirectory.logPrefix) }
                 expect(logs.count) == 1
-                expect(logs.first.flatMap { UUID(uuidString: String($0.dropFirst(DiskEventLog.prefix.count))) }).toNot(beNil())
+                expect(logs.first.flatMap { UUID(uuidString: String($0.dropFirst(EventDirectory.logPrefix.count))) }).toNot(beNil())
                 expect(try FileManager.default.contentsOfDirectory(atPath: app.directory!.path)
-                    .filter { $0.hasPrefix(DiskEventLog.openingPrefix) }).to(beEmpty())
+                    .filter { $0.hasPrefix(EventDirectory.openingLogPrefix) }).to(beEmpty())
             }
         }
     }
@@ -499,7 +499,7 @@ final class EventStoreSpec: QuickSpec {
                 let reading = DispatchSemaphore(value: 0)
                 let release = DispatchSemaphore(value: 0)
                 let next = store.nextRun(readFile: { url in
-                    if url.lastPathComponent.hasPrefix(DiskEventLog.prefix) {
+                    if url.lastPathComponent.hasPrefix(EventDirectory.logPrefix) {
                         reading.signal()
                         _ = release.wait(timeout: .now() + 5)
                     }
@@ -976,7 +976,7 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.holdsUnclosedEvents) == false
                 expect(store.pendingBatches()) == [batch]
                 let logs = try FileManager.default.contentsOfDirectory(atPath: directory.path)
-                    .filter { $0.hasPrefix(DiskEventLog.prefix) }
+                    .filter { $0.hasPrefix(EventDirectory.logPrefix) }
                 expect(logs).to(beEmpty())
             }
         }
@@ -1853,7 +1853,7 @@ final class EventStoreSpec: QuickSpec {
 
             it("discards a log a process died while opening, which holds no events") {
                 try FileManager.default.createDirectory(at: store.directory!, withIntermediateDirectories: true)
-                let opening = store.directory!.appendingPathComponent(DiskEventLog.openingPrefix + UUID().uuidString)
+                let opening = store.directory!.appendingPathComponent(EventDirectory.openingLogPrefix + UUID().uuidString)
                 try EventLogFormat.fileHeader.write(to: opening)
                 try EventStoreSpec.age(opening, byDays: 8)
 

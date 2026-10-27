@@ -123,7 +123,7 @@ extension EventStore {
     var payloadsOnDisk: [Data] {
         let files = ((try? FileManager.default.contentsOfDirectory(atPath: directory!.path)) ?? []).sorted()
         let batches = files.filter { $0.hasPrefix("ready-") }
-        let logs = files.filter { $0.hasPrefix(DiskEventLog.prefix) }
+        let logs = files.filter { $0.hasPrefix(EventDirectory.logPrefix) }
         var payloads: [Data] = []
         for name in batches + logs {
             guard let file = try? Data(contentsOf: directory!.appendingPathComponent(name))
