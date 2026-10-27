@@ -20,9 +20,8 @@ struct EventTally: Equatable {
 /// been closed off for delivery.
 ///
 /// Everything about the filesystem lives here -- where the directory is, what the files in it are called, and how they
-/// are listed, read, moved and deleted -- so that `EventStore` is left with the buffer, the capacity arithmetic, and
-/// the batches it holds in memory, none of which need a disk at all. A store the application told to keep events off
-/// the disk has no `EventDirectory`, rather than one it is careful never to use.
+/// are listed, read, moved and deleted. A store the application told to keep events off the disk has no
+/// `EventDirectory`, rather than one it is careful never to use.
 ///
 /// Where the directory is, is worked out on first use rather than at construction, so that a store which never reaches
 /// for the disk makes no filesystem call at all, not even to find out where it would have written.
