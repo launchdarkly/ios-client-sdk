@@ -43,7 +43,10 @@ private struct ClientSection: View {
                     .accessibilityIdentifier("result")
             }
             #if DEBUG
-            BenchmarkButton()
+            ButtonRow {
+                BenchmarkButton()
+                OversizedPostButton()
+            }
             #endif
             Picker("Persistence", selection: Binding(get: { controller.persistence },
                                                      set: { controller.setPersistence($0) })) {
@@ -361,6 +364,35 @@ private struct BenchmarkButton: View {
             try? handle.write(contentsOf: data)
         } else {
             try? data.write(to: file)
+        }
+    }
+}
+
+/// Posts one payload of `OversizedPostProbe.targetBytes` to the events service on a session of its own, so what the
+/// service answers a body that size is seen directly rather than through the store and the retry state. The client is
+/// not involved, and need not be running.
+private struct OversizedPostButton: View {
+    @EnvironmentObject private var controller: ClientController
+    @State private var isRunning = false
+    @State private var results: BenchmarkButton.Results?
+
+    var body: some View {
+        ActionButton("Post 20 MB", tint: .purple, id: "oversized_post_button") { run() }
+            .disabled(isRunning || controller.configuration.isMissingMobileKey)
+            .sheet(item: $results) { BenchmarkResultsView(results: $0) }
+    }
+
+    private func run() {
+        isRunning = true
+        let controller = self.controller
+        let configuration = controller.configuration
+        controller.result = "Posting 20 MB…"
+        Task {
+            let report = await OversizedPostProbe.run(configuration: configuration)
+            print("oversized post\n\(report)")
+            controller.result = "Oversized post finished"
+            results = BenchmarkButton.Results(title: "Oversized post", text: report)
+            isRunning = false
         }
     }
 }
