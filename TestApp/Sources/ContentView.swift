@@ -42,6 +42,9 @@ private struct ClientSection: View {
                     .lineLimit(4)
                     .accessibilityIdentifier("result")
             }
+            #if DEBUG
+            BenchmarkButton()
+            #endif
             Picker("Persistence", selection: Binding(get: { controller.persistence },
                                                      set: { controller.setPersistence($0) })) {
                 ForEach(EventPersistence.choices, id: \.rawValue) { Text($0.name).tag($0) }
@@ -299,6 +302,113 @@ private struct DedupeSection: View {
         }
     }
 }
+
+#if DEBUG
+/// Runs the event persistence benchmark in this process and shows its tables when it finishes. Off the main thread,
+/// since it takes up to a few minutes; the button stays disabled until it is done, so runs never measure each other.
+/// Needs no client: it measures stores of its own, in a temporary directory.
+///
+/// The tables are also printed, and appended to `event-bench.txt` in the app's caches directory.
+private struct BenchmarkButton: View {
+    struct Results: Identifiable {
+        let id = UUID()
+        let title: String
+        let text: String
+    }
+
+    @EnvironmentObject private var controller: ClientController
+    @State private var isRunning = false
+    @State private var results: Results?
+
+    var body: some View {
+        ActionButton("Benchmark", tint: .purple, id: "benchmark_button") { run() }
+            .disabled(isRunning)
+            .sheet(item: $results) { BenchmarkResultsView(results: $0) }    }
+
+    private func run() {
+        isRunning = true
+        let controller = self.controller
+        controller.result = "Benchmark starting"
+        let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("event-bench", isDirectory: true)
+        DispatchQueue.global(qos: .userInitiated).async {
+            let finished: Results
+            do {
+                let text = try EventPersistenceBenchmarkRunner.run(scratch: scratch) { section in
+                    Task { @MainActor in controller.result = "Benchmark: \(section)…" }
+                }
+                print("event persistence benchmark\n\(text)")
+                Self.append(text)
+                finished = Results(title: "Event persistence benchmark", text: text)
+            } catch {
+                finished = Results(title: "Benchmark failed", text: String(describing: error))
+            }
+            Task { @MainActor in
+                controller.result = finished.title
+                results = finished
+                isRunning = false
+            }
+        }
+    }
+
+    private nonisolated static func append(_ text: String) {
+        guard let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+        else { return }
+        let file = caches.appendingPathComponent("event-bench.txt")
+        let data = Data((text + "\n").utf8)
+        if let handle = try? FileHandle(forWritingTo: file) {
+            defer { try? handle.close() }
+            _ = try? handle.seekToEnd()
+            try? handle.write(contentsOf: data)
+        } else {
+            try? data.write(to: file)
+        }
+    }
+}
+
+/// Monospaced and scrollable both ways, because the tables are aligned in columns wider than a phone.
+private struct BenchmarkResultsView: View {
+    let results: BenchmarkButton.Results
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView([.vertical, .horizontal]) {
+                Text(results.text)
+                    .font(.caption2.monospaced())
+                    .fixedSize()
+                    .selectableWherePossible()
+                    .padding()
+            }
+            .navigationTitle(results.title)
+            .inlineTitle()
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { dismiss() }
+                }
+                #if os(iOS) || os(macOS)
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Copy") { copy(results.text) }
+                }
+                #endif
+            }
+        }
+        #if os(macOS)
+        .frame(minWidth: 640, minHeight: 520)
+        #endif
+    }
+
+    #if os(iOS) || os(macOS)
+    private func copy(_ text: String) {
+        #if os(macOS)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        #else
+        UIPasteboard.general.string = text
+        #endif
+    }
+    #endif
+}
+#endif
 
 // MARK: - Building blocks
 

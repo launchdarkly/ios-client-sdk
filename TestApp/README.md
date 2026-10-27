@@ -80,3 +80,16 @@ stands in for a UI that re-evaluates a flag far more often than anything changed
 **Fill 3 batches** tracks twenty 256 KiB events, which take three 2 MiB batches. A flush then sends three requests, and
 offline, or followed by a kill, it leaves three `ready-` files for the next launch. Each event's index is in its data,
 so the dashboard shows whether all of them arrived and none twice.
+
+## Benchmark
+
+**Benchmark**, under the status text, runs the event persistence benchmark in the app's own process and shows its
+tables in a sheet, with **Copy** on iOS and the Mac. It is the Android test app's benchmark, section for section:
+building and serializing a feature event across context shapes and privacy settings, what an evaluation and a commit
+point cost, the tail of a commit point over 100, 1,000 and 10,000 calls, comparing contexts, and summary events. It
+measures stores of its own in a temporary directory, so it needs no client and leaves the event storage view alone.
+
+It is in Debug builds only, since it reaches the SDK's internals through `@testable import`. The tables are also
+printed to the console and appended to `Library/Caches/event-bench.txt` in the app's container. A run on a watch makes a
+tenth of the iterations. Read the figures as ratios between rows: a Debug build is unoptimized, and a live client shares
+the process.
