@@ -1480,9 +1480,10 @@ final class EventStoreSpec: QuickSpec {
                     DispatchQueue.global().async {
                         while !doneLock.withLock({ done }) {
                             _ = listing.pendingBatches()
-                            // The locks are not fair, and without this the listings can hold them so continuously that
-                            // the closes starve.
-                            sched_yield()
+                            // The locks are not fair, and without a pause the listings can hold them so continuously
+                            // that the closes starve. A yield is not enough: it returns at once while the closing thread
+                            // is blocked on a lock rather than runnable.
+                            usleep(200)
                         }
                         listerFinished.signal()
                     }
