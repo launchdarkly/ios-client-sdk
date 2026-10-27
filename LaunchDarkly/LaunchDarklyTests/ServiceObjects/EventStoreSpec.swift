@@ -1663,6 +1663,24 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.hasRoomForEventBytes) == true
             }
 
+            it("counts the bytes of a batch it read to count from what it read") {
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000)
+                for index in 1...8 {
+                    _ = store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))
+                }
+                _ = store.closeBatch()
+                try EventStoreSpec.asUncountedName(EventStoreSpec.onlyBatchFile(in: store))
+
+                // Gone once it has been read, so that only what was read, or what the listing saw, can size it.
+                let reader = EventStore.sharing(store.directory!, byteCapacity: 1000, readFile: { url in
+                    let read = try Data(contentsOf: url)
+                    try? FileManager.default.removeItem(at: url)
+                    return read
+                })
+                expect(reader.pendingBatches().map { $0.eventCount }) == [8]
+                expect(reader.hasRoomForEventBytes) == false
+            }
+
             it("bounds the batches it holds in memory once it has given up on the disk") {
                 store = EventStore.temporary(capacity: 100, byteCapacity: 1000, writeLog: { _, _ in ENOSPC })
                 for index in 1...8 {

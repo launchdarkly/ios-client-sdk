@@ -377,13 +377,18 @@ final class EventDirectory {
                 else { return nil }
                 // Reading is only for a batch whose name does not count it, which a version that named them without a
                 // count may have left behind, and then only the once.
-                guard let events = counted ?? stored[payloadId]?.events ?? countOfEvents(in: file)
+                let read = counted == nil && stored[payloadId] == nil ? countOfEvents(in: file) : nil
+                guard let events = counted ?? stored[payloadId]?.events ?? read?.events
                 else { return nil }
                 let listed = EventDirectory.listed(file)
                 let modified = listed.modified ?? Date.distantPast
                 // What the close knew of its summaries is kept; nothing in the file says.
                 let previous = stored[payloadId]
-                stored[payloadId] = Stored(url: file, events: events, bytes: listed.bytes ?? previous?.bytes ?? 0,
+                // A batch just read is as big as what was read. The size the listing came with can be missing, and no
+                // batch is empty: it has a header at least.
+                let bytes = read?.bytes ?? listed.bytes.flatMap { $0 > 0 ? $0 : nil }
+                    ?? previous?.bytes ?? EventLogFormat.fileHeaderSize
+                stored[payloadId] = Stored(url: file, events: events, bytes: bytes,
                                            modified: modified,
                                            summaries: previous.map { $0.events == events ? $0.summaries : 0 } ?? 0)
                 return (EventBatch(payloadId: payloadId, eventCount: events), modified)
@@ -548,10 +553,11 @@ final class EventDirectory {
         }
     }
 
-    /// How many events a batch file holds, or nil when it is not one to list this time.
+    /// How many events a batch file holds, and how many bytes were read to count them, or nil when it is not one to
+    /// list this time.
     ///
     /// Requires `ioLock`.
-    private func countOfEvents(in file: URL) -> Int? {
+    private func countOfEvents(in file: URL) -> EventTally? {
         ioLock.assertOwned()
         switch read(file) {
         case .missing:
@@ -570,7 +576,7 @@ final class EventDirectory {
                 try? FileManager.default.removeItem(at: file)
                 return nil
             }
-            return events
+            return EventTally(events: events, bytes: log.count)
         }
     }
 
