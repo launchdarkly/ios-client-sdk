@@ -231,6 +231,13 @@ final class EventProcessorMock: EventProcessor {
         try! flushReportingOutcomeCallback?()
     }
 
+    var flushAtCloseCallCount = 0
+    var flushAtCloseCallback: (() throws -> Void)?
+    func flushAtClose() {
+        flushAtCloseCallCount += 1
+        try! flushAtCloseCallback?()
+    }
+
     var commitRecordedEventsCallCount = 0
     var commitRecordedEventsCallback: (() throws -> Void)?
     func commitRecordedEvents() {

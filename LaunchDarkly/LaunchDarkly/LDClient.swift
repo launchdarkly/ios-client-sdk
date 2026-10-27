@@ -255,7 +255,7 @@ public class LDClient {
 
     private func internalClose() {
         os_log("%s stopping", log: config.logger, type: .debug, typeName(and: #function))
-        internalFlush()
+        eventProcessor.flushAtClose()
         internalSetOnline(false)
         hasStarted = false
         os_log("%s stopped", log: config.logger, type: .debug, typeName(and: #function))

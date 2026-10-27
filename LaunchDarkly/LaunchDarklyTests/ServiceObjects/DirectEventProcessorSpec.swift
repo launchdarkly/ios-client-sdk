@@ -2960,6 +2960,37 @@ extension DirectEventProcessorSpec {
                 expect(testContext.flushOutcome()) == true
             }
 
+            it("posts what is buffered at close through the backoff's wait, though closing goes offline straight after") {
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedCeiling: 3600))
+                testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
+                testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                // A refusal, after which the backoff allows nothing for about eight and a half minutes.
+                expect(testContext.flushOutcome()) == false
+                testContext.serviceMock.stubEventResponse(success: true)
+                testContext.serviceMock.eventStatusForPost = nil
+                testContext.eventProcessor.record(CustomEvent(key: "at-close", context: testContext.context))
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+
+                // What LDClient.close() does.
+                testContext.eventProcessor.flushAtClose()
+                testContext.eventProcessor.isOnline = false
+
+                expect(testContext.serviceMock.publishedEventPayloads.dropFirst().flatMap(customKeys))
+                    .toEventually(equal(["refused", "at-close"]), timeout: Constants.deliveryTimeout)
+            }
+
+            it("posts nothing at close when the client was already offline") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "an-event", context: testContext.context))
+
+                testContext.eventProcessor.flushAtClose()
+                waitLettingTimersFire(0.5)
+
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+            }
+
             it("waits as long as a Retry-After asks before posting again") {
                 testContext = TestContext()
                 let busy = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,

@@ -137,8 +137,8 @@ class DirectEventProcessor: EventProcessor {
 
     // MARK: Guarded by deliveryLock
 
-    /// Guards `queuedDelivery`, `isDelivering` and `isRetryScheduled`. Taken on a caller's thread and on `deliveryQueue`,
-    /// and never held across either.
+    /// Guards `queuedDelivery`, `isDelivering`, `isRetryScheduled` and whether a delivery is close's. Taken on a caller's
+    /// thread, on `deliveryQueue` and where a delivery's posts are answered, and never held across any of them.
     private let deliveryLock = UnfairLock()
     /// Callers waiting on a delivery that is queued and has not taken the batches yet, or nil where none is queued.
     private var queuedDelivery: [FlushOutcomeClosure]?
@@ -151,6 +151,12 @@ class DirectEventProcessor: EventProcessor {
     /// Whether a delivery is already set to run when the backoff's wait ends, so a run of passes inside the wait sets
     /// one rather than one each.
     private var isRetryScheduled = false
+    /// Whether the delivery queued is `flushAtClose()`'s, or has been joined by it.
+    private var queuedDeliveryIsClosing = false
+    /// Whether the delivery running is `flushAtClose()`'s, which posts whatever wait the backoff is in and runs although
+    /// closing has turned `isOnline` off since. For its length only: the delivery one of its failures sets for the end
+    /// of the wait is held by the backoff, and finds the reporter offline, as any other.
+    private var isClosingDelivery = false
 
     #if DEBUG
         /// How many deliveries have started, which is fewer than the flushes asked for where they were joined.
@@ -540,6 +546,13 @@ extension DirectEventProcessor {
         queueDelivery(completion)
     }
 
+    func flushAtClose() {
+        commitWherePersisting()
+        // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing: offline is the
+        // application keeping the SDK off the network, and closing does not revoke that.
+        queueDelivery(nil, closing: isOnline)
+    }
+
     /// Queues a delivery the way a caller asking for one expects, which is as a commit point.
     ///
     /// Wherever events persist, everything accepted before the call is on disk by the time it returns, even where the
@@ -593,16 +606,20 @@ extension DirectEventProcessor {
     /// anything recorded since. Nor does another start beside it: the one queued waits until the running one has an
     /// answer, then sends what that one left behind as well as what was recorded since, so its caller hears `true`
     /// only if both got out.
-    private func queueDelivery(_ completion: FlushOutcomeClosure?) {
+    ///
+    /// - Parameter closing: whether it is `flushAtClose()`'s, which a queued delivery it joins becomes.
+    private func queueDelivery(_ completion: FlushOutcomeClosure?, closing: Bool = false) {
         deliveryLock.lock()
         if queuedDelivery != nil {
             if let completion {
                 queuedDelivery?.append(completion)
             }
+            queuedDeliveryIsClosing = queuedDeliveryIsClosing || closing
             deliveryLock.unlock()
             return
         }
         queuedDelivery = completion.map { [$0] } ?? []
+        queuedDeliveryIsClosing = closing
         let starts = !isDelivering
         isDelivering = true
         deliveryLock.unlock()
@@ -618,12 +635,15 @@ extension DirectEventProcessor {
         deliveryLock.lock()
         let waiters = queuedDelivery ?? []
         queuedDelivery = nil
+        let closing = queuedDeliveryIsClosing
+        queuedDeliveryIsClosing = false
+        isClosingDelivery = closing
         #if DEBUG
             deliveryRunCount += 1
         #endif
         deliveryLock.unlock()
 
-        reportEvents { delivered, lossMark in
+        reportEvents(closing: closing) { delivered, lossMark in
             // Taken once for the delivery rather than once per waiter, so that every caller joined to it hears about
             // a loss instead of only whichever happened to be answered first. Taken before the next delivery starts,
             // which could otherwise answer first and take this one's loss with its own.
@@ -646,6 +666,7 @@ extension DirectEventProcessor {
     /// Ends the delivery that just had its answer, starting the one queued behind it if there is one.
     private func startQueuedDeliveryOrStop() {
         let next = deliveryLock.withLock { () -> Bool in
+            isClosingDelivery = false
             isDelivering = queuedDelivery != nil
             return isDelivering
         }
@@ -654,8 +675,9 @@ extension DirectEventProcessor {
         }
     }
 
-    private func reportEvents(completion: ((_ delivered: Bool, _ lossMark: UInt64) -> Void)?) {
-        guard isOnline
+    /// - Parameter closing: whether it is `flushAtClose()`'s, which was online when it was asked for.
+    private func reportEvents(closing: Bool = false, completion: ((_ delivered: Bool, _ lossMark: UInt64) -> Void)?) {
+        guard closing || isOnline
         else {
             os_log("%s aborted. DirectEventProcessor is offline", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(.isOffline)
@@ -870,7 +892,7 @@ extension DirectEventProcessor {
             return
         }
 
-        let wait = retryState.remainingWait
+        let wait = deliveryLock.withLock { isClosingDelivery } ? 0 : retryState.remainingWait
         guard wait <= 0
         else {
             // Not an attempt, so it moves nothing in the backoff. A wait no longer than a retry's is sat out, as this

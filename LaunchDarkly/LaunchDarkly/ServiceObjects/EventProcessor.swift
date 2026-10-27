@@ -37,6 +37,14 @@ protocol EventProcessor {
     /// were written, since the delivery writes them before it sends.
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure)
 
+    /// The last delivery before the client closes: `flush`, except that it posts whatever wait the backoff is in, which
+    /// closing cuts short. After a refusal that wait is minutes to an hour, and where nothing persists the events would
+    /// not outlive it.
+    ///
+    /// Whether it posts is settled by whether the reporter is online when this is called, so the client going offline
+    /// as it closes, straight after, does not stop it.
+    func flushAtClose()
+
     /// Makes everything recorded so far outlive the process, without waiting for a delivery.
     ///
     /// The SDK does this itself at the points where an application is most likely to be about to die. It is worth

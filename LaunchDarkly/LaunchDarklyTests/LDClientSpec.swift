@@ -900,7 +900,8 @@ final class LDClientSpec: QuickSpec {
                 testContext.subject.close()
 
                 expect(testContext.subject.isOnline) == false
-                expect(testContext.eventProcessorMock.flushCallCount) == 1
+                expect(testContext.eventProcessorMock.flushAtCloseCallCount) == 1
+                expect(testContext.eventProcessorMock.flushCallCount) == 0
             }
             it("when started and offline") {
                 let testContext = TestContext()
@@ -908,7 +909,8 @@ final class LDClientSpec: QuickSpec {
                 testContext.subject.close()
 
                 expect(testContext.subject.isOnline) == false
-                expect(testContext.eventProcessorMock.flushCallCount) == 1
+                expect(testContext.eventProcessorMock.flushAtCloseCallCount) == 1
+                expect(testContext.eventProcessorMock.flushCallCount) == 0
             }
             it("when already stopped") {
                 let testContext = TestContext()
@@ -917,7 +919,8 @@ final class LDClientSpec: QuickSpec {
                 testContext.subject.close()
 
                 expect(testContext.subject.isOnline) == false
-                expect(testContext.eventProcessorMock.flushCallCount) == 1
+                expect(testContext.eventProcessorMock.flushAtCloseCallCount) == 1
+                expect(testContext.eventProcessorMock.flushCallCount) == 0
             }
         }
     }
