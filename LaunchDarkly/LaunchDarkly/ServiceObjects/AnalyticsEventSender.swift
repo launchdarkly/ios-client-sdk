@@ -18,8 +18,8 @@ final class AnalyticsEventSender {
         let error: SynchronizingError
         /// The response's status, or nil where there was no response.
         let statusCode: Int?
-        /// Whether the failure is unlikely to pass soon: a 4xx other than 400, 408 and 429, or a TLS or certificate
-        /// failure.
+        /// Whether the failure is unlikely to pass soon: a 4xx other than a refusal of the payload
+        /// (`isEventPayloadRefused`), 408 and 429, or a TLS or certificate failure.
         let unexpected: Bool
         /// The wait the response asked for, or nil where it gave none.
         let retryAfter: TimeInterval?
@@ -58,7 +58,10 @@ final class AnalyticsEventSender {
         let statusCode = response?.statusCode
         let unexpected: Bool
         if let statusCode, (400..<600).contains(statusCode) {
+            // A refusal of the payload waits like a 400: the processor drops the batch after a second in a row, and
+            // the batches behind it are not to be held back an extended wait meanwhile.
             unexpected = HTTPURLResponse.StatusCodes.isTerminalStatusCode(statusCode)
+                && !HTTPURLResponse.StatusCodes.isEventPayloadRefused(statusCode)
         } else if let urlError = error as? URLError {
             unexpected = AnalyticsEventSender.tlsErrorCodes.contains(urlError.code)
         } else {

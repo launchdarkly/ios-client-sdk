@@ -104,15 +104,15 @@ class DirectEventProcessor: EventProcessor {
         stateLock.withLock { responseDate }
     }
 
-    /// Guards the last response date, the record of what has been lost, and the count of 400s.
+    /// Guards the last response date, the record of what has been lost, and the count of refused payloads.
     private let stateLock = UnfairLock()
     /// Only to be used while holding `stateLock`.
     private var responseDate: Date
 
     /// How many events the SDK accepted and then dropped for good. Only to be used while holding `stateLock`.
     ///
-    /// A batch LaunchDarkly refuses is kept and retried, so it is not a loss, unless the refusal is a second 400 in a
-    /// row. Otherwise what is lost is what the store never received: an event or a summary that could not be serialized
+    /// A batch LaunchDarkly refuses is kept and retried, so it is not a loss, unless the refusal is a second refusal of
+    /// the payload in a row. Otherwise what is lost is what the store never received: an event or a summary that could not be serialized
     /// when it was committed, or that serialized too large to store. A delivery that finds nothing to send cannot tell
     /// those apart from events that arrived, so without this it would report success for them.
     ///
@@ -125,14 +125,15 @@ class DirectEventProcessor: EventProcessor {
     /// used while holding `stateLock`.
     private var reportedLostEvents: UInt64 = 0
 
-    /// How many 400s in a row drop a batch. A 400 is a payload the service cannot read, which posting it again will not
+    /// How many refusals of the payload in a row drop a batch: a 400, 413, 415 or 422, in any mix
+    /// (`isEventPayloadRefused`). Each says the service will not take this body, which posting it again will not
     /// change, and a kept batch is the oldest and so the next posted: kept for good, it would hold every batch behind
-    /// it. Two rather than one, so a 400 from a proxy or an incident costs nothing.
+    /// it. Two rather than one, so one from a proxy or an incident costs nothing.
     static let badRequestsBeforeDropping = 2
 
-    /// The batch that last got a 400 and how many in a row: delivery goes oldest first and stops at a kept failure, so
-    /// the next post is that batch's unless capacity dropped it. Held only in memory, so a new run of the application
-    /// counts again. Only to be used while holding `stateLock`.
+    /// The batch that last had its payload refused and how many times in a row: delivery goes oldest first and stops at
+    /// a kept failure, so the next post is that batch's unless capacity dropped it. Held only in memory, so a new run of
+    /// the application counts again. Only to be used while holding `stateLock`.
     private var badRequests: (payloadId: String, inARow: Int)?
 
     // MARK: Guarded by deliveryLock
@@ -862,8 +863,8 @@ extension DirectEventProcessor {
     enum PassOutcome: Int, Comparable {
         /// Every batch was accepted.
         case delivered
-        /// Every batch was attempted, and at least one was lost for good: unreadable, damaged, deleted unsent, or refused
-        /// as malformed `badRequestsBeforeDropping` times in a row.
+        /// Every batch was attempted, and at least one was lost for good: unreadable, damaged, deleted unsent, or had its
+        /// payload refused `badRequestsBeforeDropping` times in a row.
         case lost
         /// A batch is still there to be sent again: its request failed, the backoff did not allow it to be posted yet,
         /// or it could not be read this time. The batches after it were not attempted.
@@ -974,7 +975,7 @@ extension DirectEventProcessor {
                 let wait = self.retryState.recordFailure(unexpected: failure.unexpected, retryAfter: failure.retryAfter)
                 if self.countBadRequest(batch, statusCode: failure.statusCode) >= DirectEventProcessor.badRequestsBeforeDropping {
                     // The rest are still attempted, once the backoff allows.
-                    os_log("%s dropping %d event(s) the service refused as malformed %d times in a row", log: self.service.config.logger, type: .error, self.typeName(and: #function), batch.eventCount, DirectEventProcessor.badRequestsBeforeDropping)
+                    os_log("%s dropping %d event(s) whose payload the service refused %d times in a row, last with HTTP %d", log: self.service.config.logger, type: .error, self.typeName(and: #function), batch.eventCount, DirectEventProcessor.badRequestsBeforeDropping, failure.statusCode ?? 0)
                     self.store.remove(batch)
                     self.reportBatchLost(batch)
                     self.reportSyncComplete(failure.error)
@@ -1005,11 +1006,11 @@ extension DirectEventProcessor {
         }
     }
 
-    /// - Returns: how many 400s in a row this batch has had, counting this response; zero for any other status, which
-    ///   ends the run, and once the batch is dropped.
+    /// - Returns: how many refusals of the payload in a row this batch has had, counting this response; zero for any
+    ///   other status, which ends the run, and once the batch is dropped.
     private func countBadRequest(_ batch: EventBatch, statusCode: Int?) -> Int {
         stateLock.withLock {
-            guard statusCode == HTTPURLResponse.StatusCodes.badRequest
+            guard let statusCode, HTTPURLResponse.StatusCodes.isEventPayloadRefused(statusCode)
             else {
                 badRequests = nil
                 return 0
