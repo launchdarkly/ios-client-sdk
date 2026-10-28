@@ -982,7 +982,7 @@ public class LDClient {
     let networkReporter: NetworkReporting
 
     private(set) var flagCache: FeatureFlagCaching
-    private(set) var flagSynchronizer: LDFlagSynchronizing
+    private(set) var flagSynchronizer: LDFlagSynchronizing { didSet { reportFlagRequests() } }
     var flagChangeNotifier: FlagChangeNotifying
     private(set) var eventProcessor: EventProcessor
     private(set) var environmentReporter: EnvironmentReporting
@@ -1083,6 +1083,7 @@ public class LDClient {
         service.resetFlagResponseCache(etag: cachedData.etag)
         // Reports to this client, so it could not be given at construction: `self` is only usable from here.
         flagSynchronizer.onSyncComplete = onFlagSyncComplete
+        giveFlagRequestsTheNetworkFirst()
 
         if let cachedFlags = cachedData.items, !cachedFlags.isEmpty {
             flagStore.replaceStore(newStoredItems: cachedFlags)
@@ -1102,6 +1103,22 @@ public class LDClient {
 }
 
 extension LDClient: TypeIdentifying { }
+
+extension LDClient {
+    /// Has the flag synchronizer tell the event processor about its flag requests, so that events can give way to them.
+    fileprivate func reportFlagRequests() {
+        (flagSynchronizer as? FlagSynchronizer)?.flagRequests = eventProcessor as? FlagRequestListening
+    }
+
+    /// Has events give way to flag requests: the synchronizer reports its requests to the event processor, and the
+    /// diagnostic init event waits for the processor's launch gate as a previous run's events do.
+    fileprivate func giveFlagRequestsTheNetworkFirst() {
+        reportFlagRequests()
+        if let eventProcessor = eventProcessor as? DirectEventProcessor {
+            (diagnosticReporter as? DiagnosticReporter)?.sendsInitAfter = eventProcessor.whenLaunchGateOpens
+        }
+    }
+}
 
 #if DEBUG
 extension LDClient {

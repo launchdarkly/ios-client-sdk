@@ -21,7 +21,12 @@ import OSLog
 /// Whether a commit point runs on the caller's thread is the application's choice, through
 /// `LDConfig.eventPersistence`. Only at `.immediate` can `track` promise the event is on disk by the time it returns.
 /// At `.disabled` nothing commits early: the held run waits for the delivery, which encodes it.
-class DirectEventProcessor: EventProcessor {
+///
+/// Flag values come first. Where events persist, what a previous run left waits at launch for the first flag request,
+/// and the deliveries this reporter starts on its own send one batch at a time, giving way to any flag request in
+/// flight. The flag synchronizer says what it is doing through `FlagRequestListening`. A delivery the application asks
+/// for is never held.
+class DirectEventProcessor: EventProcessor, FlagRequestListening {
     /// How many full events may be held unencoded before one of them pays for a commit.
     ///
     /// It sets two things at once. The first is how many evaluations a termination can take -- not everything a crash
@@ -61,6 +66,12 @@ class DirectEventProcessor: EventProcessor {
 
     /// Its summarizer is guarded by `recordLock`, and its encoders are reached only under `commitLock`.
     let eventBuffer: OutboundEventBuffer
+
+    private let flagTraffic = FlagTraffic()
+    private let flagTimings: FlagTraffic.Timings
+    /// Whether events give way to flag values: only where they persist, like the rest of what persistence brings.
+    /// Without it there is no previous run to hold back.
+    private let givesWayToFlags: Bool
 
     // MARK: Guarded by commitLock
 
@@ -158,6 +169,13 @@ class DirectEventProcessor: EventProcessor {
     /// closing has turned `isOnline` off since. For its length only: the delivery one of its failures sets for the end
     /// of the wait is held by the backoff, and finds the reporter offline, as any other.
     private var isClosingDelivery = false
+    /// Whether the delivery queued was asked for only by the report timer or by the launch gate, and so is paced.
+    private var queuedDeliveryIsPaced = false
+    /// Whether the delivery running is paced: until a delivery somebody asked for is queued, or the reporter goes
+    /// offline, after which it sends the rest back to back.
+    private var isPacedDelivery = false
+    /// When the paced delivery running last had an answer for a post, or nil before its first.
+    private var lastPacedPostAnswered: DispatchTime?
 
     #if DEBUG
         /// How many deliveries have started, which is fewer than the flushes asked for where they were joined.
@@ -202,12 +220,23 @@ class DirectEventProcessor: EventProcessor {
     /// question and the delivery that acts on it are both enqueued there, in that order.
     private var hasEventsFromPreviousRun = false
 
+    /// Whether the launch gate has opened. It opens once the floor has passed since first going online, and the first
+    /// flag request has settled, or there was none, or the cap has passed too. Until then neither a previous run's events
+    /// nor the diagnostic init event are sent. Open from the start where events do not give way.
+    private var launchGateOpen: Bool
+    /// When the reporter first went online, which the gate counts from.
+    private var wentOnlineAt: DispatchTime?
+    /// What waits for the gate to open.
+    private var launchGateWaiters: [() -> Void] = []
+
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
          store: EventStoring? = nil,
          encoding: OutboundEventBuffer.Encoding = .handWritten,
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.DirectEventProcessor.commitQueue", qos: .userInitiated),
-         retryState: DeliveryRetryState? = nil) {
+         retryState: DeliveryRetryState? = nil,
+         flagTimings: FlagTraffic.Timings = .specified) {
+        let eventStore = store ?? DirectEventProcessor.makeStore(config: service.config)
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.sender = AnalyticsEventSender(service: service)
@@ -216,12 +245,16 @@ class DirectEventProcessor: EventProcessor {
         self.eventCapacity = service.config.eventCapacity
         self.commitQueue = commitQueue
         self.eventBuffer = OutboundEventBuffer(config: service.config, encoding: encoding)
-        self.store = store ?? DirectEventProcessor.makeStore(config: service.config)
+        self.store = eventStore
+        self.flagTimings = flagTimings
+        self.givesWayToFlags = eventStore.isPersisting
+        self.launchGateOpen = !eventStore.isPersisting
 
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
-        // doing it on the caller's thread would put file I/O in the way of the client starting up.
-        let store = self.store
-        deliveryQueue.async { [weak self] in
+        // doing it on the caller's thread would put file I/O in the way of the client starting up. Below the queue's
+        // own priority, and so below the flag requests, which matter more at launch than what a previous run left.
+        let store = eventStore
+        deliveryQueue.async(qos: .utility, flags: .enforceQoS) { [weak self] in
             store.preparePayloadsFromInterruptedLogs()
             self?.reportDiscarded(store.discardExpired())
             let listing = store.listPendingBatches()
@@ -521,11 +554,19 @@ extension DirectEventProcessor {
         eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: deliveryQueue, execute: queueScheduledDelivery)
 
         // Events a previous run left behind are already late by however long the application was gone, so they do not
-        // wait out a report interval on top of that: an application that crashed reports it as soon as it is next able
-        // to. Only the first time online brings a delivery forward, so going online again later, as a network comes and
-        // goes, keeps to the ordinary cadence.
+        // wait out a report interval on top of that, only the launch gate: an application that crashed reports it as
+        // soon as it is next able to. Only the first time online brings a delivery forward, so going online again
+        // later, as a network comes and goes, keeps to the ordinary cadence.
         deliveryQueue.async { [weak self] in
-            guard let self, self.hasEventsFromPreviousRun
+            guard let self
+            else { return }
+            if self.wentOnlineAt == nil {
+                self.wentOnlineAt = .now()
+                if !self.launchGateOpen {
+                    self.checkLaunchGate(after: self.flagTimings.launchFloor)
+                }
+            }
+            guard self.launchGateOpen, self.hasEventsFromPreviousRun
             else { return }
             self.hasEventsFromPreviousRun = false
             self.queueScheduledDelivery()
@@ -535,6 +576,62 @@ extension DirectEventProcessor {
     private func stopReporting() {
         eventReportTimer?.cancel()
         eventReportTimer = nil
+        endPacing()
+    }
+
+    func flagRequestStarted() {
+        flagTraffic.started()
+    }
+
+    func flagRequestSettled(_ outcome: FlagRequestOutcome) {
+        flagTraffic.settled(outcome)
+        deliveryQueue.async { [weak self] in self?.checkLaunchGate() }
+    }
+
+    /// Runs `block`, on a global queue, once the launch gate is open.
+    func whenLaunchGateOpens(_ block: @escaping () -> Void) {
+        deliveryQueue.async { [weak self] in
+            guard let self, !self.launchGateOpen
+            else {
+                DispatchQueue.global().async(execute: block)
+                return
+            }
+            self.launchGateWaiters.append(block)
+        }
+    }
+
+    private func checkLaunchGate(after delay: TimeInterval) {
+        deliveryQueue.asyncAfter(deadline: .now() + max(0, delay)) { [weak self] in self?.checkLaunchGate() }
+    }
+
+    /// Opens the launch gate if it may open now, and otherwise looks again when it next could: at the floor, then at
+    /// the cap, or sooner once the flag request settles. On `deliveryQueue`.
+    private func checkLaunchGate() {
+        guard !launchGateOpen, let wentOnlineAt
+        else { return }
+        let sinceOnline = TimeInterval(DispatchTime.now().uptimeNanoseconds - wentOnlineAt.uptimeNanoseconds) / 1_000_000_000
+        guard sinceOnline >= flagTimings.launchFloor
+        else {
+            checkLaunchGate(after: flagTimings.launchFloor - sinceOnline)
+            return
+        }
+        guard let why = flagTraffic.launchGateReason(capReached: sinceOnline >= flagTimings.launchCap, cap: flagTimings.launchCap)
+        else {
+            checkLaunchGate(after: flagTimings.launchCap - sinceOnline)
+            return
+        }
+        launchGateOpen = true
+        let waiters = launchGateWaiters
+        launchGateWaiters = []
+        waiters.forEach { DispatchQueue.global().async(execute: $0) }
+        guard hasEventsFromPreviousRun
+        else { return }
+        os_log("%s Sending events from a previous run after %s", log: service.config.logger, type: .debug, typeName(and: #function), why)
+        // Offline, they wait for the reporter to go online, which finds the gate open.
+        guard isOnline
+        else { return }
+        hasEventsFromPreviousRun = false
+        queueScheduledDelivery()
     }
 
     func flush(completion: CompletionClosure?) {
@@ -592,8 +689,29 @@ extension DirectEventProcessor {
         }
     }
 
+    /// Queues the delivery the report timer and the launch gate start, which nobody asked for now and which is paced.
     private func queueScheduledDelivery() {
-        queueDelivery(nil)
+        queueDelivery(nil, paced: true)
+    }
+
+    /// Ends the pacing of a delivery under way, which then sends the rest back to back.
+    private func endPacing() {
+        let wasPaced = deliveryLock.withLock { () -> Bool in
+            defer { isPacedDelivery = false }
+            return isPacedDelivery
+        }
+        if wasPaced {
+            flagTraffic.wake()
+        }
+    }
+
+    /// When the next batch of the delivery running may be posted, or nil where it is not paced.
+    private func pacedTurn() -> DispatchTime? {
+        deliveryLock.withLock {
+            guard isPacedDelivery
+            else { return nil }
+            return lastPacedPostAnswered.map { $0 + flagTimings.gap } ?? .now()
+        }
     }
 
     /// Queues a delivery, or joins one that is queued and has not started.
@@ -608,19 +726,27 @@ extension DirectEventProcessor {
     /// answer, then sends what that one left behind as well as what was recorded since, so its caller hears `true`
     /// only if both got out.
     ///
-    /// - Parameter closing: whether it is `flushAtClose()`'s, which a queued delivery it joins becomes.
-    private func queueDelivery(_ completion: FlushOutcomeClosure?, closing: Bool = false) {
+    /// - Parameters:
+    ///   - closing: whether it is `flushAtClose()`'s, which a queued delivery it joins becomes.
+    ///   - paced: whether nobody asked for it, so that it gives way to flag requests. One that is not ends the pacing of
+    ///     the delivery running, so that it is not held behind it.
+    private func queueDelivery(_ completion: FlushOutcomeClosure?, closing: Bool = false, paced: Bool = false) {
+        if !paced {
+            endPacing()
+        }
         deliveryLock.lock()
         if queuedDelivery != nil {
             if let completion {
                 queuedDelivery?.append(completion)
             }
             queuedDeliveryIsClosing = queuedDeliveryIsClosing || closing
+            queuedDeliveryIsPaced = queuedDeliveryIsPaced && paced
             deliveryLock.unlock()
             return
         }
         queuedDelivery = completion.map { [$0] } ?? []
         queuedDeliveryIsClosing = closing
+        queuedDeliveryIsPaced = paced
         let starts = !isDelivering
         isDelivering = true
         deliveryLock.unlock()
@@ -639,6 +765,9 @@ extension DirectEventProcessor {
         let closing = queuedDeliveryIsClosing
         queuedDeliveryIsClosing = false
         isClosingDelivery = closing
+        isPacedDelivery = queuedDeliveryIsPaced && givesWayToFlags && !closing
+        queuedDeliveryIsPaced = false
+        lastPacedPostAnswered = nil
         #if DEBUG
             deliveryRunCount += 1
         #endif
@@ -668,6 +797,7 @@ extension DirectEventProcessor {
     private func startQueuedDeliveryOrStop() {
         let next = deliveryLock.withLock { () -> Bool in
             isClosingDelivery = false
+            isPacedDelivery = false
             isDelivering = queuedDelivery != nil
             return isDelivering
         }
@@ -885,11 +1015,27 @@ extension DirectEventProcessor {
     ///
     /// `lostAnything` carries whether a batch already taken in this pass was lost for good, so that the caller hears
     /// about it even where the batches after it were accepted. `retried` whether this pass has had its retry.
-    private func deliver(_ batches: [EventBatch], lostAnything: Bool, retried: Bool, _ completion: @escaping (PassOutcome) -> Void) {
+    ///
+    /// A paced delivery holds each batch first: until a gap has passed since the last one was answered, and then while
+    /// a flag request is in flight, up to a limit. A backlog this sends unasked otherwise takes the network for as long
+    /// as it lasts, an `identify`'s flag request included. `hadTurn` is whether the first batch has been held already.
+    private func deliver(_ batches: [EventBatch], lostAnything: Bool, retried: Bool, hadTurn: Bool = false, _ completion: @escaping (PassOutcome) -> Void) {
         var remaining = batches
         guard !remaining.isEmpty
         else {
             completion(lostAnything ? .lost : .delivered)
+            return
+        }
+
+        if !hadTurn, let gapEnds = pacedTurn() {
+            let isStopped = { [weak self] () -> Bool in
+                guard let self
+                else { return true }
+                return self.deliveryLock.withLock { !self.isPacedDelivery }
+            }
+            flagTraffic.awaitTurn(gapEnds: gapEnds, flagWait: flagTimings.flagRequestWait, isStopped: isStopped) {
+                self.deliver(batches, lostAnything: lostAnything, retried: retried, hadTurn: true, completion)
+            }
             return
         }
 
@@ -1045,7 +1191,7 @@ extension DirectEventProcessor {
             guard let self
             else { return }
             self.deliveryLock.withLock { self.isRetryScheduled = false }
-            self.queueScheduledDelivery()
+            self.queueDelivery(nil)
         }
     }
 
@@ -1056,6 +1202,11 @@ extension DirectEventProcessor {
         store.startedSending(batch)
         // The store is settled before observers are told, so that one looking at it on hearing the outcome sees it.
         sender.send(payload.body, payloadId: batch.payloadId, eventCount: payload.eventCount) { outcome in
+            self.deliveryLock.withLock {
+                if self.isPacedDelivery {
+                    self.lastPacedPostAnswered = .now()
+                }
+            }
             switch outcome {
             case .accepted(let serverTime):
                 self.retryState.recordSuccess()

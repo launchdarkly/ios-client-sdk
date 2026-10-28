@@ -18,6 +18,9 @@ class DiagnosticReporter: DiagnosticReporting {
     private var sentInit: Bool
     private let stateQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.state", qos: .utility)
     private let workQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.work", qos: .utility)
+    /// Where set, what the init event waits for: the event processor's launch gate, so that it does not compete with the
+    /// first flag request. Set once the client has both.
+    var sendsInitAfter: ((@escaping () -> Void) -> Void)?
 
     init(service: DarklyServiceProvider, environmentReporting: EnvironmentReporting) {
         self.service = service
@@ -43,7 +46,12 @@ class DiagnosticReporter: DiagnosticReporting {
                                                    environmentReporting: environmentReporting,
                                                    diagnosticId: cache.getDiagnosticId(),
                                                    creationDate: Date().millisSince1970)
-                    sendDiagnosticEventAsync(diagnosticEvent: initEvent)
+                    let send = { self.sendDiagnosticEventAsync(diagnosticEvent: initEvent) }
+                    if let sendsInitAfter {
+                        sendsInitAfter(send)
+                    } else {
+                        send()
+                    }
                 }
 
                 timer = LDTimer(withTimeInterval: service.config.diagnosticRecordingInterval, fireQueue: workQueue) {
