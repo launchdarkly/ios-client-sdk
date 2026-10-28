@@ -516,6 +516,31 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 0
             }
         }
+        describe("the byte capacity") {
+            var config: LDConfig!
+            beforeEach {
+                config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+            }
+            it("is the whole of it for a single environment") {
+                config.eventCapacityBytes = 2_400
+                expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == 2_400
+            }
+            it("is shared equally by the configured environments") {
+                config.eventCapacityBytes = 2_400
+                try? config.setSecondaryMobileKeys(["second": "mob-second", "third": "mob-third", "fourth": "mob-fourth"])
+                expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == 600
+            }
+            it("shares the default where none is set") {
+                config.eventCapacityBytes = 0
+                try? config.setSecondaryMobileKeys(["second": "mob-second"])
+                expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == LDConfig.Defaults.eventCapacityBytes / 2
+            }
+            it("leaves each environment at least a byte") {
+                config.eventCapacityBytes = 2
+                try? config.setSecondaryMobileKeys(["second": "mob-second", "third": "mob-third"])
+                expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == 1
+            }
+        }
     }
 
     private func isOnlineSpec() {

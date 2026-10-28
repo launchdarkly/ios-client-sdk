@@ -267,10 +267,18 @@ class DirectEventProcessor: EventProcessor, FlagRequestListening {
         let mobileKey = config.mobileKey
         return EventStore(locatingDirectory: { EventDirectory.defaultUrl(mobileKey: mobileKey) },
                           capacity: config.eventCapacity,
-                          byteCapacity: config.eventCapacityBytes,
+                          byteCapacity: shareOfCapacityBytes(config: config),
                           maxAge: config.eventMaxAge,
                           persistEvents: config.eventPersistence != .disabled,
                           logger: config.logger)
+    }
+
+    /// This environment's share of the byte capacity, which is for every environment the application configured together,
+    /// where the event capacity is for each one.
+    static func shareOfCapacityBytes(config: LDConfig) -> Int {
+        let total = config.eventCapacityBytes > 0 ? config.eventCapacityBytes : LDConfig.Defaults.eventCapacityBytes
+        // At least one byte, since the store reads zero as the default.
+        return max(1, total / (1 + config.getSecondaryMobileKeys().count))
     }
 
     // MARK: Recording
