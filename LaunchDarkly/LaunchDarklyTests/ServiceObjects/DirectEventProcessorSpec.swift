@@ -463,6 +463,18 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: .seconds(2))
             }
 
+            itPersisting("holds paced batches for a hung flag request only until the wait after it started") {
+                let reporter = nextRunLeft(3, timings: FlagTraffic.Timings(launchFloor: 0, launchCap: 0, gap: 0.3, flagRequestWait: 1))
+                reporter.flagRequestStarted()
+
+                reporter.isOnline = true
+
+                // Waiting on the request again would add a second to each batch.
+                let times = postTimes(3)
+                expect(times.count) == 3
+                expect(times.last?.timeIntervalSince(times.first ?? Date())) < 1.5
+            }
+
             it("holds what waits for the launch gate only where events persist") {
                 let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
                                                     flagTimings: FlagTraffic.Timings(launchFloor: 0.1, launchCap: 5, gap: 0, flagRequestWait: 0))

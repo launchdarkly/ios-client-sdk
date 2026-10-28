@@ -34,7 +34,9 @@ final class FlagTraffic {
         let launchCap: TimeInterval
         /// The least time between one paced batch's answer and the next batch's request.
         let gap: TimeInterval
-        /// The longest a paced batch waits for a flag request in flight, so that a hung one cannot stop delivery.
+        /// How long after a flag request starts that paced batches stop waiting for it, so that a hung one cannot stop
+        /// delivery. It counts from the request rather than from each batch, so the launch gate's cap and the batches
+        /// after it never wait on the same request again.
         let flagRequestWait: TimeInterval
     }
 
@@ -44,8 +46,8 @@ final class FlagTraffic {
         let flagWait: TimeInterval
         let isStopped: () -> Bool
         let proceed: () -> Void
-        /// When it stops waiting on the flag request, set once the gap has passed with one in flight. Only to be used
-        /// while holding the lock.
+        /// When it stops waiting on the flag request in flight, as last scheduled for a check. Only to be used while
+        /// holding the lock.
         var flagWaitEnds: DispatchTime?
 
         init(gapEnds: DispatchTime, flagWait: TimeInterval, isStopped: @escaping () -> Bool, proceed: @escaping () -> Void) {
@@ -59,12 +61,17 @@ final class FlagTraffic {
     private let lock = UnfairLock()
     // Only to be used while holding `lock`.
     private var inFlight = false
+    /// When the request in flight started.
+    private var startedAt = DispatchTime.now()
     /// How the last flag request ended, or nil if none has.
     private var lastOutcome: FlagRequestOutcome?
     private var turns: [Turn] = []
 
     func started() {
-        lock.withLock { inFlight = true }
+        lock.withLock {
+            inFlight = true
+            startedAt = DispatchTime.now()
+        }
     }
 
     func settled(_ outcome: FlagRequestOutcome) {
@@ -100,7 +107,7 @@ final class FlagTraffic {
     }
 
     /// Calls `proceed`, on a global queue, once `gapEnds` has passed and then no flag request is in flight, waiting on
-    /// one for no longer than `flagWait`; or at once when `isStopped` says so. `isStopped` is asked outside this
+    /// one until `flagWait` after it started; or at once when `isStopped` says so. `isStopped` is asked outside this
     /// object's lock, so it may take a lock of its own.
     func awaitTurn(gapEnds: DispatchTime, flagWait: TimeInterval, isStopped: @escaping () -> Bool, then proceed: @escaping () -> Void) {
         let turn = Turn(gapEnds: gapEnds, flagWait: flagWait, isStopped: isStopped, proceed: proceed)
@@ -126,16 +133,16 @@ final class FlagTraffic {
                     due.append(turn)
                     continue
                 }
-                if turn.flagWaitEnds == nil {
-                    let ends = now + turn.flagWait
+                let ends = startedAt + turn.flagWait
+                if now >= ends {
+                    due.append(turn)
+                    continue
+                }
+                if turn.flagWaitEnds != ends {
                     turn.flagWaitEnds = ends
                     deadlines.append(ends)
                 }
-                if let ends = turn.flagWaitEnds, now >= ends {
-                    due.append(turn)
-                } else {
-                    waiting.append(turn)
-                }
+                waiting.append(turn)
             }
         }
         due += waiting.filter { $0.isStopped() }
