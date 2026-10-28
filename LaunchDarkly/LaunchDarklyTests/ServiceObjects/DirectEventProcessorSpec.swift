@@ -400,6 +400,20 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(times.first?.timeIntervalSince(wentOnline)) >= 0.7
             }
 
+            itPersisting("holds no batch any longer for a flag request past the cap") {
+                let reporter = nextRunLeft(2, timings: FlagTraffic.Timings(launchFloor: 0.1, launchCap: 2, gap: 0.3, flagRequestWait: 2))
+                reporter.flagRequestStarted()
+                let wentOnline = Date()
+
+                reporter.isOnline = true
+
+                // Waiting on the request again would add the two seconds' wait to each batch.
+                let times = postTimes(2)
+                expect(times.count) == 2
+                expect(times.first?.timeIntervalSince(wentOnline)) < 3
+                expect(times.last?.timeIntervalSince(times.first ?? wentOnline)) < 1.5
+            }
+
             itPersisting("sends what a previous run left on a flush, without waiting for the launch gate") {
                 let reporter = nextRunLeft(1, timings: FlagTraffic.Timings(launchFloor: 5, launchCap: 10, gap: 0, flagRequestWait: 0))
                 reporter.flagRequestStarted()
