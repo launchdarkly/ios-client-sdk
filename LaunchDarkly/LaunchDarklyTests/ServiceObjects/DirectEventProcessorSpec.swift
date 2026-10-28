@@ -459,10 +459,23 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(opened.withLock { hasOpened }).toEventually(beTrue(), timeout: .seconds(2))
             }
 
-            itPersisting("paces a periodic delivery of a backlog too") {
+            itPersisting("does not let a report interval shorter than the launch delay send what a previous run left") {
+                testContext = TestContext(eventFlushInterval: 0.1)
+                let reporter = nextRunLeft(1, pacing: DirectEventProcessor.Pacing(launchDelay: 0.8, gap: 0))
+                let wentOnline = Date()
+
+                reporter.isOnline = true
+
+                // Waited for on the run loop, which the report timer fires on.
+                waitLettingTimersFire(0.5)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+                expect(Date().timeIntervalSince(wentOnline)) >= 0.75
+            }
+
+            itPersisting("keeps pacing a backlog through the report intervals that end during it") {
                 testContext = TestContext(eventFlushInterval: 0.2)
-                // A launch delay longer than the example, so that the report timer rather than the gate starts it.
-                let reporter = nextRunLeft(2, pacing: DirectEventProcessor.Pacing(launchDelay: 60, gap: 1))
+                let reporter = nextRunLeft(2, pacing: DirectEventProcessor.Pacing(launchDelay: 0.2, gap: 1))
 
                 reporter.isOnline = true
 

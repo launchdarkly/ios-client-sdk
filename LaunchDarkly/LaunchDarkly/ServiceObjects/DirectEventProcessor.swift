@@ -252,7 +252,9 @@ extension DirectEventProcessor {
     private func startReporting() {
         guard eventReportTimer == nil
         else { return }
-        eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: deliveryQueue, execute: queueScheduledDelivery)
+        eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: deliveryQueue) { [weak self] in
+            self?.reportIntervalEnded()
+        }
 
         // Events a previous run left behind are already late by however long the application was gone, so they do not
         // wait out a report interval on top of that, only the launch gate: an application that crashed reports it as
@@ -347,6 +349,18 @@ extension DirectEventProcessor {
     private func commitThenQueueDelivery(_ completion: FlushOutcomeClosure?) {
         commitWherePersisting()
         queueDelivery(completion)
+    }
+
+    /// The report timer's delivery, on `deliveryQueue`. Until the launch gate opens it only commits: a delivery sends the
+    /// oldest batches first, which are what a previous run left, so one now would send them ahead of the gate. What this
+    /// run recorded goes with the first delivery after the gate opens.
+    private func reportIntervalEnded() {
+        guard launchGateOpen
+        else {
+            committer.queueCommitWherePersisting()
+            return
+        }
+        queueScheduledDelivery()
     }
 
     /// Queues the delivery the report timer and the launch gate start, which nobody asked for now and which is paced.
