@@ -750,6 +750,63 @@ final class EventStoreSpec: QuickSpec {
                 expect(FileManager.default.fileExists(atPath: batchUrl.path)) == false
             }
         }
+
+        describe("a file larger than this version reads") {
+            var store: EventStore!
+            beforeEach {
+                store = EventStore.temporary()
+            }
+            afterEach {
+                store.deleteEverything()
+            }
+
+            it("is deleted where a previous run left it as a log") {
+                let log = try EventStoreSpec.tooLargeFile(EventDirectory.logPrefix + UUID().uuidString, in: store)
+
+                store.preparePayloadsFromInterruptedLogs()
+
+                expect(store.pendingBatches()).to(beEmpty())
+                expect(FileManager.default.fileExists(atPath: log.path)) == false
+            }
+
+            it("is listed by the count in its name, and unreadable") {
+                try EventStoreSpec.tooLargeFile("ready-\(UUID().uuidString).3", in: store)
+
+                let batches = store.pendingBatches()
+                expect(batches.map { $0.eventCount }) == [3]
+                expect { try store.body(of: batches[0]) }.to(throwError(errorType: UnreadableBatch.self))
+            }
+
+            it("is listed as one event, the fewest it can hold, where its name has no count, and unreadable") {
+                try EventStoreSpec.tooLargeFile("ready-\(UUID().uuidString)", in: store)
+
+                let batches = store.pendingBatches()
+                expect(batches.map { $0.eventCount }) == [1]
+                expect { try store.body(of: batches[0]) }.to(throwError(errorType: UnreadableBatch.self))
+            }
+
+            it("is discarded as one event once it expires, where nothing counts it") {
+                let uncounted = try EventStoreSpec.tooLargeFile("ready-\(UUID().uuidString)", in: store)
+                let log = try EventStoreSpec.tooLargeFile(EventDirectory.logPrefix + UUID().uuidString, in: store)
+                try EventStoreSpec.age(uncounted, byDays: 8)
+                try EventStoreSpec.age(log, byDays: 8)
+
+                expect(store.discardExpired()) == 2
+                expect(FileManager.default.fileExists(atPath: uncounted.path)) == false
+                expect(FileManager.default.fileExists(atPath: log.path)) == false
+            }
+        }
+    }
+
+    /// A file in the store's directory one byte past the largest this version reads, starting as a log does.
+    @discardableResult
+    private static func tooLargeFile(_ name: String, in store: EventStore) throws -> URL {
+        try FileManager.default.createDirectory(at: store.directory!, withIntermediateDirectories: true)
+        let file = store.directory!.appendingPathComponent(name)
+        var contents = EventLogFormat.fileHeader
+        contents.append(Data(count: EventDirectory.maxReadSize + 1 - contents.count))
+        try contents.write(to: file)
+        return file
     }
 
     private func batchSpec() {

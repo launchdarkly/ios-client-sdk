@@ -60,6 +60,12 @@ final class EventDirectory {
             .appendingPathComponent(openingLogPrefix + log.lastPathComponent.dropFirst(logPrefix.count))
     }
 
+    /// The largest file this version reads. It writes none larger than `EventLogFormat.maxBatchSize`, so one past this
+    /// is not its own, whatever it holds. Read anyway, it would be held in memory whole, and one large enough would
+    /// take the application down with it. Twice the batch size, so that a later version may raise its own a little
+    /// without an earlier one losing what it wrote.
+    static let maxReadSize = 2 * EventLogFormat.maxBatchSize
+
     private let locateDirectory: () -> URL
     private let ioLock: UnfairLock
     private let logger: OSLog
@@ -475,6 +481,7 @@ final class EventDirectory {
             else { return nil }
             throw VanishedBatch(payloadId: batch.payloadId)
         case .failed(let error): throw error
+        case .tooLarge: throw UnreadableBatch(payloadId: batch.payloadId)
         case .bytes(let bytes): file = bytes
         }
         // No more than the batch was closed holding. A write that failed and could not be truncated leaves whole frames
@@ -523,7 +530,7 @@ final class EventDirectory {
 
         var payloads: [Data] = []
         for log in logs {
-            guard let file = try? Data(contentsOf: log)
+            guard case .bytes(let file) = read(log)
             else { continue }
             _ = EventLogFormat.forEachFrame(in: file) { type, payload in
                 if type == EventLogFormat.eventFrame {
@@ -543,14 +550,28 @@ final class EventDirectory {
         case bytes(Data)
         case missing
         case failed(Error)
+        /// Larger than `maxReadSize`, and so never read: it can never be delivered.
+        case tooLarge(size: Int)
     }
 
     private func read(_ url: URL) -> LogRead {
+        if let size = EventDirectory.sizeIfTooLarge(url) {
+            return .tooLarge(size: size)
+        }
         do {
             return .bytes(try readFile(url))
         } catch {
             return FileManager.default.fileExists(atPath: url.path) ? .failed(error) : .missing
         }
+    }
+
+    /// The size of a file larger than `maxReadSize`, or nil for any other, including one whose size could not be
+    /// found, which the read then fails on or reads.
+    private static func sizeIfTooLarge(_ url: URL) -> Int? {
+        guard let size = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? Int,
+              size > maxReadSize
+        else { return nil }
+        return size
     }
 
     /// How many events a batch file holds, and how many bytes were read to count them, or nil when it is not one to
@@ -568,6 +589,10 @@ final class EventDirectory {
             // intact all along. Without a count it cannot be delivered now.
             os_log("%s could not read stored events, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             return nil
+        case .tooLarge(let size):
+            // Never read, so never counted. Listed as holding one event, the fewest it can, so that the delivery
+            // reaching it drops it and counts the loss.
+            return EventTally(events: 1, bytes: size)
         case .bytes(let log):
             guard let events = EventLogFormat.eventCount(in: log)
             else {
@@ -625,6 +650,8 @@ final class EventDirectory {
             return InterruptedLog(url: leftOpen, contents: .missing)
         case .failed(let error):
             return InterruptedLog(url: leftOpen, contents: .failed(error))
+        case .tooLarge:
+            return InterruptedLog(url: leftOpen, contents: .unreadable)
         case .bytes(let log):
             guard let events = EventLogFormat.eventCount(in: log)
             else { return InterruptedLog(url: leftOpen, contents: .unreadable) }
@@ -812,7 +839,10 @@ extension EventDirectory {
     }
 
     private static func eventsReading(_ file: URL) -> Int {
-        (try? Data(contentsOf: file)).flatMap { EventLogFormat.eventCount(in: $0) } ?? 0
+        // Never read, so held to be the one event it holds at the fewest.
+        guard sizeIfTooLarge(file) == nil
+        else { return 1 }
+        return (try? Data(contentsOf: file)).flatMap { EventLogFormat.eventCount(in: $0) } ?? 0
     }
 
     @discardableResult
