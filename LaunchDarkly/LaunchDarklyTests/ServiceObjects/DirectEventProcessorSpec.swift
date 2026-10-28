@@ -475,6 +475,22 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(times.last?.timeIntervalSince(times.first ?? Date())) < 1.5
             }
 
+            itPersisting("stops a paced delivery on going offline, and keeps the rest") {
+                let reporter = nextRunLeft(3, timings: FlagTraffic.Timings(launchFloor: 0, launchCap: 0, gap: 0.5, flagRequestWait: 0))
+                reporter.isOnline = true
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+
+                reporter.isOnline = false
+                Thread.sleep(forTimeInterval: 1.5)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+
+                reporter.isOnline = true
+                waitUntil(timeout: .seconds(3)) { done in
+                    reporter.flush(completion: done)
+                }
+                expect(testContext.serviceMock.publishEventDataCallCount) == 3
+            }
+
             it("holds what waits for the launch gate only where events persist") {
                 let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
                                                     flagTimings: FlagTraffic.Timings(launchFloor: 0.1, launchCap: 5, gap: 0, flagRequestWait: 0))
@@ -3091,6 +3107,20 @@ extension DirectEventProcessorSpec {
                     waitLettingTimersFire(3)
                     expect(testContext.serviceMock.publishEventDataCallCount) == 3
                 }
+            }
+
+            it("does not retry a failed post once the reporter has gone offline") {
+                testContext = TestContext()
+                testContext.serviceMock.respondToEvents(with: 503)
+                testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                testContext.eventProcessor.flush(completion: nil)
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+
+                testContext.eventProcessor.isOnline = false
+
+                waitLettingTimersFire(2)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
             }
 
             for status in [400, 413, 415, 422] {

@@ -171,8 +171,8 @@ class DirectEventProcessor: EventProcessor, FlagRequestListening {
     private var isClosingDelivery = false
     /// Whether the delivery queued was asked for only by the report timer or by the launch gate, and so is paced.
     private var queuedDeliveryIsPaced = false
-    /// Whether the delivery running is paced: until a delivery somebody asked for is queued, or the reporter goes
-    /// offline, after which it sends the rest back to back.
+    /// Whether the delivery running is paced: until a delivery somebody asked for is queued, after which it sends the
+    /// rest back to back, or the reporter goes offline, after which it sends nothing more.
     private var isPacedDelivery = false
     /// When the paced delivery running last had an answer for a post, or nil before its first.
     private var lastPacedPostAnswered: DispatchTime?
@@ -702,7 +702,7 @@ extension DirectEventProcessor {
         queueDelivery(nil, paced: true)
     }
 
-    /// Ends the pacing of a delivery under way, which then sends the rest back to back.
+    /// Ends the pacing of a delivery under way, which then sends the rest back to back, or, offline, stops.
     private func endPacing() {
         let wasPaced = deliveryLock.withLock { () -> Bool in
             defer { isPacedDelivery = false }
@@ -1047,6 +1047,12 @@ extension DirectEventProcessor {
             return
         }
 
+        guard mayPost()
+        else {
+            completion(.blocked)
+            return
+        }
+
         let wait = deliveryLock.withLock { isClosingDelivery } ? 0 : retryState.remainingWait
         guard wait <= 0
         else {
@@ -1104,6 +1110,12 @@ extension DirectEventProcessor {
         post(batch, payload, leftOut: leftOut, remaining: remaining, lostAnything: lostAnything, retried: retried, completion)
     }
 
+    /// Whether the delivery running may post: online, or `flushAtClose()`'s. Going offline stops a delivery before its
+    /// next post, its retry's included, and leaves what it has not sent for a later one.
+    private func mayPost() -> Bool {
+        deliveryLock.withLock { isClosingDelivery } || isOnline
+    }
+
     /// Posts a batch already read, then goes on to the rest. Requires the backoff to allow a post.
     // swiftlint:disable:next function_parameter_count
     private func post(_ batch: EventBatch,
@@ -1146,7 +1158,13 @@ extension DirectEventProcessor {
                 }
                 os_log("%s Retrying event post after %.1fs", log: self.service.config.logger, type: .debug, self.typeName(and: #function), wait)
                 DispatchQueue.global().asyncAfter(deadline: .now() + wait) {
-                    // Another delivery's failure may have set a longer wait meanwhile.
+                    // Another delivery's failure may have set a longer wait meanwhile, or the reporter gone offline.
+                    guard self.mayPost()
+                    else {
+                        self.reportSyncComplete(failure.error)
+                        completion(.blocked)
+                        return
+                    }
                     guard self.retryState.remainingWait <= 0
                     else {
                         self.reportSyncComplete(failure.error)
