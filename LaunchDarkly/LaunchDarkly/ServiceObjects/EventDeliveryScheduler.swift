@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Made by `EventDeliveryScheduler.begin()` and passed through the delivery, so that what is true of the delivery running is
 /// held by it, and starts afresh with each one.
-final class DeliveryRun {
+final class EventDeliveryRun {
     /// A paced batch waiting out its gap.
     private final class PacedTurn {
         let proceed: () -> Void
@@ -121,7 +121,7 @@ final class EventDeliveryScheduler {
     /// each held up by a slow response, could take the store that many batches past them.
     private var isDelivering = false
     /// The delivery running, whose pacing a delivery somebody asks for ends. Only to be used while holding `lock`.
-    private var running: DeliveryRun?
+    private var running: EventDeliveryRun?
     /// Whether a delivery is already set to run when the backoff's wait ends, so a run of passes inside the wait sets
     /// one rather than one each. Only to be used while holding `lock`.
     private var isRetryScheduled = false
@@ -154,7 +154,7 @@ final class EventDeliveryScheduler {
     ///     the delivery running, so that it is not held behind it.
     /// - Returns: whether the caller is to start it, which is where no delivery is running.
     func queue(_ completion: FlushOutcomeClosure?, closing: Bool, paced: Bool) -> Bool {
-        let (starts, unpaced) = lock.withLock { () -> (Bool, DeliveryRun?) in
+        let (starts, unpaced) = lock.withLock { () -> (Bool, EventDeliveryRun?) in
             let unpaced = paced ? nil : running
             if var joined = queued {
                 if let completion {
@@ -178,11 +178,11 @@ final class EventDeliveryScheduler {
     /// close and take its batches, and what it takes is all it can speak for.
     ///
     /// - Returns: the delivery, and the callers waiting on it.
-    func begin() -> (run: DeliveryRun, waiters: [FlushOutcomeClosure]) {
+    func begin() -> (run: EventDeliveryRun, waiters: [FlushOutcomeClosure]) {
         lock.withLock {
             let next = queued ?? Queued(waiters: [], isClosing: false, isPaced: false)
             queued = nil
-            let run = DeliveryRun(isClosing: next.isClosing,
+            let run = EventDeliveryRun(isClosing: next.isClosing,
                                   isPaced: next.isPaced && pacesDeliveries && !next.isClosing,
                                   gap: gap)
             running = run

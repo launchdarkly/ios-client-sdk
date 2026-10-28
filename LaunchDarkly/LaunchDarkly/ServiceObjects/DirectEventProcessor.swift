@@ -391,7 +391,7 @@ extension DirectEventProcessor {
     }
 
     /// - Parameter run: the delivery; a closing one was online when it was asked for.
-    private func reportEvents(_ run: DeliveryRun, completion: ((_ delivered: Bool, _ lossMark: UInt64) -> Void)?) {
+    private func reportEvents(_ run: EventDeliveryRun, completion: ((_ delivered: Bool, _ lossMark: UInt64) -> Void)?) {
         guard run.isClosing || isOnline
         else {
             os_log("%s aborted. DirectEventProcessor is offline", log: service.config.logger, type: .debug, typeName(and: #function))
@@ -453,7 +453,7 @@ extension DirectEventProcessor {
     /// Delivers the batches this delivery claimed, releasing the claims once it has an outcome.
     ///
     /// - Parameter lostAnything: whether the listing that found them found other batches deleted unsent.
-    private func deliverOwn(_ batches: [EventBatch], _ run: DeliveryRun, lostAnything: Bool, _ completion: @escaping (PassOutcome) -> Void) {
+    private func deliverOwn(_ batches: [EventBatch], _ run: EventDeliveryRun, lostAnything: Bool, _ completion: @escaping (PassOutcome) -> Void) {
         guard !batches.isEmpty
         else {
             completion(lostAnything ? .lost : .delivered)
@@ -591,7 +591,7 @@ extension DirectEventProcessor {
     /// A paced delivery holds each batch after its first until a gap has passed since the last one was answered. A
     /// backlog this sends unasked otherwise takes the network for as long as it lasts, an `identify`'s flag request
     /// included. `hadTurn` is whether the first batch has been held already.
-    private func deliver(_ batches: [EventBatch], _ run: DeliveryRun, lostAnything: Bool, retried: Bool, hadTurn: Bool = false, _ completion: @escaping (PassOutcome) -> Void) {
+    private func deliver(_ batches: [EventBatch], _ run: EventDeliveryRun, lostAnything: Bool, retried: Bool, hadTurn: Bool = false, _ completion: @escaping (PassOutcome) -> Void) {
         var remaining = batches
         guard !remaining.isEmpty
         else {
@@ -670,7 +670,7 @@ extension DirectEventProcessor {
 
     /// Whether the delivery running may post: online, or `flushAtClose()`'s. Going offline stops a delivery before its
     /// next post, its retry's included, and leaves what it has not sent for a later one.
-    private func mayPost(_ run: DeliveryRun) -> Bool {
+    private func mayPost(_ run: EventDeliveryRun) -> Bool {
         run.isClosing || isOnline
     }
 
@@ -678,7 +678,7 @@ extension DirectEventProcessor {
     // swiftlint:disable:next function_parameter_count
     private func post(_ batch: EventBatch,
                       _ payload: BatchPayload,
-                      _ run: DeliveryRun,
+                      _ run: EventDeliveryRun,
                       leftOut: Int,
                       remaining: [EventBatch],
                       lostAnything: Bool,
@@ -779,7 +779,7 @@ extension DirectEventProcessor {
     /// Sends one batch and acts on what LaunchDarkly made of it, before handing the outcome on.
     private func publish(_ batch: EventBatch,
                          _ payload: BatchPayload,
-                         _ run: DeliveryRun,
+                         _ run: EventDeliveryRun,
                          _ completion: @escaping (AnalyticsEventSender.Outcome) -> Void) {
         store.startedSending(batch)
         // The store is settled before observers are told, so that one looking at it on hearing the outcome sees it.
