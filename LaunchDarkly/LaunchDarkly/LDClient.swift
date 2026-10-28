@@ -255,7 +255,7 @@ public class LDClient {
 
     private func internalClose() {
         os_log("%s stopping", log: config.logger, type: .debug, typeName(and: #function))
-        internalFlush()
+        eventProcessor.flushAtClose()
         internalSetOnline(false)
         hasStarted = false
         os_log("%s stopped", log: config.logger, type: .debug, typeName(and: #function))
@@ -1083,6 +1083,7 @@ public class LDClient {
         service.resetFlagResponseCache(etag: cachedData.etag)
         // Reports to this client, so it could not be given at construction: `self` is only usable from here.
         flagSynchronizer.onSyncComplete = onFlagSyncComplete
+        giveFlagValuesTheNetworkFirst()
 
         if let cachedFlags = cachedData.items, !cachedFlags.isEmpty {
             flagStore.replaceStore(newStoredItems: cachedFlags)
@@ -1102,6 +1103,16 @@ public class LDClient {
 }
 
 extension LDClient: TypeIdentifying { }
+
+extension LDClient {
+    /// Has the diagnostic init event wait for the event processor's launch gate, as a previous run's events do. Where
+    /// events do not persist there is no gate, and the init event goes out as it did before persistence.
+    fileprivate func giveFlagValuesTheNetworkFirst() {
+        if let eventProcessor = eventProcessor as? DirectEventProcessor, eventProcessor.givesWayToFlags {
+            (diagnosticReporter as? DiagnosticReporter)?.sendsInitAfter = eventProcessor.whenLaunchGateOpens
+        }
+    }
+}
 
 #if DEBUG
 extension LDClient {

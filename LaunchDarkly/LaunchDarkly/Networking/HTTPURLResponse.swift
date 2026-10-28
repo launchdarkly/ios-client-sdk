@@ -17,6 +17,9 @@ extension HTTPURLResponse {
         static let unauthorized = 401
         static let methodNotAllowed = 405
         static let requestTimeout = 408
+        static let contentTooLarge = 413
+        static let unsupportedMediaType = 415
+        static let unprocessableContent = 422
         static let tooManyRequests = 429
         static let internalServerError = 500
         static let notImplemented = 501
@@ -27,6 +30,13 @@ extension HTTPURLResponse {
         // Returns true for a 4xx status the SDK should not retry.
         static func isTerminalStatusCode(_ statusCode: Int) -> Bool {
             (400..<500).contains(statusCode) && !recoverableClientErrors.contains(statusCode)
+        }
+
+        /// Whether the events service refused an event payload for what it holds rather than for who sent it: one it
+        /// cannot read, too large for it, of a type it does not take, or read but not accepted. Posting the same body
+        /// again will not change the answer, though another body may be taken.
+        static func isEventPayloadRefused(_ statusCode: Int) -> Bool {
+            [badRequest, contentTooLarge, unsupportedMediaType, unprocessableContent].contains(statusCode)
         }
     }
 

@@ -20,9 +20,8 @@ struct EventTally: Equatable {
 /// been closed off for delivery.
 ///
 /// Everything about the filesystem lives here -- where the directory is, what the files in it are called, and how they
-/// are listed, read, moved and deleted -- so that `EventStore` is left with the buffer, the capacity arithmetic, and
-/// the batches it holds in memory, none of which need a disk at all. A store the application told to keep events off
-/// the disk has no `EventDirectory`, rather than one it is careful never to use.
+/// are listed, read, moved and deleted. A store the application told to keep events off the disk has no
+/// `EventDirectory`, rather than one it is careful never to use.
 ///
 /// Where the directory is, is worked out on first use rather than at construction, so that a store which never reaches
 /// for the disk makes no filesystem call at all, not even to find out where it would have written.
@@ -31,9 +30,10 @@ struct EventTally: Equatable {
 /// The lock is handed down so that each call can check it is held, rather than each level taking a lock of its own
 /// that would have to be ordered against the others.
 final class EventDirectory {
-    /// Names a log that has been closed off for delivery. The rest of the name is the batch's payload ID and how many
-    /// events are in it, `ready-<payloadId>.<count>`. Anything more a batch needs to say belongs in a frame type readers
-    /// skip, rather than in the name.
+    /// Names a log that has been closed off for delivery, whichever version named it. What follows is the version of the
+    /// rest of the name, `batchNameVersion`, then the batch's payload ID and how many events are in it:
+    /// `ready-v1-<payloadId>.<count>`. Anything more a batch needs to say belongs in a frame type readers skip, rather
+    /// than in the name.
     ///
     /// The count is in the name so that listing a batch this process did not close costs a directory entry rather than
     /// a read of the whole file. That is what every batch is at startup: the ones a previous run left behind, and the
@@ -42,7 +42,37 @@ final class EventDirectory {
     ///
     /// A batch is never appended to once it is closed, so the count is as good as the file is.
     private static let batchPrefix = "ready-"
+    /// The version of how the rest of a batch's name reads, so that a later version may change it without this one
+    /// misreading the count. A batch another version named is never listed, counted or sent: reading it is that
+    /// version's to do. Expiry still removes it, as it does any batch, so that a file this version does not read cannot
+    /// stay on the device for good. A payload ID is a UUID, which cannot start with a `v`.
+    private static let batchNameVersion = "v1-"
+    /// Names a batch this version named, and so reads.
+    private static let ownBatchPrefix = batchPrefix + batchNameVersion
     private static let nameFieldSeparator: Character = "."
+    /// Names a log whose events are not yet in a batch: one its owner is appending to, or one left by an owner that is
+    /// gone, for recovery to close off. The rest of the name is the UUID it was opened under.
+    static let logPrefix = "pending-"
+    /// Names a log while it is being opened, before it has its header. Recovery never looks at these; one left by a
+    /// process that died opening it holds no events, and expiry removes it.
+    static let openingLogPrefix = "new-"
+
+    /// A name for a new log in `directory`, under a UUID no other writer picks.
+    static func newLogUrl(in directory: URL) -> URL {
+        directory.appendingPathComponent(logPrefix + UUID().uuidString)
+    }
+
+    /// Where `log` is created and given its header, before it is moved to its own name.
+    static func openingUrl(for log: URL) -> URL {
+        log.deletingLastPathComponent()
+            .appendingPathComponent(openingLogPrefix + log.lastPathComponent.dropFirst(logPrefix.count))
+    }
+
+    /// The largest file this version reads. It writes none larger than `EventLogFormat.maxBatchSize`, so one past this
+    /// is not its own, whatever it holds. Read anyway, it would be held in memory whole, and one large enough would
+    /// take the application down with it. Twice the batch size, so that a later version may raise its own a little
+    /// without an earlier one losing what it wrote.
+    static let maxReadSize = 2 * EventLogFormat.maxBatchSize
 
     private let locateDirectory: () -> URL
     private let ioLock: UnfairLock
@@ -216,18 +246,33 @@ final class EventDirectory {
     /// Requires `ioLock`.
     private func newUrl(of payloadId: String, holding events: Int) -> URL {
         disk.directory.appendingPathComponent(
-            "\(EventDirectory.batchPrefix)\(payloadId)\(EventDirectory.nameFieldSeparator)\(events)")
+            "\(EventDirectory.ownBatchPrefix)\(payloadId)\(EventDirectory.nameFieldSeparator)\(events)")
     }
 
-    /// A batch as its name, `ready-<payloadId>.<count>`, gives it: each field by its position.
+    /// A name for a batch of events not yet counted, which the first listing to read it counts. Requires `ioLock`.
+    private func newUncountedUrl() -> URL {
+        disk.directory.appendingPathComponent("\(EventDirectory.ownBatchPrefix)\(UUID().uuidString)")
+    }
+
+    /// Whether a file is a batch this version named, and so reads.
+    private static func isOwnBatch(_ name: String) -> Bool {
+        name.hasPrefix(ownBatchPrefix)
+    }
+
+    /// Whether a file is a batch some other version named, which this one leaves to expiry.
+    private static func isAnotherVersionsBatch(_ name: String) -> Bool {
+        name.hasPrefix(batchPrefix) && !name.hasPrefix(ownBatchPrefix)
+    }
+
+    /// A batch this version named, `ready-v1-<payloadId>.<count>`, as its name gives it: each field by its position.
     ///
     /// Fields are split at `nameFieldSeparator`, which a payload ID never contains, so nothing about the count's own
-    /// characters is needed to tell it apart. Fields after it, which a later version might add, are ignored.
+    /// characters is needed to tell it apart. Fields after it are ignored.
     ///
     /// - Returns: the payload ID, and the count, which is nil where the name has none or it does not parse -- a batch a
     ///   recovery could not read, which is read once to count it.
     private static func parse(batchName name: String) -> (payloadId: String, events: Int?) {
-        let fields = name.dropFirst(batchPrefix.count)
+        let fields = name.dropFirst(ownBatchPrefix.count)
             .split(separator: nameFieldSeparator, omittingEmptySubsequences: false)
         let payloadId = String(fields[0])
         guard fields.count > 1, !fields[1].isEmpty, fields[1].allSatisfy({ $0.isASCII && $0.isNumber }),
@@ -354,20 +399,25 @@ final class EventDirectory {
         }
 
         let batches = contents
-            .filter { $0.lastPathComponent.hasPrefix(EventDirectory.batchPrefix) }
+            .filter { EventDirectory.isOwnBatch($0.lastPathComponent) }
             .compactMap { file -> (EventBatch, Date)? in
                 let (payloadId, counted) = EventDirectory.parse(batchName: file.lastPathComponent)
                 guard !isDeliveredButUndeleted(payloadId, at: file)
                 else { return nil }
                 // Reading is only for a batch whose name does not count it, which a version that named them without a
                 // count may have left behind, and then only the once.
-                guard let events = counted ?? stored[payloadId]?.events ?? countOfEvents(in: file)
+                let read = counted == nil && stored[payloadId] == nil ? countOfEvents(in: file) : nil
+                guard let events = counted ?? stored[payloadId]?.events ?? read?.events
                 else { return nil }
                 let listed = EventDirectory.listed(file)
                 let modified = listed.modified ?? Date.distantPast
                 // What the close knew of its summaries is kept; nothing in the file says.
                 let previous = stored[payloadId]
-                stored[payloadId] = Stored(url: file, events: events, bytes: listed.bytes ?? previous?.bytes ?? 0,
+                // A batch just read is as big as what was read. The size the listing came with can be missing, and no
+                // batch is empty: it has a header at least.
+                let bytes = read?.bytes ?? listed.bytes.flatMap { $0 > 0 ? $0 : nil }
+                    ?? previous?.bytes ?? EventLogFormat.fileHeaderSize
+                stored[payloadId] = Stored(url: file, events: events, bytes: bytes,
                                            modified: modified,
                                            summaries: previous.map { $0.events == events ? $0.summaries : 0 } ?? 0)
                 return (EventBatch(payloadId: payloadId, eventCount: events), modified)
@@ -454,6 +504,7 @@ final class EventDirectory {
             else { return nil }
             throw VanishedBatch(payloadId: batch.payloadId)
         case .failed(let error): throw error
+        case .tooLarge: throw UnreadableBatch(payloadId: batch.payloadId)
         case .bytes(let bytes): file = bytes
         }
         // No more than the batch was closed holding. A write that failed and could not be truncated leaves whole frames
@@ -495,14 +546,14 @@ final class EventDirectory {
         let contents = (try? FileManager.default.contentsOfDirectory(at: disk.directory,
                                                                      includingPropertiesForKeys: nil,
                                                                      options: [.skipsHiddenFiles])) ?? []
-        var logs = contents.filter { $0.lastPathComponent.hasPrefix(EventDirectory.batchPrefix) }.sorted { $0.path < $1.path }
+        var logs = contents.filter { EventDirectory.isOwnBatch($0.lastPathComponent) }.sorted { $0.path < $1.path }
         if disk.log.exists {
             logs.append(disk.log.url)
         }
 
         var payloads: [Data] = []
         for log in logs {
-            guard let file = try? Data(contentsOf: log)
+            guard case .bytes(let file) = read(log)
             else { continue }
             _ = EventLogFormat.forEachFrame(in: file) { type, payload in
                 if type == EventLogFormat.eventFrame {
@@ -522,9 +573,14 @@ final class EventDirectory {
         case bytes(Data)
         case missing
         case failed(Error)
+        /// Larger than `maxReadSize`, and so never read: it can never be delivered.
+        case tooLarge(size: Int)
     }
 
     private func read(_ url: URL) -> LogRead {
+        if let size = EventDirectory.sizeIfTooLarge(url) {
+            return .tooLarge(size: size)
+        }
         do {
             return .bytes(try readFile(url))
         } catch {
@@ -532,10 +588,20 @@ final class EventDirectory {
         }
     }
 
-    /// How many events a batch file holds, or nil when it is not one to list this time.
+    /// The size of a file larger than `maxReadSize`, or nil for any other, including one whose size could not be
+    /// found, which the read then fails on or reads.
+    private static func sizeIfTooLarge(_ url: URL) -> Int? {
+        guard let size = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? Int,
+              size > maxReadSize
+        else { return nil }
+        return size
+    }
+
+    /// How many events a batch file holds, and how many bytes were read to count them, or nil when it is not one to
+    /// list this time.
     ///
     /// Requires `ioLock`.
-    private func countOfEvents(in file: URL) -> Int? {
+    private func countOfEvents(in file: URL) -> EventTally? {
         ioLock.assertOwned()
         switch read(file) {
         case .missing:
@@ -546,6 +612,10 @@ final class EventDirectory {
             // intact all along. Without a count it cannot be delivered now.
             os_log("%s could not read stored events, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             return nil
+        case .tooLarge(let size):
+            // Never read, so never counted. Listed as holding one event, the fewest it can, so that the delivery
+            // reaching it drops it and counts the loss.
+            return EventTally(events: 1, bytes: size)
         case .bytes(let log):
             guard let events = EventLogFormat.eventCount(in: log)
             else {
@@ -554,7 +624,7 @@ final class EventDirectory {
                 try? FileManager.default.removeItem(at: file)
                 return nil
             }
-            return events
+            return EventTally(events: events, bytes: log.count)
         }
     }
 
@@ -578,12 +648,18 @@ final class EventDirectory {
     /// process has open, of which `DiskEventLog.claimForRecovery(_:)` then takes those no live process holds.
     ///
     /// The events in them were recorded by a store that is gone, so there is no one left to add to them: a previous run
-    /// of this process, or another process that has since ended, whatever it was called.
+    /// of this process, or another process that has since ended, whatever it was called. None of them becomes open here
+    /// later: a log is opened under a name of its own and never reopened once closed.
     ///
     /// Requires `ioLock`.
     func interruptedLogs() -> [URL] {
         ioLock.assertOwned()
-        return disk.log.logsNotOpenInThisProcess()
+        let contents = (try? FileManager.default.contentsOfDirectory(at: disk.directory,
+                                                                    includingPropertiesForKeys: nil,
+                                                                    options: [.skipsHiddenFiles])) ?? []
+        return contents.filter {
+            $0.lastPathComponent.hasPrefix(EventDirectory.logPrefix) && !DiskEventLog.isOpenInThisProcess($0)
+        }
     }
 
     /// Reads and counts a log recovery has claimed.
@@ -597,6 +673,8 @@ final class EventDirectory {
             return InterruptedLog(url: leftOpen, contents: .missing)
         case .failed(let error):
             return InterruptedLog(url: leftOpen, contents: .failed(error))
+        case .tooLarge:
+            return InterruptedLog(url: leftOpen, contents: .unreadable)
         case .bytes(let log):
             guard let events = EventLogFormat.eventCount(in: log)
             else { return InterruptedLog(url: leftOpen, contents: .unreadable) }
@@ -622,7 +700,7 @@ final class EventDirectory {
             // to.
             // Named without a count, which is what a batch whose events have never been counted is: the listing that
             // first manages to read it is what counts it.
-            let uncounted = disk.directory.appendingPathComponent("\(EventDirectory.batchPrefix)\(UUID().uuidString)")
+            let uncounted = newUncountedUrl()
             if (try? FileManager.default.moveItem(at: leftOpen, to: uncounted)) != nil {
                 os_log("%s could not read events from a previous run, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             } else {
@@ -675,7 +753,8 @@ extension EventDirectory {
     /// event.
     ///
     /// A batch whose request is out is left alone however old it is, whichever store or process sent it; see
-    /// `BatchLocks`.
+    /// `BatchLocks`. A batch another version named is deleted without being read or counted: it was never counted
+    /// against capacity, and its events were never this version's to lose.
     ///
     /// - Parameter sending: batches whose request is out from this store.
     /// - Returns: how many events were discarded, and how much this process had counted of the batches that left the
@@ -689,7 +768,9 @@ extension EventDirectory {
         var counted = EventTally()
         for file in contents where EventDirectory.listed(file).modified.map({ $0 < cutoff }) ?? false {
             let name = file.lastPathComponent
-            if name.hasPrefix(EventDirectory.batchPrefix) {
+            if EventDirectory.isAnotherVersionsBatch(name) {
+                _ = BatchLocks.deleteUnlessBeingSent(file)
+            } else if EventDirectory.isOwnBatch(name) {
                 let (payloadId, named) = EventDirectory.parse(batchName: name)
                 guard !sending.contains(payloadId), !deliveredButUndeleted.contains(payloadId),
                       !BatchLocks.isSentInThisProcess(file)
@@ -752,7 +833,9 @@ extension EventDirectory {
                                                                          options: [])) ?? []
             for file in contents where listed(file).modified.map({ $0 < cutoff }) ?? false {
                 let name = file.lastPathComponent
-                if name.hasPrefix(batchPrefix) {
+                if isAnotherVersionsBatch(name) {
+                    _ = BatchLocks.deleteUnlessBeingSent(file)
+                } else if isOwnBatch(name) {
                     guard !BatchLocks.isSentInThisProcess(file)
                     else { continue }
                     let held = parse(batchName: name).events ?? eventsReading(file)
@@ -772,19 +855,22 @@ extension EventDirectory {
     /// held. Anything else is left alone.
     private static func discardIfAbandonedLog(_ file: URL) -> Int {
         let name = file.lastPathComponent
-        if name.hasPrefix(DiskEventLog.openingPrefix) {
+        if name.hasPrefix(EventDirectory.openingLogPrefix) {
             // Opening a log takes moments, so one this old was never finished, and holds no events.
             delete(file)
             return 0
         }
-        guard name.hasPrefix(DiskEventLog.prefix), !DiskEventLog.isHeldByLiveProcess(file)
+        guard name.hasPrefix(EventDirectory.logPrefix), !DiskEventLog.isHeldByLiveProcess(file)
         else { return 0 }
         let held = eventsReading(file)
         return delete(file) ? held : 0
     }
 
     private static func eventsReading(_ file: URL) -> Int {
-        (try? Data(contentsOf: file)).flatMap { EventLogFormat.eventCount(in: $0) } ?? 0
+        // Never read, so held to be the one event it holds at the fewest.
+        guard sizeIfTooLarge(file) == nil
+        else { return 1 }
+        return (try? Data(contentsOf: file)).flatMap { EventLogFormat.eventCount(in: $0) } ?? 0
     }
 
     @discardableResult

@@ -30,6 +30,9 @@ class NullEventProcessor: EventProcessor {
         DispatchQueue.global().async { completion(true) }
     }
 
+    func flushAtClose() {
+    }
+
     func commitRecordedEvents() {
     }
 

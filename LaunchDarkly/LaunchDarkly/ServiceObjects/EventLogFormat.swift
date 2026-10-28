@@ -4,13 +4,14 @@ import Foundation
 ///
 /// A log opens with a magic and a format version, and holds a sequence of frames:
 ///
-///     +- 4 bytes -+- 2 bytes -+     +- 2 bytes -+- 4 bytes -+- 4 bytes -+- n bytes -+
-///     |   LDEV    |  version  | ... |   type    |  size (n) |   CRC-32  |  payload  |
+///     +- 4 bytes -+- 2 bytes -+     +- 2 bytes -+- 4 bytes -+- n bytes -+- 4 bytes -+
+///     |   LDEV    |  version  | ... |   type    |  size (n) |  payload  |   CRC-32  |
 ///     +-----------+-----------+     +-----------+-----------+-----------+-----------+
 ///
 /// The size prefix is what makes a log recoverable: a reader can tell a frame the writer finished from one it did not,
-/// without having to parse the event to find where it ends. The checksum, over the type, the size and the payload, is
-/// what tells a frame the writer finished from one the storage has since damaged; a reader treats either the same way.
+/// without having to parse the event to find where it ends. The checksum, over the type, the size and the payload --
+/// everything before it in the frame -- is what tells a frame the writer finished from one the storage has since
+/// damaged; a reader treats either the same way.
 /// The version is what makes an upgrade safe -- a log this version does not understand is discarded rather than
 /// misread -- and the frame type leaves room for a later version to write something new into a log this one still
 /// reads.
@@ -19,7 +20,12 @@ enum EventLogFormat {
     static let version: UInt16 = 1
     static let magic = Data("LDEV".utf8)
     static let fileHeaderSize = 6
-    static let frameHeaderSize = 10
+    /// The type and the size, before a frame's payload.
+    static let frameHeaderSize = 6
+    /// The checksum, after a frame's payload.
+    static let frameTrailerSize = 4
+    /// What a frame takes beyond its payload.
+    static let frameOverhead = frameHeaderSize + frameTrailerSize
     /// The only frame type written today; a reader skips a frame whose type it does not know.
     static let eventFrame: UInt16 = 1
     /// The most a batch may hold, file header included, so that no request it becomes is larger than the events
@@ -27,7 +33,7 @@ enum EventLogFormat {
     static let maxBatchSize = 2 * 1024 * 1024
     /// A ceiling on a single frame's payload: the most that still fits in a batch on its own. It is also what keeps a
     /// corrupt size from making recovery allocate wildly.
-    static let maxFrameSize = maxBatchSize - fileHeaderSize - frameHeaderSize
+    static let maxFrameSize = maxBatchSize - fileHeaderSize - frameOverhead
 
     static var fileHeader: Data {
         var header = magic
@@ -36,14 +42,13 @@ enum EventLogFormat {
     }
 
     static func frame(for encodedEvent: Data) -> Data {
-        var frame = Data(capacity: frameHeaderSize + encodedEvent.count)
+        var frame = Data(capacity: frameOverhead + encodedEvent.count)
         withUnsafeBytes(of: eventFrame.bigEndian) { frame.append(contentsOf: $0) }
         withUnsafeBytes(of: UInt32(encodedEvent.count).bigEndian) { frame.append(contentsOf: $0) }
+        frame.append(encodedEvent)
         var checksum = Crc32()
         frame.withUnsafeBytes { checksum.advance(withBytes: $0) }
-        encodedEvent.withUnsafeBytes { checksum.advance(withBytes: $0) }
         withUnsafeBytes(of: checksum.checksum.bigEndian) { frame.append(contentsOf: $0) }
-        frame.append(encodedEvent)
         return frame
     }
 
@@ -83,22 +88,21 @@ enum EventLogFormat {
     /// anywhere before where the frame ends.
     private static func walkFrames(_ bytes: UnsafeRawBufferPointer, _ visit: (UInt16, Range<Int>) -> Void) -> FrameWalk {
         var cursor = fileHeaderSize
-        while cursor + frameHeaderSize <= bytes.count {
+        while cursor + frameOverhead <= bytes.count {
             let type = UInt16(bytes[cursor]) << 8 | UInt16(bytes[cursor + 1])
             let length = Int(readUInt32(bytes, at: cursor + 2))
             let start = cursor + frameHeaderSize
-            guard length > 0, length <= maxFrameSize, start + length <= bytes.count
+            let end = start + length
+            guard length > 0, length <= maxFrameSize, end + frameTrailerSize <= bytes.count
             else { break }
 
-            let payload = UnsafeRawBufferPointer(rebasing: bytes[start..<(start + length)])
             var checksum = Crc32()
-            checksum.advance(withBytes: UnsafeRawBufferPointer(rebasing: bytes[cursor..<(cursor + 6)]))
-            checksum.advance(withBytes: payload)
-            guard checksum.checksum == readUInt32(bytes, at: cursor + 6)
+            checksum.advance(withBytes: UnsafeRawBufferPointer(rebasing: bytes[cursor..<end]))
+            guard checksum.checksum == readUInt32(bytes, at: end)
             else { break }
 
-            visit(type, start..<(start + length))
-            cursor = start + length
+            visit(type, start..<end)
+            cursor = end + frameTrailerSize
         }
         return FrameWalk(reachedEnd: cursor == bytes.count)
     }
@@ -128,7 +132,8 @@ enum EventLogFormat {
     /// Turns a log into the JSON array LaunchDarkly expects, in the log's own bytes, without parsing the events
     /// themselves: they were serialized on the way in and are shipped exactly as they were recorded.
     ///
-    /// There is always room: the file header becomes the "[", and each frame header the "," or "]" after its payload.
+    /// There is always room: the file header becomes the "[", and each frame's header and trailer the "," or "]" after
+    /// its payload.
     /// Each payload moves towards the start only once its frame has been checked, and never past where that frame
     /// began, so no frame still to be checked is written over. A log nothing else refers to is changed where it is,
     /// rather than copied first.
@@ -183,9 +188,9 @@ enum EventLogFormat {
               UInt8(truncatingIfNeeded: value)])
     }
 
-    /// The size, header included, of the frame at `start` in frames this process wrote.
+    /// The size, header and trailer included, of the frame at `start` in frames this process wrote.
     static func frameSize(in frames: Data, at start: Int) -> Int {
-        frameHeaderSize + Int(readUInt32(frames, at: start + 2))
+        frameOverhead + Int(readUInt32(frames, at: start + 2))
     }
 
     /// Where a run of whole frames from `start`, in frames this process wrote, ends if it is to take no more than
