@@ -982,7 +982,7 @@ public class LDClient {
     let networkReporter: NetworkReporting
 
     private(set) var flagCache: FeatureFlagCaching
-    private(set) var flagSynchronizer: LDFlagSynchronizing { didSet { reportFlagRequests() } }
+    private(set) var flagSynchronizer: LDFlagSynchronizing
     var flagChangeNotifier: FlagChangeNotifying
     private(set) var eventProcessor: EventProcessor
     private(set) var environmentReporter: EnvironmentReporting
@@ -1083,7 +1083,7 @@ public class LDClient {
         service.resetFlagResponseCache(etag: cachedData.etag)
         // Reports to this client, so it could not be given at construction: `self` is only usable from here.
         flagSynchronizer.onSyncComplete = onFlagSyncComplete
-        giveFlagRequestsTheNetworkFirst()
+        giveFlagValuesTheNetworkFirst()
 
         if let cachedFlags = cachedData.items, !cachedFlags.isEmpty {
             flagStore.replaceStore(newStoredItems: cachedFlags)
@@ -1105,19 +1105,9 @@ public class LDClient {
 extension LDClient: TypeIdentifying { }
 
 extension LDClient {
-    /// Has the flag synchronizer tell the event processor about its flag requests, so that events can give way to them.
-    /// Only where they do: otherwise the synchronizer tells nothing.
-    fileprivate func reportFlagRequests() {
-        guard let listener = eventProcessor as? FlagRequestListening, listener.givesWayToFlags
-        else { return }
-        (flagSynchronizer as? FlagSynchronizer)?.flagRequests = listener
-    }
-
-    /// Has events give way to flag requests: the synchronizer reports its requests to the event processor, and the
-    /// diagnostic init event waits for the processor's launch gate as a previous run's events do. Where events do not
-    /// persist neither happens, and the init event goes out as it did before persistence.
-    fileprivate func giveFlagRequestsTheNetworkFirst() {
-        reportFlagRequests()
+    /// Has the diagnostic init event wait for the event processor's launch gate, as a previous run's events do. Where
+    /// events do not persist there is no gate, and the init event goes out as it did before persistence.
+    fileprivate func giveFlagValuesTheNetworkFirst() {
         if let eventProcessor = eventProcessor as? DirectEventProcessor, eventProcessor.givesWayToFlags {
             (diagnosticReporter as? DiagnosticReporter)?.sendsInitAfter = eventProcessor.whenLaunchGateOpens
         }
