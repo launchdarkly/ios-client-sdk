@@ -2,7 +2,7 @@ import Foundation
 
 /// One delivery, from taking its batches until it has an answer for everything it sent, its retry included.
 ///
-/// Made by `DeliveryScheduler.begin()` and passed through the delivery, so that what is true of the delivery running is
+/// Made by `EventDeliveryScheduler.begin()` and passed through the delivery, so that what is true of the delivery running is
 /// held by it, and starts afresh with each one.
 final class DeliveryRun {
     /// A paced batch waiting out its gap.
@@ -95,7 +95,7 @@ final class DeliveryRun {
 ///
 /// Its lock is taken on a caller's thread, on the delivery queue and where a delivery's posts are answered, and never
 /// held across any of them.
-final class DeliveryScheduler {
+final class EventDeliveryScheduler {
     /// A delivery queued that has not taken its batches yet.
     private struct Queued {
         /// The callers waiting on it.

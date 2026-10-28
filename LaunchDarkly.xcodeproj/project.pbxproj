@@ -81,7 +81,7 @@
 		831188572113AE0B00D77CB5 /* FlagChangeNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F25F1F476AD800ECE1AF /* FlagChangeNotifier.swift */; };
 		831188582113AE0F00D77CB5 /* DirectEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* DirectEventProcessor.swift */; };
 		E7C0A11E2F00000000000002 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
-		E7C0A11E2F00000000000007 /* DeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* DeliveryScheduler.swift */; };
+		E7C0A11E2F00000000000007 /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
 		B66ECB2014E0FC95C23DA0A2 /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
 		629D5A9FE152DBC3E20D6DFC /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
 		014901E06BE1F2B0FAAD6AA6 /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
@@ -128,7 +128,7 @@
 		831EF35620655E730001C643 /* FlagChangeNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F25F1F476AD800ECE1AF /* FlagChangeNotifier.swift */; };
 		831EF35720655E730001C643 /* DirectEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* DirectEventProcessor.swift */; };
 		E7C0A11E2F00000000000003 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
-		E7C0A11E2F00000000000008 /* DeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* DeliveryScheduler.swift */; };
+		E7C0A11E2F00000000000008 /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
 		367D374B5CD1B2A8596C0738 /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
 		5A89648200D2566D3F8409BA /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
 		CFF357D68BBF2DC8395930F2 /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
@@ -216,7 +216,7 @@
 		83D9EC882062DEAB004D7FA6 /* FlagChangeNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F25F1F476AD800ECE1AF /* FlagChangeNotifier.swift */; };
 		83D9EC892062DEAB004D7FA6 /* DirectEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* DirectEventProcessor.swift */; };
 		E7C0A11E2F00000000000004 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
-		E7C0A11E2F00000000000009 /* DeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* DeliveryScheduler.swift */; };
+		E7C0A11E2F00000000000009 /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
 		321659EE1824B83BD0D0F22D /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
 		73E23C0FA009141BB4CBC24C /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
 		54745AEF1A43D165F5A6E08F /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
@@ -246,7 +246,7 @@
 		83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
 		83FEF8DF1F2667E4001CF12C /* DirectEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* DirectEventProcessor.swift */; };
 		E7C0A11E2F00000000000005 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
-		E7C0A11E2F0000000000000A /* DeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* DeliveryScheduler.swift */; };
+		E7C0A11E2F0000000000000A /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
 		E91F5DCAEEE5FC4AC408BA67 /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
 		7D37AD3ECAA9D8E2927228C5 /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
 		9FA0EE3A87678F58F4406B24 /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
@@ -638,7 +638,7 @@
 		83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlagSynchronizer.swift; sourceTree = "<group>"; };
 		83FEF8DE1F2667E4001CF12C /* DirectEventProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DirectEventProcessor.swift; sourceTree = "<group>"; };
 		E7C0A11E2F00000000000001 /* EventCommitter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventCommitter.swift; sourceTree = "<group>"; };
-		E7C0A11E2F00000000000006 /* DeliveryScheduler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeliveryScheduler.swift; sourceTree = "<group>"; };
+		E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventDeliveryScheduler.swift; sourceTree = "<group>"; };
 		508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnalyticsEventSender.swift; sourceTree = "<group>"; };
 		77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OutboundEventBuffer.swift; sourceTree = "<group>"; };
 		BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NullEventProcessor.swift; sourceTree = "<group>"; };
@@ -1089,7 +1089,7 @@
 				831425B0206B030100F2EF36 /* EnvironmentReporter.swift */,
 				83FEF8DE1F2667E4001CF12C /* DirectEventProcessor.swift */,
 				E7C0A11E2F00000000000001 /* EventCommitter.swift */,
-				E7C0A11E2F00000000000006 /* DeliveryScheduler.swift */,
+				E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */,
 				508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */,
 				77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */,
 				BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */,
@@ -1574,7 +1574,7 @@
 				831188522113ADF700D77CB5 /* KeyedValueCache.swift in Sources */,
 				831188582113AE0F00D77CB5 /* DirectEventProcessor.swift in Sources */,
 				E7C0A11E2F00000000000002 /* EventCommitter.swift in Sources */,
-				E7C0A11E2F00000000000007 /* DeliveryScheduler.swift in Sources */,
+				E7C0A11E2F00000000000007 /* EventDeliveryScheduler.swift in Sources */,
 				B66ECB2014E0FC95C23DA0A2 /* AnalyticsEventSender.swift in Sources */,
 				629D5A9FE152DBC3E20D6DFC /* OutboundEventBuffer.swift in Sources */,
 				014901E06BE1F2B0FAAD6AA6 /* NullEventProcessor.swift in Sources */,
@@ -1702,7 +1702,7 @@
 				A358D6D92A4DE6A500270C60 /* ApplicationInfoEnvironmentReporter.swift in Sources */,
 				831EF35720655E730001C643 /* DirectEventProcessor.swift in Sources */,
 				E7C0A11E2F00000000000003 /* EventCommitter.swift in Sources */,
-				E7C0A11E2F00000000000008 /* DeliveryScheduler.swift in Sources */,
+				E7C0A11E2F00000000000008 /* EventDeliveryScheduler.swift in Sources */,
 				367D374B5CD1B2A8596C0738 /* AnalyticsEventSender.swift in Sources */,
 				5A89648200D2566D3F8409BA /* OutboundEventBuffer.swift in Sources */,
 				CFF357D68BBF2DC8395930F2 /* NullEventProcessor.swift in Sources */,
@@ -1816,7 +1816,7 @@
 				8358F2601F476AD800ECE1AF /* FlagChangeNotifier.swift in Sources */,
 				83FEF8DF1F2667E4001CF12C /* DirectEventProcessor.swift in Sources */,
 				E7C0A11E2F00000000000005 /* EventCommitter.swift in Sources */,
-				E7C0A11E2F0000000000000A /* DeliveryScheduler.swift in Sources */,
+				E7C0A11E2F0000000000000A /* EventDeliveryScheduler.swift in Sources */,
 				E91F5DCAEEE5FC4AC408BA67 /* AnalyticsEventSender.swift in Sources */,
 				7D37AD3ECAA9D8E2927228C5 /* OutboundEventBuffer.swift in Sources */,
 				9FA0EE3A87678F58F4406B24 /* NullEventProcessor.swift in Sources */,
@@ -1985,7 +1985,7 @@
 				C443A40B2315AA4D00145710 /* NetworkReporter.swift in Sources */,
 				83D9EC892062DEAB004D7FA6 /* DirectEventProcessor.swift in Sources */,
 				E7C0A11E2F00000000000004 /* EventCommitter.swift in Sources */,
-				E7C0A11E2F00000000000009 /* DeliveryScheduler.swift in Sources */,
+				E7C0A11E2F00000000000009 /* EventDeliveryScheduler.swift in Sources */,
 				321659EE1824B83BD0D0F22D /* AnalyticsEventSender.swift in Sources */,
 				73E23C0FA009141BB4CBC24C /* OutboundEventBuffer.swift in Sources */,
 				54745AEF1A43D165F5A6E08F /* NullEventProcessor.swift in Sources */,

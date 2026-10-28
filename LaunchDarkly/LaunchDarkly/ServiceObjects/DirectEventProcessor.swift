@@ -36,7 +36,7 @@ class DirectEventProcessor: EventProcessor {
     let store: EventStoring
     let committer: EventCommitter
     private let lostEvents: LostEventCount
-    private let deliveryScheduler: DeliveryScheduler
+    private let deliveryScheduler: EventDeliveryScheduler
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
@@ -86,7 +86,7 @@ class DirectEventProcessor: EventProcessor {
     /// The batches a delivery has taken and not yet had an answer for, by payload ID. Only to be used while holding
     /// `claimLock`.
     ///
-    /// A batch stays on disk until its response arrives. `DeliveryScheduler` keeps a second delivery from listing it
+    /// A batch stays on disk until its response arrives. `EventDeliveryScheduler` keeps a second delivery from listing it
     /// inside that window; this is what keeps it from being sent twice, under the same payload ID, should two ever overlap.
     /// A delivery that finds a batch claimed waits on that claim's outcome rather than sending it.
     private var batchesInFlight: [String: Claim] = [:]
@@ -142,7 +142,7 @@ class DirectEventProcessor: EventProcessor {
         self.store = eventStore
         self.pacing = pacing
         self.givesWayToFlags = eventStore.isPersisting
-        self.deliveryScheduler = DeliveryScheduler(pacesDeliveries: eventStore.isPersisting, gap: pacing.gap)
+        self.deliveryScheduler = EventDeliveryScheduler(pacesDeliveries: eventStore.isPersisting, gap: pacing.gap)
         self.launchGateOpen = !eventStore.isPersisting
 
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
@@ -354,7 +354,7 @@ extension DirectEventProcessor {
         queueDelivery(nil, paced: true)
     }
 
-    /// As `DeliveryScheduler.queue(_:closing:paced:)`, starting the delivery where nothing is running.
+    /// As `EventDeliveryScheduler.queue(_:closing:paced:)`, starting the delivery where nothing is running.
     private func queueDelivery(_ completion: FlushOutcomeClosure?, closing: Bool = false, paced: Bool = false) {
         if deliveryScheduler.queue(completion, closing: closing, paced: paced) {
             deliveryQueue.async { self.runDelivery() }
