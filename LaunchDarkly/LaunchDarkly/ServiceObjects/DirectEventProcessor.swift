@@ -30,21 +30,13 @@ class DirectEventProcessor: EventProcessor {
         let gap: TimeInterval
     }
 
-    /// A paced batch waiting out its gap.
-    private final class PacedTurn {
-        let proceed: () -> Void
-
-        init(_ proceed: @escaping () -> Void) {
-            self.proceed = proceed
-        }
-    }
-
     // MARK: Set in init and never changed
 
     let service: DarklyServiceProvider
     let store: EventStoring
     let committer: EventCommitter
     private let lostEvents: LostEventCount
+    private let deliveryScheduler: DeliveryScheduler
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
@@ -83,43 +75,6 @@ class DirectEventProcessor: EventProcessor {
     /// the application counts again. Only to be used while holding `stateLock`.
     private var badRequests: (payloadId: String, inARow: Int)?
 
-    // MARK: Guarded by deliveryLock
-
-    /// Guards `queuedDelivery`, `isDelivering`, `isRetryScheduled` and whether a delivery is close's. Taken on a caller's
-    /// thread, on `deliveryQueue` and where a delivery's posts are answered, and never held across any of them.
-    private let deliveryLock = UnfairLock()
-    /// Callers waiting on a delivery that is queued and has not taken the batches yet, or nil where none is queued.
-    private var queuedDelivery: [FlushOutcomeClosure]?
-    /// Whether a delivery has started and not yet had an answer for everything it sent, its retry included.
-    ///
-    /// A delivery returns from `deliveryQueue` as soon as its first request is out, so the queue alone does not keep two
-    /// apart. Two at once would each leave the batch it is sending out of both capacities, and a run of flushes, each
-    /// held up by a slow response, could take the store that many batches past them.
-    private var isDelivering = false
-    /// Whether a delivery is already set to run when the backoff's wait ends, so a run of passes inside the wait sets
-    /// one rather than one each.
-    private var isRetryScheduled = false
-    /// Whether the delivery queued is `flushAtClose()`'s, or has been joined by it.
-    private var queuedDeliveryIsClosing = false
-    /// Whether the delivery running is `flushAtClose()`'s, which posts whatever wait the backoff is in and runs although
-    /// closing has turned `isOnline` off since. For its length only: the delivery one of its failures sets for the end
-    /// of the wait is held by the backoff, and finds the reporter offline, as any other.
-    private var isClosingDelivery = false
-    /// Whether the delivery queued was asked for only by the report timer or by the launch gate, and so is paced.
-    private var queuedDeliveryIsPaced = false
-    /// Whether the delivery running is paced: until a delivery somebody asked for is queued, after which it sends the
-    /// rest back to back, or the reporter goes offline, after which it sends nothing more.
-    private var isPacedDelivery = false
-    /// When the paced delivery running last had an answer for a post, or nil before its first.
-    private var lastPacedPostAnswered: DispatchTime?
-    /// The batch of the paced delivery running that waits out its gap, which ending the pacing lets go at once.
-    private var waitingTurn: PacedTurn?
-
-    #if DEBUG
-        /// How many deliveries have started, which is fewer than the flushes asked for where they were joined.
-        private var deliveryRunCount = 0
-    #endif
-
     // MARK: Guarded by claimLock
 
     /// Guards `batchesInFlight`.
@@ -131,8 +86,8 @@ class DirectEventProcessor: EventProcessor {
     /// The batches a delivery has taken and not yet had an answer for, by payload ID. Only to be used while holding
     /// `claimLock`.
     ///
-    /// A batch stays on disk until its response arrives. `isDelivering` keeps a second delivery from listing it inside
-    /// that window; this is what keeps it from being sent twice, under the same payload ID, should two ever overlap.
+    /// A batch stays on disk until its response arrives. `DeliveryScheduler` keeps a second delivery from listing it
+    /// inside that window; this is what keeps it from being sent twice, under the same payload ID, should two ever overlap.
     /// A delivery that finds a batch claimed waits on that claim's outcome rather than sending it.
     private var batchesInFlight: [String: Claim] = [:]
 
@@ -187,6 +142,7 @@ class DirectEventProcessor: EventProcessor {
         self.store = eventStore
         self.pacing = pacing
         self.givesWayToFlags = eventStore.isPersisting
+        self.deliveryScheduler = DeliveryScheduler(pacesDeliveries: eventStore.isPersisting, gap: pacing.gap)
         self.launchGateOpen = !eventStore.isPersisting
 
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
@@ -321,7 +277,7 @@ extension DirectEventProcessor {
     private func stopReporting() {
         eventReportTimer?.cancel()
         eventReportTimer = nil
-        endPacing()
+        deliveryScheduler.endPacing()
     }
 
     /// Runs `block`, on a global queue, once the launch gate is open.
@@ -398,111 +354,16 @@ extension DirectEventProcessor {
         queueDelivery(nil, paced: true)
     }
 
-    /// Ends the pacing of a delivery under way, which then sends the rest back to back, or, offline, stops.
-    private func endPacing() {
-        let turn = deliveryLock.withLock { () -> PacedTurn? in
-            defer {
-                isPacedDelivery = false
-                waitingTurn = nil
-            }
-            return waitingTurn
-        }
-        if let turn {
-            DispatchQueue.global().async(execute: turn.proceed)
-        }
-    }
-
-    /// Holds the next batch of the delivery running until the gap has passed since the last one was answered, where the
-    /// delivery is paced and has posted before, and then calls `proceed` on a global queue; or sooner, once the pacing
-    /// ends.
-    ///
-    /// - Returns: whether it holds the batch; false where the batch may go now, and `proceed` is not called.
-    private func awaitPacedTurn(then proceed: @escaping () -> Void) -> Bool {
-        let turn = PacedTurn(proceed)
-        // Under the same lock that ends the pacing, so that the pacing cannot end between the check and the wait.
-        guard let gapEnds = deliveryLock.withLock({ () -> DispatchTime? in
-            guard isPacedDelivery, let answered = lastPacedPostAnswered
-            else { return nil }
-            waitingTurn = turn
-            return answered + pacing.gap
-        })
-        else { return false }
-        DispatchQueue.global().asyncAfter(deadline: gapEnds) { [weak self] in
-            guard let self
-            else { return }
-            let taken = self.deliveryLock.withLock { () -> Bool in
-                guard self.waitingTurn === turn
-                else { return false }
-                self.waitingTurn = nil
-                return true
-            }
-            if taken {
-                turn.proceed()
-            }
-        }
-        return true
-    }
-
-    /// Queues a delivery, or joins one that is queued and has not started.
-    ///
-    /// A delivery that has not started yet will send everything recorded before it starts, which includes this
-    /// caller's events, so joining it is as good as queueing another. Without this, flushes arriving faster than a
-    /// post completes each queue their own, and the one that matters -- the flush at shutdown -- waits behind all of
-    /// them.
-    ///
-    /// A delivery that has already started is not joined. It has closed and taken its batches, so it cannot speak for
-    /// anything recorded since. Nor does another start beside it: the one queued waits until the running one has an
-    /// answer, then sends what that one left behind as well as what was recorded since, so its caller hears `true`
-    /// only if both got out.
-    ///
-    /// - Parameters:
-    ///   - closing: whether it is `flushAtClose()`'s, which a queued delivery it joins becomes.
-    ///   - paced: whether nobody asked for it, so that it gives way to flag requests. One that is not ends the pacing of
-    ///     the delivery running, so that it is not held behind it.
+    /// As `DeliveryScheduler.queue(_:closing:paced:)`, starting the delivery where nothing is running.
     private func queueDelivery(_ completion: FlushOutcomeClosure?, closing: Bool = false, paced: Bool = false) {
-        if !paced {
-            endPacing()
-        }
-        deliveryLock.lock()
-        if queuedDelivery != nil {
-            if let completion {
-                queuedDelivery?.append(completion)
-            }
-            queuedDeliveryIsClosing = queuedDeliveryIsClosing || closing
-            queuedDeliveryIsPaced = queuedDeliveryIsPaced && paced
-            deliveryLock.unlock()
-            return
-        }
-        queuedDelivery = completion.map { [$0] } ?? []
-        queuedDeliveryIsClosing = closing
-        queuedDeliveryIsPaced = paced
-        let starts = !isDelivering
-        isDelivering = true
-        deliveryLock.unlock()
-
-        if starts {
+        if deliveryScheduler.queue(completion, closing: closing, paced: paced) {
             deliveryQueue.async { self.runDelivery() }
         }
     }
 
     private func runDelivery() {
-        // Requests arriving from here on need a delivery of their own: this one is about to close and take its
-        // batches, and what it takes is all it can speak for.
-        deliveryLock.lock()
-        let waiters = queuedDelivery ?? []
-        queuedDelivery = nil
-        let closing = queuedDeliveryIsClosing
-        queuedDeliveryIsClosing = false
-        isClosingDelivery = closing
-        isPacedDelivery = queuedDeliveryIsPaced && givesWayToFlags && !closing
-        queuedDeliveryIsPaced = false
-        lastPacedPostAnswered = nil
-        #if DEBUG
-            deliveryRunCount += 1
-        #endif
-        deliveryLock.unlock()
-
-        reportEvents(closing: closing) { delivered, lossMark in
+        let (run, waiters) = deliveryScheduler.begin()
+        reportEvents(run) { delivered, lossMark in
             // Taken once for the delivery rather than once per waiter, so that every caller joined to it hears about
             // a loss instead of only whichever happened to be answered first. Taken before the next delivery starts,
             // which could otherwise answer first and take this one's loss with its own.
@@ -524,20 +385,14 @@ extension DirectEventProcessor {
 
     /// Ends the delivery that just had its answer, starting the one queued behind it if there is one.
     private func startQueuedDeliveryOrStop() {
-        let next = deliveryLock.withLock { () -> Bool in
-            isClosingDelivery = false
-            isPacedDelivery = false
-            isDelivering = queuedDelivery != nil
-            return isDelivering
-        }
-        if next {
+        if deliveryScheduler.finish() {
             deliveryQueue.async { self.runDelivery() }
         }
     }
 
-    /// - Parameter closing: whether it is `flushAtClose()`'s, which was online when it was asked for.
-    private func reportEvents(closing: Bool = false, completion: ((_ delivered: Bool, _ lossMark: UInt64) -> Void)?) {
-        guard closing || isOnline
+    /// - Parameter run: the delivery; a closing one was online when it was asked for.
+    private func reportEvents(_ run: DeliveryRun, completion: ((_ delivered: Bool, _ lossMark: UInt64) -> Void)?) {
+        guard run.isClosing || isOnline
         else {
             os_log("%s aborted. DirectEventProcessor is offline", log: service.config.logger, type: .debug, typeName(and: #function))
             reportSyncComplete(.isOffline)
@@ -562,7 +417,7 @@ extension DirectEventProcessor {
         // Waited on for the answer, but not before closing.
         waitOn(waiting.waitingOn, answer)
 
-        deliverOwn(waiting.deliverable, lostAnything: waiting.lostAnything) { waitingOutcome in
+        deliverOwn(waiting.deliverable, run, lostAnything: waiting.lostAnything) { waitingOutcome in
             guard waitingOutcome != .blocked
             else {
                 // Committed all the same, since a delivery is a commit point. Nothing was closed, so the caller's events
@@ -591,21 +446,21 @@ extension DirectEventProcessor {
                 answer.report(max(waitingOutcome, newOutcome))
             }
             self.waitOn(new.waitingOn, newAnswer)
-            self.deliverOwn(new.deliverable, lostAnything: new.lostAnything, newAnswer.report)
+            self.deliverOwn(new.deliverable, run, lostAnything: new.lostAnything, newAnswer.report)
         }
     }
 
     /// Delivers the batches this delivery claimed, releasing the claims once it has an outcome.
     ///
     /// - Parameter lostAnything: whether the listing that found them found other batches deleted unsent.
-    private func deliverOwn(_ batches: [EventBatch], lostAnything: Bool, _ completion: @escaping (PassOutcome) -> Void) {
+    private func deliverOwn(_ batches: [EventBatch], _ run: DeliveryRun, lostAnything: Bool, _ completion: @escaping (PassOutcome) -> Void) {
         guard !batches.isEmpty
         else {
             completion(lostAnything ? .lost : .delivered)
             return
         }
         os_log("%s starting", log: service.config.logger, type: .debug, typeName(and: #function))
-        deliver(batches, lostAnything: lostAnything, retried: false) { outcome in
+        deliver(batches, run, lostAnything: lostAnything, retried: false) { outcome in
             self.releaseClaim(on: batches, delivered: outcome == .delivered)
             completion(outcome)
         }
@@ -736,7 +591,7 @@ extension DirectEventProcessor {
     /// A paced delivery holds each batch after its first until a gap has passed since the last one was answered. A
     /// backlog this sends unasked otherwise takes the network for as long as it lasts, an `identify`'s flag request
     /// included. `hadTurn` is whether the first batch has been held already.
-    private func deliver(_ batches: [EventBatch], lostAnything: Bool, retried: Bool, hadTurn: Bool = false, _ completion: @escaping (PassOutcome) -> Void) {
+    private func deliver(_ batches: [EventBatch], _ run: DeliveryRun, lostAnything: Bool, retried: Bool, hadTurn: Bool = false, _ completion: @escaping (PassOutcome) -> Void) {
         var remaining = batches
         guard !remaining.isEmpty
         else {
@@ -744,26 +599,26 @@ extension DirectEventProcessor {
             return
         }
 
-        if !hadTurn, awaitPacedTurn(then: {
-            self.deliver(batches, lostAnything: lostAnything, retried: retried, hadTurn: true, completion)
+        if !hadTurn, run.awaitTurn(then: {
+            self.deliver(batches, run, lostAnything: lostAnything, retried: retried, hadTurn: true, completion)
         }) {
             return
         }
 
-        guard mayPost()
+        guard mayPost(run)
         else {
             completion(.blocked)
             return
         }
 
-        let wait = deliveryLock.withLock { isClosingDelivery } ? 0 : retryState.remainingWait
+        let wait = run.isClosing ? 0 : retryState.remainingWait
         guard wait <= 0
         else {
             // Not an attempt, so it moves nothing in the backoff. A wait no longer than a retry's is sat out, as this
             // pass's retry; a longer one ends the pass.
             if !retried && wait <= retryState.initialDelay {
                 DispatchQueue.global().asyncAfter(deadline: .now() + wait) {
-                    self.deliver(batches, lostAnything: lostAnything, retried: true, completion)
+                    self.deliver(batches, run, lostAnything: lostAnything, retried: true, completion)
                 }
             } else {
                 scheduleDeliveryWhenWaitEnds()
@@ -782,13 +637,13 @@ extension DirectEventProcessor {
             os_log("%s dropping %d stored event(s) this version cannot read", log: service.config.logger, type: .error, typeName(and: #function), batch.eventCount)
             store.remove(batch)
             reportBatchLost(batch)
-            deliver(remaining, lostAnything: true, retried: retried, completion)
+            deliver(remaining, run, lostAnything: true, retried: retried, completion)
             return
         } catch is VanishedBatch {
             os_log("%s %d stored event(s) were deleted before they could be sent", log: service.config.logger, type: .error, typeName(and: #function), batch.eventCount)
             store.remove(batch)
             reportBatchLost(batch)
-            deliver(remaining, lostAnything: true, retried: retried, completion)
+            deliver(remaining, run, lostAnything: true, retried: retried, completion)
             return
         } catch {
             // Kept: the batch is still there, and a read that failed may not fail next time.
@@ -802,7 +657,7 @@ extension DirectEventProcessor {
             // Delivered by another process or store, or holding no events. Either way nothing is lost and there is
             // nothing to keep.
             store.remove(batch)
-            deliver(remaining, lostAnything: lostAnything, retried: retried, completion)
+            deliver(remaining, run, lostAnything: lostAnything, retried: retried, completion)
             return
         }
 
@@ -810,36 +665,37 @@ extension DirectEventProcessor {
         // the batch is removed rather than now, since one kept for a retry is read, and found short, again.
         let leftOut = max(0, batch.eventCount - payload.eventCount)
         service.diagnosticCache?.recordEventsInLastBatch(eventsInLastBatch: payload.eventCount)
-        post(batch, payload, leftOut: leftOut, remaining: remaining, lostAnything: lostAnything, retried: retried, completion)
+        post(batch, payload, run, leftOut: leftOut, remaining: remaining, lostAnything: lostAnything, retried: retried, completion)
     }
 
     /// Whether the delivery running may post: online, or `flushAtClose()`'s. Going offline stops a delivery before its
     /// next post, its retry's included, and leaves what it has not sent for a later one.
-    private func mayPost() -> Bool {
-        deliveryLock.withLock { isClosingDelivery } || isOnline
+    private func mayPost(_ run: DeliveryRun) -> Bool {
+        run.isClosing || isOnline
     }
 
     /// Posts a batch already read, then goes on to the rest. Requires the backoff to allow a post.
     // swiftlint:disable:next function_parameter_count
     private func post(_ batch: EventBatch,
                       _ payload: BatchPayload,
+                      _ run: DeliveryRun,
                       leftOut: Int,
                       remaining: [EventBatch],
                       lostAnything: Bool,
                       retried: Bool,
                       _ completion: @escaping (PassOutcome) -> Void) {
-        publish(batch, payload) { outcome in
+        publish(batch, payload, run) { outcome in
             switch outcome {
             case .accepted:
                 _ = self.countBadRequest(batch, statusCode: nil)
                 guard leftOut > 0
                 else {
-                    self.deliver(remaining, lostAnything: lostAnything, retried: retried, completion)
+                    self.deliver(remaining, run, lostAnything: lostAnything, retried: retried, completion)
                     return
                 }
                 os_log("%s dropped %d damaged stored event(s) from a batch it delivered", log: self.service.config.logger, type: .error, self.typeName(and: #function), leftOut)
                 self.reportStoredEventsLost(leftOut)
-                self.deliver(remaining, lostAnything: true, retried: retried, completion)
+                self.deliver(remaining, run, lostAnything: true, retried: retried, completion)
             case .failed(let failure):
                 let wait = self.retryState.recordFailure(unexpected: failure.unexpected, retryAfter: failure.retryAfter)
                 if self.countBadRequest(batch, statusCode: failure.statusCode) >= DirectEventProcessor.badRequestsBeforeDropping {
@@ -848,7 +704,7 @@ extension DirectEventProcessor {
                     self.store.remove(batch)
                     self.reportBatchLost(batch)
                     self.reportSyncComplete(failure.error)
-                    self.deliver(remaining, lostAnything: true, retried: retried, completion)
+                    self.deliver(remaining, run, lostAnything: true, retried: retried, completion)
                     return
                 }
                 guard !retried, wait <= self.retryState.initialDelay
@@ -862,7 +718,7 @@ extension DirectEventProcessor {
                 os_log("%s Retrying event post after %.1fs", log: self.service.config.logger, type: .debug, self.typeName(and: #function), wait)
                 DispatchQueue.global().asyncAfter(deadline: .now() + wait) {
                     // Another delivery's failure may have set a longer wait meanwhile, or the reporter gone offline.
-                    guard self.mayPost()
+                    guard self.mayPost(run)
                     else {
                         self.reportSyncComplete(failure.error)
                         completion(.blocked)
@@ -875,7 +731,7 @@ extension DirectEventProcessor {
                         completion(.blocked)
                         return
                     }
-                    self.post(batch, payload, leftOut: leftOut, remaining: remaining, lostAnything: lostAnything, retried: true, completion)
+                    self.post(batch, payload, run, leftOut: leftOut, remaining: remaining, lostAnything: lostAnything, retried: true, completion)
                 }
             }
         }
@@ -908,18 +764,14 @@ extension DirectEventProcessor {
         let wait = retryState.remainingWait
         guard wait > 0
         else { return }
-        let alreadyScheduled = deliveryLock.withLock { () -> Bool in
-            defer { isRetryScheduled = true }
-            return isRetryScheduled
-        }
-        guard !alreadyScheduled
+        guard deliveryScheduler.claimRetry()
         else { return }
 
         os_log("%s Will retry posting events in %.1fs after a failure", log: service.config.logger, type: .debug, typeName(and: #function), wait)
         DispatchQueue.global().asyncAfter(deadline: .now() + wait) { [weak self] in
             guard let self
             else { return }
-            self.deliveryLock.withLock { self.isRetryScheduled = false }
+            self.deliveryScheduler.retryDue()
             self.queueDelivery(nil)
         }
     }
@@ -927,15 +779,12 @@ extension DirectEventProcessor {
     /// Sends one batch and acts on what LaunchDarkly made of it, before handing the outcome on.
     private func publish(_ batch: EventBatch,
                          _ payload: BatchPayload,
+                         _ run: DeliveryRun,
                          _ completion: @escaping (AnalyticsEventSender.Outcome) -> Void) {
         store.startedSending(batch)
         // The store is settled before observers are told, so that one looking at it on hearing the outcome sees it.
         sender.send(payload.body, payloadId: batch.payloadId, eventCount: payload.eventCount) { outcome in
-            self.deliveryLock.withLock {
-                if self.isPacedDelivery {
-                    self.lastPacedPostAnswered = .now()
-                }
-            }
+            run.postAnswered()
             switch outcome {
             case .accepted(let serverTime):
                 self.retryState.recordSuccess()
@@ -987,16 +836,12 @@ extension DirectEventProcessor: TypeIdentifying { }
 
         /// Callers waiting on the queued delivery.
         var queuedDeliveryWaiterCount: Int {
-            deliveryLock.lock()
-            defer { deliveryLock.unlock() }
-            return queuedDelivery?.count ?? 0
+            deliveryScheduler.queuedWaiterCount
         }
 
         /// Deliveries started, counting one for a run of flushes that joined each other.
         var startedDeliveryCount: Int {
-            deliveryLock.lock()
-            defer { deliveryLock.unlock() }
-            return deliveryRunCount
+            deliveryScheduler.startedCount
         }
 
         /// As `EventCommitter.withContextSummarizer(_:)`.
