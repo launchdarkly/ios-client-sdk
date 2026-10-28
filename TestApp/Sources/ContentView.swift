@@ -377,7 +377,8 @@ private struct OversizedPostButton: View {
     @State private var results: BenchmarkButton.Results?
 
     var body: some View {
-        ActionButton("Post 20 MB", tint: .purple, id: "oversized_post_button") { run() }
+        // Production answers a body this size with 413 Request Entity Too Large.
+        ActionButton("Post 20 MB", detail: "Expected: HTTP 413", tint: .purple, id: "oversized_post_button") { run() }
             .disabled(isRunning || controller.configuration.isMissingMobileKey)
             .sheet(item: $results) { BenchmarkResultsView(results: $0) }
     }
@@ -460,19 +461,29 @@ private struct ButtonRow<Content: View>: View {
 /// fire together.
 private struct ActionButton: View {
     let title: String
+    let detail: String?
     let tint: Color
     let id: String
     let action: () -> Void
 
-    init(_ title: String, tint: Color = .accentColor, id: String, action: @escaping () -> Void) {
+    init(_ title: String, detail: String? = nil, tint: Color = .accentColor, id: String,
+         action: @escaping () -> Void) {
         self.title = title
+        self.detail = detail
         self.tint = tint
         self.id = id
         self.action = action
     }
 
     var body: some View {
-        Button(title, action: action)
+        Button(action: action) {
+            VStack(spacing: 1) {
+                Text(title)
+                if let detail {
+                    Text(detail).font(.caption2)
+                }
+            }
+        }
             .buttonStyle(.borderedProminent)
             .tint(tint)
             .smallControl()
