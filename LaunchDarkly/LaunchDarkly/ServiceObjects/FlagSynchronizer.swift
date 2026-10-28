@@ -154,13 +154,18 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         }
     }
 
+    /// Without a listener, which is where events do not give way to flags, nothing is tracked.
     private func flagRequestStarted() {
+        guard let flagRequests
+        else { return }
         flagRequestLock.withLock { flagRequestInFlight = true }
-        flagRequests?.flagRequestStarted()
+        flagRequests.flagRequestStarted()
     }
 
     /// Tells the listener how the first request ended, once; any answer after it, and every later poll, says nothing.
     private func flagRequestSettled(_ outcome: FlagRequestOutcome) {
+        guard flagRequests != nil
+        else { return }
         let wasInFlight = flagRequestLock.withLock { () -> Bool in
             defer { flagRequestInFlight = false }
             return flagRequestInFlight

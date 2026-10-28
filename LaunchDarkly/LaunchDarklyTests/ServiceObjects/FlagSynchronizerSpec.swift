@@ -46,6 +46,7 @@ final class FlagSynchronizerSpec: QuickSpec {
 
     /// Records what a synchronizer tells the event processor about its flag requests.
     final class FlagRequestRecorder: FlagRequestListening {
+        let givesWayToFlags = true
         private let lock = NSLock()
         private var _reports: [String] = []
         var reports: [String] {

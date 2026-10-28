@@ -67,11 +67,13 @@ class DirectEventProcessor: EventProcessor, FlagRequestListening {
     /// Its summarizer is guarded by `recordLock`, and its encoders are reached only under `commitLock`.
     let eventBuffer: OutboundEventBuffer
 
-    private let flagTraffic = FlagTraffic()
     private let flagTimings: FlagTraffic.Timings
     /// Whether events give way to flag values: only where they persist, like the rest of what persistence brings.
-    /// Without it there is no previous run to hold back.
-    private let givesWayToFlags: Bool
+    /// Without it there is no previous run to hold back, and delivery is what it was before persistence: no launch
+    /// gate, no pacing, and nothing heard about flag requests.
+    let givesWayToFlags: Bool
+    /// Only where events give way to flags; nil otherwise, so that nothing of it runs.
+    private let flagTraffic: FlagTraffic?
 
     // MARK: Guarded by commitLock
 
@@ -248,11 +250,15 @@ class DirectEventProcessor: EventProcessor, FlagRequestListening {
         self.store = eventStore
         self.flagTimings = flagTimings
         self.givesWayToFlags = eventStore.isPersisting
+        self.flagTraffic = eventStore.isPersisting ? FlagTraffic() : nil
         self.launchGateOpen = !eventStore.isPersisting
 
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
         // doing it on the caller's thread would put file I/O in the way of the client starting up. Below the queue's
         // own priority, and so below the flag requests, which matter more at launch than what a previous run left.
+        // Only where events persist, since memory holds nothing from a previous run.
+        guard eventStore.isPersisting
+        else { return }
         let store = eventStore
         deliveryQueue.async(qos: .utility, flags: .enforceQoS) { [weak self] in
             store.preparePayloadsFromInterruptedLogs()
@@ -588,10 +594,12 @@ extension DirectEventProcessor {
     }
 
     func flagRequestStarted() {
-        flagTraffic.started()
+        flagTraffic?.started()
     }
 
     func flagRequestSettled(_ outcome: FlagRequestOutcome) {
+        guard let flagTraffic
+        else { return }
         flagTraffic.settled(outcome)
         deliveryQueue.async { [weak self] in self?.checkLaunchGate() }
     }
@@ -615,7 +623,7 @@ extension DirectEventProcessor {
     /// Opens the launch gate if it may open now, and otherwise looks again when it next could: at the floor, then at
     /// the cap, or sooner once the flag request settles. On `deliveryQueue`.
     private func checkLaunchGate() {
-        guard !launchGateOpen, let wentOnlineAt
+        guard !launchGateOpen, let wentOnlineAt, let flagTraffic
         else { return }
         let sinceOnline = TimeInterval(DispatchTime.now().uptimeNanoseconds - wentOnlineAt.uptimeNanoseconds) / 1_000_000_000
         guard sinceOnline >= flagTimings.launchFloor
@@ -709,7 +717,7 @@ extension DirectEventProcessor {
             return isPacedDelivery
         }
         if wasPaced {
-            flagTraffic.wake()
+            flagTraffic?.wake()
         }
     }
 
@@ -1035,7 +1043,7 @@ extension DirectEventProcessor {
             return
         }
 
-        if !hadTurn, let gapEnds = pacedTurn() {
+        if !hadTurn, let flagTraffic, let gapEnds = pacedTurn() {
             let isStopped = { [weak self] () -> Bool in
                 guard let self
                 else { return true }

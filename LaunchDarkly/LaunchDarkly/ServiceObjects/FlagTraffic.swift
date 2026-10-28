@@ -1,8 +1,10 @@
 import Foundation
 
 /// Hears when the flag synchronizer's first request after going online starts and how it ended, so that events can
-/// give way to it.
+/// give way to it. The client connects the two only where `givesWayToFlags`; otherwise the synchronizer tells nothing.
 protocol FlagRequestListening: AnyObject {
+    /// Whether events give way to flag values, and so want to hear about flag requests. Fixed for its life.
+    var givesWayToFlags: Bool { get }
     func flagRequestStarted()
     func flagRequestSettled(_ outcome: FlagRequestOutcome)
 }

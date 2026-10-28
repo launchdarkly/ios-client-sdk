@@ -509,6 +509,24 @@ class DirectEventProcessorSpec: QuickSpec {
 
                 expect(opened.withLock { hasOpened }).toEventually(beTrue(), timeout: .seconds(2))
             }
+
+            it("holds a periodic delivery for a flag request in flight only where events persist") {
+                testContext = TestContext(eventFlushInterval: 0.2)
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
+                                                    flagTimings: FlagTraffic.Timings(launchFloor: 0, launchCap: 0, gap: 0, flagRequestWait: 10))
+                nextRun = reporter
+                expect(reporter.givesWayToFlags) == self.persists
+                reporter.flagRequestStarted()
+                reporter.isOnline = true
+                reporter.record(CustomEvent(key: "an-event", context: testContext.context))
+
+                if self.persists {
+                    Thread.sleep(forTimeInterval: 1)
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 0
+                } else {
+                    expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: .seconds(2))
+                }
+            }
         }
     }
 

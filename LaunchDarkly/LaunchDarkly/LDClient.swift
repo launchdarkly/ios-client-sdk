@@ -1106,15 +1106,19 @@ extension LDClient: TypeIdentifying { }
 
 extension LDClient {
     /// Has the flag synchronizer tell the event processor about its flag requests, so that events can give way to them.
+    /// Only where they do: otherwise the synchronizer tells nothing.
     fileprivate func reportFlagRequests() {
-        (flagSynchronizer as? FlagSynchronizer)?.flagRequests = eventProcessor as? FlagRequestListening
+        guard let listener = eventProcessor as? FlagRequestListening, listener.givesWayToFlags
+        else { return }
+        (flagSynchronizer as? FlagSynchronizer)?.flagRequests = listener
     }
 
     /// Has events give way to flag requests: the synchronizer reports its requests to the event processor, and the
-    /// diagnostic init event waits for the processor's launch gate as a previous run's events do.
+    /// diagnostic init event waits for the processor's launch gate as a previous run's events do. Where events do not
+    /// persist neither happens, and the init event goes out as it did before persistence.
     fileprivate func giveFlagRequestsTheNetworkFirst() {
         reportFlagRequests()
-        if let eventProcessor = eventProcessor as? DirectEventProcessor {
+        if let eventProcessor = eventProcessor as? DirectEventProcessor, eventProcessor.givesWayToFlags {
             (diagnosticReporter as? DiagnosticReporter)?.sendsInitAfter = eventProcessor.whenLaunchGateOpens
         }
     }
