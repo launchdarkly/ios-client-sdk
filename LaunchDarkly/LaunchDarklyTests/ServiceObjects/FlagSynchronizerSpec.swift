@@ -41,6 +41,87 @@ final class FlagSynchronizerSpec: QuickSpec {
         pollingTimerFiresSpec()
         pollingBackoffSpec()
         flagRequestSpec()
+        flagRequestReportingSpec()
+    }
+
+    /// Records what a synchronizer tells the event processor about its flag requests.
+    final class FlagRequestRecorder: FlagRequestListening {
+        private let lock = NSLock()
+        private var _reports: [String] = []
+        var reports: [String] {
+            lock.lock()
+            defer { lock.unlock() }
+            return _reports
+        }
+
+        func flagRequestStarted() {
+            record("started")
+        }
+
+        func flagRequestSettled(_ outcome: FlagRequestOutcome) {
+            record("settled \(outcome)")
+        }
+
+        private func record(_ report: String) {
+            lock.lock()
+            defer { lock.unlock() }
+            _reports.append(report)
+        }
+    }
+
+    func flagRequestReportingSpec() {
+        describe("reporting flag requests") {
+            it("reports the stream starting, and that its first payload loaded flags, once") {
+                let testContext = TestContext(streamingMode: .streaming, useReport: false)
+                let recorder = FlagRequestRecorder()
+                testContext.flagSynchronizer.flagRequests = recorder
+
+                testContext.flagSynchronizer.isOnline = true
+                expect(recorder.reports) == ["started"]
+                testContext.flagSynchronizer.testStreamOnMessage(event: "put", messageEvent: MessageEvent(data: "{\"flag1\": {}}"))
+                testContext.flagSynchronizer.testStreamOnMessage(event: "put", messageEvent: MessageEvent(data: "{\"flag1\": {}}"))
+
+                expect(recorder.reports) == ["started", "settled loaded"]
+                testContext.flagSynchronizer.isOnline = false
+                expect(recorder.reports) == ["started", "settled loaded"]
+            }
+
+            it("reports a request going offline before it answered as stopped") {
+                let testContext = TestContext(streamingMode: .streaming, useReport: false)
+                let recorder = FlagRequestRecorder()
+                testContext.flagSynchronizer.flagRequests = recorder
+
+                testContext.flagSynchronizer.isOnline = true
+                testContext.flagSynchronizer.isOnline = false
+
+                expect(recorder.reports) == ["started", "settled stopped"]
+            }
+
+            it("reports the first poll and that it failed") {
+                let testContext = TestContext(streamingMode: .polling, useReport: false)
+                testContext.serviceMock.stubFlagResponse(statusCode: HTTPURLResponse.StatusCodes.internalServerError, responseOnly: true)
+                let recorder = FlagRequestRecorder()
+                testContext.flagSynchronizer.flagRequests = recorder
+
+                testContext.flagSynchronizer.isOnline = true
+
+                expect(recorder.reports).toEventually(equal(["started", "settled failed"]))
+                testContext.flagSynchronizer.isOnline = false
+            }
+
+            it("reports nothing for a poll a fresh cache puts off") {
+                let serviceMock = DarklyServiceMock()
+                let flagSynchronizer = FlagSynchronizer(streamingMode: .polling, pollingInterval: 60, useReport: false,
+                                                        lastUpdated: Date(), service: serviceMock, onSyncComplete: nil)
+                let recorder = FlagRequestRecorder()
+                flagSynchronizer.flagRequests = recorder
+
+                flagSynchronizer.isOnline = true
+                flagSynchronizer.isOnline = false
+
+                expect(recorder.reports) == []
+            }
+        }
     }
 
     func initSpec() {

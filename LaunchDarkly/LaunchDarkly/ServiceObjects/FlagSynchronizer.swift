@@ -99,6 +99,14 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
     private var lastCachedRequestedTime: Date?
 
     private var syncQueue = DispatchQueue(label: Constants.queueName, qos: .utility)
+
+    /// Told when the first flag request after going online starts and how it ends, so that events can give way to it.
+    /// Set once the client exists, as `onSyncComplete` is.
+    weak var flagRequests: FlagRequestListening?
+    private let flagRequestLock = UnfairLock()
+    /// Whether that request has started and not yet been told settled. Only to be used while holding `flagRequestLock`.
+    private var flagRequestInFlight = false
+
     private var eventSourceStarted: Date?
     // Only accessed on the event source callback queue.
     private var connectedAt: Date?
@@ -127,14 +135,38 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             switch streamingMode {
             case .streaming:
                 stopPolling()
+                if eventSource == nil {
+                    flagRequestStarted()
+                }
                 startEventSource()
             case .polling:
                 stopEventSource()
+                // A poll a fresh cache puts off makes no request now, and events do not wait for the later one.
+                if flagRequestTimer == nil && firstPollDelay == 0 {
+                    flagRequestStarted()
+                }
                 startPolling()
             }
         } else {
             stopEventSource()
             stopPolling()
+            flagRequestSettled(.stopped)
+        }
+    }
+
+    private func flagRequestStarted() {
+        flagRequestLock.withLock { flagRequestInFlight = true }
+        flagRequests?.flagRequestStarted()
+    }
+
+    /// Tells the listener how the first request ended, once; any answer after it, and every later poll, says nothing.
+    private func flagRequestSettled(_ outcome: FlagRequestOutcome) {
+        let wasInFlight = flagRequestLock.withLock { () -> Bool in
+            defer { flagRequestInFlight = false }
+            return flagRequestInFlight
+        }
+        if wasInFlight {
+            flagRequests?.flagRequestSettled(outcome)
         }
     }
 
@@ -192,10 +224,8 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             return
         }
 
-        var initialDelay: TimeInterval = 0
-        if let lastTime = self.lastCachedRequestedTime {
-            // The cache is still fresh, so delay the first poll until the cached flags would go stale.
-            initialDelay = max(0, lastTime.addingTimeInterval(pollingInterval).timeIntervalSinceNow)
+        let initialDelay = firstPollDelay
+        if self.lastCachedRequestedTime != nil {
             // We loaded cached flags, so report completion immediately rather than blocking on the first poll.
             syncQueue.async { [self] in
                 guard isOnline
@@ -205,6 +235,13 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         }
         scheduleNextPoll(after: initialDelay)
         os_log("%s", log: service.config.logger, type: .debug, typeName(and: #function))
+    }
+
+    /// How long the first poll waits: while the cache is still fresh, until the cached flags would go stale.
+    private var firstPollDelay: TimeInterval {
+        guard let lastTime = lastCachedRequestedTime
+        else { return 0 }
+        return max(0, lastTime.addingTimeInterval(pollingInterval).timeIntervalSinceNow)
     }
 
     private func stopPolling() {
@@ -286,7 +323,10 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         }
         var failed = false
         var unexpected = false
-        defer { pollDidComplete(failed: failed, unexpected: unexpected) }
+        defer {
+            flagRequestSettled(failed ? .failed : .loaded)
+            pollDidComplete(failed: failed, unexpected: unexpected)
+        }
 
         if let serviceResponseError = serviceResponse.error {
             os_log("%s error: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: serviceResponseError))
@@ -354,6 +394,7 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
         streamingRetry.recordFailure(unexpected: SynchronizingError.streamError(error).isTerminal)
         let delay = streamingRetry.nextDelay()
         os_log("%s stream error; reconnecting in %.3fs. error: %s", log: service.config.logger, type: .debug, typeName(and: #function), delay, String(describing: error))
+        flagRequestSettled(.failed)
         reportSyncComplete(.error(.streamError(error)))
 
         // Tear down the failed connection now, then reconnect after the backoff.
@@ -416,10 +457,12 @@ class FlagSynchronizer: LDFlagSynchronizing, EventHandler {
             guard let data = messageEvent.data.data(using: .utf8),
                   let flagCollection = try? JSONDecoder().decode(FeatureFlagCollection.self, from: data)
             else {
+                flagRequestSettled(.failed)
                 reportDataError(messageEvent.data.data(using: .utf8))
                 return
             }
 
+            flagRequestSettled(.loaded)
             // NOTE: If you are adding e-tag support through the streaming
             // connection, make sure you read the documentation on the
             // FeatureFlagCaching.saveCachedData method.
