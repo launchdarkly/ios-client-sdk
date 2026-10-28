@@ -30,9 +30,10 @@ struct EventTally: Equatable {
 /// The lock is handed down so that each call can check it is held, rather than each level taking a lock of its own
 /// that would have to be ordered against the others.
 final class EventDirectory {
-    /// Names a log that has been closed off for delivery. The rest of the name is the batch's payload ID and how many
-    /// events are in it, `ready-<payloadId>.<count>`. Anything more a batch needs to say belongs in a frame type readers
-    /// skip, rather than in the name.
+    /// Names a log that has been closed off for delivery, whichever version named it. What follows is the version of the
+    /// rest of the name, `batchNameVersion`, then the batch's payload ID and how many events are in it:
+    /// `ready-v1-<payloadId>.<count>`. Anything more a batch needs to say belongs in a frame type readers skip, rather
+    /// than in the name.
     ///
     /// The count is in the name so that listing a batch this process did not close costs a directory entry rather than
     /// a read of the whole file. That is what every batch is at startup: the ones a previous run left behind, and the
@@ -41,6 +42,13 @@ final class EventDirectory {
     ///
     /// A batch is never appended to once it is closed, so the count is as good as the file is.
     private static let batchPrefix = "ready-"
+    /// The version of how the rest of a batch's name reads, so that a later version may change it without this one
+    /// misreading the count. A batch another version named is never listed, counted or sent: reading it is that
+    /// version's to do. Expiry still removes it, as it does any batch, so that a file this version does not read cannot
+    /// stay on the device for good. A payload ID is a UUID, which cannot start with a `v`.
+    private static let batchNameVersion = "v1-"
+    /// Names a batch this version named, and so reads.
+    private static let ownBatchPrefix = batchPrefix + batchNameVersion
     private static let nameFieldSeparator: Character = "."
     /// Names a log whose events are not yet in a batch: one its owner is appending to, or one left by an owner that is
     /// gone, for recovery to close off. The rest of the name is the UUID it was opened under.
@@ -238,18 +246,33 @@ final class EventDirectory {
     /// Requires `ioLock`.
     private func newUrl(of payloadId: String, holding events: Int) -> URL {
         disk.directory.appendingPathComponent(
-            "\(EventDirectory.batchPrefix)\(payloadId)\(EventDirectory.nameFieldSeparator)\(events)")
+            "\(EventDirectory.ownBatchPrefix)\(payloadId)\(EventDirectory.nameFieldSeparator)\(events)")
     }
 
-    /// A batch as its name, `ready-<payloadId>.<count>`, gives it: each field by its position.
+    /// A name for a batch of events not yet counted, which the first listing to read it counts. Requires `ioLock`.
+    private func newUncountedUrl() -> URL {
+        disk.directory.appendingPathComponent("\(EventDirectory.ownBatchPrefix)\(UUID().uuidString)")
+    }
+
+    /// Whether a file is a batch this version named, and so reads.
+    private static func isOwnBatch(_ name: String) -> Bool {
+        name.hasPrefix(ownBatchPrefix)
+    }
+
+    /// Whether a file is a batch some other version named, which this one leaves to expiry.
+    private static func isAnotherVersionsBatch(_ name: String) -> Bool {
+        name.hasPrefix(batchPrefix) && !name.hasPrefix(ownBatchPrefix)
+    }
+
+    /// A batch this version named, `ready-v1-<payloadId>.<count>`, as its name gives it: each field by its position.
     ///
     /// Fields are split at `nameFieldSeparator`, which a payload ID never contains, so nothing about the count's own
-    /// characters is needed to tell it apart. Fields after it, which a later version might add, are ignored.
+    /// characters is needed to tell it apart. Fields after it are ignored.
     ///
     /// - Returns: the payload ID, and the count, which is nil where the name has none or it does not parse -- a batch a
     ///   recovery could not read, which is read once to count it.
     private static func parse(batchName name: String) -> (payloadId: String, events: Int?) {
-        let fields = name.dropFirst(batchPrefix.count)
+        let fields = name.dropFirst(ownBatchPrefix.count)
             .split(separator: nameFieldSeparator, omittingEmptySubsequences: false)
         let payloadId = String(fields[0])
         guard fields.count > 1, !fields[1].isEmpty, fields[1].allSatisfy({ $0.isASCII && $0.isNumber }),
@@ -376,7 +399,7 @@ final class EventDirectory {
         }
 
         let batches = contents
-            .filter { $0.lastPathComponent.hasPrefix(EventDirectory.batchPrefix) }
+            .filter { EventDirectory.isOwnBatch($0.lastPathComponent) }
             .compactMap { file -> (EventBatch, Date)? in
                 let (payloadId, counted) = EventDirectory.parse(batchName: file.lastPathComponent)
                 guard !isDeliveredButUndeleted(payloadId, at: file)
@@ -523,7 +546,7 @@ final class EventDirectory {
         let contents = (try? FileManager.default.contentsOfDirectory(at: disk.directory,
                                                                      includingPropertiesForKeys: nil,
                                                                      options: [.skipsHiddenFiles])) ?? []
-        var logs = contents.filter { $0.lastPathComponent.hasPrefix(EventDirectory.batchPrefix) }.sorted { $0.path < $1.path }
+        var logs = contents.filter { EventDirectory.isOwnBatch($0.lastPathComponent) }.sorted { $0.path < $1.path }
         if disk.log.exists {
             logs.append(disk.log.url)
         }
@@ -677,7 +700,7 @@ final class EventDirectory {
             // to.
             // Named without a count, which is what a batch whose events have never been counted is: the listing that
             // first manages to read it is what counts it.
-            let uncounted = disk.directory.appendingPathComponent("\(EventDirectory.batchPrefix)\(UUID().uuidString)")
+            let uncounted = newUncountedUrl()
             if (try? FileManager.default.moveItem(at: leftOpen, to: uncounted)) != nil {
                 os_log("%s could not read events from a previous run, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             } else {
@@ -730,7 +753,8 @@ extension EventDirectory {
     /// event.
     ///
     /// A batch whose request is out is left alone however old it is, whichever store or process sent it; see
-    /// `BatchLocks`.
+    /// `BatchLocks`. A batch another version named is deleted without being read or counted: it was never counted
+    /// against capacity, and its events were never this version's to lose.
     ///
     /// - Parameter sending: batches whose request is out from this store.
     /// - Returns: how many events were discarded, and how much this process had counted of the batches that left the
@@ -744,7 +768,9 @@ extension EventDirectory {
         var counted = EventTally()
         for file in contents where EventDirectory.listed(file).modified.map({ $0 < cutoff }) ?? false {
             let name = file.lastPathComponent
-            if name.hasPrefix(EventDirectory.batchPrefix) {
+            if EventDirectory.isAnotherVersionsBatch(name) {
+                _ = BatchLocks.deleteUnlessBeingSent(file)
+            } else if EventDirectory.isOwnBatch(name) {
                 let (payloadId, named) = EventDirectory.parse(batchName: name)
                 guard !sending.contains(payloadId), !deliveredButUndeleted.contains(payloadId),
                       !BatchLocks.isSentInThisProcess(file)
@@ -807,7 +833,9 @@ extension EventDirectory {
                                                                          options: [])) ?? []
             for file in contents where listed(file).modified.map({ $0 < cutoff }) ?? false {
                 let name = file.lastPathComponent
-                if name.hasPrefix(batchPrefix) {
+                if isAnotherVersionsBatch(name) {
+                    _ = BatchLocks.deleteUnlessBeingSent(file)
+                } else if isOwnBatch(name) {
                     guard !BatchLocks.isSentInThisProcess(file)
                     else { continue }
                     let held = parse(batchName: name).events ?? eventsReading(file)

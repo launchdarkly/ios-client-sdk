@@ -323,6 +323,15 @@ final class EventStoreSpec: QuickSpec {
         return renamed
     }
 
+    /// Renames a batch to a name a later version might give it, holding events this version would otherwise read.
+    @discardableResult
+    private static func asAnotherVersionsBatch(_ batch: URL) throws -> URL {
+        // Fields this version would take for a payload ID and a count, were the name its own.
+        let renamed = batch.deletingLastPathComponent().appendingPathComponent("ready-v2-7.\(UUID().uuidString)")
+        try FileManager.default.moveItem(at: batch, to: renamed)
+        return renamed
+    }
+
     /// What a process out of file descriptors gets for a file that is perfectly intact.
     private static func readFailing(while failing: @escaping () -> Bool) -> (URL) throws -> Data {
         { url in
@@ -770,7 +779,7 @@ final class EventStoreSpec: QuickSpec {
             }
 
             it("is listed by the count in its name, and unreadable") {
-                try EventStoreSpec.tooLargeFile("ready-\(UUID().uuidString).3", in: store)
+                try EventStoreSpec.tooLargeFile("ready-v1-\(UUID().uuidString).3", in: store)
 
                 let batches = store.pendingBatches()
                 expect(batches.map { $0.eventCount }) == [3]
@@ -778,7 +787,7 @@ final class EventStoreSpec: QuickSpec {
             }
 
             it("is listed as one event, the fewest it can hold, where its name has no count, and unreadable") {
-                try EventStoreSpec.tooLargeFile("ready-\(UUID().uuidString)", in: store)
+                try EventStoreSpec.tooLargeFile("ready-v1-\(UUID().uuidString)", in: store)
 
                 let batches = store.pendingBatches()
                 expect(batches.map { $0.eventCount }) == [1]
@@ -786,7 +795,7 @@ final class EventStoreSpec: QuickSpec {
             }
 
             it("is discarded as one event once it expires, where nothing counts it") {
-                let uncounted = try EventStoreSpec.tooLargeFile("ready-\(UUID().uuidString)", in: store)
+                let uncounted = try EventStoreSpec.tooLargeFile("ready-v1-\(UUID().uuidString)", in: store)
                 let log = try EventStoreSpec.tooLargeFile(EventDirectory.logPrefix + UUID().uuidString, in: store)
                 try EventStoreSpec.age(uncounted, byDays: 8)
                 try EventStoreSpec.age(log, byDays: 8)
@@ -875,7 +884,7 @@ final class EventStoreSpec: QuickSpec {
                 // Nothing appends to a batch once it is closed, so the count its name carries still holds and
                 // listing it has no reason to go to the disk. Damaging the file is how the test tells the two apart:
                 // a listing that read would refuse this batch.
-                let batchUrl = store.directory!.appendingPathComponent("ready-\(batch.payloadId).2")
+                let batchUrl = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId).2")
                 try Data("not an event log".utf8).write(to: batchUrl)
 
                 // The store that closed it and one that did not both count it from the name alone.
@@ -893,8 +902,8 @@ final class EventStoreSpec: QuickSpec {
 
                 // A name without a count, which is what a recovery that could not read a log leaves behind for a
                 // listing to count.
-                let counted = store.directory!.appendingPathComponent("ready-\(batch.payloadId).1")
-                let uncounted = store.directory!.appendingPathComponent("ready-\(batch.payloadId)")
+                let counted = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId).1")
+                let uncounted = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId)")
                 try FileManager.default.moveItem(at: counted, to: uncounted)
 
                 let reader = EventStoreSpec.reader(sharing: store)
@@ -911,8 +920,8 @@ final class EventStoreSpec: QuickSpec {
 
                 // Its last group fits an Int32 once the leading zeros are dropped.
                 let payloadId = "6F9619FF-8B86-D011-B42D-000012345678"
-                let counted = store.directory!.appendingPathComponent("ready-\(batch.payloadId).1")
-                let uncounted = store.directory!.appendingPathComponent("ready-\(payloadId)")
+                let counted = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId).1")
+                let uncounted = store.directory!.appendingPathComponent("ready-v1-\(payloadId)")
                 try FileManager.default.moveItem(at: counted, to: uncounted)
 
                 expect(EventStoreSpec.reader(sharing: store).pendingBatches()) == [EventBatch(payloadId: payloadId, eventCount: 1)]
@@ -924,8 +933,8 @@ final class EventStoreSpec: QuickSpec {
                 let batch = store.closeBatch()!
 
                 // What a later version might add, which this one has no use for.
-                let counted = store.directory!.appendingPathComponent("ready-\(batch.payloadId).2")
-                let extended = store.directory!.appendingPathComponent("ready-\(batch.payloadId).2.v2-something")
+                let counted = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId).2")
+                let extended = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId).2.v2-something")
                 try FileManager.default.moveItem(at: counted, to: extended)
 
                 expect(EventStoreSpec.reader(sharing: store).pendingBatches()) == [batch]
@@ -935,11 +944,32 @@ final class EventStoreSpec: QuickSpec {
                 _ = store.stage(EventStoreSpec.payload("only"))
                 let batch = store.closeBatch()!
 
-                let counted = store.directory!.appendingPathComponent("ready-\(batch.payloadId).1")
-                let unparseable = store.directory!.appendingPathComponent("ready-\(batch.payloadId).not-a-count")
+                let counted = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId).1")
+                let unparseable = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId).not-a-count")
                 try FileManager.default.moveItem(at: counted, to: unparseable)
 
                 expect(EventStoreSpec.reader(sharing: store).pendingBatches()) == [batch]
+            }
+
+            it("names a batch with the version of how its name reads") {
+                _ = store.stage(EventStoreSpec.payload("only"))
+                let batch = store.closeBatch()!
+
+                let named = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId).1")
+                expect(FileManager.default.fileExists(atPath: named.path)) == true
+            }
+
+            it("neither counts nor sends a batch another version named") {
+                _ = store.stage(EventStoreSpec.payload("first"))
+                _ = store.stage(EventStoreSpec.payload("second"))
+                _ = store.closeBatch()
+                let batch = try EventStoreSpec.asAnotherVersionsBatch(try EventStoreSpec.onlyBatchFile(in: store))
+
+                let reader = EventStoreSpec.reader(sharing: store)
+                expect(reader.pendingBatches()).to(beEmpty())
+                expect(reader.pendingEventCount) == 0
+                expect(reader.pendingEventPayloads()).to(beEmpty())
+                expect(FileManager.default.fileExists(atPath: batch.path)) == true
             }
 
             it("gives a batch its own payload id, so a retry is not read as a new delivery") {
@@ -1368,7 +1398,7 @@ final class EventStoreSpec: QuickSpec {
                 // The listing that can delete it does, rather than leaving it for a run that would send it again.
                 _ = store.pendingBatches()
                 let left = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
-                expect(left.filter { $0.lastPathComponent.hasPrefix("ready-\(first.payloadId)") }).to(beEmpty())
+                expect(left.filter { $0.lastPathComponent.hasPrefix("ready-v1-\(first.payloadId)") }).to(beEmpty())
             }
 
             it("stops counting a batch once when another process delivered it and a listing came between") {
@@ -1417,7 +1447,7 @@ final class EventStoreSpec: QuickSpec {
                 let delivered = store.closeBatch()!
 
                 try FileManager.default.removeItem(
-                    at: store.directory!.appendingPathComponent("ready-\(deleted.payloadId).\(deleted.eventCount)"))
+                    at: store.directory!.appendingPathComponent("ready-v1-\(deleted.payloadId).\(deleted.eventCount)"))
                 EventStoreSpec.reader(sharing: store).remove(delivered)
 
                 expect(store.listPendingBatches().vanishedEvents) == 2
@@ -1833,6 +1863,21 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.stage(EventStoreSpec.payload("new"))) == true
             }
 
+            it("discards an expired batch another version named without counting it") {
+                _ = store.stage(EventStoreSpec.payload("first"))
+                _ = store.stage(EventStoreSpec.payload("second"))
+                _ = store.closeBatch()
+                let batch = try EventStoreSpec.asAnotherVersionsBatch(try EventStoreSpec.onlyBatchFile(in: store))
+                let reader = EventStoreSpec.reader(sharing: store)
+
+                expect(reader.discardExpired()) == 0
+                expect(FileManager.default.fileExists(atPath: batch.path)) == true
+
+                try EventStoreSpec.age(batch, byDays: 8)
+                expect(reader.discardExpired()) == 0
+                expect(FileManager.default.fileExists(atPath: batch.path)) == false
+            }
+
             it("keeps a batch younger than the maximum age") {
                 _ = store.stage(EventStoreSpec.payload("recent"))
                 _ = store.closeBatch()
@@ -1961,6 +2006,17 @@ final class EventStoreSpec: QuickSpec {
                 expect(FileManager.default.fileExists(atPath: abandoned.path)) == false
                 expect(try FileManager.default.contentsOfDirectory(atPath: inUse.path)).toNot(beEmpty())
                 expect(try FileManager.default.contentsOfDirectory(atPath: otherApplication.path)).toNot(beEmpty())
+            }
+
+            it("empties an abandoned environment of batches another version named, without counting them") {
+                let abandoned = try EventStoreSpec.environment("app.abandoned", in: root, events: 2)
+                let batch = try FileManager.default.contentsOfDirectory(at: abandoned, includingPropertiesForKeys: nil)
+                    .first { $0.lastPathComponent.hasPrefix("ready-") }!
+                try EventStoreSpec.asAnotherVersionsBatch(batch)
+                try EventStoreSpec.age(contentsOf: abandoned, byDays: 8)
+
+                expect(store.discardExpired()) == 0
+                expect(FileManager.default.fileExists(atPath: abandoned.path)) == false
             }
 
             it("does nothing where the application did not ask for persistence") {

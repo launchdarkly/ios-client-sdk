@@ -2558,7 +2558,7 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.commitRecordedEvents()
                 let damaged = store.closeBatch()!
                 // Its name still counts it, so it is listed without being read; the damage is only found on sending.
-                let damagedUrl = store.directory!.appendingPathComponent("ready-\(damaged.payloadId).\(damaged.eventCount)")
+                let damagedUrl = store.directory!.appendingPathComponent("ready-v1-\(damaged.payloadId).\(damaged.eventCount)")
                 try Data("not an event log".utf8).write(to: damagedUrl)
                 testContext.recordEvents(1)
 
@@ -2585,7 +2585,7 @@ extension DirectEventProcessorSpec {
                 testContext.recordEvents(3)
                 testContext.eventProcessor.commitRecordedEvents()
                 let damaged = store.closeBatch()!
-                let damagedUrl = store.directory!.appendingPathComponent("ready-\(damaged.payloadId).\(damaged.eventCount)")
+                let damagedUrl = store.directory!.appendingPathComponent("ready-v1-\(damaged.payloadId).\(damaged.eventCount)")
                 var bytes = try Data(contentsOf: damagedUrl)
                 bytes[bytes.count - 1] ^= 0x01
                 try bytes.write(to: damagedUrl)
@@ -2618,7 +2618,7 @@ extension DirectEventProcessorSpec {
                     testContext.eventProcessor.commitRecordedEvents()
                     let gone = store.closeBatch()!
                     try FileManager.default.removeItem(
-                        at: store.directory!.appendingPathComponent("ready-\(gone.payloadId).\(gone.eventCount)"))
+                        at: store.directory!.appendingPathComponent("ready-v1-\(gone.payloadId).\(gone.eventCount)"))
                     testContext.recordEvents(1)
 
                     var delivered: Bool?
@@ -2682,7 +2682,7 @@ extension DirectEventProcessorSpec {
                 testContext.recordEvents(1)
                 testContext.eventProcessor.commitRecordedEvents()
                 let damaged = store.closeBatch()!
-                let damagedUrl = store.directory!.appendingPathComponent("ready-\(damaged.payloadId).\(damaged.eventCount)")
+                let damagedUrl = store.directory!.appendingPathComponent("ready-v1-\(damaged.payloadId).\(damaged.eventCount)")
                 try Data("not an event log".utf8).write(to: damagedUrl)
 
                 testContext.eventProcessor.flush(completion: nil)
