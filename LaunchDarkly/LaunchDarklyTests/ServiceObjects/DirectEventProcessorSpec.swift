@@ -1703,7 +1703,8 @@ extension DirectEventProcessorSpec {
         describe("surviving the process") {
             var testContext: TestContext!
             afterEach {
-                testContext.cleanUp()
+                testContext?.cleanUp()
+                testContext = nil
             }
 
             /// The events the next run of the application would find.
@@ -2120,21 +2121,30 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["feature", "summary"]
             }
 
-            itPersisting("shares writes between tracks recorded at once, and has each on disk when recording it returns") {
+            itPersisting("shares commits between tracks recorded at once, and has each on disk when recording it returns") {
                 let trackers = 8
-                let writesLock = NSLock()
-                var writes = 0
-                // A slow disk, so that the other tracks arrive while a write is under way.
-                let store = EventStore.temporary(writeLog: { file, bytes in
-                    writesLock.lock()
-                    writes += 1
-                    writesLock.unlock()
+                var config = LDConfig.stub
+                config.eventCapacity = 100
+                config.eventPersistence = .immediate
+                let serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                let inner = EventStore.temporary(capacity: config.eventCapacity)
+                defer { inner.deleteEverything() }
+                let store = ClosingHookStore(inner)
+                let commitsLock = NSLock()
+                var commits = 0
+                // A slow disk, so that the other tracks arrive while a commit is under way.
+                store.beforeCommitting = {
+                    commitsLock.lock()
+                    commits += 1
+                    commitsLock.unlock()
                     Thread.sleep(forTimeInterval: 0.05)
-                    return file.writeAll(bytes)
-                })
-                testContext = TestContext(store: store, eventCapacity: 100)
-                let reporter = testContext.eventProcessor!
-                let context = testContext.context!
+                }
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: DispatchQueue(label: "com.launchdarkly.tests.commits"), pacing: .noWaits)
+                let context = LDContext.stub()
+                func keysOnDisk() -> [String] {
+                    inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).keyField }
+                }
 
                 let start = DispatchSemaphore(value: 0)
                 let finished = DispatchGroup()
@@ -2146,7 +2156,7 @@ extension DirectEventProcessorSpec {
                     Thread {
                         start.wait()
                         reporter.record(CustomEvent(key: key, context: context))
-                        if !eventsLeftOnDisk().compactMap({ $0.keyField }).contains(key) {
+                        if !keysOnDisk().contains(key) {
                             missingLock.lock()
                             missingOnReturn.append(key)
                             missingLock.unlock()
@@ -2160,11 +2170,10 @@ extension DirectEventProcessorSpec {
                 expect(finished.wait(timeout: .now() + 10)) == .success
 
                 expect(missingOnReturn).to(beEmpty())
-                // One write is the log's header. A write per track would be one more for each of them.
-                writesLock.lock()
-                let totalWrites = writes
-                writesLock.unlock()
-                expect(totalWrites) < trackers + 1
+                commitsLock.lock()
+                let totalCommits = commits
+                commitsLock.unlock()
+                expect(totalCommits) < trackers
             }
 
             itPersisting("tries a batch a previous run left once at start, with its retry, and then waits out the backoff") {
@@ -3618,6 +3627,8 @@ private final class ClosingHookStore: EventStoring {
     let inner: EventStoring
     var beforeClosing: (() -> Void)?
     var afterClosing: (() -> Void)?
+    /// Runs at the start of every commit.
+    var beforeCommitting: (() -> Void)?
     private(set) var closedKeys: [[String]] = []
 
     init(_ inner: EventStoring) {
@@ -3632,7 +3643,10 @@ private final class ClosingHookStore: EventStoring {
     func reserve(_ events: Int) { inner.reserve(events) }
     func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
     func releaseReservations() { inner.releaseReservations() }
-    func commit() { inner.commit() }
+    func commit() {
+        beforeCommitting?()
+        inner.commit()
+    }
     var holdsUnclosedEvents: Bool { inner.holdsUnclosedEvents }
     func takeVanishedLogEvents() -> Int { inner.takeVanishedLogEvents() }
     func listPendingBatches() -> BatchListing { inner.listPendingBatches() }

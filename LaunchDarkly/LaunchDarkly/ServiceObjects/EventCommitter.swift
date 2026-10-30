@@ -92,6 +92,14 @@ final class EventCommitter {
     /// Taken before `recordLock` and before anything the store locks, never after.
     private let commitLock = UnfairLock()
 
+    /// The last recording a finished commit covered. Only to be used while holding `commitLock`.
+    ///
+    /// This is what makes concurrent `.immediate` commit points a group commit. The first caller's commit takes every
+    /// recording made before it took the run, including those of callers now waiting behind it. They find their
+    /// recordings covered and return, and the next caller still uncovered commits everything that arrived in the
+    /// meantime. Without it each waiter committed again in turn.
+    private var committedSequence: UInt64 = 0
+
     // MARK: Guarded by recordLock
 
     /// Guards everything one recording writes: the held events and the summarizer.
@@ -110,6 +118,10 @@ final class EventCommitter {
     /// too, and only a commit reaches the file. Both forms are equally lost to a crash, so the encode may as well
     /// happen where it is cheapest.
     private var pending: [Event] = []
+
+    /// Numbers every recording, so a caller at a commit point can tell whether a commit has already covered it. Only to
+    /// be used while holding `recordLock`.
+    private var recordedSequence: UInt64 = 0
 
     /// Whether a commit is already queued, so a run of recordings past the threshold asks for one write rather than
     /// one each. Only to be used while holding `recordLock`.
@@ -152,15 +164,18 @@ final class EventCommitter {
     /// an application that tracks every few seconds one encode and write per event, each taking `recordLock` from the
     /// threads evaluating flags and the store's locks from delivery.
     func record(_ event: Event) {
-        let (dropped, needsCommit) = recordLock.withLock {
-            (!admitToPending(event), pending.count >= EventCommitter.pendingCommitThreshold)
+        var sequence: UInt64 = 0
+        let (dropped, needsCommit) = recordLock.withLock { () -> (Bool, Bool) in
+            recordedSequence += 1
+            sequence = recordedSequence
+            return (!admitToPending(event), pending.count >= EventCommitter.pendingCommitThreshold)
         }
 
         if dropped {
             reportDropped()
         }
         if persistence == .immediate && EventCommitter.isCommitPoint(event.kind) {
-            commitRecordedEvents()
+            commitThrough(sequence)
         } else if needsCommit {
             scheduleCommitWherePersisting()
         }
@@ -181,6 +196,7 @@ final class EventCommitter {
 
         var dropped = 0
         let (counted, needsCommit) = recordLock.withLock { () -> (Bool, Bool) in
+            recordedSequence += 1
             let counted = eventBuffer.summarize(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
             if let featureEvent, !admitToPending(featureEvent) { dropped += 1 }
             if let debugEvent, !admitToPending(debugEvent) { dropped += 1 }
@@ -293,7 +309,7 @@ final class EventCommitter {
     /// nothing durable, and is left to the delivery.
     func commitWherePersisting() {
         if persistence == .immediate || store.isPersisting {
-            commitRecordedEvents()
+            commitThrough(recordLock.withLock { recordedSequence })
         }
     }
 
@@ -318,6 +334,16 @@ final class EventCommitter {
     /// are staged by the same commit, and encoded outside it, so recording does not wait on the encoder.
     func commitRecordedEvents() {
         commitLock.withLock { encodeAndCommitPending() }
+    }
+
+    /// Commits unless a finished commit already covers recording `sequence`, checked once the lock is held, since the
+    /// commit a caller waited behind is the one most likely to have covered it.
+    private func commitThrough(_ sequence: UInt64) {
+        commitLock.withLock {
+            guard committedSequence < sequence
+            else { return }
+            encodeAndCommitPending()
+        }
     }
 
     /// Commits what is held and closes it into a batch, as one step with respect to other commits.
@@ -352,6 +378,7 @@ final class EventCommitter {
     /// Requires `commitLock`.
     private func encodeAndCommitPending() {
         commitLock.assertOwned()
+        var through: UInt64 = 0
         let (run, summaries) = recordLock.withLock { () -> ([Event], [(tracker: FlagRequestTracker, context: LDContext)]) in
             let run = pending
             pending = []
@@ -359,6 +386,7 @@ final class EventCommitter {
             // Reserved in the same critical section the run leaves `pending` in, so capacity counts it in one place or
             // the other throughout the encode.
             store.reserve(run.count)
+            through = recordedSequence
             return (run, summaries)
         }
 
@@ -366,6 +394,7 @@ final class EventCommitter {
         store.releaseReservations()
         stageSummaries(summaries)
         store.commit()
+        committedSequence = through
     }
 
     /// Encodes the held events as one run and stages the bytes.
