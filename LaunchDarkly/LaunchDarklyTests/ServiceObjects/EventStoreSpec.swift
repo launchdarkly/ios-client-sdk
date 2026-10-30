@@ -741,7 +741,7 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(in: next.payloadsOnDisk)) == ["from-the-previous-run", "this-run"]
             }
 
-            it("is discarded when a batch named without a count is in a format this version does not read") {
+            it("is listed as one event and unreadable when a batch named without a count is in a format this version does not read") {
                 store = EventStore.temporary()
                 _ = store.stage(EventStoreSpec.payload("unreadable"))
                 store.commit()
@@ -753,9 +753,15 @@ final class EventStoreSpec: QuickSpec {
                 corrupted[5] = 0xFF
                 try corrupted.write(to: batchUrl)
 
+                // Left for the delivery that reaches it, which removes it and counts the loss, rather than deleted
+                // here uncounted.
                 let next = EventStoreSpec.reader(sharing: store)
-                expect(next.pendingBatches()).to(beEmpty())
-                // A batch that can never be delivered is not left to occupy the device either.
+                let batches = next.pendingBatches()
+                expect(batches.map { $0.eventCount }) == [1]
+                guard let batch = batches.first
+                else { return }
+                expect { try next.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
+                next.remove(batch)
                 expect(FileManager.default.fileExists(atPath: batchUrl.path)) == false
             }
         }

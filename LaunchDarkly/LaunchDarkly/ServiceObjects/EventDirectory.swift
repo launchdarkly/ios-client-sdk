@@ -620,9 +620,10 @@ final class EventDirectory {
             guard let events = EventLogFormat.eventCount(in: log)
             else {
                 // Written by a version of the SDK whose format this one does not read, or damaged beyond what the
-                // torn tail recovery tolerates. Either way it can never be delivered, so it is not kept.
-                try? FileManager.default.removeItem(at: file)
-                return nil
+                // torn tail recovery tolerates. Either way it can never be delivered, but it held events. Listed as
+                // holding one, the fewest it can, so that the delivery reaching it drops it and counts the loss, as
+                // for one too large to read.
+                return EventTally(events: 1, bytes: log.count)
             }
             return EventTally(events: events, bytes: log.count)
         }
