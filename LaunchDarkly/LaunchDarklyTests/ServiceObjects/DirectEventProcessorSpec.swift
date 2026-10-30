@@ -3145,6 +3145,22 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["refused"], ["refused"], ["next"]]
             }
 
+            it("leaves refusals of the payload in a row through a post that gets no response") {
+                testContext = TestContext(retryState: DirectEventProcessorSpec.withoutBackoff())
+                testContext.serviceMock.eventStatusForPost = { post in [1: 400, 2: 0, 3: 400][post] ?? 202 }
+                testContext.eventProcessor.record(CustomEvent(key: "malformed", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                // A refusal, and its retry, which gets no response.
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.store.pendingBatches()).toNot(beEmpty())
+
+                // The second refusal drops the batch, which no longer holds back the one behind it.
+                testContext.eventProcessor.record(CustomEvent(key: "next", context: testContext.context))
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["malformed"], ["malformed"], ["malformed"], ["next"]]
+                expect(testContext.flushOutcome()) == true
+            }
+
             // The SDK's own backoff: a refusal such as a 401 would wait eight and a half minutes before the second post.
             it("retries a batch refused with HTTP 413 a second later, as it does a 400") {
                 testContext = TestContext()

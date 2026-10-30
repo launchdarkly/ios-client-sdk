@@ -71,8 +71,9 @@ class DirectEventProcessor: EventProcessor {
     static let badRequestsBeforeDropping = 2
 
     /// The batch that last had its payload refused and how many times in a row: delivery goes oldest first and stops at
-    /// a kept failure, so the next post is that batch's unless capacity dropped it. Held only in memory, so a new run of
-    /// the application counts again. Only to be used while holding `stateLock`.
+    /// a kept failure, so the next post is that batch's unless capacity dropped it. Any response other than a refusal
+    /// ends the run; a post that got no response leaves it. Held only in memory, so a new run of the application counts
+    /// again. Only to be used while holding `stateLock`.
     private var badRequests: (payloadId: String, inARow: Int)?
 
     // MARK: Guarded by claimLock
@@ -710,7 +711,7 @@ extension DirectEventProcessor {
         publish(batch, payload, run) { outcome in
             switch outcome {
             case .accepted:
-                _ = self.countBadRequest(batch, statusCode: nil)
+                self.endBadRequests()
                 guard leftOut > 0
                 else {
                     self.deliver(remaining, run, lostAnything: lostAnything, retried: retried, completion)
@@ -760,11 +761,23 @@ extension DirectEventProcessor {
         }
     }
 
+    /// - Parameter statusCode: the response's status, or nil where there was no response.
     /// - Returns: how many refusals of the payload in a row this batch has had, counting this response; zero for any
     ///   other status, which ends the run, and once the batch is dropped.
     private func countBadRequest(_ batch: EventBatch, statusCode: Int?) -> Int {
         stateLock.withLock {
-            guard let statusCode, HTTPURLResponse.StatusCodes.isEventPayloadRefused(statusCode)
+            guard let statusCode
+            else {
+                // A network or TLS failure leaves the run as it was. The service did not answer, so it said nothing
+                // about the payload: had it ended the run, refusals with network failures between them would never
+                // reach two, and a batch the service will never take would stay the oldest, holding back every
+                // batch behind it.
+                if let previous = badRequests, previous.payloadId == batch.payloadId {
+                    return previous.inARow
+                }
+                return 0
+            }
+            guard HTTPURLResponse.StatusCodes.isEventPayloadRefused(statusCode)
             else {
                 badRequests = nil
                 return 0
@@ -776,6 +789,11 @@ extension DirectEventProcessor {
             badRequests = inARow >= DirectEventProcessor.badRequestsBeforeDropping ? nil : (batch.payloadId, inARow)
             return inARow
         }
+    }
+
+    /// Ends the run of refusals of the payload, as an accepted post does.
+    private func endBadRequests() {
+        stateLock.withLock { badRequests = nil }
     }
 
     /// Sets a delivery for when the backoff's wait ends, unless one is set already, so a batch kept through a failure
