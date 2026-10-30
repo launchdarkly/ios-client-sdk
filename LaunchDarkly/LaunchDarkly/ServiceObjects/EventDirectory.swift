@@ -625,7 +625,8 @@ final class EventDirectory {
                 // for one too large to read.
                 return EventTally(events: 1, bytes: log.count)
             }
-            return EventTally(events: events, bytes: log.count)
+            // Damaged from its first frame, it counts as no events, and would be dropped as a loss of none.
+            return EventTally(events: events == 0 && EventLogFormat.isDamaged(log) ? 1 : events, bytes: log.count)
         }
     }
 

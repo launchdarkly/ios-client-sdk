@@ -636,6 +636,24 @@ final class EventStoreSpec: QuickSpec {
                 expect { try store.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
             }
 
+            it("lists a batch named without a count whose first frame is damaged as one event, and loses it") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("damaged"))
+                _ = store.closeBatch()
+                let file = try EventStoreSpec.asUncountedName(EventStoreSpec.onlyBatchFile(in: store))
+                var damaged = try Data(contentsOf: file)
+                damaged[EventLogFormat.fileHeaderSize + EventLogFormat.frameHeaderSize] ^= 0x01
+                try damaged.write(to: file)
+
+                // Counted as no events, it would be dropped as a loss of none, which no flush hears about.
+                let next = EventStoreSpec.reader(sharing: store)
+                let batches = next.pendingBatches()
+                expect(batches.map { $0.eventCount }) == [1]
+                guard let batch = batches.first
+                else { return }
+                expect { try next.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
+            }
+
             it("says how many events made it into the body of a batch damaged after its first frame") {
                 store = EventStore.temporary()
                 ["first", "second", "third"].forEach { _ = store.stage(EventStoreSpec.payload($0)) }
