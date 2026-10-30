@@ -1778,8 +1778,8 @@ final class LDClientSpec: QuickSpec {
         describe("flushAndWait") {
             /// Answers inside the call, because `flushAndWait` blocks the test thread.
             func answer(_ mock: EventProcessorMock, with delivered: Bool) {
-                mock.flushReportingOutcomeCallback = { [weak mock] in
-                    mock?.flushReportingOutcomeReceivedCompletion?(delivered)
+                mock.flushBypassingBackoffCallback = { [weak mock] in
+                    mock?.flushBypassingBackoffReceivedCompletion?(delivered)
                 }
             }
 
@@ -1789,7 +1789,8 @@ final class LDClientSpec: QuickSpec {
                 answer(testContext.eventProcessorMock, with: true)
 
                 expect(testContext.subject.flushAndWait(timeout: 1.0)) == true
-                expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount) == 1
+                expect(testContext.eventProcessorMock.flushBypassingBackoffCallCount) == 1
+                expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount) == 0
             }
 
             it("reports false when delivery cannot finish") {
@@ -1803,7 +1804,7 @@ final class LDClientSpec: QuickSpec {
             it("reports false when the budget expires first") {
                 let testContext = TestContext()
                 testContext.start()
-                testContext.eventProcessorMock.flushReportingOutcomeCallback = nil
+                testContext.eventProcessorMock.flushBypassingBackoffCallback = nil
 
                 expect(testContext.subject.flushAndWait(timeout: 0.05)) == false
             }
@@ -1816,7 +1817,7 @@ final class LDClientSpec: QuickSpec {
 
                 expect(testContext.subject.flushAndWait(timeout: 0)) == false
                 // Still worth calling: at `.immediate` the events are on disk by the time the delivery is queued.
-                expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount) == 1
+                expect(testContext.eventProcessorMock.flushBypassingBackoffCallCount) == 1
             }
 
             it("reports false once closed") {
@@ -1838,7 +1839,7 @@ final class LDClientSpec: QuickSpec {
 
                 // Its own events were never attempted, so the outcome of another client's delivery says nothing of them.
                 expect(stale.subject.flushAndWait(timeout: 1.0)) == false
-                expect(current.eventProcessorMock.flushReportingOutcomeCallCount) == 0
+                expect(current.eventProcessorMock.flushBypassingBackoffCallCount) == 0
             }
 
             it("gives every environment the whole budget rather than what the one before it left") {
@@ -1851,8 +1852,8 @@ final class LDClientSpec: QuickSpec {
                 for environment in ["alternate", LDConfig.Constants.primaryEnvironmentName] {
                     let reporter = LDClient.get(environment: environment)?.eventProcessor as? EventProcessorMock
                     expect(reporter).toNot(beNil())
-                    reporter?.flushReportingOutcomeCallback = { [weak reporter] in
-                        let completion = reporter?.flushReportingOutcomeReceivedCompletion
+                    reporter?.flushBypassingBackoffCallback = { [weak reporter] in
+                        let completion = reporter?.flushBypassingBackoffReceivedCompletion
                         DispatchQueue.global().asyncAfter(deadline: .now() + 0.3) { completion?(true) }
                     }
                 }
@@ -1868,11 +1869,11 @@ final class LDClientSpec: QuickSpec {
                 // spent is the budget the second has left. Giving each its own copy of it would take twice as long.
                 let answering = LDClient.get(environment: "alternate")?.eventProcessor as? EventProcessorMock
                 expect(answering).toNot(beNil())
-                answering?.flushReportingOutcomeCallback = { [weak answering] in
-                    let completion = answering?.flushReportingOutcomeReceivedCompletion
+                answering?.flushBypassingBackoffCallback = { [weak answering] in
+                    let completion = answering?.flushBypassingBackoffReceivedCompletion
                     DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) { completion?(true) }
                 }
-                testContext.eventProcessorMock.flushReportingOutcomeCallback = nil
+                testContext.eventProcessorMock.flushBypassingBackoffCallback = nil
 
                 // Answering at 0.5s into a 0.6s budget leaves the second wait 0.1s, against the 0.6s a fresh copy
                 // would give it, so the two outcomes are 0.6s and 1.1s with room on either side of the threshold.

@@ -231,6 +231,15 @@ final class EventProcessorMock: EventProcessor {
         try! flushReportingOutcomeCallback?()
     }
 
+    var flushBypassingBackoffCallCount = 0
+    var flushBypassingBackoffCallback: (() throws -> Void)?
+    var flushBypassingBackoffReceivedCompletion: (FlushOutcomeClosure)?
+    func flushBypassingBackoff(completion: @escaping FlushOutcomeClosure) {
+        flushBypassingBackoffCallCount += 1
+        flushBypassingBackoffReceivedCompletion = completion
+        try! flushBypassingBackoffCallback?()
+    }
+
     var flushAtCloseCallCount = 0
     var flushAtCloseCallback: (() throws -> Void)?
     func flushAtClose() {

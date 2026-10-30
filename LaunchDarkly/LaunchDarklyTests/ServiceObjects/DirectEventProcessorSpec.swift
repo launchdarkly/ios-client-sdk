@@ -138,6 +138,17 @@ class DirectEventProcessorSpec: QuickSpec {
             return delivered
         }
 
+        func flushBypassingBackoffOutcome() -> Bool? {
+            var delivered: Bool?
+            waitUntil(timeout: .seconds(10)) { done in
+                eventProcessor.flushBypassingBackoff { result in
+                    delivered = result
+                    done()
+                }
+            }
+            return delivered
+        }
+
         func cleanUp() {
             eventProcessor.isOnline = false
             store.deleteEverything()
@@ -3207,6 +3218,44 @@ extension DirectEventProcessorSpec {
 
                 expect(testContext.serviceMock.publishedEventPayloads.dropFirst().flatMap(customKeys))
                     .toEventually(equal(["refused", "at-close"]), timeout: Constants.deliveryTimeout)
+            }
+
+            it("posts through the backoff's wait for a flush bypassing it, and answers whether the events got out") {
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedCeiling: 3600))
+                testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
+                testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                expect(testContext.flushOutcome()) == false
+                testContext.serviceMock.stubEventResponse(success: true)
+                testContext.serviceMock.eventStatusForPost = nil
+                testContext.eventProcessor.record(CustomEvent(key: "bypassing", context: testContext.context))
+
+                expect(testContext.flushBypassingBackoffOutcome()) == true
+                expect(testContext.serviceMock.publishedEventPayloads.dropFirst().flatMap(customKeys)) == ["refused", "bypassing"]
+            }
+
+            it("leaves ordinary flushes waiting out the backoff after a flush bypassing it is refused again") {
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedCeiling: 3600))
+                testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
+                testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                expect(testContext.flushOutcome()) == false
+
+                expect(testContext.flushBypassingBackoffOutcome()) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
+
+                expect(testContext.flushOutcome()) == false
+                testContext.eventProcessor.flush(completion: nil)
+                waitLettingTimersFire(0.3)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
+            }
+
+            it("posts nothing for a flush bypassing the backoff while offline") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "an-event", context: testContext.context))
+
+                expect(testContext.flushBypassingBackoffOutcome()) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
             }
 
             it("posts nothing at close when the client was already offline") {

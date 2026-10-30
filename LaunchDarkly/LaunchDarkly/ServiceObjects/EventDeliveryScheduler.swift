@@ -14,10 +14,11 @@ final class EventDeliveryRun {
         }
     }
 
-    /// Whether it is `flushAtClose()`'s, which posts whatever wait the backoff is in and runs although closing has
-    /// turned `isOnline` off since. The delivery one of its failures sets for the end of the wait is another one, held
+    /// Whether it is `flushAtClose()`'s, which runs although closing has turned `isOnline` off since. The delivery one of its failures sets for the end of the wait is another one, held
     /// by the backoff, and finds the reporter offline as any other.
     let isClosing: Bool
+    /// Whether it posts whatever wait the backoff is in: `flushAtClose()`'s, and `flushBypassingBackoff(completion:)`'s.
+    let bypassesBackoff: Bool
 
     /// The least time between one paced batch's answer and the next batch's request.
     private let gap: TimeInterval
@@ -32,8 +33,9 @@ final class EventDeliveryRun {
     /// The batch waiting out its gap, which ending the pacing lets go at once. Only to be used while holding `lock`.
     private var waitingTurn: PacedTurn?
 
-    init(isClosing: Bool, isPaced: Bool, gap: TimeInterval) {
+    init(isClosing: Bool, bypassesBackoff: Bool, isPaced: Bool, gap: TimeInterval) {
         self.isClosing = isClosing
+        self.bypassesBackoff = bypassesBackoff
         self.isPaced = isPaced
         self.gap = gap
     }
@@ -102,6 +104,8 @@ final class EventDeliveryScheduler {
         var waiters: [FlushOutcomeClosure]
         /// Whether it is `flushAtClose()`'s, or has been joined by it.
         var isClosing: Bool
+        /// Whether a caller bypassing the backoff asked for it, or joined it.
+        var bypassesBackoff: Bool
         /// Whether it was asked for only by the report timer or by the launch gate, and so is paced.
         var isPaced: Bool
     }
@@ -150,10 +154,11 @@ final class EventDeliveryScheduler {
     ///
     /// - Parameters:
     ///   - closing: whether it is `flushAtClose()`'s, which a queued delivery it joins becomes.
+    ///   - bypassingBackoff: whether it posts whatever wait the backoff is in, which a queued delivery it joins does too.
     ///   - paced: whether nobody asked for it, so that it gives way to flag requests. One that is not ends the pacing of
     ///     the delivery running, so that it is not held behind it.
     /// - Returns: whether the caller is to start it, which is where no delivery is running.
-    func queue(_ completion: FlushOutcomeClosure?, closing: Bool, paced: Bool) -> Bool {
+    func queue(_ completion: FlushOutcomeClosure?, closing: Bool, bypassingBackoff: Bool, paced: Bool) -> Bool {
         let (starts, unpaced) = lock.withLock { () -> (Bool, EventDeliveryRun?) in
             let unpaced = paced ? nil : running
             if var joined = queued {
@@ -161,11 +166,13 @@ final class EventDeliveryScheduler {
                     joined.waiters.append(completion)
                 }
                 joined.isClosing = joined.isClosing || closing
+                joined.bypassesBackoff = joined.bypassesBackoff || bypassingBackoff
                 joined.isPaced = joined.isPaced && paced
                 queued = joined
                 return (false, unpaced)
             }
-            queued = Queued(waiters: completion.map { [$0] } ?? [], isClosing: closing, isPaced: paced)
+            queued = Queued(waiters: completion.map { [$0] } ?? [], isClosing: closing, bypassesBackoff: bypassingBackoff,
+                            isPaced: paced)
             let starts = !isDelivering
             isDelivering = true
             return (starts, unpaced)
@@ -180,9 +187,10 @@ final class EventDeliveryScheduler {
     /// - Returns: the delivery, and the callers waiting on it.
     func begin() -> (run: EventDeliveryRun, waiters: [FlushOutcomeClosure]) {
         lock.withLock {
-            let next = queued ?? Queued(waiters: [], isClosing: false, isPaced: false)
+            let next = queued ?? Queued(waiters: [], isClosing: false, bypassesBackoff: false, isPaced: false)
             queued = nil
             let run = EventDeliveryRun(isClosing: next.isClosing,
+                                  bypassesBackoff: next.isClosing || next.bypassesBackoff,
                                   isPaced: next.isPaced && pacesDeliveries && !next.isClosing,
                                   gap: gap)
             running = run

@@ -333,6 +333,11 @@ extension DirectEventProcessor {
         queueDelivery(completion)
     }
 
+    func flushBypassingBackoff(completion: @escaping FlushOutcomeClosure) {
+        committer.queueCommitWherePersisting()
+        queueDelivery(completion, bypassingBackoff: true)
+    }
+
     func flushAtClose() {
         commitWherePersisting()
         // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing: offline is the
@@ -368,9 +373,13 @@ extension DirectEventProcessor {
         queueDelivery(nil, paced: true)
     }
 
-    /// As `EventDeliveryScheduler.queue(_:closing:paced:)`, starting the delivery where nothing is running.
-    private func queueDelivery(_ completion: FlushOutcomeClosure?, closing: Bool = false, paced: Bool = false) {
-        if deliveryScheduler.queue(completion, closing: closing, paced: paced) {
+    /// As `EventDeliveryScheduler.queue(_:closing:bypassingBackoff:paced:)`, starting the delivery where nothing is
+    /// running.
+    private func queueDelivery(_ completion: FlushOutcomeClosure?,
+                               closing: Bool = false,
+                               bypassingBackoff: Bool = false,
+                               paced: Bool = false) {
+        if deliveryScheduler.queue(completion, closing: closing, bypassingBackoff: bypassingBackoff, paced: paced) {
             deliveryQueue.async { self.runDelivery() }
         }
     }
@@ -625,7 +634,7 @@ extension DirectEventProcessor {
             return
         }
 
-        let wait = run.isClosing ? 0 : retryState.remainingWait
+        let wait = run.bypassesBackoff ? 0 : retryState.remainingWait
         guard wait <= 0
         else {
             // Not an attempt, so it moves nothing in the backoff. A wait no longer than a retry's is sat out, as this

@@ -37,6 +37,11 @@ protocol EventProcessor {
     /// were written, since the delivery writes them before it sends.
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure)
 
+    /// `flushReportingOutcome` for a caller about to lose the ability to send, `LDClient.flushAndWait`: it posts
+    /// whatever wait the backoff is in, as `flushAtClose()` does. After a refusal that wait is minutes to an hour, and
+    /// where nothing persists the events would not outlive it.
+    func flushBypassingBackoff(completion: @escaping FlushOutcomeClosure)
+
     /// The last delivery before the client closes: `flush`, except that it posts whatever wait the backoff is in, which
     /// closing cuts short. After a refusal that wait is minutes to an hour, and where nothing persists the events would
     /// not outlive it.

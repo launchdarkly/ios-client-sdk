@@ -105,6 +105,12 @@ extension LDClient {
      This is not a crash-time mechanism. It is safe to call from the main thread, but keep the budget well below
      15 seconds there.
 
+     It posts even while delivery is backing off after a failure, as closing the client does, since it is for a moment
+     after which the SDK may not get to send. After a refusal such as a 401 or 403 the SDK waits about eight and a half
+     minutes before posting again, doubling up to an hour, and a call that sat that out would make no attempt at all.
+     `flush` and `flush(completion:)` still wait it out, so a call made routinely, rather than before the process is
+     suspended or ends, posts once per call while LaunchDarkly keeps refusing.
+
      This method is not stable, and not subject to any backwards compatibility guarantees or semantic versioning. It is
      experimental.
 
@@ -112,11 +118,11 @@ extension LDClient {
        no upper limit: a delivery always ends, by its own request timeouts if nothing else, so a very long timeout
        waits for that.
      - returns: `true` if LaunchDarkly accepted the events, or there were none to send. `false` if the timeout expired
-       first, the client is offline or closed, or any of the events were lost: refused by LaunchDarkly, still failing
-       after one retry, or unable to be serialized. Lost events are not kept for a later flush, so calling this again
-       does not resend them. A refusal also stops event delivery until the client is next set online, and until then
-       this returns `false` even with nothing to send. A `false` because the timeout expired does not mean the events
-       were not sent: the delivery is left running, and may still arrive.
+       first, the client is offline or closed, or the events did not get out. Events the service refused or that
+       failed to post are kept, and posted again once the backoff allows, or by the next call to this method. Events
+       that could not be serialized, or whose payload LaunchDarkly refused twice in a row, are lost, and calling this
+       again does not resend them. A `false` because the timeout expired does not mean the events were not sent: the
+       delivery is left running, and may still arrive.
      */
     @discardableResult
     public func flushAndWait(timeout: TimeInterval) -> Bool {
@@ -146,7 +152,7 @@ extension LDClient {
         // one before starting the next would spend the caller's budget on deliveries that could have been running all
         // along, and leave the last environment with none of it.
         for client in clients {
-            client.eventProcessor.flushReportingOutcome { result in
+            client.eventProcessor.flushBypassingBackoff { result in
                 lock.lock()
                 delivered = delivered && result
                 lock.unlock()
