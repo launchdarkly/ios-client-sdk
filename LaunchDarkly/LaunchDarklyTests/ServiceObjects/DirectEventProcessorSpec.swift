@@ -3425,6 +3425,25 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 2
             }
 
+            it("leaves the backoff's wait as it was when flushes bypassing it are refused") {
+                let retryState = DeliveryRetryState(flushInterval: 30)
+                testContext = TestContext(retryState: retryState)
+                testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
+                testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                expect(testContext.flushOutcome()) == false
+                let waitAfterTheRefusal = retryState.remainingWait
+                expect(waitAfterTheRefusal) > 0
+
+                // An application flushing on every move to the background during a refusal.
+                for _ in 0..<4 {
+                    expect(testContext.flushBypassingBackoffOutcome()) == false
+                }
+
+                expect(testContext.serviceMock.publishEventDataCallCount) == 5
+                expect(retryState.remainingWait) <= waitAfterTheRefusal
+            }
+
             it("posts nothing for a flush bypassing the backoff while offline") {
                 testContext = TestContext()
                 testContext.eventProcessor.record(CustomEvent(key: "an-event", context: testContext.context))

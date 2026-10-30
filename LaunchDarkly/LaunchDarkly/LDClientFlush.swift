@@ -108,8 +108,11 @@ extension LDClient {
      It posts even while delivery is backing off after a failure, as closing the client does, since it is for a moment
      after which the SDK may not get to send. After a refusal such as a 401 or 403 the SDK waits about eight and a half
      minutes before posting again, doubling up to an hour, and a call that sat that out would make no attempt at all.
-     `flush` and `flush(completion:)` still wait it out, so a call made routinely, rather than before the process is
-     suspended or ends, posts once per call while LaunchDarkly keeps refusing.
+     A post that fails then leaves the wait as it was, so `flush`, `flush(completion:)` and the periodic delivery go on
+     waiting out the same one rather than a longer one. That also means nothing slows these posts down: a call made
+     routinely, rather than just before the process is suspended or ends, posts once per call for as long as
+     LaunchDarkly keeps refusing. Keep it for those last moments; the SDK already flushes on every move to the
+     background.
 
      This method is not stable, and not subject to any backwards compatibility guarantees or semantic versioning. It is
      experimental.

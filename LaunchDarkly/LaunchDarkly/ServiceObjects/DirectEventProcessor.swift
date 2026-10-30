@@ -768,7 +768,10 @@ extension DirectEventProcessor {
                 self.reportStoredEventsLost(leftOut)
                 self.deliver(remaining, run, lostAnything: true, retried: retried, completion)
             case .failed(let failure):
-                let wait = self.retryState.recordFailure(unexpected: failure.unexpected, retryAfter: failure.retryAfter)
+                // Only a run bypassing the backoff posts during its wait.
+                let wait = run.bypassesBackoff
+                    ? self.retryState.recordFailureDuringWait(unexpected: failure.unexpected, retryAfter: failure.retryAfter)
+                    : self.retryState.recordFailure(unexpected: failure.unexpected, retryAfter: failure.retryAfter)
                 if self.countBadRequest(batch, statusCode: failure.statusCode) >= DirectEventProcessor.badRequestsBeforeDropping {
                     // The rest are still attempted, once the backoff allows.
                     os_log("%s dropping %d event(s) whose payload the service refused %d times in a row, last with HTTP %d", log: self.service.config.logger, type: .error, self.typeName(and: #function), batch.eventCount, DirectEventProcessor.badRequestsBeforeDropping, failure.statusCode ?? 0)

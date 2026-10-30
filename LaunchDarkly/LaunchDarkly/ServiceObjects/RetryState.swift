@@ -184,6 +184,30 @@ final class DeliveryRetryState {
         }
     }
 
+    /// A failure of a post that went through a wait, as `flushAtClose()` and the blocking `flushAndWait` may: an extra
+    /// try, not a step of the backoff. It leaves the attempt count and the ceiling as they were, so a caller flushing
+    /// through a refusal several times does not push flush, the periodic delivery and the retry out to the hour. A
+    /// `Retry-After` can still make the wait longer, never shorter. Once the wait has run out it is an ordinary failure.
+    ///
+    /// - Parameters: as `recordFailure(unexpected:retryAfter:)`.
+    /// - Returns: how long nothing may be posted.
+    @discardableResult
+    func recordFailureDuringWait(unexpected: Bool, retryAfter: TimeInterval?) -> TimeInterval {
+        let stillWaiting: TimeInterval? = lock.withLock {
+            let now = DispatchTime.now()
+            guard let waitingUntil = nextAttempt, now < waitingUntil
+            else { return nil }
+            var until = waitingUntil
+            if let retryAfter, retryAfter >= 0 {
+                let directed = min(retryAfter, Constants.maxServerDirectedWait)
+                until = max(until, now + (directed - random() * (directed / 2)))
+            }
+            nextAttempt = until
+            return TimeInterval(until.uptimeNanoseconds - now.uptimeNanoseconds) / 1_000_000_000
+        }
+        return stillWaiting ?? recordFailure(unexpected: unexpected, retryAfter: retryAfter)
+    }
+
     /// How long until a post is allowed; zero once it is.
     var remainingWait: TimeInterval {
         lock.withLock {
