@@ -74,8 +74,22 @@ final class OutboundEventBuffer {
     }
 
     /// Encodes the summary of one context's counters. Requires the processor's `commitLock`.
-    func encodeSummary(_ summary: (tracker: FlagRequestTracker, context: LDContext)) -> Data? {
-        encode(SummaryEvent(flagRequestTracker: summary.tracker, context: summary.context))
+    ///
+    /// A summary larger than one log frame holds is split between summaries of the same context and period, each with
+    /// some of its flags, until each fits. Whole, it would be refused by the store and every evaluation in it lost. Only
+    /// a single flag's counters too large for a frame are left whole, for the store to refuse.
+    ///
+    /// - Returns: at least one summary, nil for each part that could not be encoded.
+    func encodeSummary(_ summary: (tracker: FlagRequestTracker, context: LDContext)) -> [Data?] {
+        encodeSummary(summary.tracker, context: summary.context, endDate: Date())
+    }
+
+    private func encodeSummary(_ tracker: FlagRequestTracker, context: LDContext, endDate: Date) -> [Data?] {
+        let encoded = encode(SummaryEvent(flagRequestTracker: tracker, context: context, endDate: endDate))
+        guard let size = encoded?.count, size > EventLogFormat.maxFrameSize, let halves = tracker.halved()
+        else { return [encoded] }
+        return encodeSummary(halves.0, context: context, endDate: endDate)
+            + encodeSummary(halves.1, context: context, endDate: endDate)
     }
 
     private static func makeEncoder(config: LDConfig) -> JSONEncoder {

@@ -417,8 +417,8 @@ final class EventCommitter {
     /// LaunchDarkly sums the counters of every summary it receives, so a session that produced several summaries is
     /// counted the same as one that produced a single summary covering the same evaluations.
     private func stageSummaries(_ summaries: [(tracker: FlagRequestTracker, context: LDContext)]) {
-        for summary in summaries {
-            guard let encoded = eventBuffer.encodeSummary(summary)
+        for encoded in summaries.flatMap({ eventBuffer.encodeSummary($0) }) {
+            guard let encoded = encoded
             else {
                 reportLost()
                 continue

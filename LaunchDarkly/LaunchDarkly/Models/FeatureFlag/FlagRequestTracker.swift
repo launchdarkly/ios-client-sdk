@@ -2,12 +2,35 @@ import Foundation
 import OSLog
 
 struct FlagRequestTracker {
-    let startDate = Date()
+    let startDate: Date
     var flagCounters: [LDFlagKey: FlagCounter] = [:]
     let logger: OSLog
 
-    init(logger: OSLog) {
+    init(logger: OSLog, startDate: Date = Date()) {
         self.logger = logger
+        self.startDate = startDate
+    }
+
+    /// The flags split between two trackers over the same period. LaunchDarkly sums the counters of every summary it
+    /// receives, so the two count exactly what the one did. Nothing may count into this tracker any more: the halves
+    /// share its counters.
+    ///
+    /// - Returns: the two halves, or nil for a tracker of one flag, which cannot be split.
+    func halved() -> (FlagRequestTracker, FlagRequestTracker)? {
+        guard flagCounters.count > 1
+        else { return nil }
+        let flagKeys = flagCounters.keys.sorted()
+        let middle = flagKeys.count / 2
+        var first = FlagRequestTracker(logger: logger, startDate: startDate)
+        var second = FlagRequestTracker(logger: logger, startDate: startDate)
+        for (index, flagKey) in flagKeys.enumerated() {
+            if index < middle {
+                first.flagCounters[flagKey] = flagCounters[flagKey]
+            } else {
+                second.flagCounters[flagKey] = flagCounters[flagKey]
+            }
+        }
+        return (first, second)
     }
 
     mutating func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue, context: LDContext) {

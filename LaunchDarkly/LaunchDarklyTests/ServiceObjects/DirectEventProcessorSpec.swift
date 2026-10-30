@@ -2857,6 +2857,43 @@ extension DirectEventProcessorSpec {
                 expect(bodies.flatMap(customKeys).sorted()) == (1...eventCount).map { "event-\($0)" }.sorted()
             }
 
+            it("delivers a summary larger than a frame in pieces that count every flag once") {
+                // Long keys, so that a few thousand flags take one context's summary past what a frame holds.
+                let keyPrefix = String(repeating: "k", count: 1000)
+                let flagCount = EventLogFormat.maxFrameSize / 1000 * 3 / 2
+                testContext = TestContext()
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                let context = LDContext.stub()
+                for index in 0..<flagCount {
+                    testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "\(keyPrefix)\(index)", value: "a",
+                                                                          defaultValue: "b", featureFlag: flag,
+                                                                          context: context, includeReason: false)
+                }
+                testContext.eventProcessor.isOnline = true
+                var delivered: Bool?
+                waitUntil(timeout: .seconds(30)) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+
+                let summaries = testContext.serviceMock.publishedEventPayloads.flatMap { body -> [LDValue] in
+                    guard case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
+                    else { return [] }
+                    return events.filter { $0.kindField == "summary" }
+                }
+                let flagKeys = summaries.flatMap { summary -> [String] in
+                    guard case .object(let fields) = summary, case .object(let features)? = fields["features"]
+                    else { return [] }
+                    return Array(features.keys)
+                }
+                expect(summaries.count) > 1
+                expect(flagKeys.count) == flagCount
+                expect(Set(flagKeys).count) == flagCount
+            }
+
             it("reports false when a retryable failure leaves the batch on disk") {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
