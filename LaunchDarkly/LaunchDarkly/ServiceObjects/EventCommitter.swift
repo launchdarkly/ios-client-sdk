@@ -219,7 +219,7 @@ final class EventCommitter {
     /// it is encoded; whether it fits is decided when it is staged.
     private func admitToPending(_ event: Event) -> Bool {
         recordLock.assertOwned()
-        guard pending.count + store.pendingEventCount < eventCapacity, store.hasRoomForEventBytes
+        guard store.admitsEvent(heldElsewhere: pending.count, capacity: eventCapacity)
         else { return false }
 
         pending.append(event)

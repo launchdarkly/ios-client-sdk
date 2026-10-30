@@ -383,15 +383,15 @@ public struct LDConfig {
     /// any backwards compatibility guarantees or semantic versioning. (Default: `.disabled`)
     public var eventPersistence: EventPersistence = Defaults.eventPersistence
 
-    /// The maximum number of bytes of events the SDK keeps where `eventPersistence` keeps events across launches, on disk and in
-    /// memory together. It is for every environment the application configures together: with `secondaryMobileKeys`, each environment
-    /// gets an equal share of it, unlike `eventCapacity`, which each environment has in full. When an environment reaches its share,
-    /// the SDK discards new events until it successfully reports the stored ones, as it does when `eventCapacity` is reached; it never
-    /// deletes stored events to make room. A fifth of each share is kept for the summaries of flag evaluations, so that evaluations
-    /// are still counted after full events start being discarded. A value of zero or less means the default. (Default: 20 MiB)
+    /// The maximum number of bytes of events the SDK keeps, on disk and in memory together, whatever `eventPersistence` is. It is for
+    /// every environment the application configures together: with `secondaryMobileKeys`, each environment gets an equal share of it,
+    /// unlike `eventCapacity`, which each environment has in full. When an environment reaches its share, the SDK discards new events
+    /// until it successfully reports the stored ones, as it does when `eventCapacity` is reached; it never deletes stored events to make
+    /// room. A fifth of each share is kept for the summaries of flag evaluations, so that evaluations are still counted after full
+    /// events start being discarded. A value of zero or less means the default. (Default: 20 MiB)
     ///
-    /// Where `eventPersistence` is `.disabled`, full events are bounded by `eventCapacity` alone, and this bounds only the summaries,
-    /// which `eventCapacity` never refuses: a delivery that keeps failing would otherwise leave them growing for the life of the process.
+    /// Ordinary events reach `eventCapacity` long before this. It binds where events are unusually large, or where delivery keeps
+    /// failing and summaries, which `eventCapacity` never refuses, accumulate.
     public var eventCapacityBytes: Int = Defaults.eventCapacityBytes
 
     /// How long the SDK keeps events it has persisted but not yet reported, where `eventPersistence` keeps events across launches. Events

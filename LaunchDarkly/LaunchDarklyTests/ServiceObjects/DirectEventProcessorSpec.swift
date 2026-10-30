@@ -3505,6 +3505,7 @@ private final class ClosingHookStore: EventStoring {
 
     var pendingEventCount: Int { inner.pendingEventCount }
     var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
+    func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
     var isPersisting: Bool { inner.isPersisting }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }
@@ -3585,6 +3586,7 @@ private final class SlowListingStore: EventStoring {
 
     var pendingEventCount: Int { inner.pendingEventCount }
     var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
+    func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
     var isPersisting: Bool { inner.isPersisting }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }

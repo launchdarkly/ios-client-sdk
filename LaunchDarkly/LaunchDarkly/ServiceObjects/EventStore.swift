@@ -46,6 +46,15 @@ protocol EventStoring {
     /// there is room can still be refused at `stageReserved(_:)` if it turns out not to fit.
     var hasRoomForEventBytes: Bool { get }
 
+    /// `pendingEventCount` and `hasRoomForEventBytes` in one acquisition of the lock, for the check every recorded event
+    /// makes, where the lock is contended by the commit staging events.
+    ///
+    /// - Parameters:
+    ///   - heldElsewhere: events the caller holds that the store does not count yet.
+    ///   - capacity: the most events to hold, counting `heldElsewhere`.
+    /// - Returns: whether one more full event can be accepted, by count and by bytes.
+    func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool
+
     /// Whether a commit writes anything, which is false where persistence is off and once a write has failed and the
     /// store has given up on it.
     var isPersisting: Bool { get }
@@ -350,8 +359,11 @@ final class EventStore: EventStoring {
     }
 
     var hasRoomForEventBytes: Bool {
-        // A store kept off the disk holds events the way the SDK did before persistence, bounded by count alone.
-        disk == nil || bufferLock.withLock { countedBytes < eventByteCapacity }
+        bufferLock.withLock { countedBytes < eventByteCapacity }
+    }
+
+    func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool {
+        bufferLock.withLock { heldElsewhere + countedEvents < capacity && countedBytes < eventByteCapacity }
     }
 
     var isPersisting: Bool {
@@ -388,17 +400,16 @@ final class EventStore: EventStoring {
         let frame = EventLogFormat.frame(for: encodedEvent)
         // Only a summary bypasses capacity without a reservation, and only a summary may use the bytes held back.
         let isSummary = bypassingCapacity && !usingReservation
-        // Kept off the disk, full events are bounded by count alone, as they were before persistence. A summary bypasses
-        // the count wherever it is kept, so there its bytes are all that bounds it: a delivery that keeps failing would
-        // otherwise go on holding one more for the life of the process.
-        let boundedByBytes = disk != nil || isSummary
         let staged = bufferLock.withLock { () -> Bool in
             // In the same critical section as the append, so the event is never counted twice or not at all.
             if usingReservation {
                 reservedEvents = max(0, reservedEvents - 1)
             }
+            // Bytes bound events kept off the disk too: capacity counts events, so held in memory through an outage it
+            // would allow it that many times whatever size they are, and a summary, which capacity never refuses,
+            // would otherwise go on growing for the life of the process.
             guard bypassingCapacity || countedEvents < capacity,
-                  !boundedByBytes || countedBytes + frame.count <= (isSummary ? byteCapacity : eventByteCapacity)
+                  countedBytes + frame.count <= (isSummary ? byteCapacity : eventByteCapacity)
             else { return false }
 
             if isSummary {

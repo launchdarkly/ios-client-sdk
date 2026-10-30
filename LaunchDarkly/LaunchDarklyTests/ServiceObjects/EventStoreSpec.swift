@@ -1780,15 +1780,6 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "past-capacity"))) == false
             }
 
-            it("is not bounded by bytes where it keeps events off the disk") {
-                store = EventStore.temporary(capacity: 100, byteCapacity: 1000, persistEvents: false)
-                for index in 1...20 {
-                    expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))) == true
-                }
-                expect(store.hasRoomForEventBytes) == true
-                expect(store.pendingEventCount) == 20
-            }
-
             it("bounds summaries by bytes even where it keeps events off the disk") {
                 // Nothing else bounds them: capacity never refuses a summary, and a delivery that keeps failing keeps
                 // every one it was given.
@@ -1801,8 +1792,27 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-2"), bypassingCapacity: true)) == true
 
                 expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-3"), bypassingCapacity: true)) == false
-                // Full events are still bounded by count alone.
-                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-9"))) == true
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-9"))) == false
+            }
+
+            it("bounds full events by bytes where it keeps events off the disk, leaving the summaries' fifth") {
+                // Capacity counts events, so in memory through an outage it would otherwise hold that many of any size.
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000, persistEvents: false)
+                for index in 1...8 {
+                    expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))) == true
+                }
+                expect(store.hasRoomForEventBytes) == false
+                expect(store.admitsEvent(heldElsewhere: 0, capacity: 100)) == false
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-9"))) == false
+                expect(store.pendingEventCount) == 8
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary"), bypassingCapacity: true)) == true
+            }
+
+            it("admits an event by count and by bytes in one check") {
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000, persistEvents: false)
+                _ = store.stage(EventStoreSpec.payload(framedIn: 100, key: "event"))
+                expect(store.admitsEvent(heldElsewhere: 98, capacity: 100)) == true
+                expect(store.admitsEvent(heldElsewhere: 99, capacity: 100)) == false
             }
 
             it("counts committed bytes as well as staged ones") {
