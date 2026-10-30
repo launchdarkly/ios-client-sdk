@@ -2512,6 +2512,83 @@ extension DirectEventProcessorSpec {
                 expect(store.pendingEventCount) == 0
             }
 
+            it("passes by a stored batch it could not read, reading it once a flush, and still delivers the batches behind it") {
+                let reads = FailingReads()
+                let store = EventStore.temporary(readFile: { try reads.read($0) })
+                testContext = TestContext(store: store)
+                // Online, and past the check for what a previous run left, before there is a batch for that check to find.
+                testContext.eventProcessor.isOnline = true
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                }
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                let unreadable = store.closeBatch()!
+                reads.fail(unreadable.payloadId)
+                testContext.recordEvents(1)
+
+                var delivered: Bool?
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                expect(testContext.serviceMock.publishedPayloadIds).toNot(contain(unreadable.payloadId))
+                expect(reads.failures) == 1
+                expect(store.pendingBatches().map { $0.payloadId }) == [unreadable.payloadId]
+
+                reads.fail(nil)
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+                expect(testContext.serviceMock.publishedPayloadIds.last) == unreadable.payloadId
+            }
+
+            it("drops a stored batch it could not read at three flushes in a row, and reports the loss once") {
+                let reads = FailingReads()
+                let store = EventStore.temporary(readFile: { try reads.read($0) })
+                testContext = TestContext(store: store)
+                testContext.eventProcessor.isOnline = true
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                }
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                reads.fail(store.closeBatch()!.payloadId)
+
+                var answers: [Bool] = []
+                for _ in 0..<DirectEventProcessor.readFailuresBeforeDropping {
+                    expect(store.pendingBatches().count) == 1
+                    waitUntil(timeout: Constants.deliveryTimeout) { done in
+                        testContext.eventProcessor.flushReportingOutcome { result in
+                            answers.append(result)
+                            done()
+                        }
+                    }
+                }
+                expect(answers) == [false, false, false]
+                expect(reads.failures) == DirectEventProcessor.readFailuresBeforeDropping
+                expect(store.pendingBatches()).to(beEmpty())
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+
+                testContext.recordEvents(1)
+                var delivered: Bool?
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+            }
+
             it("reports false and drops a stored batch this version cannot read, and still delivers the rest") {
                 let store = EventStore.temporary()
                 testContext = TestContext(store: store)
@@ -3550,6 +3627,37 @@ private final class Answer {
     /// Nil until the flush has been answered.
     func value() -> Bool? {
         lock.withLock { answered }
+    }
+}
+
+/// Reads that fail for one batch, as they do once a permission is taken away, counted. Set from the test's thread and
+/// read on the reporter's.
+private final class FailingReads {
+    private let lock = UnfairLock()
+    private var payloadId: String?
+    private var failed = 0
+
+    /// Fails every read of the batch from here on, or none where nil.
+    func fail(_ payloadId: String?) {
+        lock.withLock { self.payloadId = payloadId }
+    }
+
+    var failures: Int {
+        lock.withLock { failed }
+    }
+
+    /// Pass as the store's `readFile`.
+    func read(_ url: URL) throws -> Data {
+        let fails = lock.withLock { () -> Bool in
+            guard let payloadId, url.lastPathComponent.contains(payloadId)
+            else { return false }
+            failed += 1
+            return true
+        }
+        if fails {
+            throw NSError(domain: NSPOSIXErrorDomain, code: Int(EACCES))
+        }
+        return try Data(contentsOf: url)
     }
 }
 

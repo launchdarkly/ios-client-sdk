@@ -23,7 +23,8 @@ final class EventDeliveryRun {
     /// The least time between one paced batch's answer and the next batch's request.
     private let gap: TimeInterval
 
-    /// Guards the pacing, which a delivery somebody asks for, or going offline, ends from another thread.
+    /// Guards the pacing, which a delivery somebody asks for, or going offline, ends from another thread, and the
+    /// batches passed by, which the delivery notes from whichever thread it goes on from.
     private let lock = UnfairLock()
     /// Whether it is paced: until a delivery somebody asked for is queued, after which it sends the rest back to back,
     /// or the reporter goes offline, after which it sends nothing more. Only to be used while holding `lock`.
@@ -32,6 +33,9 @@ final class EventDeliveryRun {
     private var lastPostAnswered: DispatchTime?
     /// The batch waiting out its gap, which ending the pacing lets go at once. Only to be used while holding `lock`.
     private var waitingTurn: PacedTurn?
+    /// The batches whose read failed in this delivery, which it passes by rather than reading again. Only to be used
+    /// while holding `lock`.
+    private var passedBy: Set<String> = []
 
     init(isClosing: Bool, bypassesBackoff: Bool, isPaced: Bool, gap: TimeInterval) {
         self.isClosing = isClosing
@@ -47,6 +51,22 @@ final class EventDeliveryRun {
                 lastPostAnswered = .now()
             }
         }
+    }
+
+    /// Notes that a batch's read failed, so this delivery passes it by from here on: read again moments later, it would
+    /// most likely fail as it did, and count as two failures in a row.
+    func passBy(_ payloadId: String) {
+        lock.withLock { _ = passedBy.insert(payloadId) }
+    }
+
+    /// Whether this delivery passed a batch by after its read failed.
+    func passedBy(_ payloadId: String) -> Bool {
+        lock.withLock { passedBy.contains(payloadId) }
+    }
+
+    /// Whether this delivery passed any batch by after its read failed, and so left one unsent.
+    var passedAnyBy: Bool {
+        lock.withLock { !passedBy.isEmpty }
     }
 
     /// Ends the pacing, so that the rest go back to back, or, offline, stop.

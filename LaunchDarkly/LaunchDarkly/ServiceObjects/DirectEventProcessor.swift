@@ -57,7 +57,7 @@ class DirectEventProcessor: EventProcessor {
 
     // MARK: Guarded by stateLock
 
-    /// Guards which losses have been told to a caller, and the count of refused payloads.
+    /// Guards which losses have been told to a caller, and the counts of refused payloads and failed reads.
     private let stateLock = UnfairLock()
 
     /// The mark up to which losses have already been reported to a caller, so that none is told twice. Only to be
@@ -75,6 +75,18 @@ class DirectEventProcessor: EventProcessor {
     /// ends the run; a post that got no response leaves it. Held only in memory, so a new run of the application counts
     /// again. Only to be used while holding `stateLock`.
     private var badRequests: (payloadId: String, inARow: Int)?
+
+    /// How many failed reads in a row drop a batch. A read that fails is mostly one that will go on failing, a
+    /// permission taken away or a directory named like a batch, and expiry cannot delete a file it cannot open, so the
+    /// batch would be read, and fail, at every delivery for good. More than one, so a passing failure such as running out
+    /// of file descriptors costs nothing; a failed read sets no delivery of its own, so the reads are usually deliveries
+    /// apart.
+    static let readFailuresBeforeDropping = 3
+
+    /// Failed reads in a row, by payload ID, of the batches whose last read failed. Unlike refusals, these are counted
+    /// for several batches at once, since a batch whose read failed is passed by. Held only in memory, so a new run of
+    /// the application counts again. Only to be used while holding `stateLock`.
+    private var readFailures: [String: Int] = [:]
 
     // MARK: Guarded by claimLock
 
@@ -592,8 +604,11 @@ extension DirectEventProcessor {
         /// Every batch was attempted, and at least one was lost for good: unreadable, damaged, deleted unsent, or had its
         /// payload refused `badRequestsBeforeDropping` times in a row.
         case lost
-        /// A batch is still there to be sent again: its request failed, the backoff did not allow it to be posted yet,
-        /// or it could not be read this time. The batches after it were not attempted.
+        /// Every batch was attempted or passed by, and at least one was passed by: its read failed, and it is kept for a
+        /// later delivery to read again, while the batches after it were still attempted.
+        case passedBy
+        /// A batch is still there to be sent again: its request failed, or the backoff did not allow it to be posted
+        /// yet. The batches after it were not attempted.
         case blocked
 
         static func < (lhs: PassOutcome, rhs: PassOutcome) -> Bool {
@@ -601,10 +616,12 @@ extension DirectEventProcessor {
         }
     }
 
-    /// Delivers batches oldest first, stopping at the first one that failed.
+    /// Delivers batches oldest first, stopping at the first one whose post failed. One whose read failed is passed by,
+    /// and is not read again in this delivery.
     ///
     /// Stopping matters: the batches that are left keep their place in the log, and a later delivery attempts them
-    /// again rather than the SDK spending the rest of the session's requests on a service that is refusing them.
+    /// again rather than the SDK spending the rest of the session's requests on a service that is refusing them. A read
+    /// says nothing about the service, so it stops nothing.
     ///
     /// A failure whose wait is no longer than the initial delay is retried here, once a pass, so a caller waiting on
     /// the pass hears from the retry; a longer wait ends the pass at once, with a delivery set for when the wait ends.
@@ -617,9 +634,14 @@ extension DirectEventProcessor {
     /// included. `hadTurn` is whether the first batch has been held already.
     private func deliver(_ batches: [EventBatch], _ run: EventDeliveryRun, lostAnything: Bool, retried: Bool, hadTurn: Bool = false, _ completion: @escaping (PassOutcome) -> Void) {
         var remaining = batches
-        guard !remaining.isEmpty
+        guard let next = remaining.first
         else {
-            completion(lostAnything ? .lost : .delivered)
+            completion(run.passedAnyBy ? .passedBy : lostAnything ? .lost : .delivered)
+            return
+        }
+        guard !run.passedBy(next.payloadId)
+        else {
+            deliver(Array(remaining.dropFirst()), run, lostAnything: lostAnything, retried: retried, hadTurn: hadTurn, completion)
             return
         }
 
@@ -670,11 +692,11 @@ extension DirectEventProcessor {
             deliver(remaining, run, lostAnything: true, retried: retried, completion)
             return
         } catch {
-            // Kept: the batch is still there, and a read that failed may not fail next time.
-            os_log("%s could not read stored events: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error))
-            completion(.blocked)
+            let dropped = passByOrDrop(batch, readFailedWith: error, run)
+            deliver(remaining, run, lostAnything: lostAnything || dropped, retried: retried, completion)
             return
         }
+        endReadFailures(batch)
 
         guard let payload = read
         else {
@@ -690,6 +712,26 @@ extension DirectEventProcessor {
         let leftOut = max(0, batch.eventCount - payload.eventCount)
         service.diagnosticCache?.recordEventsInLastBatch(eventsInLastBatch: payload.eventCount)
         post(batch, payload, run, leftOut: leftOut, remaining: remaining, lostAnything: lostAnything, retried: retried, completion)
+    }
+
+    /// Passes by a batch whose read failed, or drops it as lost once that is `readFailuresBeforeDropping` in a row.
+    ///
+    /// Kept, since a read that failed may not fail next time, but passed by rather than stopped at. Stopped at, it held
+    /// back every batch behind it, the open log's included, on every pass for as long as the read kept failing: for good
+    /// where expiry cannot open the file to delete it either.
+    ///
+    /// - Returns: whether it dropped the batch.
+    private func passByOrDrop(_ batch: EventBatch, readFailedWith error: Error, _ run: EventDeliveryRun) -> Bool {
+        guard countReadFailure(batch) < DirectEventProcessor.readFailuresBeforeDropping
+        else {
+            os_log("%s dropping %d stored event(s) that could not be read %d times in a row: %s", log: service.config.logger, type: .error, typeName(and: #function), batch.eventCount, DirectEventProcessor.readFailuresBeforeDropping, String(describing: error))
+            store.remove(batch)
+            reportBatchLost(batch)
+            return true
+        }
+        os_log("%s could not read stored events, will try again at the next delivery: %s", log: service.config.logger, type: .info, typeName(and: #function), String(describing: error))
+        run.passBy(batch.payloadId)
+        return false
     }
 
     /// Whether the delivery running may post: online, or `flushAtClose()`'s. Going offline stops a delivery before its
@@ -794,6 +836,21 @@ extension DirectEventProcessor {
     /// Ends the run of refusals of the payload, as an accepted post does.
     private func endBadRequests() {
         stateLock.withLock { badRequests = nil }
+    }
+
+    /// - Returns: how many reads in a row of this batch have failed, counting this one; once that reaches
+    ///   `readFailuresBeforeDropping` the count is ended, since the batch is dropped.
+    private func countReadFailure(_ batch: EventBatch) -> Int {
+        stateLock.withLock {
+            let inARow = (readFailures[batch.payloadId] ?? 0) + 1
+            readFailures[batch.payloadId] = inARow >= DirectEventProcessor.readFailuresBeforeDropping ? nil : inARow
+            return inARow
+        }
+    }
+
+    /// Ends a batch's run of failed reads, at a read that worked.
+    private func endReadFailures(_ batch: EventBatch) {
+        stateLock.withLock { _ = readFailures.removeValue(forKey: batch.payloadId) }
     }
 
     /// Sets a delivery for when the backoff's wait ends, unless one is set already, so a batch kept through a failure
