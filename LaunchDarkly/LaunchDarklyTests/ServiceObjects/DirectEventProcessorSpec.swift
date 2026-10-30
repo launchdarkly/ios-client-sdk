@@ -2607,6 +2607,7 @@ extension DirectEventProcessorSpec {
                 testContext.recordEvents(1)
                 testContext.eventProcessor.commitRecordedEvents()
                 reads.fail(store.closeBatch()!.payloadId)
+                testContext.eventProcessor.readFailureSpacing = 0
 
                 var answers: [Bool] = []
                 for _ in 0..<DirectEventProcessor.readFailuresBeforeDropping {
@@ -2632,6 +2633,59 @@ extension DirectEventProcessorSpec {
                     }
                 }
                 expect(delivered) == true
+            }
+
+            it("keeps a stored batch whose reads fail closer together than the flush interval, and delivers it once it can be read") {
+                let reads = FailingReads()
+                let store = EventStore.temporary(readFile: { try reads.read($0) })
+                testContext = TestContext(store: store)
+                testContext.eventProcessor.isOnline = true
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                }
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                let unreadable = store.closeBatch()!
+                reads.fail(unreadable.payloadId)
+                testContext.eventProcessor.readFailureSpacing = 3600
+
+                // Flushes in a row, and the blocking flushAndWait's posting through the backoff, as a caller might.
+                for _ in 0..<(2 * DirectEventProcessor.readFailuresBeforeDropping) {
+                    waitUntil(timeout: Constants.deliveryTimeout) { done in
+                        testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                    }
+                    expect(testContext.flushBypassingBackoffOutcome()) == false
+                }
+                expect(reads.failures) == 4 * DirectEventProcessor.readFailuresBeforeDropping
+                expect(store.pendingBatches().map { $0.payloadId }) == [unreadable.payloadId]
+
+                reads.fail(nil)
+                expect(testContext.flushOutcome()) == true
+                expect(testContext.serviceMock.publishedPayloadIds.last) == unreadable.payloadId
+            }
+
+            it("drops a stored batch whose reads fail at least the spacing apart") {
+                let reads = FailingReads()
+                let store = EventStore.temporary(readFile: { try reads.read($0) })
+                testContext = TestContext(store: store)
+                testContext.eventProcessor.isOnline = true
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                }
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                reads.fail(store.closeBatch()!.payloadId)
+                let spacing: TimeInterval = 0.2
+                testContext.eventProcessor.readFailureSpacing = spacing
+
+                for _ in 1..<DirectEventProcessor.readFailuresBeforeDropping {
+                    expect(testContext.flushOutcome()) == false
+                    expect(testContext.flushOutcome()) == false
+                    expect(store.pendingBatches().count) == 1
+                    Thread.sleep(forTimeInterval: spacing + 0.05)
+                }
+                expect(testContext.flushOutcome()) == false
+                expect(store.pendingBatches()).to(beEmpty())
             }
 
             it("reports false and drops a stored batch this version cannot read, and still delivers the rest") {

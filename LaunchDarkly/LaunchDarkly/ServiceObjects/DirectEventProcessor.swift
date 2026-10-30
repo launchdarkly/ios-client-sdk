@@ -81,17 +81,29 @@ class DirectEventProcessor: EventProcessor {
     /// again. Only to be used while holding `stateLock`.
     private var badRequests: (payloadId: String, inARow: Int)?
 
-    /// How many failed reads in a row drop a batch. A read that fails is mostly one that will go on failing, a
+    /// How many counted failed reads in a row drop a batch. A read that fails is mostly one that will go on failing, a
     /// permission taken away or a directory named like a batch, and expiry cannot delete a file it cannot open, so the
-    /// batch would be read, and fail, at every delivery for good. More than one, so a passing failure such as running out
-    /// of file descriptors costs nothing; a failed read sets no delivery of its own, so the reads are usually deliveries
-    /// apart.
+    /// batch would be read, and fail, at every delivery for good. More than one, and counted at most once per
+    /// `readFailureSpacing`, so a passing failure such as running out of file descriptors costs nothing.
     static let readFailuresBeforeDropping = 3
 
-    /// Failed reads in a row, by payload ID, of the batches whose last read failed. Unlike refusals, these are counted
-    /// for several batches at once, since a batch whose read failed is passed by. Held only in memory, so a new run of
-    /// the application counts again. Only to be used while holding `stateLock`.
-    private var readFailures: [String: Int] = [:]
+    /// The least time between two failed reads of a batch that both count toward dropping it: the flush interval, so a
+    /// drop takes failures across at least two of them. Every pass that reaches the batch reads it, and passes can come
+    /// milliseconds apart, from flushes called in a row or the blocking `flushAndWait` posting through the backoff;
+    /// counted by pass, a failure lasting a moment would drop an intact batch. A failed read closer than this to the
+    /// last counted one passes the batch by without counting. Settable only for tests.
+    var readFailureSpacing: TimeInterval {
+        get { stateLock.withLock { readFailureSpacingValue } }
+        set { stateLock.withLock { readFailureSpacingValue = newValue } }
+    }
+    // Only to be used while holding `stateLock`.
+    private var readFailureSpacingValue: TimeInterval
+
+    /// Counted failed reads in a row, by payload ID, of the batches whose last read failed, and when the last of them
+    /// was. Unlike refusals, these are counted for several batches at once, since a batch whose read failed is passed
+    /// by. Held only in memory, so a new run of the application counts again. Only to be used while holding
+    /// `stateLock`.
+    private var readFailures: [String: (counted: Int, lastCounted: DispatchTime)] = [:]
 
     // MARK: Guarded by claimLock
 
@@ -153,6 +165,7 @@ class DirectEventProcessor: EventProcessor {
         self.onSyncComplete = onSyncComplete
         self.sender = AnalyticsEventSender(service: service)
         self.retryState = retryState ?? DeliveryRetryState(flushInterval: service.config.eventFlushInterval)
+        self.readFailureSpacingValue = service.config.eventFlushInterval
         self.lostEvents = lostEvents
         self.committer = EventCommitter(config: service.config, store: eventStore, encoding: encoding,
                                         commitQueue: commitQueue, diagnosticCache: service.diagnosticCache,
@@ -846,13 +859,19 @@ extension DirectEventProcessor {
         stateLock.withLock { badRequests = nil }
     }
 
-    /// - Returns: how many reads in a row of this batch have failed, counting this one; once that reaches
-    ///   `readFailuresBeforeDropping` the count is ended, since the batch is dropped.
+    /// - Returns: how many counted reads in a row of this batch have failed, this one included if it is at least
+    ///   `readFailureSpacing` after the last counted one; once that reaches `readFailuresBeforeDropping` the count is
+    ///   ended, since the batch is dropped.
     private func countReadFailure(_ batch: EventBatch) -> Int {
-        stateLock.withLock {
-            let inARow = (readFailures[batch.payloadId] ?? 0) + 1
-            readFailures[batch.payloadId] = inARow >= DirectEventProcessor.readFailuresBeforeDropping ? nil : inARow
-            return inARow
+        let now = DispatchTime.now()
+        return stateLock.withLock {
+            if let last = readFailures[batch.payloadId], now < last.lastCounted + readFailureSpacingValue {
+                return last.counted
+            }
+            let counted = (readFailures[batch.payloadId]?.counted ?? 0) + 1
+            readFailures[batch.payloadId] = counted >= DirectEventProcessor.readFailuresBeforeDropping
+                ? nil : (counted, now)
+            return counted
         }
     }
 
