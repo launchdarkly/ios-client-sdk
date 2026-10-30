@@ -900,24 +900,48 @@ enum BatchLocks {
         var senders = 0
     }
 
-    /// The batches this process has a request out for, by `key(_:)`. Guarded by `lock`, which covers the probes and
-    /// deletions below as well, so that a store in this process cannot start sending a batch another is expiring.
-    private static var heldInThisProcess: [String: Held] = [:]
-    private static let lock = UnfairLock()
+    /// The batches of one directory this process has a request out for, by name. Guarded by `lock`, which covers the
+    /// probes and deletions below as well, so that a store in this process cannot start sending a batch another is
+    /// expiring. One per directory rather than one for all, since a lock taken or dropped on one file leaves every other
+    /// file's alone, so stores of different environments have nothing to wait on each other for.
+    private final class Directory {
+        var heldInThisProcess: [String: Held] = [:]
+        let lock = UnfairLock()
+    }
 
-    /// One name for a batch however its URL was come by, from a listing or put together from the directory: only the
-    /// directory is resolved, since the batch itself may be gone by the time its send stops.
+    /// Every directory this process has sent from or expired in, by `key(_:)`. Process-wide, because two stores in one
+    /// process can share a directory and must share its lock. Never shrinks: a directory dropped while a call still held
+    /// it would let the next call take a second lock for the same files. There is one entry per environment directory
+    /// the process has touched, which stays a handful.
+    private static var directories: [String: Directory] = [:]
+    private static let directoriesLock = UnfairLock()
+
+    /// One name for a batch's directory however its URL was come by, from a listing or put together from the directory:
+    /// only the directory is resolved, since the batch itself may be gone by the time its send stops.
     private static func key(_ batch: URL) -> String {
-        batch.deletingLastPathComponent().resolvingSymlinksInPath().appendingPathComponent(batch.lastPathComponent).path
+        batch.deletingLastPathComponent().resolvingSymlinksInPath().path
+    }
+
+    private static func directory(of batch: URL) -> Directory {
+        let path = key(batch)
+        return directoriesLock.withLock {
+            if let known = directories[path] {
+                return known
+            }
+            let created = Directory()
+            directories[path] = created
+            return created
+        }
     }
 
     /// Locks a batch for as long as a request for it is out. Each call is ended by one `stoppedSending(_:)`; a batch
     /// two deliveries send at once stays locked until both have stopped.
     static func startedSending(_ batch: URL) {
-        let path = key(batch)
-        lock.withLock {
-            let held = heldInThisProcess[path] ?? Held()
-            heldInThisProcess[path] = held
+        let directory = directory(of: batch)
+        let name = batch.lastPathComponent
+        directory.lock.withLock {
+            let held = directory.heldInThisProcess[name] ?? Held()
+            directory.heldInThisProcess[name] = held
             held.senders += 1
             #if os(macOS) || targetEnvironment(macCatalyst)
             // Only fails to open where the batch is gone already, leaving nothing for expiry to take. Still remembered
@@ -936,14 +960,15 @@ enum BatchLocks {
 
     /// Ends one `startedSending(_:)`, releasing the lock once the last sender has stopped.
     static func stoppedSending(_ batch: URL) {
-        let path = key(batch)
-        lock.withLock {
-            guard let held = heldInThisProcess[path]
+        let directory = directory(of: batch)
+        let name = batch.lastPathComponent
+        directory.lock.withLock {
+            guard let held = directory.heldInThisProcess[name]
             else { return }
             held.senders -= 1
             guard held.senders <= 0
             else { return }
-            heldInThisProcess[path] = nil
+            directory.heldInThisProcess[name] = nil
             // Releases the lock with it.
             held.file?.close()
         }
@@ -951,8 +976,9 @@ enum BatchLocks {
 
     /// Whether a store in this process is sending a batch, answered without opening the file.
     static func isSentInThisProcess(_ batch: URL) -> Bool {
-        let path = key(batch)
-        return lock.withLock { heldInThisProcess[path] != nil }
+        let directory = directory(of: batch)
+        let name = batch.lastPathComponent
+        return directory.lock.withLock { directory.heldInThisProcess[name] != nil }
     }
 
     /// Deletes a batch for expiry, unless some live process is sending it.
@@ -960,9 +986,10 @@ enum BatchLocks {
     /// - Returns: whether this call deleted it; false for one being sent, one that could not be looked at, and one
     ///   already gone, whose events are someone else's to count.
     static func deleteUnlessBeingSent(_ batch: URL) -> Bool {
-        let path = key(batch)
-        return lock.withLock {
-            guard heldInThisProcess[path] == nil
+        let directory = directory(of: batch)
+        let name = batch.lastPathComponent
+        return directory.lock.withLock {
+            guard directory.heldInThisProcess[name] == nil
             else { return false }
             #if os(macOS) || targetEnvironment(macCatalyst)
             // Opened without being created: a batch delivered since it was listed has to stay gone, since a delivery
@@ -977,6 +1004,13 @@ enum BatchLocks {
             return (try? FileManager.default.removeItem(at: batch)) != nil
         }
     }
+
+    #if DEBUG
+    /// The lock every call on a batch takes: its directory's, whichever store names the batch.
+    static func lockForTesting(_ batch: URL) -> UnfairLock {
+        directory(of: batch).lock
+    }
+    #endif
 }
 
 extension EventDirectory {

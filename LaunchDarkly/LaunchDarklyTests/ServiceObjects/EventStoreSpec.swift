@@ -2089,6 +2089,75 @@ final class EventStoreSpec: QuickSpec {
     /// Losing the disk should cost durability and nothing else. These are the events an application would otherwise
     /// have reported before any of this existed, so the store keeps delivering them from memory.
     private func fallbackSpec() {
+        describe("batch locks") {
+            var root: URL!
+            beforeEach {
+                root = EventStore.temporaryDirectory()
+            }
+            afterEach {
+                try? FileManager.default.removeItem(at: root)
+            }
+            func batch(in directory: String, named name: String) throws -> URL {
+                let directory = root.appendingPathComponent(directory, isDirectory: true)
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                let batch = directory.appendingPathComponent(name)
+                try Data([1, 2, 3]).write(to: batch)
+                return batch
+            }
+
+            it("gives the batches of one directory one lock, however their URLs were come by, and another directory its own") {
+                let first = try batch(in: "one", named: "ready-a-1")
+                let second = URL(fileURLWithPath: first.deletingLastPathComponent().path + "/ready-b-1")
+                let elsewhere = try batch(in: "other", named: "ready-a-1")
+
+                expect(BatchLocks.lockForTesting(first) === BatchLocks.lockForTesting(second)) == true
+                expect(BatchLocks.lockForTesting(first) === BatchLocks.lockForTesting(elsewhere)) == false
+            }
+
+            it("expires in one directory while another directory's lock is held, and waits on its own") {
+                let held = try batch(in: "held", named: "ready-held-1")
+                let besideIt = try batch(in: "held", named: "ready-beside-1")
+                let elsewhere = try batch(in: "elsewhere", named: "ready-elsewhere-1")
+                let elsewhereDone = DispatchSemaphore(value: 0)
+                let besideItDone = DispatchSemaphore(value: 0)
+
+                let lock = BatchLocks.lockForTesting(held)
+                lock.lock()
+                DispatchQueue.global().async {
+                    _ = BatchLocks.deleteUnlessBeingSent(elsewhere)
+                    elsewhereDone.signal()
+                }
+                let elsewhereWaited = elsewhereDone.wait(timeout: .now() + 5) == .timedOut
+                DispatchQueue.global().async {
+                    _ = BatchLocks.deleteUnlessBeingSent(besideIt)
+                    besideItDone.signal()
+                }
+                let besideItWaited = besideItDone.wait(timeout: .now() + 0.2) == .timedOut
+                lock.unlock()
+
+                expect(elsewhereWaited) == false
+                expect(besideItWaited) == true
+                expect(besideItDone.wait(timeout: .now() + 5)) == .success
+                expect(FileManager.default.fileExists(atPath: elsewhere.path)) == false
+                expect(FileManager.default.fileExists(atPath: besideIt.path)) == false
+            }
+
+            it("leaves a batch of the same name in another directory to expiry while one is sent") {
+                let sent = try batch(in: "sending", named: "ready-same-1")
+                let namesake = try batch(in: "expiring", named: "ready-same-1")
+
+                BatchLocks.startedSending(sent)
+                expect(BatchLocks.isSentInThisProcess(sent)) == true
+                expect(BatchLocks.isSentInThisProcess(namesake)) == false
+                expect(BatchLocks.deleteUnlessBeingSent(sent)) == false
+                expect(BatchLocks.deleteUnlessBeingSent(namesake)) == true
+                BatchLocks.stoppedSending(sent)
+
+                expect(BatchLocks.isSentInThisProcess(sent)) == false
+                expect(BatchLocks.deleteUnlessBeingSent(sent)) == true
+            }
+        }
+
         describe("a store the filesystem will not take") {
             var store: EventStore!
             beforeEach {
