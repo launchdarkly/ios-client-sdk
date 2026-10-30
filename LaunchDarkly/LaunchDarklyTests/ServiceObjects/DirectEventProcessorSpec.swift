@@ -2176,6 +2176,35 @@ extension DirectEventProcessorSpec {
                 expect(totalCommits) < trackers
             }
 
+            itPersisting("returns from closing within its budget while the final commit is stalled on the disk, and still writes it") {
+                var config = LDConfig.stub
+                config.eventPersistence = .deferred
+                let serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                let inner = EventStore.temporary(capacity: config.eventCapacity)
+                defer { inner.deleteEverything() }
+                let store = ClosingHookStore(inner)
+                let diskAnswers = DispatchGroup()
+                diskAnswers.enter()
+                let stalled = DispatchSemaphore(value: 0)
+                store.beforeCommitting = {
+                    stalled.signal()
+                    _ = diskAnswers.wait(timeout: .now() + 10)
+                }
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: DispatchQueue(label: "com.launchdarkly.tests.commits"), pacing: .noWaits)
+                reporter.record(CustomEvent(key: "before-close", context: LDContext.stub()))
+
+                let started = Date()
+                reporter.flushAtClose()
+                let took = Date().timeIntervalSince(started)
+                diskAnswers.leave()
+
+                expect(stalled.wait(timeout: .now())) == .success
+                expect(took) < DirectEventProcessor.closeCommitBudget + 1
+                let keysOnDisk = { inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).keyField } }
+                expect(keysOnDisk()).toEventually(contain("before-close"), timeout: Constants.deliveryTimeout)
+            }
+
             itPersisting("tries a batch a previous run left once at start, with its retry, and then waits out the backoff") {
                 testContext = TestContext()
                 testContext.serviceMock.respondToEvents(with: 503)

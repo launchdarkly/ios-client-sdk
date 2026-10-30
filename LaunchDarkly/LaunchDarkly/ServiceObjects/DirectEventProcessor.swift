@@ -30,6 +30,11 @@ class DirectEventProcessor: EventProcessor {
         let gap: TimeInterval
     }
 
+    /// How long `flushAtClose()` waits for its commit, on a thread that for an application closing the client is
+    /// usually the main one. The same two seconds Android allows its whole `close()`, well inside what the system
+    /// tolerates from a main thread that has stopped answering.
+    static let closeCommitBudget: TimeInterval = 2
+
     // MARK: Set in init and never changed
 
     let service: DarklyServiceProvider
@@ -352,7 +357,7 @@ extension DirectEventProcessor {
     }
 
     func flushAtClose() {
-        commitWherePersisting()
+        committer.commitWithinBudget(DirectEventProcessor.closeCommitBudget)
         // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing: offline is the
         // application keeping the SDK off the network, and closing does not revoke that.
         queueDelivery(nil, closing: isOnline)
