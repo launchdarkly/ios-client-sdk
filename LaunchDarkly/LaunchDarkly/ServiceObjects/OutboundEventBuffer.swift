@@ -77,19 +77,25 @@ final class OutboundEventBuffer {
     ///
     /// A summary larger than one log frame holds is split between summaries of the same context and period, each with
     /// some of its flags, until each fits. Whole, it would be refused by the store and every evaluation in it lost. Only
-    /// a single flag's counters too large for a frame are left whole, for the store to refuse.
+    /// a single flag's counters too large for a frame, and a part that is mostly context, which no split makes fit, are
+    /// left whole, for the store to refuse.
     ///
     /// - Returns: at least one summary, nil for each part that could not be encoded.
     func encodeSummary(_ summary: (tracker: FlagRequestTracker, context: LDContext)) -> [Data?] {
-        encodeSummary(summary.tracker, context: summary.context, endDate: Date())
+        encodeSummary(summary.tracker, context: summary.context, endDate: Date(), splitFrom: .max)
     }
 
-    private func encodeSummary(_ tracker: FlagRequestTracker, context: LDContext, endDate: Date) -> [Data?] {
+    /// - Parameter splitFrom: the encoded size of the summary this is half of, or `.max` for one that is not.
+    private func encodeSummary(_ tracker: FlagRequestTracker, context: LDContext, endDate: Date, splitFrom: Int) -> [Data?] {
         let encoded = encode(SummaryEvent(flagRequestTracker: tracker, context: context, endDate: endDate))
-        guard let size = encoded?.count, size > EventLogFormat.maxFrameSize, let halves = tracker.halved()
+        // Every part carries the whole context. A half that kept more than three quarters of what it was split from is
+        // mostly context, and halving it again would only turn its one loss into one per flag, each a frame's worth of
+        // context held at once.
+        guard let size = encoded?.count, size > EventLogFormat.maxFrameSize, size <= splitFrom / 4 * 3,
+              let halves = tracker.halved()
         else { return [encoded] }
-        return encodeSummary(halves.0, context: context, endDate: endDate)
-            + encodeSummary(halves.1, context: context, endDate: endDate)
+        return encodeSummary(halves.0, context: context, endDate: endDate, splitFrom: size)
+            + encodeSummary(halves.1, context: context, endDate: endDate, splitFrom: size)
     }
 
     private static func makeEncoder(config: LDConfig) -> JSONEncoder {

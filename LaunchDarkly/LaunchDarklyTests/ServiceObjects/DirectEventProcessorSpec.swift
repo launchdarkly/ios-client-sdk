@@ -2993,6 +2993,32 @@ extension DirectEventProcessorSpec {
                 expect(Set(flagKeys).count) == flagCount
             }
 
+            it("does not split a summary large for its context down to one flag per part") {
+                var builder = LDContextBuilder(key: "huge")
+                _ = builder.trySetValue("data", .string(String(repeating: "x", count: EventLogFormat.maxFrameSize)))
+                let context = try! builder.build().get()
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                let flagCount = 16
+                var tracker = FlagRequestTracker(logger: .disabled)
+                for index in 0..<flagCount {
+                    tracker.trackRequest(flagKey: "flag-\(index)", reportedValue: "a", featureFlag: flag, defaultValue: "b",
+                                         context: context)
+                }
+
+                let parts = OutboundEventBuffer(config: LDConfig.stub, encoding: .handWritten)
+                    .encodeSummary((tracker: tracker, context: context))
+
+                expect(parts.count) <= 2
+                let flagKeys = parts.compactMap { $0 }.flatMap { part -> [String] in
+                    guard case .object(let fields)? = try? JSONDecoder().decode(LDValue.self, from: part),
+                          case .object(let features)? = fields["features"]
+                    else { return [] }
+                    return Array(features.keys)
+                }
+                expect(Set(flagKeys).count) == flagCount
+                expect(flagKeys.count) == flagCount
+            }
+
             it("reports false when a retryable failure leaves the batch on disk") {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
