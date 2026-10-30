@@ -36,10 +36,9 @@ public enum LDStreamingMode {
     case disabled
     /// Events are written to disk, off the thread that recorded them.
     ///
-    /// Recording stays as cheap as it is without persistence. An event from `track` or `identify` becomes durable a
-    /// moment after it was recorded rather than immediately, and a process that dies inside that window still loses
-    /// it. Evaluating a flag does not schedule a write of its own: its events wait in memory until enough of them have
-    /// built up, or until the next `track`, `identify`, flush or delivery writes them.
+    /// Recording stays as cheap as it is without persistence. Neither `track`, `identify` nor evaluating a flag
+    /// schedules a write of its own: events wait in memory until enough of them have built up, or until the next
+    /// flush, delivery or move to the background writes them. A process that dies before then loses them.
     ///
     /// A flush and entering the background are the exceptions. Both write on the calling thread, as `.immediate` does:
     /// a flush so that an application ending the process on purpose can rely on it, and entering the background because

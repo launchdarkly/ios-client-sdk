@@ -1722,14 +1722,19 @@ extension DirectEventProcessorSpec {
                 expect(onDisk.first?.kindField) == "custom"
             }
 
-            itPersisting("still writes a tracked event when the write is not on the caller's thread") {
-                testContext = TestContext(eventPersistence: .deferred)
+            itPersisting("writes nothing for a tracked event at .deferred, and writes it with the rest at the pending threshold") {
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.commits")
+                testContext = TestContext(eventCapacity: 100, eventPersistence: .deferred, commitQueue: commits)
 
                 testContext.eventProcessor.record(CustomEvent(key: "fatal-error", context: testContext.context, data: ["message": "boom"]))
+                // Behind any write the track queued, so that write has run by now.
+                commits.sync { }
+                expect(eventsLeftOnDisk()).to(beEmpty())
 
-                // The promise is weaker by exactly one scheduling hop: the event reaches the disk, just not before
-                // recording it returned.
-                expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]), timeout: Constants.deliveryTimeout)
+                for index in 1..<EventCommitter.pendingCommitThreshold {
+                    testContext.eventProcessor.record(CustomEvent(key: "more-\(index)", context: testContext.context))
+                }
+                expect(eventsLeftOnDisk().count).toEventually(equal(EventCommitter.pendingCommitThreshold), timeout: Constants.deliveryTimeout)
             }
 
             itPersisting("has written the evaluations that came before a tracked event") {
@@ -1759,9 +1764,9 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["feature", "summary"]
             }
 
-            itPersisting("writes on flush at .deferred too, without waiting for the queue a tracked event's write goes to") {
-                // Suspended, so that the tracked event's own write cannot run and the only write there can be is one the
-                // flush makes on this thread.
+            itPersisting("writes on flush at .deferred too, without waiting for the commit queue") {
+                // Suspended, so that a queued write cannot run and the only write there can be is one the flush makes on
+                // this thread.
                 let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
                 commits.suspend()
                 defer { commits.resume() }
@@ -2085,17 +2090,19 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
             }
 
-            itPersisting("writes a deferred track while a delivery holds the delivery queue") {
-                testContext = TestContext(eventPersistence: .deferred)
+            itPersisting("writes deferred events at the pending threshold while a delivery holds the delivery queue") {
+                testContext = TestContext(eventCapacity: 100, eventPersistence: .deferred)
                 // Stands in for a post to a network that does not answer, which holds the queue for as long as its
                 // timeouts allow.
                 let released = DispatchSemaphore(value: 0)
                 defer { released.signal() }
                 testContext.eventProcessor.occupyQueue(until: released)
 
-                testContext.eventProcessor.record(CustomEvent(key: "tracked", context: testContext.context))
+                for index in 0..<EventCommitter.pendingCommitThreshold {
+                    testContext.eventProcessor.record(CustomEvent(key: "tracked-\(index)", context: testContext.context))
+                }
 
-                expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]), timeout: Constants.deliveryTimeout)
+                expect(eventsLeftOnDisk().count).toEventually(equal(EventCommitter.pendingCommitThreshold), timeout: Constants.deliveryTimeout)
             }
 
             itPersisting("has written everything by the time a flush returns, even while a delivery holds the delivery queue") {
