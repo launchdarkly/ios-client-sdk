@@ -89,12 +89,21 @@ final class OutboundEventBuffer {
     ///
     /// - Returns: at least one summary, nil for each part that could not be encoded.
     func encodeSummary(_ summary: (tracker: FlagRequestTracker, context: LDContext)) -> [Data?] {
+        encodeSummary(summary, splitting: true) ?? []
+    }
+
+    /// `encodeSummary(_:)`, or nil for a summary that would be split where `splitting` is false, leaving the split to
+    /// the caller. Splitting encodes the context once per part, which is more than a commit on the application's thread
+    /// should spend.
+    func encodeSummary(_ summary: (tracker: FlagRequestTracker, context: LDContext), splitting: Bool) -> [Data?]? {
         let tracker = summary.tracker
         let context = summary.context
         let endDate = Date()
         let encoded = encode(SummaryEvent(flagRequestTracker: tracker, context: context, endDate: endDate))
         guard let size = encoded?.count, size > EventLogFormat.maxFrameSize, tracker.flagCounters.count > 1
         else { return [encoded] }
+        guard splitting
+        else { return nil }
         let parts = packIntoFrames(tracker, flagKeys: tracker.flagCounters.keys.sorted(), endDate: endDate, size: size)
         guard parts.count > 1
         else { return [encoded] }

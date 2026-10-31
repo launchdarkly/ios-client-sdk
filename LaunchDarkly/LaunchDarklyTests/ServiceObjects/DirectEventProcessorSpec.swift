@@ -1780,6 +1780,30 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom"]
             }
 
+            itPersisting("leaves splitting an oversized summary to the commit queue when a flush writes on this thread") {
+                // Splitting a summary encodes its context once per part, which is more than the application's thread
+                // should spend. Suspended, so the flush's write is the only one until the queue resumes.
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
+                commits.suspend()
+                testContext = TestContext(lastEventResponseDate: Date(), eventPersistence: .deferred, commitQueue: commits)
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                let large = LDValue.string(String(repeating: "v", count: 64 * 1024))
+                // About 3 MiB of values, so two parts.
+                for index in 0..<48 {
+                    testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-\(index)", value: large, defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
+                }
+                testContext.eventProcessor.record(CustomEvent(key: "before-exit", context: testContext.context, data: nil))
+
+                testContext.eventProcessor.flush(completion: nil)
+
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom"]
+
+                commits.resume()
+                commits.sync { }
+
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom", "summary", "summary"]
+            }
+
             it("does not write on the main thread when a flag is evaluated there") {
                 // Suspended for the length of the evaluations, so that a write this thread was going to cause is a
                 // write that cannot happen: an evaluation is expected to be a memory operation, and the thread
