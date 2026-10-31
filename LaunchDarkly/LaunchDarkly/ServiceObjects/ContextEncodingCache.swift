@@ -26,6 +26,9 @@ final class ContextEncodingCache {
 
     private var entries: [Entry?] = [nil, nil]
 
+    /// How many encodings have been stored, which is how many times a context was encoded rather than served.
+    private(set) var storeCount = 0
+
     /// The encoded bytes for `context` under `redactAnonymous`, or nil if that entry holds a different context.
     func encodedContext(for context: LDContext, redactAnonymous: Bool) -> [UInt8]? {
         let slot = ContextEncodingCache.slot(redactAnonymous)
@@ -38,6 +41,7 @@ final class ContextEncodingCache {
 
     func store(_ context: LDContext, redactAnonymous: Bool, encoded: [UInt8]) {
         entries[ContextEncodingCache.slot(redactAnonymous)] = Entry(context: context, encoded: encoded)
+        storeCount += 1
     }
 
     private static func slot(_ redactAnonymous: Bool) -> Int {

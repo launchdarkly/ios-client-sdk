@@ -35,10 +35,34 @@ public final class ObjcLDConfig: NSObject {
         set { config.streamUrl = newValue }
     }
 
-    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)
+    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. The same number bounds how many distinct contexts flag evaluations are summarized for between two reports; evaluations for contexts beyond it are not counted until the next report. (Default: 2000)
     @objc public var eventCapacity: Int {
         get { config.eventCapacity }
         set { config.eventCapacity = newValue }
+    }
+
+    /// How far the SDK goes to make a recorded event outlive the process that recorded it.
+    ///
+    /// Without this, an event lives in memory until it is delivered, and a process that dies before the next flush
+    /// takes everything recorded since the last one, including the crash an application was reporting when it died.
+    /// `.immediate` additionally puts the write on the thread that called `track` or `identify`, so there is no window
+    /// in which the event exists only in memory. Both levels other than `.disabled` are experimental, and not subject to
+    /// any backwards compatibility guarantees or semantic versioning. (Default: `.disabled`)
+    @objc public var eventPersistence: EventPersistence {
+        get { config.eventPersistence }
+        set { config.eventPersistence = newValue }
+    }
+
+    /// The maximum number of bytes of events the SDK keeps, on disk and in memory together, whatever `eventPersistence` is, for every environment together: each environment in `secondaryMobileKeys` gets an equal share of it, unlike `eventCapacity`. When an environment reaches its share, the SDK discards new events until it reports the stored ones; a fifth of each share is kept for the summaries of flag evaluations. (Default: 20 MiB)
+    @objc public var eventCapacityBytes: Int {
+        get { config.eventCapacityBytes }
+        set { config.eventCapacityBytes = newValue }
+    }
+
+    /// How long the SDK keeps persisted events it has not yet reported before discarding them, which also removes what it stored for a mobile key the application stopped using. No effect where `eventPersistence` is `.disabled`. (Default: 7 days)
+    @objc public var eventMaxAge: TimeInterval {
+        get { config.eventMaxAge }
+        set { config.eventMaxAge = newValue }
     }
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)

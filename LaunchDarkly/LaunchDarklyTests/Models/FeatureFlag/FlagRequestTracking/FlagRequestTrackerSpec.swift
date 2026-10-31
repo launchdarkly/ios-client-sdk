@@ -63,6 +63,32 @@ final class FlagRequestTrackerSpec: XCTestCase {
         XCTAssertEqual(flagRequestTracker.flagCounters["alt-flag"], counter2)
     }
 
+    func testHalvedLeavesATrackerOfOneFlagWhole() {
+        var tracker = FlagRequestTracker(logger: .disabled)
+        tracker.trackRequest(flagKey: "only", reportedValue: true, featureFlag: FeatureFlag(flagKey: "only"), defaultValue: false, context: LDContext.stub())
+        tracker.trackRequest(flagKey: "only", reportedValue: true, featureFlag: FeatureFlag(flagKey: "only"), defaultValue: false, context: LDContext.stub())
+        XCTAssertNil(tracker.halved())
+    }
+
+    func testHalvedSharesTheFlagsBetweenTwoTrackersOverTheSamePeriod() {
+        var tracker = FlagRequestTracker(logger: .disabled)
+        for index in 0..<5 {
+            tracker.trackRequest(flagKey: "flag-\(index)", reportedValue: true, featureFlag: FeatureFlag(flagKey: "flag-\(index)"), defaultValue: false, context: LDContext.stub())
+        }
+        guard let halves = tracker.halved()
+        else { return XCTFail("a tracker of five flags was not split") }
+        let (first, second) = halves
+        XCTAssertEqual(first.flagCounters.count, 2)
+        XCTAssertEqual(second.flagCounters.count, 3)
+        XCTAssertEqual(first.startDate, tracker.startDate)
+        XCTAssertEqual(second.startDate, tracker.startDate)
+        let rejoined = first.flagCounters.merging(second.flagCounters) { kept, _ in kept }
+        XCTAssertEqual(Set(rejoined.keys), Set(tracker.flagCounters.keys))
+        for (flagKey, counter) in rejoined {
+            XCTAssertTrue(counter === tracker.flagCounters[flagKey])
+        }
+    }
+
     func testHasLoggedRequests() {
         var flagRequestTracker = FlagRequestTracker(logger: OSLog(subsystem: "com.launchdarkly", category: "tests"))
         flagRequestTracker.trackRequest(flagKey: "test-key", reportedValue: nil, featureFlag: FeatureFlag(flagKey: "test-key"), defaultValue: nil, context: LDContext.stub())

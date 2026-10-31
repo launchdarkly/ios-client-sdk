@@ -4,19 +4,30 @@ import OSLog
 // MARK: - Flush
 extension LDClient {
     /**
-     Tells the SDK to immediately send any currently queued events to LaunchDarkly.
+     Writes down all pending events and sends them to LaunchDarkly.
 
      There should not normally be a need to call this function. While online, the LDClient automatically reports events
      on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
-     sent, it only triggers a background task to send events immediately.
+     sent, it only triggers a background task to send them immediately.
 
      Because it does not wait, it cannot report how the delivery went. Use `flush(completion:)` where that matters
      but blocking does not suit, or `flushAndWait` where blocking is acceptable.
+
+     Where `LDConfig.eventPersistence` is on, it also writes before it returns, on the calling thread, at `.deferred`
+     as well as at `.immediate`. Recording an event does not on its own make it outlive the process: events are written
+     in runs, so one recorded shortly before the process ends may never have been written at all. This call writes
+     everything recorded so far, and those events then survive whether or not the delivery does. Where it is off,
+     events live in memory only and nothing survives the process, whether or not this was called.
+
+     That is what makes it worth calling where the process is about to end deliberately. It is not a crash-time
+     mechanism — Apple gives the SDK no crash hook, and a trap or a `SIGKILL` loses whatever was recorded since the
+     last write. What was written before then is delivered on the next launch.
      */
     public func flush() {
-        LDClient.instancesQueue.sync(flags: .barrier) {
-            LDClient.instances?.forEach { $1.internalFlush() }
-        }
+        // Taken under the queue and flushed after it is released, since each flush writes, and every other client call
+        // in the process that reads the instances would otherwise wait behind every environment's write.
+        let clients = LDClient.instancesQueue.sync { LDClient.instances.map { Array($0.values) } } ?? []
+        clients.forEach { $0.internalFlush() }
     }
 
     /**
@@ -39,7 +50,9 @@ extension LDClient {
         guard !clients.isEmpty
         else {
             os_log("%s called on a closed client", log: config.logger, type: .debug, self.typeName(and: #function))
-            completion(false)
+            // Answered off the caller's thread even with nothing to wait for, so that the contract holds whether or
+            // not the client turned out to be closed.
+            DispatchQueue.global().async { completion(false) }
             return
         }
 
@@ -49,7 +62,7 @@ extension LDClient {
         var outstanding = clients.count
 
         for client in clients {
-            client.eventReporter.flushReportingOutcome { result in
+            client.eventProcessor.flushReportingOutcome { result in
                 lock.lock()
                 delivered = delivered && result
                 outstanding -= 1
@@ -92,6 +105,15 @@ extension LDClient {
      This is not a crash-time mechanism. It is safe to call from the main thread, but keep the budget well below
      15 seconds there.
 
+     It posts even while delivery is backing off after a failure, as closing the client does, since it is for a moment
+     after which the SDK may not get to send. After a refusal such as a 401 or 403 the SDK waits about eight and a half
+     minutes before posting again, doubling up to an hour, and a call that sat that out would make no attempt at all.
+     A post that fails then leaves the wait as it was, so `flush`, `flush(completion:)` and the periodic delivery go on
+     waiting out the same one rather than a longer one. That also means nothing slows these posts down: a call made
+     routinely, rather than just before the process is suspended or ends, posts once per call for as long as
+     LaunchDarkly keeps refusing. Keep it for those last moments; the SDK already flushes on every move to the
+     background.
+
      This method is not stable, and not subject to any backwards compatibility guarantees or semantic versioning. It is
      experimental.
 
@@ -99,14 +121,16 @@ extension LDClient {
        no upper limit: a delivery always ends, by its own request timeouts if nothing else, so a very long timeout
        waits for that.
      - returns: `true` if LaunchDarkly accepted the events, or there were none to send. `false` if the timeout expired
-       first, the client is offline or closed, or any of the events were lost: refused by LaunchDarkly, still failing
-       after one retry, or unable to be serialized. Lost events are not kept for a later flush, so calling this again
-       does not resend them. A refusal also stops event delivery until the client is next set online, and until then
-       this returns `false` even with nothing to send. A `false` because the timeout expired does not mean the events
-       were not sent: the delivery is left running, and may still arrive.
+       first, the client is offline or closed, or the events did not get out. Events the service refused or that
+       failed to post are kept, and posted again once the backoff allows, or by the next call to this method. Events
+       that could not be serialized, or whose payload LaunchDarkly refused twice in a row, are lost, and calling this
+       again does not resend them. A `false` because the timeout expired does not mean the events were not sent: the
+       delivery is left running, and may still arrive.
      */
     @discardableResult
     public func flushAndWait(timeout: TimeInterval) -> Bool {
+        // Taken first, so that the timeout covers the whole call, finding the clients included.
+        let deadline = DispatchTime.now() + max(0, timeout)
         if timeout > LDClient.longTimeoutInterval {
             os_log("%s LDClient.flushAndWait was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
         }
@@ -119,7 +143,6 @@ extension LDClient {
             os_log("%s called on a closed client", log: config.logger, type: .debug, self.typeName(and: #function))
             return false
         }
-        let deadline = DispatchTime.now() + max(0, timeout)
         // Counts answers rather than tracking each delivery, so that a reporter answering twice costs a spare permit
         // no one reads. A DispatchGroup would fit as well, but its `leave` traps without a matching `enter`, which
         // turns a broken reporter into a crash in the application.
@@ -132,13 +155,19 @@ extension LDClient {
         // one before starting the next would spend the caller's budget on deliveries that could have been running all
         // along, and leave the last environment with none of it.
         for client in clients {
-            client.eventReporter.flushReportingOutcome { result in
+            client.eventProcessor.flushBypassingBackoff { result in
                 lock.lock()
                 delivered = delivered && result
                 lock.unlock()
                 answered.signal()
             }
         }
+
+        // Started, then given up on. The deliveries are what makes a zero timeout worth calling at all: wherever events
+        // persist, each `flushReportingOutcome` has queued their write, which no longer waits on this thread. Waiting
+        // is what is skipped, and a reporter that answered during the loop above must not turn that into a `true`.
+        guard timeout > 0
+        else { return false }
 
         // Every wait is against the one deadline rather than a fresh copy of it, so the timeout the caller asked for
         // is the time this call can take however many environments there are. A delivery still running when the wait
@@ -157,6 +186,6 @@ extension LDClient {
     }
 
     func internalFlush() {
-        eventReporter.flush(completion: nil)
+        eventProcessor.flush(completion: nil)
     }
 }

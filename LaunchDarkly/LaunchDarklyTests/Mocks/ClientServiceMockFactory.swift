@@ -72,17 +72,19 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         return makeFlagChangeNotifierReturnValue
     }
 
-    var makeEventReporterCallCount = 0
-    var makeEventReporterReceivedConfig: LDConfig? = nil
-    var makeEventReporterReceivedService: DarklyServiceProvider? = nil
+    var makeEventProcessorCallCount = 0
+    var makeEventProcessorReceivedConfig: LDConfig? = nil
+    var makeEventProcessorReceivedService: DarklyServiceProvider? = nil
     var onEventSyncComplete: EventSyncCompleteClosure? = nil
-    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider, onSyncComplete: EventSyncCompleteClosure?) -> EventReporting {
-        makeEventReporterCallCount += 1
-        makeEventReporterReceivedConfig = config
-        makeEventReporterReceivedService = service
+    func makeEventProcessor(config: LDConfig,
+                            service: DarklyServiceProvider,
+                            onSyncComplete: EventSyncCompleteClosure?) -> EventProcessor {
+        makeEventProcessorCallCount += 1
+        makeEventProcessorReceivedConfig = config
+        makeEventProcessorReceivedService = service
         onEventSyncComplete = onSyncComplete
 
-        let mock = EventReportingMock()
+        let mock = EventProcessorMock()
         // Answer by default so backgrounding does not hold its activity assertion until timeout.
         mock.flushReportingOutcomeCallback = { [weak mock] in
             mock?.flushReportingOutcomeReceivedCompletion?(true)
@@ -90,8 +92,8 @@ final class ClientServiceMockFactory: ClientServiceCreating {
         return mock
     }
 
-    func makeEventReporter(config: LDConfig, service: DarklyServiceProvider) -> EventReporting {
-        return makeEventReporter(config: config, service: service, onSyncComplete: nil)
+    func makeEventProcessor(config: LDConfig, service: DarklyServiceProvider) -> EventProcessor {
+        return makeEventProcessor(config: config, service: service, onSyncComplete: nil)
     }
 
     var makeStreamingProviderCallCount = 0

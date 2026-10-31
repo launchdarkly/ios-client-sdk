@@ -66,7 +66,7 @@ public class LDClient {
                 let oldValue = _isOnline
                 _isOnline = newValue
                 flagSynchronizer.isOnline = _isOnline
-                eventReporter.isOnline = _isOnline
+                eventProcessor.isOnline = _isOnline
                 diagnosticReporter.setMode(runMode, online: _isOnline)
                 if _isOnline != oldValue {
                     connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: connectionInformation, ldClient: self, config: config, online: _isOnline)
@@ -255,7 +255,7 @@ public class LDClient {
 
     private func internalClose() {
         os_log("%s stopping", log: config.logger, type: .debug, typeName(and: #function))
-        internalFlush()
+        eventProcessor.flushAtClose()
         internalSetOnline(false)
         hasStarted = false
         os_log("%s stopped", log: config.logger, type: .debug, typeName(and: #function))
@@ -263,8 +263,13 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
+        // The OS may kill a backgrounded application without warning, so make its events durable now, before returning,
+        // at `.deferred` too. On every platform: macOS does not suspend an application that loses focus, but it can
+        // still be quit or killed.
+        eventProcessor.commitWherePersisting()
         // A backgrounded process is suspended once idle, so deliver inside an activity assertion. Only where suspension
         // is real: macOS posts this notification whenever the application loses focus, and never suspends it for that.
+        // What does not get out is on disk for the next launch.
         #if os(iOS) || os(tvOS)
         backgroundDelivery.run { [weak self] finished in
             guard let self = self
@@ -272,9 +277,9 @@ public class LDClient {
                 finished()
                 return
             }
-            self.eventReporter.flushReportingOutcome { delivered in
+            self.eventProcessor.flushReportingOutcome { delivered in
                 if !delivered {
-                    os_log("%s events did not reach LaunchDarkly before suspension", log: self.config.logger, type: .debug, self.typeName(and: #function))
+                    os_log("%s events did not reach LaunchDarkly before suspension; they remain on disk", log: self.config.logger, type: .debug, self.typeName(and: #function))
                 }
                 finished()
             }
@@ -475,7 +480,7 @@ public class LDClient {
 
         internalIdentifyQueue.sync {
             if self.context == updatedContext {
-                self.eventReporter.record(IdentifyEvent(context: self.context))
+                self.eventProcessor.record(IdentifyEvent(context: self.context))
                 completion?()
                 return
             }
@@ -525,7 +530,7 @@ public class LDClient {
                                                                    onSyncComplete: self.onFlagSyncComplete)
 
             if self.hasStarted {
-                self.eventReporter.record(IdentifyEvent(context: self.context))
+                self.eventProcessor.record(IdentifyEvent(context: self.context))
             }
 
             if self.isOnline && self.isInSupportedRunMode {
@@ -769,7 +774,7 @@ public class LDClient {
             key,
             String(describing: data),
             String(describing: metricValue))
-        eventReporter.record(event)
+        eventProcessor.record(event)
 
         executeAfterTrackHooks(key: key, data: data, metricValue: metricValue)
     }
@@ -979,7 +984,7 @@ public class LDClient {
     private(set) var flagCache: FeatureFlagCaching
     private(set) var flagSynchronizer: LDFlagSynchronizing
     var flagChangeNotifier: FlagChangeNotifying
-    private(set) var eventReporter: EventReporting
+    private(set) var eventProcessor: EventProcessor
     private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
     private(set) var diagnosticReporter: DiagnosticReporting
@@ -1042,7 +1047,7 @@ public class LDClient {
             context = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(context)
         }
 
-        var hookState: IdentifyHookState? = nil
+        var hookState: IdentifyHookState?
         if !hooks.isEmpty {
             let seriesContext = IdentifySeriesContext(context: context, methodName: "init")
             let seriesData = hooks.map { hook in hook.beforeIdentify(seriesContext: seriesContext, seriesData: EvaluationSeriesData()) }
@@ -1054,7 +1059,7 @@ public class LDClient {
         // Reports over the logger rather than over this client, which is not usable until every stored property
         // below has a value, so that the reporter can be built once rather than built and replaced.
         let logger = configuration.logger
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service) { result in
+        eventProcessor = self.serviceFactory.makeEventProcessor(config: config, service: service) { result in
             LDClient.logEventSyncComplete(result, logger)
         }
         connectionInformation = self.serviceFactory.makeConnectionInformation()
@@ -1078,12 +1083,13 @@ public class LDClient {
         service.resetFlagResponseCache(etag: cachedData.etag)
         // Reports to this client, so it could not be given at construction: `self` is only usable from here.
         flagSynchronizer.onSyncComplete = onFlagSyncComplete
+        giveFlagValuesTheNetworkFirst()
 
         if let cachedFlags = cachedData.items, !cachedFlags.isEmpty {
             flagStore.replaceStore(newStoredItems: cachedFlags)
         }
 
-        eventReporter.record(IdentifyEvent(context: context))
+        eventProcessor.record(IdentifyEvent(context: context))
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
         internalSetOnline(configuration.startOnline) {
@@ -1098,12 +1104,12 @@ public class LDClient {
 
 extension LDClient: TypeIdentifying { }
 
-private extension LDClient {
-    func onEventSyncComplete(result: SynchronizingError?) {
-        if let synchronizingError = result {
-            os_log("%s result: %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: synchronizingError))
-        } else {
-            os_log("%s result: success", log: config.logger, type: .debug, typeName(and: #function))
+extension LDClient {
+    /// Has the diagnostic init event wait for the event processor's launch gate, as a previous run's events do. Where
+    /// events do not persist there is no gate, and the init event goes out as it did before persistence.
+    fileprivate func giveFlagValuesTheNetworkFirst() {
+        if let eventProcessor = eventProcessor as? DirectEventProcessor, eventProcessor.givesWayToFlags {
+            (diagnosticReporter as? DiagnosticReporter)?.sendsInitAfter = eventProcessor.whenLaunchGateOpens
         }
     }
 }

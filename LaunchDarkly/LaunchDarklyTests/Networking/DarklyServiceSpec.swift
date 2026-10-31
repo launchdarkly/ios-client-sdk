@@ -49,13 +49,17 @@ final class DarklyServiceSpec: QuickSpec {
     }
 
     override func spec() {
-        getFeatureFlagsSpec()
-        flagRequestEtagSpec()
         clearFlagRequestCacheSpec()
         createEventSourceSpec()
-        publishEventDataSpec()
         diagnosticCacheSpec()
+        // On the watchOS simulator these requests reach the network even with the OHHTTPStubs protocol installed in
+        // the session, so nothing answers them.
+        #if !os(watchOS)
+        getFeatureFlagsSpec()
+        flagRequestEtagSpec()
+        publishEventDataSpec()
         publishDiagnosticSpec()
+        #endif
 
         afterEach {
             HTTPStubs.removeAllStubs()
