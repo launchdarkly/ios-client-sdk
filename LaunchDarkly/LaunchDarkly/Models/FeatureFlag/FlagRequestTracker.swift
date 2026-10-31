@@ -33,6 +33,16 @@ struct FlagRequestTracker {
         return (first, second)
     }
 
+    /// Only these flags, over the same period. Nothing may count into this tracker any more: the part shares its
+    /// counters.
+    func withFlags<Keys: Sequence>(_ flagKeys: Keys) -> FlagRequestTracker where Keys.Element == LDFlagKey {
+        var part = FlagRequestTracker(logger: logger, startDate: startDate)
+        for flagKey in flagKeys {
+            part.flagCounters[flagKey] = flagCounters[flagKey]
+        }
+        return part
+    }
+
     mutating func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue, context: LDContext) {
         if flagCounters[flagKey] == nil {
             flagCounters[flagKey] = FlagCounter(defaultValue: defaultValue)

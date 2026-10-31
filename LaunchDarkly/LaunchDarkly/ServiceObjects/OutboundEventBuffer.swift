@@ -76,26 +76,89 @@ final class OutboundEventBuffer {
     /// Encodes the summary of one context's counters. Requires the processor's `commitLock`.
     ///
     /// A summary larger than one log frame holds is split between summaries of the same context and period, each with
-    /// some of its flags, until each fits. Whole, it would be refused by the store and every evaluation in it lost. Only
-    /// a single flag's counters too large for a frame, and a part that is mostly context, which no split makes fit, are
-    /// left whole, for the store to refuse.
+    /// as many of its flags as fit beside the context. Whole, it would be refused by the store and every evaluation in
+    /// it lost. Only a single flag too large to fit beside the context, and a summary whose context alone takes a frame,
+    /// are left whole, for the store to refuse.
     ///
     /// - Returns: at least one summary, nil for each part that could not be encoded.
     func encodeSummary(_ summary: (tracker: FlagRequestTracker, context: LDContext)) -> [Data?] {
-        encodeSummary(summary.tracker, context: summary.context, endDate: Date(), splitFrom: .max)
+        let tracker = summary.tracker
+        let context = summary.context
+        let endDate = Date()
+        let encoded = encode(SummaryEvent(flagRequestTracker: tracker, context: context, endDate: endDate))
+        guard let size = encoded?.count, size > EventLogFormat.maxFrameSize, tracker.flagCounters.count > 1
+        else { return [encoded] }
+        let parts = packIntoFrames(tracker, flagKeys: tracker.flagCounters.keys.sorted(), endDate: endDate, size: size)
+        guard parts.count > 1
+        else { return [encoded] }
+        return parts.flatMap { flagKeys -> [Data?] in
+            let part = tracker.withFlags(flagKeys)
+            return halveUntilFits(part, encode(SummaryEvent(flagRequestTracker: part, context: context, endDate: endDate)),
+                                  context: context, endDate: endDate)
+        }
     }
 
-    /// - Parameter splitFrom: the encoded size of the summary this is half of, or `.max` for one that is not.
-    private func encodeSummary(_ tracker: FlagRequestTracker, context: LDContext, endDate: Date, splitFrom: Int) -> [Data?] {
-        let encoded = encode(SummaryEvent(flagRequestTracker: tracker, context: context, endDate: endDate))
-        // Every part carries the whole context. A half that kept more than three quarters of what it was split from is
-        // mostly context, and halving it again would only turn its one loss into one per flag, each a frame's worth of
-        // context held at once.
-        guard let size = encoded?.count, size > EventLogFormat.maxFrameSize, size <= splitFrom / 4 * 3,
-              let halves = tracker.halved()
+    private static let standInContext = try? LDContextBuilder(key: "k").build().get()
+
+    /// Splits an oversized summary's flags into runs, in key order, that each fit a frame beside the context. Every
+    /// part carries the whole context, so how much room a part has for flags is a frame less the context. What each
+    /// flag takes is measured with a small stand-in for the context, which costs one small encoding per flag rather than
+    /// one of the context per part, and what is left of the whole summary is what every part repeats. Where the context
+    /// alone takes a frame, nothing fits, so the summary is one part, refused whole as one loss rather than one per flag.
+    ///
+    /// - Parameters:
+    ///   - flagKeys: the summary's flags, sorted, at least two.
+    ///   - size: the whole summary's encoded size.
+    /// - Returns: the flags of each part.
+    private func packIntoFrames(_ tracker: FlagRequestTracker, flagKeys: [LDFlagKey], endDate: Date, size: Int) -> [ArraySlice<LDFlagKey>] {
+        let whole = [flagKeys[...]]
+        guard let standIn = OutboundEventBuffer.standInContext
+        else { return whole }
+        func standInSize(_ keys: ArraySlice<LDFlagKey>) -> Int? {
+            encode(SummaryEvent(flagRequestTracker: tracker.withFlags(keys), context: standIn, endDate: endDate))?.count
+        }
+        var flagSizes: [Int] = []
+        flagSizes.reserveCapacity(flagKeys.count)
+        for index in flagKeys.indices {
+            guard let single = standInSize(flagKeys[index...index])
+            else { return whole }
+            flagSizes.append(single)
+        }
+        // Two flags measured alone and together give what a part of the stand-in repeats, less the separator a flag
+        // adds beside another, so that what a part takes is that plus the sum of its flags' sizes.
+        guard let pair = standInSize(flagKeys[0...1])
+        else { return whole }
+        let standInRepeated = flagSizes[0] + flagSizes[1] - pair
+        flagSizes = flagSizes.map { $0 - standInRepeated }
+        let room = EventLogFormat.maxFrameSize - (size - flagSizes.reduce(0, +))
+        guard room > 0
+        else { return whole }
+
+        var parts: [ArraySlice<LDFlagKey>] = []
+        var start = 0
+        var used = 0
+        for (index, flagSize) in flagSizes.enumerated() {
+            if index > start && used + flagSize > room {
+                parts.append(flagKeys[start..<index])
+                start = index
+                used = 0
+            }
+            used += flagSize
+        }
+        parts.append(flagKeys[start...])
+        return parts
+    }
+
+    /// Halves a packed part that came out larger than measured until each half fits, which only a part whose context
+    /// fits a frame reaches, so the halving ends. A single flag too large beside the context is left whole, for the
+    /// store to refuse.
+    private func halveUntilFits(_ tracker: FlagRequestTracker, _ encoded: Data?, context: LDContext, endDate: Date) -> [Data?] {
+        guard let size = encoded?.count, size > EventLogFormat.maxFrameSize, let halves = tracker.halved()
         else { return [encoded] }
-        return encodeSummary(halves.0, context: context, endDate: endDate, splitFrom: size)
-            + encodeSummary(halves.1, context: context, endDate: endDate, splitFrom: size)
+        return [halves.0, halves.1].flatMap { half -> [Data?] in
+            halveUntilFits(half, encode(SummaryEvent(flagRequestTracker: half, context: context, endDate: endDate)),
+                           context: context, endDate: endDate)
+        }
     }
 
     private static func makeEncoder(config: LDConfig) -> JSONEncoder {

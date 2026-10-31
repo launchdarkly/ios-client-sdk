@@ -3019,6 +3019,45 @@ extension DirectEventProcessorSpec {
                 expect(flagKeys.count) == flagCount
             }
 
+            it("splits a summary mostly context into parts that fit where the context does") {
+                var builder = LDContextBuilder(key: "large")
+                _ = builder.trySetValue("data", .string(String(repeating: "x", count: 1_700_000)))
+                let context = try! builder.build().get()
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                let flagCount = 16
+                var tracker = FlagRequestTracker(logger: .disabled)
+                for index in 0..<flagCount {
+                    tracker.trackRequest(flagKey: "flag-\(index)", reportedValue: .string(String(repeating: "v", count: 64 * 1024)),
+                                         featureFlag: flag, defaultValue: "b", context: context)
+                }
+
+                let parts = OutboundEventBuffer(config: LDConfig.stub, encoding: .handWritten)
+                    .encodeSummary((tracker: tracker, context: context))
+
+                // A megabyte of flags beside a context of 1.7 MB leaves room for about 400 KB of them per part: six flags,
+                // so three parts. Halved, each half would be about 2.2 MB, still too large.
+                expect(parts.count) == 3
+                expectEveryPartFitsAndEveryFlagIsCountedOnce(parts, flagCount: flagCount)
+            }
+
+            it("packs a large flag so the flags beside it still fit") {
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                let context = LDContext.stub()
+                var tracker = FlagRequestTracker(logger: .disabled)
+                tracker.trackRequest(flagKey: "a-large", reportedValue: .string(String(repeating: "v", count: 1_500_000)),
+                                     featureFlag: flag, defaultValue: "b", context: context)
+                let smallCount = 100
+                for index in 0..<smallCount {
+                    tracker.trackRequest(flagKey: "b-small-\(index)", reportedValue: .string(String(repeating: "v", count: 10_000)),
+                                         featureFlag: flag, defaultValue: "b", context: context)
+                }
+
+                let parts = OutboundEventBuffer(config: LDConfig.stub, encoding: .handWritten)
+                    .encodeSummary((tracker: tracker, context: context))
+
+                expectEveryPartFitsAndEveryFlagIsCountedOnce(parts, flagCount: smallCount + 1)
+            }
+
             it("reports false when a retryable failure leaves the batch on disk") {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
@@ -3748,6 +3787,25 @@ private final class EncodingGate: CustomEvent {
         _ = proceed.wait(timeout: .now() + 5)
         try super.encode(to: encoder)
     }
+}
+
+/// That every part of a split summary encoded, fits a frame, and that the parts count each flag exactly once.
+private func expectEveryPartFitsAndEveryFlagIsCountedOnce(_ parts: [Data?], flagCount: Int) {
+    var flagKeys: [String] = []
+    for part in parts {
+        guard let part
+        else {
+            fail("a part did not encode")
+            continue
+        }
+        expect(part.count) <= EventLogFormat.maxFrameSize
+        guard case .object(let fields)? = try? JSONDecoder().decode(LDValue.self, from: part),
+              case .object(let features)? = fields["features"]
+        else { continue }
+        flagKeys += features.keys
+    }
+    expect(flagKeys.count) == flagCount
+    expect(Set(flagKeys).count) == flagCount
 }
 
 /// A store that runs a hook on either side of closing a batch, and remembers the custom event keys of each batch closed.
