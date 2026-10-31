@@ -2475,7 +2475,8 @@ extension DirectEventProcessorSpec {
         describe("flush reporting outcome") {
             var testContext: TestContext!
             afterEach {
-                testContext.cleanUp()
+                testContext?.cleanUp()
+                testContext = nil
             }
 
             it("reports true when there is nothing to deliver") {
@@ -3038,6 +3039,24 @@ extension DirectEventProcessorSpec {
                 // so three parts. Halved, each half would be about 2.2 MB, still too large.
                 expect(parts.count) == 3
                 expectEveryPartFitsAndEveryFlagIsCountedOnce(parts, flagCount: flagCount)
+            }
+
+            it("encodes the context of a summary it splits only once") {
+                var builder = LDContextBuilder(key: "large")
+                _ = builder.trySetValue("data", .string(String(repeating: "x", count: 1_700_000)))
+                let context = try! builder.build().get()
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                var tracker = FlagRequestTracker(logger: .disabled)
+                for index in 0..<16 {
+                    tracker.trackRequest(flagKey: "flag-\(index)", reportedValue: .string(String(repeating: "v", count: 64 * 1024)),
+                                         featureFlag: flag, defaultValue: "b", context: context)
+                }
+                let buffer = OutboundEventBuffer(config: LDConfig.stub, encoding: .handWritten)
+
+                let parts = buffer.encodeSummary((tracker: tracker, context: context))
+
+                expect(parts.count) == 3
+                expect(buffer.contextEncodingCount) == 1
             }
 
             it("packs a large flag so the flags beside it still fit") {

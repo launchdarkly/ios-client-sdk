@@ -22,6 +22,9 @@ struct EventJSONWriter {
                   globalPrivateAttributes: config.privateContextAttributes)
     }
 
+    /// How many times a context was encoded rather than served from the cache.
+    var contextEncodingCount: Int { contextCache.storeCount }
+
     /// Nil if the event cannot be encoded, including when it holds a NaN or infinite number, which `JSONEncoder` also
     /// rejects.
     func encode(_ event: Event) -> Data? {

@@ -32,8 +32,12 @@ final class OutboundEventBuffer {
     /// `commitLock`.
     private let eventJSONWriter: EventJSONWriter
 
+    /// For building the writer an oversized summary is measured with.
+    private let config: LDConfig
+
     init(config: LDConfig, encoding: Encoding) {
         self.encoding = encoding
+        self.config = config
         self.logger = config.logger
         self.contextSummarizer = ContextSummarizer(logger: config.logger, maxContexts: config.eventCapacity)
         self.encoder = OutboundEventBuffer.makeEncoder(config: config)
@@ -61,6 +65,9 @@ final class OutboundEventBuffer {
         }
         return summaries
     }
+
+    /// How many times the writer events go through encoded a context rather than reusing its last encoding.
+    var contextEncodingCount: Int { eventJSONWriter.contextEncodingCount }
 
     /// Requires the processor's `commitLock`.
     func encode(_ event: Event) -> Data? {
@@ -106,6 +113,9 @@ final class OutboundEventBuffer {
     /// one of the context per part, and what is left of the whole summary is what every part repeats. Where the context
     /// alone takes a frame, nothing fits, so the summary is one part, refused whole as one loss rather than one per flag.
     ///
+    /// The stand-in goes through a writer of its own, which leaves the context's encoding in the cache of the writer
+    /// the parts go through, so that no part encodes the context again.
+    ///
     /// - Parameters:
     ///   - flagKeys: the summary's flags, sorted, at least two.
     ///   - size: the whole summary's encoded size.
@@ -114,8 +124,10 @@ final class OutboundEventBuffer {
         let whole = [flagKeys[...]]
         guard let standIn = OutboundEventBuffer.standInContext
         else { return whole }
+        let standInWriter = encoding == .handWritten ? EventJSONWriter(config: config) : nil
         func standInSize(_ keys: ArraySlice<LDFlagKey>) -> Int? {
-            encode(SummaryEvent(flagRequestTracker: tracker.withFlags(keys), context: standIn, endDate: endDate))?.count
+            let event = SummaryEvent(flagRequestTracker: tracker.withFlags(keys), context: standIn, endDate: endDate)
+            return (standInWriter.map { $0.encode(event) } ?? encode(event))?.count
         }
         var flagSizes: [Int] = []
         flagSizes.reserveCapacity(flagKeys.count)
