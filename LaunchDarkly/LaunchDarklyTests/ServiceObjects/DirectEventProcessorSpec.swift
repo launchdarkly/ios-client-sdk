@@ -1780,11 +1780,12 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom"]
             }
 
-            itPersisting("leaves splitting an oversized summary to the commit queue when a flush writes on this thread") {
-                // Splitting a summary encodes its context once per part, which is more than the application's thread
-                // should spend. Suspended, so the flush's write is the only one until the queue resumes.
+            itPersisting("has written the split of an oversized summary by the time a flush returns") {
+                // A flush promises everything recorded is written before it returns, the evaluations a summary too
+                // large for one frame counts included. Suspended, so the flush's own write is the only one there can be.
                 let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
                 commits.suspend()
+                defer { commits.resume() }
                 testContext = TestContext(lastEventResponseDate: Date(), eventPersistence: .deferred, commitQueue: commits)
                 let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
                 let large = LDValue.string(String(repeating: "v", count: 64 * 1024))
@@ -1792,16 +1793,10 @@ extension DirectEventProcessorSpec {
                 for index in 0..<48 {
                     testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-\(index)", value: large, defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
                 }
-                testContext.eventProcessor.record(CustomEvent(key: "before-exit", context: testContext.context, data: nil))
 
                 testContext.eventProcessor.flush(completion: nil)
 
-                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom"]
-
-                commits.resume()
-                commits.sync { }
-
-                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom", "summary", "summary"]
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["summary", "summary"]
             }
 
             it("does not write on the main thread when a flag is evaluated there") {

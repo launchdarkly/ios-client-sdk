@@ -41,9 +41,7 @@ final class LostEventCount {
 /// `.disabled` nothing commits early: the held run waits for the delivery, which encodes it.
 ///
 /// Threads. Recording runs on whichever thread evaluated or tracked. Commits run on `commitQueue`, or on the caller's
-/// thread at a commit point, one at a time under `commitLock`. A delivery commits too, before it closes a batch. A
-/// summary too large for one frame is split off the caller's thread even then: a commit there leaves it to
-/// `commitQueue`, so it is durable a moment after the call returns rather than before.
+/// thread at a commit point, one at a time under `commitLock`. A delivery commits too, before it closes a batch.
 final class EventCommitter {
     /// How many full events may be held unencoded before one of them pays for a commit.
     ///
@@ -101,12 +99,6 @@ final class EventCommitter {
     /// recordings covered and return, and the next caller still uncovered commits everything that arrived in the
     /// meantime. Without it each waiter committed again in turn.
     private var committedSequence: UInt64 = 0
-
-    /// Summaries too large for one frame that a commit on the application's thread left for `commitQueue` to split,
-    /// since splitting encodes the context once per part. Every commit off that thread stages them, so they reach the
-    /// store before the next delivery closes a batch. Until then they are only in memory, as the counters they were
-    /// taken from were. Only to be used while holding `commitLock`.
-    private var summariesToSplit: [(tracker: FlagRequestTracker, context: LDContext)] = []
 
     // MARK: Guarded by recordLock
 
@@ -183,7 +175,7 @@ final class EventCommitter {
             reportDropped()
         }
         if persistence == .immediate && EventCommitter.isCommitPoint(event.kind) {
-            commitThrough(sequence, onCallerThread: true)
+            commitThrough(sequence)
         } else if needsCommit {
             scheduleCommitWherePersisting()
         }
@@ -317,7 +309,7 @@ final class EventCommitter {
     /// nothing durable, and is left to the delivery.
     func commitWherePersisting() {
         if persistence == .immediate || store.isPersisting {
-            commitThrough(recordLock.withLock { recordedSequence }, onCallerThread: true)
+            commitThrough(recordLock.withLock { recordedSequence })
         }
     }
 
@@ -334,7 +326,7 @@ final class EventCommitter {
         let through = recordLock.withLock { recordedSequence }
         let committed = DispatchSemaphore(value: 0)
         commitQueue.async {
-            self.commitThrough(through, onCallerThread: false)
+            self.commitThrough(through)
             committed.signal()
         }
         if committed.wait(timeout: .now() + budget) == .timedOut {
@@ -367,11 +359,11 @@ final class EventCommitter {
 
     /// Commits unless a finished commit already covers recording `sequence`, checked once the lock is held, since the
     /// commit a caller waited behind is the one most likely to have covered it.
-    private func commitThrough(_ sequence: UInt64, onCallerThread: Bool) {
+    private func commitThrough(_ sequence: UInt64) {
         commitLock.withLock {
             guard committedSequence < sequence
             else { return }
-            encodeAndCommitPending(onCallerThread: onCallerThread)
+            encodeAndCommitPending()
         }
     }
 
@@ -405,13 +397,10 @@ final class EventCommitter {
     }
 
     /// Requires `commitLock`.
-    ///
-    /// - Parameter onCallerThread: whether this runs on the application's thread, which leaves a summary too large for
-    ///   one frame to `summariesToSplit` rather than splitting it here.
-    private func encodeAndCommitPending(onCallerThread: Bool = false) {
+    private func encodeAndCommitPending() {
         commitLock.assertOwned()
         var through: UInt64 = 0
-        let (run, taken) = recordLock.withLock { () -> ([Event], [(tracker: FlagRequestTracker, context: LDContext)]) in
+        let (run, summaries) = recordLock.withLock { () -> ([Event], [(tracker: FlagRequestTracker, context: LDContext)]) in
             let run = pending
             pending = []
             let summaries = eventBuffer.takeSummaries()
@@ -421,15 +410,10 @@ final class EventCommitter {
             through = recordedSequence
             return (run, summaries)
         }
-        var summaries = taken
-        if !onCallerThread && !summariesToSplit.isEmpty {
-            summaries = summariesToSplit + taken
-            summariesToSplit = []
-        }
 
         stage(run)
         store.releaseReservations()
-        stageSummaries(summaries, onCallerThread: onCallerThread)
+        stageSummaries(summaries)
         store.commit()
         committedSequence = through
     }
@@ -475,35 +459,20 @@ final class EventCommitter {
     /// commit point rather than only at a delivery is what bounds that loss, and it costs nothing in accuracy:
     /// LaunchDarkly sums the counters of every summary it receives, so a session that produced several summaries is
     /// counted the same as one that produced a single summary covering the same evaluations.
-    ///
-    /// On the application's thread, a summary that would have to be split is held for a commit on `commitQueue`
-    /// instead. Requires `commitLock`.
-    private func stageSummaries(_ summaries: [(tracker: FlagRequestTracker, context: LDContext)], onCallerThread: Bool) {
-        var toSplit: [(tracker: FlagRequestTracker, context: LDContext)] = []
-        for summary in summaries {
-            guard let parts = eventBuffer.encodeSummary(summary, splitting: !onCallerThread)
+    private func stageSummaries(_ summaries: [(tracker: FlagRequestTracker, context: LDContext)]) {
+        for encoded in summaries.flatMap({ eventBuffer.encodeSummary($0) }) {
+            guard let encoded = encoded
             else {
-                toSplit.append(summary)
+                reportLost()
                 continue
             }
-            for encoded in parts {
-                guard let encoded = encoded
-                else {
-                    reportLost()
-                    continue
-                }
-                // Summaries are an aggregate of evaluations that were already counted, so refusing one for capacity
-                // would lose evaluations the SDK promised to report rather than shed new load. Only the byte capacity
-                // refuses one, once even the room held back for summaries is used up, since nothing else bounds how
-                // many are staged while delivery keeps failing.
-                if !store.stage(encoded, bypassingCapacity: true) {
-                    reportLost()
-                }
+            // Summaries are an aggregate of evaluations that were already counted, so refusing one for capacity would
+            // lose evaluations the SDK promised to report rather than shed new load. Only the byte capacity refuses
+            // one, once even the room held back for summaries is used up, since nothing else bounds how many are
+            // staged while delivery keeps failing.
+            if !store.stage(encoded, bypassingCapacity: true) {
+                reportLost()
             }
-        }
-        if !toSplit.isEmpty {
-            summariesToSplit += toSplit
-            scheduleCommit()
         }
     }
 }
