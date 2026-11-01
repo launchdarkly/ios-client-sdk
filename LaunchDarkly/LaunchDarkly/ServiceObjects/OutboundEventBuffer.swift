@@ -4,8 +4,8 @@ import OSLog
 /// Turns what `DirectEventProcessor` records into what it stages: evaluations into summary counters, and events into the
 /// JSON the events endpoint accepts. Android's `OutboundEventBuffer` plays the same part.
 ///
-/// It has no lock of its own. The summarizer is only to be used while holding the processor's `recordLock`, and the
-/// encoders are only reached under its `commitLock`.
+/// The summarizer is only to be used while holding the processor's `recordLock`, and the encoders are only reached under
+/// its `commitLock`, except the pair `encodeAlone(_:)` uses, which have a lock of their own.
 final class OutboundEventBuffer {
     /// Which encoder recorded events go through.
     ///
@@ -32,6 +32,14 @@ final class OutboundEventBuffer {
     /// `commitLock`.
     private let eventJSONWriter: EventJSONWriter
 
+    /// Guards the encoders a `track` or `identify` writing itself goes through, which are separate from the commit's so
+    /// that it never waits for a commit to finish encoding.
+    private let aloneLock = UnfairLock()
+    /// Only to be used while holding `aloneLock`.
+    private let aloneEncoder: JSONEncoder
+    /// Only to be used while holding `aloneLock`.
+    private let aloneJSONWriter: EventJSONWriter
+
     /// For building the writer an oversized summary is measured with.
     private let config: LDConfig
 
@@ -42,6 +50,8 @@ final class OutboundEventBuffer {
         self.contextSummarizer = ContextSummarizer(logger: config.logger, maxContexts: config.eventCapacity)
         self.encoder = OutboundEventBuffer.makeEncoder(config: config)
         self.eventJSONWriter = EventJSONWriter(config: config)
+        self.aloneEncoder = OutboundEventBuffer.makeEncoder(config: config)
+        self.aloneJSONWriter = EventJSONWriter(config: config)
     }
 
     /// Counts an evaluation into its context's summary. Requires the processor's `recordLock`.
@@ -71,7 +81,18 @@ final class OutboundEventBuffer {
 
     /// Requires the processor's `commitLock`.
     func encode(_ event: Event) -> Data? {
-        let encoded: Data? = encoding == .codable ? try? encoder.encode(event) : eventJSONWriter.encode(event)
+        logged(encoding == .codable ? try? encoder.encode(event) : eventJSONWriter.encode(event), event)
+    }
+
+    /// `encode(_:)` for an event encoded outside a commit, on any thread.
+    func encodeAlone(_ event: Event) -> Data? {
+        let encoded = aloneLock.withLock {
+            encoding == .codable ? try? aloneEncoder.encode(event) : aloneJSONWriter.encode(event)
+        }
+        return logged(encoded, event)
+    }
+
+    private func logged(_ encoded: Data?, _ event: Event) -> Data? {
         guard let encoded = encoded
         else {
             os_log("%s Failed to serialize event for publication: %s", log: logger, type: .error, typeName(and: #function), String(describing: event))

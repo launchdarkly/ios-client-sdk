@@ -48,12 +48,11 @@ public enum LDStreamingMode {
     case deferred
     /// Events are written to disk before `track` and `identify` return.
     ///
-    /// The write happens on the calling thread, costing tens of microseconds depending on how many evaluations are
-    /// waiting to be encoded alongside it. Evaluations are usually written in the background before many build up. A
-    /// burst of them faster than that can leave up to `eventCapacity` waiting, and the `track` or `identify` that
-    /// follows encodes them all, which can take milliseconds. In exchange there is no window: a process that dies the
-    /// instant after `track` returns still reports that event on the next launch. Evaluating a flag stays in memory
-    /// regardless.
+    /// The write happens on the calling thread and covers that one event, costing tens to hundreds of microseconds
+    /// depending on the device, however many evaluations are waiting. Those, and the summaries of them, are written in
+    /// the background by a write the call sets going, so they follow moments later. In exchange there is no window: a
+    /// process that dies the instant after `track` returns still reports that event on the next launch. Evaluating a
+    /// flag stays in memory regardless.
     ///
     /// This level is experimental; see `EventPersistence`.
     case immediate

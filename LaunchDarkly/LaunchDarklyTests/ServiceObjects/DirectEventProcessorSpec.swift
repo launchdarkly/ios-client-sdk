@@ -106,6 +106,11 @@ class DirectEventProcessorSpec: QuickSpec {
             events.compactMap { encodeToLDValue($0) }
         }
 
+        /// `recordedEventsAsJSON()` through `unordered(_:)`.
+        func recordedEventsUnordered() -> [String] {
+            unordered(recordedEventsAsJSON())
+        }
+
         /// Flushes, and answers whether a flush made from the completion got anywhere.
         ///
         /// A completion is free to flush again, which only works where it is not running on the queue deliveries go
@@ -642,7 +647,7 @@ class DirectEventProcessorSpec: QuickSpec {
                     expect(testContext.eventProcessor.isOnline) == false
                     expect(testContext.eventProcessor.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                    expect(testContext.committedEvents()) == testContext.recordedEventsAsJSON()
+                    expect(unordered(testContext.committedEvents())) == testContext.recordedEventsUnordered()
                 }
             }
         }
@@ -660,7 +665,7 @@ class DirectEventProcessorSpec: QuickSpec {
                     expect(testContext.eventProcessor.isOnline) == false
                     expect(testContext.eventProcessor.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                    expect(testContext.committedEvents()) == testContext.recordedEventsAsJSON()
+                    expect(unordered(testContext.committedEvents())) == testContext.recordedEventsUnordered()
                 }
                 it("does not record a dropped event to diagnosticCache") {
                     expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 0
@@ -678,7 +683,7 @@ class DirectEventProcessorSpec: QuickSpec {
                     expect(testContext.eventProcessor.isOnline) == false
                     expect(testContext.eventProcessor.isReportingActive) == false
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                    expect(testContext.committedEvents()) == testContext.recordedEventsAsJSON()
+                    expect(unordered(testContext.committedEvents())) == testContext.recordedEventsUnordered()
                 }
                 it("records a dropped event to diagnosticCache") {
                     expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 1
@@ -1090,10 +1095,8 @@ class DirectEventProcessorSpec: QuickSpec {
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             valueIsArray(published) { valueArray in
                                 expect(valueArray.count) == testContext.events.count + 1
-                                expect(Array(valueArray.prefix(testContext.events.count))) == testContext.events.map { encodeToLDValue($0) }
-                                valueIsObject(valueArray[testContext.events.count]) { summaryObject in
-                                    expect(summaryObject["kind"]) == "summary"
-                                }
+                                expect(unordered(valueArray.filter { $0.kindField != "summary" })) == testContext.recordedEventsUnordered()
+                                expect(valueArray.filter { $0.kindField == "summary" }.count) == 1
                             }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
@@ -1119,7 +1122,7 @@ class DirectEventProcessorSpec: QuickSpec {
                             erOnline()
                             expect(testContext.serviceMock.publishEventDataCallCount) == 1
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
-                            expect(published) == encodeToLDValue(testContext.events)
+                            valueIsArray(published) { expect(unordered($0)) == testContext.recordedEventsUnordered() }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == testContext.events.count
                             expect(testContext.store.pendingEventCount) == 0
@@ -1270,10 +1273,8 @@ class DirectEventProcessorSpec: QuickSpec {
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             valueIsArray(published) { valueArray in
                                 expect(valueArray.count) == testContext.events.count + 1
-                                expect(Array(valueArray.prefix(testContext.events.count))) == testContext.events.map { encodeToLDValue($0) }
-                                valueIsObject(valueArray[testContext.events.count]) { summaryObject in
-                                    expect(summaryObject["kind"]) == "summary"
-                                }
+                                expect(unordered(valueArray.filter { $0.kindField != "summary" })) == testContext.recordedEventsUnordered()
+                                expect(valueArray.filter { $0.kindField == "summary" }.count) == 1
                             }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
@@ -1317,10 +1318,8 @@ class DirectEventProcessorSpec: QuickSpec {
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             valueIsArray(published) { valueArray in
                                 expect(valueArray.count) == testContext.events.count + 1
-                                expect(Array(valueArray.prefix(testContext.events.count))) == testContext.events.map { encodeToLDValue($0) }
-                                valueIsObject(valueArray[testContext.events.count]) { summaryObject in
-                                    expect(summaryObject["kind"]) == "summary"
-                                }
+                                expect(unordered(valueArray.filter { $0.kindField != "summary" })) == testContext.recordedEventsUnordered()
+                                expect(valueArray.filter { $0.kindField == "summary" }.count) == 1
                             }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
@@ -1367,10 +1366,8 @@ class DirectEventProcessorSpec: QuickSpec {
                             let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                             valueIsArray(published) { valueArray in
                                 expect(valueArray.count) == testContext.events.count + 1
-                                expect(Array(valueArray.prefix(testContext.events.count))) == testContext.events.map { encodeToLDValue($0) }
-                                valueIsObject(valueArray[testContext.events.count]) { summaryObject in
-                                    expect(summaryObject["kind"]) == "summary"
-                                }
+                                expect(unordered(valueArray.filter { $0.kindField != "summary" })) == testContext.recordedEventsUnordered()
+                                expect(valueArray.filter { $0.kindField == "summary" }.count) == 1
                             }
                             expect(testContext.diagnosticCache.recordEventsInLastBatchCallCount) == 1
                             expect(testContext.diagnosticCache.recordEventsInLastBatchReceivedEventsInLastBatch) == Event.Kind.nonSummaryKinds.count + 1
@@ -1449,8 +1446,8 @@ class DirectEventProcessorSpec: QuickSpec {
                     // Being offline delays delivery, not durability: a flush is a commit point, so the recorded events and
                     // the evaluations counted so far are on disk even though nothing can be sent.
                     let pending = testContext.committedEvents()
-                    expect(pending.dropLast().map { $0 }) == testContext.recordedEventsAsJSON()
-                    expect(pending.last?.kindField) == "summary"
+                    expect(unordered(pending.filter { $0.kindField != "summary" })) == testContext.recordedEventsUnordered()
+                    expect(pending.filter { $0.kindField == "summary" }.count) == 1
                     expect(testContext.eventProcessor.withContextSummarizer { $0.hasLoggedRequests }) == false
                     guard case .isOffline = testContext.syncResult
                     else {
@@ -1662,7 +1659,7 @@ class DirectEventProcessorSpec: QuickSpec {
                     let published = try JSONDecoder().decode(LDValue.self, from: testContext.serviceMock.publishedEventData!)
                     valueIsArray(published) { valueArray in
                         expect(valueArray.count) == testContext.events.count
-                        expect(valueArray) == testContext.events.map { encodeToLDValue($0) }
+                        expect(unordered(valueArray)) == testContext.recordedEventsUnordered()
                     }
                 }
             }
@@ -1738,18 +1735,60 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().count).toEventually(equal(EventCommitter.pendingCommitThreshold), timeout: Constants.deliveryTimeout)
             }
 
-            itPersisting("has written the evaluations that came before a tracked event") {
+            itPersisting("writes only a tracked event itself, and leaves the evaluations before it to the commit queue") {
+                // Suspended, so that what is on disk when the track returns is what the track wrote.
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
+                commits.suspend()
                 // A response date of its own, because the distant past that a fresh context defaults to also satisfies
                 // the debug window comparison and would add a debug event to what is asserted below.
-                testContext = TestContext(lastEventResponseDate: Date())
-                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                testContext = TestContext(lastEventResponseDate: Date(), commitQueue: commits)
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
 
-                // An untracked flag is only ever reported as a summary, so this is the case where the exposure exists
-                // nowhere but in memory until something forces it out.
                 testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
                 testContext.eventProcessor.record(CustomEvent(key: "fatal-error", context: testContext.context, data: nil))
 
-                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom", "summary"]
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom"]
+                commits.resume()
+                expect(eventsLeftOnDisk().compactMap { $0.kindField })
+                    .toEventually(equal(["custom", "feature", "summary"]), timeout: Constants.deliveryTimeout)
+            }
+
+            itPersisting("writes a tracked event without waiting for a commit in progress") {
+                var config = LDConfig.stub
+                config.eventCapacity = 100
+                config.eventPersistence = .immediate
+                let serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                let inner = EventStore.temporary(capacity: config.eventCapacity)
+                defer { inner.deleteEverything() }
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.commits")
+                let onCommits = DispatchSpecificKey<Bool>()
+                commits.setSpecific(key: onCommits, value: true)
+                let store = ClosingHookStore(inner)
+                let stalled = DispatchSemaphore(value: 0)
+                let release = DispatchSemaphore(value: 0)
+                defer { release.signal() }
+                // A commit on the commit queue stalled on the disk, holding the commit lock while it is.
+                store.beforeCommitting = {
+                    if DispatchQueue.getSpecific(key: onCommits) == true {
+                        stalled.signal()
+                        _ = release.wait(timeout: .now() + 10)
+                    }
+                }
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, commitQueue: commits, pacing: .noWaits)
+                let context = LDContext.stub()
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+                for _ in 0..<EventCommitter.pendingCommitThreshold {
+                    reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b", featureFlag: flag, context: context, includeReason: false)
+                }
+                expect(stalled.wait(timeout: .now() + 5)) == .success
+
+                let started = Date()
+                reporter.record(CustomEvent(key: "fatal-error", context: context))
+
+                expect(Date().timeIntervalSince(started)) < 1
+                // Alongside whatever the stalled commit had staged before it stalled, which the track's write takes too.
+                expect(inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).kindField }).to(contain("custom"))
             }
 
             itPersisting("persists feature and summary events synchronously on flush") {
@@ -2140,7 +2179,7 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["feature", "summary"]
             }
 
-            itPersisting("shares commits between tracks recorded at once, and has each on disk when recording it returns") {
+            itPersisting("has each of several tracks recorded at once on disk when recording it returns") {
                 let trackers = 8
                 var config = LDConfig.stub
                 config.eventCapacity = 100
@@ -2150,15 +2189,8 @@ extension DirectEventProcessorSpec {
                 let inner = EventStore.temporary(capacity: config.eventCapacity)
                 defer { inner.deleteEverything() }
                 let store = ClosingHookStore(inner)
-                let commitsLock = NSLock()
-                var commits = 0
                 // A slow disk, so that the other tracks arrive while a commit is under way.
-                store.beforeCommitting = {
-                    commitsLock.lock()
-                    commits += 1
-                    commitsLock.unlock()
-                    Thread.sleep(forTimeInterval: 0.05)
-                }
+                store.beforeCommitting = { Thread.sleep(forTimeInterval: 0.05) }
                 let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: DispatchQueue(label: "com.launchdarkly.tests.commits"), pacing: .noWaits)
                 let context = LDContext.stub()
                 func keysOnDisk() -> [String] {
@@ -2189,10 +2221,6 @@ extension DirectEventProcessorSpec {
                 expect(finished.wait(timeout: .now() + 10)) == .success
 
                 expect(missingOnReturn).to(beEmpty())
-                commitsLock.lock()
-                let totalCommits = commits
-                commitsLock.unlock()
-                expect(totalCommits) < trackers
             }
 
             itPersisting("returns from closing within its budget while the final commit is stalled on the disk, and still writes it") {
@@ -3844,6 +3872,14 @@ private func expectEveryPartFitsAndEveryFlagIsCountedOnce(_ parts: [Data?], flag
     }
     expect(flagKeys.count) == flagCount
     expect(Set(flagKeys).count) == flagCount
+}
+
+/// Events in an order of their own, for comparing what was staged with what was recorded: at `.immediate` a custom or
+/// identify event is staged ahead of the evaluations held before it.
+private func unordered(_ events: [LDValue]) -> [String] {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .sortedKeys
+    return events.map { String(decoding: (try? encoder.encode($0)) ?? Data(), as: UTF8.self) }.sorted()
 }
 
 /// A store that runs a hook on either side of closing a batch, and remembers the custom event keys of each batch closed.

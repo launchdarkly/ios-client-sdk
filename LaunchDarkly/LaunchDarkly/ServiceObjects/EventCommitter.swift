@@ -31,8 +31,9 @@ final class LostEventCount {
 ///
 /// Where the line falls is between the events an application asked for by name and the ones it did not. At `.immediate`
 /// recording a custom or identify event is a *commit point*, because an application reporting something it chose to
-/// report is saying this matters more than the microseconds it costs, and the crash it describes may be moments away. A
-/// commit takes the whole held run with it, so the exposures leading up to the error go down alongside it. Everything
+/// report is saying this matters more than the microseconds it costs, and the crash it describes may be moments away. It
+/// writes itself before returning, and only itself: what is held, and the summaries of the evaluations so far, are left
+/// to a commit queued in the same call, so the exposures leading up to the error follow it moments later. Everything
 /// else is committed once `pendingCommitThreshold` events have accumulated, when a delivery starts, on entering the
 /// background, or on `flush`.
 ///
@@ -41,22 +42,23 @@ final class LostEventCount {
 /// `.disabled` nothing commits early: the held run waits for the delivery, which encodes it.
 ///
 /// Threads. Recording runs on whichever thread evaluated or tracked. Commits run on `commitQueue`, or on the caller's
-/// thread at a commit point, one at a time under `commitLock`. A delivery commits too, before it closes a batch.
+/// thread for a flush or entering the background, one at a time under `commitLock`. A delivery commits too, before it
+/// closes a batch. A commit point at `.immediate` writes its event without `commitLock`.
 final class EventCommitter {
     /// How many full events may be held unencoded before one of them pays for a commit.
     ///
     /// It sets two things at once. The first is how many evaluations a termination can take -- not everything a crash
     /// could take, since an application that flushes on its way out commits the whole run, but the window for the
     /// terminations that run nothing on the way out, such as the system reclaiming a backgrounded process. Recording a
-    /// custom or identify event at `.immediate` closes it too, because that commits.
+    /// custom or identify event at `.immediate` narrows it too, because that queues a commit.
     ///
-    /// The second is what a commit point usually costs, since it encodes whatever is held before returning. The commit
-    /// queue keeps the run drained, so the common case is far below this; raising it trades that cost against the
-    /// number of writes.
+    /// The second is what a flush usually costs, since it encodes whatever is held before returning. The commit queue
+    /// keeps the run drained, so the common case is far below this; raising it trades that cost against the number of
+    /// writes.
     ///
     /// Neither is a ceiling. Reaching this only schedules a commit, and recording does not wait for it, so where events
     /// arrive faster than the commit queue encodes them, or the queue is starved, the run grows up to the event
-    /// capacity, and the next commit point encodes all of it.
+    /// capacity, and the next flush encodes all of it.
     ///
     /// It is the only thing that writes events no caller asked to have written. The store writes only when told to, so
     /// every staged byte reaches the disk through a commit that started here, at a commit point, or at a delivery.
@@ -83,21 +85,21 @@ final class EventCommitter {
 
     /// Held for the whole of a commit, so that only one runs at a time.
     ///
-    /// This is what a commit point's guarantee rests on. Without it a commit already in flight could take the caller's
-    /// event out of `pending` before the caller got there, leaving the caller nothing to write and returning while
-    /// those bytes were still being produced somewhere else. Waiting here instead means that when the call returns the
-    /// event is on disk, whichever commit put it there. It also keeps two encoders from staging their runs in
-    /// whichever order they happened to finish.
+    /// This is what a flush's guarantee rests on. Without it a commit already in flight could take the caller's events
+    /// out of `pending` before the caller got there, leaving the caller nothing to write and returning while those
+    /// bytes were still being produced somewhere else. Waiting here instead means that when the call returns the events
+    /// are on disk, whichever commit put them there. It also keeps two encoders from staging their runs in whichever
+    /// order they happened to finish.
     ///
     /// Taken before `recordLock` and before anything the store locks, never after.
     private let commitLock = UnfairLock()
 
     /// The last recording a finished commit covered. Only to be used while holding `commitLock`.
     ///
-    /// This is what makes concurrent `.immediate` commit points a group commit. The first caller's commit takes every
-    /// recording made before it took the run, including those of callers now waiting behind it. They find their
-    /// recordings covered and return, and the next caller still uncovered commits everything that arrived in the
-    /// meantime. Without it each waiter committed again in turn.
+    /// This is what makes concurrent flushes a group commit. The first caller's commit takes every recording made before
+    /// it took the run, including those of callers now waiting behind it. They find their recordings covered and
+    /// return, and the next caller still uncovered commits everything that arrived in the meantime. Without it each
+    /// waiter committed again in turn.
     private var committedSequence: UInt64 = 0
 
     // MARK: Guarded by recordLock
@@ -118,6 +120,15 @@ final class EventCommitter {
     /// too, and only a commit reaches the file. Both forms are equally lost to a crash, so the encode may as well
     /// happen where it is cheapest.
     private var pending: [Event] = []
+
+    /// Counters a commit point at `.immediate` took from the summarizer for the next commit to encode. Only to be used
+    /// while holding `recordLock`.
+    ///
+    /// Taken there rather than left, so the summarizer's contexts are cleared at each of them as they were when they
+    /// committed the counters themselves: an application identifying its way through more contexts than capacity faster
+    /// than the commit queue keeps up would otherwise find the summarizer refusing evaluations. Every commit takes them
+    /// along with `pending`, so an evaluation's counter and its full event are still staged together.
+    private var takenSummaries: [(tracker: FlagRequestTracker, context: LDContext)] = []
 
     /// Numbers every recording, so a caller at a commit point can tell whether a commit has already covered it. Only to
     /// be used while holding `recordLock`.
@@ -157,13 +168,18 @@ final class EventCommitter {
 
     // MARK: Recording
 
-    /// Records an event, and at `.immediate` commits before returning if it is a commit point.
+    /// Records an event, and at `.immediate` writes it before returning if it is a commit point.
     ///
     /// At `.deferred` a custom or identify event writes nothing itself (durability §13.3), and is committed with what
     /// is held at the pending threshold, a flush, a delivery or entering the background. A commit per call would cost
     /// an application that tracks every few seconds one encode and write per event, each taking `recordLock` from the
     /// threads evaluating flags and the store's locks from delivery.
     func record(_ event: Event) {
+        let isCommitPoint = persistence == .immediate && EventCommitter.isCommitPoint(event.kind)
+        if isCommitPoint && store.isPersisting {
+            writeAlone(event)
+            return
+        }
         var sequence: UInt64 = 0
         let (dropped, needsCommit) = recordLock.withLock { () -> (Bool, Bool) in
             recordedSequence += 1
@@ -174,11 +190,39 @@ final class EventCommitter {
         if dropped {
             reportDropped()
         }
-        if persistence == .immediate && EventCommitter.isCommitPoint(event.kind) {
+        if isCommitPoint {
             commitThrough(sequence)
         } else if needsCommit {
             scheduleCommitWherePersisting()
         }
+    }
+
+    /// Encodes and writes one event on the caller's thread, and queues a commit of everything else.
+    ///
+    /// Only the event itself, so the caller pays for one small encode and one write however much is held: a commit
+    /// encodes the held run and every summary, and a summary with a large context or many flags takes megabytes, which
+    /// is a dropped frame on the main thread. They follow on `commitQueue`, queued here. The event is staged ahead of
+    /// the run held before it, which LaunchDarkly does not mind: every event carries its own creation date.
+    ///
+    /// Not under `commitLock`, which a commit holds for the whole of its encoding, so this never waits for one. The
+    /// store takes its own locks, and the event goes through encoders of its own; the one wait left is for the store's
+    /// I/O lock, held by a write or by a delivery reading a batch back.
+    private func writeAlone(_ event: Event) {
+        let admitted = recordLock.withLock { () -> Bool in
+            takenSummaries.append(contentsOf: eventBuffer.takeSummaries())
+            return store.admitsEvent(heldElsewhere: pending.count, capacity: eventCapacity)
+        }
+        if admitted {
+            // Checked against capacity again, since it is counted nowhere between being admitted and being staged.
+            if let encoded = eventBuffer.encodeAlone(event), store.stage(encoded, bypassingCapacity: false) {
+                store.commit()
+            } else {
+                reportLost()
+            }
+        } else {
+            reportDropped()
+        }
+        scheduleCommit()
     }
 
     // swiftlint:disable:next function_parameter_count
@@ -213,8 +257,8 @@ final class EventCommitter {
         }
         // Deliberately no commit point. An evaluation is expected to cost what bookkeeping costs, and it is usually the
         // main thread doing it; where events are persisted, the run is encoded and written on the commit queue once
-        // enough of them have piled up, and at `.immediate` the next event recorded at a commit point makes them
-        // durable along with itself.
+        // enough of them have piled up, and at `.immediate` the next event recorded at a commit point queues that
+        // write as well.
         if needsCommit {
             scheduleCommitWherePersisting()
         }
@@ -403,7 +447,8 @@ final class EventCommitter {
         let (run, summaries) = recordLock.withLock { () -> ([Event], [(tracker: FlagRequestTracker, context: LDContext)]) in
             let run = pending
             pending = []
-            let summaries = eventBuffer.takeSummaries()
+            let summaries = takenSummaries + eventBuffer.takeSummaries()
+            takenSummaries = []
             // Reserved in the same critical section the run leaves `pending` in, so capacity counts it in one place or
             // the other throughout the encode.
             store.reserve(run.count)
