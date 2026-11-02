@@ -519,8 +519,8 @@ final class EventCommitter {
     /// LaunchDarkly sums the counters of every summary it receives, so a session that produced several summaries is
     /// counted the same as one that produced a single summary covering the same evaluations.
     private func stageSummaries(_ summaries: [(tracker: FlagRequestTracker, context: LDContext)]) {
-        for encoded in summaries.flatMap({ eventBuffer.encodeSummary($0) }) {
-            guard let encoded = encoded
+        for summary in summaries {
+            guard let encoded = eventBuffer.encodeSummary(summary)
             else {
                 reportLost()
                 continue
@@ -528,7 +528,7 @@ final class EventCommitter {
             // Summaries are an aggregate of evaluations that were already counted, so refusing one for capacity would
             // lose evaluations the SDK promised to report rather than shed new load. Only the byte capacity refuses
             // one, once even the room held back for summaries is used up, since nothing else bounds how many are
-            // staged while delivery keeps failing.
+            // staged while delivery keeps failing; and the frame size, for one too large for a frame.
             if !store.stage(encoded, bypassingCapacity: true) {
                 reportLost()
             }

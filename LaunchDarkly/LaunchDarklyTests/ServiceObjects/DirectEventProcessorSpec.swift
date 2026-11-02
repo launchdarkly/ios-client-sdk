@@ -1819,25 +1819,6 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom"]
             }
 
-            itPersisting("has written the split of an oversized summary by the time a flush returns") {
-                // A flush promises everything recorded is written before it returns, the evaluations a summary too
-                // large for one frame counts included. Suspended, so the flush's own write is the only one there can be.
-                let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
-                commits.suspend()
-                defer { commits.resume() }
-                testContext = TestContext(lastEventResponseDate: Date(), eventPersistence: .deferred, commitQueue: commits)
-                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
-                let large = LDValue.string(String(repeating: "v", count: 64 * 1024))
-                // About 3 MiB of values, so two parts.
-                for index in 0..<48 {
-                    testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-\(index)", value: large, defaultValue: "b", featureFlag: flag, context: testContext.context, includeReason: false)
-                }
-
-                testContext.eventProcessor.flush(completion: nil)
-
-                expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["summary", "summary"]
-            }
-
             it("does not write on the main thread when a flag is evaluated there") {
                 // Suspended for the length of the evaluations, so that a write this thread was going to cause is a
                 // write that cannot happen: an evaluation is expected to be a memory operation, and the thread
@@ -3004,13 +2985,15 @@ extension DirectEventProcessorSpec {
                 expect(bodies.flatMap(customKeys).sorted()) == (1...eventCount).map { "event-\($0)" }.sorted()
             }
 
-            it("delivers a summary larger than a frame in pieces that count every flag once") {
+            it("drops a summary larger than a frame whole and delivers the events beside it") {
                 // Long keys, so that a few thousand flags take one context's summary past what a frame holds.
                 let keyPrefix = String(repeating: "k", count: 1000)
                 let flagCount = EventLogFormat.maxFrameSize / 1000 * 3 / 2
                 testContext = TestContext()
                 let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
                 let context = LDContext.stub()
+                // First, ahead of the debug events the evaluations fill the capacity with.
+                testContext.eventProcessor.record(CustomEvent(key: "fine", context: context))
                 for index in 0..<flagCount {
                     testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "\(keyPrefix)\(index)", value: "a",
                                                                           defaultValue: "b", featureFlag: flag,
@@ -3024,104 +3007,15 @@ extension DirectEventProcessorSpec {
                         done()
                     }
                 }
-                expect(delivered) == true
+                expect(delivered) == false
 
-                let summaries = testContext.serviceMock.publishedEventPayloads.flatMap { body -> [LDValue] in
+                let events = testContext.serviceMock.publishedEventPayloads.flatMap { body -> [LDValue] in
                     guard case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
                     else { return [] }
-                    return events.filter { $0.kindField == "summary" }
+                    return events
                 }
-                let flagKeys = summaries.flatMap { summary -> [String] in
-                    guard case .object(let fields) = summary, case .object(let features)? = fields["features"]
-                    else { return [] }
-                    return Array(features.keys)
-                }
-                expect(summaries.count) > 1
-                expect(flagKeys.count) == flagCount
-                expect(Set(flagKeys).count) == flagCount
-            }
-
-            it("does not split a summary large for its context down to one flag per part") {
-                var builder = LDContextBuilder(key: "huge")
-                _ = builder.trySetValue("data", .string(String(repeating: "x", count: EventLogFormat.maxFrameSize)))
-                let context = try! builder.build().get()
-                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
-                let flagCount = 16
-                var tracker = FlagRequestTracker(logger: .disabled)
-                for index in 0..<flagCount {
-                    tracker.trackRequest(flagKey: "flag-\(index)", reportedValue: "a", featureFlag: flag, defaultValue: "b",
-                                         context: context)
-                }
-
-                let parts = OutboundEventBuffer(config: LDConfig.stub, encoding: .handWritten)
-                    .encodeSummary((tracker: tracker, context: context))
-
-                expect(parts.count) <= 2
-                let flagKeys = parts.compactMap { $0 }.flatMap { part -> [String] in
-                    guard case .object(let fields)? = try? JSONDecoder().decode(LDValue.self, from: part),
-                          case .object(let features)? = fields["features"]
-                    else { return [] }
-                    return Array(features.keys)
-                }
-                expect(Set(flagKeys).count) == flagCount
-                expect(flagKeys.count) == flagCount
-            }
-
-            it("splits a summary mostly context into parts that fit where the context does") {
-                var builder = LDContextBuilder(key: "large")
-                _ = builder.trySetValue("data", .string(String(repeating: "x", count: 1_700_000)))
-                let context = try! builder.build().get()
-                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
-                let flagCount = 16
-                var tracker = FlagRequestTracker(logger: .disabled)
-                for index in 0..<flagCount {
-                    tracker.trackRequest(flagKey: "flag-\(index)", reportedValue: .string(String(repeating: "v", count: 64 * 1024)),
-                                         featureFlag: flag, defaultValue: "b", context: context)
-                }
-
-                let parts = OutboundEventBuffer(config: LDConfig.stub, encoding: .handWritten)
-                    .encodeSummary((tracker: tracker, context: context))
-
-                // A megabyte of flags beside a context of 1.7 MB leaves room for about 400 KB of them per part: six flags,
-                // so three parts. Halved, each half would be about 2.2 MB, still too large.
-                expect(parts.count) == 3
-                expectEveryPartFitsAndEveryFlagIsCountedOnce(parts, flagCount: flagCount)
-            }
-
-            it("encodes the context of a summary it splits only once") {
-                var builder = LDContextBuilder(key: "large")
-                _ = builder.trySetValue("data", .string(String(repeating: "x", count: 1_700_000)))
-                let context = try! builder.build().get()
-                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
-                var tracker = FlagRequestTracker(logger: .disabled)
-                for index in 0..<16 {
-                    tracker.trackRequest(flagKey: "flag-\(index)", reportedValue: .string(String(repeating: "v", count: 64 * 1024)),
-                                         featureFlag: flag, defaultValue: "b", context: context)
-                }
-                let buffer = OutboundEventBuffer(config: LDConfig.stub, encoding: .handWritten)
-
-                let parts = buffer.encodeSummary((tracker: tracker, context: context))
-
-                expect(parts.count) == 3
-                expect(buffer.contextEncodingCount) == 1
-            }
-
-            it("packs a large flag so the flags beside it still fit") {
-                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
-                let context = LDContext.stub()
-                var tracker = FlagRequestTracker(logger: .disabled)
-                tracker.trackRequest(flagKey: "a-large", reportedValue: .string(String(repeating: "v", count: 1_500_000)),
-                                     featureFlag: flag, defaultValue: "b", context: context)
-                let smallCount = 100
-                for index in 0..<smallCount {
-                    tracker.trackRequest(flagKey: "b-small-\(index)", reportedValue: .string(String(repeating: "v", count: 10_000)),
-                                         featureFlag: flag, defaultValue: "b", context: context)
-                }
-
-                let parts = OutboundEventBuffer(config: LDConfig.stub, encoding: .handWritten)
-                    .encodeSummary((tracker: tracker, context: context))
-
-                expectEveryPartFitsAndEveryFlagIsCountedOnce(parts, flagCount: smallCount + 1)
+                expect(events.filter { $0.kindField == "summary" }).to(beEmpty())
+                expect(testContext.serviceMock.publishedEventPayloads.flatMap(customKeys)) == ["fine"]
             }
 
             it("reports false when a retryable failure leaves the batch on disk") {
@@ -3853,25 +3747,6 @@ private final class EncodingGate: CustomEvent {
         _ = proceed.wait(timeout: .now() + 5)
         try super.encode(to: encoder)
     }
-}
-
-/// That every part of a split summary encoded, fits a frame, and that the parts count each flag exactly once.
-private func expectEveryPartFitsAndEveryFlagIsCountedOnce(_ parts: [Data?], flagCount: Int) {
-    var flagKeys: [String] = []
-    for part in parts {
-        guard let part
-        else {
-            fail("a part did not encode")
-            continue
-        }
-        expect(part.count) <= EventLogFormat.maxFrameSize
-        guard case .object(let fields)? = try? JSONDecoder().decode(LDValue.self, from: part),
-              case .object(let features)? = fields["features"]
-        else { continue }
-        flagKeys += features.keys
-    }
-    expect(flagKeys.count) == flagCount
-    expect(Set(flagKeys).count) == flagCount
 }
 
 /// Events in an order of their own, for comparing what was staged with what was recorded: at `.immediate` a custom or
