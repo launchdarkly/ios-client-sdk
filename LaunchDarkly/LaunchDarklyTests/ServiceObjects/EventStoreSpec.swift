@@ -438,6 +438,37 @@ final class EventStoreSpec: QuickSpec {
 
                 expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0", "event-1", "event-2", "event-3", "event-4"]
             }
+
+            it("writes an event on its own, leaving what is staged to its commit") {
+                _ = store.stage(EventStoreSpec.payload("staged"))
+                store.reserve(1)
+
+                expect(store.writeReservedAlone(EventStoreSpec.payload("alone"))) == true
+
+                expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["alone"]
+                expect(store.pendingEventCount) == 2
+                store.commit()
+                expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["alone", "staged"]
+            }
+
+            it("keeps the place of an event reserved to be written on its own") {
+                let full = EventStore.temporary(capacity: 1)
+                defer { full.deleteEverything() }
+                full.reserve(1)
+
+                // What another thread recording meanwhile finds.
+                expect(full.stage(EventStoreSpec.payload("staged"))) == false
+                expect(full.writeReservedAlone(EventStoreSpec.payload("alone"))) == true
+                expect(full.pendingEventCount) == 1
+            }
+
+            it("releases only the reservations it is told to") {
+                store.reserve(1)
+                store.reserve(2)
+                store.releaseReservations(2)
+
+                expect(store.pendingEventCount) == 1
+            }
         }
     }
 
@@ -2192,6 +2223,16 @@ final class EventStoreSpec: QuickSpec {
                 let held = store.closeBatch()!
 
                 expect(try store.body(of: held)) == (try written.body(of: onDisk))
+            }
+
+            it("delivers an event written on its own from memory when the write fails") {
+                store.reserve(1)
+                expect(store.writeReservedAlone(EventStoreSpec.payload("alone"))) == true
+
+                expect(store.pendingEventCount) == 1
+                let batch = store.closeBatch()
+                expect(batch?.eventCount) == 1
+                expect(try store.body(of: batch!)) == Data("[{\"kind\":\"custom\",\"key\":\"alone\"}]".utf8)
             }
 
             it("keeps accepting events after persistence has been given up on") {

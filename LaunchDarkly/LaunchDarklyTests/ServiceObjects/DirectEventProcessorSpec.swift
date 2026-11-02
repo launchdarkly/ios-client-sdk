@@ -1787,8 +1787,8 @@ extension DirectEventProcessorSpec {
                 reporter.record(CustomEvent(key: "fatal-error", context: context))
 
                 expect(Date().timeIntervalSince(started)) < 1
-                // Alongside whatever the stalled commit had staged before it stalled, which the track's write takes too.
-                expect(inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).kindField }).to(contain("custom"))
+                // Without what the stalled commit had staged before it stalled, which is that commit's to write.
+                expect(inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).kindField }) == ["custom"]
             }
 
             itPersisting("persists feature and summary events synchronously on flush") {
@@ -3902,11 +3902,12 @@ private final class ClosingHookStore: EventStoring {
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }
     func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
-    func releaseReservations() { inner.releaseReservations() }
+    func releaseReservations(_ events: Int) { inner.releaseReservations(events) }
     func commit() {
         beforeCommitting?()
         inner.commit()
     }
+    func writeReservedAlone(_ encodedEvent: Data) -> Bool { inner.writeReservedAlone(encodedEvent) }
     var holdsUnclosedEvents: Bool { inner.holdsUnclosedEvents }
     func takeVanishedLogEvents() -> Int { inner.takeVanishedLogEvents() }
     func listPendingBatches() -> BatchListing { inner.listPendingBatches() }
@@ -4017,8 +4018,9 @@ private final class SlowListingStore: EventStoring {
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }
     func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
-    func releaseReservations() { inner.releaseReservations() }
+    func releaseReservations(_ events: Int) { inner.releaseReservations(events) }
     func commit() { inner.commit() }
+    func writeReservedAlone(_ encodedEvent: Data) -> Bool { inner.writeReservedAlone(encodedEvent) }
     func closeBatch() -> EventBatch? { inner.closeBatch() }
     var holdsUnclosedEvents: Bool { inner.holdsUnclosedEvents }
     func takeVanishedLogEvents() -> Int { inner.takeVanishedLogEvents() }

@@ -77,11 +77,20 @@ protocol EventStoring {
     /// they were not known when it was accepted.
     func stageReserved(_ encodedEvent: Data) -> Bool
 
-    /// Gives back every reservation not used up by `stageReserved(_:)`, such as one for an event that failed to encode.
-    func releaseReservations()
+    /// Gives back `events` reservations not used up by `stageReserved(_:)` or `writeReservedAlone(_:)`, such as one for
+    /// an event that failed to encode. Only the caller's own, since another caller may hold reservations alongside.
+    func releaseReservations(_ events: Int)
 
     /// Hands every staged byte to the kernel, so that the events recorded so far survive the process dying.
     func commit()
+
+    /// Writes one encoded event to the log on its own, using up one reservation as `stageReserved(_:)` does, but leaving
+    /// what anything else has staged to the commit that staged it, so the caller pays for writing its own bytes and no
+    /// one else's. It may land ahead of events staged before it. Returns false if it is too large for a frame or for
+    /// the bytes left in the store.
+    ///
+    /// Without persistence, or once it has failed, the event is staged in memory instead, as a commit leaves it.
+    func writeReservedAlone(_ encodedEvent: Data) -> Bool
 
     /// Commits, then closes the open log into a batch to deliver, and whatever is still staged in memory into another.
     ///
@@ -374,8 +383,8 @@ final class EventStore: EventStoring {
         bufferLock.withLock { reservedEvents += events }
     }
 
-    func releaseReservations() {
-        bufferLock.withLock { reservedEvents = 0 }
+    func releaseReservations(_ events: Int) {
+        bufferLock.withLock { reservedEvents = max(0, reservedEvents - events) }
     }
 
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool = false) -> Bool {
@@ -432,6 +441,44 @@ final class EventStore: EventStoring {
         guard disk != nil
         else { return }
         ioLock.withLock { writeStagedBytes() }
+    }
+
+    func writeReservedAlone(_ encodedEvent: Data) -> Bool {
+        guard disk != nil
+        else { return stageReserved(encodedEvent) }
+        guard encodedEvent.count <= EventLogFormat.maxFrameSize
+        else {
+            os_log("%s dropping an event larger than a log frame allows", log: logger, type: .debug, typeName(and: #function))
+            releaseReservations(1)
+            return false
+        }
+        let frame = EventLogFormat.frame(for: encodedEvent)
+        return ioLock.withLock { () -> Bool in
+            let (admitted, taken) = bufferLock.withLock { () -> (Bool, StagedFrames?) in
+                // In the same critical section as the count that replaces it, so the event is never counted twice or
+                // not at all.
+                reservedEvents = max(0, reservedEvents - 1)
+                guard countedBytes + frame.count <= eventByteCapacity
+                else { return (false, nil) }
+                // As a commit leaves staged bytes once persistence has failed, for a delivery to close from memory.
+                guard persistEvents
+                else {
+                    bufferData.append(frame)
+                    bufferedEventCount += 1
+                    return (true, nil)
+                }
+                writingEvents += 1
+                writingBytes += frame.count
+                return (true, StagedFrames(frames: frame, summariesFrom: frame.count, events: 1, summaries: 0))
+            }
+            if let taken {
+                write(taken)
+            }
+            if !admitted {
+                os_log("%s dropping an event the store has no room for", log: logger, type: .debug, typeName(and: #function))
+            }
+            return admitted
+        }
     }
 
     func closeBatch() -> EventBatch? {
@@ -735,9 +782,14 @@ extension EventStore {
             else { return nil }
             return takeStaged()
         }
-        guard let taken
-        else { return }
+        if let taken {
+            write(taken)
+        }
+    }
 
+    /// Requires `ioLock`, and `taken` counted as being written.
+    private func write(_ taken: StagedFrames) {
+        ioLock.assertOwned()
         let bytes = taken.frames
         let base = bytes.startIndex
         var written = 0

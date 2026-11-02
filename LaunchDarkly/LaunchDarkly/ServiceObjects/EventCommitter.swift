@@ -201,22 +201,31 @@ final class EventCommitter {
     ///
     /// Only the event itself, so the caller pays for one small encode and one write however much is held: a commit
     /// encodes the held run and every summary, and a summary with a large context or many flags takes megabytes, which
-    /// is a dropped frame on the main thread. They follow on `commitQueue`, queued here. The event is staged ahead of
+    /// is a dropped frame on the main thread. They follow on `commitQueue`, queued here. The event is written ahead of
     /// the run held before it, which LaunchDarkly does not mind: every event carries its own creation date.
     ///
     /// Not under `commitLock`, which a commit holds for the whole of its encoding, so this never waits for one. The
-    /// store takes its own locks, and the event goes through encoders of its own; the one wait left is for the store's
-    /// I/O lock, held by a write or by a delivery reading a batch back.
+    /// store writes the one frame rather than committing, which would also write whatever a commit in flight has staged
+    /// so far, and the event goes through encoders of its own; the one wait left is for the store's I/O lock, held by
+    /// a write or by a delivery reading a batch back.
     private func writeAlone(_ event: Event) {
         let admitted = recordLock.withLock { () -> Bool in
             takenSummaries.append(contentsOf: eventBuffer.takeSummaries())
-            return store.admitsEvent(heldElsewhere: pending.count, capacity: eventCapacity)
+            guard store.admitsEvent(heldElsewhere: pending.count, capacity: eventCapacity)
+            else { return false }
+            // Reserved where it is admitted, as a run is where it leaves `pending`, so capacity counts it while it is
+            // encoded and a recording on another thread cannot take its place.
+            store.reserve(1)
+            return true
         }
         if admitted {
-            // Checked against capacity again, since it is counted nowhere between being admitted and being staged.
-            if let encoded = eventBuffer.encodeAlone(event), store.stage(encoded, bypassingCapacity: false) {
-                store.commit()
+            if let encoded = eventBuffer.encodeAlone(event) {
+                // Only the bytes are checked: a frame or byte capacity it turns out not to fit.
+                if !store.writeReservedAlone(encoded) {
+                    reportLost()
+                }
             } else {
+                store.releaseReservations(1)
                 reportLost()
             }
         } else {
@@ -456,8 +465,8 @@ final class EventCommitter {
             return (run, summaries)
         }
 
-        stage(run)
-        store.releaseReservations()
+        // Only the run's own: a track or identify writing itself alone may hold one beside them.
+        store.releaseReservations(stage(run))
         stageSummaries(summaries)
         store.commit()
         committedSequence = through
@@ -471,12 +480,16 @@ final class EventCommitter {
     ///
     /// Requires `commitLock`: two threads draining separate runs would stage them in whichever order they finished
     /// encoding, which is not the order they were recorded in.
-    private func stage(_ run: [Event]) {
+    ///
+    /// - Returns: how many of the run's reservations are left unused, one for each event that did not encode.
+    private func stage(_ run: [Event]) -> Int {
         commitLock.assertOwned()
+        var unencoded = 0
         for event in run {
             guard let encoded = eventBuffer.encode(event)
             else {
                 reportLost()
+                unencoded += 1
                 continue
             }
             // The event capacity is bypassed here, so what is left is an event too large for a frame or for the bytes
@@ -485,6 +498,7 @@ final class EventCommitter {
                 reportLost()
             }
         }
+        return unencoded
     }
 
     /// Whether recording this kind of event at `.immediate` should encode and write the held run before it returns.
