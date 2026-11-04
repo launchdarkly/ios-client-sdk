@@ -1105,10 +1105,10 @@ public class LDClient {
 extension LDClient: TypeIdentifying { }
 
 extension LDClient {
-    /// Has the diagnostic init event wait for the event processor's launch gate, as a previous run's events do. Where
-    /// events do not persist there is no gate, and the init event goes out as it did before persistence.
+    /// Has the diagnostic init event wait for the event processor's launch gate, as a previous run's events do, whether
+    /// or not events persist.
     fileprivate func giveFlagValuesTheNetworkFirst() {
-        if let eventProcessor = eventProcessor as? DirectEventProcessor, eventProcessor.givesWayToFlags {
+        if let eventProcessor = eventProcessor as? DirectEventProcessor {
             (diagnosticReporter as? DiagnosticReporter)?.sendsInitAfter = eventProcessor.whenLaunchGateOpens
         }
     }

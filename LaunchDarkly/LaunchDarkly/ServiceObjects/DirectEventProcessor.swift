@@ -11,20 +11,24 @@ import OSLog
 /// calls are commit points and which thread each commit runs on. This class delivers what is committed, and runs the
 /// reporter's life: flushes, going online and offline, and the flush at close.
 ///
-/// Flag values come first. Where events persist, what a previous run left waits at launch until a fixed time after the
-/// reporter first goes online, and the deliveries this reporter starts on its own send one batch at a time, a gap apart,
-/// leaving room for flag requests. Both go by time alone: nothing here hears what the flag synchronizer is doing. A
-/// delivery the application asks for is never held.
+/// Flag values come first. What this reporter sends on its own waits at launch until `LDConfig.eventDeliveryDelay` after
+/// it first goes online, and where events persist, the deliveries it starts on its own send one batch at a time, a gap
+/// apart, leaving room for flag requests. Both go by time alone: nothing here hears what the flag synchronizer is doing.
+/// A delivery the application asks for is never held.
 class DirectEventProcessor: EventProcessor {
     /// How long the deliveries this reporter starts on its own wait, so that flag values come first.
     struct Pacing {
-        static let specified = Pacing(launchDelay: 2, gap: 1)
+        /// The gap the specification gives, after the launch delay the application configured.
+        static func specified(launchDelay: TimeInterval) -> Pacing {
+            Pacing(launchDelay: launchDelay, gap: 1)
+        }
         /// No waits at all, for tests about something else.
         static let noWaits = Pacing(launchDelay: 0, gap: 0)
 
-        /// How long after first going online that a previous run's events, and the diagnostic init event, wait. It
-        /// gives the application's startup traffic, the first flag request among it, the network first, and is short
-        /// enough for an application that dies a few seconds after every launch to still send them.
+        /// How long after first going online that a previous run's events, this run's periodic delivery, and the
+        /// diagnostic init event wait. It gives the application's startup traffic, the first flag request among it, the
+        /// network first, and is short enough for an application that dies a few seconds after every launch to still
+        /// send them.
         let launchDelay: TimeInterval
         /// The least time between one paced batch's answer and the next batch's request.
         let gap: TimeInterval
@@ -51,10 +55,6 @@ class DirectEventProcessor: EventProcessor {
     private let retryState: DeliveryRetryState
 
     private let pacing: Pacing
-    /// Whether events give way to flag values: only where they persist, like the rest of what persistence brings.
-    /// Without it there is no previous run to hold back, and delivery is what it was before persistence: no launch
-    /// gate and no pacing.
-    let givesWayToFlags: Bool
 
     var lastEventResponseDate: Date {
         committer.lastEventResponseDate
@@ -144,8 +144,8 @@ class DirectEventProcessor: EventProcessor {
     private var hasEventsFromPreviousRun = false
 
     /// Whether the launch gate has opened. It opens once the launch delay has passed since first going online. Until then
-    /// neither a previous run's events nor the diagnostic init event are sent. Open from the start where events do not
-    /// give way.
+    /// neither a previous run's events, this run's periodic delivery, nor the diagnostic init event are sent. Open from
+    /// the start where there is no launch delay.
     private var launchGateOpen: Bool
     /// When the reporter first went online, which the gate counts from.
     private var wentOnlineAt: DispatchTime?
@@ -158,7 +158,7 @@ class DirectEventProcessor: EventProcessor {
          encoding: OutboundEventBuffer.Encoding = .handWritten,
          commitQueue: DispatchQueue = DispatchQueue(label: "com.launchdarkly.DirectEventProcessor.commitQueue", qos: .userInitiated),
          retryState: DeliveryRetryState? = nil,
-         pacing: Pacing = .specified) {
+         pacing: Pacing? = nil) {
         let eventStore = store ?? DirectEventProcessor.makeStore(config: service.config)
         let lostEvents = LostEventCount()
         self.service = service
@@ -171,10 +171,10 @@ class DirectEventProcessor: EventProcessor {
                                         commitQueue: commitQueue, diagnosticCache: service.diagnosticCache,
                                         lostEvents: lostEvents)
         self.store = eventStore
+        let pacing = pacing ?? .specified(launchDelay: service.config.eventDeliveryDelay)
         self.pacing = pacing
-        self.givesWayToFlags = eventStore.isPersisting
         self.deliveryScheduler = EventDeliveryScheduler(pacesDeliveries: eventStore.isPersisting, gap: pacing.gap)
-        self.launchGateOpen = !eventStore.isPersisting
+        self.launchGateOpen = pacing.launchDelay <= 0
 
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
         // doing it on the caller's thread would put file I/O in the way of the client starting up. Below the queue's

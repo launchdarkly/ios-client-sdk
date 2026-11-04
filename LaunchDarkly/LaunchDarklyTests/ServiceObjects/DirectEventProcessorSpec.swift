@@ -452,22 +452,42 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 3
             }
 
-            it("holds what waits for the launch gate only where events persist") {
-                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
-                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 1, gap: 0))
-                nextRun = reporter
-                expect(reporter.givesWayToFlags) == self.persists
+            /// Whether what waits on `reporter`'s launch gate has run, `after` it went online.
+            func gateOpened(_ reporter: DirectEventProcessor, after: TimeInterval) -> Bool {
                 let opened = UnfairLock()
                 var hasOpened = false
                 reporter.whenLaunchGateOpens { opened.withLock { hasOpened = true } }
                 reporter.isOnline = true
+                Thread.sleep(forTimeInterval: after)
+                return opened.withLock { hasOpened }
+            }
 
-                if self.persists {
-                    Thread.sleep(forTimeInterval: 0.6)
-                    expect(opened.withLock { hasOpened }) == false
-                }
+            it("holds what waits for the launch gate until the launch delay has passed, whether or not events persist") {
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
+                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 1, gap: 0))
+                nextRun = reporter
 
-                expect(opened.withLock { hasOpened }).toEventually(beTrue(), timeout: .seconds(2))
+                expect(gateOpened(reporter, after: 0.6)) == false
+                expect(gateOpened(reporter, after: 0.8)) == true
+            }
+
+            it("holds nothing at the launch gate where the launch delay is zero") {
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
+                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 0))
+                nextRun = reporter
+
+                expect(gateOpened(reporter, after: 0.2)) == true
+            }
+
+            it("takes the launch delay from the configuration") {
+                var config = testContext.serviceMock.config
+                config.eventDeliveryDelay = 1
+                testContext.serviceMock.config = config
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store)
+                nextRun = reporter
+
+                expect(gateOpened(reporter, after: 0.6)) == false
+                expect(gateOpened(reporter, after: 0.8)) == true
             }
 
             itPersisting("does not let a report interval shorter than the launch delay send what a previous run left") {

@@ -67,6 +67,15 @@ public final class ObjcLDConfig: NSObject {
         set { config.eventMaxAge = newValue }
     }
 
+    /// How long after the client first goes online the SDK holds back the traffic it starts on its own: the diagnostic init payload, the events a previous run left, and the periodic delivery of this run's events. A flush the application asks for is never held. Kept between 0 and 60 seconds. (Default: 2 seconds)
+    ///
+    /// - Warning: Experimental. This property is not stable, and not subject to any backwards compatibility guarantees
+    ///   or semantic versioning.
+    @objc public var eventDeliveryDelay: TimeInterval {
+        get { config.eventDeliveryDelay }
+        set { config.eventDeliveryDelay = newValue }
+    }
+
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
     @objc public var connectionTimeout: TimeInterval {
         get { config.connectionTimeout }

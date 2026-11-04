@@ -19,7 +19,7 @@ class DiagnosticReporter: DiagnosticReporting {
     private let stateQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.state", qos: .utility)
     private let workQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.work", qos: .utility)
     /// Where set, what the init event waits for: the event processor's launch gate, so that it does not compete with the
-    /// first flag request. Set once the client has both.
+    /// first flag request. Set once the client has both; unset only where events are not sent, and so neither is this.
     var sendsInitAfter: ((@escaping () -> Void) -> Void)?
 
     init(service: DarklyServiceProvider, environmentReporting: EnvironmentReporting) {

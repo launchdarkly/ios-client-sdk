@@ -243,6 +243,11 @@ public struct LDConfig {
         /// The default behavior for the SDK is to keep events in memory only.
         static let eventPersistence = EventPersistence.disabled
 
+        /// The default time the SDK's own event and diagnostic traffic waits after first going online. (2 seconds)
+        static let eventDeliveryDelay: TimeInterval = 2
+        /// The longest `eventDeliveryDelay` can be set to. (60 seconds)
+        static let maxEventDeliveryDelay: TimeInterval = 60
+
         /// The default timeout interval for flag requests and event reports. (10 seconds)
         static let connectionTimeout: TimeInterval = 10.0
         /// The default time interval between event reports. (30 seconds)
@@ -401,6 +406,20 @@ public struct LDConfig {
     ///
     /// It has no effect where `eventPersistence` is `.disabled`.
     public var eventMaxAge: TimeInterval = Defaults.eventMaxAge
+
+    private var _eventDeliveryDelay: TimeInterval = Defaults.eventDeliveryDelay
+    /// How long after the client first goes online the SDK holds back the traffic it starts on its own, so that the
+    /// first flag request has the network to itself. That is the diagnostic init payload, the events a previous run left
+    /// where `eventPersistence` keeps them, and the periodic delivery of this run's events. A flush the application asks
+    /// for is never held. Zero sends them as soon as the client is online. Values are kept between 0 and 60 seconds, so
+    /// an application that ends soon after every launch still sends what a previous run left. (Default: 2 seconds)
+    ///
+    /// - Warning: Experimental. This property is not stable, and not subject to any backwards compatibility guarantees
+    ///   or semantic versioning.
+    public var eventDeliveryDelay: TimeInterval {
+        get { _eventDeliveryDelay }
+        set { _eventDeliveryDelay = newValue.isNaN ? Defaults.eventDeliveryDelay : min(max(newValue, 0), Defaults.maxEventDeliveryDelay) }
+    }
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
     public var connectionTimeout: TimeInterval = Defaults.connectionTimeout
@@ -634,6 +653,7 @@ extension LDConfig: Equatable {
             && lhs.eventPersistence == rhs.eventPersistence
             && lhs.eventCapacityBytes == rhs.eventCapacityBytes
             && lhs.eventMaxAge == rhs.eventMaxAge
+            && lhs.eventDeliveryDelay == rhs.eventDeliveryDelay
             && lhs.sendEvents == rhs.sendEvents
             && lhs.connectionTimeout == rhs.connectionTimeout
             && lhs.eventFlushInterval == rhs.eventFlushInterval
