@@ -38,53 +38,6 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
     }
 }
 
-// MARK: - DiagnosticCachingMock
-final class DiagnosticCachingMock: DiagnosticCaching {
-
-    var getDiagnosticIdCallCount = 0
-    var getDiagnosticIdCallback: (() throws -> Void)?
-    var getDiagnosticIdReturnValue: DiagnosticId!
-    func getDiagnosticId() -> DiagnosticId {
-        getDiagnosticIdCallCount += 1
-        try! getDiagnosticIdCallback?()
-        return getDiagnosticIdReturnValue
-    }
-
-    var getCurrentStatsAndResetCallCount = 0
-    var getCurrentStatsAndResetCallback: (() throws -> Void)?
-    var getCurrentStatsAndResetReturnValue: DiagnosticStats!
-    func getCurrentStatsAndReset() -> DiagnosticStats {
-        getCurrentStatsAndResetCallCount += 1
-        try! getCurrentStatsAndResetCallback?()
-        return getCurrentStatsAndResetReturnValue
-    }
-
-    var incrementDroppedEventCountCallCount = 0
-    var incrementDroppedEventCountCallback: (() throws -> Void)?
-    func incrementDroppedEventCount() {
-        incrementDroppedEventCountCallCount += 1
-        try! incrementDroppedEventCountCallback?()
-    }
-
-    var recordEventsInLastBatchCallCount = 0
-    var recordEventsInLastBatchCallback: (() throws -> Void)?
-    var recordEventsInLastBatchReceivedEventsInLastBatch: Int?
-    func recordEventsInLastBatch(eventsInLastBatch: Int) {
-        recordEventsInLastBatchCallCount += 1
-        recordEventsInLastBatchReceivedEventsInLastBatch = eventsInLastBatch
-        try! recordEventsInLastBatchCallback?()
-    }
-
-    var addStreamInitCallCount = 0
-    var addStreamInitCallback: (() throws -> Void)?
-    var addStreamInitReceivedStreamInit: DiagnosticStreamInit?
-    func addStreamInit(streamInit: DiagnosticStreamInit) {
-        addStreamInitCallCount += 1
-        addStreamInitReceivedStreamInit = streamInit
-        try! addStreamInitCallback?()
-    }
-}
-
 // MARK: - DiagnosticReportingMock
 final class DiagnosticReportingMock: DiagnosticReporting {
 

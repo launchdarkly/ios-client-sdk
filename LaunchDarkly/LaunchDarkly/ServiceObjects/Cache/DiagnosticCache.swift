@@ -1,6 +1,5 @@
 import Foundation
 
-// sourcery: autoMockable
 protocol DiagnosticCaching {
     func getDiagnosticId() -> DiagnosticId
     func getCurrentStatsAndReset() -> DiagnosticStats

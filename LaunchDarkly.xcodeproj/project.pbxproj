@@ -201,6 +201,7 @@
 		83B9A082204F6022000C3F17 /* FlagsUnchangedObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B9A081204F6022000C3F17 /* FlagsUnchangedObserver.swift */; };
 		83CFE7CE1F7AD81D0010544E /* DirectEventProcessorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7CD1F7AD81D0010544E /* DirectEventProcessorSpec.swift */; };
 		83CFE7D11F7AD8DC0010544E /* DarklyServiceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7D01F7AD8DC0010544E /* DarklyServiceMock.swift */; };
+		A1D1A6C12F0B000000C0FFEE /* DiagnosticCachingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D1A6C02F0B000000C0FFEE /* DiagnosticCachingMock.swift */; };
 		83D559741FD87CC9002D10C8 /* KeyedValueCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D559731FD87CC9002D10C8 /* KeyedValueCache.swift */; };
 		83D9EC752062DEAB004D7FA6 /* LDCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B6C4B51F4DE7630055351C /* LDCommon.swift */; };
 		83D9EC762062DEAB004D7FA6 /* LDConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFDD1F26380700C05156 /* LDConfig.swift */; };
@@ -625,6 +626,7 @@
 		83B9A081204F6022000C3F17 /* FlagsUnchangedObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagsUnchangedObserver.swift; sourceTree = "<group>"; };
 		83CFE7CD1F7AD81D0010544E /* DirectEventProcessorSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectEventProcessorSpec.swift; sourceTree = "<group>"; };
 		83CFE7D01F7AD8DC0010544E /* DarklyServiceMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyServiceMock.swift; sourceTree = "<group>"; };
+		A1D1A6C02F0B000000C0FFEE /* DiagnosticCachingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCachingMock.swift; sourceTree = "<group>"; };
 		83D559731FD87CC9002D10C8 /* KeyedValueCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyedValueCache.swift; sourceTree = "<group>"; };
 		83D9EC6B2062DBB7004D7FA6 /* LaunchDarkly_watchOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LaunchDarkly_watchOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		83DDBEF51FA24A7E00E428B6 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
@@ -982,6 +984,7 @@
 			isa = PBXGroup;
 			children = (
 				83CFE7D01F7AD8DC0010544E /* DarklyServiceMock.swift */,
+				A1D1A6C02F0B000000C0FFEE /* DiagnosticCachingMock.swift */,
 				832307A71F7DA61B0029815A /* LDEventSourceMock.swift */,
 				832307A91F7ECA630029815A /* LDConfigStub.swift */,
 				A33A5F7928466D04000C29C7 /* LDContextStub.swift */,
@@ -1897,6 +1900,7 @@
 				B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */,
 				83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */,
 				83CFE7D11F7AD8DC0010544E /* DarklyServiceMock.swift in Sources */,
+				A1D1A6C12F0B000000C0FFEE /* DiagnosticCachingMock.swift in Sources */,
 				832307AA1F7ECA630029815A /* LDConfigStub.swift in Sources */,
 				A3C6F7622B7FA803005B3B61 /* SheddingQueueSpec.swift in Sources */,
 				A33A5F7A28466D04000C29C7 /* LDContextStub.swift in Sources */,
