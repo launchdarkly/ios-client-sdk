@@ -37,8 +37,8 @@ extension LDClient {
      timeout, because a delivery always ends, by its own request timeouts if nothing else. This is the one to reach
      for from a Swift concurrency task, where blocking is not safe.
 
-     This method is not stable, and not subject to any backwards compatibility guarantees or semantic versioning. It is
-     experimental.
+     - Warning: Experimental. This method is not stable, and not subject to any backwards compatibility guarantees or
+       semantic versioning.
 
      - parameter completion: Given `true` if LaunchDarkly accepted the events, or there were none to send, and
        `false` if the client is offline or closed, or any of the events were lost. See `flushAndWait` for what being
@@ -114,8 +114,8 @@ extension LDClient {
      LaunchDarkly keeps refusing. Keep it for those last moments; the SDK already flushes on every move to the
      background.
 
-     This method is not stable, and not subject to any backwards compatibility guarantees or semantic versioning. It is
-     experimental.
+     - Warning: Experimental. This method is not stable, and not subject to any backwards compatibility guarantees or
+       semantic versioning.
 
      - parameter timeout: How long to wait, in seconds. Zero or less does not wait, and so reports `false`. There is
        no upper limit: a delivery always ends, by its own request timeouts if nothing else, so a very long timeout

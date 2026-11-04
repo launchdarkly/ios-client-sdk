@@ -548,8 +548,8 @@ public final class ObjcLDClient: NSObject {
      Like `flushAndWait`, but without blocking: the completion runs once every environment has answered. There is no
      timeout, because a delivery always ends, by its own request timeouts if nothing else.
 
-     This method is not stable, and not subject to any backwards compatibility guarantees or semantic versioning. It is
-     experimental.
+     - Warning: Experimental. This method is not stable, and not subject to any backwards compatibility guarantees or
+       semantic versioning.
 
      - parameter completion: Given `YES` if LaunchDarkly accepted the events, or there were none to send, and `NO` if
        the client is offline or closed, or any of the events were lost. See `flushAndWait` for what being lost
@@ -581,10 +581,10 @@ public final class ObjcLDClient: NSObject {
      A post that fails then leaves the wait as it was, so `flush` and the periodic delivery go on waiting out the same
      one rather than a longer one. That also means nothing slows these posts down: a call made routinely, rather than
      just before the process is suspended or ends, posts once per call for as long as LaunchDarkly keeps refusing.
-     Keep it for those last moments; the SDK already flushes on every move to the background.
+     Keep it for those last moments; the SDK already flushes on every move to the      background.
 
-     This method is not stable, and not subject to any backwards compatibility guarantees or semantic versioning. It is
-     experimental.
+     - Warning: Experimental. This method is not stable, and not subject to any backwards compatibility guarantees or
+       semantic versioning.
 
      - parameter timeout: How long to wait, in seconds. Zero or less does not wait, and so reports `NO`. There is
        no upper limit: a delivery always ends, by its own request timeouts if nothing else, so a very long timeout
