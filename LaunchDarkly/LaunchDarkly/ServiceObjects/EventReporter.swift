@@ -70,10 +70,9 @@ class EventReporter: EventReporting {
     /// queued.
     private var queuedDelivery: [FlushOutcomeClosure]?
 
-    #if DEBUG
-        /// How many deliveries have started, which is fewer than the flushes asked for where they were joined.
-        private var deliveryRunCount = 0
-    #endif
+    /// How many deliveries have started, which is fewer than the flushes asked for where they were joined. Only to be
+    /// used while holding `deliveryLock`.
+    private var deliveryRunCount = 0
 
     private var timerQueue = DispatchQueue(label: "com.launchdarkly.EventReporter.timerQueue")
     private var eventReportTimer: TimeResponding?
@@ -188,9 +187,7 @@ class EventReporter: EventReporting {
         deliveryLock.lock()
         let waiters = queuedDelivery ?? []
         queuedDelivery = nil
-        #if DEBUG
-            deliveryRunCount += 1
-        #endif
+        deliveryRunCount += 1
         deliveryLock.unlock()
 
         reportEvents { delivered in
@@ -403,29 +400,27 @@ extension EventReporter {
 
 extension EventReporter: TypeIdentifying { }
 
-#if DEBUG
-    extension EventReporter {
-        func setLastEventResponseDate(_ date: Date) {
-            lastEventResponseDate = date
-        }
-
-        /// Occupies the queue a delivery runs on, so a test can see what one that has not started yet collects.
-        func occupyQueue(until released: DispatchSemaphore) {
-            eventQueue.async { _ = released.wait(timeout: .now() + 10) }
-        }
-
-        /// Callers waiting on the queued delivery.
-        var queuedDeliveryWaiterCount: Int {
-            deliveryLock.lock()
-            defer { deliveryLock.unlock() }
-            return queuedDelivery?.count ?? 0
-        }
-
-        /// Deliveries started, counting one for a run of flushes that joined each other.
-        var startedDeliveryCount: Int {
-            deliveryLock.lock()
-            defer { deliveryLock.unlock() }
-            return deliveryRunCount
-        }
+extension EventReporter {
+    func setLastEventResponseDate(_ date: Date) {
+        lastEventResponseDate = date
     }
-#endif
+
+    /// Occupies the queue a delivery runs on, so a test can see what one that has not started yet collects.
+    func occupyQueue(until released: DispatchSemaphore) {
+        eventQueue.async { _ = released.wait(timeout: .now() + 10) }
+    }
+
+    /// Callers waiting on the queued delivery.
+    var queuedDeliveryWaiterCount: Int {
+        deliveryLock.lock()
+        defer { deliveryLock.unlock() }
+        return queuedDelivery?.count ?? 0
+    }
+
+    /// Deliveries started, counting one for a run of flushes that joined each other.
+    var startedDeliveryCount: Int {
+        deliveryLock.lock()
+        defer { deliveryLock.unlock() }
+        return deliveryRunCount
+    }
+}
