@@ -943,35 +943,33 @@ extension DirectEventProcessor {
 
 extension DirectEventProcessor: TypeIdentifying { }
 
-#if DEBUG
-    extension DirectEventProcessor {
-        /// Full events accepted but not yet handed to a commit.
-        var pendingEventsForTesting: [Event] {
-            committer.pendingEventsForTesting
-        }
-
-        func setLastEventResponseDate(_ date: Date) {
-            committer.setLastEventResponseDate(date)
-        }
-
-        /// Occupies the queue a delivery runs on, so a test can see what one that has not started yet collects.
-        func occupyQueue(until released: DispatchSemaphore) {
-            deliveryQueue.async { _ = released.wait(timeout: .now() + 10) }
-        }
-
-        /// Callers waiting on the queued delivery.
-        var queuedDeliveryWaiterCount: Int {
-            deliveryScheduler.queuedWaiterCount
-        }
-
-        /// Deliveries started, counting one for a run of flushes that joined each other.
-        var startedDeliveryCount: Int {
-            deliveryScheduler.startedCount
-        }
-
-        /// As `EventCommitter.withContextSummarizer(_:)`.
-        func withContextSummarizer<T>(_ read: (ContextSummarizer) -> T) -> T {
-            committer.withContextSummarizer(read)
-        }
+extension DirectEventProcessor {
+    /// Full events accepted but not yet handed to a commit.
+    var pendingEventsForTesting: [Event] {
+        committer.pendingEventsForTesting
     }
-#endif
+
+    func setLastEventResponseDate(_ date: Date) {
+        committer.setLastEventResponseDate(date)
+    }
+
+    /// Occupies the queue a delivery runs on, so a test can see what one that has not started yet collects.
+    func occupyQueue(until released: DispatchSemaphore) {
+        deliveryQueue.async { _ = released.wait(timeout: .now() + 10) }
+    }
+
+    /// Callers waiting on the queued delivery.
+    var queuedDeliveryWaiterCount: Int {
+        deliveryScheduler.queuedWaiterCount
+    }
+
+    /// Deliveries started, counting one for a run of flushes that joined each other.
+    var startedDeliveryCount: Int {
+        deliveryScheduler.startedCount
+    }
+
+    /// As `EventCommitter.withContextSummarizer(_:)`.
+    func withContextSummarizer<T>(_ read: (ContextSummarizer) -> T) -> T {
+        committer.withContextSummarizer(read)
+    }
+}

@@ -150,10 +150,9 @@ final class EventDeliveryScheduler {
     /// one rather than one each. Only to be used while holding `lock`.
     private var isRetryScheduled = false
 
-    #if DEBUG
-        /// How many deliveries have started, which is fewer than the flushes asked for where they were joined.
-        private var deliveryRunCount = 0
-    #endif
+    /// How many deliveries have started, which is fewer than the flushes asked for where they were joined. Only to be
+    /// used while holding `lock`.
+    private var deliveryRunCount = 0
 
     init(pacesDeliveries: Bool, gap: TimeInterval) {
         self.pacesDeliveries = pacesDeliveries
@@ -214,9 +213,7 @@ final class EventDeliveryScheduler {
                                   isPaced: next.isPaced && pacesDeliveries && !next.isClosing,
                                   gap: gap)
             running = run
-            #if DEBUG
-                deliveryRunCount += 1
-            #endif
+            deliveryRunCount += 1
             return (run, next.waiters)
         }
     }
@@ -252,15 +249,13 @@ final class EventDeliveryScheduler {
         lock.withLock { isRetryScheduled = false }
     }
 
-    #if DEBUG
-        /// Callers waiting on the queued delivery.
-        var queuedWaiterCount: Int {
-            lock.withLock { queued?.waiters.count ?? 0 }
-        }
+    /// Callers waiting on the queued delivery.
+    var queuedWaiterCount: Int {
+        lock.withLock { queued?.waiters.count ?? 0 }
+    }
 
-        /// Deliveries started, counting one for a run of flushes that joined each other.
-        var startedCount: Int {
-            lock.withLock { deliveryRunCount }
-        }
-    #endif
+    /// Deliveries started, counting one for a run of flushes that joined each other.
+    var startedCount: Int {
+        lock.withLock { deliveryRunCount }
+    }
 }

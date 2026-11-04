@@ -479,20 +479,18 @@ final class EventCommitter {
 
 extension EventCommitter: TypeIdentifying { }
 
-#if DEBUG
-    extension EventCommitter {
-        /// Full events accepted but not yet handed to a commit.
-        var pendingEventsForTesting: [Event] {
-            recordLock.withLock { pending }
-        }
-
-        func setLastEventResponseDate(_ date: Date) {
-            responseDateLock.withLock { responseDate = date }
-        }
-
-        /// Reads the summarizer under `recordLock`, which a scheduled commit may be holding to take its counters.
-        func withContextSummarizer<T>(_ read: (ContextSummarizer) -> T) -> T {
-            recordLock.withLock { read(eventBuffer.contextSummarizer) }
-        }
+extension EventCommitter {
+    /// Full events accepted but not yet handed to a commit.
+    var pendingEventsForTesting: [Event] {
+        recordLock.withLock { pending }
     }
-#endif
+
+    func setLastEventResponseDate(_ date: Date) {
+        responseDateLock.withLock { responseDate = date }
+    }
+
+    /// Reads the summarizer under `recordLock`, which a scheduled commit may be holding to take its counters.
+    func withContextSummarizer<T>(_ read: (ContextSummarizer) -> T) -> T {
+        recordLock.withLock { read(eventBuffer.contextSummarizer) }
+    }
+}

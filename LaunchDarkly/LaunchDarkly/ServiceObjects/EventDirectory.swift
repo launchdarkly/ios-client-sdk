@@ -1005,12 +1005,10 @@ enum BatchLocks {
         }
     }
 
-    #if DEBUG
     /// The lock every call on a batch takes: its directory's, whichever store names the batch.
     static func lockForTesting(_ batch: URL) -> UnfairLock {
         directory(of: batch).lock
     }
-    #endif
 }
 
 extension EventDirectory {
