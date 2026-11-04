@@ -35,7 +35,9 @@ final class UnfairLock {
     /// Traps unless the calling thread holds the lock. Debug builds only, since it is called on recording paths.
     @inline(__always)
     func assertOwned() {
-        assert({ os_unfair_lock_assert_owner(unfairLock); return true }())
+        #if DEBUG
+        os_unfair_lock_assert_owner(unfairLock)
+        #endif
     }
 }
 #else
