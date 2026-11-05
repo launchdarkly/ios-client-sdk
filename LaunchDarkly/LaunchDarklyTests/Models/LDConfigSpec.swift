@@ -23,6 +23,7 @@ final class LDConfigSpec: XCTestCase {
 
         fileprivate static let debugMode = true
         fileprivate static let evaluationReasons = true
+        fileprivate static let payloadFilter = "mobile-flags"
         fileprivate static let maxCachedContexts = -1
         fileprivate static let diagnosticOptOut = true
         fileprivate static let diagnosticRecordingInterval: TimeInterval = 600.0
@@ -48,6 +49,7 @@ final class LDConfigSpec: XCTestCase {
          ("private context attributes", Constants.privateContextAttributes, { c, v in c.privateContextAttributes = (v as! [Reference])}),
          ("use report", Constants.useReport, { c, v in c.useReport = v as! Bool }),
          ("evaluation reasons", Constants.evaluationReasons, { c, v in c.evaluationReasons = v as! Bool }),
+         ("payload filter", Constants.payloadFilter, { c, v in c.payloadFilter = v as! String? }),
          ("max cached contexts", Constants.maxCachedContexts, { c, v in c.maxCachedContexts = v as! Int }),
          ("diagnostic opt out", Constants.diagnosticOptOut, { c, v in c.diagnosticOptOut = v as! Bool }),
          ("diagnostic recording interval", Constants.diagnosticRecordingInterval, { c, v in c.diagnosticRecordingInterval = v as! TimeInterval }),
@@ -74,6 +76,7 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.useReport, LDConfig.Defaults.useReport)
         XCTAssertEqual(config.isDebugMode, LDConfig.Defaults.debugMode)
         XCTAssertEqual(config.evaluationReasons, LDConfig.Defaults.evaluationReasons)
+        XCTAssertEqual(config.payloadFilter, LDConfig.Defaults.payloadFilter)
         XCTAssertEqual(config.maxCachedContexts, LDConfig.Defaults.maxCachedContexts)
         XCTAssertEqual(config.diagnosticOptOut, LDConfig.Defaults.diagnosticOptOut)
         XCTAssertEqual(config.diagnosticRecordingInterval, LDConfig.Defaults.diagnosticRecordingInterval)
@@ -108,6 +111,7 @@ final class LDConfigSpec: XCTestCase {
             XCTAssertEqual(config.useReport, Constants.useReport, "\(os)")
             XCTAssertEqual(config.isDebugMode, Constants.debugMode, "\(os)")
             XCTAssertEqual(config.evaluationReasons, Constants.evaluationReasons, "\(os)")
+            XCTAssertEqual(config.payloadFilter, Constants.payloadFilter, "\(os)")
             XCTAssertEqual(config.maxCachedContexts, Constants.maxCachedContexts, "\(os)")
             XCTAssertEqual(config.diagnosticOptOut, Constants.diagnosticOptOut, "\(os)")
             XCTAssertEqual(config.diagnosticRecordingInterval, Constants.diagnosticRecordingInterval, "\(os)")
@@ -184,6 +188,21 @@ final class LDConfigSpec: XCTestCase {
             var otherConfig = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
             setter(&otherConfig, otherVal)
             symmetricAssertNotEqual(defaultConfig, otherConfig, "\(name) is the same")
+        }
+    }
+
+    func testValidatedPayloadFilter() {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        XCTAssertNil(config.validatedPayloadFilter())
+
+        ["mobile-flags", "a", "0.filter_key-1"].forEach { key in
+            config.payloadFilter = key
+            XCTAssertEqual(config.validatedPayloadFilter(), key)
+        }
+
+        ["", "-starts-with-hyphen", ".starts-with-period", "has space", "encoding necessary +! %& ( )", "trailing-newline\n", "ключ"].forEach { key in
+            config.payloadFilter = key
+            XCTAssertNil(config.validatedPayloadFilter(), "\(key) should be rejected")
         }
     }
 
