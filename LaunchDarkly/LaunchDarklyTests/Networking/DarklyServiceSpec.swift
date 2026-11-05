@@ -59,6 +59,7 @@ final class DarklyServiceSpec: QuickSpec {
         createEventSourceSpec()
         publishEventDataSpec()
         diagnosticCacheSpec()
+        sessionSpec()
         publishDiagnosticSpec()
 
         afterEach {
@@ -679,6 +680,16 @@ final class DarklyServiceSpec: QuickSpec {
                 expect(testContext.service.diagnosticCache).toNot(beNil())
                 expect(testContext.serviceFactoryMock.makeDiagnosticCacheCallCount) == 1
                 expect(testContext.serviceFactoryMock.makeDiagnosticCacheReceivedSdkKey) == LDConfig.Constants.mockMobileKey
+            }
+        }
+    }
+
+    private func sessionSpec() {
+        describe("session") {
+            it("is shared by every environment") {
+                let primary = TestContext(mobileKey: LDConfig.Constants.mockMobileKey)
+                let secondary = TestContext(mobileKey: "secondary-mobile-key")
+                expect(primary.service.session) === secondary.service.session
             }
         }
     }
