@@ -21,10 +21,13 @@ final class SdkController: RouteCollection {
         let capabilities = [
             "client-side",
             "mobile",
+            "singleton",
             "service-endpoints",
             "strongly-typed",
             "tags",
+            "wrapper",
             "auto-env-attributes",
+            "context-type",
             "context-comparison",
             "etag-caching",
             "inline-context-all",
@@ -38,7 +41,9 @@ final class SdkController: RouteCollection {
             "polling-gzip",
             "client-per-context-summaries",
             "retry-conformance-fdv1-streaming",
-            "retry-conformance-fdv1-polling"
+            "retry-conformance-fdv1-polling",
+            "client-event-source-http-errors",
+            "tls:verify-peer"
         ]
 
         return StatusResponse(
@@ -121,6 +126,17 @@ final class SdkController: RouteCollection {
             }
 
             config.applicationInfo = applicationInfo
+        }
+
+        // The harness sends an empty string for a wrapper name or version that is not set.
+        if let wrapper = createInstance.configuration.wrapper {
+            if let name = wrapper.name, !name.isEmpty {
+                config.wrapperName = name
+            }
+
+            if let version = wrapper.version, !version.isEmpty {
+                config.wrapperVersion = version
+            }
         }
 
         if let hooksConfig = createInstance.configuration.hooks {
@@ -213,7 +229,7 @@ final class SdkController: RouteCollection {
                 if let singleParams = contextBuild.single {
                     let context = try SdkController.buildSingleContextFromParams(singleParams)
 
-                    let encoder = JSONEncoder()
+                    let encoder = SdkController.makeContextEncoder()
                     let output = try encoder.encode(context)
 
                     let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
@@ -227,7 +243,7 @@ final class SdkController: RouteCollection {
                     }
 
                     let context = try multiContextBuilder.build().get()
-                    let encoder = JSONEncoder()
+                    let encoder = SdkController.makeContextEncoder()
                     let output = try encoder.encode(context)
 
                     let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
@@ -243,7 +259,7 @@ final class SdkController: RouteCollection {
                 let decoder = JSONDecoder()
                 let context: LDContext = try decoder.decode(LDContext.self, from: Data(convertRequest.input.utf8))
 
-                let encoder = JSONEncoder()
+                let encoder = SdkController.makeContextEncoder()
                 let output = try encoder.encode(context)
 
                 let response = ContextBuildResponse(output: String(data: Data(output), encoding: .utf8))
@@ -264,6 +280,14 @@ final class SdkController: RouteCollection {
         }
 
         return CommandResponse.ok
+    }
+
+    // Encodes a context in full, keeping private attribute values and listing them in _meta.
+    static func makeContextEncoder() -> JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.userInfo[LDContext.UserInfoKeys.includePrivateAttributes] = true
+        encoder.userInfo[LDContext.UserInfoKeys.redactAttributes] = false
+        return encoder
     }
 
     static func buildContextForComparison(_ params: ContextComparisonParameters) throws -> LDContext {

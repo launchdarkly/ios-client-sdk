@@ -17,6 +17,7 @@ struct Configuration: Content {
     var tags: TagParameters?
     var clientSide: ClientSideParameters
     var hooks: HookParameters?
+    var wrapper: WrapperParameters?
 }
 
 struct StreamingParameters: Content {
@@ -44,6 +45,11 @@ struct TagParameters: Content {
     var applicationName: String?
     var applicationVersion: String?
     var applicationVersionName: String?
+}
+
+struct WrapperParameters: Content {
+    var name: String?
+    var version: String?
 }
 
 struct ClientSideParameters: Content {

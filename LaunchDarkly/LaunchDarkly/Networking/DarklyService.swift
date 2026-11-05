@@ -52,7 +52,25 @@ final class DarklyService: DarklyServiceProvider {
     let httpHeaders: HTTPHeaders
     let diagnosticCache: DiagnosticCaching?
     private(set) var serviceFactory: ClientServiceCreating
-    private var session: URLSession
+    /// Shared by every environment, so that their requests to the same host reuse connections rather than each
+    /// environment opening its own. Nothing in its configuration depends on the environment; headers and timeouts
+    /// are set on each request.
+    static let session: URLSession = {
+        // URLSessionConfiguration is a class, but `.default` creates a new instance. This does not effect other session configuration.
+        let sessionConfig = URLSessionConfiguration.default
+
+        if #available(iOS 13, macOS 10.15, tvOS 13, watchOS 6, *) {
+            sessionConfig.tlsMinimumSupportedProtocolVersion = .TLSv12
+        } else {
+            sessionConfig.tlsMinimumSupportedProtocol = .tlsProtocol12
+        }
+
+        // We always revalidate the cache which we handle manually
+        sessionConfig.requestCachePolicy = .reloadIgnoringLocalCacheData
+        sessionConfig.urlCache = nil
+        return URLSession(configuration: sessionConfig)
+    }()
+    let session: URLSession = DarklyService.session
     var flagRequestEtag: String?
 
   init(config: LDConfig, context: LDContext, envReporter: EnvironmentReporting, serviceFactory: ClientServiceCreating) {
@@ -67,19 +85,6 @@ final class DarklyService: DarklyServiceProvider {
         }
 
         self.httpHeaders = HTTPHeaders(config: config, environmentReporter: envReporter)
-        // URLSessionConfiguration is a class, but `.default` creates a new instance. This does not effect other session configuration.
-        let sessionConfig = URLSessionConfiguration.default
-
-        if #available(iOS 13, macOS 10.15, tvOS 13, watchOS 6, *) {
-            sessionConfig.tlsMinimumSupportedProtocolVersion = .TLSv12
-        } else {
-            sessionConfig.tlsMinimumSupportedProtocol = .tlsProtocol12
-        }
-
-        // We always revalidate the cache which we handle manually
-        sessionConfig.requestCachePolicy = .reloadIgnoringLocalCacheData
-        sessionConfig.urlCache = nil
-        self.session = URLSession(configuration: sessionConfig)
     }
 
     // MARK: Feature Flags
