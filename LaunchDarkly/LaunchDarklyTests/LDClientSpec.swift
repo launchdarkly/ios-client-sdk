@@ -1404,13 +1404,13 @@ final class LDClientSpec: QuickSpec {
                                 testContext.start()
                                 NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
 
-                                #if os(iOS) || os(tvOS)
-                                expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount).toEventually(equal(1))
-                                #else
-                                // macOS posts this on every loss of focus, which suspends nothing.
-                                expect(testContext.subject.runMode).toEventually(equal(LDClientRunMode.background))
-                                expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount) == 0
-                                #endif
+                                if SystemCapabilities.suspendsWhenBackgrounded {
+                                    expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount).toEventually(equal(1))
+                                } else {
+                                    // macOS posts this on every loss of focus, which suspends nothing.
+                                    expect(testContext.subject.runMode).toEventually(equal(LDClientRunMode.background))
+                                    expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount) == 0
+                                }
                             }
                             it("writes what it has before the notification returns, on every platform", onlyWhere: platformPostsLifecycleNotifications) {
                                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)

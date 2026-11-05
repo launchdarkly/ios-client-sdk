@@ -40,6 +40,7 @@
 		3D2406232E0D90E000F91253 /* SdkMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406122E0D90E000F91253 /* SdkMetadata.swift */; };
 		3D2406252E0D90EA00F91253 /* LDClientPluginsSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406242E0D90EA00F91253 /* LDClientPluginsSpec.swift */; };
 		3D34EEEF37158657D49335BB /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */; };
+		051BF088E9BDA17A3871A530 /* BackgroundEventDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */; };
 		3D3AB9432A4F16FE003AECF1 /* ReportingConsts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3AB9422A4F16FE003AECF1 /* ReportingConsts.swift */; };
 		3D3AB9442A4F16FE003AECF1 /* ReportingConsts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3AB9422A4F16FE003AECF1 /* ReportingConsts.swift */; };
 		3D3AB9452A4F16FE003AECF1 /* ReportingConsts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3AB9422A4F16FE003AECF1 /* ReportingConsts.swift */; };
@@ -60,6 +61,7 @@
 		D4080613CEA27D51BF349075 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
 		ECBE45806B470ACC5187B7D6 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
 		7185A3C30E7FFC4F725769F1 /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */; };
+		1830F6435EE141699F106451 /* BackgroundEventDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */; };
 		830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
 		830DB3AC22380A3E00D65D25 /* HTTPHeadersSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3AB22380A3E00D65D25 /* HTTPHeadersSpec.swift */; };
 		830DB3AE2239B54900D65D25 /* URLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3AD2239B54900D65D25 /* URLResponse.swift */; };
@@ -110,6 +112,7 @@
 		831AAE2E20A9E4F600B46DBA /* Throttler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2B20A9E4F600B46DBA /* Throttler.swift */; };
 		831AAE3020A9E75D00B46DBA /* ThrottlerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */; };
 		3F9AC0D80849C86866E03807 /* BackgroundActivitySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */; };
+		379F34CAB1EE19A0F85AA2C8 /* BackgroundEventDeliverySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */; };
 		831D2AAF2061AAA000B4AC3C /* Thread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D2AAE2061AAA000B4AC3C /* Thread.swift */; };
 		831D8B6F1F71532300ED65E8 /* HTTPHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */; };
 		831D8B721F71D3E700ED65E8 /* DarklyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B711F71D3E700ED65E8 /* DarklyService.swift */; };
@@ -287,6 +290,7 @@
 		A032A73E446055D14A546CA0 /* EventJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B430884DBF2E541B919C08FA /* EventJSONWriter.swift */; };
 		A0BAD9EE25943C43A5154E6F /* EventJSONWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367A9182439001C3EBD68477 /* EventJSONWriterTests.swift */; };
 		A20146E7AF098560627C614E /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */; };
+		BAB394DCCA3C189DD1B11C36 /* BackgroundEventDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */; };
 		B6168D5F889EFC4C19F59135 /* JSONWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BECAB38F41B30401D3CD7EA /* JSONWriterTests.swift */; };
 		A3047D642A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5D2A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift */; };
 		A3047D652A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5E2A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift */; };
@@ -312,6 +316,7 @@
 		A31088282837DCA900184942 /* ReferenceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088252837DCA900184942 /* ReferenceSpec.swift */; };
 		A31088292837DCA900184942 /* KindSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088262837DCA900184942 /* KindSpec.swift */; };
 		A32FCDB22D53263851DDB727 /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */; };
+		8F654B978A758FDFC94E4AF0 /* BackgroundEventDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */; };
 		A33A5F7A28466D04000C29C7 /* LDContextStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33A5F7928466D04000C29C7 /* LDContextStub.swift */; };
 		A3470C372B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3470C362B7C1ACE00951CEE /* LDValueDecoder.swift */; };
 		A3470C382B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3470C362B7C1ACE00951CEE /* LDValueDecoder.swift */; };
@@ -576,6 +581,7 @@
 		831AAE2B20A9E4F600B46DBA /* Throttler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Throttler.swift; sourceTree = "<group>"; };
 		831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottlerSpec.swift; sourceTree = "<group>"; };
 		C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundActivitySpec.swift; sourceTree = "<group>"; };
+		88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundEventDeliverySpec.swift; sourceTree = "<group>"; };
 		831D2AAE2061AAA000B4AC3C /* Thread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thread.swift; sourceTree = "<group>"; };
 		831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeaders.swift; sourceTree = "<group>"; };
 		831D8B711F71D3E700ED65E8 /* DarklyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyService.swift; sourceTree = "<group>"; };
@@ -651,6 +657,7 @@
 		9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSummarizerSpec.swift; sourceTree = "<group>"; };
 		9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSummarizer.swift; sourceTree = "<group>"; };
 		9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackgroundActivity.swift; sourceTree = "<group>"; };
+		EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackgroundEventDelivery.swift; sourceTree = "<group>"; };
 		9AE1D0A02F4A1B000001FD9C /* EvaluationExposureDeduper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluationExposureDeduper.swift; sourceTree = "<group>"; };
 		9AE1D0A52F4A1B000001FD9C /* EvaluationExposureDeduperSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluationExposureDeduperSpec.swift; sourceTree = "<group>"; };
 		9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookDecorator.swift; sourceTree = "<group>"; };
@@ -819,6 +826,7 @@
 				837406D321F760640087B22B /* LDTimerSpec.swift */,
 				831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */,
 				C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */,
+				88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */,
 				8354AC75224316C700CDE602 /* Cache */,
 				A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */,
 				EE6BAECBB739A0F24DB5A944 /* EventStoreSpec.swift */,
@@ -1108,6 +1116,7 @@
 				6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */,
 				D93B7F5F6CF5C3DE79FB4286 /* ContextEncodingCache.swift */,
 				9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */,
+				EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */,
 				C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */,
 				E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */,
 				A1B2C3D4E5F60718293A4B5C /* EventDirectory.swift */,
@@ -1647,6 +1656,7 @@
 				8B3D9E2F5A6C1047B2D5E9F1 /* JSONWriter.swift in Sources */,
 				40F4D07AD934AF976687011D /* ContextEncodingCache.swift in Sources */,
 				A32FCDB22D53263851DDB727 /* BackgroundActivity.swift in Sources */,
+				8F654B978A758FDFC94E4AF0 /* BackgroundEventDelivery.swift in Sources */,
 				CF9A1EB116D8AA3B7B5535B2 /* EventStore.swift in Sources */,
 				E2F8080AB2B3CD6E9A9C1FCC /* DiskEventLog.swift in Sources */,
 				A1B2C3D4E5F60718293A4B04 /* EventDirectory.swift in Sources */,
@@ -1754,6 +1764,7 @@
 				9C4E0F306B7D2158C3E6F0A2 /* JSONWriter.swift in Sources */,
 				4882B223C23B63F30BC60941 /* ContextEncodingCache.swift in Sources */,
 				7185A3C30E7FFC4F725769F1 /* BackgroundActivity.swift in Sources */,
+				1830F6435EE141699F106451 /* BackgroundEventDelivery.swift in Sources */,
 				2CA9D36B3566D78850D6F0AF /* EventStore.swift in Sources */,
 				B8F228923BE11E444D1ECB8E /* DiskEventLog.swift in Sources */,
 				A1B2C3D4E5F60718293A4B01 /* EventDirectory.swift in Sources */,
@@ -1860,6 +1871,7 @@
 				AD5F10417C8E3269D4F701B3 /* JSONWriter.swift in Sources */,
 				D7A500FCA04E3412F931003F /* ContextEncodingCache.swift in Sources */,
 				A20146E7AF098560627C614E /* BackgroundActivity.swift in Sources */,
+				BAB394DCCA3C189DD1B11C36 /* BackgroundEventDelivery.swift in Sources */,
 				5AEA1F832DCA974314E07D21 /* EventStore.swift in Sources */,
 				D4225F1F05F2C55E9518941B /* DiskEventLog.swift in Sources */,
 				A1B2C3D4E5F60718293A4B02 /* EventDirectory.swift in Sources */,
@@ -1889,6 +1901,7 @@
 				83B6E3F1222EFA3800FF2A6A /* ThreadSpec.swift in Sources */,
 				831AAE3020A9E75D00B46DBA /* ThrottlerSpec.swift in Sources */,
 				3F9AC0D80849C86866E03807 /* BackgroundActivitySpec.swift in Sources */,
+				379F34CAB1EE19A0F85AA2C8 /* BackgroundEventDeliverySpec.swift in Sources */,
 				832D68AC224B3321005F052A /* CacheConverterSpec.swift in Sources */,
 				838F96741FB9F024009CFC45 /* LDClientSpec.swift in Sources */,
 				83A0E6B1203B557F00224298 /* FeatureFlagSpec.swift in Sources */,
@@ -2034,6 +2047,7 @@
 				BE6011528D9F4370E50812C4 /* JSONWriter.swift in Sources */,
 				BAE0B4F45562EBF4AC786B5D /* ContextEncodingCache.swift in Sources */,
 				3D34EEEF37158657D49335BB /* BackgroundActivity.swift in Sources */,
+				051BF088E9BDA17A3871A530 /* BackgroundEventDelivery.swift in Sources */,
 				B0B1AD7CADE8DBB596C2DE9B /* EventStore.swift in Sources */,
 				DAA2C9B9C144F129217A7C55 /* DiskEventLog.swift in Sources */,
 				A1B2C3D4E5F60718293A4B03 /* EventDirectory.swift in Sources */,
