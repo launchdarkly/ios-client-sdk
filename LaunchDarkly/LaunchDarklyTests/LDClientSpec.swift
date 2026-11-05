@@ -1368,6 +1368,19 @@ final class LDClientSpec: QuickSpec {
                                 expect(testContext.eventReporterMock.isOnline) == true
                                 expect(testContext.flagSynchronizerMock.isOnline) == false
                             }
+                            it("tries to deliver what it has before the process is suspended, where it is suspended") {
+                                let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
+                                testContext.start()
+                                NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
+
+                                #if os(iOS) || os(tvOS)
+                                expect(testContext.eventReporterMock.flushReportingOutcomeCallCount).toEventually(equal(1))
+                                #else
+                                // macOS posts this on every loss of focus, which suspends nothing.
+                                expect(testContext.subject.runMode).toEventually(equal(LDClientRunMode.background))
+                                expect(testContext.eventReporterMock.flushReportingOutcomeCallCount) == 0
+                                #endif
+                            }
                             it("background updates enabled") {
                                 let testContext = TestContext(startOnline: true)
                                 testContext.start()
@@ -1636,6 +1649,165 @@ final class LDClientSpec: QuickSpec {
                 testContext.start()
                 testContext.subject.flush()
                 expect(testContext.eventReporterMock.flushCallCount) == 1
+            }
+        }
+
+        describe("flush with a completion") {
+            /// Answers from another thread, because this call does not block and must not be answered inside it.
+            func answer(_ mock: EventReportingMock, with delivered: Bool, after delay: TimeInterval = 0.05) {
+                mock.flushReportingOutcomeCallback = { [weak mock] in
+                    let completion = mock?.flushReportingOutcomeReceivedCompletion
+                    DispatchQueue.global().asyncAfter(deadline: .now() + delay) { completion?(delivered) }
+                }
+            }
+
+            it("reports true when delivery succeeds") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventReporterMock, with: true)
+
+                var delivered: Bool?
+                testContext.subject.flush { delivered = $0 }
+                // Nothing has answered yet, so a call that reported now would be blocking or guessing.
+                expect(delivered).to(beNil())
+                expect(delivered).toEventually(beTrue())
+            }
+
+            it("reports false when delivery cannot finish") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventReporterMock, with: false)
+
+                var delivered: Bool?
+                testContext.subject.flush { delivered = $0 }
+                expect(delivered).toEventually(beFalse())
+            }
+
+            it("reports false for a client a later start replaced, without flushing the clients that replaced it") {
+                let stale = TestContext()
+                stale.start()
+                stale.subject.close()
+                let current = TestContext()
+                current.start()
+                answer(current.eventReporterMock, with: true)
+
+                var delivered: Bool?
+                stale.subject.flush { delivered = $0 }
+                expect(delivered) == false
+                expect(current.eventReporterMock.flushReportingOutcomeCallCount) == 0
+            }
+
+            it("reports once every environment has answered, and only once") {
+                let testContext = TestContext()
+                try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
+                testContext.start()
+                let answering = LDClient.get(environment: "alternate")?.eventReporter as? EventReportingMock
+                expect(answering).toNot(beNil())
+                // The one that fails answers last, so reporting before every environment is in would say true.
+                answer(testContext.eventReporterMock, with: true, after: 0.05)
+                answer(answering!, with: false, after: 0.2)
+
+                var answers: [Bool] = []
+                testContext.subject.flush { answers.append($0) }
+                expect(answers).toEventually(equal([false]))
+                Thread.sleep(forTimeInterval: 0.2)
+                expect(answers) == [false]
+            }
+        }
+
+        describe("flushAndWait") {
+            /// Answers inside the call, because `flushAndWait` blocks the test thread.
+            func answer(_ mock: EventReportingMock, with delivered: Bool) {
+                mock.flushReportingOutcomeCallback = { [weak mock] in
+                    mock?.flushReportingOutcomeReceivedCompletion?(delivered)
+                }
+            }
+
+            it("reports true when delivery succeeds") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventReporterMock, with: true)
+
+                expect(testContext.subject.flushAndWait(timeout: 1.0)) == true
+                expect(testContext.eventReporterMock.flushReportingOutcomeCallCount) == 1
+            }
+
+            it("reports false when delivery cannot finish") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventReporterMock, with: false)
+
+                expect(testContext.subject.flushAndWait(timeout: 1.0)) == false
+            }
+
+            it("reports false when the budget expires first") {
+                let testContext = TestContext()
+                testContext.start()
+                testContext.eventReporterMock.flushReportingOutcomeCallback = nil
+
+                expect(testContext.subject.flushAndWait(timeout: 0.05)) == false
+            }
+
+            it("reports false once closed") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventReporterMock, with: true)
+                testContext.subject.close()
+
+                expect(testContext.subject.flushAndWait(timeout: 1.0)) == false
+            }
+
+            it("reports false for a client a later start replaced, without flushing the clients that replaced it") {
+                let stale = TestContext()
+                stale.start()
+                stale.subject.close()
+                let current = TestContext()
+                current.start()
+                answer(current.eventReporterMock, with: true)
+
+                // Its own events were never attempted, so the outcome of another client's delivery says nothing of them.
+                expect(stale.subject.flushAndWait(timeout: 1.0)) == false
+                expect(current.eventReporterMock.flushReportingOutcomeCallCount) == 0
+            }
+
+            it("gives every environment the whole budget rather than what the one before it left") {
+                let testContext = TestContext()
+                try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
+                testContext.start()
+
+                // Each takes most of the budget, so delivering them one after another would leave the second
+                // environment past the deadline before its own delivery had begun.
+                for environment in ["alternate", LDConfig.Constants.primaryEnvironmentName] {
+                    let reporter = LDClient.get(environment: environment)?.eventReporter as? EventReportingMock
+                    expect(reporter).toNot(beNil())
+                    reporter?.flushReportingOutcomeCallback = { [weak reporter] in
+                        let completion = reporter?.flushReportingOutcomeReceivedCompletion
+                        DispatchQueue.global().asyncAfter(deadline: .now() + 0.3) { completion?(true) }
+                    }
+                }
+
+                expect(testContext.subject.flushAndWait(timeout: 0.5)) == true
+            }
+
+            it("takes no longer for several environments than the budget it was given") {
+                let testContext = TestContext()
+                try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
+                testContext.start()
+                // One answers most of the way through the budget and the other never does, so the budget the first
+                // spent is the budget the second has left. Giving each its own copy of it would take twice as long.
+                let answering = LDClient.get(environment: "alternate")?.eventReporter as? EventReportingMock
+                expect(answering).toNot(beNil())
+                answering?.flushReportingOutcomeCallback = { [weak answering] in
+                    let completion = answering?.flushReportingOutcomeReceivedCompletion
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) { completion?(true) }
+                }
+                testContext.eventReporterMock.flushReportingOutcomeCallback = nil
+
+                // Answering at 0.5s into a 0.6s budget leaves the second wait 0.1s, against the 0.6s a fresh copy
+                // would give it, so the two outcomes are 0.6s and 1.1s with room on either side of the threshold.
+                let started = Date()
+                expect(testContext.subject.flushAndWait(timeout: 0.6)) == false
+                expect(Date().timeIntervalSince(started)) < 0.85
             }
         }
     }
