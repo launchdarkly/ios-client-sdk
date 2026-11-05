@@ -269,7 +269,7 @@ public class LDClient {
         eventProcessor.commitWherePersisting()
         // A backgrounded process is suspended once idle, so deliver inside an activity assertion. Only where suspension
         // is real: macOS posts this notification whenever the application loses focus, and never suspends it for that.
-        // What does not get out is on disk for the next launch.
+        // What does not get out is on disk for the next launch where events persist, and otherwise only in memory.
         #if os(iOS) || os(tvOS)
         backgroundDelivery.run { [weak self] finished in
             guard let self = self
@@ -279,7 +279,7 @@ public class LDClient {
             }
             self.eventProcessor.flushReportingOutcome { delivered in
                 if !delivered {
-                    os_log("%s events did not reach LaunchDarkly before suspension; they remain on disk", log: self.config.logger, type: .debug, self.typeName(and: #function))
+                    self.logUndeliveredAtSuspension()
                 }
                 finished()
             }
@@ -1112,6 +1112,21 @@ extension LDClient {
             (diagnosticReporter as? DiagnosticReporter)?.sendsInitAfter = eventProcessor.whenLaunchGateOpens
         }
     }
+
+    #if os(iOS) || os(tvOS)
+    /// At info where nothing persists, since the events are lost if the application is terminated while suspended.
+    /// Whether events persist is the store's answer rather than the configuration's: a store that failed to write has
+    /// stopped persisting.
+    fileprivate func logUndeliveredAtSuspension() {
+        if (eventProcessor as? DirectEventProcessor)?.store.isPersisting == true {
+            os_log("%s events did not reach LaunchDarkly before suspension; they remain on disk for the next launch",
+                   log: config.logger, type: .debug, typeName(and: #function))
+        } else {
+            os_log("%s events did not reach LaunchDarkly before suspension; they are only in memory and are lost if the application is terminated",
+                   log: config.logger, type: .info, typeName(and: #function))
+        }
+    }
+    #endif
 }
 
 #if DEBUG
