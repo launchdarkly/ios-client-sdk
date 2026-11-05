@@ -29,16 +29,16 @@ final class LostEventCount {
 /// on the thread that recorded it; a commit turns the whole held run into bytes at once. So an evaluation of an
 /// untracked flag costs a counter update, and an evaluation of a tracked one costs that plus an array append.
 ///
-/// Where the line falls is between the events an application asked for by name and the ones it did not. Recording a
-/// custom or identify event is a *commit point*, because an application reporting something it chose to report is
-/// saying this matters more than the microseconds it costs, and the crash it describes may be moments away. A commit
-/// takes the whole held run with it, so the exposures leading up to the error go down alongside it. Evaluations get no
-/// such promise, and are committed once `pendingCommitThreshold` of them have accumulated, when a delivery starts, or
-/// on `flush`.
+/// Where the line falls is between the events an application asked for by name and the ones it did not. At `.immediate`
+/// recording a custom or identify event is a *commit point*, because an application reporting something it chose to
+/// report is saying this matters more than the microseconds it costs, and the crash it describes may be moments away. A
+/// commit takes the whole held run with it, so the exposures leading up to the error go down alongside it. Everything
+/// else is committed once `pendingCommitThreshold` events have accumulated, when a delivery starts, on entering the
+/// background, or on `flush`.
 ///
-/// Whether a commit point runs on the caller's thread is the application's choice, through
-/// `LDConfig.eventPersistence`. Only at `.immediate` can `track` promise the event is on disk by the time it returns.
-/// At `.disabled` nothing commits early: the held run waits for the delivery, which encodes it.
+/// Which of the two `track` gets is the application's choice, through `LDConfig.eventPersistence`. Only at `.immediate`
+/// can `track` promise the event is on disk by the time it returns; at `.deferred` it costs what an evaluation does. At
+/// `.disabled` nothing commits early: the held run waits for the delivery, which encodes it.
 ///
 /// Threads. Recording runs on whichever thread evaluated or tracked. Commits run on `commitQueue`, or on the caller's
 /// thread at a commit point, one at a time under `commitLock`. A delivery commits too, before it closes a batch.
@@ -48,7 +48,7 @@ final class EventCommitter {
     /// It sets two things at once. The first is how many evaluations a termination can take -- not everything a crash
     /// could take, since an application that flushes on its way out commits the whole run, but the window for the
     /// terminations that run nothing on the way out, such as the system reclaiming a backgrounded process. Recording a
-    /// custom or identify event closes it too, because that commits.
+    /// custom or identify event at `.immediate` closes it too, because that commits.
     ///
     /// The second is what a commit point usually costs, since it encodes whatever is held before returning. The commit
     /// queue keeps the run drained, so the common case is far below this; raising it trades that cost against the
@@ -60,7 +60,7 @@ final class EventCommitter {
     ///
     /// It is the only thing that writes events no caller asked to have written. The store writes only when told to, so
     /// every staged byte reaches the disk through a commit that started here, at a commit point, or at a delivery.
-    private static let pendingCommitThreshold = 32
+    static let pendingCommitThreshold = 32
 
     // MARK: Set in init and never changed
 
@@ -92,6 +92,14 @@ final class EventCommitter {
     /// Taken before `recordLock` and before anything the store locks, never after.
     private let commitLock = UnfairLock()
 
+    /// The last recording a finished commit covered. Only to be used while holding `commitLock`.
+    ///
+    /// This is what makes concurrent `.immediate` commit points a group commit. The first caller's commit takes every
+    /// recording made before it took the run, including those of callers now waiting behind it. They find their
+    /// recordings covered and return, and the next caller still uncovered commits everything that arrived in the
+    /// meantime. Without it each waiter committed again in turn.
+    private var committedSequence: UInt64 = 0
+
     // MARK: Guarded by recordLock
 
     /// Guards everything one recording writes: the held events and the summarizer.
@@ -110,6 +118,10 @@ final class EventCommitter {
     /// too, and only a commit reaches the file. Both forms are equally lost to a crash, so the encode may as well
     /// happen where it is cheapest.
     private var pending: [Event] = []
+
+    /// Numbers every recording, so a caller at a commit point can tell whether a commit has already covered it. Only to
+    /// be used while holding `recordLock`.
+    private var recordedSequence: UInt64 = 0
 
     /// Whether a commit is already queued, so a run of recordings past the threshold asks for one write rather than
     /// one each. Only to be used while holding `recordLock`.
@@ -145,16 +157,25 @@ final class EventCommitter {
 
     // MARK: Recording
 
+    /// Records an event, and at `.immediate` commits before returning if it is a commit point.
+    ///
+    /// At `.deferred` a custom or identify event writes nothing itself (durability §13.3), and is committed with what
+    /// is held at the pending threshold, a flush, a delivery or entering the background. A commit per call would cost
+    /// an application that tracks every few seconds one encode and write per event, each taking `recordLock` from the
+    /// threads evaluating flags and the store's locks from delivery.
     func record(_ event: Event) {
-        let (dropped, needsCommit) = recordLock.withLock {
-            (!admitToPending(event), pending.count >= EventCommitter.pendingCommitThreshold)
+        var sequence: UInt64 = 0
+        let (dropped, needsCommit) = recordLock.withLock { () -> (Bool, Bool) in
+            recordedSequence += 1
+            sequence = recordedSequence
+            return (!admitToPending(event), pending.count >= EventCommitter.pendingCommitThreshold)
         }
 
         if dropped {
             reportDropped()
         }
-        if EventCommitter.isCommitPoint(event.kind) {
-            commitAtCommitPoint()
+        if persistence == .immediate && EventCommitter.isCommitPoint(event.kind) {
+            commitThrough(sequence)
         } else if needsCommit {
             scheduleCommitWherePersisting()
         }
@@ -175,6 +196,7 @@ final class EventCommitter {
 
         var dropped = 0
         let (counted, needsCommit) = recordLock.withLock { () -> (Bool, Bool) in
+            recordedSequence += 1
             let counted = eventBuffer.summarize(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
             if let featureEvent, !admitToPending(featureEvent) { dropped += 1 }
             if let debugEvent, !admitToPending(debugEvent) { dropped += 1 }
@@ -191,8 +213,8 @@ final class EventCommitter {
         }
         // Deliberately no commit point. An evaluation is expected to cost what bookkeeping costs, and it is usually the
         // main thread doing it; where events are persisted, the run is encoded and written on the commit queue once
-        // enough of them have piled up, and the next event recorded at a commit point makes them durable along with
-        // itself.
+        // enough of them have piled up, and at `.immediate` the next event recorded at a commit point makes them
+        // durable along with itself.
         if needsCommit {
             scheduleCommitWherePersisting()
         }
@@ -219,7 +241,7 @@ final class EventCommitter {
     /// it is encoded; whether it fits is decided when it is staged.
     private func admitToPending(_ event: Event) -> Bool {
         recordLock.assertOwned()
-        guard pending.count + store.pendingEventCount < eventCapacity, store.hasRoomForEventBytes
+        guard store.admitsEvent(heldElsewhere: pending.count, capacity: eventCapacity)
         else { return false }
 
         pending.append(event)
@@ -247,19 +269,6 @@ final class EventCommitter {
     }
 
     // MARK: Committing
-
-    /// Commits at a commit point, on the caller's thread or off it as the application asked.
-    ///
-    /// Committing on the caller's thread is what lets `track` promise its event is on disk by the time it returns.
-    /// Scheduling it instead keeps the encode and the write off that thread, and the event is durable a moment later
-    /// rather than immediately.
-    private func commitAtCommitPoint() {
-        if persistence == .immediate {
-            commitRecordedEvents()
-        } else {
-            scheduleCommitWherePersisting()
-        }
-    }
 
     /// Queues a commit where there is a disk for it to reach.
     ///
@@ -300,7 +309,28 @@ final class EventCommitter {
     /// nothing durable, and is left to the delivery.
     func commitWherePersisting() {
         if persistence == .immediate || store.isPersisting {
-            commitRecordedEvents()
+            commitThrough(recordLock.withLock { recordedSequence })
+        }
+    }
+
+    /// Commits everything recorded so far for `flushAtClose()`, waiting for it no longer than `budget`.
+    ///
+    /// On `commitQueue` rather than the caller's thread, which for an application closing the client is usually the
+    /// main one. Each step of a commit can block for as long as the device takes: on `commitLock` behind a commit
+    /// stalled on the disk, on the store's I/O lock, and on the write itself. A commit that outlasts the budget is left
+    /// to finish, and the delivery queued after it waits for it on the delivery queue, not on the caller's thread.
+    /// Where nothing persists there is nothing to write: the final delivery encodes what it sends.
+    func commitWithinBudget(_ budget: TimeInterval) {
+        guard store.isPersisting
+        else { return }
+        let through = recordLock.withLock { recordedSequence }
+        let committed = DispatchSemaphore(value: 0)
+        commitQueue.async {
+            self.commitThrough(through)
+            committed.signal()
+        }
+        if committed.wait(timeout: .now() + budget) == .timedOut {
+            os_log("%s gave up waiting for the final event commit after %dms; it continues in the background", log: logger, type: .info, typeName(and: #function), Int(budget * 1000))
         }
     }
 
@@ -325,6 +355,16 @@ final class EventCommitter {
     /// are staged by the same commit, and encoded outside it, so recording does not wait on the encoder.
     func commitRecordedEvents() {
         commitLock.withLock { encodeAndCommitPending() }
+    }
+
+    /// Commits unless a finished commit already covers recording `sequence`, checked once the lock is held, since the
+    /// commit a caller waited behind is the one most likely to have covered it.
+    private func commitThrough(_ sequence: UInt64) {
+        commitLock.withLock {
+            guard committedSequence < sequence
+            else { return }
+            encodeAndCommitPending()
+        }
     }
 
     /// Commits what is held and closes it into a batch, as one step with respect to other commits.
@@ -359,6 +399,7 @@ final class EventCommitter {
     /// Requires `commitLock`.
     private func encodeAndCommitPending() {
         commitLock.assertOwned()
+        var through: UInt64 = 0
         let (run, summaries) = recordLock.withLock { () -> ([Event], [(tracker: FlagRequestTracker, context: LDContext)]) in
             let run = pending
             pending = []
@@ -366,6 +407,7 @@ final class EventCommitter {
             // Reserved in the same critical section the run leaves `pending` in, so capacity counts it in one place or
             // the other throughout the encode.
             store.reserve(run.count)
+            through = recordedSequence
             return (run, summaries)
         }
 
@@ -373,6 +415,7 @@ final class EventCommitter {
         store.releaseReservations()
         stageSummaries(summaries)
         store.commit()
+        committedSequence = through
     }
 
     /// Encodes the held events as one run and stages the bytes.
@@ -399,7 +442,7 @@ final class EventCommitter {
         }
     }
 
-    /// Whether recording this kind of event should encode and write the held run before it returns.
+    /// Whether recording this kind of event at `.immediate` should encode and write the held run before it returns.
     ///
     /// Custom and identify events are recorded because the application did something it chose to report, which is both
     /// rare enough to afford a write and the moment it is least acceptable to lose. Evaluations are neither.
@@ -426,7 +469,7 @@ final class EventCommitter {
             // Summaries are an aggregate of evaluations that were already counted, so refusing one for capacity would
             // lose evaluations the SDK promised to report rather than shed new load. Only the byte capacity refuses
             // one, once even the room held back for summaries is used up, since nothing else bounds how many are
-            // staged while delivery keeps failing.
+            // staged while delivery keeps failing; and the frame size, for one too large for a frame.
             if !store.stage(encoded, bypassingCapacity: true) {
                 reportLost()
             }
@@ -436,20 +479,18 @@ final class EventCommitter {
 
 extension EventCommitter: TypeIdentifying { }
 
-#if DEBUG
-    extension EventCommitter {
-        /// Full events accepted but not yet handed to a commit.
-        var pendingEventsForTesting: [Event] {
-            recordLock.withLock { pending }
-        }
-
-        func setLastEventResponseDate(_ date: Date) {
-            responseDateLock.withLock { responseDate = date }
-        }
-
-        /// Reads the summarizer under `recordLock`, which a scheduled commit may be holding to take its counters.
-        func withContextSummarizer<T>(_ read: (ContextSummarizer) -> T) -> T {
-            recordLock.withLock { read(eventBuffer.contextSummarizer) }
-        }
+extension EventCommitter {
+    /// Full events accepted but not yet handed to a commit.
+    var pendingEventsForTesting: [Event] {
+        recordLock.withLock { pending }
     }
-#endif
+
+    func setLastEventResponseDate(_ date: Date) {
+        responseDateLock.withLock { responseDate = date }
+    }
+
+    /// Reads the summarizer under `recordLock`, which a scheduled commit may be holding to take its counters.
+    func withContextSummarizer<T>(_ read: (ContextSummarizer) -> T) -> T {
+        recordLock.withLock { read(eventBuffer.contextSummarizer) }
+    }
+}

@@ -146,7 +146,8 @@ final class DarklyServiceMock: DarklyServiceProvider {
     private var _eventStatusForPost: ((Int) -> Int)?
     private var _publishedEventStatuses: [Int?] = []
 
-    /// The status to answer the nth post with, counting from 1, in place of `stubbedEventResponse`.
+    /// The status to answer the nth post with, counting from 1, in place of `stubbedEventResponse`; 0 for a network
+    /// error with no response.
     var eventStatusForPost: ((Int) -> Int)? {
         get { withEventLock { _eventStatusForPost } }
         set { withEventLock { _eventStatusForPost = newValue } }
@@ -199,11 +200,13 @@ final class DarklyServiceMock: DarklyServiceProvider {
             }
             var response = _stubbedEventResponse ?? (nil, nil, nil, nil)
             if let statusForPost = _eventStatusForPost {
-                response = (nil,
-                            HTTPURLResponse(url: config.eventsUrl, statusCode: statusForPost(_publishEventDataCallCount),
-                                            httpVersion: Constants.httpVersion, headerFields: nil),
-                            nil,
-                            nil)
+                let status = statusForPost(_publishEventDataCallCount)
+                response = status == 0
+                    ? (nil, nil, Constants.error, nil)
+                    : (nil,
+                       HTTPURLResponse(url: config.eventsUrl, statusCode: status, httpVersion: Constants.httpVersion, headerFields: nil),
+                       nil,
+                       nil)
             }
             _publishedEventStatuses.append((response.urlResponse as? HTTPURLResponse)?.statusCode)
             return response

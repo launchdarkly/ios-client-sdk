@@ -30,6 +30,10 @@ class NullEventProcessor: EventProcessor {
         DispatchQueue.global().async { completion(true) }
     }
 
+    func flushBypassingBackoff(completion: @escaping FlushOutcomeClosure) {
+        flushReportingOutcome(completion: completion)
+    }
+
     func flushAtClose() {
     }
 

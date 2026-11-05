@@ -25,9 +25,9 @@ public enum LDStreamingMode {
 /// recorded since the last one — including the crash an application was reporting when it died. Writing events to
 /// disk is what closes that gap: they are delivered on a later launch instead of being lost.
 ///
-/// `.deferred` and `.immediate` are not stable in this major version, and not subject to any backwards compatibility
-/// guarantees or semantic versioning. They are experimental: their behavior, their cost on the calling thread, and
-/// what they leave on disk may change in a minor release.
+/// - Warning: Experimental. `.deferred` and `.immediate` are not stable in this major version, and not subject to any
+///   backwards compatibility guarantees or semantic versioning: their behavior, their cost on the calling thread, and
+///   what they leave on disk may change in a minor release.
 @objc(LDEventPersistence) public enum EventPersistence: Int {
     /// Events are kept in memory only, and nothing survives the process ending.
     ///
@@ -36,16 +36,15 @@ public enum LDStreamingMode {
     case disabled
     /// Events are written to disk, off the thread that recorded them.
     ///
-    /// Recording stays as cheap as it is without persistence. An event from `track` or `identify` becomes durable a
-    /// moment after it was recorded rather than immediately, and a process that dies inside that window still loses
-    /// it. Evaluating a flag does not schedule a write of its own: its events wait in memory until enough of them have
-    /// built up, or until the next `track`, `identify`, flush or delivery writes them.
+    /// Recording stays as cheap as it is without persistence. Neither `track`, `identify` nor evaluating a flag
+    /// schedules a write of its own: events wait in memory until enough of them have built up, or until the next
+    /// flush, delivery or move to the background writes them. A process that dies before then loses them.
     ///
     /// A flush and entering the background are the exceptions. Both write on the calling thread, as `.immediate` does:
     /// a flush so that an application ending the process on purpose can rely on it, and entering the background because
     /// that is when the system is most likely to end it.
     ///
-    /// This level is experimental; see `EventPersistence`.
+    /// - Warning: Experimental; see `EventPersistence`.
     case deferred
     /// Events are written to disk before `track` and `identify` return.
     ///
@@ -56,7 +55,7 @@ public enum LDStreamingMode {
     /// instant after `track` returns still reports that event on the next launch. Evaluating a flag stays in memory
     /// regardless.
     ///
-    /// This level is experimental; see `EventPersistence`.
+    /// - Warning: Experimental; see `EventPersistence`.
     case immediate
 }
 
@@ -244,6 +243,11 @@ public struct LDConfig {
         /// The default behavior for the SDK is to keep events in memory only.
         static let eventPersistence = EventPersistence.disabled
 
+        /// The default time the SDK's own event and diagnostic traffic waits after first going online. (2 seconds)
+        static let eventDeliveryDelay: TimeInterval = 2
+        /// The longest `eventDeliveryDelay` can be set to. (60 seconds)
+        static let maxEventDeliveryDelay: TimeInterval = 60
+
         /// The default timeout interval for flag requests and event reports. (10 seconds)
         static let connectionTimeout: TimeInterval = 10.0
         /// The default time interval between event reports. (30 seconds)
@@ -379,19 +383,21 @@ public struct LDConfig {
     /// Anything other than `.disabled` appends events to a log under Application Support and delivers them on a later
     /// run, which is what lets the crash an application was reporting when it died reach LaunchDarkly at all.
     /// `.immediate` additionally puts the write on the thread that called `track` or `identify`, so there is no window
-    /// in which the event exists only in memory. Both levels other than `.disabled` are experimental, and not subject to
-    /// any backwards compatibility guarantees or semantic versioning. (Default: `.disabled`)
+    /// in which the event exists only in memory. (Default: `.disabled`)
+    ///
+    /// - Warning: Experimental. Both levels other than `.disabled` are not stable, and not subject to any backwards
+    ///   compatibility guarantees or semantic versioning.
     public var eventPersistence: EventPersistence = Defaults.eventPersistence
 
-    /// The maximum number of bytes of events the SDK keeps where `eventPersistence` keeps events across launches, on disk and in
-    /// memory together. It is for every environment the application configures together: with `secondaryMobileKeys`, each environment
-    /// gets an equal share of it, unlike `eventCapacity`, which each environment has in full. When an environment reaches its share,
-    /// the SDK discards new events until it successfully reports the stored ones, as it does when `eventCapacity` is reached; it never
-    /// deletes stored events to make room. A fifth of each share is kept for the summaries of flag evaluations, so that evaluations
-    /// are still counted after full events start being discarded. A value of zero or less means the default. (Default: 20 MiB)
+    /// The maximum number of bytes of events the SDK keeps, on disk and in memory together, whatever `eventPersistence` is. It is for
+    /// every environment the application configures together: with `secondaryMobileKeys`, each environment gets an equal share of it,
+    /// unlike `eventCapacity`, which each environment has in full. When an environment reaches its share, the SDK discards new events
+    /// until it successfully reports the stored ones, as it does when `eventCapacity` is reached; it never deletes stored events to make
+    /// room. A fifth of each share is kept for the summaries of flag evaluations, so that evaluations are still counted after full
+    /// events start being discarded. A value of zero or less means the default. (Default: 20 MiB)
     ///
-    /// Where `eventPersistence` is `.disabled`, full events are bounded by `eventCapacity` alone, and this bounds only the summaries,
-    /// which `eventCapacity` never refuses: a delivery that keeps failing would otherwise leave them growing for the life of the process.
+    /// Ordinary events reach `eventCapacity` long before this. It binds where events are unusually large, or where delivery keeps
+    /// failing and summaries, which `eventCapacity` never refuses, accumulate.
     public var eventCapacityBytes: Int = Defaults.eventCapacityBytes
 
     /// How long the SDK keeps events it has persisted but not yet reported, where `eventPersistence` keeps events across launches. Events
@@ -400,6 +406,20 @@ public struct LDConfig {
     ///
     /// It has no effect where `eventPersistence` is `.disabled`.
     public var eventMaxAge: TimeInterval = Defaults.eventMaxAge
+
+    private var _eventDeliveryDelay: TimeInterval = Defaults.eventDeliveryDelay
+    /// How long after the client first goes online the SDK holds back the traffic it starts on its own, so that the
+    /// first flag request has the network to itself. That is the diagnostic init payload, the events a previous run left
+    /// where `eventPersistence` keeps them, and the periodic delivery of this run's events. A flush the application asks
+    /// for is never held. Zero sends them as soon as the client is online. Values are kept between 0 and 60 seconds, so
+    /// an application that ends soon after every launch still sends what a previous run left. (Default: 2 seconds)
+    ///
+    /// - Warning: Experimental. This property is not stable, and not subject to any backwards compatibility guarantees
+    ///   or semantic versioning.
+    public var eventDeliveryDelay: TimeInterval {
+        get { _eventDeliveryDelay }
+        set { _eventDeliveryDelay = newValue.isNaN ? Defaults.eventDeliveryDelay : min(max(newValue, 0), Defaults.maxEventDeliveryDelay) }
+    }
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
     public var connectionTimeout: TimeInterval = Defaults.connectionTimeout
@@ -633,6 +653,7 @@ extension LDConfig: Equatable {
             && lhs.eventPersistence == rhs.eventPersistence
             && lhs.eventCapacityBytes == rhs.eventCapacityBytes
             && lhs.eventMaxAge == rhs.eventMaxAge
+            && lhs.eventDeliveryDelay == rhs.eventDeliveryDelay
             && lhs.sendEvents == rhs.sendEvents
             && lhs.connectionTimeout == rhs.connectionTimeout
             && lhs.eventFlushInterval == rhs.eventFlushInterval

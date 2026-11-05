@@ -263,28 +263,7 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
-        // The OS may kill a backgrounded application without warning, so make its events durable now, before returning,
-        // at `.deferred` too. On every platform: macOS does not suspend an application that loses focus, but it can
-        // still be quit or killed.
-        eventProcessor.commitWherePersisting()
-        // A backgrounded process is suspended once idle, so deliver inside an activity assertion. Only where suspension
-        // is real: macOS posts this notification whenever the application loses focus, and never suspends it for that.
-        // What does not get out is on disk for the next launch.
-        #if os(iOS) || os(tvOS)
-        backgroundDelivery.run { [weak self] finished in
-            guard let self = self
-            else {
-                finished()
-                return
-            }
-            self.eventProcessor.flushReportingOutcome { delivered in
-                if !delivered {
-                    os_log("%s events did not reach LaunchDarkly before suspension; they remain on disk", log: self.config.logger, type: .debug, self.typeName(and: #function))
-                }
-                finished()
-            }
-        }
-        #endif
+        backgroundEvents.applicationDidEnterBackground()
         Thread.performOnMain {
             runMode = .background
         }
@@ -297,8 +276,7 @@ public class LDClient {
         }
     }
 
-    /// One assertion per client, however many times the application is backgrounded while a delivery is running.
-    private let backgroundDelivery: BackgroundActivity
+    private let backgroundEvents: BackgroundEventDelivery
 
     let config: LDConfig
     /// Identifies this client's environment to a hook, without handing it the mobile key that identifies the
@@ -1040,7 +1018,6 @@ public class LDClient {
         throttler = self.serviceFactory.makeThrottler(environmentReporter: environmentReporter)
 
         config = configuration
-        backgroundDelivery = BackgroundActivity(reason: "LaunchDarkly event delivery", logger: configuration.logger)
         context = startContext ?? LDContext()
 
         if config.autoEnvAttributes {
@@ -1062,6 +1039,7 @@ public class LDClient {
         eventProcessor = self.serviceFactory.makeEventProcessor(config: config, service: service) { result in
             LDClient.logEventSyncComplete(result, logger)
         }
+        backgroundEvents = BackgroundEventDelivery(eventProcessor: eventProcessor, logger: logger)
         connectionInformation = self.serviceFactory.makeConnectionInformation()
 
         let cachedData = flagCache.getCachedData(cacheKey: context.fullyQualifiedHashedKey(), contextHash: context.contextHash())
@@ -1105,10 +1083,10 @@ public class LDClient {
 extension LDClient: TypeIdentifying { }
 
 extension LDClient {
-    /// Has the diagnostic init event wait for the event processor's launch gate, as a previous run's events do. Where
-    /// events do not persist there is no gate, and the init event goes out as it did before persistence.
+    /// Has the diagnostic init event wait for the event processor's launch gate, as a previous run's events do, whether
+    /// or not events persist.
     fileprivate func giveFlagValuesTheNetworkFirst() {
-        if let eventProcessor = eventProcessor as? DirectEventProcessor, eventProcessor.givesWayToFlags {
+        if let eventProcessor = eventProcessor as? DirectEventProcessor {
             (diagnosticReporter as? DiagnosticReporter)?.sendsInitAfter = eventProcessor.whenLaunchGateOpens
         }
     }

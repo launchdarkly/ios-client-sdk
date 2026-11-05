@@ -14,15 +14,17 @@ final class EventDeliveryRun {
         }
     }
 
-    /// Whether it is `flushAtClose()`'s, which posts whatever wait the backoff is in and runs although closing has
-    /// turned `isOnline` off since. The delivery one of its failures sets for the end of the wait is another one, held
+    /// Whether it is `flushAtClose()`'s, which runs although closing has turned `isOnline` off since. The delivery one of its failures sets for the end of the wait is another one, held
     /// by the backoff, and finds the reporter offline as any other.
     let isClosing: Bool
+    /// Whether it posts whatever wait the backoff is in: `flushAtClose()`'s, and `flushBypassingBackoff(completion:)`'s.
+    let bypassesBackoff: Bool
 
     /// The least time between one paced batch's answer and the next batch's request.
     private let gap: TimeInterval
 
-    /// Guards the pacing, which a delivery somebody asks for, or going offline, ends from another thread.
+    /// Guards the pacing, which a delivery somebody asks for, or going offline, ends from another thread, and the
+    /// batches passed by, which the delivery notes from whichever thread it goes on from.
     private let lock = UnfairLock()
     /// Whether it is paced: until a delivery somebody asked for is queued, after which it sends the rest back to back,
     /// or the reporter goes offline, after which it sends nothing more. Only to be used while holding `lock`.
@@ -31,9 +33,13 @@ final class EventDeliveryRun {
     private var lastPostAnswered: DispatchTime?
     /// The batch waiting out its gap, which ending the pacing lets go at once. Only to be used while holding `lock`.
     private var waitingTurn: PacedTurn?
+    /// The batches whose read failed in this delivery, which it passes by rather than reading again. Only to be used
+    /// while holding `lock`.
+    private var passedBy: Set<String> = []
 
-    init(isClosing: Bool, isPaced: Bool, gap: TimeInterval) {
+    init(isClosing: Bool, bypassesBackoff: Bool, isPaced: Bool, gap: TimeInterval) {
         self.isClosing = isClosing
+        self.bypassesBackoff = bypassesBackoff
         self.isPaced = isPaced
         self.gap = gap
     }
@@ -45,6 +51,22 @@ final class EventDeliveryRun {
                 lastPostAnswered = .now()
             }
         }
+    }
+
+    /// Notes that a batch's read failed, so this delivery passes it by from here on: read again moments later, it would
+    /// most likely fail as it did, and count as two failures in a row.
+    func passBy(_ payloadId: String) {
+        lock.withLock { _ = passedBy.insert(payloadId) }
+    }
+
+    /// Whether this delivery passed a batch by after its read failed.
+    func passedBy(_ payloadId: String) -> Bool {
+        lock.withLock { passedBy.contains(payloadId) }
+    }
+
+    /// Whether this delivery passed any batch by after its read failed, and so left one unsent.
+    var passedAnyBy: Bool {
+        lock.withLock { !passedBy.isEmpty }
     }
 
     /// Ends the pacing, so that the rest go back to back, or, offline, stop.
@@ -102,6 +124,8 @@ final class EventDeliveryScheduler {
         var waiters: [FlushOutcomeClosure]
         /// Whether it is `flushAtClose()`'s, or has been joined by it.
         var isClosing: Bool
+        /// Whether a caller bypassing the backoff asked for it, or joined it.
+        var bypassesBackoff: Bool
         /// Whether it was asked for only by the report timer or by the launch gate, and so is paced.
         var isPaced: Bool
     }
@@ -126,10 +150,9 @@ final class EventDeliveryScheduler {
     /// one rather than one each. Only to be used while holding `lock`.
     private var isRetryScheduled = false
 
-    #if DEBUG
-        /// How many deliveries have started, which is fewer than the flushes asked for where they were joined.
-        private var deliveryRunCount = 0
-    #endif
+    /// How many deliveries have started, which is fewer than the flushes asked for where they were joined. Only to be
+    /// used while holding `lock`.
+    private var deliveryRunCount = 0
 
     init(pacesDeliveries: Bool, gap: TimeInterval) {
         self.pacesDeliveries = pacesDeliveries
@@ -150,10 +173,11 @@ final class EventDeliveryScheduler {
     ///
     /// - Parameters:
     ///   - closing: whether it is `flushAtClose()`'s, which a queued delivery it joins becomes.
+    ///   - bypassingBackoff: whether it posts whatever wait the backoff is in, which a queued delivery it joins does too.
     ///   - paced: whether nobody asked for it, so that it gives way to flag requests. One that is not ends the pacing of
     ///     the delivery running, so that it is not held behind it.
     /// - Returns: whether the caller is to start it, which is where no delivery is running.
-    func queue(_ completion: FlushOutcomeClosure?, closing: Bool, paced: Bool) -> Bool {
+    func queue(_ completion: FlushOutcomeClosure?, closing: Bool, bypassingBackoff: Bool, paced: Bool) -> Bool {
         let (starts, unpaced) = lock.withLock { () -> (Bool, EventDeliveryRun?) in
             let unpaced = paced ? nil : running
             if var joined = queued {
@@ -161,11 +185,13 @@ final class EventDeliveryScheduler {
                     joined.waiters.append(completion)
                 }
                 joined.isClosing = joined.isClosing || closing
+                joined.bypassesBackoff = joined.bypassesBackoff || bypassingBackoff
                 joined.isPaced = joined.isPaced && paced
                 queued = joined
                 return (false, unpaced)
             }
-            queued = Queued(waiters: completion.map { [$0] } ?? [], isClosing: closing, isPaced: paced)
+            queued = Queued(waiters: completion.map { [$0] } ?? [], isClosing: closing, bypassesBackoff: bypassingBackoff,
+                            isPaced: paced)
             let starts = !isDelivering
             isDelivering = true
             return (starts, unpaced)
@@ -180,15 +206,14 @@ final class EventDeliveryScheduler {
     /// - Returns: the delivery, and the callers waiting on it.
     func begin() -> (run: EventDeliveryRun, waiters: [FlushOutcomeClosure]) {
         lock.withLock {
-            let next = queued ?? Queued(waiters: [], isClosing: false, isPaced: false)
+            let next = queued ?? Queued(waiters: [], isClosing: false, bypassesBackoff: false, isPaced: false)
             queued = nil
             let run = EventDeliveryRun(isClosing: next.isClosing,
+                                  bypassesBackoff: next.isClosing || next.bypassesBackoff,
                                   isPaced: next.isPaced && pacesDeliveries && !next.isClosing,
                                   gap: gap)
             running = run
-            #if DEBUG
-                deliveryRunCount += 1
-            #endif
+            deliveryRunCount += 1
             return (run, next.waiters)
         }
     }
@@ -224,15 +249,13 @@ final class EventDeliveryScheduler {
         lock.withLock { isRetryScheduled = false }
     }
 
-    #if DEBUG
-        /// Callers waiting on the queued delivery.
-        var queuedWaiterCount: Int {
-            lock.withLock { queued?.waiters.count ?? 0 }
-        }
+    /// Callers waiting on the queued delivery.
+    var queuedWaiterCount: Int {
+        lock.withLock { queued?.waiters.count ?? 0 }
+    }
 
-        /// Deliveries started, counting one for a run of flushes that joined each other.
-        var startedCount: Int {
-            lock.withLock { deliveryRunCount }
-        }
-    #endif
+    /// Deliveries started, counting one for a run of flushes that joined each other.
+    var startedCount: Int {
+        lock.withLock { deliveryRunCount }
+    }
 }

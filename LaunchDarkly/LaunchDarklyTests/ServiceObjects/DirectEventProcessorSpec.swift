@@ -138,6 +138,17 @@ class DirectEventProcessorSpec: QuickSpec {
             return delivered
         }
 
+        func flushBypassingBackoffOutcome() -> Bool? {
+            var delivered: Bool?
+            waitUntil(timeout: .seconds(10)) { done in
+                eventProcessor.flushBypassingBackoff { result in
+                    delivered = result
+                    done()
+                }
+            }
+            return delivered
+        }
+
         func cleanUp() {
             eventProcessor.isOnline = false
             store.deleteEverything()
@@ -441,28 +452,61 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 3
             }
 
-            it("holds what waits for the launch gate only where events persist") {
-                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
-                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 1, gap: 0))
-                nextRun = reporter
-                expect(reporter.givesWayToFlags) == self.persists
+            /// Whether what waits on `reporter`'s launch gate has run, `after` it went online.
+            func gateOpened(_ reporter: DirectEventProcessor, after: TimeInterval) -> Bool {
                 let opened = UnfairLock()
                 var hasOpened = false
                 reporter.whenLaunchGateOpens { opened.withLock { hasOpened = true } }
                 reporter.isOnline = true
-
-                if self.persists {
-                    Thread.sleep(forTimeInterval: 0.6)
-                    expect(opened.withLock { hasOpened }) == false
-                }
-
-                expect(opened.withLock { hasOpened }).toEventually(beTrue(), timeout: .seconds(2))
+                Thread.sleep(forTimeInterval: after)
+                return opened.withLock { hasOpened }
             }
 
-            itPersisting("paces a periodic delivery of a backlog too") {
+            it("holds what waits for the launch gate until the launch delay has passed, whether or not events persist") {
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
+                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 1, gap: 0))
+                nextRun = reporter
+
+                expect(gateOpened(reporter, after: 0.6)) == false
+                expect(gateOpened(reporter, after: 0.8)) == true
+            }
+
+            it("holds nothing at the launch gate where the launch delay is zero") {
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
+                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 0))
+                nextRun = reporter
+
+                expect(gateOpened(reporter, after: 0.2)) == true
+            }
+
+            it("takes the launch delay from the configuration") {
+                var config = testContext.serviceMock.config
+                config.eventDeliveryDelay = 1
+                testContext.serviceMock.config = config
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store)
+                nextRun = reporter
+
+                expect(gateOpened(reporter, after: 0.6)) == false
+                expect(gateOpened(reporter, after: 0.8)) == true
+            }
+
+            itPersisting("does not let a report interval shorter than the launch delay send what a previous run left") {
+                testContext = TestContext(eventFlushInterval: 0.1)
+                let reporter = nextRunLeft(1, pacing: DirectEventProcessor.Pacing(launchDelay: 0.8, gap: 0))
+                let wentOnline = Date()
+
+                reporter.isOnline = true
+
+                // Waited for on the run loop, which the report timer fires on.
+                waitLettingTimersFire(0.5)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+                expect(Date().timeIntervalSince(wentOnline)) >= 0.75
+            }
+
+            itPersisting("keeps pacing a backlog through the report intervals that end during it") {
                 testContext = TestContext(eventFlushInterval: 0.2)
-                // A launch delay longer than the example, so that the report timer rather than the gate starts it.
-                let reporter = nextRunLeft(2, pacing: DirectEventProcessor.Pacing(launchDelay: 60, gap: 1))
+                let reporter = nextRunLeft(2, pacing: DirectEventProcessor.Pacing(launchDelay: 0.2, gap: 1))
 
                 reporter.isOnline = true
 
@@ -1679,7 +1723,8 @@ extension DirectEventProcessorSpec {
         describe("surviving the process") {
             var testContext: TestContext!
             afterEach {
-                testContext.cleanUp()
+                testContext?.cleanUp()
+                testContext = nil
             }
 
             /// The events the next run of the application would find.
@@ -1698,20 +1743,29 @@ extension DirectEventProcessorSpec {
                 expect(onDisk.first?.kindField) == "custom"
             }
 
-            itPersisting("still writes a tracked event when the write is not on the caller's thread") {
-                testContext = TestContext(eventPersistence: .deferred)
+            itPersisting("writes nothing for a tracked event at .deferred, and writes it with the rest at the pending threshold") {
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.commits")
+                testContext = TestContext(eventCapacity: 100, eventPersistence: .deferred, commitQueue: commits)
 
                 testContext.eventProcessor.record(CustomEvent(key: "fatal-error", context: testContext.context, data: ["message": "boom"]))
+                // Behind any write the track queued, so that write has run by now.
+                commits.sync { }
+                expect(eventsLeftOnDisk()).to(beEmpty())
 
-                // The promise is weaker by exactly one scheduling hop: the event reaches the disk, just not before
-                // recording it returned.
-                expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]), timeout: Constants.deliveryTimeout)
+                for index in 1..<EventCommitter.pendingCommitThreshold {
+                    testContext.eventProcessor.record(CustomEvent(key: "more-\(index)", context: testContext.context))
+                }
+                expect(eventsLeftOnDisk().count).toEventually(equal(EventCommitter.pendingCommitThreshold), timeout: Constants.deliveryTimeout)
             }
 
             itPersisting("has written the evaluations that came before a tracked event") {
                 // A response date of its own, because the distant past that a fresh context defaults to also satisfies
-                // the debug window comparison and would add a debug event to what is asserted below.
-                testContext = TestContext(lastEventResponseDate: Date())
+                // the debug window comparison and would add a debug event to what is asserted below. The commit queue is
+                // suspended, so the only write there can be is the one the track makes on this thread.
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
+                commits.suspend()
+                defer { commits.resume() }
+                testContext = TestContext(lastEventResponseDate: Date(), commitQueue: commits)
                 let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
 
                 // An untracked flag is only ever reported as a summary, so this is the case where the exposure exists
@@ -1735,9 +1789,9 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["feature", "summary"]
             }
 
-            itPersisting("writes on flush at .deferred too, without waiting for the queue a tracked event's write goes to") {
-                // Suspended, so that the tracked event's own write cannot run and the only write there can be is one the
-                // flush makes on this thread.
+            itPersisting("writes on flush at .deferred too, without waiting for the commit queue") {
+                // Suspended, so that a queued write cannot run and the only write there can be is one the flush makes on
+                // this thread.
                 let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
                 commits.suspend()
                 defer { commits.resume() }
@@ -2061,17 +2115,19 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
             }
 
-            itPersisting("writes a deferred track while a delivery holds the delivery queue") {
-                testContext = TestContext(eventPersistence: .deferred)
+            itPersisting("writes deferred events at the pending threshold while a delivery holds the delivery queue") {
+                testContext = TestContext(eventCapacity: 100, eventPersistence: .deferred)
                 // Stands in for a post to a network that does not answer, which holds the queue for as long as its
                 // timeouts allow.
                 let released = DispatchSemaphore(value: 0)
                 defer { released.signal() }
                 testContext.eventProcessor.occupyQueue(until: released)
 
-                testContext.eventProcessor.record(CustomEvent(key: "tracked", context: testContext.context))
+                for index in 0..<EventCommitter.pendingCommitThreshold {
+                    testContext.eventProcessor.record(CustomEvent(key: "tracked-\(index)", context: testContext.context))
+                }
 
-                expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["custom"]), timeout: Constants.deliveryTimeout)
+                expect(eventsLeftOnDisk().count).toEventually(equal(EventCommitter.pendingCommitThreshold), timeout: Constants.deliveryTimeout)
             }
 
             itPersisting("has written everything by the time a flush returns, even while a delivery holds the delivery queue") {
@@ -2089,21 +2145,30 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["feature", "summary"]
             }
 
-            itPersisting("shares writes between tracks recorded at once, and has each on disk when recording it returns") {
+            itPersisting("shares commits between tracks recorded at once, and has each on disk when recording it returns") {
                 let trackers = 8
-                let writesLock = NSLock()
-                var writes = 0
-                // A slow disk, so that the other tracks arrive while a write is under way.
-                let store = EventStore.temporary(writeLog: { file, bytes in
-                    writesLock.lock()
-                    writes += 1
-                    writesLock.unlock()
+                var config = LDConfig.stub
+                config.eventCapacity = 100
+                config.eventPersistence = .immediate
+                let serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                let inner = EventStore.temporary(capacity: config.eventCapacity)
+                defer { inner.deleteEverything() }
+                let store = ClosingHookStore(inner)
+                let commitsLock = NSLock()
+                var commits = 0
+                // A slow disk, so that the other tracks arrive while a commit is under way.
+                store.beforeCommitting = {
+                    commitsLock.lock()
+                    commits += 1
+                    commitsLock.unlock()
                     Thread.sleep(forTimeInterval: 0.05)
-                    return file.writeAll(bytes)
-                })
-                testContext = TestContext(store: store, eventCapacity: 100)
-                let reporter = testContext.eventProcessor!
-                let context = testContext.context!
+                }
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: DispatchQueue(label: "com.launchdarkly.tests.commits"), pacing: .noWaits)
+                let context = LDContext.stub()
+                func keysOnDisk() -> [String] {
+                    inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).keyField }
+                }
 
                 let start = DispatchSemaphore(value: 0)
                 let finished = DispatchGroup()
@@ -2115,7 +2180,7 @@ extension DirectEventProcessorSpec {
                     Thread {
                         start.wait()
                         reporter.record(CustomEvent(key: key, context: context))
-                        if !eventsLeftOnDisk().compactMap({ $0.keyField }).contains(key) {
+                        if !keysOnDisk().contains(key) {
                             missingLock.lock()
                             missingOnReturn.append(key)
                             missingLock.unlock()
@@ -2129,11 +2194,39 @@ extension DirectEventProcessorSpec {
                 expect(finished.wait(timeout: .now() + 10)) == .success
 
                 expect(missingOnReturn).to(beEmpty())
-                // One write is the log's header. A write per track would be one more for each of them.
-                writesLock.lock()
-                let totalWrites = writes
-                writesLock.unlock()
-                expect(totalWrites) < trackers + 1
+                commitsLock.lock()
+                let totalCommits = commits
+                commitsLock.unlock()
+                expect(totalCommits) < trackers
+            }
+
+            itPersisting("returns from closing within its budget while the final commit is stalled on the disk, and still writes it") {
+                var config = LDConfig.stub
+                config.eventPersistence = .deferred
+                let serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                let inner = EventStore.temporary(capacity: config.eventCapacity)
+                defer { inner.deleteEverything() }
+                let store = ClosingHookStore(inner)
+                let diskAnswers = DispatchGroup()
+                diskAnswers.enter()
+                let stalled = DispatchSemaphore(value: 0)
+                store.beforeCommitting = {
+                    stalled.signal()
+                    _ = diskAnswers.wait(timeout: .now() + 10)
+                }
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: DispatchQueue(label: "com.launchdarkly.tests.commits"), pacing: .noWaits)
+                reporter.record(CustomEvent(key: "before-close", context: LDContext.stub()))
+
+                let started = Date()
+                reporter.flushAtClose()
+                let took = Date().timeIntervalSince(started)
+                diskAnswers.leave()
+
+                expect(stalled.wait(timeout: .now())) == .success
+                expect(took) < DirectEventProcessor.closeCommitBudget + 1
+                let keysOnDisk = { inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).keyField } }
+                expect(keysOnDisk()).toEventually(contain("before-close"), timeout: Constants.deliveryTimeout)
             }
 
             itPersisting("tries a batch a previous run left once at start, with its retry, and then waits out the backoff") {
@@ -2406,7 +2499,8 @@ extension DirectEventProcessorSpec {
         describe("flush reporting outcome") {
             var testContext: TestContext!
             afterEach {
-                testContext.cleanUp()
+                testContext?.cleanUp()
+                testContext = nil
             }
 
             it("reports true when there is nothing to deliver") {
@@ -2486,6 +2580,137 @@ extension DirectEventProcessorSpec {
                 expect(delivered) == true
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
                 expect(store.pendingEventCount) == 0
+            }
+
+            it("passes by a stored batch it could not read, reading it once a flush, and still delivers the batches behind it") {
+                let reads = FailingReads()
+                let store = EventStore.temporary(readFile: { try reads.read($0) })
+                testContext = TestContext(store: store)
+                // Online, and past the check for what a previous run left, before there is a batch for that check to find.
+                testContext.eventProcessor.isOnline = true
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                }
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                let unreadable = store.closeBatch()!
+                reads.fail(unreadable.payloadId)
+                testContext.recordEvents(1)
+
+                var delivered: Bool?
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                expect(testContext.serviceMock.publishedPayloadIds).toNot(contain(unreadable.payloadId))
+                expect(reads.failures) == 1
+                expect(store.pendingBatches().map { $0.payloadId }) == [unreadable.payloadId]
+
+                reads.fail(nil)
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+                expect(testContext.serviceMock.publishedPayloadIds.last) == unreadable.payloadId
+            }
+
+            it("drops a stored batch it could not read at three flushes in a row, and reports the loss once") {
+                let reads = FailingReads()
+                let store = EventStore.temporary(readFile: { try reads.read($0) })
+                testContext = TestContext(store: store)
+                testContext.eventProcessor.isOnline = true
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                }
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                reads.fail(store.closeBatch()!.payloadId)
+                testContext.eventProcessor.readFailureSpacing = 0
+
+                var answers: [Bool] = []
+                for _ in 0..<DirectEventProcessor.readFailuresBeforeDropping {
+                    expect(store.pendingBatches().count) == 1
+                    waitUntil(timeout: Constants.deliveryTimeout) { done in
+                        testContext.eventProcessor.flushReportingOutcome { result in
+                            answers.append(result)
+                            done()
+                        }
+                    }
+                }
+                expect(answers) == [false, false, false]
+                expect(reads.failures) == DirectEventProcessor.readFailuresBeforeDropping
+                expect(store.pendingBatches()).to(beEmpty())
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+
+                testContext.recordEvents(1)
+                var delivered: Bool?
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == true
+            }
+
+            it("keeps a stored batch whose reads fail closer together than the flush interval, and delivers it once it can be read") {
+                let reads = FailingReads()
+                let store = EventStore.temporary(readFile: { try reads.read($0) })
+                testContext = TestContext(store: store)
+                testContext.eventProcessor.isOnline = true
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                }
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                let unreadable = store.closeBatch()!
+                reads.fail(unreadable.payloadId)
+                testContext.eventProcessor.readFailureSpacing = 3600
+
+                // Flushes in a row, and the blocking flushAndWait's posting through the backoff, as a caller might.
+                for _ in 0..<(2 * DirectEventProcessor.readFailuresBeforeDropping) {
+                    waitUntil(timeout: Constants.deliveryTimeout) { done in
+                        testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                    }
+                    expect(testContext.flushBypassingBackoffOutcome()) == false
+                }
+                expect(reads.failures) == 4 * DirectEventProcessor.readFailuresBeforeDropping
+                expect(store.pendingBatches().map { $0.payloadId }) == [unreadable.payloadId]
+
+                reads.fail(nil)
+                expect(testContext.flushOutcome()) == true
+                expect(testContext.serviceMock.publishedPayloadIds.last) == unreadable.payloadId
+            }
+
+            it("drops a stored batch whose reads fail at least the spacing apart") {
+                let reads = FailingReads()
+                let store = EventStore.temporary(readFile: { try reads.read($0) })
+                testContext = TestContext(store: store)
+                testContext.eventProcessor.isOnline = true
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { _ in done() }
+                }
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                reads.fail(store.closeBatch()!.payloadId)
+                let spacing: TimeInterval = 0.2
+                testContext.eventProcessor.readFailureSpacing = spacing
+
+                for _ in 1..<DirectEventProcessor.readFailuresBeforeDropping {
+                    expect(testContext.flushOutcome()) == false
+                    expect(testContext.flushOutcome()) == false
+                    expect(store.pendingBatches().count) == 1
+                    Thread.sleep(forTimeInterval: spacing + 0.05)
+                }
+                expect(testContext.flushOutcome()) == false
+                expect(store.pendingBatches()).to(beEmpty())
             }
 
             it("reports false and drops a stored batch this version cannot read, and still delivers the rest") {
@@ -2754,6 +2979,39 @@ extension DirectEventProcessorSpec {
                 expect(sizes.dropFirst().allSatisfy { $0 > EventLogFormat.maxBatchSize - dataCharacters - 4096 }) == true
                 expect(Set(testContext.serviceMock.publishedPayloadIds).count) == bodies.count
                 expect(bodies.flatMap(customKeys).sorted()) == (1...eventCount).map { "event-\($0)" }.sorted()
+            }
+
+            it("drops a summary larger than a frame whole and delivers the events beside it") {
+                // Long keys, so that a few thousand flags take one context's summary past what a frame holds.
+                let keyPrefix = String(repeating: "k", count: 1000)
+                let flagCount = EventLogFormat.maxFrameSize / 1000 * 3 / 2
+                testContext = TestContext()
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                let context = LDContext.stub()
+                // First, ahead of the debug events the evaluations fill the capacity with.
+                testContext.eventProcessor.record(CustomEvent(key: "fine", context: context))
+                for index in 0..<flagCount {
+                    testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "\(keyPrefix)\(index)", value: "a",
+                                                                          defaultValue: "b", featureFlag: flag,
+                                                                          context: context, includeReason: false)
+                }
+                testContext.eventProcessor.isOnline = true
+                var delivered: Bool?
+                waitUntil(timeout: .seconds(30)) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+
+                let events = testContext.serviceMock.publishedEventPayloads.flatMap { body -> [LDValue] in
+                    guard case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
+                    else { return [] }
+                    return events
+                }
+                expect(events.filter { $0.kindField == "summary" }).to(beEmpty())
+                expect(testContext.serviceMock.publishedEventPayloads.flatMap(customKeys)) == ["fine"]
             }
 
             it("reports false when a retryable failure leaves the batch on disk") {
@@ -3121,6 +3379,22 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["refused"], ["refused"], ["next"]]
             }
 
+            it("leaves refusals of the payload in a row through a post that gets no response") {
+                testContext = TestContext(retryState: DirectEventProcessorSpec.withoutBackoff())
+                testContext.serviceMock.eventStatusForPost = { post in [1: 400, 2: 0, 3: 400][post] ?? 202 }
+                testContext.eventProcessor.record(CustomEvent(key: "malformed", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                // A refusal, and its retry, which gets no response.
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.store.pendingBatches()).toNot(beEmpty())
+
+                // The second refusal drops the batch, which no longer holds back the one behind it.
+                testContext.eventProcessor.record(CustomEvent(key: "next", context: testContext.context))
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["malformed"], ["malformed"], ["malformed"], ["next"]]
+                expect(testContext.flushOutcome()) == true
+            }
+
             // The SDK's own backoff: a refusal such as a 401 would wait eight and a half minutes before the second post.
             it("retries a batch refused with HTTP 413 a second later, as it does a 400") {
                 testContext = TestContext()
@@ -3194,6 +3468,63 @@ extension DirectEventProcessorSpec {
 
                 expect(testContext.serviceMock.publishedEventPayloads.dropFirst().flatMap(customKeys))
                     .toEventually(equal(["refused", "at-close"]), timeout: Constants.deliveryTimeout)
+            }
+
+            it("posts through the backoff's wait for a flush bypassing it, and answers whether the events got out") {
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedCeiling: 3600))
+                testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
+                testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                expect(testContext.flushOutcome()) == false
+                testContext.serviceMock.stubEventResponse(success: true)
+                testContext.serviceMock.eventStatusForPost = nil
+                testContext.eventProcessor.record(CustomEvent(key: "bypassing", context: testContext.context))
+
+                expect(testContext.flushBypassingBackoffOutcome()) == true
+                expect(testContext.serviceMock.publishedEventPayloads.dropFirst().flatMap(customKeys)) == ["refused", "bypassing"]
+            }
+
+            it("leaves ordinary flushes waiting out the backoff after a flush bypassing it is refused again") {
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedCeiling: 3600))
+                testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
+                testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                expect(testContext.flushOutcome()) == false
+
+                expect(testContext.flushBypassingBackoffOutcome()) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
+
+                expect(testContext.flushOutcome()) == false
+                testContext.eventProcessor.flush(completion: nil)
+                waitLettingTimersFire(0.3)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
+            }
+
+            it("leaves the backoff's wait as it was when flushes bypassing it are refused") {
+                let retryState = DeliveryRetryState(flushInterval: 30)
+                testContext = TestContext(retryState: retryState)
+                testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
+                testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                expect(testContext.flushOutcome()) == false
+                let waitAfterTheRefusal = retryState.remainingWait
+                expect(waitAfterTheRefusal) > 0
+
+                // An application flushing on every move to the background during a refusal.
+                for _ in 0..<4 {
+                    expect(testContext.flushBypassingBackoffOutcome()) == false
+                }
+
+                expect(testContext.serviceMock.publishEventDataCallCount) == 5
+                expect(retryState.remainingWait) <= waitAfterTheRefusal
+            }
+
+            it("posts nothing for a flush bypassing the backoff while offline") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "an-event", context: testContext.context))
+
+                expect(testContext.flushBypassingBackoffOutcome()) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
             }
 
             it("posts nothing at close when the client was already offline") {
@@ -3419,6 +3750,8 @@ private final class ClosingHookStore: EventStoring {
     let inner: EventStoring
     var beforeClosing: (() -> Void)?
     var afterClosing: (() -> Void)?
+    /// Runs at the start of every commit.
+    var beforeCommitting: (() -> Void)?
     private(set) var closedKeys: [[String]] = []
 
     init(_ inner: EventStoring) {
@@ -3427,12 +3760,16 @@ private final class ClosingHookStore: EventStoring {
 
     var pendingEventCount: Int { inner.pendingEventCount }
     var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
+    func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
     var isPersisting: Bool { inner.isPersisting }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }
     func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
     func releaseReservations() { inner.releaseReservations() }
-    func commit() { inner.commit() }
+    func commit() {
+        beforeCommitting?()
+        inner.commit()
+    }
     var holdsUnclosedEvents: Bool { inner.holdsUnclosedEvents }
     func takeVanishedLogEvents() -> Int { inner.takeVanishedLogEvents() }
     func listPendingBatches() -> BatchListing { inner.listPendingBatches() }
@@ -3474,6 +3811,37 @@ private final class Answer {
     }
 }
 
+/// Reads that fail for one batch, as they do once a permission is taken away, counted. Set from the test's thread and
+/// read on the reporter's.
+private final class FailingReads {
+    private let lock = UnfairLock()
+    private var payloadId: String?
+    private var failed = 0
+
+    /// Fails every read of the batch from here on, or none where nil.
+    func fail(_ payloadId: String?) {
+        lock.withLock { self.payloadId = payloadId }
+    }
+
+    var failures: Int {
+        lock.withLock { failed }
+    }
+
+    /// Pass as the store's `readFile`.
+    func read(_ url: URL) throws -> Data {
+        let fails = lock.withLock { () -> Bool in
+            guard let payloadId, url.lastPathComponent.contains(payloadId)
+            else { return false }
+            failed += 1
+            return true
+        }
+        if fails {
+            throw NSError(domain: NSPOSIXErrorDomain, code: Int(EACCES))
+        }
+        return try Data(contentsOf: url)
+    }
+}
+
 /// What a run of flushes were told, written from whichever threads answered them and read from the test's.
 private final class Answers {
     private let lock = UnfairLock()
@@ -3507,6 +3875,7 @@ private final class SlowListingStore: EventStoring {
 
     var pendingEventCount: Int { inner.pendingEventCount }
     var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
+    func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
     var isPersisting: Bool { inner.isPersisting }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }

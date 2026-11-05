@@ -74,6 +74,10 @@ final class OutboundEventBuffer {
     }
 
     /// Encodes the summary of one context's counters. Requires the processor's `commitLock`.
+    ///
+    /// A summary larger than one log frame is not split: the store refuses it whole, and its evaluations are counted
+    /// as lost. Reaching that takes one context evaluating dozens of the largest JSON flags LaunchDarkly allows
+    /// between two commits.
     func encodeSummary(_ summary: (tracker: FlagRequestTracker, context: LDContext)) -> Data? {
         encode(SummaryEvent(flagRequestTracker: summary.tracker, context: summary.context))
     }

@@ -636,6 +636,24 @@ final class EventStoreSpec: QuickSpec {
                 expect { try store.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
             }
 
+            it("lists a batch named without a count whose first frame is damaged as one event, and loses it") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("damaged"))
+                _ = store.closeBatch()
+                let file = try EventStoreSpec.asUncountedName(EventStoreSpec.onlyBatchFile(in: store))
+                var damaged = try Data(contentsOf: file)
+                damaged[EventLogFormat.fileHeaderSize + EventLogFormat.frameHeaderSize] ^= 0x01
+                try damaged.write(to: file)
+
+                // Counted as no events, it would be dropped as a loss of none, which no flush hears about.
+                let next = EventStoreSpec.reader(sharing: store)
+                let batches = next.pendingBatches()
+                expect(batches.map { $0.eventCount }) == [1]
+                guard let batch = batches.first
+                else { return }
+                expect { try next.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
+            }
+
             it("says how many events made it into the body of a batch damaged after its first frame") {
                 store = EventStore.temporary()
                 ["first", "second", "third"].forEach { _ = store.stage(EventStoreSpec.payload($0)) }
@@ -741,7 +759,7 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(in: next.payloadsOnDisk)) == ["from-the-previous-run", "this-run"]
             }
 
-            it("is discarded when a batch named without a count is in a format this version does not read") {
+            it("is listed as one event and unreadable when a batch named without a count is in a format this version does not read") {
                 store = EventStore.temporary()
                 _ = store.stage(EventStoreSpec.payload("unreadable"))
                 store.commit()
@@ -753,9 +771,15 @@ final class EventStoreSpec: QuickSpec {
                 corrupted[5] = 0xFF
                 try corrupted.write(to: batchUrl)
 
+                // Left for the delivery that reaches it, which removes it and counts the loss, rather than deleted
+                // here uncounted.
                 let next = EventStoreSpec.reader(sharing: store)
-                expect(next.pendingBatches()).to(beEmpty())
-                // A batch that can never be delivered is not left to occupy the device either.
+                let batches = next.pendingBatches()
+                expect(batches.map { $0.eventCount }) == [1]
+                guard let batch = batches.first
+                else { return }
+                expect { try next.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
+                next.remove(batch)
                 expect(FileManager.default.fileExists(atPath: batchUrl.path)) == false
             }
         }
@@ -1780,15 +1804,6 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "past-capacity"))) == false
             }
 
-            it("is not bounded by bytes where it keeps events off the disk") {
-                store = EventStore.temporary(capacity: 100, byteCapacity: 1000, persistEvents: false)
-                for index in 1...20 {
-                    expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))) == true
-                }
-                expect(store.hasRoomForEventBytes) == true
-                expect(store.pendingEventCount) == 20
-            }
-
             it("bounds summaries by bytes even where it keeps events off the disk") {
                 // Nothing else bounds them: capacity never refuses a summary, and a delivery that keeps failing keeps
                 // every one it was given.
@@ -1801,8 +1816,27 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-2"), bypassingCapacity: true)) == true
 
                 expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary-3"), bypassingCapacity: true)) == false
-                // Full events are still bounded by count alone.
-                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-9"))) == true
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-9"))) == false
+            }
+
+            it("bounds full events by bytes where it keeps events off the disk, leaving the summaries' fifth") {
+                // Capacity counts events, so in memory through an outage it would otherwise hold that many of any size.
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000, persistEvents: false)
+                for index in 1...8 {
+                    expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-\(index)"))) == true
+                }
+                expect(store.hasRoomForEventBytes) == false
+                expect(store.admitsEvent(heldElsewhere: 0, capacity: 100)) == false
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "event-9"))) == false
+                expect(store.pendingEventCount) == 8
+                expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "summary"), bypassingCapacity: true)) == true
+            }
+
+            it("admits an event by count and by bytes in one check") {
+                store = EventStore.temporary(capacity: 100, byteCapacity: 1000, persistEvents: false)
+                _ = store.stage(EventStoreSpec.payload(framedIn: 100, key: "event"))
+                expect(store.admitsEvent(heldElsewhere: 98, capacity: 100)) == true
+                expect(store.admitsEvent(heldElsewhere: 99, capacity: 100)) == false
             }
 
             it("counts committed bytes as well as staged ones") {
@@ -2055,6 +2089,75 @@ final class EventStoreSpec: QuickSpec {
     /// Losing the disk should cost durability and nothing else. These are the events an application would otherwise
     /// have reported before any of this existed, so the store keeps delivering them from memory.
     private func fallbackSpec() {
+        describe("batch locks") {
+            var root: URL!
+            beforeEach {
+                root = EventStore.temporaryDirectory()
+            }
+            afterEach {
+                try? FileManager.default.removeItem(at: root)
+            }
+            func batch(in directory: String, named name: String) throws -> URL {
+                let directory = root.appendingPathComponent(directory, isDirectory: true)
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                let batch = directory.appendingPathComponent(name)
+                try Data([1, 2, 3]).write(to: batch)
+                return batch
+            }
+
+            it("gives the batches of one directory one lock, however their URLs were come by, and another directory its own") {
+                let first = try batch(in: "one", named: "ready-a-1")
+                let second = URL(fileURLWithPath: first.deletingLastPathComponent().path + "/ready-b-1")
+                let elsewhere = try batch(in: "other", named: "ready-a-1")
+
+                expect(BatchLocks.lockForTesting(first) === BatchLocks.lockForTesting(second)) == true
+                expect(BatchLocks.lockForTesting(first) === BatchLocks.lockForTesting(elsewhere)) == false
+            }
+
+            it("expires in one directory while another directory's lock is held, and waits on its own") {
+                let held = try batch(in: "held", named: "ready-held-1")
+                let besideIt = try batch(in: "held", named: "ready-beside-1")
+                let elsewhere = try batch(in: "elsewhere", named: "ready-elsewhere-1")
+                let elsewhereDone = DispatchSemaphore(value: 0)
+                let besideItDone = DispatchSemaphore(value: 0)
+
+                let lock = BatchLocks.lockForTesting(held)
+                lock.lock()
+                DispatchQueue.global().async {
+                    _ = BatchLocks.deleteUnlessBeingSent(elsewhere)
+                    elsewhereDone.signal()
+                }
+                let elsewhereWaited = elsewhereDone.wait(timeout: .now() + 5) == .timedOut
+                DispatchQueue.global().async {
+                    _ = BatchLocks.deleteUnlessBeingSent(besideIt)
+                    besideItDone.signal()
+                }
+                let besideItWaited = besideItDone.wait(timeout: .now() + 0.2) == .timedOut
+                lock.unlock()
+
+                expect(elsewhereWaited) == false
+                expect(besideItWaited) == true
+                expect(besideItDone.wait(timeout: .now() + 5)) == .success
+                expect(FileManager.default.fileExists(atPath: elsewhere.path)) == false
+                expect(FileManager.default.fileExists(atPath: besideIt.path)) == false
+            }
+
+            it("leaves a batch of the same name in another directory to expiry while one is sent") {
+                let sent = try batch(in: "sending", named: "ready-same-1")
+                let namesake = try batch(in: "expiring", named: "ready-same-1")
+
+                BatchLocks.startedSending(sent)
+                expect(BatchLocks.isSentInThisProcess(sent)) == true
+                expect(BatchLocks.isSentInThisProcess(namesake)) == false
+                expect(BatchLocks.deleteUnlessBeingSent(sent)) == false
+                expect(BatchLocks.deleteUnlessBeingSent(namesake)) == true
+                BatchLocks.stoppedSending(sent)
+
+                expect(BatchLocks.isSentInThisProcess(sent)) == false
+                expect(BatchLocks.deleteUnlessBeingSent(sent)) == true
+            }
+        }
+
         describe("a store the filesystem will not take") {
             var store: EventStore!
             beforeEach {

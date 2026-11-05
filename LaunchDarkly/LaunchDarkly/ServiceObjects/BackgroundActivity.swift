@@ -72,12 +72,16 @@ final class BackgroundActivity {
 
     /// An assertion from the process, over an injectable system call and cap so that a test can drive both.
     ///
-    /// Without assertions on this platform, `whileHeld` runs on the calling thread.
+    /// Where the platform has no assertions, `perform` is nil and `whileHeld` runs on the calling thread.
     static func processAssertion(logger: OSLog,
-                                 perform: @escaping ExpiringActivity = BackgroundActivity.performExpiringActivity,
+                                 perform: ExpiringActivity? = SystemCapabilities.expiringActivity,
                                  maximumDuration: TimeInterval = BackgroundActivity.maximumDuration) -> Assertion {
         { reason, whileHeld in
-            #if os(iOS) || os(tvOS) || os(watchOS)
+            guard let perform
+            else {
+                whileHeld {}
+                return
+            }
             let finished = DispatchSemaphore(value: 0)
             // The work does not wait on the assertion, and does not run inside it. The system refuses one outright
             // under the very resource pressure this is here for, and a delivery it may suspend is better than no
@@ -96,15 +100,6 @@ final class BackgroundActivity {
                 _ = finished.wait(timeout: .now() + maximumDuration)
             }
             whileHeld { finished.signal() }
-            #else
-            whileHeld {}
-            #endif
         }
-    }
-
-    private static func performExpiringActivity(_ reason: String, _ whileGranted: @escaping (Bool) -> Void) {
-        #if os(iOS) || os(tvOS) || os(watchOS)
-        ProcessInfo.processInfo.performExpiringActivity(withReason: reason, using: whileGranted)
-        #endif
     }
 }

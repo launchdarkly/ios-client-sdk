@@ -46,14 +46,16 @@ public final class ObjcLDConfig: NSObject {
     /// Without this, an event lives in memory until it is delivered, and a process that dies before the next flush
     /// takes everything recorded since the last one, including the crash an application was reporting when it died.
     /// `.immediate` additionally puts the write on the thread that called `track` or `identify`, so there is no window
-    /// in which the event exists only in memory. Both levels other than `.disabled` are experimental, and not subject to
-    /// any backwards compatibility guarantees or semantic versioning. (Default: `.disabled`)
+    /// in which the event exists only in memory. (Default: `.disabled`)
+    ///
+    /// - Warning: Experimental. Both levels other than `.disabled` are not stable, and not subject to any backwards
+    ///   compatibility guarantees or semantic versioning.
     @objc public var eventPersistence: EventPersistence {
         get { config.eventPersistence }
         set { config.eventPersistence = newValue }
     }
 
-    /// The maximum number of bytes of events the SDK keeps where `eventPersistence` keeps events across launches, for every environment together: each environment in `secondaryMobileKeys` gets an equal share of it, unlike `eventCapacity`. When an environment reaches its share, the SDK discards new events until it reports the stored ones; a fifth of each share is kept for the summaries of flag evaluations. No effect where `eventPersistence` is `.disabled`. (Default: 20 MiB)
+    /// The maximum number of bytes of events the SDK keeps, on disk and in memory together, whatever `eventPersistence` is, for every environment together: each environment in `secondaryMobileKeys` gets an equal share of it, unlike `eventCapacity`. When an environment reaches its share, the SDK discards new events until it reports the stored ones; a fifth of each share is kept for the summaries of flag evaluations. (Default: 20 MiB)
     @objc public var eventCapacityBytes: Int {
         get { config.eventCapacityBytes }
         set { config.eventCapacityBytes = newValue }
@@ -63,6 +65,15 @@ public final class ObjcLDConfig: NSObject {
     @objc public var eventMaxAge: TimeInterval {
         get { config.eventMaxAge }
         set { config.eventMaxAge = newValue }
+    }
+
+    /// How long after the client first goes online the SDK holds back the traffic it starts on its own: the diagnostic init payload, the events a previous run left, and the periodic delivery of this run's events. A flush the application asks for is never held. Kept between 0 and 60 seconds. (Default: 2 seconds)
+    ///
+    /// - Warning: Experimental. This property is not stable, and not subject to any backwards compatibility guarantees
+    ///   or semantic versioning.
+    @objc public var eventDeliveryDelay: TimeInterval {
+        get { config.eventDeliveryDelay }
+        set { config.eventDeliveryDelay = newValue }
     }
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)
