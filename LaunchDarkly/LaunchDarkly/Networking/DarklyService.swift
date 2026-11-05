@@ -53,12 +53,14 @@ final class DarklyService: DarklyServiceProvider {
     let diagnosticCache: DiagnosticCaching?
     private(set) var serviceFactory: ClientServiceCreating
     private var session: URLSession
+    private let payloadFilter: String?
     var flagRequestEtag: String?
 
   init(config: LDConfig, context: LDContext, envReporter: EnvironmentReporting, serviceFactory: ClientServiceCreating) {
         self.config = config
         self.context = context
         self.serviceFactory = serviceFactory
+        self.payloadFilter = config.validatedPayloadFilter()
 
         if !config.mobileKey.isEmpty && !config.diagnosticOptOut && config.sendEvents {
             self.diagnosticCache = serviceFactory.makeDiagnosticCache(sdkKey: config.mobileKey)
@@ -129,16 +131,22 @@ final class DarklyService: DarklyServiceProvider {
         } else {
             flagRequestUrl.appendPathComponent(FlagRequestPath.report, isDirectory: false)
         }
-        return shouldGetReasons(url: flagRequestUrl)
+        return addingQueryItems(to: flagRequestUrl)
     }
 
-    private func shouldGetReasons(url: URL) -> URL {
-        guard config.evaluationReasons
+    private func addingQueryItems(to url: URL) -> URL {
+        var queryItems: [URLQueryItem] = []
+        if config.evaluationReasons {
+            queryItems.append(URLQueryItem(name: "withReasons", value: "true"))
+        }
+        if let payloadFilter = payloadFilter {
+            queryItems.append(URLQueryItem(name: "filter", value: payloadFilter))
+        }
+        guard !queryItems.isEmpty, var urlComponent = URLComponents(url: url, resolvingAgainstBaseURL: false)
         else { return url }
 
-        var urlComponent = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        urlComponent?.queryItems = [URLQueryItem(name: "withReasons", value: "true")]
-        return urlComponent?.url ?? url
+        urlComponent.queryItems = queryItems
+        return urlComponent.url ?? url
     }
 
     private func processEtag(from serviceResponse: ServiceResponse) {
@@ -177,7 +185,7 @@ final class DarklyService: DarklyServiceProvider {
             streamRequestUrl.appendPathComponent(contextJsonData?.base64UrlEncodedString ?? "", isDirectory: false)
         }
 
-        return serviceFactory.makeStreamingProvider(url: shouldGetReasons(url: streamRequestUrl),
+        return serviceFactory.makeStreamingProvider(url: addingQueryItems(to: streamRequestUrl),
                                                     httpHeaders: httpHeaders.eventSourceHeaders,
                                                     connectMethod: connectMethod,
                                                     connectBody: connectBody,
