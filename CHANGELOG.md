@@ -6,6 +6,19 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 * bumping swift-tools-version:5.5 and macosx to be compatible with otel
 - masOS "10.13" -> "12.00"
 
+## [11.8.0](https://github.com/launchdarkly/ios-client-sdk/compare/11.7.0...11.8.0) (2026-11-05)
+
+
+### Features
+
+* Expose enableCompression on ObjcLDConfig ([#543](https://github.com/launchdarkly/ios-client-sdk/issues/543)) ([785f5b6](https://github.com/launchdarkly/ios-client-sdk/commit/785f5b66c8023e7df5202fd9fa3e8c00f55d86d1))
+
+
+### Bug Fixes
+
+* Fix unit tests running in offline ([#540](https://github.com/launchdarkly/ios-client-sdk/issues/540)) ([559cca7](https://github.com/launchdarkly/ios-client-sdk/commit/559cca771e5dc0563bce7fd1b4c3b68f58538a1c))
+* **networking:** Share one URLSession across environments ([#547](https://github.com/launchdarkly/ios-client-sdk/issues/547)) ([0024e28](https://github.com/launchdarkly/ios-client-sdk/commit/0024e2893afbbe42fec3187eaa3169dffe2c43f0))
+
 ## [11.7.0](https://github.com/launchdarkly/ios-client-sdk/compare/11.6.2...11.7.0) (2026-09-30)
 
 
