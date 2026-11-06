@@ -114,10 +114,6 @@ extension LDClient {
     public func flushAndWait(timeout: TimeInterval) -> Bool {
         // Taken first, so that the timeout covers the whole call, finding the clients included.
         let deadline = DispatchTime.now() + max(0, timeout)
-        if timeout > LDClient.longTimeoutInterval {
-            os_log("%s LDClient.flushAndWait was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: config.logger, type: .info, self.typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
-        }
-
         let clients = instancesIncludingThisClient()
         guard !clients.isEmpty
         else {
