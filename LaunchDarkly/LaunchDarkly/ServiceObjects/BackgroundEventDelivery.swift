@@ -23,11 +23,19 @@ final class BackgroundEventDelivery {
     private let environments: () -> [Environment]
     private let suspendsWhenBackgrounded: Bool
     private let activity: BackgroundActivity
+    /// How long the deliveries have to answer before the ones that have not count as undelivered. The activity holds
+    /// one assertion at a time, so a delivery that never answered would otherwise keep every later backgrounding from
+    /// delivering at all.
+    private let answerTimeout: TimeInterval
 
-    init(environments: @escaping () -> [Environment], suspendsWhenBackgrounded: Bool, activity: BackgroundActivity) {
+    init(environments: @escaping () -> [Environment],
+         suspendsWhenBackgrounded: Bool,
+         activity: BackgroundActivity,
+         answerTimeout: TimeInterval = BackgroundActivity.maximumDuration) {
         self.environments = environments
         self.suspendsWhenBackgrounded = suspendsWhenBackgrounded
         self.activity = activity
+        self.answerTimeout = answerTimeout
     }
 
     convenience init(environments: @escaping () -> [Environment]) {
@@ -50,7 +58,7 @@ final class BackgroundEventDelivery {
                 finished()
                 return
             }
-            environments.map(\.eventProcessor).flushReportingOutcomes { delivered in
+            environments.map(\.eventProcessor).flushReportingOutcomes(deadline: .now() + self.answerTimeout) { delivered in
                 self.logUndelivered(zip(environments, delivered).filter { !$0.1 }.map(\.0))
                 finished()
             }

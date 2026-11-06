@@ -17,7 +17,7 @@ final class BackgroundActivity {
     typealias ExpiringActivity = (_ reason: String, _ whileGranted: @escaping (_ expired: Bool) -> Void) -> Void
 
     /// Upper bound for work that never calls `finished`.
-    private static let maximumDuration: TimeInterval = 30
+    static let maximumDuration: TimeInterval = 30
 
     private let reason: String
     private let assertion: Assertion

@@ -66,11 +66,19 @@ protocol EventProcessor {
 
 extension Array where Element == EventProcessor {
     /// Starts every processor's delivery at once, and gives `completion` each one's outcome, in order, once all of them
-    /// have answered. With no processors it answers at once, on the calling thread.
+    /// have answered or `deadline` has passed, whichever is first. A processor that has not answered by the deadline
+    /// counts as not delivered, and its answer, should it come later, is ignored. With no processors it answers at
+    /// once, on the calling thread.
     ///
-    /// The completion runs once, on the thread of the last answer. A reporter answering twice neither ends the wait
-    /// before every processor has answered nor ends it again: its second answer is ignored.
-    func flushReportingOutcomes(bypassingBackoff: Bool = false, completion: @escaping (_ delivered: [Bool]) -> Void) {
+    /// The completion runs once, on the thread of the last answer, or a global queue at the deadline. A reporter
+    /// answering twice neither ends the wait before every processor has answered nor ends it again: its second answer
+    /// is ignored.
+    ///
+    /// - parameter deadline: where a caller cannot wait on a reporter that never answers. Without one, the completion
+    ///   waits for every answer.
+    func flushReportingOutcomes(bypassingBackoff: Bool = false,
+                                deadline: DispatchTime? = nil,
+                                completion: @escaping (_ delivered: [Bool]) -> Void) {
         guard !isEmpty
         else {
             completion([])
@@ -80,6 +88,20 @@ extension Array where Element == EventProcessor {
         /// Only to be used while holding `lock`: each processor answers from whichever thread its delivery ended on.
         var outcomes = [Bool?](repeating: nil, count: count)
         var outstanding = count
+        if let deadline {
+            DispatchQueue.global().asyncAfter(deadline: deadline) {
+                let ended: [Bool]? = lock.withLock {
+                    guard outstanding > 0
+                    else { return nil }
+                    outstanding = 0
+                    outcomes = outcomes.map { $0 ?? false }
+                    return outcomes.compactMap { $0 }
+                }
+                if let ended {
+                    completion(ended)
+                }
+            }
+        }
         for (index, processor) in enumerated() {
             let answer: FlushOutcomeClosure = { delivered in
                 let ended: [Bool]? = lock.withLock {

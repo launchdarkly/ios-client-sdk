@@ -91,6 +91,24 @@ final class BackgroundEventDeliverySpec: QuickSpec {
                 expect(released) == 1
             }
 
+            it("releases the assertion where an environment never answers, so a later backgrounding still delivers") {
+                var releases = 0
+                let lock = UnfairLock()
+                let counted = BackgroundActivity(reason: "test") { _, work in
+                    work { lock.withLock { releases += 1 } }
+                }
+                let subject = BackgroundEventDelivery(environments: { environments },
+                                                      suspendsWhenBackgrounded: true,
+                                                      activity: counted,
+                                                      answerTimeout: 0.1)
+                subject.applicationDidEnterBackground()
+                primary.flushReportingOutcomeReceivedCompletion?(true)
+                expect(lock.withLock { releases }).toEventually(equal(1))
+
+                subject.applicationDidEnterBackground()
+                expect(primary.flushReportingOutcomeCallCount) == 2
+            }
+
             it("takes no assertion where no client is started") {
                 environments = []
                 delivery(suspendsWhenBackgrounded: true).applicationDidEnterBackground()
