@@ -922,6 +922,24 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.eventProcessorMock.flushAtCloseCallCount) == 1
                 expect(testContext.eventProcessorMock.flushCallCount) == 0
             }
+            it("answers other calls while an environment's final commit is under way") {
+                let testContext = TestContext()
+                testContext.start()
+                var answeredDuringClose = false
+                testContext.eventProcessorMock.flushAtCloseCallback = {
+                    // Standing in for a commit stalled on the disk, which can hold the closing thread for the budget.
+                    let answered = DispatchSemaphore(value: 0)
+                    DispatchQueue.global().async {
+                        _ = LDClient.get()
+                        answered.signal()
+                    }
+                    answeredDuringClose = answered.wait(timeout: .now() + 1) == .success
+                }
+                testContext.subject.close()
+
+                expect(answeredDuringClose) == true
+                expect(LDClient.get()).to(beNil())
+            }
         }
     }
 

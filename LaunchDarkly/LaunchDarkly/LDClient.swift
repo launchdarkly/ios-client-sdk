@@ -247,10 +247,13 @@ public class LDClient {
      There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.
     */
     public func close() {
-        LDClient.instancesQueue.sync(flags: .barrier) {
-            LDClient.instances?.forEach { $1.internalClose() }
-            LDClient.instances = nil
+        // Closed outside `instancesQueue`: each close can wait on its final event commit, and every other call that
+        // reads `instances` would wait behind it.
+        let clients = LDClient.instancesQueue.sync(flags: .barrier) { () -> [LDClient] in
+            defer { LDClient.instances = nil }
+            return LDClient.instances.map { Array($0.values) } ?? []
         }
+        clients.forEach { $0.internalClose() }
     }
 
     private func internalClose() {
