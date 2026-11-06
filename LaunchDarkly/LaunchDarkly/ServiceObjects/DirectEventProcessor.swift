@@ -177,19 +177,38 @@ class DirectEventProcessor: EventProcessor {
         self.launchGateOpen = pacing.launchDelay <= 0
 
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
-        // doing it on the caller's thread would put file I/O in the way of the client starting up. Below the queue's
-        // own priority, and so below the flag requests, which matter more at launch than what a previous run left.
-        // Only where events persist, since memory holds nothing from a previous run.
+        // doing it on the caller's thread would put file I/O in the way of the client starting up. At utility, below
+        // the flag requests, which matter more at launch than what a previous run left. Not as a block on
+        // `deliveryQueue`, whose own userInitiated QoS a block cannot go below; the queue is suspended instead, so
+        // everything enqueued on it meanwhile still runs after the recovery. Only where events persist, since memory
+        // holds nothing from a previous run.
         guard eventStore.isPersisting
         else { return }
         let store = eventStore
-        deliveryQueue.async(qos: .utility, flags: .enforceQoS) { [weak self] in
+        let queue = deliveryQueue
+        let recovered = RecoveredListing()
+        queue.suspend()
+        queue.async { [weak self] in
+            self?.reportVanished(recovered.vanishedEvents)
+            self?.hasEventsFromPreviousRun = recovered.hasBatches
+        }
+        // Enforced, since the caller is usually the main thread, whose QoS would otherwise be carried over.
+        DispatchQueue.global(qos: .utility).async(qos: .utility, flags: .enforceQoS) { [weak self] in
+            // Resumed whatever happens: a dispatch queue released while suspended traps.
+            defer { queue.resume() }
             store.preparePayloadsFromInterruptedLogs()
             self?.reportDiscarded(store.discardExpired())
             let listing = store.listPendingBatches()
-            self?.reportVanished(listing.vanishedEvents)
-            self?.hasEventsFromPreviousRun = !listing.batches.isEmpty
+            recovered.vanishedEvents = listing.vanishedEvents
+            recovered.hasBatches = !listing.batches.isEmpty
         }
+    }
+
+    /// What the recovery found, handed to `deliveryQueue`. Written before the queue resumes and read after, so the
+    /// resume orders the two.
+    private final class RecoveredListing {
+        var vanishedEvents = 0
+        var hasBatches = false
     }
 
     private static func makeStore(config: LDConfig) -> EventStoring {
@@ -399,7 +418,8 @@ extension DirectEventProcessor {
         queueScheduledDelivery()
     }
 
-    /// Queues the delivery the report timer and the launch gate start, which nobody asked for now and which is paced.
+    /// Queues the delivery the report timer, the launch gate and the end of a backoff's wait start, which nobody asked
+    /// for now and which is paced. Unpaced, it would also end the pacing of the delivery running.
     private func queueScheduledDelivery() {
         queueDelivery(nil, paced: true)
     }
@@ -897,7 +917,7 @@ extension DirectEventProcessor {
             guard let self
             else { return }
             self.deliveryScheduler.retryDue()
-            self.queueDelivery(nil)
+            self.queueScheduledDelivery()
         }
     }
 
@@ -943,6 +963,7 @@ extension DirectEventProcessor {
 
 extension DirectEventProcessor: TypeIdentifying { }
 
+#if DEBUG
 extension DirectEventProcessor {
     /// Full events accepted but not yet handed to a commit.
     var pendingEventsForTesting: [Event] {
@@ -973,3 +994,4 @@ extension DirectEventProcessor {
         committer.withContextSummarizer(read)
     }
 }
+#endif

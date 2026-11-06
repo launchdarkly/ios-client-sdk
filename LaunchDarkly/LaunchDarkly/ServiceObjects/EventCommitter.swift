@@ -479,6 +479,7 @@ final class EventCommitter {
 
 extension EventCommitter: TypeIdentifying { }
 
+#if DEBUG
 extension EventCommitter {
     /// Full events accepted but not yet handed to a commit.
     var pendingEventsForTesting: [Event] {
@@ -494,3 +495,4 @@ extension EventCommitter {
         recordLock.withLock { read(eventBuffer.contextSummarizer) }
     }
 }
+#endif

@@ -351,14 +351,14 @@ class DirectEventProcessorSpec: QuickSpec {
             }
 
             /// A reporter on what a previous run left: `batches` batches of one event each.
-            func nextRunLeft(_ batches: Int, pacing: DirectEventProcessor.Pacing) -> DirectEventProcessor {
+            func nextRunLeft(_ batches: Int, pacing: DirectEventProcessor.Pacing, retryState: DeliveryRetryState? = nil) -> DirectEventProcessor {
                 for _ in 0..<batches {
                     testContext.recordEvents(1)
                     testContext.eventProcessor.commitRecordedEvents()
                     _ = testContext.store.closeBatch()
                 }
                 let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil,
-                                                    store: testContext.store.nextRun(), pacing: pacing)
+                                                    store: testContext.store.nextRun(), retryState: retryState, pacing: pacing)
                 nextRun = reporter
                 return reporter
             }
@@ -434,6 +434,47 @@ class DirectEventProcessorSpec: QuickSpec {
                 }
 
                 expect(testContext.serviceMock.publishEventDataCallCount) == 3
+            }
+
+            itPersisting("recovers what a previous run left at utility, though it is started from the main thread") {
+                let store = RecoveryObservingStore(testContext.store.nextRun())
+                nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits)
+
+                expect(store.recoveryQoS).toEventually(equal(QOS_CLASS_UTILITY), timeout: Constants.deliveryTimeout)
+            }
+
+            itPersisting("holds a delivery asked for during the recovery until the recovery is done") {
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                _ = testContext.store.closeBatch()
+                let store = RecoveryObservingStore(testContext.store.nextRun(), holdingRecovery: true)
+                defer { store.release.signal() }
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits)
+                nextRun = reporter
+                reporter.isOnline = true
+
+                var delivered: Bool?
+                reporter.flushReportingOutcome { delivered = $0 }
+                Thread.sleep(forTimeInterval: 0.3)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+
+                store.release.signal()
+                expect(delivered).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+            }
+
+            itPersisting("keeps the gap for the delivery a backoff's wait sets when it ends") {
+                // A refusal waits the extended ceiling, longer than a pass sits out, so the pass ends and the delivery
+                // is set for when the wait ends.
+                let reporter = nextRunLeft(3, pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 10),
+                                           retryState: DeliveryRetryState(initialDelay: 0.1, normalCeiling: 0.1, extendedCeiling: 0.5))
+                testContext.serviceMock.eventStatusForPost = { post in post == 1 ? HTTPURLResponse.StatusCodes.unauthorized : 202 }
+                reporter.isOnline = true
+
+                // The refused batch again, then the gap before the next.
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: Constants.deliveryTimeout)
+                Thread.sleep(forTimeInterval: 1)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
             }
 
             itPersisting("stops a paced delivery on going offline, and keeps the rest") {
@@ -3905,6 +3946,50 @@ private final class SlowListingStore: EventStoring {
             release.signal()
         }
         return inner.listPendingBatches()
+    }
+}
+
+/// A store that notes the QoS the previous run's events are recovered at, and can hold the recovery open.
+private final class RecoveryObservingStore: EventStoring {
+    let inner: EventStoring
+    /// Signal to let a held recovery finish.
+    let release = DispatchSemaphore(value: 0)
+    private let holds: Bool
+    private let lock = UnfairLock()
+    private var observedQoS: qos_class_t?
+
+    init(_ inner: EventStoring, holdingRecovery holds: Bool = false) {
+        self.inner = inner
+        self.holds = holds
+    }
+
+    var recoveryQoS: qos_class_t? { lock.withLock { observedQoS } }
+
+    var pendingEventCount: Int { inner.pendingEventCount }
+    var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
+    func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
+    var isPersisting: Bool { inner.isPersisting }
+    func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
+    func reserve(_ events: Int) { inner.reserve(events) }
+    func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
+    func releaseReservations() { inner.releaseReservations() }
+    func commit() { inner.commit() }
+    func closeBatch() -> EventBatch? { inner.closeBatch() }
+    var holdsUnclosedEvents: Bool { inner.holdsUnclosedEvents }
+    func takeVanishedLogEvents() -> Int { inner.takeVanishedLogEvents() }
+    func payload(of batch: EventBatch) throws -> BatchPayload? { try inner.payload(of: batch) }
+    func remove(_ batch: EventBatch) { inner.remove(batch) }
+    func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
+    func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
+    func discardExpired() -> Int { inner.discardExpired() }
+    func listPendingBatches() -> BatchListing { inner.listPendingBatches() }
+
+    func preparePayloadsFromInterruptedLogs() {
+        lock.withLock { observedQoS = qos_class_self() }
+        if holds {
+            _ = release.wait(timeout: .now() + 5)
+        }
+        inner.preparePayloadsFromInterruptedLogs()
     }
 }
 

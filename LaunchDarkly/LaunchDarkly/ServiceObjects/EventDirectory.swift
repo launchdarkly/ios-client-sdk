@@ -1004,12 +1004,16 @@ enum BatchLocks {
             return (try? FileManager.default.removeItem(at: batch)) != nil
         }
     }
+}
 
+#if DEBUG
+extension BatchLocks {
     /// The lock every call on a batch takes: its directory's, whichever store names the batch.
     static func lockForTesting(_ batch: URL) -> UnfairLock {
         directory(of: batch).lock
     }
 }
+#endif
 
 extension EventDirectory {
     /// The directory the store for a mobile key belongs in.

@@ -1773,6 +1773,29 @@ final class LDClientSpec: QuickSpec {
                 Thread.sleep(forTimeInterval: 0.2)
                 expect(answers) == [false]
             }
+
+            it("waits for every environment where one answers twice") {
+                let testContext = TestContext()
+                try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
+                testContext.start()
+                testContext.eventProcessorMock.flushReportingOutcomeCallback = { [weak testContext] in
+                    let completion = testContext?.eventProcessorMock.flushReportingOutcomeReceivedCompletion
+                    DispatchQueue.global().async {
+                        completion?(true)
+                        completion?(true)
+                    }
+                }
+                let answering = LDClient.get(environment: "alternate")?.eventProcessor as? EventProcessorMock
+                expect(answering).toNot(beNil())
+                answer(answering!, with: false, after: 0.2)
+
+                var answers: [Bool] = []
+                testContext.subject.flush { answers.append($0) }
+                // Two answers from the primary are not one from each, so a `true` here would be about events still unsent.
+                expect(answers).toEventually(equal([false]))
+                Thread.sleep(forTimeInterval: 0.2)
+                expect(answers) == [false]
+            }
         }
 
         describe("flushAndWait") {
@@ -1880,6 +1903,23 @@ final class LDClientSpec: QuickSpec {
                 let started = Date()
                 expect(testContext.subject.flushAndWait(timeout: 0.6)) == false
                 expect(Date().timeIntervalSince(started)) < 0.85
+            }
+
+            it("waits for every environment where one answers twice") {
+                let testContext = TestContext()
+                try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
+                testContext.start()
+                testContext.eventProcessorMock.flushBypassingBackoffCallback = { [weak testContext] in
+                    let completion = testContext?.eventProcessorMock.flushBypassingBackoffReceivedCompletion
+                    completion?(true)
+                    completion?(true)
+                }
+                let silent = LDClient.get(environment: "alternate")?.eventProcessor as? EventProcessorMock
+                expect(silent).toNot(beNil())
+                silent?.flushBypassingBackoffCallback = nil
+
+                // Two answers from one environment are not one from each, and the other's events are still unsent.
+                expect(testContext.subject.flushAndWait(timeout: 0.2)) == false
             }
         }
     }

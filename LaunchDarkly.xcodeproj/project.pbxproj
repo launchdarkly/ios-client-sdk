@@ -113,6 +113,7 @@
 		831AAE3020A9E75D00B46DBA /* ThrottlerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */; };
 		3F9AC0D80849C86866E03807 /* BackgroundActivitySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */; };
 		379F34CAB1EE19A0F85AA2C8 /* BackgroundEventDeliverySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */; };
+		C863C417AB6004C6EE2F600C /* EventProcessorOutcomesSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406B825B2AAD6C24F5467449 /* EventProcessorOutcomesSpec.swift */; };
 		831D2AAF2061AAA000B4AC3C /* Thread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D2AAE2061AAA000B4AC3C /* Thread.swift */; };
 		831D8B6F1F71532300ED65E8 /* HTTPHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */; };
 		831D8B721F71D3E700ED65E8 /* DarklyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B711F71D3E700ED65E8 /* DarklyService.swift */; };
@@ -582,6 +583,7 @@
 		831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottlerSpec.swift; sourceTree = "<group>"; };
 		C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundActivitySpec.swift; sourceTree = "<group>"; };
 		88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundEventDeliverySpec.swift; sourceTree = "<group>"; };
+		406B825B2AAD6C24F5467449 /* EventProcessorOutcomesSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventProcessorOutcomesSpec.swift; sourceTree = "<group>"; };
 		831D2AAE2061AAA000B4AC3C /* Thread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thread.swift; sourceTree = "<group>"; };
 		831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeaders.swift; sourceTree = "<group>"; };
 		831D8B711F71D3E700ED65E8 /* DarklyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyService.swift; sourceTree = "<group>"; };
@@ -827,6 +829,7 @@
 				831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */,
 				C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */,
 				88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */,
+				406B825B2AAD6C24F5467449 /* EventProcessorOutcomesSpec.swift */,
 				8354AC75224316C700CDE602 /* Cache */,
 				A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */,
 				EE6BAECBB739A0F24DB5A944 /* EventStoreSpec.swift */,
@@ -1902,6 +1905,7 @@
 				831AAE3020A9E75D00B46DBA /* ThrottlerSpec.swift in Sources */,
 				3F9AC0D80849C86866E03807 /* BackgroundActivitySpec.swift in Sources */,
 				379F34CAB1EE19A0F85AA2C8 /* BackgroundEventDeliverySpec.swift in Sources */,
+				C863C417AB6004C6EE2F600C /* EventProcessorOutcomesSpec.swift in Sources */,
 				832D68AC224B3321005F052A /* CacheConverterSpec.swift in Sources */,
 				838F96741FB9F024009CFC45 /* LDClientSpec.swift in Sources */,
 				83A0E6B1203B557F00224298 /* FeatureFlagSpec.swift in Sources */,

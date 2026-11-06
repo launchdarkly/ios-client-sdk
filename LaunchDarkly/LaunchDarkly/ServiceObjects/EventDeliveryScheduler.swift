@@ -126,7 +126,8 @@ final class EventDeliveryScheduler {
         var isClosing: Bool
         /// Whether a caller bypassing the backoff asked for it, or joined it.
         var bypassesBackoff: Bool
-        /// Whether it was asked for only by the report timer or by the launch gate, and so is paced.
+        /// Whether it was asked for only by the report timer, the launch gate or the end of a backoff's wait, and so is
+        /// paced.
         var isPaced: Bool
     }
 
@@ -248,7 +249,10 @@ final class EventDeliveryScheduler {
     func retryDue() {
         lock.withLock { isRetryScheduled = false }
     }
+}
 
+#if DEBUG
+extension EventDeliveryScheduler {
     /// Callers waiting on the queued delivery.
     var queuedWaiterCount: Int {
         lock.withLock { queued?.waiters.count ?? 0 }
@@ -259,3 +263,4 @@ final class EventDeliveryScheduler {
         lock.withLock { deliveryRunCount }
     }
 }
+#endif
