@@ -127,7 +127,16 @@ private struct FlagSection: View {
                 .fixedSize()
                 ActionButton("Eval", id: "eval_button") { evaluate() }
             }
+            ActionButton("All flags", id: "all_flags_button") { readAllFlags() }
         }
+    }
+
+    /// How many flags the client holds. The keys are printed.
+    private func readAllFlags() {
+        guard let flags = controller.client?.allFlags
+        else { return }
+        controller.result = "Read \(flags.count) flags"
+        print("all flags: \(flags.keys.sorted())")
     }
 
     private func evaluate() {
