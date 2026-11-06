@@ -943,6 +943,7 @@ extension DirectEventProcessor {
 
 extension DirectEventProcessor: TypeIdentifying { }
 
+#if DEBUG
 extension DirectEventProcessor {
     /// Full events accepted but not yet handed to a commit.
     var pendingEventsForTesting: [Event] {
@@ -973,3 +974,4 @@ extension DirectEventProcessor {
         committer.withContextSummarizer(read)
     }
 }
+#endif

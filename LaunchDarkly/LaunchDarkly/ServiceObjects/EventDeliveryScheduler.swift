@@ -248,7 +248,10 @@ final class EventDeliveryScheduler {
     func retryDue() {
         lock.withLock { isRetryScheduled = false }
     }
+}
 
+#if DEBUG
+extension EventDeliveryScheduler {
     /// Callers waiting on the queued delivery.
     var queuedWaiterCount: Int {
         lock.withLock { queued?.waiters.count ?? 0 }
@@ -259,3 +262,4 @@ final class EventDeliveryScheduler {
         lock.withLock { deliveryRunCount }
     }
 }
+#endif
