@@ -399,7 +399,8 @@ extension DirectEventProcessor {
         queueScheduledDelivery()
     }
 
-    /// Queues the delivery the report timer and the launch gate start, which nobody asked for now and which is paced.
+    /// Queues the delivery the report timer, the launch gate and the end of a backoff's wait start, which nobody asked
+    /// for now and which is paced. Unpaced, it would also end the pacing of the delivery running.
     private func queueScheduledDelivery() {
         queueDelivery(nil, paced: true)
     }
@@ -897,7 +898,7 @@ extension DirectEventProcessor {
             guard let self
             else { return }
             self.deliveryScheduler.retryDue()
-            self.queueDelivery(nil)
+            self.queueScheduledDelivery()
         }
     }
 

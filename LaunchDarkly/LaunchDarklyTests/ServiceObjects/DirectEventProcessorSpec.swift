@@ -351,14 +351,14 @@ class DirectEventProcessorSpec: QuickSpec {
             }
 
             /// A reporter on what a previous run left: `batches` batches of one event each.
-            func nextRunLeft(_ batches: Int, pacing: DirectEventProcessor.Pacing) -> DirectEventProcessor {
+            func nextRunLeft(_ batches: Int, pacing: DirectEventProcessor.Pacing, retryState: DeliveryRetryState? = nil) -> DirectEventProcessor {
                 for _ in 0..<batches {
                     testContext.recordEvents(1)
                     testContext.eventProcessor.commitRecordedEvents()
                     _ = testContext.store.closeBatch()
                 }
                 let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil,
-                                                    store: testContext.store.nextRun(), pacing: pacing)
+                                                    store: testContext.store.nextRun(), retryState: retryState, pacing: pacing)
                 nextRun = reporter
                 return reporter
             }
@@ -434,6 +434,20 @@ class DirectEventProcessorSpec: QuickSpec {
                 }
 
                 expect(testContext.serviceMock.publishEventDataCallCount) == 3
+            }
+
+            itPersisting("keeps the gap for the delivery a backoff's wait sets when it ends") {
+                // A refusal waits the extended ceiling, longer than a pass sits out, so the pass ends and the delivery
+                // is set for when the wait ends.
+                let reporter = nextRunLeft(3, pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 10),
+                                           retryState: DeliveryRetryState(initialDelay: 0.1, normalCeiling: 0.1, extendedCeiling: 0.5))
+                testContext.serviceMock.eventStatusForPost = { post in post == 1 ? HTTPURLResponse.StatusCodes.unauthorized : 202 }
+                reporter.isOnline = true
+
+                // The refused batch again, then the gap before the next.
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: Constants.deliveryTimeout)
+                Thread.sleep(forTimeInterval: 1)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
             }
 
             itPersisting("stops a paced delivery on going offline, and keeps the rest") {

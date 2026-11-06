@@ -126,7 +126,8 @@ final class EventDeliveryScheduler {
         var isClosing: Bool
         /// Whether a caller bypassing the backoff asked for it, or joined it.
         var bypassesBackoff: Bool
-        /// Whether it was asked for only by the report timer or by the launch gate, and so is paced.
+        /// Whether it was asked for only by the report timer, the launch gate or the end of a backoff's wait, and so is
+        /// paced.
         var isPaced: Bool
     }
 
