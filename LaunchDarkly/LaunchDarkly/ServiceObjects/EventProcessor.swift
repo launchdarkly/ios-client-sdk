@@ -63,3 +63,41 @@ protocol EventProcessor {
     /// a write that was only queued may never happen.
     func commitWherePersisting()
 }
+
+extension Array where Element == EventProcessor {
+    /// Starts every processor's delivery at once, and gives `completion` each one's outcome, in order, once all of them
+    /// have answered. With no processors it answers at once, on the calling thread.
+    ///
+    /// The completion runs once, on the thread of the last answer. A reporter answering twice neither ends the wait
+    /// before every processor has answered nor ends it again: its second answer is ignored.
+    func flushReportingOutcomes(bypassingBackoff: Bool = false, completion: @escaping (_ delivered: [Bool]) -> Void) {
+        guard !isEmpty
+        else {
+            completion([])
+            return
+        }
+        let lock = UnfairLock()
+        /// Only to be used while holding `lock`: each processor answers from whichever thread its delivery ended on.
+        var outcomes = [Bool?](repeating: nil, count: count)
+        var outstanding = count
+        for (index, processor) in enumerated() {
+            let answer: FlushOutcomeClosure = { delivered in
+                let ended: [Bool]? = lock.withLock {
+                    guard outcomes[index] == nil
+                    else { return nil }
+                    outcomes[index] = delivered
+                    outstanding -= 1
+                    return outstanding == 0 ? outcomes.compactMap { $0 } : nil
+                }
+                if let ended {
+                    completion(ended)
+                }
+            }
+            if bypassingBackoff {
+                processor.flushBypassingBackoff(completion: answer)
+            } else {
+                processor.flushReportingOutcome(completion: answer)
+            }
+        }
+    }
+}

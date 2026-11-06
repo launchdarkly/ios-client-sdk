@@ -50,31 +50,8 @@ final class BackgroundEventDelivery {
                 finished()
                 return
             }
-            self.deliver(environments, then: finished)
-        }
-    }
-
-    /// Delivers every environment at once, and calls `finished` once all of them have answered.
-    private func deliver(_ environments: [Environment], then finished: @escaping () -> Void) {
-        let lock = UnfairLock()
-        /// Only to be used while holding `lock`: each environment answers from whichever thread its delivery ended on.
-        var outstanding = Set(environments.indices)
-        var undelivered: [Environment] = []
-        for (index, environment) in environments.enumerated() {
-            environment.eventProcessor.flushReportingOutcome { delivered in
-                // Nil until the last environment answers, so this ends once, and a reporter answering twice neither
-                // ends it early nor ends it again.
-                let ended: [Environment]? = lock.withLock {
-                    guard outstanding.remove(index) != nil
-                    else { return nil }
-                    if !delivered {
-                        undelivered.append(environment)
-                    }
-                    return outstanding.isEmpty ? undelivered : nil
-                }
-                guard let ended
-                else { return }
-                self.logUndelivered(ended)
+            environments.map(\.eventProcessor).flushReportingOutcomes { delivered in
+                self.logUndelivered(zip(environments, delivered).filter { !$0.1 }.map(\.0))
                 finished()
             }
         }

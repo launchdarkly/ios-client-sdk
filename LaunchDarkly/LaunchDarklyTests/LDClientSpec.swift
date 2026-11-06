@@ -1881,6 +1881,23 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.subject.flushAndWait(timeout: 0.6)) == false
                 expect(Date().timeIntervalSince(started)) < 0.85
             }
+
+            it("waits for every environment where one answers twice") {
+                let testContext = TestContext()
+                try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
+                testContext.start()
+                testContext.eventProcessorMock.flushBypassingBackoffCallback = { [weak testContext] in
+                    let completion = testContext?.eventProcessorMock.flushBypassingBackoffReceivedCompletion
+                    completion?(true)
+                    completion?(true)
+                }
+                let silent = LDClient.get(environment: "alternate")?.eventProcessor as? EventProcessorMock
+                expect(silent).toNot(beNil())
+                silent?.flushBypassingBackoffCallback = nil
+
+                // Two answers from one environment are not one from each, and the other's events are still unsent.
+                expect(testContext.subject.flushAndWait(timeout: 0.2)) == false
+            }
         }
     }
 

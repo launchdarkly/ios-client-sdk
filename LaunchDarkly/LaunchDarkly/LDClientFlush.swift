@@ -56,25 +56,8 @@ extension LDClient {
             return
         }
 
-        let lock = UnfairLock()
-        /// Only to be used while holding `lock`: each environment answers from whichever thread its delivery ended on.
-        var delivered = true
-        var outstanding = clients.count
-
-        for client in clients {
-            client.eventProcessor.flushReportingOutcome { result in
-                lock.lock()
-                delivered = delivered && result
-                outstanding -= 1
-                // Nil until the last environment answers, so the completion runs once. A reporter answering twice
-                // takes the count past zero rather than back to it, which cannot match again.
-                let outcome = outstanding == 0 ? delivered : nil
-                lock.unlock()
-
-                if let outcome {
-                    completion(outcome)
-                }
-            }
+        clients.map(\.eventProcessor).flushReportingOutcomes { delivered in
+            completion(!delivered.contains(false))
         }
     }
 
@@ -143,46 +126,34 @@ extension LDClient {
             os_log("%s called on a closed client", log: config.logger, type: .debug, self.typeName(and: #function))
             return false
         }
-        // Counts answers rather than tracking each delivery, so that a reporter answering twice costs a spare permit
-        // no one reads. A DispatchGroup would fit as well, but its `leave` traps without a matching `enter`, which
-        // turns a broken reporter into a crash in the application.
+        // Signaled once, by the last environment to answer, so a reporter answering twice cannot end the wait while
+        // another environment's delivery is still running. A DispatchGroup would fit as well, but its `leave` traps
+        // without a matching `enter`, which turns a broken reporter into a crash in the application.
         let answered = DispatchSemaphore(value: 0)
         let lock = UnfairLock()
-        /// Only to be used while holding `lock`: each environment answers from whichever thread its delivery ended on.
-        var delivered = true
+        /// Only to be used while holding `lock`: the last environment answers from whichever thread its delivery ended on.
+        var delivered = false
 
         // Every environment is started before any of them is waited on. Each has its own event reporter, so waiting on
         // one before starting the next would spend the caller's budget on deliveries that could have been running all
         // along, and leave the last environment with none of it.
-        for client in clients {
-            client.eventProcessor.flushBypassingBackoff { result in
-                lock.lock()
-                delivered = delivered && result
-                lock.unlock()
-                answered.signal()
-            }
+        clients.map(\.eventProcessor).flushReportingOutcomes(bypassingBackoff: true) { outcomes in
+            lock.withLock { delivered = !outcomes.contains(false) }
+            answered.signal()
         }
 
         // Started, then given up on. The deliveries are what makes a zero timeout worth calling at all: wherever events
         // persist, each `flushReportingOutcome` has queued their write, which no longer waits on this thread. Waiting
-        // is what is skipped, and a reporter that answered during the loop above must not turn that into a `true`.
+        // is what is skipped, and deliveries that already answered must not turn that into a `true`.
         guard timeout > 0
         else { return false }
 
-        // Every wait is against the one deadline rather than a fresh copy of it, so the timeout the caller asked for
-        // is the time this call can take however many environments there are. A delivery still running when the wait
-        // gives up is left to finish rather than canceled: its events are already in flight, so abandoning it would
-        // only make losing them certain.
-        for _ in clients {
-            guard answered.wait(timeout: deadline) == .success
-            else { return false }
-        }
-
-        // The waits count answers rather than environments, so a reporter answering twice can end them while another
-        // environment's answer is still being written.
-        lock.lock()
-        defer { lock.unlock() }
-        return delivered
+        // The deadline was taken on entry, so the timeout the caller asked for is the time this call can take however
+        // many environments there are. A delivery still running when the wait gives up is left to finish rather than
+        // canceled: its events are already in flight, so abandoning it would only make losing them certain.
+        guard answered.wait(timeout: deadline) == .success
+        else { return false }
+        return lock.withLock { delivered }
     }
 
     func internalFlush() {
