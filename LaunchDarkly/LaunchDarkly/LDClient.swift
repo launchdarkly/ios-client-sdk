@@ -263,7 +263,6 @@ public class LDClient {
 
     @objc private func didEnterBackground() {
         os_log("%s", log: config.logger, type: .debug, typeName(and: #function))
-        backgroundEvents.applicationDidEnterBackground()
         Thread.performOnMain {
             runMode = .background
         }
@@ -275,8 +274,6 @@ public class LDClient {
             runMode = .foreground
         }
     }
-
-    private let backgroundEvents: BackgroundEventDelivery
 
     let config: LDConfig
     /// Identifies this client's environment to a hook, without handing it the mobile key that identifies the
@@ -1039,7 +1036,6 @@ public class LDClient {
         eventProcessor = self.serviceFactory.makeEventProcessor(config: config, service: service) { result in
             LDClient.logEventSyncComplete(result, logger)
         }
-        backgroundEvents = BackgroundEventDelivery(eventProcessor: eventProcessor, logger: logger)
         connectionInformation = self.serviceFactory.makeConnectionInformation()
 
         let cachedData = flagCache.getCachedData(cacheKey: context.fullyQualifiedHashedKey(), contextHash: context.contextHash())
@@ -1052,6 +1048,7 @@ public class LDClient {
         if let backgroundNotification = SystemCapabilities.backgroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
         }
+        LDClient.observeBackgroundingForEvents()
         if let foregroundNotification = SystemCapabilities.foregroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
         }
@@ -1088,6 +1085,29 @@ extension LDClient {
     fileprivate func giveFlagValuesTheNetworkFirst() {
         if let eventProcessor = eventProcessor as? DirectEventProcessor {
             (diagnosticReporter as? DiagnosticReporter)?.sendsInitAfter = eventProcessor.whenLaunchGateOpens
+        }
+    }
+
+    /// Observes the notification once for the events of every environment, however many clients are made.
+    private static let backgroundEvents: BackgroundEventDelivery? = {
+        guard let backgroundNotification = SystemCapabilities.backgroundNotification
+        else { return nil }
+        let delivery = BackgroundEventDelivery(environments: LDClient.currentEnvironments)
+        // Run on the posting thread, so that every environment has committed by the time the notification returns.
+        NotificationCenter.default.addObserver(forName: backgroundNotification, object: nil, queue: nil) { _ in
+            delivery.applicationDidEnterBackground()
+        }
+        return delivery
+    }()
+
+    fileprivate static func observeBackgroundingForEvents() {
+        _ = backgroundEvents
+    }
+
+    private static func currentEnvironments() -> [BackgroundEventDelivery.Environment] {
+        let clients = instancesQueue.sync { instances } ?? [:]
+        return clients.map { name, client in
+            BackgroundEventDelivery.Environment(name: name, eventProcessor: client.eventProcessor, logger: client.config.logger)
         }
     }
 }

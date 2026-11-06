@@ -32,8 +32,9 @@ final class BackgroundActivity {
         self.assertion = assertion
     }
 
-    convenience init(reason: String, logger: OSLog) {
-        self.init(reason: reason, assertion: BackgroundActivity.processAssertion(logger: logger))
+    /// - parameter logger: Read each time it logs, so that it can be the logger of whichever client is current then.
+    convenience init(reason: String, logger: @autoclosure @escaping () -> OSLog) {
+        self.init(reason: reason, assertion: BackgroundActivity.processAssertion(logger: logger()))
     }
 
     /// Runs `work` under an assertion released when `work` calls `finished`, the system expires it, or
@@ -73,7 +74,7 @@ final class BackgroundActivity {
     /// An assertion from the process, over an injectable system call and cap so that a test can drive both.
     ///
     /// Where the platform has no assertions, `perform` is nil and `whileHeld` runs on the calling thread.
-    static func processAssertion(logger: OSLog,
+    static func processAssertion(logger: @autoclosure @escaping () -> OSLog,
                                  perform: ExpiringActivity? = SystemCapabilities.expiringActivity,
                                  maximumDuration: TimeInterval = BackgroundActivity.maximumDuration) -> Assertion {
         { reason, whileHeld in
@@ -92,7 +93,7 @@ final class BackgroundActivity {
                     // The system taking the assertion back, or declining to give one. Nothing should stay blocked on
                     // it, and the work goes ahead either way.
                     os_log("%s unprotected by a background assertion: %s",
-                           log: logger, type: .debug, String(describing: BackgroundActivity.self), reason)
+                           log: logger(), type: .debug, String(describing: BackgroundActivity.self), reason)
                     finished.signal()
                     return
                 }
