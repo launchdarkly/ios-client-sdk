@@ -110,6 +110,21 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         return testContext
     }
 
+    /// Identifies and then tracks, with `hook` holding only the stages those two produce.
+    ///
+    /// An identify's completion runs before its after-identify hooks, so waiting on the completion is not enough:
+    /// for the identify the client makes as it starts, and for this one.
+    private func identifyThenTrack(_ testContext: TestContext, _ hook: RecordingHook) {
+        expect(hook.recordedStages).toEventually(contain("afterIdentify"))
+        _ = hook.takeStages()
+
+        waitUntil { done in
+            testContext.subject.identify(context: LDContext.stub()) { _ in done() }
+        }
+        expect(hook.recordedStages).toEventually(contain("afterIdentify"))
+        testContext.subject.track(key: "event-key")
+    }
+
     // An evaluation reads the flag once, so every hook it reaches and the result it returns all describe that one read,
     // whatever the store does in the meantime.
     func testHooksAndTheResultDescribeOneReadOfTheFlag() {
@@ -147,7 +162,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
 
         // The evaluation returns the default value, and the event it records reports that value under no variation and
         // no version, so that is the result the hook is told about too.
-        guard let key = keys.first ?? nil
+        guard let key = keys.first.flatMap({ $0 })
         else {
             fail("The hook was not told about the evaluation.")
             return
@@ -219,7 +234,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         }
 
         // Deduplication applies to hooks only, so analytics events are unaffected.
-        XCTAssertEqual(testContext.eventReporterMock.recordFlagEvaluationEventsCallCount, 3)
+        XCTAssertEqual(testContext.eventProcessorMock.recordFlagEvaluationEventsCallCount, 3)
     }
 
     func testEvaluationsOfDifferentFlagsReachHooksSeparately() {
@@ -400,12 +415,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
     func testADeduperForwardsTheStagesItDoesNotDeduplicate() {
         let hook = RecordingHook()
         let testContext = dedupeTestContext(hooks: [DedupingHook(hook, window: 60)])
-        _ = hook.takeStages()
-
-        waitUntil { done in
-            testContext.subject.identify(context: LDContext.stub()) { _ in done() }
-        }
-        testContext.subject.track(key: "event-key")
+        identifyThenTrack(testContext, hook)
 
         // Only evaluations are deduplicated; the identify and track stages are always forwarded.
         XCTAssertEqual(hook.takeStages(), ["beforeIdentify", "afterIdentify", "afterTrack"])
@@ -488,12 +498,7 @@ final class LDClientEvaluationHookSpec: XCTestCase {
     func testADecoratorForwardsTheStagesItDoesNotOverride() {
         let hook = RecordingHook()
         let testContext = dedupeTestContext(hooks: [CountingDecorator(hook)])
-        _ = hook.takeStages()
-
-        waitUntil { done in
-            testContext.subject.identify(context: LDContext.stub()) { _ in done() }
-        }
-        testContext.subject.track(key: "event-key")
+        identifyThenTrack(testContext, hook)
 
         // The decorator mentions neither identify nor track, and the hook it wraps is still told about both: a stage a
         // decorator leaves alone is forwarded rather than dropped.
@@ -545,14 +550,27 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         // Returned rather than built on demand, so that a test can recognize it by identity: `Metadata` exposes
         // nothing to compare it by.
         let hookMetadata = Metadata(name: "recording-hook")
+        /// Guards `stages`: the identify stages run on whichever thread the identify ended on.
+        private let lock = UnfairLock()
         private var stages: [String] = []
+
+        /// The stages recorded since `takeStages` was last called, leaving them in place.
+        var recordedStages: [String] {
+            lock.withLock { stages }
+        }
 
         /// The stages recorded since this was last called, so a test can ignore the identify the client makes as it
         /// starts.
         func takeStages() -> [String] {
-            let recorded = stages
-            stages = []
-            return recorded
+            lock.withLock {
+                let recorded = stages
+                stages = []
+                return recorded
+            }
+        }
+
+        private func record(_ stage: String) {
+            lock.withLock { stages.append(stage) }
         }
 
         func metadata() -> Metadata {
@@ -560,27 +578,27 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         }
 
         func beforeEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData) -> EvaluationSeriesData {
-            stages.append("beforeEvaluation")
+            record("beforeEvaluation")
             return seriesData
         }
 
         func afterEvaluation(seriesContext: EvaluationSeriesContext, seriesData: EvaluationSeriesData, evaluationDetail: LDEvaluationDetail<LDValue>) -> EvaluationSeriesData {
-            stages.append("afterEvaluation")
+            record("afterEvaluation")
             return seriesData
         }
 
         func beforeIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData) -> IdentifySeriesData {
-            stages.append("beforeIdentify")
+            record("beforeIdentify")
             return seriesData
         }
 
         func afterIdentify(seriesContext: IdentifySeriesContext, seriesData: IdentifySeriesData, result: IdentifyResult) -> IdentifySeriesData {
-            stages.append("afterIdentify")
+            record("afterIdentify")
             return seriesData
         }
 
         func afterTrack(seriesContext: TrackSeriesContext) {
-            stages.append("afterTrack")
+            record("afterTrack")
         }
     }
 

@@ -176,10 +176,10 @@ final class ContextSummarizerSpec: QuickSpec {
                             privateAttributes.forEach { builder.addPrivateAttribute(Reference($0)) }
                             return try! builder.build().get()
                         }
-                        let nested: LDValue = ["x": 1, "y": ["z", true]]
-                        let forward = context([("email", "a@example.com"), ("plan", nested), ("score", 2)],
+                        let nested: LDValue = ["x": .number(1), "y": ["z", true]]
+                        let forward = context([("email", "a@example.com"), ("plan", nested), ("score", .number(2))],
                                               privateAttributes: ["email", "plan"])
-                        let backward = context([("score", 2), ("plan", nested), ("email", "a@example.com")],
+                        let backward = context([("score", .number(2)), ("plan", nested), ("email", "a@example.com")],
                                                privateAttributes: ["/plan", "email"])
                         expect(forward) == backward
 

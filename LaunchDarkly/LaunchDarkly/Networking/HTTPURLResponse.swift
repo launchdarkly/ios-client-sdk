@@ -5,6 +5,7 @@ extension HTTPURLResponse {
     struct HeaderKeys {
         static let date = "Date"
         static let etag = "Etag"
+        static let retryAfter = "Retry-After"
     }
 
     struct StatusCodes {
@@ -16,6 +17,9 @@ extension HTTPURLResponse {
         static let unauthorized = 401
         static let methodNotAllowed = 405
         static let requestTimeout = 408
+        static let contentTooLarge = 413
+        static let unsupportedMediaType = 415
+        static let unprocessableContent = 422
         static let tooManyRequests = 429
         static let internalServerError = 500
         static let notImplemented = 501
@@ -27,6 +31,13 @@ extension HTTPURLResponse {
         static func isTerminalStatusCode(_ statusCode: Int) -> Bool {
             (400..<500).contains(statusCode) && !recoverableClientErrors.contains(statusCode)
         }
+
+        /// Whether the events service refused an event payload for what it holds rather than for who sent it: one it
+        /// cannot read, too large for it, of a type it does not take, or read but not accepted. Posting the same body
+        /// again will not change the answer, though another body may be taken.
+        static func isEventPayloadRefused(_ statusCode: Int) -> Bool {
+            [badRequest, contentTooLarge, unsupportedMediaType, unprocessableContent].contains(statusCode)
+        }
     }
 
     var headerDate: Date? {
@@ -37,5 +48,18 @@ extension HTTPURLResponse {
 
     var headerEtag: String? {
         self.allHeaderFields[HeaderKeys.etag] as? String
+    }
+
+    /// The wait a `Retry-After` header asks for, in delta-seconds or as an HTTP date; nil where there is none, or it
+    /// cannot be read. A date already past is no wait at all.
+    var headerRetryAfter: TimeInterval? {
+        guard let value = value(forHTTPHeaderField: HeaderKeys.retryAfter)?.trimmingCharacters(in: .whitespaces)
+        else { return nil }
+        if let seconds = Int(value) {
+            return seconds >= 0 ? TimeInterval(seconds) : nil
+        }
+        guard let date = DateFormatter.httpUrlHeaderFormatter.date(from: value)
+        else { return nil }
+        return max(0, date.timeIntervalSinceNow)
     }
 }

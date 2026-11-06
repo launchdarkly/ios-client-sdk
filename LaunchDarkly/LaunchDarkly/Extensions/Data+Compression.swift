@@ -258,12 +258,12 @@ internal extension Data {
 
 /// Struct based type representing a Crc32 checksum.
 struct Crc32: CustomStringConvertible {
-    private static let zLibCrc32: ZLibCrc32FuncPtr? = loadCrc32fromZLib()
+    static let zLibCrc32: ZLibCrc32FuncPtr? = loadCrc32fromZLib()
 
     init() {}
 
     // C convention function pointer type matching the signature of `libz::crc32`
-    private typealias ZLibCrc32FuncPtr = @convention(c) (
+    typealias ZLibCrc32FuncPtr = @convention(c) (
         _ cks: UInt32,
         _ buf: UnsafePointer<UInt8>,
         _ len: UInt32
@@ -300,7 +300,7 @@ struct Crc32: CustomStringConvertible {
     /// Rudimentary fallback implementation of the crc32 checksum. This is only a backup used
     /// when zlib can't be found under '/usr/lib/libz.dylib'.
     /// - returns: crc32 checksum (4 byte)
-    private func slowCrc32(start: UInt32, data: Data) -> UInt32 {
+    func slowCrc32(start: UInt32, data: Data) -> UInt32 {
         return ~data.reduce(~start) { (crc: UInt32, next: UInt8) -> UInt32 in
             let tableOffset = (crc ^ UInt32(next)) & 0xff
             return lookUpTable[Int(tableOffset)] ^ crc >> 8
