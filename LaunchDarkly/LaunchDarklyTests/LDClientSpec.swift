@@ -940,6 +940,26 @@ final class LDClientSpec: QuickSpec {
                 expect(answeredDuringClose) == true
                 expect(LDClient.get()).to(beNil())
             }
+            it("holds a start on another thread until the clients are closed") {
+                let testContext = TestContext()
+                testContext.start()
+                let started = DispatchSemaphore(value: 0)
+                var startedDuringClose = true
+                testContext.eventProcessorMock.flushAtCloseCallback = {
+                    testContext.eventProcessorMock.flushAtCloseCallback = nil
+                    DispatchQueue.global().async {
+                        LDClient.start(serviceFactory: testContext.serviceFactoryMock, config: testContext.config, context: testContext.context)
+                        started.signal()
+                    }
+                    startedDuringClose = started.wait(timeout: .now() + 0.5) == .success
+                }
+                testContext.subject.close()
+
+                expect(startedDuringClose) == false
+                expect(started.wait(timeout: .now() + 5)) == .success
+                expect(LDClient.get()).toNot(beNil())
+                LDClient.get()?.close()
+            }
         }
     }
 
