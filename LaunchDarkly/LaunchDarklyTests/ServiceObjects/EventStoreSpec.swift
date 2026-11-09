@@ -1915,7 +1915,7 @@ final class EventStoreSpec: QuickSpec {
             it("keeps a batch younger than the maximum age") {
                 _ = store.stage(EventStoreSpec.payload("recent"))
                 _ = store.closeBatch()
-                try EventStoreSpec.age(try EventStoreSpec.onlyBatchFile(in: store), byDays: 6)
+                try EventStoreSpec.age(try EventStoreSpec.onlyBatchFile(in: store), byDays: 0.5)
 
                 expect(store.discardExpired()) == 0
                 expect(store.pendingBatches().count) == 1
@@ -1987,7 +1987,7 @@ final class EventStoreSpec: QuickSpec {
                 let old = logLeftBy("gone")
                 let young = logLeftBy("recent")
                 try EventStoreSpec.age(old, byDays: 8)
-                try EventStoreSpec.age(young, byDays: 1)
+                try EventStoreSpec.age(young, byDays: 0.5)
 
                 expect(store.discardExpired()) == 1
 
@@ -2030,7 +2030,7 @@ final class EventStoreSpec: QuickSpec {
                 let inUse = try EventStoreSpec.environment("app.in-use", in: root, events: 1)
                 let otherApplication = try EventStoreSpec.environment("other.abandoned", in: root, events: 1)
                 try EventStoreSpec.age(contentsOf: abandoned, byDays: 8)
-                try EventStoreSpec.age(contentsOf: inUse, byDays: 1)
+                try EventStoreSpec.age(contentsOf: inUse, byDays: 0.5)
                 try EventStoreSpec.age(contentsOf: otherApplication, byDays: 30)
 
                 expect(store.discardExpired()) == 2
