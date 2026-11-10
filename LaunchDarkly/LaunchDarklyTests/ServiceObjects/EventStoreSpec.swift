@@ -358,6 +358,25 @@ final class EventStoreSpec: QuickSpec {
         Data("{\"kind\":\"custom\",\"key\":\"\(key)\"}".utf8)
     }
 
+    /// The events of the page-cache persistence spec's worked example (Appendix A).
+    private static let workedExampleEvents = [Data(#"{"kind":"custom","key":"checkout-opened"}"#.utf8),
+                                              Data(#"{"kind":"identify","context":{"key":"u"}}"#.utf8)]
+
+    /// The worked example's log, byte for byte: the file header, then a frame per event. The Android SDK's
+    /// `EventLogFormatTest` holds the same bytes, so a drift on either side fails one suite or the other.
+    private static let workedExample = bytes(hex: """
+        4C444556 0001
+        0001 00000029 7B226B696E64223A22637573746F6D222C226B6579223A22636865636B6F75742D6F70656E6564227D 194AD1F0
+        0001 00000029 7B226B696E64223A226964656E74696679222C22636F6E74657874223A7B226B6579223A2275227D7D C549D122
+        """)
+
+    private static let workedExampleBody = Data(#"[{"kind":"custom","key":"checkout-opened"},{"kind":"identify","context":{"key":"u"}}]"#.utf8)
+
+    private static func bytes(hex: String) -> Data {
+        let digits = Array(hex.filter { !$0.isWhitespace })
+        return Data(stride(from: 0, to: digits.count, by: 2).map { UInt8(String(digits[$0...$0 + 1]), radix: 16)! })
+    }
+
     /// Where each frame of a log written by this version starts.
     private static func frameOffsets(in log: Data) -> [Int] {
         var offsets: [Int] = []
@@ -461,6 +480,20 @@ final class EventStoreSpec: QuickSpec {
                 expect(batches.count) == 1
                 expect(batches.first?.eventCount) == 1
                 expect(try next.body(of: batches[0])) == Data("[{\"kind\":\"custom\",\"key\":\"survived\"}]".utf8)
+            }
+
+            it("delivers the worked example's log, as the Android SDK writes it") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("replaced"))
+                store.commit()
+                try EventStoreSpec.workedExample.write(to: store.openLogUrl!)
+
+                let next = store.nextRun()
+                next.preparePayloadsFromInterruptedLogs()
+
+                let batches = next.pendingBatches()
+                expect(batches.map { $0.eventCount }) == [2]
+                expect(try next.body(of: batches[0])) == EventStoreSpec.workedExampleBody
             }
 
             it("leaves nothing behind when the log held no events") {
@@ -880,6 +913,23 @@ final class EventStoreSpec: QuickSpec {
                 let event = Data("{\"kind\":\"custom\",\"key\":\"k\"}".utf8)
                 let frame = EventLogFormat.frame(for: event)
                 expect(frame) == Data([0x00, 0x01, 0x00, 0x00, 0x00, 0x1B]) + event + Data([0xCB, 0x2B, 0x5E, 0x6F])
+            }
+
+            it("writes the worked example's log, byte for byte") {
+                expect(EventLogFormat.fileHeader) == EventStoreSpec.workedExample.prefix(EventLogFormat.fileHeaderSize)
+                for event in EventStoreSpec.workedExampleEvents {
+                    _ = store.stage(event)
+                }
+                store.commit()
+
+                expect(try Data(contentsOf: store.openLogUrl!)) == EventStoreSpec.workedExample
+            }
+
+            it("reads the worked example's log") {
+                let log = EventStoreSpec.workedExample
+                expect(EventLogFormat.eventCount(in: log)) == 2
+                expect(EventLogFormat.isDamaged(log)) == false
+                expect(EventLogFormat.assembleBody(from: log)) == EventStoreSpec.workedExampleBody
             }
 
             it("has nothing to close when nothing was recorded") {
