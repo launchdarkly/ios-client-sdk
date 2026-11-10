@@ -3597,16 +3597,16 @@ extension DirectEventProcessorSpec {
                 let busy = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
                                            statusCode: 503,
                                            httpVersion: DarklyServiceMock.Constants.httpVersion,
-                                           headerFields: [HTTPURLResponse.HeaderKeys.retryAfter: "4"])
+                                           headerFields: [HTTPURLResponse.HeaderKeys.retryAfter: "3"])
                 testContext.serviceMock.stubbedEventResponse = (nil, busy, nil, nil)
                 testContext.eventProcessor.record(CustomEvent(key: "an-event", context: testContext.context))
                 testContext.eventProcessor.isOnline = true
 
-                // Four seconds, jittered down to no less than two, which is past the second a flush waits out.
+                // Three seconds, jittered up to no more than four and a half, which is past the second a flush waits out.
                 expect(testContext.flushOutcome()) == false
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
                 testContext.serviceMock.stubEventResponse(success: true)
-                waitLettingTimersFire(1.8)
+                waitLettingTimersFire(2.5)
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: .seconds(5))
                 expect(testContext.serviceMock.publishedEventPayloads.map(customKeys).last) == ["an-event"]

@@ -175,10 +175,7 @@ final class DeliveryRetryState {
             }
             let wait: TimeInterval
             if let retryAfter, retryAfter >= 0 {
-                // Every instance hears the same value at the same moment, so it is jittered to keep them from posting
-                // together when it runs out.
-                let directed = min(retryAfter, Constants.maxServerDirectedWait)
-                wait = directed - random() * (directed / 2)
+                wait = directedWait(retryAfter)
             } else {
                 // Not jittered: each instance's failures follow its own history, which already spreads them.
                 let regime = inExtendedRegime ? extended : normal
@@ -204,13 +201,23 @@ final class DeliveryRetryState {
             else { return nil }
             var until = waitingUntil
             if let retryAfter, retryAfter >= 0 {
-                let directed = min(retryAfter, Constants.maxServerDirectedWait)
-                until = max(until, now + (directed - random() * (directed / 2)))
+                until = max(until, now + directedWait(retryAfter))
             }
             nextAttempt = until
             return TimeInterval(until.uptimeNanoseconds - now.uptimeNanoseconds) / 1_000_000_000
         }
         return stillWaiting ?? recordFailure(unexpected: unexpected, retryAfter: retryAfter)
+    }
+
+    /// The wait a `Retry-After` sets. Every instance hears the same value at the same moment, so it is jittered to keep
+    /// them from posting together when it runs out: up, by as much as half, so it is never shorter than the service
+    /// asked, but no further than the hour a server-directed wait is capped at. A wait asked for of an hour or more is
+    /// jittered down from the hour instead, as nothing above it is left to spread over.
+    private func directedWait(_ retryAfter: TimeInterval) -> TimeInterval {
+        let cap = Constants.maxServerDirectedWait
+        guard retryAfter < cap
+        else { return cap - random() * (cap / 2) }
+        return retryAfter + random() * (min(retryAfter * 1.5, cap) - retryAfter)
     }
 
     /// How long until a post is allowed; zero once it is.
