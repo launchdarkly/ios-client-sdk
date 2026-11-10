@@ -26,7 +26,7 @@ class DirectEventProcessorSpec: QuickSpec {
     /// Retries at once and never waits, so every flush posts: for tests about what is kept through failures rather than
     /// when it is posted again.
     static func withoutBackoff() -> DeliveryRetryState {
-        DeliveryRetryState(initialDelay: 0, normalCeiling: 0, extendedCeiling: 0)
+        DeliveryRetryState(initialDelay: 0, normalCeiling: 0, extendedInitialDelay: 0, extendedCeiling: 0)
     }
 
     struct TestContext {
@@ -221,7 +221,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 // then the service says the key is no good, after which nothing is posted for a while. The waits are
                 // cut to milliseconds, which makes that while about four seconds.
                 testContext = TestContext(store: store,
-                                          retryState: DeliveryRetryState(initialDelay: 0.008, normalCeiling: 0.008, extendedCeiling: 3600))
+                                          retryState: DeliveryRetryState(initialDelay: 0.008, normalCeiling: 0.008, extendedInitialDelay: 4, extendedCeiling: 3600))
                 testContext.serviceMock.eventStatusForPost = { post in post <= 2 ? 503 : post <= 4 ? 202 : 401 }
                 testContext.eventProcessor.isOnline = true
 
@@ -436,6 +436,20 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 3
             }
 
+            itPersisting("sends the rest at its own priority when a flush from a lower one ends the pacing") {
+                let reporter = nextRunLeft(3, pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 10))
+                reporter.isOnline = true
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+
+                waitUntil(timeout: .seconds(3)) { done in
+                    DispatchQueue(label: "DirectEventProcessorSpec.utility", qos: .utility).async {
+                        reporter.flushReportingOutcome { _ in done() }
+                    }
+                }
+
+                expect(testContext.serviceMock.publishedEventQoS) == Array(repeating: QOS_CLASS_USER_INITIATED, count: 3)
+            }
+
             itPersisting("recovers what a previous run left at utility, though it is started from the main thread") {
                 let store = RecoveryObservingStore(testContext.store.nextRun())
                 nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits)
@@ -467,7 +481,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 // A refusal waits the extended ceiling, longer than a pass sits out, so the pass ends and the delivery
                 // is set for when the wait ends.
                 let reporter = nextRunLeft(3, pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 10),
-                                           retryState: DeliveryRetryState(initialDelay: 0.1, normalCeiling: 0.1, extendedCeiling: 0.5))
+                                           retryState: DeliveryRetryState(initialDelay: 0.1, normalCeiling: 0.1, extendedInitialDelay: 0.5, extendedCeiling: 0.5))
                 testContext.serviceMock.eventStatusForPost = { post in post == 1 ? HTTPURLResponse.StatusCodes.unauthorized : 202 }
                 reporter.isOnline = true
 
@@ -3460,7 +3474,7 @@ extension DirectEventProcessorSpec {
 
             it("keeps a refused batch and posts it again once the longer wait is over") {
                 // Cut to a second and a half here from the eight and a half minutes the SDK waits.
-                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedCeiling: 1.5))
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedInitialDelay: 1.5, extendedCeiling: 1.5))
                 testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
                 testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
                 testContext.eventProcessor.isOnline = true
@@ -3491,7 +3505,7 @@ extension DirectEventProcessorSpec {
             }
 
             it("posts what is buffered at close through the backoff's wait, though closing goes offline straight after") {
-                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedCeiling: 3600))
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedInitialDelay: 512, extendedCeiling: 3600))
                 testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
                 testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
                 testContext.eventProcessor.isOnline = true
@@ -3512,7 +3526,7 @@ extension DirectEventProcessorSpec {
             }
 
             it("posts through the backoff's wait for a flush bypassing it, and answers whether the events got out") {
-                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedCeiling: 3600))
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedInitialDelay: 512, extendedCeiling: 3600))
                 testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
                 testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
                 testContext.eventProcessor.isOnline = true
@@ -3526,7 +3540,7 @@ extension DirectEventProcessorSpec {
             }
 
             it("leaves ordinary flushes waiting out the backoff after a flush bypassing it is refused again") {
-                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedCeiling: 3600))
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedInitialDelay: 512, extendedCeiling: 3600))
                 testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
                 testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
                 testContext.eventProcessor.isOnline = true
@@ -3583,16 +3597,16 @@ extension DirectEventProcessorSpec {
                 let busy = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
                                            statusCode: 503,
                                            httpVersion: DarklyServiceMock.Constants.httpVersion,
-                                           headerFields: [HTTPURLResponse.HeaderKeys.retryAfter: "4"])
+                                           headerFields: [HTTPURLResponse.HeaderKeys.retryAfter: "3"])
                 testContext.serviceMock.stubbedEventResponse = (nil, busy, nil, nil)
                 testContext.eventProcessor.record(CustomEvent(key: "an-event", context: testContext.context))
                 testContext.eventProcessor.isOnline = true
 
-                // Four seconds, jittered down to no less than two, which is past the second a flush waits out.
+                // Three seconds, jittered up to no more than four and a half, which is past the second a flush waits out.
                 expect(testContext.flushOutcome()) == false
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
                 testContext.serviceMock.stubEventResponse(success: true)
-                waitLettingTimersFire(1.8)
+                waitLettingTimersFire(2.5)
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: .seconds(5))
                 expect(testContext.serviceMock.publishedEventPayloads.map(customKeys).last) == ["an-event"]

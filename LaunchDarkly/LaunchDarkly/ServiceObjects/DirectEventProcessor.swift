@@ -449,7 +449,7 @@ extension DirectEventProcessor {
             // Answered away from `deliveryQueue`, and from whichever thread the delivery ended on, so that every
             // completion reaches its caller the same way. A completion is free to flush again: it is never running
             // on the queue the delivery it asks for would be queued on.
-            DispatchQueue.global().async {
+            DispatchQueue.global(qos: .userInitiated).async {
                 for waiter in waiters {
                     waiter(delivered && kept)
                 }
@@ -701,7 +701,7 @@ extension DirectEventProcessor {
             // Not an attempt, so it moves nothing in the backoff. A wait no longer than a retry's is sat out, as this
             // pass's retry; a longer one ends the pass.
             if !retried && wait <= retryState.initialDelay {
-                DispatchQueue.global().asyncAfter(deadline: .now() + wait) {
+                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + wait) {
                     self.deliver(batches, run, lostAnything: lostAnything, retried: true, completion)
                 }
             } else {
@@ -823,7 +823,7 @@ extension DirectEventProcessor {
                     return
                 }
                 os_log("%s Retrying event post after %.1fs", log: self.service.config.logger, type: .debug, self.typeName(and: #function), wait)
-                DispatchQueue.global().asyncAfter(deadline: .now() + wait) {
+                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + wait) {
                     // Another delivery's failure may have set a longer wait meanwhile, or the reporter gone offline.
                     guard self.mayPost(run)
                     else {

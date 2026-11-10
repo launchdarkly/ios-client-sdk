@@ -8,8 +8,8 @@ private struct Constants {
     // The consecutive successful polls that clear the backoff.
     static let pollingResetThreshold = 2
     static let deliveryInitialDelay: TimeInterval = 1
-    // Where the attempt count goes at least to on an unexpected failure, so its first wait is 2^9 initial delays.
-    static let deliveryAttemptsAfterUnexpected = 10
+    // The first wait after an unexpected failure: 2^9 initial delays, about eight and a half minutes.
+    static let deliveryExtendedInitialDelay: TimeInterval = 512
     static let maxServerDirectedWait: TimeInterval = 60 * 60
 }
 
@@ -115,16 +115,14 @@ final class PollingRetryState {
 /// One per event processor, so each environment backs off on its own. Held only in memory, so a new run of the
 /// application posts at once. Thread safe: a delivery's responses arrive on whichever thread the session answers on.
 final class DeliveryRetryState {
-    /// The wait after a first failure, which a flush waiting on the delivery that failed sits out.
-    let initialDelay: TimeInterval
-    private let normalCeiling: TimeInterval
-    private let extendedCeiling: TimeInterval
+    private let normal: RetryRegime
+    private let extended: RetryRegime
     private let random: () -> Double
 
     private let lock = UnfairLock()
     // Guarded by lock.
     private var attempts = 0
-    private var maxDelay: TimeInterval
+    private var inExtendedRegime = false
     private var nextAttempt: DispatchTime?
 
     /// - Parameter flushInterval: the normal ceiling; never below the initial delay, so a short interval does not make
@@ -132,25 +130,30 @@ final class DeliveryRetryState {
     convenience init(flushInterval: TimeInterval) {
         self.init(initialDelay: Constants.deliveryInitialDelay,
                   normalCeiling: max(flushInterval, Constants.deliveryInitialDelay),
+                  extendedInitialDelay: Constants.deliveryExtendedInitialDelay,
                   extendedCeiling: Constants.extendedMaxDelay)
     }
 
+    /// The extended delays are never below the initial delay (RETRY 1.5.4.1).
     init(initialDelay: TimeInterval,
          normalCeiling: TimeInterval,
+         extendedInitialDelay: TimeInterval,
          extendedCeiling: TimeInterval,
          random: @escaping () -> Double = { Double.random(in: 0..<1) }) {
-        self.initialDelay = initialDelay
-        self.normalCeiling = normalCeiling
-        self.extendedCeiling = extendedCeiling
+        self.normal = RetryRegime(initialDelay: initialDelay, maxDelay: normalCeiling)
+        self.extended = RetryRegime(initialDelay: max(extendedInitialDelay, initialDelay),
+                                    maxDelay: max(extendedCeiling, initialDelay))
         self.random = random
-        self.maxDelay = normalCeiling
     }
+
+    /// The wait after a first failure, which a flush waiting on the delivery that failed sits out.
+    var initialDelay: TimeInterval { normal.initialDelay }
 
     /// An accepted delivery, which is all it takes for the next failure to start from a second again.
     func recordSuccess() {
         lock.withLock {
             attempts = 0
-            maxDelay = normalCeiling
+            inExtendedRegime = false
             nextAttempt = nil
         }
     }
@@ -163,21 +166,20 @@ final class DeliveryRetryState {
     @discardableResult
     func recordFailure(unexpected: Bool, retryAfter: TimeInterval?) -> TimeInterval {
         lock.withLock {
-            if unexpected {
-                attempts = max(attempts + 1, Constants.deliveryAttemptsAfterUnexpected)
-                maxDelay = extendedCeiling
+            if unexpected && !inExtendedRegime {
+                // The first wait of the extended regime is its initial delay, however many failures came before.
+                inExtendedRegime = true
+                attempts = 1
             } else {
                 attempts += 1
             }
             let wait: TimeInterval
             if let retryAfter, retryAfter >= 0 {
-                // Every instance hears the same value at the same moment, so it is jittered to keep them from posting
-                // together when it runs out.
-                let directed = min(retryAfter, Constants.maxServerDirectedWait)
-                wait = directed - random() * (directed / 2)
+                wait = directedWait(retryAfter)
             } else {
                 // Not jittered: each instance's failures follow its own history, which already spreads them.
-                wait = min(maxDelay, initialDelay * pow(2, Double(min(attempts - 1, 40))))
+                let regime = inExtendedRegime ? extended : normal
+                wait = min(regime.maxDelay, regime.initialDelay * pow(2, Double(min(attempts - 1, 40))))
             }
             nextAttempt = .now() + wait
             return wait
@@ -199,13 +201,23 @@ final class DeliveryRetryState {
             else { return nil }
             var until = waitingUntil
             if let retryAfter, retryAfter >= 0 {
-                let directed = min(retryAfter, Constants.maxServerDirectedWait)
-                until = max(until, now + (directed - random() * (directed / 2)))
+                until = max(until, now + directedWait(retryAfter))
             }
             nextAttempt = until
             return TimeInterval(until.uptimeNanoseconds - now.uptimeNanoseconds) / 1_000_000_000
         }
         return stillWaiting ?? recordFailure(unexpected: unexpected, retryAfter: retryAfter)
+    }
+
+    /// The wait a `Retry-After` sets. Every instance hears the same value at the same moment, so it is jittered to keep
+    /// them from posting together when it runs out: up, by as much as half, so it is never shorter than the service
+    /// asked, but no further than the hour a server-directed wait is capped at. A wait asked for of an hour or more is
+    /// jittered down from the hour instead, as nothing above it is left to spread over.
+    private func directedWait(_ retryAfter: TimeInterval) -> TimeInterval {
+        let cap = Constants.maxServerDirectedWait
+        guard retryAfter < cap
+        else { return cap - random() * (cap / 2) }
+        return retryAfter + random() * (min(retryAfter * 1.5, cap) - retryAfter)
     }
 
     /// How long until a post is allowed; zero once it is.

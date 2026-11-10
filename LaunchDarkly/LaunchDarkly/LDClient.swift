@@ -42,6 +42,9 @@ public class LDClient {
 
     static var instances: [String: LDClient]?
     static let instancesQueue = DispatchQueue(label: "com.launchdarkly.LDClient.instancesQueue")
+    /// The `close()` calls still closing the clients they took from `instances`. Entered on `instancesQueue`, in the
+    /// same step that takes them, so that a `start()` checking it there cannot miss one.
+    private static let closingClients = DispatchGroup()
 
     // If the SDK is provided a timeout value that exceeds this value, a warning will be logged.
     static let longTimeoutInterval: TimeInterval = 15
@@ -247,10 +250,16 @@ public class LDClient {
      There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.
     */
     public func close() {
-        LDClient.instancesQueue.sync(flags: .barrier) {
-            LDClient.instances?.forEach { $1.internalClose() }
-            LDClient.instances = nil
+        // Closed outside `instancesQueue`: each close can wait on its final event commit, and every other call that
+        // reads `instances` would wait behind it. Only `start()` waits, so that a new client does not open the event
+        // store of one still committing.
+        let clients = LDClient.instancesQueue.sync(flags: .barrier) { () -> [LDClient] in
+            defer { LDClient.instances = nil }
+            LDClient.closingClients.enter()
+            return LDClient.instances.map { Array($0.values) } ?? []
         }
+        defer { LDClient.closingClients.leave() }
+        clients.forEach { $0.internalClose() }
     }
 
     private func internalClose() {
@@ -829,26 +838,36 @@ public class LDClient {
         }
     }
 
+    /// Marks a start in progress, once any close in progress has closed its clients. False where there are clients, or
+    /// another start has claimed them already.
+    private static func claimInstances() -> Bool {
+        while true {
+            closingClients.wait()
+            let claimed = instancesQueue.sync(flags: .barrier) { () -> Bool? in
+                guard closingClients.wait(timeout: .now()) == .success
+                else { return nil }
+                guard instances == nil
+                else { return false }
+                // initializing instances to empty list acts as a initialization in progress flag to avoid other threads
+                // entering this function again
+                instances = [:]
+                return true
+            }
+            if let claimed {
+                return claimed
+            }
+        }
+    }
+
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
 
         if serviceFactory != nil {
             get()?.close()
         }
 
-        var shouldCreateInstances = false
-        instancesQueue.sync(flags: .barrier) {
-            if instances != nil {
-                os_log("%s LDClient.start() was called more than once!", log: config.logger, type: .debug, typeName(and: #function))
-                shouldCreateInstances = false
-            } else {
-                // initializing instances to empty list acts as a initialization in progress flag to avoid other threads
-                // entering this function again
-                LDClient.instances = [:]
-                shouldCreateInstances = true
-            }
-        }
-
-        if !shouldCreateInstances {
+        guard claimInstances()
+        else {
+            os_log("%s LDClient.start() was called more than once!", log: config.logger, type: .debug, typeName(and: #function))
             return
         }
 
