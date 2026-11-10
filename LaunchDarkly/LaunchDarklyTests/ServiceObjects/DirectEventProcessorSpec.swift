@@ -436,6 +436,20 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 3
             }
 
+            itPersisting("sends the rest at its own priority when a flush from a lower one ends the pacing") {
+                let reporter = nextRunLeft(3, pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 10))
+                reporter.isOnline = true
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+
+                waitUntil(timeout: .seconds(3)) { done in
+                    DispatchQueue(label: "DirectEventProcessorSpec.utility", qos: .utility).async {
+                        reporter.flushReportingOutcome { _ in done() }
+                    }
+                }
+
+                expect(testContext.serviceMock.publishedEventQoS) == Array(repeating: QOS_CLASS_USER_INITIATED, count: 3)
+            }
+
             itPersisting("recovers what a previous run left at utility, though it is started from the main thread") {
                 let store = RecoveryObservingStore(testContext.store.nextRun())
                 nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits)
