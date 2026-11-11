@@ -765,6 +765,7 @@ class DirectEventProcessorSpec: QuickSpec {
     /// An event holding a NaN or infinite number cannot be serialized by either encoder. It is dropped, and
     /// the events beside it and after it are still delivered.
     private func unserializableEventSpec() {
+        let persistence = type(of: self).persistence
         describe("unserializable events") {
             var serviceMock: DarklyServiceMock!
             var ldContext: LDContext!
@@ -774,11 +775,12 @@ class DirectEventProcessorSpec: QuickSpec {
             func makeReporter(encoding: OutboundEventBuffer.Encoding) -> DirectEventProcessor {
                 var config = LDConfig.stub
                 config.eventCapacity = 8
+                config.eventPersistence = persistence
                 ldContext = LDContext.stub()
                 serviceMock = DarklyServiceMock()
                 serviceMock.config = config
                 serviceMock.stubEventResponse(success: true)
-                store = EventStore.temporary(capacity: config.eventCapacity)
+                store = EventStore.temporary(capacity: config.eventCapacity, persistEvents: persistence != .disabled)
                 return DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: encoding, pacing: .noWaits)
             }
 
@@ -917,6 +919,7 @@ class DirectEventProcessorSpec: QuickSpec {
     /// which inlines the context it counted, is redacted like any other event. Android's `EventProcessorPrivacyTest`
     /// covers the same ground.
     private func privacySpec() {
+        let persistence = type(of: self).persistence
         describe("context privacy") {
             var serviceMock: DarklyServiceMock!
             var reporter: DirectEventProcessor!
@@ -936,11 +939,12 @@ class DirectEventProcessorSpec: QuickSpec {
                               configure: (inout LDConfig) -> Void = { _ in }) -> DirectEventProcessor {
                 var config = LDConfig.stub
                 config.eventCapacity = 100
+                config.eventPersistence = persistence
                 configure(&config)
                 serviceMock = DarklyServiceMock()
                 serviceMock.config = config
                 serviceMock.stubEventResponse(success: true)
-                store = EventStore.temporary(capacity: config.eventCapacity)
+                store = EventStore.temporary(capacity: config.eventCapacity, persistEvents: persistence != .disabled)
                 reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: encoding, pacing: .noWaits)
                 reporter.isOnline = true
                 return reporter
@@ -1263,7 +1267,7 @@ class DirectEventProcessorSpec: QuickSpec {
                         }
                     }
                     context("while a commit is stuck writing") {
-                        it("takes the delivered batch out of the store before telling observers") {
+                        itPersisting("takes the delivered batch out of the store before telling observers") {
                             let writeStarted = DispatchSemaphore(value: 0)
                             let finishWrite = DispatchSemaphore(value: 0)
                             let blockLock = NSLock()
@@ -1538,12 +1542,16 @@ class DirectEventProcessorSpec: QuickSpec {
     }
 
     func testRecordFlagEvaluationEvents() {
+        let persistence = type(of: self).persistence
         let context = LDContext.stub()
         let serviceMock = DarklyServiceMock()
+        var serviceConfig = serviceMock.config
+        serviceConfig.eventPersistence = persistence
+        serviceMock.config = serviceConfig
 
         /// A reporter writing to a store of its own, and that store, so a test can read back what was recorded.
         func makeReporter() -> (DirectEventProcessor, EventStore) {
-            let store = EventStore.temporary()
+            let store = EventStore.temporary(persistEvents: persistence != .disabled)
             return (DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits), store)
         }
 
@@ -1551,13 +1559,16 @@ class DirectEventProcessorSpec: QuickSpec {
             it("counts an evaluation the summarizer turns away as dropped, and still keeps its full event") {
                 var config = LDConfig.stub
                 config.eventCapacity = 2
+                config.eventPersistence = persistence
                 let service = DarklyServiceMock()
                 service.config = config
+                service.stubEventResponse(success: true)
                 let diagnosticCache = DiagnosticCachingMock()
                 service.diagnosticCache = diagnosticCache
-                let store = EventStore.temporary(capacity: config.eventCapacity)
+                let store = EventStore.temporary(capacity: config.eventCapacity, persistEvents: persistence != .disabled)
                 defer { store.deleteEverything() }
                 let reporter = DirectEventProcessor(service: service, onSyncComplete: nil, store: store, pacing: .noWaits)
+                defer { reporter.isOnline = false }
                 let untracked = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
                 let tracked = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
 
@@ -1571,8 +1582,14 @@ class DirectEventProcessorSpec: QuickSpec {
 
                 expect(diagnosticCache.incrementDroppedEventCountCallCount) == 1
                 expect(reporter.withContextSummarizer { $0.getSummaries() }.count) == 2
-                reporter.commitRecordedEvents()
-                expect(recordedEvents(store).compactMap { $0.kindField }) == ["feature", "summary", "summary"]
+                reporter.isOnline = true
+                waitUntil(timeout: Constants.deliveryTimeout) { done in reporter.flush(completion: done) }
+                let posted = service.publishedEventPayloads.flatMap { body -> [LDValue] in
+                    guard case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
+                    else { return [] }
+                    return events
+                }
+                expect(posted.compactMap { $0.kindField }) == ["feature", "summary", "summary"]
             }
             it("unknown flag") {
                 let (reporter, store) = makeReporter()
@@ -1859,7 +1876,7 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().compactMap { $0.kindField }) == ["custom"]
             }
 
-            it("does not write on the main thread when a flag is evaluated there") {
+            itPersisting("does not write on the main thread when a flag is evaluated there") {
                 // Suspended for the length of the evaluations, so that a write this thread was going to cause is a
                 // write that cannot happen: an evaluation is expected to be a memory operation, and the thread
                 // evaluating is usually this one.
@@ -2366,7 +2383,7 @@ extension DirectEventProcessorSpec {
                 }
             }
 
-            it("commits an evaluation's counter together with its full event") {
+            itPersisting("commits an evaluation's counter together with its full event") {
                 testContext = TestContext(lastEventResponseDate: Date(),
                                           store: EventStore.temporary(capacity: .max),
                                           eventCapacity: .max)
@@ -2600,7 +2617,7 @@ extension DirectEventProcessorSpec {
                 expect(testContext.store.pendingEventCount) == 0
             }
 
-            it("reports false and keeps the batch when it could not be read, and delivers it once it can be") {
+            itPersisting("reports false and keeps the batch when it could not be read, and delivers it once it can be") {
                 // Set from this thread and read on the reporter's, which reads files from the moment it is built.
                 let failing = Answer()
                 let store = EventStore.temporary(readFile: { url in
@@ -2637,7 +2654,7 @@ extension DirectEventProcessorSpec {
                 expect(store.pendingEventCount) == 0
             }
 
-            it("passes by a stored batch it could not read, reading it once a flush, and still delivers the batches behind it") {
+            itPersisting("passes by a stored batch it could not read, reading it once a flush, and still delivers the batches behind it") {
                 let reads = FailingReads()
                 let store = EventStore.temporary(readFile: { try reads.read($0) })
                 testContext = TestContext(store: store)
@@ -2676,7 +2693,7 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedPayloadIds.last) == unreadable.payloadId
             }
 
-            it("drops a stored batch it could not read at three flushes in a row, and reports the loss once") {
+            itPersisting("drops a stored batch it could not read at three flushes in a row, and reports the loss once") {
                 let reads = FailingReads()
                 let store = EventStore.temporary(readFile: { try reads.read($0) })
                 testContext = TestContext(store: store)
@@ -2715,7 +2732,7 @@ extension DirectEventProcessorSpec {
                 expect(delivered) == true
             }
 
-            it("keeps a stored batch whose reads fail closer together than the flush interval, and delivers it once it can be read") {
+            itPersisting("keeps a stored batch whose reads fail closer together than the flush interval, and delivers it once it can be read") {
                 let reads = FailingReads()
                 let store = EventStore.temporary(readFile: { try reads.read($0) })
                 testContext = TestContext(store: store)
@@ -2744,7 +2761,7 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedPayloadIds.last) == unreadable.payloadId
             }
 
-            it("drops a stored batch whose reads fail at least the spacing apart") {
+            itPersisting("drops a stored batch whose reads fail at least the spacing apart") {
                 let reads = FailingReads()
                 let store = EventStore.temporary(readFile: { try reads.read($0) })
                 testContext = TestContext(store: store)
@@ -2768,7 +2785,7 @@ extension DirectEventProcessorSpec {
                 expect(store.pendingBatches()).to(beEmpty())
             }
 
-            it("reports false and drops a stored batch this version cannot read, and still delivers the rest") {
+            itPersisting("reports false and drops a stored batch this version cannot read, and still delivers the rest") {
                 let store = EventStore.temporary()
                 testContext = TestContext(store: store)
                 // Online, and past the check for what a previous run left, before there is a batch for that check to
@@ -2799,7 +2816,7 @@ extension DirectEventProcessorSpec {
                 expect(store.pendingEventCount) == 0
             }
 
-            it("reports false when a stored batch damaged after its first frame is sent short") {
+            itPersisting("reports false when a stored batch damaged after its first frame is sent short") {
                 let store = EventStore.temporary()
                 testContext = TestContext(store: store)
                 testContext.eventProcessor.isOnline = true
@@ -2830,7 +2847,7 @@ extension DirectEventProcessorSpec {
             }
 
             for shared in [false, true] {
-                it("reports \(shared ? "true" : "false") for a stored batch gone before it was sent, where other processes \(shared ? "share" : "do not share") the directory") {
+                itPersisting("reports \(shared ? "true" : "false") for a stored batch gone before it was sent, where other processes \(shared ? "share" : "do not share") the directory") {
                     let store = EventStore.temporary()
                     store.sharesDirectoryWithOtherProcesses = shared
                     testContext = TestContext(store: store)
@@ -2859,7 +2876,7 @@ extension DirectEventProcessorSpec {
                     expect(store.pendingEventCount) == 0
                 }
 
-                it("reports \(shared ? "true" : "false") for events whose open log was gone before it was closed, where other processes \(shared ? "may take" : "cannot take") it") {
+                itPersisting("reports \(shared ? "true" : "false") for events whose open log was gone before it was closed, where other processes \(shared ? "may take" : "cannot take") it") {
                     let store = EventStore.temporary()
                     store.sharesDirectoryWithOtherProcesses = shared
                     testContext = TestContext(store: store)
@@ -2896,7 +2913,7 @@ extension DirectEventProcessorSpec {
                 }
             }
 
-            it("tells the next flush about a stored batch a delivery nobody waited on dropped") {
+            itPersisting("tells the next flush about a stored batch a delivery nobody waited on dropped") {
                 let store = EventStore.temporary()
                 testContext = TestContext(store: store)
                 testContext.eventProcessor.isOnline = true
@@ -2933,7 +2950,7 @@ extension DirectEventProcessorSpec {
                 expect(delivered) == true
             }
 
-            it("delivers what memory was left holding beside what the disk took, and reports true") {
+            itPersisting("delivers what memory was left holding beside what the disk took, and reports true") {
                 var writes = 0
                 let store = EventStore.temporary(writeLog: { file, bytes in
                     writes += 1
@@ -3304,6 +3321,7 @@ extension DirectEventProcessorSpec {
     }
 
     private func outageSpec() {
+        let persistence = type(of: self).persistence
         describe("delivering through an outage") {
             var testContext: TestContext!
             afterEach {
@@ -3342,7 +3360,7 @@ extension DirectEventProcessorSpec {
             }
 
             it("keeps a batch through repeated refusals and delivers it once the service recovers") {
-                expectKeptThroughRefusals(status: 503, persistence: .immediate, refusedFlushes: 3)
+                expectKeptThroughRefusals(status: 503, persistence: persistence, refusedFlushes: 3)
             }
 
             it("keeps a batch held in memory through repeated refusals where persistence is off") {
@@ -3353,7 +3371,7 @@ extension DirectEventProcessorSpec {
             // 422, which drop the batch when they come twice in a row; see below.
             for status in [401, 403, 404, 408, 429, 500, 502, 504] {
                 it("keeps a batch refused with HTTP \(status) past the retry") {
-                    expectKeptThroughRefusals(status: status, persistence: .immediate, refusedFlushes: 2)
+                    expectKeptThroughRefusals(status: status, persistence: persistence, refusedFlushes: 2)
                 }
             }
 
