@@ -888,6 +888,26 @@ class DirectEventProcessorSpec: QuickSpec {
                     expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 1
                 }
             }
+            for capacity in [0, -5] {
+                it("still reports with a capacity of \(capacity) rather than going silent") {
+                    testContext = TestContext(lastEventResponseDate: Date(), eventCapacity: capacity)
+                    testContext.eventProcessor.isOnline = true
+                    let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
+                    testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b",
+                                                                          featureFlag: flag, context: testContext.context, includeReason: false)
+                    testContext.eventProcessor.record(CustomEvent(key: "an-event", context: testContext.context))
+
+                    expect(testContext.flushOutcome()) == true
+                    let posted = testContext.serviceMock.publishedEventPayloads.flatMap { body -> [LDValue] in
+                        guard case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
+                        else { return [] }
+                        return events
+                    }
+                    expect(posted.filter { $0.kindField == "summary" }.map(summaryCount).reduce(0, +)) == 1
+                    expect(posted.filter { $0.kindField == "custom" }.count) == 1
+                    testContext.cleanUp()
+                }
+            }
         }
     }
 
