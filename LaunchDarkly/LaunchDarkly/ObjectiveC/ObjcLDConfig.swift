@@ -210,6 +210,12 @@ public final class ObjcLDConfig: NSObject {
         set { config.enableCompression = newValue }
     }
 
+    /// The key of a payload filter to apply to flag data requests. If the key is invalid, the SDK logs an error and requests the full environment instead. (Default: nil)
+    @objc public var payloadFilter: String? {
+        get { config.payloadFilter }
+        set { config.payloadFilter = newValue }
+    }
+
     /// For use by wrapper libraries to set an identifying name for the wrapper being used. This will be sent in the "X-LaunchDarkly-Wrapper" header on requests to the LaunchDarkly servers to allow recording metrics on the usage of these wrapper libraries.
     @objc public var wrapperName: String? {
         get { config.wrapperName }

@@ -28,7 +28,9 @@ final class DarklyServiceSpec: QuickSpec {
         init(mobileKey: String = LDConfig.Constants.mockMobileKey,
              useReport: Bool = Constants.useGetMethod,
              diagnosticOptOut: Bool = false,
-             enableCompression: Bool? = nil) {
+             enableCompression: Bool? = nil,
+             evaluationReasons: Bool = false,
+             payloadFilter: String? = nil) {
 
             config = LDConfig.stub(mobileKey: mobileKey, autoEnvAttributes: .disabled, isDebugBuild: true)
             config.useReport = useReport
@@ -36,6 +38,8 @@ final class DarklyServiceSpec: QuickSpec {
             if let enableCompression {
                 config.enableCompression = enableCompression
             }
+            config.evaluationReasons = evaluationReasons
+            config.payloadFilter = payloadFilter
             self.serviceFactoryMock = ClientServiceMockFactory(config: config)
             serviceMock = DarklyServiceMock(config: config)
             service = DarklyService(config: config, context: context, envReporter: envReporterMock, serviceFactory: serviceFactoryMock)
@@ -61,6 +65,7 @@ final class DarklyServiceSpec: QuickSpec {
         // the session, so nothing answers them.
         #if !os(watchOS)
         getFeatureFlagsSpec()
+        payloadFilterSpec()
         flagRequestEtagSpec()
         publishEventDataSpec()
         publishDiagnosticSpec()
@@ -572,6 +577,56 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(receivedArguments!.connectMethod) == DarklyService.HTTPRequestMethod.report
                     let expectedContext = encodeToLDValue(testContext.context, userInfo: [LDContext.UserInfoKeys.includePrivateAttributes: true, LDContext.UserInfoKeys.redactAttributes: false])
                     expect(try? JSONDecoder().decode(LDValue.self, from: receivedArguments!.connectBody!)) == expectedContext
+                }
+            }
+        }
+    }
+
+    private func payloadFilterSpec() {
+        func streamUrl(_ testContext: TestContext, useReport: Bool) -> URL? {
+            _ = testContext.service.createEventSource(useReport: useReport, handler: EventHandlerMock(), errorHandler: nil)
+            return testContext.serviceFactoryMock.makeStreamingProviderReceivedArguments?.url
+        }
+
+        func pollUrl(_ testContext: TestContext, useReport: Bool) -> URL? {
+            var urlRequest: URLRequest?
+            waitUntil(timeout: .seconds(5)) { done in
+                testContext.serviceMock.stubFlagRequest(statusCode: HTTPURLResponse.StatusCodes.ok,
+                                                        featureFlags: testContext.stubFlags.featureFlags,
+                                                        useReport: useReport,
+                                                        onActivation: { request in urlRequest = request })
+                testContext.service.getFeatureFlags(useReport: useReport, completion: { _ in done() })
+            }
+            return urlRequest?.url
+        }
+
+        describe("payload filter") {
+            [Constants.useGetMethod, Constants.useReportMethod].forEach { useReport in
+                let method = useReport ? "REPORT" : "GET"
+                context("using \(method) method") {
+                    it("adds the filter to the stream url") {
+                        let testContext = TestContext(useReport: useReport, payloadFilter: "mobile-flags")
+                        expect(streamUrl(testContext, useReport: useReport)?.query) == "filter=mobile-flags"
+                    }
+                    it("adds the filter to the poll url") {
+                        let testContext = TestContext(useReport: useReport, payloadFilter: "mobile-flags")
+                        expect(pollUrl(testContext, useReport: useReport)?.query) == "filter=mobile-flags"
+                    }
+                    it("keeps evaluation reasons alongside the filter") {
+                        let testContext = TestContext(useReport: useReport, evaluationReasons: true, payloadFilter: "mobile-flags")
+                        expect(streamUrl(testContext, useReport: useReport)?.query) == "withReasons=true&filter=mobile-flags"
+                        expect(pollUrl(testContext, useReport: useReport)?.query) == "withReasons=true&filter=mobile-flags"
+                    }
+                    it("omits an invalid filter") {
+                        let testContext = TestContext(useReport: useReport, payloadFilter: "not valid")
+                        expect(streamUrl(testContext, useReport: useReport)?.query).to(beNil())
+                        expect(pollUrl(testContext, useReport: useReport)?.query).to(beNil())
+                    }
+                    it("omits the query when no filter is set") {
+                        let testContext = TestContext(useReport: useReport)
+                        expect(streamUrl(testContext, useReport: useReport)?.query).to(beNil())
+                        expect(pollUrl(testContext, useReport: useReport)?.query).to(beNil())
+                    }
                 }
             }
         }
