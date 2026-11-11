@@ -162,7 +162,9 @@ private struct FlagSection: View {
         controller.countEvaluation()
         controller.result = "\(key) = \(describe(client, key))"
         controller.observeFlag(key) { [weak controller] changed, environment in
-            guard let controller, let client = controller.client(for: environment)
+            // Stays observed in this environment after a switch, when the result line is the other one's.
+            guard let controller, environment == controller.environment,
+                  let client = controller.client(for: environment)
             else { return }
             controller.countEvaluation()
             controller.result = "\(changed) changed to \(describe(client, changed))"
