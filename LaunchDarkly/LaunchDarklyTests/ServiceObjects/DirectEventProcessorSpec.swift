@@ -791,9 +791,9 @@ class DirectEventProcessorSpec: QuickSpec {
 
                     testContext.eventProcessor.isOnline = false
                 }
-                it("goes offline and stops reporting") {
+                it("goes offline and keeps the report interval running") {
                     expect(testContext.eventProcessor.isOnline) == false
-                    expect(testContext.eventProcessor.isReportingActive) == false
+                    expect(testContext.eventProcessor.isReportingActive) == true
                     expect(testContext.serviceMock.publishEventDataCallCount) == 0
                 }
             }
@@ -1910,6 +1910,41 @@ class DirectEventProcessorSpec: QuickSpec {
                         done()
                     }
                 }
+            }
+            it("keeps to the interval through brief outages rather than restarting it at each reconnect") {
+                let interval: TimeInterval = 3
+                testContext = TestContext(eventFlushInterval: interval)
+                let started = Date()
+                testContext.eventProcessor.isOnline = true
+                testContext.recordEvents(1)
+                waitLettingTimersFire(interval / 2)
+                for _ in 0..<5 {
+                    testContext.eventProcessor.isOnline = false
+                    testContext.eventProcessor.isOnline = true
+                }
+
+                // Restarted, the first delivery would come an interval after the last reconnect, past this.
+                waitLettingTimersFire(interval * 1.3 - Date().timeIntervalSince(started))
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+            }
+            it("posts nothing for an interval that ends offline, and sends what it held with the first after") {
+                testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
+                testContext.eventProcessor.isOnline = true
+                testContext.eventProcessor.isOnline = false
+                testContext.recordEvents(1)
+                waitLettingTimersFire(3 * Constants.eventFlushIntervalHalfSecond)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+
+                testContext.eventProcessor.isOnline = true
+                waitLettingTimersFire(3 * Constants.eventFlushIntervalHalfSecond)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+            }
+            it("stops at close") {
+                testContext = TestContext(eventFlushInterval: Constants.eventFlushIntervalHalfSecond)
+                testContext.eventProcessor.isOnline = true
+                testContext.eventProcessor.flushAtClose()
+                testContext.eventProcessor.isOnline = false
+                expect(testContext.eventProcessor.isReportingActive) == false
             }
         }
     }

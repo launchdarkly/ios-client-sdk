@@ -124,13 +124,17 @@ class DirectEventProcessor: EventProcessor {
     // MARK: Confined to timerQueue
 
     var isOnline: Bool {
-        get { timerQueue.sync { eventReportTimer != nil } }
+        get { timerQueue.sync { online } }
         set { timerQueue.sync { newValue ? startReporting() : stopReporting() } }
     }
 
     private var timerQueue = DispatchQueue(label: "com.launchdarkly.DirectEventProcessor.timerQueue")
+    private var online = false
+    /// Started the first time the reporter goes online, and left running through going offline: cancelling it would
+    /// restart the interval on every reconnect, and a run of brief outages would then hold events back for far longer
+    /// than one interval. Only closing cancels it.
     private var eventReportTimer: TimeResponding?
-    var isReportingActive: Bool { eventReportTimer != nil }
+    var isReportingActive: Bool { timerQueue.sync { eventReportTimer != nil } }
 
     // MARK: Confined to deliveryQueue
 
@@ -300,10 +304,13 @@ class DirectEventProcessor: EventProcessor {
 
 extension DirectEventProcessor {
     private func startReporting() {
-        guard eventReportTimer == nil
+        guard !online
         else { return }
-        eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: deliveryQueue) { [weak self] in
-            self?.reportIntervalEnded()
+        online = true
+        if eventReportTimer == nil {
+            eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: deliveryQueue) { [weak self] in
+                self?.reportIntervalEnded()
+            }
         }
 
         // Events a previous run left behind are already late by however long the application was gone, so they do not
@@ -327,9 +334,15 @@ extension DirectEventProcessor {
     }
 
     private func stopReporting() {
-        eventReportTimer?.cancel()
-        eventReportTimer = nil
+        online = false
         deliveryScheduler.endPacing()
+    }
+
+    private func cancelReportTimer() {
+        timerQueue.sync {
+            eventReportTimer?.cancel()
+            eventReportTimer = nil
+        }
     }
 
     /// Runs `block`, on a global queue, once the launch gate is open.
@@ -389,6 +402,7 @@ extension DirectEventProcessor {
     }
 
     func flushAtClose() {
+        cancelReportTimer()
         committer.commitWithinBudget(DirectEventProcessor.closeCommitBudget)
         // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing: offline is the
         // application keeping the SDK off the network, and closing does not revoke that.
@@ -408,9 +422,10 @@ extension DirectEventProcessor {
 
     /// The report timer's delivery, on `deliveryQueue`. Until the launch gate opens it only commits: a delivery sends the
     /// oldest batches first, which are what a previous run left, so one now would send them ahead of the gate. What this
-    /// run recorded goes with the first delivery after the gate opens.
+    /// run recorded goes with the first delivery after the gate opens. Offline it only commits too, and what it committed
+    /// goes with the first delivery after the reporter is back online.
     private func reportIntervalEnded() {
-        guard launchGateOpen
+        guard launchGateOpen, isOnline
         else {
             committer.queueCommitWherePersisting()
             return
