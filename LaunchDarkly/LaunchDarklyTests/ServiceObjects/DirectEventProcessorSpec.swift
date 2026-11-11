@@ -334,6 +334,135 @@ class DirectEventProcessorSpec: QuickSpec {
                     expect(summaries.count).to(equal(capacity), description: "round \(round)")
                 }
             }
+
+            struct Observed {
+                let reporter: DirectEventProcessor
+                let store: StagingObservingStore
+                let serviceMock: DarklyServiceMock
+                let diagnosticCache: DiagnosticCachingMock
+                let commits: DispatchQueue
+            }
+
+            /// A processor keeping its events off the disk, on a store that remembers what each delivery encoded.
+            func observed(eventCapacity: Int) -> Observed {
+                var config = LDConfig.stub
+                config.eventCapacity = eventCapacity
+                config.eventPersistence = .disabled
+                let serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                serviceMock.stubEventResponse(success: true)
+                let diagnosticCache = DiagnosticCachingMock()
+                serviceMock.diagnosticCache = diagnosticCache
+                let store = StagingObservingStore(EventStore.temporary(capacity: eventCapacity, persistEvents: false))
+                let commits = DispatchQueue(label: "com.launchdarkly.tests.commits")
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits, pacing: .noWaits)
+                return Observed(reporter: reporter, store: store, serviceMock: serviceMock, diagnosticCache: diagnosticCache, commits: commits)
+            }
+
+            func outcome(of reporter: DirectEventProcessor) -> Bool? {
+                var delivered: Bool?
+                waitUntil(timeout: .seconds(10)) { done in
+                    reporter.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                return delivered
+            }
+
+            func postedEvents(_ serviceMock: DarklyServiceMock) -> [LDValue] {
+                serviceMock.publishedEventPayloads.flatMap { body -> [LDValue] in
+                    guard case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
+                    else { return [] }
+                    return events
+                }
+            }
+
+            let trackedFlag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+
+            it("never encodes an evaluation's counter in one delivery and its full event in another") {
+                // Without a disk only a delivery encodes, so what each one encodes has to count exactly the evaluations
+                // whose full events it carries, however the recorders interleave with it.
+                var runsWithCounters = 0
+                for trial in 0..<5 {
+                    let observed = observed(eventCapacity: 100_000)
+                    let reporter = observed.reporter
+                    reporter.isOnline = true
+                    let context = LDContext.stub()
+                    let recorders = 4
+                    let evaluationsEach = 500
+                    let recorded = DispatchGroup()
+                    for _ in 0..<recorders {
+                        DispatchQueue.global().async(group: recorded) {
+                            for _ in 0..<evaluationsEach {
+                                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b",
+                                                                    featureFlag: trackedFlag, context: context, includeReason: false)
+                            }
+                        }
+                    }
+                    while recorded.wait(timeout: .now()) == .timedOut {
+                        _ = outcome(of: reporter)
+                    }
+                    expect(outcome(of: reporter)) == true
+
+                    var counted = 0
+                    for run in observed.store.stagedRuns {
+                        let counters = run.filter { $0.kindField == "summary" }.map(summaryCount).reduce(0, +)
+                        expect(counters).to(equal(run.filter { $0.kindField == "feature" }.count), description: "trial \(trial)")
+                        counted += counters
+                        if counters > 0 {
+                            runsWithCounters += 1
+                        }
+                    }
+                    expect(counted).to(equal(recorders * evaluationsEach), description: "trial \(trial)")
+                    expect(observed.diagnosticCache.incrementDroppedEventCountCallCount) == 0
+                    reporter.isOnline = false
+                }
+                expect(runsWithCounters) > 5
+            }
+
+            it("encodes nothing for a flush while offline, and delivers all of it once online") {
+                let observed = observed(eventCapacity: 1_000)
+                let reporter = observed.reporter
+                let context = LDContext.stub()
+                // Past the number of held events that asks for a write where events persist.
+                let evaluations = EventCommitter.pendingCommitThreshold + 10
+                for _ in 0..<evaluations {
+                    reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b",
+                                                        featureFlag: trackedFlag, context: context, includeReason: false)
+                }
+                reporter.record(CustomEvent(key: "an-event", context: context))
+
+                expect(outcome(of: reporter)) == false
+                observed.commits.sync {}
+                expect(observed.store.stagedCount) == 0
+                expect(observed.serviceMock.publishEventDataCallCount) == 0
+
+                reporter.isOnline = true
+                expect(outcome(of: reporter)) == true
+                let events = postedEvents(observed.serviceMock)
+                expect(events.filter { $0.kindField == "feature" }.count) == evaluations
+                expect(events.filter { $0.kindField == "custom" }.compactMap { $0.keyField }) == ["an-event"]
+                expect(events.filter { $0.kindField == "summary" }.map(summaryCount).reduce(0, +)) == evaluations
+                reporter.isOnline = false
+            }
+
+            it("encodes nothing when it closes while offline") {
+                let observed = observed(eventCapacity: 1_000)
+                let reporter = observed.reporter
+                let context = LDContext.stub()
+                reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b",
+                                                    featureFlag: trackedFlag, context: context, includeReason: false)
+                reporter.record(CustomEvent(key: "an-event", context: context))
+
+                reporter.flushAtClose()
+                observed.commits.sync {}
+                // Queued behind the delivery closing asked for, so that has run by the time this is answered.
+                expect(outcome(of: reporter)) == false
+
+                expect(observed.store.stagedCount) == 0
+                expect(observed.serviceMock.publishEventDataCallCount) == 0
+            }
         }
     }
 
@@ -1830,6 +1959,64 @@ extension DirectEventProcessorSpec {
                 expect(eventsLeftOnDisk().count).toEventually(equal(EventCommitter.pendingCommitThreshold), timeout: Constants.deliveryTimeout)
             }
 
+            itPersisting("writes what a flush waiting on its outcome covers at .deferred while a delivery holds the delivery queue") {
+                testContext = TestContext(lastEventResponseDate: Date(), eventPersistence: .deferred)
+                testContext.eventProcessor.isOnline = true
+                let released = DispatchSemaphore(value: 0)
+                defer { released.signal() }
+                testContext.eventProcessor.occupyQueue(until: released)
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+                testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b",
+                                                                      featureFlag: flag, context: testContext.context, includeReason: false)
+
+                let answer = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: answer.record)
+
+                expect(eventsLeftOnDisk().compactMap { $0.kindField }).toEventually(equal(["feature", "summary"]), timeout: Constants.deliveryTimeout)
+                expect(answer.value()).to(beNil())
+            }
+
+            itPersisting("writes at close at .deferred though a delivery holds the delivery queue") {
+                testContext = TestContext(eventPersistence: .deferred)
+                testContext.eventProcessor.isOnline = true
+                let released = DispatchSemaphore(value: 0)
+                defer { released.signal() }
+                testContext.eventProcessor.occupyQueue(until: released)
+                testContext.eventProcessor.record(CustomEvent(key: "an-event", context: testContext.context))
+
+                let started = Date()
+                testContext.eventProcessor.flushAtClose()
+
+                expect(Date().timeIntervalSince(started)) < DirectEventProcessor.closeCommitBudget
+                expect(eventsLeftOnDisk().compactMap { $0.keyField }) == ["an-event"]
+            }
+
+            itPersisting("works out where its directory is away from the caller's thread at .deferred") {
+                // An application builds the client on the main thread, and finding the directory reaches for the disk.
+                let lock = UnfairLock()
+                var onCallersThread: [Bool] = []
+                let caller = Thread.current
+                let located = DispatchSemaphore(value: 0)
+                let store = EventStore(locatingDirectory: {
+                                           lock.withLock { onCallersThread.append(Thread.current === caller) }
+                                           located.signal()
+                                           return EventStore.temporaryDirectory()
+                                       },
+                                       capacity: 100,
+                                       persistEvents: true,
+                                       logger: .disabled)
+                #if os(macOS) || targetEnvironment(macCatalyst)
+                store.locksOpenLog = false
+                #endif
+                testContext = TestContext(store: store, eventPersistence: .deferred)
+                testContext.eventProcessor.isOnline = true
+                testContext.eventProcessor.record(CustomEvent(key: "an-event", context: testContext.context))
+                testContext.eventProcessor.flush(completion: nil)
+
+                expect(located.wait(timeout: .now() + 5)) == .success
+                expect(lock.withLock { onCallersThread }).toNot(contain(true))
+            }
+
             itPersisting("has written the evaluations that came before a tracked event") {
                 // A response date of its own, because the distant past that a fresh context defaults to also satisfies
                 // the debug window comparison and would add a debug event to what is asserted below. The commit queue is
@@ -2512,6 +2699,50 @@ extension DirectEventProcessorSpec {
                 expect(rest) == ["first", "slow"]
             }
 
+            it("never delivers a summary at close without the full events of the evaluations it counts") {
+                var featureEventsSeen = 0
+                for trial in 0..<10 {
+                    testContext = TestContext(lastEventResponseDate: Date(), eventCapacity: 100_000)
+                    testContext.eventProcessor.isOnline = true
+                    let processor = testContext.eventProcessor!
+                    let context = testContext.context!
+                    let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+                    let lock = UnfairLock()
+                    var evaluated = 0
+                    let recording = DispatchGroup()
+                    for _ in 0..<4 {
+                        DispatchQueue.global().async(group: recording) {
+                            for _ in 0..<1_000 {
+                                processor.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b",
+                                                                     featureFlag: flag, context: context, includeReason: false)
+                                lock.withLock { evaluated += 1 }
+                            }
+                        }
+                    }
+                    while lock.withLock({ evaluated }) < 1_000 {
+                        usleep(500)
+                    }
+                    processor.flushAtClose()
+                    processor.isOnline = false
+                    expect(recording.wait(timeout: .now() + 20)) == .success
+                    // Queued behind the delivery closing asked for, so that has run by the time this is answered.
+                    _ = testContext.flushOutcome()
+
+                    let delivered = testContext.serviceMock.publishedEventPayloads.flatMap { body -> [LDValue] in
+                        guard case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
+                        else { return [] }
+                        return events
+                    }
+                    let features = delivered.filter { $0.kindField == "feature" }.count
+                    let counted = delivered.filter { $0.kindField == "summary" }.map(summaryCount).reduce(0, +)
+                    expect(counted).to(equal(features), description: "trial \(trial): a summary counted evaluations delivered without their events")
+                    featureEventsSeen += features
+                    testContext.cleanUp()
+                    testContext = nil
+                }
+                expect(featureEventsSeen) > 0
+            }
+
             it("counts an event once while the commit that staged it is still running") {
                 var config = LDConfig.stub
                 config.eventCapacity = 3
@@ -3002,6 +3233,42 @@ extension DirectEventProcessorSpec {
                 expect(delivered) == true
             }
 
+            it("reports false when an evaluation's summary could not be serialized, though the rest were accepted") {
+                testContext = TestContext()
+                testContext.eventProcessor.isOnline = true
+                testContext.eventProcessor.recordFlagEvaluationEvents(flagKey: "poison-flag", value: .number(.nan), defaultValue: .number(0),
+                                                                      featureFlag: nil, context: testContext.context, includeReason: false)
+                testContext.eventProcessor.record(IdentifyEvent(context: testContext.context))
+
+                expect(testContext.flushOutcome()) == false
+                let posted = testContext.serviceMock.publishedEventPayloads.flatMap { body -> [LDValue] in
+                    guard case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
+                    else { return [] }
+                    return events
+                }
+                expect(posted.compactMap { $0.kindField }) == ["identify"]
+            }
+
+            it("covers what its caller recorded when its flush joins a delivery queued behind one in flight") {
+                testContext = TestContext()
+                testContext.serviceMock.holdsEventCompletions = true
+                testContext.eventProcessor.isOnline = true
+                testContext.eventProcessor.record(CustomEvent(key: "first", context: testContext.context))
+                let first = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: first.record)
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+
+                testContext.eventProcessor.record(CustomEvent(key: "joined", context: testContext.context))
+                let joined = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: joined.record)
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+
+                expect(first.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
+                expect(joined.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["first"], ["joined"]]
+            }
+
             it("reports false when an event serialized too large to store") {
                 testContext = TestContext()
                 // Larger than a log frame holds, so the store refuses it however much room is left.
@@ -3490,6 +3757,31 @@ extension DirectEventProcessorSpec {
                 expect(Set(testContext.serviceMock.publishedPayloadIds).count) == 1
             }
 
+            for status in [400, 413] {
+                it("posts what is flushed after a batch dropped for HTTP \(status) once the backoff allows") {
+                    testContext = TestContext(eventCapacity: 100)
+                    testContext.serviceMock.respondToEvents(with: status)
+                    testContext.eventProcessor.record(CustomEvent(key: "malformed", context: testContext.context))
+                    testContext.eventProcessor.isOnline = true
+                    testContext.eventProcessor.flush(completion: nil)
+                    expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+
+                    // Asked for while the retry a second later is waiting.
+                    let later = (0..<4).map { "next-\($0)" }
+                    for key in later {
+                        testContext.eventProcessor.record(CustomEvent(key: key, context: testContext.context))
+                        testContext.eventProcessor.flush(completion: nil)
+                    }
+                    // The retry, whose refusal drops the batch.
+                    expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: .seconds(3))
+                    testContext.serviceMock.stubEventResponse(success: true)
+
+                    expect(Set(testContext.serviceMock.publishedEventPayloads.dropFirst(2).flatMap(customKeys)))
+                        .toEventually(equal(Set(later)), timeout: .seconds(5))
+                    expect(testContext.serviceMock.publishedEventPayloads.dropFirst(2).flatMap(customKeys)).toNot(contain("malformed"))
+                }
+            }
+
             it("keeps a refused batch and posts it again once the longer wait is over") {
                 // Cut to a second and a half here from the eight and a half minutes the SDK waits.
                 testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedInitialDelay: 1.5, extendedCeiling: 1.5))
@@ -3555,6 +3847,23 @@ extension DirectEventProcessorSpec {
 
                 expect(testContext.flushBypassingBackoffOutcome()) == true
                 expect(testContext.serviceMock.publishedEventPayloads.dropFirst().flatMap(customKeys)) == ["refused", "bypassing"]
+            }
+
+            it("posts for a flush bypassing the backoff asked for behind an ordinary one") {
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedInitialDelay: 512, extendedCeiling: 3600))
+                testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
+                testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                expect(testContext.flushOutcome()) == false
+                testContext.serviceMock.stubEventResponse(success: true)
+                testContext.serviceMock.eventStatusForPost = nil
+
+                // Whether it joins the ordinary delivery before that starts or queues behind it, the bypass still posts.
+                let ordinary = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: ordinary.record)
+                expect(testContext.flushBypassingBackoffOutcome()) == true
+                expect(ordinary.value()).toEventuallyNot(beNil(), timeout: Constants.deliveryTimeout)
+                expect(testContext.serviceMock.publishedEventPayloads.dropFirst().flatMap(customKeys)) == ["refused"]
             }
 
             it("leaves ordinary flushes waiting out the backoff after a flush bypassing it is refused again") {
@@ -3717,6 +4026,24 @@ extension DirectEventProcessorSpec {
                 expect(testContext.flushOutcome()) == false
             }
 
+            it("sends a batch a delivery nobody waited on could not send once the service recovers, under the same payload ID") {
+                testContext = TestContext(retryState: DirectEventProcessorSpec.withoutBackoff())
+                testContext.serviceMock.eventStatusForPost = { post in post <= 2 ? 503 : 202 }
+                testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                testContext.eventProcessor.flush(completion: nil)
+                // The post and its one retry; the service recovers once both have failed.
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: Constants.deliveryTimeout)
+
+                expect(testContext.flushOutcome()) == true
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["kept"], ["kept"], ["kept"]]
+                expect(Set(testContext.serviceMock.publishedPayloadIds).count) == 1
+
+                testContext.eventProcessor.record(CustomEvent(key: "later", context: testContext.context))
+                expect(testContext.flushOutcome()) == true
+                expect(testContext.serviceMock.publishedEventPayloads.last.map(customKeys)) == ["later"]
+            }
+
             it("starts a delivery asked for while a refused post waits to retry once that retry is answered") {
                 testContext = TestContext()
                 testContext.serviceMock.respondToEvents(with: 503)
@@ -3866,6 +4193,76 @@ private final class ClosingHookStore: EventStoring {
         after?()
         return batch
     }
+}
+
+/// A store that remembers what was staged between one commit or close and the next, which is one delivery's
+/// encoding where nothing persists.
+private final class StagingObservingStore: EventStoring {
+    let inner: EventStoring
+    private let lock = UnfairLock()
+    private var staging: [Data] = []
+    private var runs: [[Data]] = []
+    private var stagings = 0
+
+    init(_ inner: EventStoring) {
+        self.inner = inner
+    }
+
+    /// Each run of staging that ended in a commit or a close, decoded.
+    var stagedRuns: [[LDValue]] {
+        lock.withLock { runs }.map { run in run.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) } }
+    }
+
+    /// Every event staged, whether or not the store took it.
+    var stagedCount: Int { lock.withLock { stagings } }
+
+    private func note(_ encodedEvent: Data) {
+        lock.withLock {
+            staging.append(encodedEvent)
+            stagings += 1
+        }
+    }
+
+    private func endRun() {
+        lock.withLock {
+            if !staging.isEmpty {
+                runs.append(staging)
+                staging = []
+            }
+        }
+    }
+
+    var pendingEventCount: Int { inner.pendingEventCount }
+    var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
+    func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
+    var isPersisting: Bool { inner.isPersisting }
+    func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool {
+        note(encodedEvent)
+        return inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity)
+    }
+    func reserve(_ events: Int) { inner.reserve(events) }
+    func stageReserved(_ encodedEvent: Data) -> Bool {
+        note(encodedEvent)
+        return inner.stageReserved(encodedEvent)
+    }
+    func releaseReservations() { inner.releaseReservations() }
+    func commit() {
+        inner.commit()
+        endRun()
+    }
+    func closeBatch() -> EventBatch? {
+        endRun()
+        return inner.closeBatch()
+    }
+    var holdsUnclosedEvents: Bool { inner.holdsUnclosedEvents }
+    func takeVanishedLogEvents() -> Int { inner.takeVanishedLogEvents() }
+    func listPendingBatches() -> BatchListing { inner.listPendingBatches() }
+    func payload(of batch: EventBatch) throws -> BatchPayload? { try inner.payload(of: batch) }
+    func remove(_ batch: EventBatch) { inner.remove(batch) }
+    func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
+    func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
+    func preparePayloadsFromInterruptedLogs() { inner.preparePayloadsFromInterruptedLogs() }
+    func discardExpired() -> Int { inner.discardExpired() }
 }
 
 /// What a flush was told, written from whichever thread answered it and read from the test's.
