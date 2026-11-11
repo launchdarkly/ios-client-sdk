@@ -376,7 +376,15 @@ public struct LDConfig {
     ///
     /// Events being sent stop counting once the request is out, so a flush makes room straight away. If the request fails they are kept
     /// to send again and count again, so after a failed send the SDK can hold up to this many plus the events that request carried.
-    public var eventCapacity: Int = Defaults.eventCapacity
+    ///
+    /// A capacity below one is treated as one; to stop sending events altogether, set `sendEvents` to false instead.
+    public var eventCapacity: Int = Defaults.eventCapacity {
+        didSet {
+            if eventCapacity < 1 {
+                eventCapacity = 1
+            }
+        }
+    }
 
     /// How far the SDK goes to make a recorded event outlive the process that recorded it.
     ///
