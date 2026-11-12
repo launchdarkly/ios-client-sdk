@@ -58,7 +58,7 @@ final class BackgroundEventDelivery {
                 finished()
                 return
             }
-            environments.map(\.eventProcessor).flushReportingOutcomes(deadline: .now() + self.answerTimeout) { delivered in
+            environments.map { $0.eventProcessor }.flushReportingOutcomes(deadline: .now() + self.answerTimeout) { delivered in
                 self.logUndelivered(zip(environments, delivered).filter { !$0.1 }.map(\.0))
                 finished()
             }
