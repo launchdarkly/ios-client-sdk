@@ -196,7 +196,7 @@ final class DarklyService: DarklyServiceProvider {
     func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?) {
         guard hasMobileKey(#function)
         else {
-            // Answered rather than dropped: until this answers, its batch stays claimed and its flush never reports.
+            // Answered rather than dropped: until this answers, its delivery never ends and its flush never reports.
             completion?((nil, nil, URLError(.userAuthenticationRequired), nil))
             return
         }
