@@ -34,6 +34,9 @@ enum EventLogFormat {
     /// A ceiling on a single frame's payload: the most that still fits in a batch on its own. It is also what keeps a
     /// corrupt size from making recovery allocate wildly.
     static let maxFrameSize = maxBatchSize - fileHeaderSize - frameOverhead
+    /// The most events a batch can hold, every frame carrying at least a byte of payload. A count beyond it, in a
+    /// batch's name, is not one this format could have written.
+    static let maxEventsPerBatch = (maxBatchSize - fileHeaderSize) / (frameOverhead + 1)
 
     static var fileHeader: Data {
         var header = magic
