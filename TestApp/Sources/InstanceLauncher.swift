@@ -43,11 +43,11 @@ enum InstanceLauncher {
         #endif
     }
 
-    /// The `-LDMobileKey` and `-LDEnvironment` overrides this instance was launched with, so the next one talks to the
-    /// same environment.
+    /// The `-LDMobileKey`, `-LDSecondaryMobileKey` and `-LDEnvironment` overrides this instance was launched with, so
+    /// the next one talks to the same environments.
     private static var forwardedArguments: [String] {
         var forwarded: [String] = []
-        for key in ["LDMobileKey", "LDEnvironment"] {
+        for key in ["LDMobileKey", "LDSecondaryMobileKey", "LDEnvironment"] {
             if let value = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)[key] as? String {
                 forwarded += ["-\(key)", value]
             }

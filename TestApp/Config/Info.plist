@@ -4,6 +4,8 @@
 <dict>
 	<key>LDMobileKey</key>
 	<string>$(LAUNCHDARKLY_MOBILE_KEY)</string>
+	<key>LDSecondaryMobileKey</key>
+	<string>$(LAUNCHDARKLY_SECONDARY_MOBILE_KEY)</string>
 	<key>LDEnvironment</key>
 	<string>$(LAUNCHDARKLY_ENVIRONMENT)</string>
 </dict>

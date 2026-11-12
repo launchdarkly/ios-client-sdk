@@ -278,6 +278,9 @@ public struct LDConfig {
         /// The default setting for whether we request evaluation reasons for all flags. (false)
         static let evaluationReasons = false
 
+        /// The default payload filter key. (nil, the full environment is requested)
+        static let payloadFilter: String? = nil
+
         /// The default setting for the maximum number of locally cached contexts. (5)
         static let maxCachedContexts = 5
 
@@ -504,6 +507,17 @@ public struct LDConfig {
     /// Enables requesting evaluation reasons for all flags. (Default: false)
     public var evaluationReasons: Bool = Defaults.evaluationReasons
 
+    /**
+     The key of a payload filter to apply to flag data requests. (Default: nil)
+
+     Payload filters are defined per project in LaunchDarkly. When a filter key is set, the SDK adds it as the `filter` query
+     parameter to its streaming and polling requests, and LaunchDarkly limits the flags it sends to the ones selected by that filter.
+
+     The key must contain only alphanumeric characters, periods, underscores, and hyphens, and must start with an alphanumeric
+     character. If the key is invalid, the SDK logs an error and requests the full environment instead.
+     */
+    public var payloadFilter: String? = Defaults.payloadFilter
+
     /// An Integer that tells ContextEnvironmentFlagCache the maximum number of contexts to locally cache. Can be set to -1 for unlimited cached contexts.
     public var maxCachedContexts: Int = Defaults.maxCachedContexts
 
@@ -644,6 +658,19 @@ public struct LDConfig {
         return runMode == .foreground ? max(flagPollingInterval, minima.flagPollingInterval) : max(backgroundFlagPollingInterval, minima.backgroundFlagPollingInterval)
     }
 
+    // Returns the payload filter key to send with flag requests, or nil if none is set or the configured key is invalid.
+    func validatedPayloadFilter() -> String? {
+        guard let payloadFilter = payloadFilter, !payloadFilter.isEmpty
+        else { return nil }
+
+        guard payloadFilter.range(of: "\\A[a-zA-Z0-9][._\\-a-zA-Z0-9]*\\z", options: .regularExpression) != nil
+        else {
+            os_log("%s Payload filter \"%s\" is invalid; the full environment will be requested instead", log: logger, type: .error, typeName(and: #function), payloadFilter)
+            return nil
+        }
+        return payloadFilter
+    }
+
     // Determines if the status code is a code that should cause the SDK to retry a failed HTTP Request that used the REPORT method. Retried requests will use the GET method.
     static func isReportRetryStatusCode(_ statusCode: Int) -> Bool {
         return LDConfig.flagRetryStatusCodes.contains(statusCode)
@@ -676,6 +703,7 @@ extension LDConfig: Equatable {
             && lhs.useReport == rhs.useReport
             && lhs.isDebugMode == rhs.isDebugMode
             && lhs.evaluationReasons == rhs.evaluationReasons
+            && lhs.payloadFilter == rhs.payloadFilter
             && lhs.maxCachedContexts == rhs.maxCachedContexts
             && lhs.diagnosticOptOut == rhs.diagnosticOptOut
             && lhs.diagnosticRecordingInterval == rhs.diagnosticRecordingInterval

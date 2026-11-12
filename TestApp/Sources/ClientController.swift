@@ -1,10 +1,11 @@
 import Foundation
 @preconcurrency import LaunchDarkly
 
-/// Starts, restarts and reports on the one `LDClient` the app uses.
+/// Starts, restarts and reports on the `LDClient` the app uses, with a second environment where the build gives a key.
 ///
-/// Every button acts on `LDClient.get()`, which is nil while a restart is under way, so a tap meanwhile does nothing
-/// rather than reaching a client that is closing.
+/// Every button acts on the selected environment's client, which is nil while a restart is under way, so a tap
+/// meanwhile does nothing rather than reaching a client that is closing. Some calls reach every environment whichever
+/// client they are made on: `flush`, `flushAndWait`, `setOnline`, `identify` and `close`.
 @MainActor
 final class ClientController: ObservableObject {
     static let defaultUserKey = "user key"
@@ -17,6 +18,7 @@ final class ClientController: ObservableObject {
     private nonisolated static let startWaitSeconds: TimeInterval = 10
 
     private static let persistenceKey = "eventPersistence"
+    private static let environmentKey = "selectedEnvironment"
     private static let defaultPersistence = EventPersistence.immediate
 
     let configuration = TestAppConfiguration.current
@@ -25,6 +27,8 @@ final class ClientController: ObservableObject {
     /// launch has to read the disk the same way. Under `.disabled` the events a dead process left there are not
     /// delivered.
     @Published private(set) var persistence: EventPersistence
+    /// Saved too, so the launch that answers a kill scenario shows the environment it was run against.
+    @Published private(set) var environment: TestEnvironment
     @Published private(set) var isOffline = false
     @Published private(set) var isRestarting = false
     @Published private(set) var connectionStatus = "Not started"
@@ -33,8 +37,8 @@ final class ClientController: ObservableObject {
 
     private(set) var evaluationsRequested = 0
 
-    /// Flags the running client already reports changes of, so evaluating one again does not add another observer.
-    private var observedFlags: Set<String> = []
+    /// Flags each running client already reports changes of, so evaluating one again does not add another observer.
+    private var observedFlags: [TestEnvironment: Set<String>] = [:]
 
     /// What the running client was started with, for the scenarios that depend on its limits.
     private(set) var config: LDConfig?
@@ -49,11 +53,30 @@ final class ClientController: ObservableObject {
     init() {
         let saved = UserDefaults.standard.object(forKey: Self.persistenceKey) as? Int
         persistence = saved.flatMap(EventPersistence.init(rawValue:)) ?? Self.defaultPersistence
+        let available = TestAppConfiguration.current.environments
+        let savedEnvironment = UserDefaults.standard.string(forKey: Self.environmentKey).flatMap(TestEnvironment.init)
+        environment = savedEnvironment.flatMap { available.contains($0) ? $0 : nil } ?? .primary
         refreshDedupeStatus()
     }
 
     var client: LDClient? {
-        isRestarting ? nil : LDClient.get()
+        client(for: environment)
+    }
+
+    func client(for environment: TestEnvironment) -> LDClient? {
+        isRestarting ? nil : LDClient.get(environment: environment.sdkName)
+    }
+
+    var mobileKey: String {
+        configuration.mobileKey(for: environment)
+    }
+
+    func select(_ chosen: TestEnvironment) {
+        guard chosen != environment, configuration.environments.contains(chosen)
+        else { return }
+        environment = chosen
+        UserDefaults.standard.set(chosen.rawValue, forKey: Self.environmentKey)
+        refreshConnectionStatus()
     }
 
     func start() {
@@ -93,9 +116,13 @@ final class ClientController: ObservableObject {
         isRestarting = true
         let config = makeConfig()
         let context = Self.context(key: Self.defaultUserKey)
+        let environments = configuration.environments
         lifecycleQueue.async {
             if let previous = LDClient.get() {
-                previous.stopObserving(owner: self)
+                for environment in environments {
+                    LDClient.get(environment: environment.sdkName)?.stopObserving(owner: self)
+                }
+                // Closes every environment.
                 previous.close()
             }
             LDClient.start(config: config, context: context, startWaitSeconds: Self.startWaitSeconds) { timedOut in
@@ -132,12 +159,14 @@ final class ClientController: ObservableObject {
         refreshDedupeStatus()
     }
 
-    /// Calls `changed` with the key of a flag each time its value changes, from the first call for that key on.
-    func observeFlag(_ key: String, changed: @escaping @MainActor (String) -> Void) {
-        guard let client, observedFlags.insert(key).inserted
+    /// Calls `changed` with the key of a flag and the environment it is in each time its value changes, from the first
+    /// call for that key in the selected environment on.
+    func observeFlag(_ key: String, changed: @escaping @MainActor (String, TestEnvironment) -> Void) {
+        let environment = self.environment
+        guard let client, observedFlags[environment, default: []].insert(key).inserted
         else { return }
         client.observe(key: key, owner: self) { change in
-            Task { @MainActor in changed(change.key) }
+            Task { @MainActor in changed(change.key, environment) }
         }
     }
 
@@ -154,15 +183,25 @@ final class ClientController: ObservableObject {
         connectionStatus = status
     }
 
+    /// Every environment, not only the selected one, so switching shows the other's status without observing it again.
     private func observeConnection() {
         refreshConnectionStatus()
-        client?.observeCurrentConnectionMode(owner: self) { [weak self] _ in
-            Task { @MainActor in self?.refreshConnectionStatus() }
+        for environment in configuration.environments {
+            client(for: environment)?.observeCurrentConnectionMode(owner: self) { [weak self] _ in
+                Task { @MainActor in self?.refreshConnectionStatus() }
+            }
         }
     }
 
     private func makeConfig() -> LDConfig {
         var config = LDConfig(mobileKey: configuration.mobileKey, autoEnvAttributes: .enabled)
+        if configuration.hasSecondaryEnvironment {
+            do {
+                try config.setSecondaryMobileKeys([TestEnvironment.secondary.sdkName: configuration.secondaryMobileKey])
+            } catch {
+                print("secondary environment not started: \(error)")
+            }
+        }
         config.startOnline = !isOffline
         config.eventPersistence = persistence
         // Same shape an application uses for any hook: wrap it at registration. Each wrapper has its own window, so

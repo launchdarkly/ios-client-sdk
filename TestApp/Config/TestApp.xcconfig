@@ -1,7 +1,9 @@
 // Settings every TestApp target shares. The mobile key lives in Secrets.xcconfig, which is not checked in: copy
-// Secrets.xcconfig.example next to it. Without it the app builds and says what is missing.
+// Secrets.xcconfig.example next to it. Without it the app builds and says what is missing. A second key there starts
+// a second environment alongside the first.
 
 LAUNCHDARKLY_MOBILE_KEY =
+LAUNCHDARKLY_SECONDARY_MOBILE_KEY =
 LAUNCHDARKLY_ENVIRONMENT = production
 
 #include? "Secrets.xcconfig"
