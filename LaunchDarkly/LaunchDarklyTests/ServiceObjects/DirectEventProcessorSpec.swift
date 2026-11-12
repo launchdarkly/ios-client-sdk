@@ -2077,7 +2077,7 @@ extension DirectEventProcessorSpec {
                 let started = Date()
                 testContext.eventProcessor.flushAtClose()
 
-                expect(Date().timeIntervalSince(started)) < DirectEventProcessor.closeCommitBudget
+                expect(Date().timeIntervalSince(started)) < DirectEventProcessor.flushAtCloseCommitBudget
                 expect(eventsLeftOnDisk().compactMap { $0.keyField }) == ["an-event"]
             }
 
@@ -2573,7 +2573,7 @@ extension DirectEventProcessorSpec {
                 diskAnswers.leave()
 
                 expect(stalled.wait(timeout: .now())) == .success
-                expect(took) < DirectEventProcessor.closeCommitBudget + 1
+                expect(took) < DirectEventProcessor.flushAtCloseCommitBudget + 1
                 let keysOnDisk = { inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).keyField } }
                 expect(keysOnDisk()).toEventually(contain("before-close"), timeout: Constants.deliveryTimeout)
             }

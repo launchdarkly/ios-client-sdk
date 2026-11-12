@@ -34,10 +34,11 @@ class DirectEventProcessor: EventProcessor {
         let gap: TimeInterval
     }
 
-    /// How long `flushAtClose()` waits for its commit, on a thread that for an application closing the client is
-    /// usually the main one. The same two seconds Android allows its whole `close()`, well inside what the system
-    /// tolerates from a main thread that has stopped answering.
-    static let closeCommitBudget: TimeInterval = 2
+    /// How long `flushAtClose()` waits for its commit, the last chance to get what was recorded to disk before the
+    /// client goes away. Only for that: no other commit is waited for within a limit. Waited for on a thread that for
+    /// an application closing the client is usually the main one, so the same two seconds Android allows its whole
+    /// `close()`, well inside what the system tolerates from a main thread that has stopped answering.
+    static let flushAtCloseCommitBudget: TimeInterval = 2
 
     // MARK: Set in init and never changed
 
@@ -400,7 +401,7 @@ extension DirectEventProcessor {
 
     func flushAtClose() {
         cancelReportTimer()
-        committer.commitWithinBudget(DirectEventProcessor.closeCommitBudget)
+        committer.commitWithinBudget(DirectEventProcessor.flushAtCloseCommitBudget)
         // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing: offline is the
         // application keeping the SDK off the network, and closing does not revoke that.
         queueDelivery(nil, closing: isOnline)
