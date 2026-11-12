@@ -2031,8 +2031,8 @@ extension DirectEventProcessorSpec {
                 testContext = TestContext(store: store, eventPersistence: .deferred)
                 testContext.eventProcessor.isOnline = true
                 testContext.eventProcessor.record(CustomEvent(key: "an-event", context: testContext.context))
-                testContext.eventProcessor.flush(completion: nil)
-
+                // Waits for the store to ask rather than flushing: a flush at .deferred writes on the caller's thread,
+                // so whichever write reached the disk first would be the one asking.
                 expect(located.wait(timeout: .now() + 5)) == .success
                 expect(lock.withLock { onCallersThread }).toNot(contain(true))
             }
