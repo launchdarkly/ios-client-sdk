@@ -655,6 +655,15 @@ final class EventStoreSpec: QuickSpec {
 
                     expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0"]
                 }
+
+                it("keeps every event before a size with its top bit set") {
+                    // Past Int32.max, so where Int is 32 bits it has to be rejected before it is converted.
+                    var damaged = try Data(contentsOf: log)
+                    damaged[second + 2] |= 0x80
+                    try damaged.write(to: log)
+
+                    expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0"]
+                }
             }
 
             it("loses a batch whose first frame is damaged, rather than taking it for one with nothing to send") {

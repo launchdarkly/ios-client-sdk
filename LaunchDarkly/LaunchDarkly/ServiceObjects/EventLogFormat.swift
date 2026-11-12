@@ -90,10 +90,14 @@ enum EventLogFormat {
         var cursor = fileHeaderSize
         while cursor + frameOverhead <= bytes.count {
             let type = UInt16(bytes[cursor]) << 8 | UInt16(bytes[cursor + 1])
-            let length = Int(readUInt32(bytes, at: cursor + 2))
+            // Bounded before it becomes an Int, which is 32 bits on watchOS: a damaged size past Int32.max would trap
+            // in the conversion.
+            let size = readUInt32(bytes, at: cursor + 2)
+            guard size > 0, size <= maxFrameSize
+            else { break }
             let start = cursor + frameHeaderSize
-            let end = start + length
-            guard length > 0, length <= maxFrameSize, end + frameTrailerSize <= bytes.count
+            let end = start + Int(size)
+            guard end + frameTrailerSize <= bytes.count
             else { break }
 
             var checksum = Crc32()
