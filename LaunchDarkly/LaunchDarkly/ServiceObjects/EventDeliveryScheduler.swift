@@ -79,7 +79,7 @@ final class EventDeliveryRun {
             return waitingTurn
         }
         if let turn {
-            DispatchQueue.global().async(execute: turn.proceed)
+            DispatchQueue.global(qos: .userInitiated).async(execute: turn.proceed)
         }
     }
 
@@ -97,7 +97,7 @@ final class EventDeliveryRun {
             return answered + gap
         })
         else { return false }
-        DispatchQueue.global().asyncAfter(deadline: gapEnds) {
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: gapEnds) {
             let taken = self.lock.withLock { () -> Bool in
                 guard self.waitingTurn === turn
                 else { return false }

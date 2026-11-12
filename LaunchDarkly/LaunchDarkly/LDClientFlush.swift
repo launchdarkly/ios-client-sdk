@@ -56,7 +56,7 @@ extension LDClient {
             return
         }
 
-        clients.map(\.eventProcessor).flushReportingOutcomes { delivered in
+        clients.map { $0.eventProcessor }.flushReportingOutcomes { delivered in
             completion(!delivered.contains(false))
         }
     }
@@ -133,7 +133,7 @@ extension LDClient {
         // Every environment is started before any of them is waited on. Each has its own event reporter, so waiting on
         // one before starting the next would spend the caller's budget on deliveries that could have been running all
         // along, and leave the last environment with none of it.
-        clients.map(\.eventProcessor).flushReportingOutcomes(bypassingBackoff: true) { outcomes in
+        clients.map { $0.eventProcessor }.flushReportingOutcomes(bypassingBackoff: true) { outcomes in
             lock.withLock { delivered = !outcomes.contains(false) }
             answered.signal()
         }

@@ -102,6 +102,20 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertFalse(config.enableCompression)
     }
 
+    func testEventCapacityBelowOneIsOne() {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        for capacity in [0, -5] {
+            config.eventCapacity = capacity
+            XCTAssertEqual(config.eventCapacity, 1, "\(capacity)")
+        }
+        config.eventCapacity = 3
+        XCTAssertEqual(config.eventCapacity, 3)
+
+        let objcConfig = ObjcLDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        objcConfig.eventCapacity = 0
+        XCTAssertEqual(objcConfig.eventCapacity, 1)
+    }
+
     func testObjcEnableCompression() {
         let objcConfig = ObjcLDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
         XCTAssertFalse(objcConfig.enableCompression)

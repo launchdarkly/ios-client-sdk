@@ -922,6 +922,44 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.eventProcessorMock.flushAtCloseCallCount) == 1
                 expect(testContext.eventProcessorMock.flushCallCount) == 0
             }
+            it("answers other calls while an environment's final commit is under way") {
+                let testContext = TestContext()
+                testContext.start()
+                var answeredDuringClose = false
+                testContext.eventProcessorMock.flushAtCloseCallback = {
+                    // Standing in for a commit stalled on the disk, which can hold the closing thread for the budget.
+                    let answered = DispatchSemaphore(value: 0)
+                    DispatchQueue.global().async {
+                        _ = LDClient.get()
+                        answered.signal()
+                    }
+                    answeredDuringClose = answered.wait(timeout: .now() + 1) == .success
+                }
+                testContext.subject.close()
+
+                expect(answeredDuringClose) == true
+                expect(LDClient.get()).to(beNil())
+            }
+            it("holds a start on another thread until the clients are closed") {
+                let testContext = TestContext()
+                testContext.start()
+                let started = DispatchSemaphore(value: 0)
+                var startedDuringClose = true
+                testContext.eventProcessorMock.flushAtCloseCallback = {
+                    testContext.eventProcessorMock.flushAtCloseCallback = nil
+                    DispatchQueue.global().async {
+                        LDClient.start(serviceFactory: testContext.serviceFactoryMock, config: testContext.config, context: testContext.context)
+                        started.signal()
+                    }
+                    startedDuringClose = started.wait(timeout: .now() + 0.5) == .success
+                }
+                testContext.subject.close()
+
+                expect(startedDuringClose) == false
+                expect(started.wait(timeout: .now() + 5)) == .success
+                expect(LDClient.get()).toNot(beNil())
+                LDClient.get()?.close()
+            }
         }
     }
 
