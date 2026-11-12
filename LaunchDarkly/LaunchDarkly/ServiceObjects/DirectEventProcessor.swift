@@ -177,16 +177,23 @@ class DirectEventProcessor: EventProcessor {
         self.pacing = pacing
         self.deliveryScheduler = EventDeliveryScheduler(pacesDeliveries: eventStore.isPersisting, gap: pacing.gap)
         self.launchGateOpen = pacing.launchDelay <= 0
+    }
 
+    /// Starts what the reporter does on its own: closing and listing what a previous run left.
+    ///
+    /// Called once, straight after init and before anything else uses the reporter, as `ClientServiceFactory` does.
+    /// `deliveryQueue` is suspended until the recovery is done, and suspending holds back only what has not started:
+    /// a delivery already running would list the store beside the recovery.
+    func start() {
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
         // doing it on the caller's thread would put file I/O in the way of the client starting up. At utility, below
         // the flag requests, which matter more at launch than what a previous run left. Not as a block on
         // `deliveryQueue`, whose own userInitiated QoS a block cannot go below; the queue is suspended instead, so
         // everything enqueued on it meanwhile still runs after the recovery. Only where events persist, since memory
         // holds nothing from a previous run.
-        guard eventStore.isPersisting
+        guard store.isPersisting
         else { return }
-        let store = eventStore
+        let store = self.store
         let queue = deliveryQueue
         let recovered = RecoveredListing()
         queue.suspend()

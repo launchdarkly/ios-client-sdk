@@ -117,7 +117,7 @@ final class DiagnosticReporterSpec: XCTestCase {
         tst.queueResponse(status: 202)
         let events = DirectEventProcessor(service: tst.service, onSyncComplete: nil,
                                           store: EventStore.temporary(capacity: 10, persistEvents: false),
-                                          pacing: DirectEventProcessor.Pacing(launchDelay: 0.5, gap: 0))
+                                          pacing: DirectEventProcessor.Pacing(launchDelay: 0.5, gap: 0)).started()
         tst.subject.sendsInitAfter = events.whenLaunchGateOpens
         events.isOnline = true
         tst.subject.setMode(.foreground, online: true)
