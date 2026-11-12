@@ -383,7 +383,6 @@ class DirectEventProcessorSpec: QuickSpec {
             it("never encodes an evaluation's counter in one delivery and its full event in another") {
                 // Without a disk only a delivery encodes, so what each one encodes has to count exactly the evaluations
                 // whose full events it carries, however the recorders interleave with it.
-                var runsWithCounters = 0
                 for trial in 0..<5 {
                     let observed = observed(eventCapacity: 100_000)
                     let reporter = observed.reporter
@@ -392,13 +391,27 @@ class DirectEventProcessorSpec: QuickSpec {
                     let recorders = 4
                     let evaluationsEach = 500
                     let recorded = DispatchGroup()
+                    let halfway = DispatchGroup()
+                    let resume = DispatchSemaphore(value: 0)
                     for _ in 0..<recorders {
+                        halfway.enter()
                         DispatchQueue.global().async(group: recorded) {
-                            for _ in 0..<evaluationsEach {
+                            for evaluation in 0..<evaluationsEach {
+                                if evaluation == evaluationsEach / 2 {
+                                    halfway.leave()
+                                    resume.wait()
+                                }
                                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b",
                                                                     featureFlag: trackedFlag, context: context, includeReason: false)
                             }
                         }
+                    }
+                    // A delivery between the halves, so that every trial splits the recordings at least once however
+                    // fast they run; the racing deliveries after it are what interleave with them.
+                    halfway.wait()
+                    expect(outcome(of: reporter)) == true
+                    for _ in 0..<recorders {
+                        resume.signal()
                     }
                     while recorded.wait(timeout: .now()) == .timedOut {
                         _ = outcome(of: reporter)
@@ -406,6 +419,7 @@ class DirectEventProcessorSpec: QuickSpec {
                     expect(outcome(of: reporter)) == true
 
                     var counted = 0
+                    var runsWithCounters = 0
                     for run in observed.store.stagedRuns {
                         let counters = run.filter { $0.kindField == "summary" }.map(summaryCount).reduce(0, +)
                         expect(counters).to(equal(run.filter { $0.kindField == "feature" }.count), description: "trial \(trial)")
@@ -415,10 +429,10 @@ class DirectEventProcessorSpec: QuickSpec {
                         }
                     }
                     expect(counted).to(equal(recorders * evaluationsEach), description: "trial \(trial)")
+                    expect(runsWithCounters).to(beGreaterThanOrEqualTo(2), description: "trial \(trial)")
                     expect(observed.diagnosticCache.incrementDroppedEventCountCallCount) == 0
                     reporter.isOnline = false
                 }
-                expect(runsWithCounters) > 5
             }
 
             it("encodes nothing for a flush while offline, and delivers all of it once online") {
