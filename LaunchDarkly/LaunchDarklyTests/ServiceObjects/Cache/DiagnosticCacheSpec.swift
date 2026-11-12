@@ -91,6 +91,12 @@ final class DiagnosticCacheSpec: QuickSpec {
                 expect(diagnosticStats.eventsInLastBatch) == 0
                 expect(diagnosticStats.streamInits.count) == 0
             }
+            it("increments dropped event count by many at once") {
+                let diagnosticCache = DiagnosticCache(sdkKey: "this_is_a_fake_key")
+                diagnosticCache.incrementDroppedEventCount()
+                diagnosticCache.incrementDroppedEventCount(by: 41)
+                expect(diagnosticCache.getCurrentStatsAndReset().droppedEvents) == 42
+            }
         }
     }
 

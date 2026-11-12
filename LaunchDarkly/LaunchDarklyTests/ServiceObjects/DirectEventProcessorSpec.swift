@@ -2301,7 +2301,8 @@ extension DirectEventProcessorSpec {
                 // The caller's own events all got out; the ones discarded were no one's to wait on.
                 expect(delivered) == true
                 expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 2
+                expect(testContext.diagnosticCache.droppedEventCount) == 2
+                expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 1
                 nextRun.isOnline = false
             }
 

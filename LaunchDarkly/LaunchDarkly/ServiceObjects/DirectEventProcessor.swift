@@ -271,9 +271,7 @@ class DirectEventProcessor: EventProcessor {
         guard events > 0
         else { return }
         os_log("%s discarded %d stored event(s) older than the maximum age", log: service.config.logger, type: .debug, typeName(and: #function), events)
-        for _ in 0..<events {
-            service.diagnosticCache?.incrementDroppedEventCount()
-        }
+        service.diagnosticCache?.incrementDroppedEventCount(by: events)
     }
 
     /// Records a batch lost for good. The pass that lost it tells its caller, but a delivery nobody waits on -- the

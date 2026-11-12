@@ -3,9 +3,15 @@ import Foundation
 protocol DiagnosticCaching {
     func getDiagnosticId() -> DiagnosticId
     func getCurrentStatsAndReset() -> DiagnosticStats
-    func incrementDroppedEventCount()
+    func incrementDroppedEventCount(by count: Int)
     func recordEventsInLastBatch(eventsInLastBatch: Int)
     func addStreamInit(streamInit: DiagnosticStreamInit)
+}
+
+extension DiagnosticCaching {
+    func incrementDroppedEventCount() {
+        incrementDroppedEventCount(by: 1)
+    }
 }
 
 /// In-memory diagnostic statistics (no persistence).
@@ -58,9 +64,9 @@ final class DiagnosticCache: DiagnosticCaching {
         }
     }
 
-    func incrementDroppedEventCount() {
+    func incrementDroppedEventCount(by count: Int) {
         lock.withLock {
-            droppedEvents += 1
+            droppedEvents += count
         }
     }
 
