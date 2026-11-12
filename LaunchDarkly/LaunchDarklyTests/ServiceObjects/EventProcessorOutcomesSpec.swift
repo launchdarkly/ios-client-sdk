@@ -74,6 +74,22 @@ final class EventProcessorOutcomesSpec: QuickSpec {
                 expect(lock.withLock { answered }) == [[true, true]]
             }
 
+            it("lets go of the completion once every processor has answered, rather than at the deadline") {
+                final class Held { }
+                var held: Held? = Held()
+                weak var released = held
+                processors.flushReportingOutcomes(deadline: .now() + 60) { [held] outcome in
+                    withExtendedLifetime(held) { answers.append(outcome) }
+                }
+                held = nil
+                expect(released).toNot(beNil())
+
+                first.flushReportingOutcomeReceivedCompletion?(true)
+                second.flushReportingOutcomeReceivedCompletion?(true)
+                expect(answers) == [[true, true]]
+                expect(released).to(beNil())
+            }
+
             it("posts through the backoff only where asked to") {
                 processors.flushReportingOutcomes(bypassingBackoff: true) { answers.append($0) }
                 expect(first.flushBypassingBackoffCallCount) == 1
