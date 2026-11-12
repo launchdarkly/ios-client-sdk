@@ -774,6 +774,27 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == 1
             }
         }
+        describe("the flush interval") {
+            it("is the configured one where that is a positive finite number") {
+                var config = LDConfig.stub
+                config.eventFlushInterval = 7
+                expect(DirectEventProcessor.flushInterval(config: config)) == 7
+            }
+            for interval in [TimeInterval.nan, .infinity, 0, -5] {
+                it("is the default for \(interval)") {
+                    var config = LDConfig.stub
+                    config.eventFlushInterval = interval
+                    expect(DirectEventProcessor.flushInterval(config: config)) == LDConfig.Defaults.eventFlushInterval
+                }
+            }
+            it("spaces counted read failures by the default and starts reporting for NaN") {
+                let testContext = TestContext(eventFlushInterval: .nan)
+                expect(testContext.eventProcessor.readFailureSpacing) == LDConfig.Defaults.eventFlushInterval
+                testContext.eventProcessor.isOnline = true
+                expect(testContext.eventProcessor.isReportingActive) == true
+                testContext.cleanUp()
+            }
+        }
     }
 
     private func isOnlineSpec() {

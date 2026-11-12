@@ -56,6 +56,17 @@ class DirectEventProcessor: EventProcessor {
 
     private let pacing: Pacing
 
+    /// `LDConfig.eventFlushInterval`, or its default where that is not a positive finite number. The
+    /// report timer, the backoff and the read-failure spacing all take it: NaN would trap the timer and make the backoff
+    /// wait for good, and nought would fire the timer ten thousand times a second and let three quick passes drop an
+    /// intact batch.
+    private let flushInterval: TimeInterval
+
+    static func flushInterval(config: LDConfig) -> TimeInterval {
+        let configured = config.eventFlushInterval
+        return configured.isFinite && configured > 0 ? configured : LDConfig.Defaults.eventFlushInterval
+    }
+
     var lastEventResponseDate: Date {
         committer.lastEventResponseDate
     }
@@ -168,8 +179,10 @@ class DirectEventProcessor: EventProcessor {
         self.service = service
         self.onSyncComplete = onSyncComplete
         self.sender = AnalyticsEventSender(service: service)
-        self.retryState = retryState ?? DeliveryRetryState(flushInterval: service.config.eventFlushInterval)
-        self.readFailureSpacingValue = service.config.eventFlushInterval
+        let flushInterval = DirectEventProcessor.flushInterval(config: service.config)
+        self.flushInterval = flushInterval
+        self.retryState = retryState ?? DeliveryRetryState(flushInterval: flushInterval)
+        self.readFailureSpacingValue = flushInterval
         self.lostEvents = lostEvents
         self.committer = EventCommitter(config: service.config, store: eventStore, encoding: encoding,
                                         commitQueue: commitQueue, diagnosticCache: service.diagnosticCache,
@@ -308,7 +321,7 @@ extension DirectEventProcessor {
         else { return }
         online = true
         if eventReportTimer == nil {
-            eventReportTimer = LDTimer(withTimeInterval: service.config.eventFlushInterval, fireQueue: deliveryQueue) { [weak self] in
+            eventReportTimer = LDTimer(withTimeInterval: flushInterval, fireQueue: deliveryQueue) { [weak self] in
                 self?.reportIntervalEnded()
             }
         }
