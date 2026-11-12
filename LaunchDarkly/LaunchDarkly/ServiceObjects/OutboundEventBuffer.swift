@@ -2,7 +2,7 @@ import Foundation
 import OSLog
 
 /// Turns what `DirectEventProcessor` records into what it stages: evaluations into summary counters, and events into the
-/// JSON the events endpoint accepts. Android's `OutboundEventBuffer` plays the same part.
+/// JSON the events endpoint accepts.
 ///
 /// It has no lock of its own. The summarizer is only to be used while holding the processor's `recordLock`, and the
 /// encoders are only reached under its `commitLock`.

@@ -1,11 +1,9 @@
 import Foundation
 import OSLog
 
-/// Posts a batch of events to LaunchDarkly once and says what the response means. Android's `AnalyticsEventSender`
-/// plays the same part.
+/// Sends a batch of events to LaunchDarkly and classifies the response.
 ///
-/// It keeps no state. What an outcome means for the SDK -- the server's time, when to post again, removing the batch --
-/// is left to `DirectEventProcessor`, which owns that state.
+/// Stateless. Retries, backoff, server time, and removing the batch are handled by `DirectEventProcessor`.
 final class AnalyticsEventSender {
     enum Outcome {
         /// LaunchDarkly took the events. Carries the time the response gave, if it gave one.

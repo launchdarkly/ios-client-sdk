@@ -104,7 +104,7 @@ final class PollingRetryState {
 }
 
 /// When event delivery may post again after a failure, following the SDK Retry Behavior specification as event
-/// durability §9 binds it. Android's `DeliveryRetryState` plays the same part.
+/// durability §9 binds it.
 ///
 /// A failure never stops delivery, it only makes the next post wait. An ordinary one, such as a 503 or no network,
 /// waits from a second up to the flush interval, so it is never later than the schedule already would be. A refusal
