@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 
-/// What the events of every environment do as the application goes to the background.
+/// Writes and delivers the events of every environment as the application goes to the background.
 ///
 /// One for all environments rather than one per client, so that backgrounding takes one background activity assertion
 /// however many environments there are, and reaches only the clients started now: a closed client the application
