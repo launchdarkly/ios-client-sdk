@@ -116,22 +116,6 @@ class DirectEventProcessor: EventProcessor {
     /// `stateLock`.
     private var readFailures: [String: (counted: Int, lastCounted: DispatchTime)] = [:]
 
-    // MARK: Guarded by claimLock
-
-    /// Guards `batchesInFlight`.
-    ///
-    /// Its own lock rather than `stateLock`, which an evaluating thread takes to read `lastEventResponseDate`: a claim
-    /// is made next to a listing of the store, and nothing a flag evaluation waits on may be held near the disk.
-    private let claimLock = UnfairLock()
-
-    /// The batches a delivery has taken and not yet had an answer for, by payload ID. Only to be used while holding
-    /// `claimLock`.
-    ///
-    /// A batch stays on disk until its response arrives. `EventDeliveryScheduler` keeps a second delivery from listing it
-    /// inside that window; this is what keeps it from being sent twice, under the same payload ID, should two ever overlap.
-    /// A delivery that finds a batch claimed waits on that claim's outcome rather than sending it.
-    private var batchesInFlight: [String: Claim] = [:]
-
     // MARK: Confined to timerQueue
 
     var isOnline: Bool {
@@ -426,8 +410,8 @@ extension DirectEventProcessor {
     ///
     /// Wherever events persist, everything accepted before the call is on disk by the time it returns, even where the
     /// delivery itself cannot run because the client is offline. What it does not do is close those events into a
-    /// batch: only a delivery does that, so a delivery already under way may be the one holding them. That is why the
-    /// answer waits on the claims it skips rather than only on what it sent itself.
+    /// batch: only a delivery does that, and the one this queues, or the queued one it joins, is the next to start and
+    /// so the one that will.
     private func commitThenQueueDelivery(_ completion: FlushOutcomeClosure?) {
         commitWherePersisting()
         queueDelivery(completion)
@@ -508,112 +492,65 @@ extension DirectEventProcessor {
         // held in memory, each with the summary its commit staged. Held back, what is committed meanwhile goes on into
         // the open log, which closes once it is full or once the batches ahead of it are gone, so an outage costs a
         // batch per `EventLogFormat.maxBatchSize` rather than one per pass.
-        let waiting = claimDeliverableBatches(discardingExpired: true)
-        // Settled before this delivery's own outcome is reported, which is what the answer waits for last.
-        var settled = (lossMark: UInt64(0), accountsForEverything: false)
-        // This delivery's own outcome, plus that of every batch another delivery is already sending. The caller's
-        // events may be in either: a delivery that started after they were recorded closed them into its batch.
-        let answer = PassAnswer(outstanding: waiting.waitingOn.count + 1) { outcome in
-            completion?(outcome == .delivered && settled.accountsForEverything, settled.lossMark)
-        }
-        // Waited on for the answer, but not before closing.
-        waitOn(waiting.waitingOn, answer)
-
-        deliverOwn(waiting.deliverable, run, lostAnything: waiting.lostAnything) { waitingOutcome in
+        let waiting = listDeliverableBatches(discardingExpired: true)
+        deliverListed(waiting, run) { waitingOutcome in
             guard waitingOutcome != .blocked
             else {
                 // Committed all the same, since a delivery is a commit point. Nothing was closed, so the caller's events
                 // did not go, and the mark is as of this commit, the last point anything the caller recorded was staged.
-                settled = (self.committer.commitLeavingTheLogOpen(), false)
+                let lossMark = self.committer.commitLeavingTheLogOpen()
                 os_log("%s will report failure: an earlier batch could not be delivered", log: self.service.config.logger, type: .debug, self.typeName(and: #function))
-                answer.report(.blocked)
+                completion?(false, lossMark)
                 return
             }
 
             let (lossMark, closedEverything) = self.committer.commitAndCloseBatch()
-            let new = self.claimDeliverableBatches(discardingExpired: false)
+            let new = self.listDeliverableBatches(discardingExpired: false)
             // Events left in a log that would not close, or in a batch a listing that failed could not see, are still on
             // the disk for a later delivery. This one delivers what it has, and cannot say the caller's events got out.
-            settled = (lossMark, closedEverything && waiting.isComplete && new.isComplete)
-            if !settled.accountsForEverything {
+            let accountsForEverything = closedEverything && waiting.isComplete && new.isComplete
+            if !accountsForEverything {
                 os_log("%s will report failure: %s", log: self.service.config.logger, type: .debug, self.typeName(and: #function),
                        closedEverything ? "the stored events could not be listed" : "the event log could not be closed")
             }
-            if waiting.deliverable.isEmpty && waiting.waitingOn.isEmpty && new.deliverable.isEmpty && new.waitingOn.isEmpty {
+            if waiting.batches.isEmpty && new.batches.isEmpty {
                 os_log("%s aborted. Event store is empty", log: self.service.config.logger, type: .debug, self.typeName(and: #function))
                 self.reportSyncComplete(nil)
             }
 
-            let newAnswer = PassAnswer(outstanding: new.waitingOn.count + 1) { newOutcome in
-                answer.report(max(waitingOutcome, newOutcome))
+            self.deliverListed(new, run) { newOutcome in
+                completion?(max(waitingOutcome, newOutcome) == .delivered && accountsForEverything, lossMark)
             }
-            self.waitOn(new.waitingOn, newAnswer)
-            self.deliverOwn(new.deliverable, run, lostAnything: new.lostAnything, newAnswer.report)
         }
     }
 
-    /// Delivers the batches this delivery claimed, releasing the claims once it has an outcome.
-    ///
-    /// - Parameter lostAnything: whether the listing that found them found other batches deleted unsent.
-    private func deliverOwn(_ batches: [EventBatch], _ run: EventDeliveryRun, lostAnything: Bool, _ completion: @escaping (PassOutcome) -> Void) {
-        guard !batches.isEmpty
+    /// Delivers the batches one pass of a delivery listed.
+    private func deliverListed(_ listing: BatchListing, _ run: EventDeliveryRun, _ completion: @escaping (PassOutcome) -> Void) {
+        let lostAnything = listing.vanishedEvents > 0
+        guard !listing.batches.isEmpty
         else {
             completion(lostAnything ? .lost : .delivered)
             return
         }
         os_log("%s starting", log: service.config.logger, type: .debug, typeName(and: #function))
-        deliver(batches, run, lostAnything: lostAnything, retried: false) { outcome in
-            self.releaseClaim(on: batches, delivered: outcome == .delivered)
-            completion(outcome)
-        }
+        deliver(listing.batches, run, lostAnything: lostAnything, retried: false, completion)
     }
 
-    /// Reports the outcome of each batch another delivery is sending to `answer`, once it has one.
-    private func waitOn(_ claims: [Claim], _ answer: PassAnswer) {
-        for claim in claims {
-            whenSettled(claim) { answer.report($0 ? .delivered : .blocked) }
-        }
-    }
-
-    /// What `claimDeliverableBatches(discardingExpired:)` took.
-    private struct ClaimedBatches {
-        let deliverable: [EventBatch]
-        /// The claims on the batches left out. One may hold this caller's events -- `commitRecordedEvents` only stages
-        /// them, and whichever delivery runs next is what closes them into a batch -- so the answer has to wait for
-        /// those claims rather than assume they are someone else's business.
-        let waitingOn: [Claim]
-        let isComplete: Bool
-        /// Whether the listing found batches deleted unsent.
-        let lostAnything: Bool
-    }
-
-    /// Takes the batches this delivery will send, leaving out any another delivery is still waiting on a response for.
+    /// Lists the batches this delivery will send.
+    ///
+    /// A batch stays on disk until its response arrives, so a delivery listing beside another would send it twice.
+    /// `EventDeliveryScheduler` runs deliveries one at a time, and each ends its passes before the next lists.
     ///
     /// - Parameter discardingExpired: whether to discard what is too old to report first, which a second pass moments
     ///   after the first has no need to do again.
-    private func claimDeliverableBatches(discardingExpired: Bool) -> ClaimedBatches {
-        // Listed before the lock is taken, because listing reads the disk. Taking what appeared after it is the next
-        // delivery's business; all this has to be atomic is deciding which of these batches are this delivery's.
+    private func listDeliverableBatches(discardingExpired: Bool) -> BatchListing {
         // Expired first, so that a batch too old to report is not sent.
         if discardingExpired {
             reportDiscarded(store.discardExpired())
         }
         let listing = store.listPendingBatches()
         reportVanished(listing.vanishedEvents)
-        return claimLock.withLock {
-            var deliverable: [EventBatch] = []
-            var waitingOn: [Claim] = []
-            for batch in listing.batches {
-                if let claimed = batchesInFlight[batch.payloadId] {
-                    waitingOn.append(claimed)
-                } else {
-                    batchesInFlight[batch.payloadId] = Claim()
-                    deliverable.append(batch)
-                }
-            }
-            return ClaimedBatches(deliverable: deliverable, waitingOn: waitingOn, isComplete: listing.isComplete,
-                                  lostAnything: listing.vanishedEvents > 0)
-        }
+        return listing
     }
 
     /// Counts as lost the events of batches a listing found deleted unsent, or of an open log a close found gone.
@@ -622,45 +559,6 @@ extension DirectEventProcessor {
         else { return }
         os_log("%s %d stored event(s) were deleted before they could be sent", log: service.config.logger, type: .error, typeName(and: #function), events)
         reportStoredEventsLost(events)
-    }
-
-    /// Releases the claims once the delivery has an answer, whether or not every batch was sent: `deliver` stops at the
-    /// first retryable failure, and what it did not reach has to be deliverable again.
-    ///
-    /// Every batch in the pass is settled with the pass's own result, rather than its own. A pass that stopped partway
-    /// did not hear back about what it never reached, so the batches it is giving up are not known to have arrived.
-    private func releaseClaim(on batches: [EventBatch], delivered: Bool) {
-        let waiters = claimLock.withLock { () -> [FlushOutcomeClosure] in
-            batches.flatMap { batch -> [FlushOutcomeClosure] in
-                guard let claimed = batchesInFlight.removeValue(forKey: batch.payloadId)
-                else { return [] }
-                claimed.outcome = delivered
-                return claimed.waiters
-            }
-        }
-
-        for waiter in waiters {
-            waiter(delivered)
-        }
-    }
-
-    /// Calls back with a claimed batch's outcome, once there is one.
-    ///
-    /// Settling and registering both happen under `claimLock`, so a claim released between the listing and this call
-    /// answers from what it recorded rather than leaving a waiter nobody will ever come back to.
-    private func whenSettled(_ claim: Claim, _ completion: @escaping FlushOutcomeClosure) {
-        let settled = claimLock.withLock { () -> Bool? in
-            guard let outcome = claim.outcome
-            else {
-                claim.waiters.append(completion)
-                return nil
-            }
-            return outcome
-        }
-
-        if let settled {
-            completion(settled)
-        }
     }
 
     /// How a pass over some batches went, from best to worst.

@@ -3647,8 +3647,8 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.flushReportingOutcome(completion: answers.record)
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
 
-                // Held on the first post, each of these finds the only batch claimed by it. None of them is told
-                // its events arrived on the strength of having nothing left of its own to send.
+                // Held on the first post, these join one delivery queued behind it, which sends that batch again once
+                // the first ends. None of them is told its events arrived on the strength of the first having sent it.
                 for _ in 0..<20 {
                     testContext.eventProcessor.flushReportingOutcome(completion: answers.record)
                 }
