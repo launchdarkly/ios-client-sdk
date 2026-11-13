@@ -76,7 +76,7 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.eventCapacity, LDConfig.Defaults.eventCapacity)
         XCTAssertEqual(config.eventPersistence, LDConfig.Defaults.eventPersistence)
         XCTAssertEqual(config.eventCapacityBytes, 20 * 1024 * 1024)
-        XCTAssertEqual(config.eventMaxAge, 7 * 24 * 60 * 60)
+        XCTAssertEqual(config.eventMaxAge, 24 * 60 * 60)
         XCTAssertEqual(config.eventDeliveryDelay, 2)
         XCTAssertEqual(config.connectionTimeout, LDConfig.Defaults.connectionTimeout)
         XCTAssertEqual(config.eventFlushInterval, LDConfig.Defaults.eventFlushInterval)

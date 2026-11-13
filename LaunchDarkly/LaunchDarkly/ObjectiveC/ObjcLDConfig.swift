@@ -63,7 +63,7 @@ public final class ObjcLDConfig: NSObject {
         set { config.eventCapacityBytes = newValue }
     }
 
-    /// How long the SDK keeps persisted events it has not yet reported before discarding them, which also removes what it stored for a mobile key the application stopped using. No effect where `eventPersistence` is `.disabled`. (Default: 7 days)
+    /// How long the SDK keeps persisted events it has not yet reported before discarding them, which also removes what it stored for a mobile key the application stopped using. No effect where `eventPersistence` is `.disabled`. (Default: 24 hours)
     @objc public var eventMaxAge: TimeInterval {
         get { config.eventMaxAge }
         set { config.eventMaxAge = newValue }
