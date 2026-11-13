@@ -110,6 +110,19 @@ jobs:
 
       - uses: ./.github/actions/build-watchos
 
+  # Xcode 16 or later only: the project uses folders Xcode keeps in sync, which earlier versions cannot open.
+  build-test-app:
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
+        with:
+          xcode-version: 16.4.0
+
+      - uses: ./.github/actions/build-test-app
+
   test-swiftpm:
     runs-on: ${{ matrix.os }}
 
