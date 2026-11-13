@@ -3923,6 +3923,21 @@ extension DirectEventProcessorSpec {
                 expect(testContext.flushOutcome()) == true
             }
 
+            it("retries a TLS failure on the normal backoff, within the flush that met it") {
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedInitialDelay: 512, extendedCeiling: 3600))
+                testContext.serviceMock.stubbedEventResponse = (nil, nil, URLError(.serverCertificateUntrusted), nil)
+                testContext.eventProcessor.record(CustomEvent(key: "untrusted", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+
+                let flushed = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: flushed.record)
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+                testContext.serviceMock.stubEventResponse(success: true)
+
+                expect(flushed.value()).toEventually(equal(true), timeout: .seconds(5))
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["untrusted"], ["untrusted"]]
+            }
+
             it("posts what is buffered at close through the backoff's wait, though closing goes offline straight after") {
                 testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedInitialDelay: 512, extendedCeiling: 3600))
                 testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)

@@ -17,21 +17,11 @@ final class AnalyticsEventSender {
         /// The response's status, or nil where there was no response.
         let statusCode: Int?
         /// True when the failure calls for the extended backoff: a 4xx other than 400, 408, 429 or a payload refusal
-        /// (`isEventPayloadRefused`), or a TLS or certificate failure. Anything else retries on the normal backoff.
+        /// (`isEventPayloadRefused`). Anything else retries on the normal backoff.
         let unexpected: Bool
         /// The wait the response asked for, or nil where it gave none.
         let retryAfter: TimeInterval?
     }
-
-    private static let tlsErrorCodes: Set<URLError.Code> = [
-        .secureConnectionFailed,
-        .serverCertificateHasBadDate,
-        .serverCertificateUntrusted,
-        .serverCertificateHasUnknownRoot,
-        .serverCertificateNotYetValid,
-        .clientCertificateRejected,
-        .clientCertificateRequired
-    ]
 
     private let service: DarklyServiceProvider
 
@@ -54,17 +44,11 @@ final class AnalyticsEventSender {
 
         os_log("%s Sending events failed with error: %s response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: response))
         let statusCode = response?.statusCode
-        let unexpected: Bool
-        if let statusCode, (400..<600).contains(statusCode) {
-            // A refusal of the payload waits like a 400: the processor drops the batch after a second in a row, and
-            // the batches behind it are not to be held back an extended wait meanwhile.
-            unexpected = HTTPURLResponse.StatusCodes.isTerminalStatusCode(statusCode)
-                && !HTTPURLResponse.StatusCodes.isEventPayloadRefused(statusCode)
-        } else if let urlError = error as? URLError {
-            unexpected = AnalyticsEventSender.tlsErrorCodes.contains(urlError.code)
-        } else {
-            unexpected = false
-        }
+        // A refusal of the payload waits like a 400: the processor drops the batch after a second in a row, and the
+        // batches behind it are not to be held back an extended wait meanwhile.
+        let unexpected = statusCode.map {
+            HTTPURLResponse.StatusCodes.isTerminalStatusCode($0) && !HTTPURLResponse.StatusCodes.isEventPayloadRefused($0)
+        } ?? false
         return .failed(Failure(error: error.map { .request($0) } ?? .response(response),
                                statusCode: statusCode,
                                unexpected: unexpected,
