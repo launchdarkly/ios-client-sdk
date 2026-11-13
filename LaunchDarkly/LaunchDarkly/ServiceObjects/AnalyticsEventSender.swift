@@ -16,8 +16,8 @@ final class AnalyticsEventSender {
         let error: SynchronizingError
         /// The response's status, or nil where there was no response.
         let statusCode: Int?
-        /// Whether the failure is unlikely to pass soon: a 4xx other than a refusal of the payload
-        /// (`isEventPayloadRefused`), 408 and 429, or a TLS or certificate failure.
+        /// True when the failure calls for the extended backoff: a 4xx other than 400, 408, 429 or a payload refusal
+        /// (`isEventPayloadRefused`), or a TLS or certificate failure. Anything else retries on the normal backoff.
         let unexpected: Bool
         /// The wait the response asked for, or nil where it gave none.
         let retryAfter: TimeInterval?

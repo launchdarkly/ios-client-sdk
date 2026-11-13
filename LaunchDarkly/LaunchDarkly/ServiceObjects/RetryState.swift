@@ -108,7 +108,7 @@ final class PollingRetryState {
 ///
 /// A failure never stops delivery, it only makes the next post wait. An ordinary one, such as a 503 or no network,
 /// waits from a second up to the flush interval, so it is never later than the schedule already would be. A refusal
-/// that is unlikely to pass soon, such as a 401, waits about eight and a half minutes, doubling up to an hour, rather
+/// likely to last, such as a 401, waits about eight and a half minutes, doubling up to an hour, rather
 /// than deleting the batch: a valid key is sometimes refused for minutes during an incident, and every event the fleet
 /// recorded meanwhile would be lost. A `Retry-After` sets the wait instead. One accepted delivery puts everything back.
 ///
@@ -159,8 +159,8 @@ final class DeliveryRetryState {
     }
 
     /// - Parameters:
-    ///   - unexpected: whether the failure is unlikely to pass soon: a 4xx other than 400, 408 and 429, or a TLS or
-    ///     certificate failure.
+    ///   - unexpected: true when the failure calls for the extended backoff, as `AnalyticsEventSender.Failure` decides
+    ///     it. Otherwise the normal backoff applies.
     ///   - retryAfter: the wait the response asked for, or nil where it gave none.
     /// - Returns: how long nothing may be posted.
     @discardableResult
