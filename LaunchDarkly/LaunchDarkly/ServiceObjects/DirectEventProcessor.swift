@@ -149,7 +149,7 @@ class DirectEventProcessor: EventProcessor {
     private var launchGateOpen: Bool
     /// When the reporter first went online, which the gate counts from.
     private var wentOnlineAt: DispatchTime?
-    /// What waits for the gate to open.
+    /// What waits for the gate to open with the reporter online.
     private var launchGateWaiters: [() -> Void] = []
 
     init(service: DarklyServiceProvider,
@@ -321,6 +321,7 @@ extension DirectEventProcessor {
                     self.checkLaunchGate(after: self.pacing.launchDelay)
                 }
             }
+            self.releaseLaunchGateWaiters()
             guard self.launchGateOpen, self.hasEventsFromPreviousRun
             else { return }
             self.hasEventsFromPreviousRun = false
@@ -340,16 +341,24 @@ extension DirectEventProcessor {
         }
     }
 
-    /// Runs `block`, on a global queue, once the launch gate is open.
+    /// Runs `block`, on a global queue, once the launch gate is open and the reporter is online. Offline, including once
+    /// closed, it waits for the reporter to go online.
     func whenLaunchGateOpens(_ block: @escaping () -> Void) {
         deliveryQueue.async { [weak self] in
-            guard let self, !self.launchGateOpen
-            else {
-                DispatchQueue.global().async(execute: block)
-                return
-            }
+            guard let self
+            else { return }
             self.launchGateWaiters.append(block)
+            self.releaseLaunchGateWaiters()
         }
+    }
+
+    /// On `deliveryQueue`.
+    private func releaseLaunchGateWaiters() {
+        guard launchGateOpen, !launchGateWaiters.isEmpty, isOnline
+        else { return }
+        let waiters = launchGateWaiters
+        launchGateWaiters = []
+        waiters.forEach { DispatchQueue.global().async(execute: $0) }
     }
 
     private func checkLaunchGate(after delay: TimeInterval) {
@@ -368,9 +377,7 @@ extension DirectEventProcessor {
             return
         }
         launchGateOpen = true
-        let waiters = launchGateWaiters
-        launchGateWaiters = []
-        waiters.forEach { DispatchQueue.global().async(execute: $0) }
+        releaseLaunchGateWaiters()
         guard hasEventsFromPreviousRun
         else { return }
         os_log("%s Sending events from a previous run, %dms after going online", log: service.config.logger, type: .debug, typeName(and: #function), Int(pacing.launchDelay * 1000))

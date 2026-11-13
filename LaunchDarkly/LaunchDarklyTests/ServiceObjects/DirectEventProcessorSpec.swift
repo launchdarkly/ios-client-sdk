@@ -669,6 +669,38 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(gateOpened(reporter, after: 0.8)) == true
             }
 
+            it("holds what waits for the launch gate while the reporter is offline, until it is online again") {
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
+                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 0.3, gap: 0)).started()
+                nextRun = reporter
+                let opened = UnfairLock()
+                var hasOpened = false
+                reporter.whenLaunchGateOpens { opened.withLock { hasOpened = true } }
+                reporter.isOnline = true
+                reporter.isOnline = false
+
+                Thread.sleep(forTimeInterval: 0.8)
+                expect(opened.withLock { hasOpened }) == false
+
+                reporter.isOnline = true
+                expect(opened.withLock { hasOpened }).toEventually(beTrue(), timeout: .seconds(2))
+            }
+
+            it("holds what asks for the open launch gate while the reporter is offline") {
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
+                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 0)).started()
+                nextRun = reporter
+                let opened = UnfairLock()
+                var hasOpened = false
+                reporter.whenLaunchGateOpens { opened.withLock { hasOpened = true } }
+
+                Thread.sleep(forTimeInterval: 0.3)
+                expect(opened.withLock { hasOpened }) == false
+
+                reporter.isOnline = true
+                expect(opened.withLock { hasOpened }).toEventually(beTrue(), timeout: .seconds(2))
+            }
+
             it("holds nothing at the launch gate where the launch delay is zero") {
                 let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
                                                     pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 0)).started()

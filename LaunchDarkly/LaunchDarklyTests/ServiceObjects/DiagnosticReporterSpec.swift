@@ -128,6 +128,26 @@ final class DiagnosticReporterSpec: XCTestCase {
         tst.stop()
     }
 
+    func testInitEventGoingOfflineBeforeTheLaunchGateOpensWaitsForOnline() {
+        let tst = TestContext()
+        tst.queueResponse(status: 202)
+        let events = DirectEventProcessor(service: tst.service, onSyncComplete: nil,
+                                          store: EventStore.temporary(capacity: 10, persistEvents: false),
+                                          pacing: DirectEventProcessor.Pacing(launchDelay: 0.3, gap: 0)).started()
+        tst.subject.sendsInitAfter = events.whenLaunchGateOpens
+        events.isOnline = true
+        tst.subject.setMode(.foreground, online: true)
+        events.isOnline = false
+
+        Thread.sleep(forTimeInterval: 0.5)
+        tst.expectNoEvent()
+
+        events.isOnline = true
+        XCTAssertEqual(tst.takeEvent().kind, .diagnosticInit)
+        events.isOnline = false
+        tst.stop()
+    }
+
     func testRetries() {
         let tst = TestContext()
         tst.queueResponse(status: 500)
