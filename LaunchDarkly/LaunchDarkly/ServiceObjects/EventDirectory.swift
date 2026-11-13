@@ -1017,13 +1017,14 @@ extension BatchLocks {
 #endif
 
 extension EventDirectory {
-    /// The directory the store for a mobile key belongs in.
+    /// The directory the store for one environment belongs in. `environmentName` is used as it is, so it has to be safe
+    /// in a path and hold nothing secret.
     ///
     /// tvOS is the reason this is not simply Application Support: a tvOS application is only allowed to persist to
     /// purgeable caches, so there the events are kept somewhere the system may reclaim, which is the most durability
     /// the platform offers. A directory that turns out not to be writable is no different from a full device: the store
     /// gives up on the disk and holds events in memory.
-    static func defaultUrl(mobileKey: String) -> URL {
+    static func defaultUrl(environmentName: String) -> URL {
         #if os(tvOS)
         let searchPath = FileManager.SearchPathDirectory.cachesDirectory
         #else
@@ -1033,14 +1034,9 @@ extension EventDirectory {
         let root = FileManager.default.urls(for: searchPath, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
 
-        var keyComponent = Util.sha256(mobileKey).base64UrlEncodedString
-        if let bundleId = Bundle.main.bundleIdentifier {
-            keyComponent = "\(Util.sha256(bundleId).base64UrlEncodedString).\(keyComponent)"
-        }
-
         return root
             .appendingPathComponent("com.launchdarkly.events", isDirectory: true)
-            .appendingPathComponent(keyComponent, isDirectory: true)
+            .appendingPathComponent(environmentName, isDirectory: true)
     }
 }
 

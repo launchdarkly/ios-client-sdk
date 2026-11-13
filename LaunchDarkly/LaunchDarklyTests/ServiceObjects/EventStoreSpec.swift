@@ -1052,6 +1052,12 @@ final class EventStoreSpec: QuickSpec {
                 expect(reader.pendingEventCount) == 2
             }
 
+            it("keeps an environment's events in a directory named as it is told, without hashing it again") {
+                let url = EventDirectory.defaultUrl(environmentName: "an-environment")
+                expect(url.lastPathComponent) == "an-environment"
+                expect(url.deletingLastPathComponent().lastPathComponent) == "com.launchdarkly.events"
+            }
+
             it("names a batch with the version of how its name reads") {
                 _ = store.stage(EventStoreSpec.payload("only"))
                 let batch = store.closeBatch()!
