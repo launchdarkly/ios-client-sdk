@@ -767,25 +767,17 @@ class DirectEventProcessorSpec: QuickSpec {
             var config: LDConfig!
             beforeEach {
                 config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+                config.eventPersistence = .disabled
+                try? config.setSecondaryMobileKeys(Dictionary(uniqueKeysWithValues: (2...7).map { ("env-\($0)", "mob-\($0)") }))
             }
-            it("is the whole of it for a single environment") {
+            it("is the whole of it for each environment, however many are configured") {
                 config.eventCapacityBytes = 2_400
-                expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == 2_400
+                expect(config.getSecondaryMobileKeys().count) == 6
+                expect((DirectEventProcessor.makeStore(config: config) as? EventStore)?.byteCapacity) == 2_400
             }
-            it("is shared equally by the configured environments") {
-                config.eventCapacityBytes = 2_400
-                try? config.setSecondaryMobileKeys(["second": "mob-second", "third": "mob-third", "fourth": "mob-fourth"])
-                expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == 600
-            }
-            it("shares the default where none is set") {
+            it("is the whole default for each environment where none is set") {
                 config.eventCapacityBytes = 0
-                try? config.setSecondaryMobileKeys(["second": "mob-second"])
-                expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == LDConfig.Defaults.eventCapacityBytes / 2
-            }
-            it("leaves each environment at least a byte") {
-                config.eventCapacityBytes = 2
-                try? config.setSecondaryMobileKeys(["second": "mob-second", "third": "mob-third"])
-                expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == 1
+                expect((DirectEventProcessor.makeStore(config: config) as? EventStore)?.byteCapacity) == LDConfig.Defaults.eventCapacityBytes
             }
         }
         describe("the flush interval") {

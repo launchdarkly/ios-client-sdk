@@ -190,7 +190,7 @@ final class EventStore: EventStoring {
     private let disk: EventDirectory?
     private let capacity: Int
     /// The most bytes summaries may take the store to.
-    private let byteCapacity: Int
+    let byteCapacity: Int
     /// The most bytes full events may take the store to: the byte capacity less a fifth of it, held back so that
     /// summaries, which bypass `capacity`, still have room once full events are being refused.
     private let eventByteCapacity: Int

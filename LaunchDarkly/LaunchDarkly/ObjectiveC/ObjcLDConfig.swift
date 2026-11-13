@@ -57,7 +57,7 @@ public final class ObjcLDConfig: NSObject {
         set { config.eventPersistence = newValue }
     }
 
-    /// The maximum number of bytes of events the SDK keeps, on disk and in memory together, whatever `eventPersistence` is, for every environment together: each environment in `secondaryMobileKeys` gets an equal share of it, unlike `eventCapacity`. When an environment reaches its share, the SDK discards new events until it reports the stored ones; a fifth of each share is kept for the summaries of flag evaluations. (Default: 20 MiB)
+    /// The maximum number of bytes of events the SDK keeps for each environment, on disk and in memory together, whatever `eventPersistence` is: like `eventCapacity`, each environment in `secondaryMobileKeys` has it in full. When an environment reaches it, the SDK discards new events until it reports the stored ones; a fifth of it is kept for the summaries of flag evaluations. (Default: 20 MiB)
     @objc public var eventCapacityBytes: Int {
         get { config.eventCapacityBytes }
         set { config.eventCapacityBytes = newValue }
