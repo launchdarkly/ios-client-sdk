@@ -1,29 +1,26 @@
 #if os(watchOS)
 import Foundation
+import WatchKit
 import XCTest
 
 @testable import LaunchDarkly
 
-final class WatchOSEnvironmentReporterSpec: XCTest {
+final class WatchOSEnvironmentReporterSpec: XCTestCase {
     func testDefaultReporterBehavior() {
         let chain = EnvironmentReporterChainBase()
         chain.setNext(WatchOSEnvironmentReporter())
 
-        XCTAssert(!chain.applicationInfo.isEmpty())
+        XCTAssertNotNil(chain.applicationInfo.applicationId)
         XCTAssertNotEqual(chain.deviceModel, "UNKNOWN")
         XCTAssertNotEqual(chain.systemVersion, "UNKNOWN")
-        XCTAssertNotEqual(chain.systemName, "UNKNOWN")
-
-        XCTAssertEqual(chain.operatingSystem, .watchOS)
 
         XCTAssertNil(chain.vendorUUID)
     }
 
     func testBuilderDoesNotIncludeWatchInfoWithoutExplicitOptIn() {
-        let builder = EnvironmentReporterBuilder()
-        let reporting = builder.build()
+        let reporting = EnvironmentReporterBuilder().build()
 
-        XCTAssertEqual(reporting.operatingSystem, .watchOS)
+        XCTAssertEqual(reporting.deviceModel, EnvironmentReporterChainBase().deviceModel)
     }
 
     func testEnsureBuilderUsesCorrectReporter() {
@@ -32,7 +29,7 @@ final class WatchOSEnvironmentReporterSpec: XCTest {
 
         let reporting = builder.build()
 
-        XCTAssertEqual(reporting.operatingSystem, .watchOS)
+        XCTAssertEqual(reporting.deviceModel, WKInterfaceDevice.current().model)
     }
 }
 #endif

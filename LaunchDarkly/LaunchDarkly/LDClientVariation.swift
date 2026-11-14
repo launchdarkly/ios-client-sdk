@@ -170,7 +170,7 @@ extension LDClient {
     }
 
     private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool, methodName: String) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
-        var visited: Set<String>? = nil
+        var visited: Set<String>?
         return variationDetailInternal(flagKey, defaultValue, needsReason: needsReason, methodName: methodName, visited: &visited)
     }
 
@@ -220,7 +220,7 @@ extension LDClient {
                 result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "FLAG_NOT_FOUND"])
             }
 
-            eventReporter.recordFlagEvaluationEvents(flagKey: flagKey,
+            eventProcessor.recordFlagEvaluationEvents(flagKey: flagKey,
                                                      value: result.value.toLDValue(),
                                                      defaultValue: defaultValue.toLDValue(),
                                                      featureFlag: featureFlag,

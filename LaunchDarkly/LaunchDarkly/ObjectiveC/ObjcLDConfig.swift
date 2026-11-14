@@ -35,10 +35,47 @@ public final class ObjcLDConfig: NSObject {
         set { config.streamUrl = newValue }
     }
 
-    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. (Default: 100)
+    /// The maximum number of analytics events the LDClient can store. When the LDClient event store reaches the eventCapacity, the SDK discards events until it successfully reports them to LaunchDarkly. The same number bounds how many distinct contexts flag evaluations are summarized for between two reports; evaluations for contexts beyond it are not counted until the next report. (Default: 2000)
+    ///
+    /// A capacity below one is treated as one; to stop sending events altogether, set `sendEvents` to false instead.
     @objc public var eventCapacity: Int {
         get { config.eventCapacity }
         set { config.eventCapacity = newValue }
+    }
+
+    /// How far the SDK goes to make a recorded event outlive the process that recorded it.
+    ///
+    /// Without this, an event lives in memory until it is delivered, and a process that dies before the next flush
+    /// takes everything recorded since the last one, including the crash an application was reporting when it died.
+    /// `.immediate` additionally puts the write on the thread that called `track` or `identify`, so there is no window
+    /// in which the event exists only in memory. (Default: `.disabled`)
+    ///
+    /// - Warning: Experimental. Both levels other than `.disabled` are not stable, and not subject to any backwards
+    ///   compatibility guarantees or semantic versioning.
+    @objc public var eventPersistence: EventPersistence {
+        get { config.eventPersistence }
+        set { config.eventPersistence = newValue }
+    }
+
+    /// The maximum number of bytes of events the SDK keeps for each environment, on disk and in memory together, whatever `eventPersistence` is: like `eventCapacity`, each environment in `secondaryMobileKeys` has it in full. When an environment reaches it, the SDK discards new events until it reports the stored ones; a fifth of it is kept for the summaries of flag evaluations. (Default: 20 MiB)
+    @objc public var eventCapacityBytes: Int {
+        get { config.eventCapacityBytes }
+        set { config.eventCapacityBytes = newValue }
+    }
+
+    /// How long the SDK keeps persisted events it has not yet reported before discarding them, which also removes what it stored for a mobile key the application stopped using. No effect where `eventPersistence` is `.disabled`. (Default: 7 days)
+    @objc public var eventMaxAge: TimeInterval {
+        get { config.eventMaxAge }
+        set { config.eventMaxAge = newValue }
+    }
+
+    /// How long after the client first goes online the SDK holds back the traffic it starts on its own: the diagnostic init payload, the events a previous run left, and the periodic delivery of this run's events. A flush the application asks for is never held. Kept between 0 and 60 seconds. (Default: 2 seconds)
+    ///
+    /// - Warning: Experimental. This property is not stable, and not subject to any backwards compatibility guarantees
+    ///   or semantic versioning.
+    @objc public var eventDeliveryDelay: TimeInterval {
+        get { config.eventDeliveryDelay }
+        set { config.eventDeliveryDelay = newValue }
     }
 
     /// The timeout interval for flag requests and event reports. (Default: 10 seconds)

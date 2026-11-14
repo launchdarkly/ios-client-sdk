@@ -38,53 +38,6 @@ final class DarklyStreamingProviderMock: DarklyStreamingProvider {
     }
 }
 
-// MARK: - DiagnosticCachingMock
-final class DiagnosticCachingMock: DiagnosticCaching {
-
-    var getDiagnosticIdCallCount = 0
-    var getDiagnosticIdCallback: (() throws -> Void)?
-    var getDiagnosticIdReturnValue: DiagnosticId!
-    func getDiagnosticId() -> DiagnosticId {
-        getDiagnosticIdCallCount += 1
-        try! getDiagnosticIdCallback?()
-        return getDiagnosticIdReturnValue
-    }
-
-    var getCurrentStatsAndResetCallCount = 0
-    var getCurrentStatsAndResetCallback: (() throws -> Void)?
-    var getCurrentStatsAndResetReturnValue: DiagnosticStats!
-    func getCurrentStatsAndReset() -> DiagnosticStats {
-        getCurrentStatsAndResetCallCount += 1
-        try! getCurrentStatsAndResetCallback?()
-        return getCurrentStatsAndResetReturnValue
-    }
-
-    var incrementDroppedEventCountCallCount = 0
-    var incrementDroppedEventCountCallback: (() throws -> Void)?
-    func incrementDroppedEventCount() {
-        incrementDroppedEventCountCallCount += 1
-        try! incrementDroppedEventCountCallback?()
-    }
-
-    var recordEventsInLastBatchCallCount = 0
-    var recordEventsInLastBatchCallback: (() throws -> Void)?
-    var recordEventsInLastBatchReceivedEventsInLastBatch: Int?
-    func recordEventsInLastBatch(eventsInLastBatch: Int) {
-        recordEventsInLastBatchCallCount += 1
-        recordEventsInLastBatchReceivedEventsInLastBatch = eventsInLastBatch
-        try! recordEventsInLastBatchCallback?()
-    }
-
-    var addStreamInitCallCount = 0
-    var addStreamInitCallback: (() throws -> Void)?
-    var addStreamInitReceivedStreamInit: DiagnosticStreamInit?
-    func addStreamInit(streamInit: DiagnosticStreamInit) {
-        addStreamInitCallCount += 1
-        addStreamInitReceivedStreamInit = streamInit
-        try! addStreamInitCallback?()
-    }
-}
-
 // MARK: - DiagnosticReportingMock
 final class DiagnosticReportingMock: DiagnosticReporting {
 
@@ -174,8 +127,8 @@ final class EnvironmentReportingMock: EnvironmentReporting {
     }
 }
 
-// MARK: - EventReportingMock
-final class EventReportingMock: EventReporting {
+// MARK: - EventProcessorMock
+final class EventProcessorMock: EventProcessor {
 
     var isOnlineSetCount = 0
     var setIsOnlineCallback: (() throws -> Void)?
@@ -229,6 +182,36 @@ final class EventReportingMock: EventReporting {
         flushReportingOutcomeCallCount += 1
         flushReportingOutcomeReceivedCompletion = completion
         try! flushReportingOutcomeCallback?()
+    }
+
+    var flushBypassingBackoffCallCount = 0
+    var flushBypassingBackoffCallback: (() throws -> Void)?
+    var flushBypassingBackoffReceivedCompletion: (FlushOutcomeClosure)?
+    func flushBypassingBackoff(completion: @escaping FlushOutcomeClosure) {
+        flushBypassingBackoffCallCount += 1
+        flushBypassingBackoffReceivedCompletion = completion
+        try! flushBypassingBackoffCallback?()
+    }
+
+    var flushAtCloseCallCount = 0
+    var flushAtCloseCallback: (() throws -> Void)?
+    func flushAtClose() {
+        flushAtCloseCallCount += 1
+        try! flushAtCloseCallback?()
+    }
+
+    var commitRecordedEventsCallCount = 0
+    var commitRecordedEventsCallback: (() throws -> Void)?
+    func commitRecordedEvents() {
+        commitRecordedEventsCallCount += 1
+        try! commitRecordedEventsCallback?()
+    }
+
+    var commitWherePersistingCallCount = 0
+    var commitWherePersistingCallback: (() throws -> Void)?
+    func commitWherePersisting() {
+        commitWherePersistingCallCount += 1
+        try! commitWherePersistingCallback?()
     }
 }
 

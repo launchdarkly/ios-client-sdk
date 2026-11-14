@@ -7,6 +7,9 @@ final class LDConfigSpec: XCTestCase {
     struct Constants {
         fileprivate static let alternateMockUrl = URL(string: "https://dummy.alternate.com")!
         fileprivate static let eventCapacity = 10
+        fileprivate static let eventPersistence = EventPersistence.immediate
+        fileprivate static let eventCapacityBytes = 4096
+        fileprivate static let eventMaxAge: TimeInterval = 60
         fileprivate static let connectionTimeout: TimeInterval = 0.01
         fileprivate static let eventFlushInterval: TimeInterval = 0.01
         fileprivate static let flagPollingInterval: TimeInterval = 0.01
@@ -26,6 +29,7 @@ final class LDConfigSpec: XCTestCase {
         fileprivate static let maxCachedContexts = -1
         fileprivate static let diagnosticOptOut = true
         fileprivate static let diagnosticRecordingInterval: TimeInterval = 600.0
+        fileprivate static let eventDeliveryDelay: TimeInterval = 5
         fileprivate static let wrapperName = "ReactNative"
         fileprivate static let wrapperVersion = "0.1.0"
         fileprivate static let additionalHeaders = ["Proxy-Authorization": "creds"]
@@ -37,6 +41,10 @@ final class LDConfigSpec: XCTestCase {
          ("event URL", Constants.alternateMockUrl, { c, v in c.eventsUrl = v as! URL }),
          ("stream URL", Constants.alternateMockUrl, { c, v in c.streamUrl = v as! URL }),
          ("event capacity", Constants.eventCapacity, { c, v in c.eventCapacity = v as! Int }),
+         ("event persistence", Constants.eventPersistence, { c, v in c.eventPersistence = v as! EventPersistence }),
+         ("event capacity bytes", Constants.eventCapacityBytes, { c, v in c.eventCapacityBytes = v as! Int }),
+         ("event max age", Constants.eventMaxAge, { c, v in c.eventMaxAge = v as! TimeInterval }),
+         ("event delivery delay", Constants.eventDeliveryDelay, { c, v in c.eventDeliveryDelay = v as! TimeInterval }),
          ("connection timeout", Constants.connectionTimeout, { c, v in c.connectionTimeout = v as! TimeInterval }),
          ("event flush interval", Constants.eventFlushInterval, { c, v in c.eventFlushInterval = v as! TimeInterval }),
          ("poll interval", Constants.flagPollingInterval, { c, v in c.flagPollingInterval = v as! TimeInterval }),
@@ -55,6 +63,10 @@ final class LDConfigSpec: XCTestCase {
          ("wrapper version", Constants.wrapperVersion, { c, v in c.wrapperVersion = v as! String? }),
          ("additional headers", Constants.additionalHeaders, { c, v in c.additionalHeaders = v as! [String: String]})]
 
+    func testEventPersistenceIsOffUnlessTheApplicationAsksForIt() {
+        XCTAssertEqual(LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled).eventPersistence, .disabled)
+    }
+
     func testInitDefault() {
         let config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
         XCTAssertEqual(config.mobileKey, LDConfig.Constants.mockMobileKey)
@@ -62,6 +74,10 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.eventsUrl, LDConfig.Defaults.eventsUrl)
         XCTAssertEqual(config.streamUrl, LDConfig.Defaults.streamUrl)
         XCTAssertEqual(config.eventCapacity, LDConfig.Defaults.eventCapacity)
+        XCTAssertEqual(config.eventPersistence, LDConfig.Defaults.eventPersistence)
+        XCTAssertEqual(config.eventCapacityBytes, 20 * 1024 * 1024)
+        XCTAssertEqual(config.eventMaxAge, 7 * 24 * 60 * 60)
+        XCTAssertEqual(config.eventDeliveryDelay, 2)
         XCTAssertEqual(config.connectionTimeout, LDConfig.Defaults.connectionTimeout)
         XCTAssertEqual(config.eventFlushInterval, LDConfig.Defaults.eventFlushInterval)
         XCTAssertEqual(config.flagPollingInterval, LDConfig.Defaults.flagPollingInterval)
@@ -81,6 +97,20 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.wrapperVersion, LDConfig.Defaults.wrapperVersion)
         XCTAssertEqual(config.additionalHeaders, LDConfig.Defaults.additionalHeaders)
         XCTAssertFalse(config.enableCompression)
+    }
+
+    func testEventCapacityBelowOneIsOne() {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        for capacity in [0, -5] {
+            config.eventCapacity = capacity
+            XCTAssertEqual(config.eventCapacity, 1, "\(capacity)")
+        }
+        config.eventCapacity = 3
+        XCTAssertEqual(config.eventCapacity, 3)
+
+        let objcConfig = ObjcLDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        objcConfig.eventCapacity = 0
+        XCTAssertEqual(objcConfig.eventCapacity, 1)
     }
 
     func testObjcEnableCompression() {
@@ -103,6 +133,9 @@ final class LDConfigSpec: XCTestCase {
             XCTAssertEqual(config.eventsUrl, Constants.alternateMockUrl, "\(os)")
             XCTAssertEqual(config.streamUrl, Constants.alternateMockUrl, "\(os)")
             XCTAssertEqual(config.eventCapacity, Constants.eventCapacity, "\(os)")
+            XCTAssertEqual(config.eventCapacityBytes, Constants.eventCapacityBytes, "\(os)")
+            XCTAssertEqual(config.eventMaxAge, Constants.eventMaxAge, "\(os)")
+            XCTAssertEqual(config.eventDeliveryDelay, Constants.eventDeliveryDelay, "\(os)")
             XCTAssertEqual(config.connectionTimeout, Constants.connectionTimeout, "\(os)")
             XCTAssertEqual(config.eventFlushInterval, Constants.eventFlushInterval, "\(os)")
             XCTAssertEqual(config.flagPollingInterval, Constants.flagPollingInterval, "\(os)")
@@ -179,6 +212,20 @@ final class LDConfigSpec: XCTestCase {
         // set above minimum value
         config.diagnosticRecordingInterval = config.minima.diagnosticRecordingInterval + 0.001
         XCTAssertEqual(config.diagnosticRecordingInterval, config.minima.diagnosticRecordingInterval + 0.001)
+    }
+
+    func testEventDeliveryDelayIsKeptBetweenZeroAndAMinute() {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        config.eventDeliveryDelay = 0
+        XCTAssertEqual(config.eventDeliveryDelay, 0)
+        config.eventDeliveryDelay = -1
+        XCTAssertEqual(config.eventDeliveryDelay, 0)
+        config.eventDeliveryDelay = 61
+        XCTAssertEqual(config.eventDeliveryDelay, 60)
+        config.eventDeliveryDelay = .infinity
+        XCTAssertEqual(config.eventDeliveryDelay, 60)
+        config.eventDeliveryDelay = .nan
+        XCTAssertEqual(config.eventDeliveryDelay, 2)
     }
 
     func testEquals() {

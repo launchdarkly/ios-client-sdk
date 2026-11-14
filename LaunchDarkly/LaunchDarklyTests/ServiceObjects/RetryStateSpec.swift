@@ -101,4 +101,148 @@ final class RetryStateSpec: XCTestCase {
         retry.recordFailure(unexpected: true)
         assertDelay(retry, inClosedRange: 600...600)
     }
+
+    func testDeliveryNothingWaitsBeforeTheFirstFailure() {
+        XCTAssertEqual(DeliveryRetryState(flushInterval: 30).remainingWait, 0)
+    }
+
+    func testDeliveryOrdinaryFailuresDoubleTheWaitUpToTheFlushInterval() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        for expected in [1, 2, 4, 8, 16, 30, 30] as [TimeInterval] {
+            XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: nil), expected)
+        }
+    }
+
+    func testDeliveryNormalCeilingIsNeverBelowASecond() {
+        let retry = DeliveryRetryState(flushInterval: 0.2)
+        retry.recordFailure(unexpected: false, retryAfter: nil)
+        XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: nil), 1)
+    }
+
+    func testDeliveryRefusalWaitsAboutEightAndAHalfMinutesAndDoublesToAnHour() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        for expected in [512, 1024, 2048, 3600] as [TimeInterval] {
+            XCTAssertEqual(retry.recordFailure(unexpected: true, retryAfter: nil), expected)
+        }
+    }
+
+    func testDeliveryRefusalAfterOrdinaryFailuresStartsFromTheExtendedInitialDelay() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        for _ in 0..<12 {
+            retry.recordFailure(unexpected: false, retryAfter: nil)
+        }
+        XCTAssertEqual(retry.recordFailure(unexpected: true, retryAfter: nil), 512)
+    }
+
+    func testDeliveryExtendedDelaysAreNeverBelowTheInitialDelay() {
+        let retry = DeliveryRetryState(initialDelay: 2, normalCeiling: 30, extendedInitialDelay: 1, extendedCeiling: 1)
+        XCTAssertEqual(retry.recordFailure(unexpected: true, retryAfter: nil), 2)
+        XCTAssertEqual(retry.recordFailure(unexpected: true, retryAfter: nil), 2)
+    }
+
+    func testDeliveryOrdinaryFailureAfterARefusalKeepsTheLongerCeiling() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        retry.recordFailure(unexpected: true, retryAfter: nil)
+        XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: nil), 1024)
+    }
+
+    func testDeliveryAcceptedDeliveryPutsEverythingBack() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        retry.recordFailure(unexpected: true, retryAfter: nil)
+        retry.recordFailure(unexpected: false, retryAfter: nil)
+        retry.recordSuccess()
+        XCTAssertEqual(retry.remainingWait, 0)
+        XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: nil), 1)
+    }
+
+    func testDeliveryRetryAfterSetsTheWaitJitteredUpByNoMoreThanHalfOfIt() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        for _ in 0..<100 {
+            let wait = retry.recordFailure(unexpected: false, retryAfter: 10)
+            XCTAssertTrue((10...15).contains(wait), "\(wait) is outside 10...15")
+        }
+    }
+
+    func testDeliveryRetryAfterIsJitteredUpToTheHourAtMost() {
+        func waits(_ retryAfter: TimeInterval) -> [TimeInterval] {
+            [0, 0.5, 0.999_999].map { draw in
+                DeliveryRetryState(initialDelay: 1, normalCeiling: 30, extendedInitialDelay: 512, extendedCeiling: 3600, random: { draw })
+                    .recordFailure(unexpected: false, retryAfter: retryAfter)
+            }
+        }
+        let fortyFiveMinutes = waits(45 * 60)
+        XCTAssertEqual(fortyFiveMinutes[0], 45 * 60)
+        XCTAssertEqual(fortyFiveMinutes[1], 52.5 * 60)
+        XCTAssertEqual(fortyFiveMinutes[2], 3600, accuracy: 0.01)
+    }
+
+    func testDeliveryRetryAfterOfAnHourOrMoreIsJitteredDownFromTheHour() {
+        for retryAfter in [3600, 5 * 3600] as [TimeInterval] {
+            for (draw, expected) in [(0, 3600), (0.5, 2700)] as [(Double, TimeInterval)] {
+                let retry = DeliveryRetryState(initialDelay: 1, normalCeiling: 30, extendedInitialDelay: 512, extendedCeiling: 3600, random: { draw })
+                XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: retryAfter), expected)
+            }
+        }
+    }
+
+    func testDeliveryFailureWithARetryAfterStillCountsTowardTheBackoff() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        retry.recordFailure(unexpected: false, retryAfter: nil)
+        retry.recordFailure(unexpected: false, retryAfter: 0)
+        XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: nil), 4)
+    }
+
+    func testDeliveryFailureDuringTheWaitLeavesTheBackoffWhereItWas() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        retry.recordFailure(unexpected: true, retryAfter: nil)
+        let waiting = retry.remainingWait
+        for _ in 0..<5 {
+            XCTAssertLessThanOrEqual(retry.recordFailureDuringWait(unexpected: true, retryAfter: nil), waiting)
+        }
+
+        XCTAssertLessThanOrEqual(retry.remainingWait, waiting)
+        // The next step is the one after the first refusal, not five steps on.
+        XCTAssertEqual(retry.recordFailure(unexpected: true, retryAfter: nil), 1024)
+    }
+
+    func testDeliveryRetryAfterDuringTheWaitCanOnlyLengthenIt() {
+        let retry = DeliveryRetryState(initialDelay: 1, normalCeiling: 30, extendedInitialDelay: 512, extendedCeiling: 3600, random: { 0 })
+        retry.recordFailure(unexpected: true, retryAfter: nil)
+        let waiting = retry.remainingWait
+
+        retry.recordFailureDuringWait(unexpected: false, retryAfter: 10)
+        XCTAssertLessThanOrEqual(retry.remainingWait, waiting)
+
+        XCTAssertGreaterThan(retry.recordFailureDuringWait(unexpected: false, retryAfter: 20 * 60), 19 * 60)
+        XCTAssertGreaterThan(retry.remainingWait, 19 * 60)
+    }
+
+    func testDeliveryFailureDuringAWaitThatHasRunOutIsAnOrdinaryOne() {
+        let retry = DeliveryRetryState(initialDelay: 0.02, normalCeiling: 1, extendedInitialDelay: 1, extendedCeiling: 1)
+        retry.recordFailure(unexpected: false, retryAfter: nil)
+        Thread.sleep(forTimeInterval: 0.04)
+
+        XCTAssertEqual(retry.recordFailureDuringWait(unexpected: false, retryAfter: nil), 0.04, accuracy: 0.0001)
+    }
+
+    func testDeliveryWaitRunsOut() {
+        let retry = DeliveryRetryState(initialDelay: 0.02, normalCeiling: 0.02, extendedInitialDelay: 0.02, extendedCeiling: 0.02)
+        retry.recordFailure(unexpected: false, retryAfter: nil)
+        XCTAssertGreaterThan(retry.remainingWait, 0)
+        Thread.sleep(forTimeInterval: 0.04)
+        XCTAssertEqual(retry.remainingWait, 0)
+    }
+
+    func testRetryAfterHeaderIsReadAsSecondsOrAnHttpDate() {
+        func response(_ retryAfter: String?) -> HTTPURLResponse {
+            HTTPURLResponse(url: URL(string: "https://example.com")!, statusCode: 503, httpVersion: "1.1",
+                            headerFields: retryAfter.map { ["retry-after": $0] })!
+        }
+        XCTAssertNil(response(nil).headerRetryAfter)
+        XCTAssertEqual(response("120").headerRetryAfter, 120)
+        XCTAssertNil(response("soon").headerRetryAfter)
+        XCTAssertEqual(response(DateFormatter.httpUrlHeaderFormatter.string(from: Date(timeIntervalSinceNow: -60))).headerRetryAfter, 0)
+        let date = DateFormatter.httpUrlHeaderFormatter.string(from: Date(timeIntervalSinceNow: 600))
+        XCTAssertEqual(response(date).headerRetryAfter ?? 0, 600, accuracy: 2)
+    }
 }
