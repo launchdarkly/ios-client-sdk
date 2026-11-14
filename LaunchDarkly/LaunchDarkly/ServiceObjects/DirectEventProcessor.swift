@@ -34,10 +34,11 @@ class DirectEventProcessor: EventProcessor {
         let gap: TimeInterval
     }
 
-    /// How long `flushAtClose()` waits for its commit, on a thread that for an application closing the client is
-    /// usually the main one. The same two seconds Android allows its whole `close()`, well inside what the system
-    /// tolerates from a main thread that has stopped answering.
-    static let closeCommitBudget: TimeInterval = 2
+    /// How long `flushAtClose()` waits for its commit, the last chance to get what was recorded to disk before the
+    /// client goes away. Only for that: no other commit is waited for within a limit. Waited for on a thread that for
+    /// an application closing the client is usually the main one, so the same two seconds Android allows its whole
+    /// `close()`, well inside what the system tolerates from a main thread that has stopped answering.
+    static let flushAtCloseCommitBudget: TimeInterval = 2
 
     // MARK: Set in init and never changed
 
@@ -136,7 +137,8 @@ class DirectEventProcessor: EventProcessor {
     /// Deliveries run here, off whatever thread recorded an event.
     private let deliveryQueue = DispatchQueue(label: "com.launchdarkly.eventSyncQueue", qos: .userInitiated)
 
-    /// Whether the store held events from a previous run of the application when this reporter started.
+    /// Whether the store held events from a previous run of the application when this reporter started, and no delivery
+    /// has run since to send them.
     ///
     /// Only to be used on `deliveryQueue`, which is what makes it safe without a lock: the recovery that answers the
     /// question and the delivery that acts on it are both enqueued there, in that order.
@@ -148,7 +150,7 @@ class DirectEventProcessor: EventProcessor {
     private var launchGateOpen: Bool
     /// When the reporter first went online, which the gate counts from.
     private var wentOnlineAt: DispatchTime?
-    /// What waits for the gate to open.
+    /// What waits for the gate to open with the reporter online.
     private var launchGateWaiters: [() -> Void] = []
 
     init(service: DarklyServiceProvider,
@@ -176,16 +178,23 @@ class DirectEventProcessor: EventProcessor {
         self.pacing = pacing
         self.deliveryScheduler = EventDeliveryScheduler(pacesDeliveries: eventStore.isPersisting, gap: pacing.gap)
         self.launchGateOpen = pacing.launchDelay <= 0
+    }
 
+    /// Starts what the reporter does on its own: closing and listing what a previous run left.
+    ///
+    /// Called once, straight after init and before anything else uses the reporter, as `ClientServiceFactory` does.
+    /// `deliveryQueue` is suspended until the recovery is done, and suspending holds back only what has not started:
+    /// a delivery already running would list the store beside the recovery.
+    func start() {
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
         // doing it on the caller's thread would put file I/O in the way of the client starting up. At utility, below
         // the flag requests, which matter more at launch than what a previous run left. Not as a block on
         // `deliveryQueue`, whose own userInitiated QoS a block cannot go below; the queue is suspended instead, so
         // everything enqueued on it meanwhile still runs after the recovery. Only where events persist, since memory
         // holds nothing from a previous run.
-        guard eventStore.isPersisting
+        guard store.isPersisting
         else { return }
-        let store = eventStore
+        let store = self.store
         let queue = deliveryQueue
         let recovered = RecoveredListing()
         queue.suspend()
@@ -212,22 +221,14 @@ class DirectEventProcessor: EventProcessor {
         var hasBatches = false
     }
 
-    private static func makeStore(config: LDConfig) -> EventStoring {
+    static func makeStore(config: LDConfig) -> EventStoring {
         let mobileKey = config.mobileKey
-        return EventStore(locatingDirectory: { EventDirectory.defaultUrl(mobileKey: mobileKey) },
+        return EventStore(locatingDirectory: { EventDirectory.defaultUrl(environmentName: Util.hashedStorageName(mobileKey: mobileKey)) },
                           capacity: config.eventCapacity,
-                          byteCapacity: shareOfCapacityBytes(config: config),
+                          byteCapacity: config.eventCapacityBytes,
                           maxAge: config.eventMaxAge,
                           persistEvents: config.eventPersistence != .disabled,
                           logger: config.logger)
-    }
-
-    /// This environment's share of the byte capacity, which is for every environment the application configured together,
-    /// where the event capacity is for each one.
-    static func shareOfCapacityBytes(config: LDConfig) -> Int {
-        let total = config.eventCapacityBytes > 0 ? config.eventCapacityBytes : LDConfig.Defaults.eventCapacityBytes
-        // At least one byte, since the store reads zero as the default.
-        return max(1, total / (1 + config.getSecondaryMobileKeys().count))
     }
 
     // MARK: Recording
@@ -263,9 +264,7 @@ class DirectEventProcessor: EventProcessor {
         guard events > 0
         else { return }
         os_log("%s discarded %d stored event(s) older than the maximum age", log: service.config.logger, type: .debug, typeName(and: #function), events)
-        for _ in 0..<events {
-            service.diagnosticCache?.incrementDroppedEventCount()
-        }
+        service.diagnosticCache?.incrementDroppedEventCount(by: events)
     }
 
     /// Records a batch lost for good. The pass that lost it tells its caller, but a delivery nobody waits on -- the
@@ -323,10 +322,8 @@ extension DirectEventProcessor {
                     self.checkLaunchGate(after: self.pacing.launchDelay)
                 }
             }
-            guard self.launchGateOpen, self.hasEventsFromPreviousRun
-            else { return }
-            self.hasEventsFromPreviousRun = false
-            self.queueScheduledDelivery()
+            self.releaseLaunchGateWaiters()
+            self.deliverWhatAPreviousRunLeft()
         }
     }
 
@@ -342,16 +339,24 @@ extension DirectEventProcessor {
         }
     }
 
-    /// Runs `block`, on a global queue, once the launch gate is open.
+    /// Runs `block`, on a global queue, once the launch gate is open and the reporter is online. Offline, including once
+    /// closed, it waits for the reporter to go online.
     func whenLaunchGateOpens(_ block: @escaping () -> Void) {
         deliveryQueue.async { [weak self] in
-            guard let self, !self.launchGateOpen
-            else {
-                DispatchQueue.global().async(execute: block)
-                return
-            }
+            guard let self
+            else { return }
             self.launchGateWaiters.append(block)
+            self.releaseLaunchGateWaiters()
         }
+    }
+
+    /// On `deliveryQueue`.
+    private func releaseLaunchGateWaiters() {
+        guard launchGateOpen, !launchGateWaiters.isEmpty, isOnline
+        else { return }
+        let waiters = launchGateWaiters
+        launchGateWaiters = []
+        waiters.forEach { DispatchQueue.global().async(execute: $0) }
     }
 
     private func checkLaunchGate(after delay: TimeInterval) {
@@ -363,6 +368,7 @@ extension DirectEventProcessor {
     private func checkLaunchGate() {
         guard !launchGateOpen, let wentOnlineAt
         else { return }
+
         let sinceOnline = TimeInterval(DispatchTime.now().uptimeNanoseconds - wentOnlineAt.uptimeNanoseconds) / 1_000_000_000
         guard sinceOnline >= pacing.launchDelay
         else {
@@ -370,16 +376,19 @@ extension DirectEventProcessor {
             return
         }
         launchGateOpen = true
-        let waiters = launchGateWaiters
-        launchGateWaiters = []
-        waiters.forEach { DispatchQueue.global().async(execute: $0) }
-        guard hasEventsFromPreviousRun
+        releaseLaunchGateWaiters()
+
+        deliverWhatAPreviousRunLeft()
+    }
+
+    /// Queues the delivery that sends what a previous run left, once the gate is open with the reporter online. Offline,
+    /// it waits for the reporter to go online, which calls this again. Does nothing where a delivery has already run
+    /// online, since that sent the oldest batches first. The flag is left to that delivery to clear, so going offline
+    /// before it starts leaves them for the next time online. On `deliveryQueue`.
+    private func deliverWhatAPreviousRunLeft() {
+        guard launchGateOpen, hasEventsFromPreviousRun, isOnline
         else { return }
-        os_log("%s Sending events from a previous run, %dms after going online", log: service.config.logger, type: .debug, typeName(and: #function), Int(pacing.launchDelay * 1000))
-        // Offline, they wait for the reporter to go online, which finds the gate open.
-        guard isOnline
-        else { return }
-        hasEventsFromPreviousRun = false
+
         queueScheduledDelivery()
     }
 
@@ -400,7 +409,7 @@ extension DirectEventProcessor {
 
     func flushAtClose() {
         cancelReportTimer()
-        committer.commitWithinBudget(DirectEventProcessor.closeCommitBudget)
+        committer.commitWithinBudget(DirectEventProcessor.flushAtCloseCommitBudget)
         // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing: offline is the
         // application keeping the SDK off the network, and closing does not revoke that.
         queueDelivery(nil, closing: isOnline)
@@ -485,6 +494,12 @@ extension DirectEventProcessor {
             completion?(false, 0)
             return
         }
+        // This delivery sends the oldest batches first, which are what a previous run left.
+        if hasEventsFromPreviousRun {
+            hasEventsFromPreviousRun = false
+            let sinceOnline = wentOnlineAt.map { Int((DispatchTime.now().uptimeNanoseconds - $0.uptimeNanoseconds) / 1_000_000) } ?? 0
+            os_log("%s Delivering events a previous run left, %dms after first going online", log: service.config.logger, type: .debug, typeName(and: #function), sinceOnline)
+        }
 
         // The batches already waiting go first, and what has been committed since is closed into a batch of its own
         // only once none of them is left blocked. Closing first would add a batch for every pass a failure lasts: every
@@ -553,7 +568,9 @@ extension DirectEventProcessor {
         return listing
     }
 
-    /// Counts as lost the events of batches a listing found deleted unsent, or of an open log a close found gone.
+    /// Counts as lost the events of batches that left the directory without being sent: the store counted them on disk,
+    /// and a listing no longer finds them, though no store in this process removed them and no other process shares the
+    /// directory. tvOS purging a cache directory is one way it happens.
     private func reportVanished(_ events: Int) {
         guard events > 0
         else { return }
@@ -561,18 +578,19 @@ extension DirectEventProcessor {
         reportStoredEventsLost(events)
     }
 
-    /// How a pass over some batches went, from best to worst.
+    /// How a pass over some batches ended, from best to worst. Only `blocked` ends a pass before its last batch; the
+    /// others mean it got through every one.
     enum PassOutcome: Int, Comparable {
         /// Every batch was accepted.
         case delivered
-        /// Every batch was attempted, and at least one was lost for good: unreadable, damaged, deleted unsent, or had its
-        /// payload refused `badRequestsBeforeDropping` times in a row.
+        /// Every batch was accepted or lost for good, and at least one was lost: unreadable, damaged, deleted unsent, or
+        /// had its payload refused `badRequestsBeforeDropping` times in a row.
         case lost
-        /// Every batch was attempted or passed by, and at least one was passed by: its read failed, and it is kept for a
-        /// later delivery to read again, while the batches after it were still attempted.
+        /// The pass got through every batch, and this delivery passed at least one by: its read failed, and it is kept
+        /// for a later delivery to read again.
         case passedBy
-        /// A batch is still there to be sent again: its request failed, or the backoff did not allow it to be posted
-        /// yet. The batches after it were not attempted.
+        /// The pass stopped at a batch that is still there to be sent again: its request failed, or the backoff did not
+        /// allow it to be posted yet. The batches after it were not attempted.
         case blocked
 
         static func < (lhs: PassOutcome, rhs: PassOutcome) -> Bool {

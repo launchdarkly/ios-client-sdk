@@ -655,6 +655,15 @@ final class EventStoreSpec: QuickSpec {
 
                     expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0"]
                 }
+
+                it("keeps every event before a size with its top bit set") {
+                    // Past Int32.max, so where Int is 32 bits it has to be rejected before it is converted.
+                    var damaged = try Data(contentsOf: log)
+                    damaged[second + 2] |= 0x80
+                    try damaged.write(to: log)
+
+                    expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0"]
+                }
             }
 
             it("loses a batch whose first frame is damaged, rather than taking it for one with nothing to send") {
@@ -1023,6 +1032,30 @@ final class EventStoreSpec: QuickSpec {
                 try FileManager.default.moveItem(at: counted, to: unparseable)
 
                 expect(EventStoreSpec.reader(sharing: store).pendingBatches()) == [batch]
+            }
+
+            it("counts batches whose names claim more than a batch can hold by reading them") {
+                // Two such counts would overflow a 32-bit Int added together.
+                var batches: [EventBatch] = []
+                for key in ["first", "second"] {
+                    _ = store.stage(EventStoreSpec.payload(key))
+                    let batch = store.closeBatch()!
+                    let counted = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId).1")
+                    let claimed = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId).\(Int32.max)")
+                    try FileManager.default.moveItem(at: counted, to: claimed)
+                    batches.append(batch)
+                }
+
+                let reader = EventStoreSpec.reader(sharing: store)
+                let byPayloadId = { (lhs: EventBatch, rhs: EventBatch) in lhs.payloadId < rhs.payloadId }
+                expect(reader.pendingBatches().sorted(by: byPayloadId)) == batches.sorted(by: byPayloadId)
+                expect(reader.pendingEventCount) == 2
+            }
+
+            it("keeps an environment's events in a directory named as it is told, without hashing it again") {
+                let url = EventDirectory.defaultUrl(environmentName: "an-environment")
+                expect(url.lastPathComponent) == "an-environment"
+                expect(url.deletingLastPathComponent().lastPathComponent) == "com.launchdarkly.events"
             }
 
             it("names a batch with the version of how its name reads") {

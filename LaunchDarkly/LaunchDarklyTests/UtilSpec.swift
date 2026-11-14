@@ -18,4 +18,16 @@ final class UtilSpec: XCTestCase {
         let output = Util.sha256(input).base64UrlEncodedString
         XCTAssertEqual(output, expectedOutput)
     }
+
+    func testHashedStorageNameHoldsNeitherTheKeyNorTheBundle() {
+        let name = Util.hashedStorageName(mobileKey: "mob-12345", bundleId: "com.example.app")
+        XCTAssertEqual(name, "ikZOBb8DevJDIgDIaHRV_NHgqATWnIow0p2ln1hKx38=.Ok8Us_66OLNirYC1BCOPqkKiYvc6EGiBRMypMw5GdTQ=")
+        XCTAssertFalse(name.contains("mob-12345"))
+        XCTAssertFalse(name.contains("com.example.app"))
+        XCTAssertFalse(name.contains("/"))
+    }
+
+    func testHashedStorageNameWithoutABundle() {
+        XCTAssertEqual(Util.hashedStorageName(mobileKey: "mob-12345", bundleId: nil), "Ok8Us_66OLNirYC1BCOPqkKiYvc6EGiBRMypMw5GdTQ=")
+    }
 }

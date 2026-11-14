@@ -88,32 +88,34 @@ extension Array where Element == EventProcessor {
         /// Only to be used while holding `lock`: each processor answers from whichever thread its delivery ended on.
         var outcomes = [Bool?](repeating: nil, count: count)
         var outstanding = count
+        /// Taken by whichever ends the wait, and only reached through here: the timer stays scheduled until the
+        /// deadline however soon the last answer comes, and must not keep what the completion holds alive until then.
+        /// Only to be used while holding `lock`.
+        var pending: (([Bool]) -> Void)? = completion
         if let deadline {
             DispatchQueue.global().asyncAfter(deadline: deadline) {
-                let ended: [Bool]? = lock.withLock {
-                    guard outstanding > 0
+                let ended: (finish: ([Bool]) -> Void, delivered: [Bool])? = lock.withLock {
+                    guard let finish = pending
                     else { return nil }
-                    outstanding = 0
-                    outcomes = outcomes.map { $0 ?? false }
-                    return outcomes.compactMap { $0 }
+                    pending = nil
+                    return (finish, outcomes.map { $0 ?? false })
                 }
-                if let ended {
-                    completion(ended)
-                }
+                ended.map { $0.finish($0.delivered) }
             }
         }
         for (index, processor) in enumerated() {
             let answer: FlushOutcomeClosure = { delivered in
-                let ended: [Bool]? = lock.withLock {
-                    guard outcomes[index] == nil
+                let ended: (finish: ([Bool]) -> Void, delivered: [Bool])? = lock.withLock {
+                    guard pending != nil, outcomes[index] == nil
                     else { return nil }
                     outcomes[index] = delivered
                     outstanding -= 1
-                    return outstanding == 0 ? outcomes.compactMap { $0 } : nil
+                    guard outstanding == 0, let finish = pending
+                    else { return nil }
+                    pending = nil
+                    return (finish, outcomes.compactMap { $0 })
                 }
-                if let ended {
-                    completion(ended)
-                }
+                ended.map { $0.finish($0.delivered) }
             }
             if bypassingBackoff {
                 processor.flushBypassingBackoff(completion: answer)
