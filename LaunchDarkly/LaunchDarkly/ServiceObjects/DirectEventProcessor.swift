@@ -382,15 +382,13 @@ extension DirectEventProcessor {
     }
 
     /// Queues the delivery that sends what a previous run left, once the gate is open with the reporter online. Offline,
-    /// it waits for the reporter to go online, which calls this again. Does nothing where a delivery has already run,
-    /// since that sent the oldest batches first. On `deliveryQueue`.
+    /// it waits for the reporter to go online, which calls this again. Does nothing where a delivery has already run
+    /// online, since that sent the oldest batches first. The flag is left to that delivery to clear, so going offline
+    /// before it starts leaves them for the next time online. On `deliveryQueue`.
     private func deliverWhatAPreviousRunLeft() {
-        guard launchGateOpen, hasEventsFromPreviousRun, isOnline, let wentOnlineAt
+        guard launchGateOpen, hasEventsFromPreviousRun, isOnline
         else { return }
 
-        hasEventsFromPreviousRun = false
-        let sinceOnline = (DispatchTime.now().uptimeNanoseconds - wentOnlineAt.uptimeNanoseconds) / 1_000_000
-        os_log("%s Delivering events a previous run left, %dms after first going online", log: service.config.logger, type: .debug, typeName(and: #function), Int(sinceOnline))
         queueScheduledDelivery()
     }
 
@@ -497,7 +495,11 @@ extension DirectEventProcessor {
             return
         }
         // This delivery sends the oldest batches first, which are what a previous run left.
-        hasEventsFromPreviousRun = false
+        if hasEventsFromPreviousRun {
+            hasEventsFromPreviousRun = false
+            let sinceOnline = wentOnlineAt.map { Int((DispatchTime.now().uptimeNanoseconds - $0.uptimeNanoseconds) / 1_000_000) } ?? 0
+            os_log("%s Delivering events a previous run left, %dms after first going online", log: service.config.logger, type: .debug, typeName(and: #function), sinceOnline)
+        }
 
         // The batches already waiting go first, and what has been committed since is closed into a batch of its own
         // only once none of them is left blocked. Closing first would add a batch for every pass a failure lasts: every
