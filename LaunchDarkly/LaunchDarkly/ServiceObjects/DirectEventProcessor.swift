@@ -370,6 +370,7 @@ extension DirectEventProcessor {
     private func checkLaunchGate() {
         guard !launchGateOpen, let wentOnlineAt
         else { return }
+        
         let sinceOnline = TimeInterval(DispatchTime.now().uptimeNanoseconds - wentOnlineAt.uptimeNanoseconds) / 1_000_000_000
         guard sinceOnline >= pacing.launchDelay
         else {
@@ -378,12 +379,16 @@ extension DirectEventProcessor {
         }
         launchGateOpen = true
         releaseLaunchGateWaiters()
+        
         guard hasEventsFromPreviousRun
         else { return }
+        
         os_log("%s Sending events from a previous run, %dms after going online", log: service.config.logger, type: .debug, typeName(and: #function), Int(pacing.launchDelay * 1000))
         // Offline, they wait for the reporter to go online, which finds the gate open.
+        
         guard isOnline
         else { return }
+        
         hasEventsFromPreviousRun = false
         queueScheduledDelivery()
     }
