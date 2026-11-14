@@ -77,7 +77,9 @@ final class ClientServiceFactory: ClientServiceCreating {
                             service: DarklyServiceProvider,
                             onSyncComplete: EventSyncCompleteClosure? = nil) -> EventProcessor {
         if config.sendEvents {
-            return DirectEventProcessor(service: service, onSyncComplete: onSyncComplete)
+            let processor = DirectEventProcessor(service: service, onSyncComplete: onSyncComplete)
+            processor.start()
+            return processor
         } else {
             return NullEventProcessor()
         }

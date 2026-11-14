@@ -17,6 +17,7 @@ final class DiagnosticCachingMock: DiagnosticCaching {
 
     private var _incrementDroppedEventCountCallCount = 0
     private var _incrementDroppedEventCountCallback: (() throws -> Void)?
+    private var _droppedEventCount = 0
 
     private var _recordEventsInLastBatchCallCount = 0
     private var _recordEventsInLastBatchCallback: (() throws -> Void)?
@@ -82,9 +83,14 @@ final class DiagnosticCachingMock: DiagnosticCaching {
         get { synchronized { _incrementDroppedEventCountCallback } }
         set { synchronized { _incrementDroppedEventCountCallback = newValue } }
     }
-    func incrementDroppedEventCount() {
+    /// Every event counted, across all the calls.
+    var droppedEventCount: Int {
+        synchronized { _droppedEventCount }
+    }
+    func incrementDroppedEventCount(by count: Int) {
         let callback = synchronized { () -> (() throws -> Void)? in
             _incrementDroppedEventCountCallCount += 1
+            _droppedEventCount += count
             return _incrementDroppedEventCountCallback
         }
         try! callback?()

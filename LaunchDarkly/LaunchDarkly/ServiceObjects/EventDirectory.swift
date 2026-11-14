@@ -269,16 +269,17 @@ final class EventDirectory {
     /// Fields are split at `nameFieldSeparator`, which a payload ID never contains, so nothing about the count's own
     /// characters is needed to tell it apart. Fields after it are ignored.
     ///
-    /// - Returns: the payload ID, and the count, which is nil where the name has none or it does not parse -- a batch a
-    ///   recovery could not read, which is read once to count it.
+    /// - Returns: the payload ID, and the count, which is nil where the name has none, it does not parse, or it is more
+    ///   than a batch can hold -- a batch a recovery could not read, or a name that was damaged, which is read once to
+    ///   count it. The bound keeps a damaged name from overflowing what a directory's counts add up to in a 32-bit Int.
     private static func parse(batchName name: String) -> (payloadId: String, events: Int?) {
         let fields = name.dropFirst(ownBatchPrefix.count)
             .split(separator: nameFieldSeparator, omittingEmptySubsequences: false)
         let payloadId = String(fields[0])
         guard fields.count > 1, !fields[1].isEmpty, fields[1].allSatisfy({ $0.isASCII && $0.isNumber }),
-              let events = Int32(fields[1])
+              let events = Int(fields[1]), events <= EventLogFormat.maxEventsPerBatch
         else { return (payloadId, nil) }
-        return (payloadId, Int(events))
+        return (payloadId, events)
     }
 
     // MARK: Writing
@@ -1016,13 +1017,14 @@ extension BatchLocks {
 #endif
 
 extension EventDirectory {
-    /// The directory the store for a mobile key belongs in.
+    /// The directory the store for one environment belongs in. `environmentName` is used as it is, so it has to be safe
+    /// in a path and hold nothing secret.
     ///
     /// tvOS is the reason this is not simply Application Support: a tvOS application is only allowed to persist to
     /// purgeable caches, so there the events are kept somewhere the system may reclaim, which is the most durability
     /// the platform offers. A directory that turns out not to be writable is no different from a full device: the store
     /// gives up on the disk and holds events in memory.
-    static func defaultUrl(mobileKey: String) -> URL {
+    static func defaultUrl(environmentName: String) -> URL {
         #if os(tvOS)
         let searchPath = FileManager.SearchPathDirectory.cachesDirectory
         #else
@@ -1032,14 +1034,9 @@ extension EventDirectory {
         let root = FileManager.default.urls(for: searchPath, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
 
-        var keyComponent = Util.sha256(mobileKey).base64UrlEncodedString
-        if let bundleId = Bundle.main.bundleIdentifier {
-            keyComponent = "\(Util.sha256(bundleId).base64UrlEncodedString).\(keyComponent)"
-        }
-
         return root
             .appendingPathComponent("com.launchdarkly.events", isDirectory: true)
-            .appendingPathComponent(keyComponent, isDirectory: true)
+            .appendingPathComponent(environmentName, isDirectory: true)
     }
 }
 

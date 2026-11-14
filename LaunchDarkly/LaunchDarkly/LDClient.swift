@@ -1103,7 +1103,7 @@ extension LDClient {
     /// or not events persist.
     fileprivate func giveFlagValuesTheNetworkFirst() {
         if let eventProcessor = eventProcessor as? DirectEventProcessor {
-            (diagnosticReporter as? DiagnosticReporter)?.sendsInitAfter = eventProcessor.whenLaunchGateOpens
+            (diagnosticReporter as? DiagnosticReporter)?.sendInitAfterLaunchGate(of: eventProcessor)
         }
     }
 

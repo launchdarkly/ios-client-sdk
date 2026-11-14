@@ -78,7 +78,7 @@ class DirectEventProcessorSpec: QuickSpec {
             self.store = store ?? EventStore.temporary(capacity: config.eventCapacity, persistEvents: persistence != .disabled)
             eventProcessor = DirectEventProcessor(service: serviceMock, onSyncComplete: onSyncComplete,
                                           store: self.store, commitQueue: commitQueue, retryState: retryState,
-                                          pacing: .noWaits)
+                                          pacing: .noWaits).started()
             (0..<eventCount).forEach {
                 let event = Event.stub(Event.eventKind(for: $0), with: context!)
                 events.append(event)
@@ -355,7 +355,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 serviceMock.diagnosticCache = diagnosticCache
                 let store = StagingObservingStore(EventStore.temporary(capacity: eventCapacity, persistEvents: false))
                 let commits = DispatchQueue(label: "com.launchdarkly.tests.commits")
-                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits, pacing: .noWaits)
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits, pacing: .noWaits).started()
                 return Observed(reporter: reporter, store: store, serviceMock: serviceMock, diagnosticCache: diagnosticCache, commits: commits)
             }
 
@@ -383,7 +383,6 @@ class DirectEventProcessorSpec: QuickSpec {
             it("never encodes an evaluation's counter in one delivery and its full event in another") {
                 // Without a disk only a delivery encodes, so what each one encodes has to count exactly the evaluations
                 // whose full events it carries, however the recorders interleave with it.
-                var runsWithCounters = 0
                 for trial in 0..<5 {
                     let observed = observed(eventCapacity: 100_000)
                     let reporter = observed.reporter
@@ -392,13 +391,27 @@ class DirectEventProcessorSpec: QuickSpec {
                     let recorders = 4
                     let evaluationsEach = 500
                     let recorded = DispatchGroup()
+                    let halfway = DispatchGroup()
+                    let resume = DispatchSemaphore(value: 0)
                     for _ in 0..<recorders {
+                        halfway.enter()
                         DispatchQueue.global().async(group: recorded) {
-                            for _ in 0..<evaluationsEach {
+                            for evaluation in 0..<evaluationsEach {
+                                if evaluation == evaluationsEach / 2 {
+                                    halfway.leave()
+                                    resume.wait()
+                                }
                                 reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b",
                                                                     featureFlag: trackedFlag, context: context, includeReason: false)
                             }
                         }
+                    }
+                    // A delivery between the halves, so that every trial splits the recordings at least once however
+                    // fast they run; the racing deliveries after it are what interleave with them.
+                    halfway.wait()
+                    expect(outcome(of: reporter)) == true
+                    for _ in 0..<recorders {
+                        resume.signal()
                     }
                     while recorded.wait(timeout: .now()) == .timedOut {
                         _ = outcome(of: reporter)
@@ -406,6 +419,7 @@ class DirectEventProcessorSpec: QuickSpec {
                     expect(outcome(of: reporter)) == true
 
                     var counted = 0
+                    var runsWithCounters = 0
                     for run in observed.store.stagedRuns {
                         let counters = run.filter { $0.kindField == "summary" }.map(summaryCount).reduce(0, +)
                         expect(counters).to(equal(run.filter { $0.kindField == "feature" }.count), description: "trial \(trial)")
@@ -415,10 +429,10 @@ class DirectEventProcessorSpec: QuickSpec {
                         }
                     }
                     expect(counted).to(equal(recorders * evaluationsEach), description: "trial \(trial)")
+                    expect(runsWithCounters).to(beGreaterThanOrEqualTo(2), description: "trial \(trial)")
                     expect(observed.diagnosticCache.incrementDroppedEventCountCallCount) == 0
                     reporter.isOnline = false
                 }
-                expect(runsWithCounters) > 5
             }
 
             it("encodes nothing for a flush while offline, and delivers all of it once online") {
@@ -487,7 +501,7 @@ class DirectEventProcessorSpec: QuickSpec {
                     _ = testContext.store.closeBatch()
                 }
                 let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil,
-                                                    store: testContext.store.nextRun(), retryState: retryState, pacing: pacing)
+                                                    store: testContext.store.nextRun(), retryState: retryState, pacing: pacing).started()
                 nextRun = reporter
                 return reporter
             }
@@ -527,6 +541,18 @@ class DirectEventProcessorSpec: QuickSpec {
 
                 Thread.sleep(forTimeInterval: 0.3)
                 expect(testContext.serviceMock.publishEventDataCallCount) == 0
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+            }
+
+            itPersisting("sends what a previous run left on going online again, where the launch gate opened while offline") {
+                let reporter = nextRunLeft(1, pacing: DirectEventProcessor.Pacing(launchDelay: 0.3, gap: 0))
+                reporter.isOnline = true
+                reporter.isOnline = false
+
+                Thread.sleep(forTimeInterval: 0.6)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+
+                reporter.isOnline = true
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
             }
 
@@ -581,7 +607,7 @@ class DirectEventProcessorSpec: QuickSpec {
 
             itPersisting("recovers what a previous run left at utility, though it is started from the main thread") {
                 let store = RecoveryObservingStore(testContext.store.nextRun())
-                nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits)
+                nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits).started()
 
                 expect(store.recoveryQoS).toEventually(equal(QOS_CLASS_UTILITY), timeout: Constants.deliveryTimeout)
             }
@@ -592,7 +618,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 _ = testContext.store.closeBatch()
                 let store = RecoveryObservingStore(testContext.store.nextRun(), holdingRecovery: true)
                 defer { store.release.signal() }
-                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits)
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits).started()
                 nextRun = reporter
                 reporter.isOnline = true
 
@@ -648,16 +674,48 @@ class DirectEventProcessorSpec: QuickSpec {
 
             it("holds what waits for the launch gate until the launch delay has passed, whether or not events persist") {
                 let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
-                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 1, gap: 0))
+                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 1, gap: 0)).started()
                 nextRun = reporter
 
                 expect(gateOpened(reporter, after: 0.6)) == false
                 expect(gateOpened(reporter, after: 0.8)) == true
             }
 
+            it("holds what waits for the launch gate while the reporter is offline, until it is online again") {
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
+                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 0.3, gap: 0)).started()
+                nextRun = reporter
+                let opened = UnfairLock()
+                var hasOpened = false
+                reporter.whenLaunchGateOpens { opened.withLock { hasOpened = true } }
+                reporter.isOnline = true
+                reporter.isOnline = false
+
+                Thread.sleep(forTimeInterval: 0.8)
+                expect(opened.withLock { hasOpened }) == false
+
+                reporter.isOnline = true
+                expect(opened.withLock { hasOpened }).toEventually(beTrue(), timeout: .seconds(2))
+            }
+
+            it("holds what asks for the open launch gate while the reporter is offline") {
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
+                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 0)).started()
+                nextRun = reporter
+                let opened = UnfairLock()
+                var hasOpened = false
+                reporter.whenLaunchGateOpens { opened.withLock { hasOpened = true } }
+
+                Thread.sleep(forTimeInterval: 0.3)
+                expect(opened.withLock { hasOpened }) == false
+
+                reporter.isOnline = true
+                expect(opened.withLock { hasOpened }).toEventually(beTrue(), timeout: .seconds(2))
+            }
+
             it("holds nothing at the launch gate where the launch delay is zero") {
                 let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store,
-                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 0))
+                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 0)).started()
                 nextRun = reporter
 
                 expect(gateOpened(reporter, after: 0.2)) == true
@@ -667,7 +725,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 var config = testContext.serviceMock.config
                 config.eventDeliveryDelay = 1
                 testContext.serviceMock.config = config
-                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store)
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store).started()
                 nextRun = reporter
 
                 expect(gateOpened(reporter, after: 0.6)) == false
@@ -740,7 +798,7 @@ class DirectEventProcessorSpec: QuickSpec {
             var testContext: TestContext!
             beforeEach {
                 testContext = TestContext()
-                testContext.eventProcessor = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: { _ in }, store: testContext.store, pacing: .noWaits)
+                testContext.eventProcessor = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: { _ in }, store: testContext.store, pacing: .noWaits).started()
             }
             it("starts offline without reporting events") {
                 expect(testContext.eventProcessor.service) === testContext.serviceMock
@@ -753,25 +811,17 @@ class DirectEventProcessorSpec: QuickSpec {
             var config: LDConfig!
             beforeEach {
                 config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+                config.eventPersistence = .disabled
+                try? config.setSecondaryMobileKeys(Dictionary(uniqueKeysWithValues: (2...7).map { ("env-\($0)", "mob-\($0)") }))
             }
-            it("is the whole of it for a single environment") {
+            it("is the whole of it for each environment, however many are configured") {
                 config.eventCapacityBytes = 2_400
-                expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == 2_400
+                expect(config.getSecondaryMobileKeys().count) == 6
+                expect((DirectEventProcessor.makeStore(config: config) as? EventStore)?.byteCapacity) == 2_400
             }
-            it("is shared equally by the configured environments") {
-                config.eventCapacityBytes = 2_400
-                try? config.setSecondaryMobileKeys(["second": "mob-second", "third": "mob-third", "fourth": "mob-fourth"])
-                expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == 600
-            }
-            it("shares the default where none is set") {
+            it("is the whole default for each environment where none is set") {
                 config.eventCapacityBytes = 0
-                try? config.setSecondaryMobileKeys(["second": "mob-second"])
-                expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == LDConfig.Defaults.eventCapacityBytes / 2
-            }
-            it("leaves each environment at least a byte") {
-                config.eventCapacityBytes = 2
-                try? config.setSecondaryMobileKeys(["second": "mob-second", "third": "mob-third"])
-                expect(DirectEventProcessor.shareOfCapacityBytes(config: config)) == 1
+                expect((DirectEventProcessor.makeStore(config: config) as? EventStore)?.byteCapacity) == LDConfig.Defaults.eventCapacityBytes
             }
         }
         describe("the flush interval") {
@@ -951,7 +1001,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 serviceMock.config = config
                 serviceMock.stubEventResponse(success: true)
                 store = EventStore.temporary(capacity: config.eventCapacity, persistEvents: persistence != .disabled)
-                return DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: encoding, pacing: .noWaits)
+                return DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: encoding, pacing: .noWaits).started()
             }
 
             afterEach {
@@ -1115,7 +1165,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 serviceMock.config = config
                 serviceMock.stubEventResponse(success: true)
                 store = EventStore.temporary(capacity: config.eventCapacity, persistEvents: persistence != .disabled)
-                reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: encoding, pacing: .noWaits)
+                reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: encoding, pacing: .noWaits).started()
                 reporter.isOnline = true
                 return reporter
             }
@@ -1722,7 +1772,7 @@ class DirectEventProcessorSpec: QuickSpec {
         /// A reporter writing to a store of its own, and that store, so a test can read back what was recorded.
         func makeReporter() -> (DirectEventProcessor, EventStore) {
             let store = EventStore.temporary(persistEvents: persistence != .disabled)
-            return (DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits), store)
+            return (DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits).started(), store)
         }
 
         describe("recordFlagEvaluationEvents") {
@@ -1737,7 +1787,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 service.diagnosticCache = diagnosticCache
                 let store = EventStore.temporary(capacity: config.eventCapacity, persistEvents: persistence != .disabled)
                 defer { store.deleteEverything() }
-                let reporter = DirectEventProcessor(service: service, onSyncComplete: nil, store: store, pacing: .noWaits)
+                let reporter = DirectEventProcessor(service: service, onSyncComplete: nil, store: store, pacing: .noWaits).started()
                 defer { reporter.isOnline = false }
                 let untracked = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: false)
                 let tracked = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
@@ -2063,7 +2113,7 @@ extension DirectEventProcessorSpec {
                 let started = Date()
                 testContext.eventProcessor.flushAtClose()
 
-                expect(Date().timeIntervalSince(started)) < DirectEventProcessor.closeCommitBudget
+                expect(Date().timeIntervalSince(started)) < DirectEventProcessor.flushAtCloseCommitBudget
                 expect(eventsLeftOnDisk().compactMap { $0.keyField }) == ["an-event"]
             }
 
@@ -2212,7 +2262,7 @@ extension DirectEventProcessorSpec {
 
                 // Nothing delivered them and nothing closed the log, as would be the case had the process died here.
                 let recovered = testContext.store.nextRun()
-                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered, pacing: .noWaits)
+                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered, pacing: .noWaits).started()
                 nextRun.isOnline = true
 
                 waitUntil(timeout: Constants.deliveryTimeout) { done in
@@ -2228,13 +2278,31 @@ extension DirectEventProcessorSpec {
                 nextRun.isOnline = false
             }
 
-            itPersisting("delivers what a previous run left behind as soon as it is online, without waiting for a report interval") {
+            itPersisting("leaves what a previous run left behind alone until it is started") {
                 testContext = TestContext()
                 testContext.recordEvents(2)
                 testContext.eventProcessor.commitRecordedEvents()
 
                 let recovered = testContext.store.nextRun()
                 let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered, pacing: .noWaits)
+                nextRun.isOnline = true
+
+                // The log the previous run left open is only a batch once the recovery has closed it.
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    nextRun.flush(completion: done)
+                }
+
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+                nextRun.isOnline = false
+            }
+
+            itPersisting("delivers what a previous run left behind as soon as it is online, without waiting for a report interval") {
+                testContext = TestContext()
+                testContext.recordEvents(2)
+                testContext.eventProcessor.commitRecordedEvents()
+
+                let recovered = testContext.store.nextRun()
+                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered, pacing: .noWaits).started()
 
                 // Nothing asks for a flush, and the report interval is several times longer than this waits, so the
                 // only thing that can deliver these is the reporter coming online.
@@ -2256,7 +2324,7 @@ extension DirectEventProcessorSpec {
                     try FileManager.default.setAttributes([.modificationDate: longAgo], ofItemAtPath: file.path)
                 }
 
-                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: EventStore.sharing(directory), pacing: .noWaits)
+                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: EventStore.sharing(directory), pacing: .noWaits).started()
                 nextRun.isOnline = true
                 var delivered: Bool?
                 waitUntil(timeout: Constants.deliveryTimeout) { done in
@@ -2269,7 +2337,8 @@ extension DirectEventProcessorSpec {
                 // The caller's own events all got out; the ones discarded were no one's to wait on.
                 expect(delivered) == true
                 expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 2
+                expect(testContext.diagnosticCache.droppedEventCount) == 2
+                expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 1
                 nextRun.isOnline = false
             }
 
@@ -2430,7 +2499,7 @@ extension DirectEventProcessorSpec {
                 // after launch reads every batch a previous run left behind.
                 let store = SlowListingStore(testContext.store)
                 defer { store.release.signal() }
-                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits)
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits).started()
                 reporter.isOnline = true
 
                 reporter.record(CustomEvent(key: "tracked", context: testContext.context))
@@ -2499,7 +2568,7 @@ extension DirectEventProcessorSpec {
                     commitsLock.unlock()
                     Thread.sleep(forTimeInterval: 0.05)
                 }
-                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: DispatchQueue(label: "com.launchdarkly.tests.commits"), pacing: .noWaits)
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: DispatchQueue(label: "com.launchdarkly.tests.commits"), pacing: .noWaits).started()
                 let context = LDContext.stub()
                 func keysOnDisk() -> [String] {
                     inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).keyField }
@@ -2550,7 +2619,7 @@ extension DirectEventProcessorSpec {
                     stalled.signal()
                     _ = diskAnswers.wait(timeout: .now() + 10)
                 }
-                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: DispatchQueue(label: "com.launchdarkly.tests.commits"), pacing: .noWaits)
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: DispatchQueue(label: "com.launchdarkly.tests.commits"), pacing: .noWaits).started()
                 reporter.record(CustomEvent(key: "before-close", context: LDContext.stub()))
 
                 let started = Date()
@@ -2559,7 +2628,7 @@ extension DirectEventProcessorSpec {
                 diskAnswers.leave()
 
                 expect(stalled.wait(timeout: .now())) == .success
-                expect(took) < DirectEventProcessor.closeCommitBudget + 1
+                expect(took) < DirectEventProcessor.flushAtCloseCommitBudget + 1
                 let keysOnDisk = { inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).keyField } }
                 expect(keysOnDisk()).toEventually(contain("before-close"), timeout: Constants.deliveryTimeout)
             }
@@ -2570,7 +2639,7 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.record(CustomEvent(key: "kept", context: testContext.context))
 
                 let recovered = testContext.store.nextRun()
-                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered, pacing: .noWaits)
+                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered, pacing: .noWaits).started()
                 nextRun.isOnline = true
                 defer { nextRun.isOnline = false }
 
@@ -2595,7 +2664,7 @@ extension DirectEventProcessorSpec {
                 // The same directory, as the application's next launch would find it.
                 testContext.serviceMock.stubEventResponse(success: true)
                 let recovered = EventStore.sharing(testContext.store.directory!)
-                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered, pacing: .noWaits)
+                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered, pacing: .noWaits).started()
                 nextRun.isOnline = true
                 defer { nextRun.isOnline = false }
 
@@ -2712,7 +2781,7 @@ extension DirectEventProcessorSpec {
                 let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
                 commits.suspend()
                 defer { commits.resume() }
-                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits, pacing: .noWaits)
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits, pacing: .noWaits).started()
 
                 let slow = EncodingGate(key: "slow", context: LDContext.stub())
                 reporter.record(slow)
@@ -2746,7 +2815,7 @@ extension DirectEventProcessorSpec {
                 let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
                 commits.suspend()
                 defer { commits.resume() }
-                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits, pacing: .noWaits)
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits, pacing: .noWaits).started()
 
                 let slow = EncodingGate(key: "slow", context: LDContext.stub())
                 let competingCommit = DispatchSemaphore(value: 0)
@@ -2832,7 +2901,7 @@ extension DirectEventProcessorSpec {
                 let commits = DispatchQueue(label: "com.launchdarkly.tests.suspended")
                 commits.suspend()
                 defer { commits.resume() }
-                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits, pacing: .noWaits)
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: commits, pacing: .noWaits).started()
 
                 let slow = EncodingGate(key: "slow", context: LDContext.stub())
                 reporter.record(CustomEvent(key: "first", context: LDContext.stub()))
@@ -3890,6 +3959,21 @@ extension DirectEventProcessorSpec {
                 expect(testContext.flushOutcome()) == true
             }
 
+            it("retries a TLS failure on the normal backoff, within the flush that met it") {
+                testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedInitialDelay: 512, extendedCeiling: 3600))
+                testContext.serviceMock.stubbedEventResponse = (nil, nil, URLError(.serverCertificateUntrusted), nil)
+                testContext.eventProcessor.record(CustomEvent(key: "untrusted", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+
+                let flushed = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: flushed.record)
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+                testContext.serviceMock.stubEventResponse(success: true)
+
+                expect(flushed.value()).toEventually(equal(true), timeout: .seconds(5))
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["untrusted"], ["untrusted"]]
+            }
+
             it("posts what is buffered at close through the backoff's wait, though closing goes offline straight after") {
                 testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedInitialDelay: 512, extendedCeiling: 3600))
                 testContext.serviceMock.respondToEvents(with: HTTPURLResponse.StatusCodes.unauthorized)
@@ -4273,6 +4357,14 @@ private final class ClosingHookStore: EventStoring {
 
 /// A store that remembers what was staged between one commit or close and the next, which is one delivery's
 /// encoding where nothing persists.
+extension DirectEventProcessor {
+    /// Started straight after init, as `ClientServiceFactory` starts the one it makes.
+    func started() -> DirectEventProcessor {
+        start()
+        return self
+    }
+}
+
 private final class StagingObservingStore: EventStoring {
     let inner: EventStoring
     private let lock = UnfairLock()

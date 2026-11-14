@@ -34,6 +34,9 @@ enum EventLogFormat {
     /// A ceiling on a single frame's payload: the most that still fits in a batch on its own. It is also what keeps a
     /// corrupt size from making recovery allocate wildly.
     static let maxFrameSize = maxBatchSize - fileHeaderSize - frameOverhead
+    /// The most events a batch can hold, every frame carrying at least a byte of payload. A count beyond it, in a
+    /// batch's name, is not one this format could have written.
+    static let maxEventsPerBatch = (maxBatchSize - fileHeaderSize) / (frameOverhead + 1)
 
     static var fileHeader: Data {
         var header = magic
@@ -90,10 +93,14 @@ enum EventLogFormat {
         var cursor = fileHeaderSize
         while cursor + frameOverhead <= bytes.count {
             let type = UInt16(bytes[cursor]) << 8 | UInt16(bytes[cursor + 1])
-            let length = Int(readUInt32(bytes, at: cursor + 2))
+            // Bounded before it becomes an Int, which is 32 bits on watchOS: a damaged size past Int32.max would trap
+            // in the conversion.
+            let size = readUInt32(bytes, at: cursor + 2)
+            guard size > 0, size <= maxFrameSize
+            else { break }
             let start = cursor + frameHeaderSize
-            let end = start + length
-            guard length > 0, length <= maxFrameSize, end + frameTrailerSize <= bytes.count
+            let end = start + Int(size)
+            guard end + frameTrailerSize <= bytes.count
             else { break }
 
             var checksum = Crc32()
