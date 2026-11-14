@@ -578,18 +578,19 @@ extension DirectEventProcessor {
         reportStoredEventsLost(events)
     }
 
-    /// How a pass over some batches went, from best to worst.
+    /// How a pass over some batches ended, from best to worst. Only `blocked` ends a pass before its last batch; the
+    /// others mean it got through every one.
     enum PassOutcome: Int, Comparable {
         /// Every batch was accepted.
         case delivered
-        /// Every batch was attempted, and at least one was lost for good: unreadable, damaged, deleted unsent, or had its
-        /// payload refused `badRequestsBeforeDropping` times in a row.
+        /// Every batch was accepted or lost for good, and at least one was lost: unreadable, damaged, deleted unsent, or
+        /// had its payload refused `badRequestsBeforeDropping` times in a row.
         case lost
-        /// Every batch was attempted or passed by, and at least one was passed by: its read failed, and it is kept for a
-        /// later delivery to read again, while the batches after it were still attempted.
+        /// The pass got through every batch, and this delivery passed at least one by: its read failed, and it is kept
+        /// for a later delivery to read again.
         case passedBy
-        /// A batch is still there to be sent again: its request failed, or the backoff did not allow it to be posted
-        /// yet. The batches after it were not attempted.
+        /// The pass stopped at a batch that is still there to be sent again: its request failed, or the backoff did not
+        /// allow it to be posted yet. The batches after it were not attempted.
         case blocked
 
         static func < (lhs: PassOutcome, rhs: PassOutcome) -> Bool {
