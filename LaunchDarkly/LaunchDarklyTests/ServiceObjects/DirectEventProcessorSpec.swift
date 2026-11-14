@@ -544,6 +544,18 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
             }
 
+            itPersisting("sends what a previous run left on going online again, where the launch gate opened while offline") {
+                let reporter = nextRunLeft(1, pacing: DirectEventProcessor.Pacing(launchDelay: 0.3, gap: 0))
+                reporter.isOnline = true
+                reporter.isOnline = false
+
+                Thread.sleep(forTimeInterval: 0.6)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+
+                reporter.isOnline = true
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+            }
+
             itPersisting("sends what a previous run left on a flush, without waiting for the launch gate") {
                 let reporter = nextRunLeft(1, pacing: DirectEventProcessor.Pacing(launchDelay: 5, gap: 0))
                 reporter.isOnline = true

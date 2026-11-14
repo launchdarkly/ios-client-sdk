@@ -137,7 +137,8 @@ class DirectEventProcessor: EventProcessor {
     /// Deliveries run here, off whatever thread recorded an event.
     private let deliveryQueue = DispatchQueue(label: "com.launchdarkly.eventSyncQueue", qos: .userInitiated)
 
-    /// Whether the store held events from a previous run of the application when this reporter started.
+    /// Whether the store held events from a previous run of the application when this reporter started, and no delivery
+    /// has run since to send them.
     ///
     /// Only to be used on `deliveryQueue`, which is what makes it safe without a lock: the recovery that answers the
     /// question and the delivery that acts on it are both enqueued there, in that order.
@@ -322,10 +323,7 @@ extension DirectEventProcessor {
                 }
             }
             self.releaseLaunchGateWaiters()
-            guard self.launchGateOpen, self.hasEventsFromPreviousRun
-            else { return }
-            self.hasEventsFromPreviousRun = false
-            self.queueScheduledDelivery()
+            self.deliverWhatAPreviousRunLeft()
         }
     }
 
@@ -370,7 +368,7 @@ extension DirectEventProcessor {
     private func checkLaunchGate() {
         guard !launchGateOpen, let wentOnlineAt
         else { return }
-        
+
         let sinceOnline = TimeInterval(DispatchTime.now().uptimeNanoseconds - wentOnlineAt.uptimeNanoseconds) / 1_000_000_000
         guard sinceOnline >= pacing.launchDelay
         else {
@@ -379,17 +377,20 @@ extension DirectEventProcessor {
         }
         launchGateOpen = true
         releaseLaunchGateWaiters()
-        
-        guard hasEventsFromPreviousRun
+
+        deliverWhatAPreviousRunLeft()
+    }
+
+    /// Queues the delivery that sends what a previous run left, once the gate is open with the reporter online. Offline,
+    /// it waits for the reporter to go online, which calls this again. Does nothing where a delivery has already run,
+    /// since that sent the oldest batches first. On `deliveryQueue`.
+    private func deliverWhatAPreviousRunLeft() {
+        guard launchGateOpen, hasEventsFromPreviousRun, isOnline, let wentOnlineAt
         else { return }
-        
-        os_log("%s Sending events from a previous run, %dms after going online", log: service.config.logger, type: .debug, typeName(and: #function), Int(pacing.launchDelay * 1000))
-        // Offline, they wait for the reporter to go online, which finds the gate open.
-        
-        guard isOnline
-        else { return }
-        
+
         hasEventsFromPreviousRun = false
+        let sinceOnline = (DispatchTime.now().uptimeNanoseconds - wentOnlineAt.uptimeNanoseconds) / 1_000_000
+        os_log("%s Delivering events a previous run left, %dms after first going online", log: service.config.logger, type: .debug, typeName(and: #function), Int(sinceOnline))
         queueScheduledDelivery()
     }
 
@@ -495,6 +496,8 @@ extension DirectEventProcessor {
             completion?(false, 0)
             return
         }
+        // This delivery sends the oldest batches first, which are what a previous run left.
+        hasEventsFromPreviousRun = false
 
         // The batches already waiting go first, and what has been committed since is closed into a batch of its own
         // only once none of them is left blocked. Closing first would add a batch for every pass a failure lasts: every
