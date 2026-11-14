@@ -22,6 +22,12 @@ class DiagnosticReporter: DiagnosticReporting {
     /// first flag request. Set once the client has both; unset only where events are not sent, and so neither is this.
     var sendsInitAfter: ((@escaping () -> Void) -> Void)?
 
+    /// Has the init event wait for `events`' launch gate. Holds `events` weakly: the init it holds keeps this reporter
+    /// alive, and a client closed before the gate opens leaves it held for good.
+    func sendInitAfterLaunchGate(of events: DirectEventProcessor) {
+        sendsInitAfter = { [weak events] send in events?.whenLaunchGateOpens(send) }
+    }
+
     init(service: DarklyServiceProvider, environmentReporting: EnvironmentReporting) {
         self.service = service
         self.environmentReporting = environmentReporting
