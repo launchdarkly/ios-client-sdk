@@ -568,7 +568,9 @@ extension DirectEventProcessor {
         return listing
     }
 
-    /// Counts as lost the events of batches a listing found deleted unsent, or of an open log a close found gone.
+    /// Counts as lost the events of batches that left the directory without being sent: the store counted them on disk,
+    /// and a listing no longer finds them, though no store in this process removed them and no other process shares the
+    /// directory. tvOS purging a cache directory is one way it happens.
     private func reportVanished(_ events: Int) {
         guard events > 0
         else { return }
