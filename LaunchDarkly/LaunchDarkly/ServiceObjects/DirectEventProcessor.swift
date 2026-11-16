@@ -598,22 +598,23 @@ extension DirectEventProcessor {
         }
     }
 
-    /// Delivers batches oldest first, stopping at the first one whose post failed. One whose read failed is passed by,
-    /// and is not read again in this delivery.
+    /// Delivers `batches` oldest first, one at a time, and calls `completion` once with how the pass ended. Calls itself
+    /// for each batch it moves on to.
     ///
-    /// Stopping matters: the batches that are left keep their place in the log, and a later delivery attempts them
-    /// again rather than the SDK spending the rest of the session's requests on a service that is refusing them. A read
-    /// says nothing about the service, so it stops nothing.
+    /// - A failed post stops the pass. The batches left keep their place, and a later delivery tries them again, rather
+    ///   than the SDK spending the session's requests on a service that is refusing them. Where the backoff's wait is no
+    ///   longer than the initial delay, the pass sits it out once, as its retry, so a caller waiting on it hears the
+    ///   retry's answer; a longer wait ends the pass, with a delivery set for when it ends.
+    /// - A batch whose read fails is passed by, kept, and not read again in this delivery. A read says nothing about the
+    ///   service, so it stops nothing.
+    /// - A paced delivery holds each batch until the gap has passed since the last post was answered, so a backlog sent
+    ///   unasked does not take the network from an `identify`'s flag request.
     ///
-    /// A failure whose wait is no longer than the initial delay is retried here, once a pass, so a caller waiting on
-    /// the pass hears from the retry; a longer wait ends the pass at once, with a delivery set for when the wait ends.
-    ///
-    /// `lostAnything` carries whether a batch already taken in this pass was lost for good, so that the caller hears
-    /// about it even where the batches after it were accepted. `retried` whether this pass has had its retry.
-    ///
-    /// A paced delivery holds each batch after its first until a gap has passed since the last one was answered. A
-    /// backlog this sends unasked otherwise takes the network for as long as it lasts, an `identify`'s flag request
-    /// included. `hadTurn` is whether the first batch has been held already.
+    /// - Parameters:
+    ///   - lostAnything: whether a batch this pass already took was lost for good, so the caller hears of it even where
+    ///     the batches after it were accepted.
+    ///   - retried: whether this pass has had its retry.
+    ///   - hadTurn: whether the first of `batches` has already waited its turn under the pacing, so it is not held again.
     private func deliver(_ batches: [EventBatch], _ run: EventDeliveryRun, lostAnything: Bool, retried: Bool, hadTurn: Bool = false, _ completion: @escaping (PassOutcome) -> Void) {
         var remaining = batches
         guard let next = remaining.first
@@ -623,7 +624,7 @@ extension DirectEventProcessor {
         }
         guard !run.passedBy(next.payloadId)
         else {
-            deliver(Array(remaining.dropFirst()), run, lostAnything: lostAnything, retried: retried, hadTurn: hadTurn, completion)
+            deliver(Array(remaining.dropFirst()), run, lostAnything: lostAnything, retried: retried, completion)
             return
         }
 
