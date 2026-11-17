@@ -4131,6 +4131,51 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedEventPayloads.map(customKeys).last) == ["an-event"]
             }
 
+            it("posts at once on going online again after an ordinary failure, rather than sitting out the rest of its wait") {
+                let retryState = DeliveryRetryState(initialDelay: 1, normalCeiling: 60, extendedInitialDelay: 512, extendedCeiling: 3600)
+                testContext = TestContext(retryState: retryState)
+                testContext.serviceMock.respondToEvents(with: 503)
+                testContext.eventProcessor.record(CustomEvent(key: "held", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                expect(testContext.flushOutcome()) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 2
+                // Failures while the network was going, which leave about sixteen seconds to wait, past the report
+                // interval.
+                for _ in 0..<3 {
+                    retryState.recordFailure(unexpected: false, retryAfter: nil)
+                }
+                testContext.serviceMock.stubEventResponse(success: true)
+                testContext.serviceMock.eventStatusForPost = nil
+
+                testContext.eventProcessor.isOnline = false
+                testContext.eventProcessor.isOnline = true
+
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(3), timeout: .seconds(2))
+                expect(testContext.serviceMock.publishedEventPayloads.last.map(customKeys)) == ["held"]
+            }
+
+            for (refusal, response) in [("HTTP 401", (status: 401, retryAfter: String?.none)), ("a Retry-After", (status: 503, retryAfter: "30"))] {
+                it("keeps to the wait \(refusal) set on going online again") {
+                    testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedInitialDelay: 512, extendedCeiling: 3600))
+                    let refused = HTTPURLResponse(url: testContext.serviceMock.config.eventsUrl,
+                                                  statusCode: response.status,
+                                                  httpVersion: DarklyServiceMock.Constants.httpVersion,
+                                                  headerFields: response.retryAfter.map { [HTTPURLResponse.HeaderKeys.retryAfter: $0] })
+                    testContext.serviceMock.stubbedEventResponse = (nil, refused, nil, nil)
+                    testContext.eventProcessor.record(CustomEvent(key: "refused", context: testContext.context))
+                    testContext.eventProcessor.isOnline = true
+                    expect(testContext.flushOutcome()) == false
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                    testContext.serviceMock.stubEventResponse(success: true)
+
+                    testContext.eventProcessor.isOnline = false
+                    testContext.eventProcessor.isOnline = true
+
+                    waitLettingTimersFire(1.5)
+                    expect(testContext.serviceMock.publishEventDataCallCount) == 1
+                }
+            }
+
             it("delivers events recorded during an outage after the batch refused before them, oldest first and once each") {
                 testContext = TestContext(retryState: DirectEventProcessorSpec.withoutBackoff())
                 testContext.serviceMock.respondToEvents(with: 503)

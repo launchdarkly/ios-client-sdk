@@ -138,6 +138,11 @@ final class EventBatchDeliverer {
         advance(EventDeliveryPass(listing.batches, run, lostAnything: lostAnything, completion: completion))
     }
 
+    /// As `DeliveryRetryState.endOrdinaryWait()`, for the reporter going online again.
+    func endOrdinaryWait() -> Bool {
+        retryState.endOrdinaryWait()
+    }
+
     /// Goes on with a pass from its first batch left, and calls its completion once it ends.
     ///
     /// Loops over the batches it can go through without waiting, so a run of them passed by or lost costs the stack

@@ -273,8 +273,9 @@ extension DirectEventProcessor {
 
         // Events a previous run left behind are already late by however long the application was gone, so they do not
         // wait out a report interval on top of that, only the launch gate: an application that crashed reports it as
-        // soon as it is next able to. Only the first time online brings a delivery forward, so going online again
-        // later, as a network comes and goes, keeps to the ordinary cadence.
+        // soon as it is next able to. Going online again later, as a network comes and goes, keeps to the ordinary
+        // cadence, unless a post failed in a way the network coming back may cure: that delivery goes now, rather than
+        // after the rest of a wait set while the network was gone, or at the next report interval.
         deliveryQueue.async { [weak self] in
             guard let self
             else { return }
@@ -285,6 +286,9 @@ extension DirectEventProcessor {
                 }
             }
             self.releaseLaunchGateWaiters()
+            if self.deliverer.endOrdinaryWait() && self.launchGateOpen {
+                self.queueScheduledDelivery()
+            }
             self.deliverWhatAPreviousRunLeft()
         }
     }
