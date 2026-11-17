@@ -3069,6 +3069,38 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedPayloadIds.last) == unreadable.payloadId
             }
 
+            itPersisting("passes by a thousand stored batches it could not read in one delivery") {
+                // Each goes by without a post, which is what once took a stack frame per batch, and overflowed the
+                // stack of the thread the delivery ran on after a few hundred.
+                let batchCount = 1_000
+                let failing = Answer()
+                let store = EventStore.temporary(capacity: batchCount, readFile: { url in
+                    guard failing.value() != true
+                    else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(EMFILE)) }
+                    return try Data(contentsOf: url)
+                })
+                for index in 0..<batchCount {
+                    _ = store.stage(Data(#"{"kind":"custom","key":"unreadable-\#(index)"}"#.utf8))
+                    store.commit()
+                    _ = store.closeBatch()
+                }
+                expect(store.pendingBatches().count) == batchCount
+                failing.record(true)
+                testContext = TestContext(store: store)
+                testContext.eventProcessor.isOnline = true
+
+                var delivered: Bool?
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+                expect(store.pendingBatches().count) == batchCount
+            }
+
             itPersisting("drops a stored batch it could not read at three flushes in a row, and reports the loss once") {
                 let reads = FailingReads()
                 let store = EventStore.temporary(readFile: { try reads.read($0) })

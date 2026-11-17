@@ -24,7 +24,7 @@ final class EventDeliveryRun {
     private let gap: TimeInterval
 
     /// Guards the pacing, which a delivery somebody asks for, or going offline, ends from another thread, and the
-    /// batches passed by, which the delivery notes from whichever thread it goes on from.
+    /// batches passed by.
     private let lock = UnfairLock()
     /// Whether it is paced: until a delivery somebody asked for is queued, after which it sends the rest back to back,
     /// or the reporter goes offline, after which it sends nothing more. Only to be used while holding `lock`.
@@ -112,10 +112,51 @@ final class EventDeliveryRun {
     }
 }
 
+/// One pass over the batches a delivery listed, from its first batch until it has gone through the last or stops.
+///
+/// Only used on `DirectEventProcessor`'s delivery queue. The pass takes its batches there, and each wait it makes, for
+/// its turn under the pacing, for a retry or for a post's answer, ends by going back there, so the rest of the pass
+/// never runs on whichever thread the wait ended on.
+final class EventDeliveryPass {
+    let run: EventDeliveryRun
+    /// The batches it has not gone through, oldest first.
+    private(set) var remaining: ArraySlice<EventBatch>
+    /// Whether a batch it went through was lost for good, so the caller hears of it even where the batches after it
+    /// were accepted.
+    var lostAnything: Bool
+    /// Whether it has had its retry.
+    var retried = false
+    /// Whether the first of `remaining` has already waited its turn under the pacing, so it is not held again.
+    var hadTurn = false
+    /// Called once, with how the pass ended.
+    let completion: (DirectEventProcessor.PassOutcome) -> Void
+
+    init(_ batches: [EventBatch],
+         _ run: EventDeliveryRun,
+         lostAnything: Bool,
+         completion: @escaping (DirectEventProcessor.PassOutcome) -> Void) {
+        self.run = run
+        self.remaining = batches[...]
+        self.lostAnything = lostAnything
+        self.completion = completion
+    }
+
+    /// Goes on to the next batch, which waits its own turn.
+    func moveOn() {
+        remaining.removeFirst()
+        hadTurn = false
+    }
+
+    /// How it ended, once it has gone through every batch.
+    var outcome: DirectEventProcessor.PassOutcome {
+        run.passedAnyBy ? .passedBy : lostAnything ? .lost : .delivered
+    }
+}
+
 /// Decides which delivery runs next, one at a time: queues one, joins a caller to one that is queued and has not
 /// started, starts the queued one once the one running has its answer, and sets one for when the backoff's wait ends.
 ///
-/// Its lock is taken on a caller's thread, on the delivery queue and where a delivery's posts are answered, and never
+/// Its lock is taken on a caller's thread, on the delivery queue and where the end of a backoff's wait fires, and never
 /// held across any of them.
 final class EventDeliveryScheduler {
     /// A delivery queued that has not taken its batches yet.
