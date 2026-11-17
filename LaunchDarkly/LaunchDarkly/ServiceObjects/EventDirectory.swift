@@ -316,8 +316,23 @@ final class EventDirectory {
             return .failed
         }
 
-        stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes, modified: Date(), summaries: held.summaries)
+        stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes,
+                                   modified: EventDirectory.listed(file).modified ?? Date(), summaries: held.summaries)
         return .closed(EventBatch(payloadId: payloadId, eventCount: events))
+    }
+
+    /// When the open log was last written, as a batch closed from it would be dated, or nil where there is none or it
+    /// cannot be told. Requires `ioLock`.
+    var openLogLastWritten: Date? {
+        ioLock.assertOwned()
+        return located.flatMap { EventDirectory.listed($0.log.url).modified }
+    }
+
+    /// When a batch the last listing or close counted was last written, which is what orders a listing. Requires
+    /// `ioLock`.
+    func lastWritten(_ payloadId: String) -> Date? {
+        ioLock.assertOwned()
+        return stored[payloadId]?.modified
     }
 
     /// As `DiskEventLog.takeBackAndClose(reading:)`, for a store giving up on a log it cannot close. Requires `ioLock`.

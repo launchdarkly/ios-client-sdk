@@ -520,29 +520,39 @@ final class EventStore: EventStoring {
         // either side of a close that moves events between them.
         guard let disk
         else {
-            return BatchListing(batches: heldBatchesAndRecount(after: [], storedSummaries: 0, storedBytes: 0), isComplete: true)
+            return BatchListing(batches: heldBatchesAndRecount(among: [], storedSummaries: 0, storedBytes: 0), isComplete: true)
         }
         return ioLock.withLock {
             let listing = disk.listBatches()
-            return BatchListing(batches: heldBatchesAndRecount(after: listing.batches, storedSummaries: disk.storedSummaries,
+            let onDisk = listing.batches.map { (batch: $0, lastWritten: disk.lastWritten($0.payloadId) ?? .distantPast) }
+            return BatchListing(batches: heldBatchesAndRecount(among: onDisk, storedSummaries: disk.storedSummaries,
                                                                storedBytes: disk.storedBytes),
                                 isComplete: listing.isComplete,
                                 vanishedEvents: listing.vanishedEvents)
         }
     }
 
-    /// Adds the batches the filesystem would not take, after the files: anything held was closed by this run and so is
-    /// newer than whatever a previous run left on the disk. Then counts everything listed as closed, which is how
-    /// batches another process closed or delivered come to be counted or not.
+    /// Places the batches held in memory among the ones on the disk by when each was last written, since neither kind
+    /// is always the older: a full log that will not close leaves the events after it to be held, and is closed once it
+    /// can be, with newer logs after it. Then counts everything listed as closed, which is how batches another process
+    /// closed or delivered come to be counted or not.
     ///
     /// Requires `ioLock` where there is a disk, so that the count is of the listing as it stands.
     ///
     /// - Parameters:
+    ///   - onDisk: the batches listed from the disk, oldest first, with when each was last written.
     ///   - storedSummaries: the summaries this store knows of in the batches listed from the disk.
     ///   - storedBytes: the bytes in the batches listed from the disk.
-    private func heldBatchesAndRecount(after onDisk: [EventBatch], storedSummaries: Int, storedBytes: Int) -> [EventBatch] {
+    private func heldBatchesAndRecount(among onDisk: [(batch: EventBatch, lastWritten: Date)], storedSummaries: Int,
+                                       storedBytes: Int) -> [EventBatch] {
         heldLock.withLock {
-            let batches = onDisk + inMemoryBatches.map { EventBatch(payloadId: $0.payloadId, eventCount: $0.eventCount) }
+            let held = inMemoryBatches.map {
+                (batch: EventBatch(payloadId: $0.payloadId, eventCount: $0.eventCount), lastWritten: $0.lastWritten)
+            }
+            // Batches written at the same moment keep the order they come in, the disk's first.
+            let batches = (onDisk + held).enumerated()
+                .sorted { ($0.element.lastWritten, $0.offset) < ($1.element.lastWritten, $1.offset) }
+                .map { $0.element.batch }
             bufferLock.withLock {
                 closedEvents = batches.reduce(0) { $0 + $1.eventCount }
                 closedSummaries = inMemoryBatches.reduce(storedSummaries) { $0 + $1.summaries }
@@ -874,6 +884,8 @@ private extension EventStore {
     func giveUpOnOpenLog(of disk: EventDirectory, holding closed: EventTally) -> EventBatch? {
         ioLock.assertOwned()
         os_log("%s giving up on persisting events: the event log could not be closed %d times in a row", log: logger, type: .info, typeName(and: #function), closeFailures)
+        // Before taking it back, which cuts it down and so writes it.
+        let lastWritten = disk.openLogLastWritten ?? .distantPast
         let taken = disk.takeBackOpenLog()
         disablePersistence()
         if taken == nil {
@@ -889,7 +901,8 @@ private extension EventStore {
         let payloadId = UUID().uuidString
         heldLock.withLock {
             if events > 0 {
-                inMemoryBatches.insert(HeldBatch(payloadId: payloadId, body: body, eventCount: events, summaries: summaries), at: 0)
+                inMemoryBatches.insert(HeldBatch(payloadId: payloadId, body: body, eventCount: events, summaries: summaries,
+                                                 lastWritten: lastWritten), at: 0)
             }
             bufferLock.withLock {
                 vanishedLogEvents += taken == nil ? 0 : closed.events - events
@@ -917,6 +930,7 @@ private extension EventStore {
         // counted meanwhile. Through the same reader a batch on disk goes through, so a held batch and a written one
         // produce byte-identical request bodies.
         let base = frames.startIndex
+        let lastWritten = Date()
         var closed: [EventBatch] = []
         var held = 0
         var heldEvents = 0
@@ -934,7 +948,7 @@ private extension EventStore {
             let payloadId = UUID().uuidString
             heldLock.withLock {
                 inMemoryBatches.append(HeldBatch(payloadId: payloadId, body: body, eventCount: batchEvents,
-                                                 summaries: batchSummaries))
+                                                 summaries: batchSummaries, lastWritten: lastWritten))
                 // Counted where they landed in the same critical section that stops counting them on the way, so a
                 // capacity check never sees them in both places or in neither. A held batch is counted as its body,
                 // which is what it keeps.

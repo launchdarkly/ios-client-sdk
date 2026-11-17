@@ -1172,6 +1172,30 @@ final class EventStoreSpec: QuickSpec {
                 expect(logs).to(beEmpty())
             }
 
+            it("lists what it held while a full log would not close after that log and before the logs after it") {
+                let largest = EventLogFormat.maxFrameSize + EventLogFormat.frameOverhead
+                _ = store.stage(EventStoreSpec.payload(framedIn: largest, key: "fills-the-log"))
+                store.commit()
+                let directory = store.directory!
+                let readOnly: [FileAttributeKey: Any] = [.posixPermissions: 0o555]
+                let writable: [FileAttributeKey: Any] = [.posixPermissions: 0o755]
+                try FileManager.default.setAttributes(readOnly, ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes(writable, ofItemAtPath: directory.path) }
+
+                // No room for it in the log, which will not close, so it is held.
+                _ = store.stage(EventStoreSpec.payload("held"))
+                let held = store.closeBatch()!
+                expect(EventStoreSpec.keys(ofBody: try? store.body(of: held))) == ["held"]
+                expect(store.isPersisting) == true
+
+                try FileManager.default.setAttributes(writable, ofItemAtPath: directory.path)
+                _ = store.stage(EventStoreSpec.payload("after"))
+                _ = store.closeBatch()
+
+                let keys = try store.pendingBatches().map { EventStoreSpec.keys(ofBody: try store.body(of: $0)) }
+                expect(keys) == [["fills-the-log"], ["held"], ["after"]]
+            }
+
             it("gives up on the disk once the log will not close three times in a row, and delivers what it held from memory") {
                 _ = store.stage(EventStoreSpec.payload("first"))
                 store.commit()

@@ -7,6 +7,9 @@ struct HeldBatch {
     let eventCount: Int
     /// How many of `eventCount` are summaries.
     let summaries: Int
+    /// When its last event was added, which places it among the batches on the disk, dated by when their log was last
+    /// written.
+    let lastWritten: Date
 }
 
 /// Everything staged, taken out of the buffers in one step: the full events, then the summaries.
