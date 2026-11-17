@@ -8,7 +8,7 @@ final class EventProcessorOutcomesSpec: QuickSpec {
         describe("flushing several processors") {
             var first: EventProcessorMock!
             var second: EventProcessorMock!
-            var answers: [[Bool]] = []
+            var answers: [[Bool?]] = []
             var processors: [EventProcessor] { [first!, second!] }
             beforeEach {
                 first = EventProcessorMock()
@@ -48,21 +48,21 @@ final class EventProcessorOutcomesSpec: QuickSpec {
                 expect(answers) == []
             }
 
-            it("counts a processor that has not answered by the deadline as undelivered, and ignores its late answer") {
-                var answered: [[Bool]] = []
+            it("gives a processor that has not answered by the deadline as nil, and ignores its late answer") {
+                var answered: [[Bool?]] = []
                 let lock = UnfairLock()
                 processors.flushReportingOutcomes(deadline: .now() + 0.1) { outcome in
                     lock.withLock { answered.append(outcome) }
                 }
                 first.flushReportingOutcomeReceivedCompletion?(true)
 
-                expect(lock.withLock { answered }).toEventually(equal([[true, false]]))
+                expect(lock.withLock { answered }).toEventually(equal([[true, nil]]))
                 second.flushReportingOutcomeReceivedCompletion?(true)
-                expect(lock.withLock { answered }) == [[true, false]]
+                expect(lock.withLock { answered }) == [[true, nil]]
             }
 
             it("answers once where every processor answers before the deadline") {
-                var answered: [[Bool]] = []
+                var answered: [[Bool?]] = []
                 let lock = UnfairLock()
                 processors.flushReportingOutcomes(deadline: .now() + 0.1) { outcome in
                     lock.withLock { answered.append(outcome) }
