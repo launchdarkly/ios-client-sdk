@@ -3069,6 +3069,38 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedPayloadIds.last) == unreadable.payloadId
             }
 
+            itPersisting("passes by a thousand stored batches it could not read in one delivery") {
+                // Each goes by without a post, which is what once took a stack frame per batch, and overflowed the
+                // stack of the thread the delivery ran on after a few hundred.
+                let batchCount = 1_000
+                let failing = Answer()
+                let store = EventStore.temporary(capacity: batchCount, readFile: { url in
+                    guard failing.value() != true
+                    else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(EMFILE)) }
+                    return try Data(contentsOf: url)
+                })
+                for index in 0..<batchCount {
+                    _ = store.stage(Data(#"{"kind":"custom","key":"unreadable-\#(index)"}"#.utf8))
+                    store.commit()
+                    _ = store.closeBatch()
+                }
+                expect(store.pendingBatches().count) == batchCount
+                failing.record(true)
+                testContext = TestContext(store: store)
+                testContext.eventProcessor.isOnline = true
+
+                var delivered: Bool?
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    testContext.eventProcessor.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+                expect(store.pendingBatches().count) == batchCount
+            }
+
             itPersisting("drops a stored batch it could not read at three flushes in a row, and reports the loss once") {
                 let reads = FailingReads()
                 let store = EventStore.temporary(readFile: { try reads.read($0) })
@@ -3083,7 +3115,7 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.readFailureSpacing = 0
 
                 var answers: [Bool] = []
-                for _ in 0..<DirectEventProcessor.readFailuresBeforeDropping {
+                for _ in 0..<EventBatchDeliverer.readFailuresBeforeDropping {
                     expect(store.pendingBatches().count) == 1
                     waitUntil(timeout: Constants.deliveryTimeout) { done in
                         testContext.eventProcessor.flushReportingOutcome { result in
@@ -3093,7 +3125,7 @@ extension DirectEventProcessorSpec {
                     }
                 }
                 expect(answers) == [false, false, false]
-                expect(reads.failures) == DirectEventProcessor.readFailuresBeforeDropping
+                expect(reads.failures) == EventBatchDeliverer.readFailuresBeforeDropping
                 expect(store.pendingBatches()).to(beEmpty())
                 expect(testContext.serviceMock.publishEventDataCallCount) == 0
 
@@ -3123,13 +3155,13 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.readFailureSpacing = 3600
 
                 // Flushes in a row, and the blocking flushAndWait's posting through the backoff, as a caller might.
-                for _ in 0..<(2 * DirectEventProcessor.readFailuresBeforeDropping) {
+                for _ in 0..<(2 * EventBatchDeliverer.readFailuresBeforeDropping) {
                     waitUntil(timeout: Constants.deliveryTimeout) { done in
                         testContext.eventProcessor.flushReportingOutcome { _ in done() }
                     }
                     expect(testContext.flushBypassingBackoffOutcome()) == false
                 }
-                expect(reads.failures) == 4 * DirectEventProcessor.readFailuresBeforeDropping
+                expect(reads.failures) == 4 * EventBatchDeliverer.readFailuresBeforeDropping
                 expect(store.pendingBatches().map { $0.payloadId }) == [unreadable.payloadId]
 
                 reads.fail(nil)
@@ -3151,7 +3183,7 @@ extension DirectEventProcessorSpec {
                 let spacing: TimeInterval = 0.2
                 testContext.eventProcessor.readFailureSpacing = spacing
 
-                for _ in 1..<DirectEventProcessor.readFailuresBeforeDropping {
+                for _ in 1..<EventBatchDeliverer.readFailuresBeforeDropping {
                     expect(testContext.flushOutcome()) == false
                     expect(testContext.flushOutcome()) == false
                     expect(store.pendingBatches().count) == 1

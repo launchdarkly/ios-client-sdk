@@ -24,7 +24,7 @@ final class EventDeliveryRun {
     private let gap: TimeInterval
 
     /// Guards the pacing, which a delivery somebody asks for, or going offline, ends from another thread, and the
-    /// batches passed by, which the delivery notes from whichever thread it goes on from.
+    /// batches passed by.
     private let lock = UnfairLock()
     /// Whether it is paced: until a delivery somebody asked for is queued, after which it sends the rest back to back,
     /// or the reporter goes offline, after which it sends nothing more. Only to be used while holding `lock`.
@@ -115,7 +115,7 @@ final class EventDeliveryRun {
 /// Decides which delivery runs next, one at a time: queues one, joins a caller to one that is queued and has not
 /// started, starts the queued one once the one running has its answer, and sets one for when the backoff's wait ends.
 ///
-/// Its lock is taken on a caller's thread, on the delivery queue and where a delivery's posts are answered, and never
+/// Its lock is taken on a caller's thread, on the delivery queue and where the end of a backoff's wait fires, and never
 /// held across any of them.
 final class EventDeliveryScheduler {
     /// A delivery queued that has not taken its batches yet.

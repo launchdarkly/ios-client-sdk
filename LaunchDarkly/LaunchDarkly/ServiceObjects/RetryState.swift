@@ -113,7 +113,7 @@ final class PollingRetryState {
 /// recorded meanwhile would be lost. A `Retry-After` sets the wait instead. One accepted delivery puts everything back.
 ///
 /// One per event processor, so each environment backs off on its own. Held only in memory, so a new run of the
-/// application posts at once. Thread safe: a delivery's responses arrive on whichever thread the session answers on.
+/// application posts at once. Thread safe, though the event processor only uses it on its delivery queue.
 final class DeliveryRetryState {
     private let normal: RetryRegime
     private let extended: RetryRegime
