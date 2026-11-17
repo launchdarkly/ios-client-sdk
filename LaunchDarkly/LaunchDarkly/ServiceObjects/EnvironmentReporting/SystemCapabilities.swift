@@ -44,6 +44,16 @@ class SystemCapabilities {
     static var operatingSystem: OperatingSystem { .tvOS }
     #endif
 
+    /// Whether another instance of the application can run over the same container at the same time, which only a Mac
+    /// does. Where it can, a store locks the event log it has open, and leaves alone the logs and batches another
+    /// instance holds. Elsewhere no file lock may be taken: iOS terminates a suspended application holding one in a
+    /// shared container (`0xdead10cc`).
+    #if os(macOS) || targetEnvironment(macCatalyst)
+    static var sharesContainerWithOtherInstances: Bool { true }
+    #else
+    static var sharesContainerWithOtherInstances: Bool { false }
+    #endif
+
     #if os(iOS) || os(tvOS) || os(watchOS)
     private static func performExpiringActivity(_ reason: String, _ whileGranted: @escaping (Bool) -> Void) {
         ProcessInfo.processInfo.performExpiringActivity(withReason: reason, using: whileGranted)

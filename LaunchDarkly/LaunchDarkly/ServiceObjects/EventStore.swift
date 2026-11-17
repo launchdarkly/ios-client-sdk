@@ -290,13 +290,11 @@ final class EventStore: EventStoring {
         ioLock.withLock { disk?.openLogUrl }
     }
 
-    #if os(macOS) || targetEnvironment(macCatalyst)
     /// Whether the open log is locked while it is open. Only to be changed before the store first touches the disk.
     var locksOpenLog: Bool {
         get { ioLock.withLock { disk?.locksOpenLog ?? false } }
         set { ioLock.withLock { disk?.locksOpenLog = newValue } }
     }
-    #endif
 
     /// Whether other processes of the application may use this directory, and so deliver its batches.
     var sharesDirectoryWithOtherProcesses: Bool {

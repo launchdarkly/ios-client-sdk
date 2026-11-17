@@ -17,12 +17,11 @@ final class EventStoreSpec: QuickSpec {
         optOutSpec()
         multiProcessSpec()
         withoutPersistenceSpec()
-        #if os(macOS) || targetEnvironment(macCatalyst)
-        lockedInstancesSpec()
-        #endif
+        if SystemCapabilities.sharesContainerWithOtherInstances {
+            lockedInstancesSpec()
+        }
     }
 
-    #if os(macOS) || targetEnvironment(macCatalyst)
     private func lockedInstancesSpec() {
         // A Mac runs a second instance of an application over the same directory on request.
         describe("live instances holding their logs locked") {
@@ -107,7 +106,6 @@ final class EventStoreSpec: QuickSpec {
             }
         }
     }
-    #endif
 
     private func multiProcessSpec() {
         describe("several processes sharing a directory") {
@@ -1257,11 +1255,9 @@ final class EventStoreSpec: QuickSpec {
                                            logger: .disabled)
                     defer { try? FileManager.default.removeItem(at: directory) }
                     expect(lock.withLock { located }) == 0
-                    #if os(macOS) || targetEnvironment(macCatalyst)
                     if persistEvents {
                         store.locksOpenLog = false
                     }
-                    #endif
 
                     store.preparePayloadsFromInterruptedLogs()
                     _ = store.stage(EventStoreSpec.payload("first"))
@@ -1678,7 +1674,6 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.takeVanishedLogEvents()) == 0
             }
 
-            #if os(macOS) || targetEnvironment(macCatalyst)
             it("hands over the events of a locked open log deleted unsent as vanished, though another process shares the directory") {
                 store = EventStore.temporary()
                 store.sharesDirectoryWithOtherProcesses = true
@@ -1704,7 +1699,6 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingEventCount) == 0
                 expect(store.takeVanishedLogEvents()) == 0
             }
-            #endif
 
             it("hands over nothing as vanished from a log persistence gave up on, which recovery may have taken") {
                 var writes = 0
@@ -2095,24 +2089,24 @@ final class EventStoreSpec: QuickSpec {
                 expect(FileManager.default.fileExists(atPath: file.path)) == false
             }
 
-            #if os(macOS) || targetEnvironment(macCatalyst)
-            it("leaves a batch another process is sending until it stops") {
-                _ = store.stage(EventStoreSpec.payload("sending"))
-                _ = store.closeBatch()
-                let file = try EventStoreSpec.onlyBatchFile(in: store)
-                try EventStoreSpec.age(file, byDays: 30)
-                // A lock taken through a descriptor of its own contends as another process's would.
-                let otherProcess = EventLogFile.open(at: file, flags: O_RDONLY)!
-                expect(otherProcess.tryLock(shared: true)) == true
+            if SystemCapabilities.sharesContainerWithOtherInstances {
+                it("leaves a batch another process is sending until it stops") {
+                    _ = store.stage(EventStoreSpec.payload("sending"))
+                    _ = store.closeBatch()
+                    let file = try EventStoreSpec.onlyBatchFile(in: store)
+                    try EventStoreSpec.age(file, byDays: 30)
+                    // A lock taken through a descriptor of its own contends as another process's would.
+                    let otherProcess = EventLogFile.open(at: file, flags: O_RDONLY)!
+                    expect(otherProcess.tryLock(shared: true)) == true
 
-                expect(store.discardExpired()) == 0
-                expect(FileManager.default.fileExists(atPath: file.path)) == true
+                    expect(store.discardExpired()) == 0
+                    expect(FileManager.default.fileExists(atPath: file.path)) == true
 
-                otherProcess.close()
-                expect(store.discardExpired()) == 1
-                expect(FileManager.default.fileExists(atPath: file.path)) == false
+                    otherProcess.close()
+                    expect(store.discardExpired()) == 1
+                    expect(FileManager.default.fileExists(atPath: file.path)) == false
+                }
             }
-            #endif
 
             it("leaves the directory of another environment open in this process") {
                 let open = EventStore.sharing(root.appendingPathComponent("app.open", isDirectory: true))

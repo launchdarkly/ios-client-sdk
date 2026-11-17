@@ -138,33 +138,24 @@ final class EventDirectory {
     private static var openInThisProcess: [String: Int] = [:]
     private static let openInThisProcessLock = UnfairLock()
 
-    #if os(macOS) || targetEnvironment(macCatalyst)
-    /// Whether the open log is locked while it is open. Only to be changed before the store first touches the disk.
+    /// Whether the open log is locked while it is open, which it is where another instance can share the directory.
+    /// Only to be changed before the store first touches the disk.
     ///
     /// Kept here rather than asked of the log, so that setting it does not build the log and with it work out where
     /// the directory is. Only to be used while holding `ioLock`.
-    var locksOpenLog = true {
+    var locksOpenLog = SystemCapabilities.sharesContainerWithOtherInstances {
         didSet { located?.log.isLocked = locksOpenLog }
     }
-    #endif
 
     /// Whether other processes of the application may use this directory, and so deliver its batches. Only a Mac runs
     /// a second instance of an application over the same directory; elsewhere a batch that is gone, and that no store
     /// in this process removed, was deleted unsent. Only to be used while holding `ioLock`.
-    #if os(macOS) || targetEnvironment(macCatalyst)
-    var sharesDirectoryWithOtherProcesses = true
-    #else
-    var sharesDirectoryWithOtherProcesses = false
-    #endif
+    var sharesDirectoryWithOtherProcesses = SystemCapabilities.sharesContainerWithOtherInstances
 
     /// Whether another process could recover the log this store holds open, and so deliver it: only one sharing the
-    /// directory, and on a Mac only where the log is not locked. Requires `ioLock`.
+    /// directory, and only where the log is not locked. Requires `ioLock`.
     private var otherProcessesCanTakeTheOpenLog: Bool {
-        #if os(macOS) || targetEnvironment(macCatalyst)
         sharesDirectoryWithOtherProcesses && !locksOpenLog
-        #else
-        sharesDirectoryWithOtherProcesses
-        #endif
     }
 
     /// The payload IDs of the batches stores in this process last removed, delivered or expired, oldest first, so that
@@ -212,9 +203,7 @@ final class EventDirectory {
                                ioLock: ioLock,
                                logger: logger,
                                writeLog: writeLog)
-        #if os(macOS) || targetEnvironment(macCatalyst)
         log.isLocked = locksOpenLog
-        #endif
         let disk = (directory: directory, log: log)
         located = disk
         let path = directory.resolvingSymlinksInPath().path
@@ -950,18 +939,18 @@ enum BatchLocks {
             let held = directory.heldInThisProcess[name] ?? Held()
             directory.heldInThisProcess[name] = held
             held.senders += 1
-            #if os(macOS) || targetEnvironment(macCatalyst)
-            // Only fails to open where the batch is gone already, leaving nothing for expiry to take. Still remembered
-            // where it cannot be locked, which keeps expiry in this process away from it; only other processes cannot
-            // tell.
-            guard held.file == nil, let opened = EventLogFile.open(at: batch, flags: O_RDONLY)
+            // Locked only where another instance's expiry could take it. Only fails to open where the batch is gone
+            // already, leaving nothing for expiry to take. Still remembered where it cannot be locked, which keeps
+            // expiry in this process away from it; only other processes cannot tell.
+            guard SystemCapabilities.sharesContainerWithOtherInstances,
+                  held.file == nil,
+                  let opened = EventLogFile.open(at: batch, flags: O_RDONLY)
             else { return }
             if opened.tryLock(shared: true) {
                 held.file = opened
             } else {
                 opened.close()
             }
-            #endif
         }
     }
 
@@ -998,15 +987,18 @@ enum BatchLocks {
         return directory.lock.withLock {
             guard directory.heldInThisProcess[name] == nil
             else { return false }
-            #if os(macOS) || targetEnvironment(macCatalyst)
-            // Opened without being created: a batch delivered since it was listed has to stay gone, since a delivery
-            // reading one brought back empty would report its events lost.
-            guard let probe = EventLogFile.open(at: batch, flags: O_RDONLY)
+            // Where another instance can be sending it, only taken under its lock. Opened without being created: a
+            // batch delivered since it was listed has to stay gone, since a delivery reading one brought back empty
+            // would report its events lost.
+            var probe: EventLogFile?
+            if SystemCapabilities.sharesContainerWithOtherInstances {
+                guard let opened = EventLogFile.open(at: batch, flags: O_RDONLY)
+                else { return false }
+                probe = opened
+            }
+            defer { probe?.close() }
+            guard probe?.tryLock(shared: false) ?? true
             else { return false }
-            defer { probe.close() }
-            guard probe.tryLock(shared: false)
-            else { return false }
-            #endif
             // Deleted while still locked, so no sender can take its lock between the look and the delete.
             return (try? FileManager.default.removeItem(at: batch)) != nil
         }

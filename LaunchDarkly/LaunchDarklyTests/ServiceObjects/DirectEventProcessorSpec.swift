@@ -2131,9 +2131,7 @@ extension DirectEventProcessorSpec {
                                        capacity: 100,
                                        persistEvents: true,
                                        logger: .disabled)
-                #if os(macOS) || targetEnvironment(macCatalyst)
                 store.locksOpenLog = false
-                #endif
                 testContext = TestContext(store: store, eventPersistence: .deferred)
                 testContext.eventProcessor.isOnline = true
                 testContext.eventProcessor.record(CustomEvent(key: "an-event", context: testContext.context))

@@ -98,9 +98,7 @@ extension EventStore {
     }
 
     private static func unlocked(_ store: EventStore) -> EventStore {
-        #if os(macOS) || targetEnvironment(macCatalyst)
         store.locksOpenLog = false
-        #endif
         return store
     }
 
