@@ -8,8 +8,9 @@ import OSLog
 /// before the process is gone, and the next run of the application delivers them.
 ///
 /// What the application records is accepted, held and committed to the store by `EventCommitter`, which says which
-/// calls are commit points and which thread each commit runs on. This class delivers what is committed, and runs the
-/// reporter's life: flushes, going online and offline, and the flush at close.
+/// calls are commit points and which thread each commit runs on. This class decides when what is committed is
+/// delivered, and `EventBatchDeliverer` sends it. This class also runs the reporter's life: flushes, going online and
+/// offline, and the flush at close.
 ///
 /// Flag values come first. What this reporter sends on its own waits at launch until `LDConfig.eventDeliveryDelay` after
 /// it first goes online, and where events persist, the deliveries it starts on its own send one batch at a time, a gap
@@ -50,10 +51,8 @@ class DirectEventProcessor: EventProcessor {
 
     private let onSyncComplete: EventSyncCompleteClosure?
 
-    private let sender: AnalyticsEventSender
-
-    /// When a post is allowed after a failure. Nothing is posted while it says to wait.
-    private let retryState: DeliveryRetryState
+    /// Sends the batches each pass of a delivery lists.
+    private let deliverer: EventBatchDeliverer
 
     private let pacing: Pacing
 
@@ -74,48 +73,12 @@ class DirectEventProcessor: EventProcessor {
 
     // MARK: Guarded by stateLock
 
-    /// Guards which losses have been told to a caller, and the counts of refused payloads and failed reads.
+    /// Guards which losses have been told to a caller.
     private let stateLock = UnfairLock()
 
     /// The mark up to which losses have already been reported to a caller, so that none is told twice. Only to be
     /// used while holding `stateLock`.
     private var reportedLostEvents: UInt64 = 0
-
-    /// How many refusals of the payload in a row drop a batch: a 400, 413, 415 or 422, in any mix
-    /// (`isEventPayloadRefused`). Each says the service will not take this body, which posting it again will not
-    /// change, and a kept batch is the oldest and so the next posted: kept for good, it would hold every batch behind
-    /// it. Two rather than one, so one from a proxy or an incident costs nothing.
-    static let badRequestsBeforeDropping = 2
-
-    /// The batch that last had its payload refused and how many times in a row: delivery goes oldest first and stops at
-    /// a kept failure, so the next post is that batch's unless capacity dropped it. Any response other than a refusal
-    /// ends the run; a post that got no response leaves it. Held only in memory, so a new run of the application counts
-    /// again. Only to be used while holding `stateLock`.
-    private var badRequests: (payloadId: String, inARow: Int)?
-
-    /// How many counted failed reads in a row drop a batch. A read that fails is mostly one that will go on failing, a
-    /// permission taken away or a directory named like a batch, and expiry cannot delete a file it cannot open, so the
-    /// batch would be read, and fail, at every delivery for good. More than one, and counted at most once per
-    /// `readFailureSpacing`, so a passing failure such as running out of file descriptors costs nothing.
-    static let readFailuresBeforeDropping = 3
-
-    /// The least time between two failed reads of a batch that both count toward dropping it: the flush interval, so a
-    /// drop takes failures across at least two of them. Every pass that reaches the batch reads it, and passes can come
-    /// milliseconds apart, from flushes called in a row or the blocking `flushAndWait` posting through the backoff;
-    /// counted by pass, a failure lasting a moment would drop an intact batch. A failed read closer than this to the
-    /// last counted one passes the batch by without counting. Settable only for tests.
-    var readFailureSpacing: TimeInterval {
-        get { stateLock.withLock { readFailureSpacingValue } }
-        set { stateLock.withLock { readFailureSpacingValue = newValue } }
-    }
-    // Only to be used while holding `stateLock`.
-    private var readFailureSpacingValue: TimeInterval
-
-    /// Counted failed reads in a row, by payload ID, of the batches whose last read failed, and when the last of them
-    /// was. Unlike refusals, these are counted for several batches at once, since a batch whose read failed is passed
-    /// by. Held only in memory, so a new run of the application counts again. Only to be used while holding
-    /// `stateLock`.
-    private var readFailures: [String: (counted: Int, lastCounted: DispatchTime)] = [:]
 
     // MARK: Confined to timerQueue
 
@@ -135,7 +98,7 @@ class DirectEventProcessor: EventProcessor {
     // MARK: Confined to deliveryQueue
 
     /// Deliveries run here, off whatever thread recorded an event.
-    private let deliveryQueue = DispatchQueue(label: "com.launchdarkly.eventSyncQueue", qos: .userInitiated)
+    private let deliveryQueue: DispatchQueue
 
     /// Whether the store held events from a previous run of the application when this reporter started, and no delivery
     /// has run since to send them.
@@ -164,20 +127,24 @@ class DirectEventProcessor: EventProcessor {
         let lostEvents = LostEventCount()
         self.service = service
         self.onSyncComplete = onSyncComplete
-        self.sender = AnalyticsEventSender(service: service)
         let flushInterval = DirectEventProcessor.flushInterval(config: service.config)
         self.flushInterval = flushInterval
-        self.retryState = retryState ?? DeliveryRetryState(flushInterval: flushInterval)
-        self.readFailureSpacingValue = flushInterval
         self.lostEvents = lostEvents
-        self.committer = EventCommitter(config: service.config, store: eventStore, encoding: encoding,
-                                        commitQueue: commitQueue, diagnosticCache: service.diagnosticCache,
-                                        lostEvents: lostEvents)
+        let committer = EventCommitter(config: service.config, store: eventStore, encoding: encoding,
+                                       commitQueue: commitQueue, diagnosticCache: service.diagnosticCache,
+                                       lostEvents: lostEvents)
+        self.committer = committer
         self.store = eventStore
+        let deliveryQueue = DispatchQueue(label: "com.launchdarkly.eventSyncQueue", qos: .userInitiated)
+        self.deliveryQueue = deliveryQueue
+        self.deliverer = EventBatchDeliverer(service: service, store: eventStore, committer: committer,
+                                             retryState: retryState ?? DeliveryRetryState(flushInterval: flushInterval),
+                                             deliveryQueue: deliveryQueue)
         let pacing = pacing ?? .specified(launchDelay: service.config.eventDeliveryDelay)
         self.pacing = pacing
         self.deliveryScheduler = EventDeliveryScheduler(pacesDeliveries: eventStore.isPersisting, gap: pacing.gap)
         self.launchGateOpen = pacing.launchDelay <= 0
+        deliverer.owner = self
     }
 
     /// Starts what the reporter does on its own: closing and listing what a previous run left.
@@ -267,16 +234,11 @@ class DirectEventProcessor: EventProcessor {
         service.diagnosticCache?.incrementDroppedEventCount(by: events)
     }
 
-    /// Records a batch lost for good. The pass that lost it tells its caller, but a delivery nobody waits on -- the
-    /// periodic one, a `flush()`, the one going online starts -- has no one to tell, so the loss is also counted for the
-    /// next `flushReportingOutcome` to hear about. A caller waiting on this pass can then hear about it from the next
-    /// one too.
-    private func reportBatchLost(_ batch: EventBatch) {
-        reportStoredEventsLost(batch.eventCount)
-    }
-
-    /// `reportBatchLost(_:)` for part of a batch.
-    private func reportStoredEventsLost(_ events: Int) {
+    /// Records stored events lost for good. The pass that lost them tells its caller, but a delivery nobody waits on --
+    /// the periodic one, a `flush()`, the one going online starts -- has no one to tell, so the loss is also counted for
+    /// the next `flushReportingOutcome` to hear about. A caller waiting on this pass can then hear about it from the
+    /// next one too.
+    func reportStoredEventsLost(_ events: Int) {
         lostEvents.add(events)
     }
 
@@ -467,9 +429,8 @@ extension DirectEventProcessor {
             self.startQueuedDeliveryOrStop()
             guard !waiters.isEmpty
             else { return }
-            // Answered away from `deliveryQueue`, and from whichever thread the delivery ended on, so that every
-            // completion reaches its caller the same way. A completion is free to flush again: it is never running
-            // on the queue the delivery it asks for would be queued on.
+            // Answered away from `deliveryQueue`, where every delivery ends. A completion is free to flush again: it is
+            // never running on the queue the delivery it asks for would be queued on.
             DispatchQueue.global(qos: .userInitiated).async {
                 for waiter in waiters {
                     waiter(delivered && kept)
@@ -508,7 +469,7 @@ extension DirectEventProcessor {
         // the open log, which closes once it is full or once the batches ahead of it are gone, so an outage costs a
         // batch per `EventLogFormat.maxBatchSize` rather than one per pass.
         let waiting = listDeliverableBatches(discardingExpired: true)
-        deliverListed(waiting, run) { waitingOutcome in
+        deliverer.deliver(waiting, run) { waitingOutcome in
             guard waitingOutcome != .blocked
             else {
                 // Committed all the same, since a delivery is a commit point. Nothing was closed, so the caller's events
@@ -533,22 +494,10 @@ extension DirectEventProcessor {
                 self.reportSyncComplete(nil)
             }
 
-            self.deliverListed(new, run) { newOutcome in
+            self.deliverer.deliver(new, run) { newOutcome in
                 completion?(max(waitingOutcome, newOutcome) == .delivered && accountsForEverything, lossMark)
             }
         }
-    }
-
-    /// Delivers the batches one pass of a delivery listed.
-    private func deliverListed(_ listing: BatchListing, _ run: EventDeliveryRun, _ completion: @escaping (PassOutcome) -> Void) {
-        let lostAnything = listing.vanishedEvents > 0
-        guard !listing.batches.isEmpty
-        else {
-            completion(lostAnything ? .lost : .delivered)
-            return
-        }
-        os_log("%s starting", log: service.config.logger, type: .debug, typeName(and: #function))
-        deliver(listing.batches, run, lostAnything: lostAnything, retried: false, completion)
     }
 
     /// Lists the batches this delivery will send.
@@ -578,281 +527,12 @@ extension DirectEventProcessor {
         reportStoredEventsLost(events)
     }
 
-    /// How a pass over some batches ended, from best to worst. Only `blocked` ends a pass before its last batch; the
-    /// others mean it got through every one.
-    enum PassOutcome: Int, Comparable {
-        /// Every batch was accepted.
-        case delivered
-        /// Every batch was accepted or lost for good, and at least one was lost: unreadable, damaged, deleted unsent, or
-        /// had its payload refused `badRequestsBeforeDropping` times in a row.
-        case lost
-        /// The pass got through every batch, and this delivery passed at least one by: its read failed, and it is kept
-        /// for a later delivery to read again.
-        case passedBy
-        /// The pass stopped at a batch that is still there to be sent again: its request failed, or the backoff did not
-        /// allow it to be posted yet. The batches after it were not attempted.
-        case blocked
-
-        static func < (lhs: PassOutcome, rhs: PassOutcome) -> Bool {
-            lhs.rawValue < rhs.rawValue
-        }
-    }
-
-    /// Delivers batches oldest first, stopping at the first one whose post failed. One whose read failed is passed by,
-    /// and is not read again in this delivery.
-    ///
-    /// Stopping matters: the batches that are left keep their place in the log, and a later delivery attempts them
-    /// again rather than the SDK spending the rest of the session's requests on a service that is refusing them. A read
-    /// says nothing about the service, so it stops nothing.
-    ///
-    /// A failure whose wait is no longer than the initial delay is retried here, once a pass, so a caller waiting on
-    /// the pass hears from the retry; a longer wait ends the pass at once, with a delivery set for when the wait ends.
-    ///
-    /// `lostAnything` carries whether a batch already taken in this pass was lost for good, so that the caller hears
-    /// about it even where the batches after it were accepted. `retried` whether this pass has had its retry.
-    ///
-    /// A paced delivery holds each batch after its first until a gap has passed since the last one was answered. A
-    /// backlog this sends unasked otherwise takes the network for as long as it lasts, an `identify`'s flag request
-    /// included. `hadTurn` is whether the first batch has been held already.
-    private func deliver(_ batches: [EventBatch], _ run: EventDeliveryRun, lostAnything: Bool, retried: Bool, hadTurn: Bool = false, _ completion: @escaping (PassOutcome) -> Void) {
-        var remaining = batches
-        guard let next = remaining.first
-        else {
-            completion(run.passedAnyBy ? .passedBy : lostAnything ? .lost : .delivered)
-            return
-        }
-        guard !run.passedBy(next.payloadId)
-        else {
-            deliver(Array(remaining.dropFirst()), run, lostAnything: lostAnything, retried: retried, hadTurn: hadTurn, completion)
-            return
-        }
-
-        if !hadTurn, run.awaitTurn(then: {
-            self.deliver(batches, run, lostAnything: lostAnything, retried: retried, hadTurn: true, completion)
-        }) {
-            return
-        }
-
-        guard mayPost(run)
-        else {
-            completion(.blocked)
-            return
-        }
-
-        let wait = run.bypassesBackoff ? 0 : retryState.remainingWait
-        guard wait <= 0
-        else {
-            // Not an attempt, so it moves nothing in the backoff. A wait no longer than a retry's is sat out, as this
-            // pass's retry; a longer one ends the pass.
-            if !retried && wait <= retryState.initialDelay {
-                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + wait) {
-                    self.deliver(batches, run, lostAnything: lostAnything, retried: true, completion)
-                }
-            } else {
-                scheduleDeliveryWhenWaitEnds()
-                completion(.blocked)
-            }
-            return
-        }
-
-        let batch = remaining.removeFirst()
-        let read: BatchPayload?
-        do {
-            read = try store.payload(of: batch)
-        } catch is UnreadableBatch {
-            // Lost: nothing will ever send it, so it is removed, the rest are still attempted, and the caller hears
-            // that this pass lost events.
-            os_log("%s dropping %d stored event(s) this version cannot read", log: service.config.logger, type: .error, typeName(and: #function), batch.eventCount)
-            store.remove(batch)
-            reportBatchLost(batch)
-            deliver(remaining, run, lostAnything: true, retried: retried, completion)
-            return
-        } catch is VanishedBatch {
-            os_log("%s %d stored event(s) were deleted before they could be sent", log: service.config.logger, type: .error, typeName(and: #function), batch.eventCount)
-            store.remove(batch)
-            reportBatchLost(batch)
-            deliver(remaining, run, lostAnything: true, retried: retried, completion)
-            return
-        } catch {
-            let dropped = passByOrDrop(batch, readFailedWith: error, run)
-            deliver(remaining, run, lostAnything: lostAnything || dropped, retried: retried, completion)
-            return
-        }
-        endReadFailures(batch)
-
-        guard let payload = read
-        else {
-            // Delivered by another process or store, or holding no events. Either way nothing is lost and there is
-            // nothing to keep.
-            store.remove(batch)
-            deliver(remaining, run, lostAnything: lostAnything, retried: retried, completion)
-            return
-        }
-
-        // Damage after the first frame: what came before it is sent, and the rest is gone with the file. Counted once
-        // the batch is removed rather than now, since one kept for a retry is read, and found short, again.
-        let leftOut = max(0, batch.eventCount - payload.eventCount)
-        service.diagnosticCache?.recordEventsInLastBatch(eventsInLastBatch: payload.eventCount)
-        post(batch, payload, run, leftOut: leftOut, remaining: remaining, lostAnything: lostAnything, retried: retried, completion)
-    }
-
-    /// Passes by a batch whose read failed, or drops it as lost once that is `readFailuresBeforeDropping` in a row.
-    ///
-    /// Kept, since a read that failed may not fail next time, but passed by rather than stopped at. Stopped at, it held
-    /// back every batch behind it, the open log's included, on every pass for as long as the read kept failing: for good
-    /// where expiry cannot open the file to delete it either.
-    ///
-    /// - Returns: whether it dropped the batch.
-    private func passByOrDrop(_ batch: EventBatch, readFailedWith error: Error, _ run: EventDeliveryRun) -> Bool {
-        guard countReadFailure(batch) < DirectEventProcessor.readFailuresBeforeDropping
-        else {
-            os_log("%s dropping %d stored event(s) that could not be read %d times in a row: %s", log: service.config.logger, type: .error, typeName(and: #function), batch.eventCount, DirectEventProcessor.readFailuresBeforeDropping, String(describing: error))
-            store.remove(batch)
-            reportBatchLost(batch)
-            return true
-        }
-        os_log("%s could not read stored events, will try again at the next delivery: %s", log: service.config.logger, type: .info, typeName(and: #function), String(describing: error))
-        run.passBy(batch.payloadId)
-        return false
-    }
-
-    /// Whether the delivery running may post: online, or `flushAtClose()`'s. Going offline stops a delivery before its
-    /// next post, its retry's included, and leaves what it has not sent for a later one.
-    private func mayPost(_ run: EventDeliveryRun) -> Bool {
-        run.isClosing || isOnline
-    }
-
-    /// Posts a batch already read, then goes on to the rest. Requires the backoff to allow a post.
-    // swiftlint:disable:next function_parameter_count
-    private func post(_ batch: EventBatch,
-                      _ payload: BatchPayload,
-                      _ run: EventDeliveryRun,
-                      leftOut: Int,
-                      remaining: [EventBatch],
-                      lostAnything: Bool,
-                      retried: Bool,
-                      _ completion: @escaping (PassOutcome) -> Void) {
-        publish(batch, payload, run) { outcome in
-            switch outcome {
-            case .accepted:
-                self.endBadRequests()
-                guard leftOut > 0
-                else {
-                    self.deliver(remaining, run, lostAnything: lostAnything, retried: retried, completion)
-                    return
-                }
-                os_log("%s dropped %d damaged stored event(s) from a batch it delivered", log: self.service.config.logger, type: .error, self.typeName(and: #function), leftOut)
-                self.reportStoredEventsLost(leftOut)
-                self.deliver(remaining, run, lostAnything: true, retried: retried, completion)
-            case .failed(let failure):
-                // Only a run bypassing the backoff posts during its wait.
-                let wait = run.bypassesBackoff
-                    ? self.retryState.recordFailureDuringWait(unexpected: failure.unexpected, retryAfter: failure.retryAfter)
-                    : self.retryState.recordFailure(unexpected: failure.unexpected, retryAfter: failure.retryAfter)
-                if self.countBadRequest(batch, statusCode: failure.statusCode) >= DirectEventProcessor.badRequestsBeforeDropping {
-                    // The rest are still attempted, once the backoff allows.
-                    os_log("%s dropping %d event(s) whose payload the service refused %d times in a row, last with HTTP %d", log: self.service.config.logger, type: .error, self.typeName(and: #function), batch.eventCount, DirectEventProcessor.badRequestsBeforeDropping, failure.statusCode ?? 0)
-                    self.store.remove(batch)
-                    self.reportBatchLost(batch)
-                    self.reportSyncComplete(failure.error)
-                    self.deliver(remaining, run, lostAnything: true, retried: retried, completion)
-                    return
-                }
-                guard !retried, wait <= self.retryState.initialDelay
-                else {
-                    // Told once the pass gives the batch up, not for a failure its retry may still answer.
-                    self.reportSyncComplete(failure.error)
-                    self.scheduleDeliveryWhenWaitEnds()
-                    completion(.blocked)
-                    return
-                }
-                os_log("%s Retrying event post after %.1fs", log: self.service.config.logger, type: .debug, self.typeName(and: #function), wait)
-                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + wait) {
-                    // Another delivery's failure may have set a longer wait meanwhile, or the reporter gone offline.
-                    guard self.mayPost(run)
-                    else {
-                        self.reportSyncComplete(failure.error)
-                        completion(.blocked)
-                        return
-                    }
-                    guard self.retryState.remainingWait <= 0
-                    else {
-                        self.reportSyncComplete(failure.error)
-                        self.scheduleDeliveryWhenWaitEnds()
-                        completion(.blocked)
-                        return
-                    }
-                    self.post(batch, payload, run, leftOut: leftOut, remaining: remaining, lostAnything: lostAnything, retried: true, completion)
-                }
-            }
-        }
-    }
-
-    /// - Parameter statusCode: the response's status, or nil where there was no response.
-    /// - Returns: how many refusals of the payload in a row this batch has had, counting this response; zero for any
-    ///   other status, which ends the run, and once the batch is dropped.
-    private func countBadRequest(_ batch: EventBatch, statusCode: Int?) -> Int {
-        stateLock.withLock {
-            guard let statusCode
-            else {
-                // A network or TLS failure leaves the run as it was. The service did not answer, so it said nothing
-                // about the payload: had it ended the run, refusals with network failures between them would never
-                // reach two, and a batch the service will never take would stay the oldest, holding back every
-                // batch behind it.
-                if let previous = badRequests, previous.payloadId == batch.payloadId {
-                    return previous.inARow
-                }
-                return 0
-            }
-            guard HTTPURLResponse.StatusCodes.isEventPayloadRefused(statusCode)
-            else {
-                badRequests = nil
-                return 0
-            }
-            var inARow = 1
-            if let previous = badRequests, previous.payloadId == batch.payloadId {
-                inARow = previous.inARow + 1
-            }
-            badRequests = inARow >= DirectEventProcessor.badRequestsBeforeDropping ? nil : (batch.payloadId, inARow)
-            return inARow
-        }
-    }
-
-    /// Ends the run of refusals of the payload, as an accepted post does.
-    private func endBadRequests() {
-        stateLock.withLock { badRequests = nil }
-    }
-
-    /// - Returns: how many counted reads in a row of this batch have failed, this one included if it is at least
-    ///   `readFailureSpacing` after the last counted one; once that reaches `readFailuresBeforeDropping` the count is
-    ///   ended, since the batch is dropped.
-    private func countReadFailure(_ batch: EventBatch) -> Int {
-        let now = DispatchTime.now()
-        return stateLock.withLock {
-            if let last = readFailures[batch.payloadId], now < last.lastCounted + readFailureSpacingValue {
-                return last.counted
-            }
-            let counted = (readFailures[batch.payloadId]?.counted ?? 0) + 1
-            readFailures[batch.payloadId] = counted >= DirectEventProcessor.readFailuresBeforeDropping
-                ? nil : (counted, now)
-            return counted
-        }
-    }
-
-    /// Ends a batch's run of failed reads, at a read that worked.
-    private func endReadFailures(_ batch: EventBatch) {
-        stateLock.withLock { _ = readFailures.removeValue(forKey: batch.payloadId) }
-    }
-
     /// Sets a delivery for when the backoff's wait ends, unless one is set already, so a batch kept through a failure
     /// goes out then rather than at the next report interval after it.
     ///
     /// A delivery that fails again sets the next one, each a longer wait away, which is what keeps this from posting
     /// in a loop. Going offline leaves the one set to find nothing to do.
-    private func scheduleDeliveryWhenWaitEnds() {
-        let wait = retryState.remainingWait
-        guard wait > 0
-        else { return }
+    func deliverWhenWaitEnds(in wait: TimeInterval) {
         guard deliveryScheduler.claimRetry()
         else { return }
 
@@ -865,37 +545,7 @@ extension DirectEventProcessor {
         }
     }
 
-    /// Sends one batch and acts on what LaunchDarkly made of it, before handing the outcome on.
-    private func publish(_ batch: EventBatch,
-                         _ payload: BatchPayload,
-                         _ run: EventDeliveryRun,
-                         _ completion: @escaping (AnalyticsEventSender.Outcome) -> Void) {
-        store.startedSending(batch)
-        // The store is settled before observers are told, so that one looking at it on hearing the outcome sees it.
-        sender.send(payload.body, payloadId: batch.payloadId, eventCount: payload.eventCount) { outcome in
-            run.postAnswered()
-            switch outcome {
-            case .accepted(let serverTime):
-                self.retryState.recordSuccess()
-                if let serverTime {
-                    self.committer.recordResponseDate(serverTime)
-                }
-                self.store.remove(batch)
-                self.store.stoppedSending(batch)
-                self.reportSyncComplete(nil)
-            case .failed:
-                self.store.stoppedSending(batch)
-                // Kept whatever the failure, a 401 included: a valid key is sometimes refused for minutes, and deleting
-                // on a refusal would lose every event recorded meanwhile. A later delivery, in this run of the
-                // application or the next one, sends it under the same payload ID, so LaunchDarkly can tell it is not
-                // new.
-                os_log("%s Keeping %d event(s) to retry later", log: self.service.config.logger, type: .debug, self.typeName(and: #function), batch.eventCount)
-            }
-            completion(outcome)
-        }
-    }
-
-    private func reportSyncComplete(_ result: SynchronizingError?) {
+    func reportSyncComplete(_ result: SynchronizingError?) {
         // The eventProcessor is created when the LDClient singleton is created, and kept for the app's lifetime. So while the use of self in the async block does setup a retain cycle, it's not going to cause a memory leak
         guard let onSyncComplete = onSyncComplete
         else { return }
@@ -907,6 +557,8 @@ extension DirectEventProcessor {
 
 extension DirectEventProcessor: TypeIdentifying { }
 
+extension DirectEventProcessor: EventBatchDelivererOwner { }
+
 #if DEBUG
 extension DirectEventProcessor {
     /// Full events accepted but not yet handed to a commit.
@@ -916,6 +568,12 @@ extension DirectEventProcessor {
 
     func setLastEventResponseDate(_ date: Date) {
         committer.setLastEventResponseDate(date)
+    }
+
+    /// As `EventBatchDeliverer.readFailureSpacing`.
+    var readFailureSpacing: TimeInterval {
+        get { deliverer.readFailureSpacing }
+        set { deliverer.readFailureSpacing = newValue }
     }
 
     /// Occupies the queue a delivery runs on, so a test can see what one that has not started yet collects.
