@@ -666,6 +666,8 @@ final class EventStore: EventStoring {
     }
 
     deinit {
+        guard disk != nil
+        else { return }
         // One acquisition: the lock is not recursive, and `commit()` would take it again.
         ioLock.withLock {
             writeStagedBytes()
