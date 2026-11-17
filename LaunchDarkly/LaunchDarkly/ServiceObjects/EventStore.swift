@@ -252,9 +252,17 @@ final class EventStore: EventStoring {
     /// Whether the directories of other environments have been looked at for ones nobody uses any more, which is
     /// done once per process. Only to be used while holding `ioLock`.
     private var hasDiscardedAbandonedEnvironments = false
-    /// Whether events are being written to disk, which is what the application asked for until a write fails and the
-    /// store gives up on persistence for the rest of the session.
+    /// Whether events are being written to disk, which is what the application asked for until a write fails, or the
+    /// log will not close, and the store gives up on persistence for the rest of the session.
     private var persistEvents = true
+
+    /// How many closes of the open log in a row may fail before the store gives up on the disk. A move the directory
+    /// refuses is mostly one it will go on refusing -- a permission taken away, a volume gone read-only -- while appends,
+    /// which take no permission on the directory, go on landing in a log no delivery can send. Three rather than one,
+    /// so a passing failure costs nothing.
+    static let closeFailuresBeforeGivingUp = 3
+    /// Failed closes of the open log in a row. Only to be used while holding `ioLock`.
+    private var closeFailures = 0
 
     /// Batches held in memory because the filesystem would not take them, or because it was never asked.
     ///
@@ -466,9 +474,13 @@ final class EventStore: EventStoring {
         switch disk.closeLog(holding: closed) {
         case .failed:
             // A log that is still there is still the open one, and its events go on counting as committed until a
-            // later close manages it.
-            return nil
+            // later close manages it, or until so many have failed that the store gives up on it.
+            closeFailures += 1
+            guard closeFailures >= EventStore.closeFailuresBeforeGivingUp
+            else { return nil }
+            return giveUpOnOpenLog(of: disk, holding: closed)
         case .vanished(let deletedUnsent):
+            closeFailures = 0
             bufferLock.withLock {
                 if deletedUnsent {
                     vanishedLogEvents += committedEvents
@@ -479,6 +491,7 @@ final class EventStore: EventStoring {
             }
             return nil
         case .closed(let batch):
+            closeFailures = 0
             bufferLock.withLock {
                 committedEvents = 0
                 committedSummaries = 0
@@ -809,7 +822,7 @@ extension EventStore {
     /// `ioLock`.
     ///
     /// Returns whether the next append starts a new log; false if this one could not be closed, which leaves the frames
-    /// to be held in memory rather than grow it past the size of a batch.
+    /// to be held in memory rather than grow it past the size of a batch, or if the store gave up on the disk instead.
     private func closeFullLog() -> Bool {
         ioLock.assertOwned()
         guard let disk
@@ -818,7 +831,7 @@ extension EventStore {
             EventTally(events: committedEvents, bytes: committedBytes, summaries: committedSummaries)
         }
         _ = closeOpenLog(of: disk, holding: committed)
-        return bufferLock.withLock { committedBytes == 0 }
+        return bufferLock.withLock { persistEvents && committedBytes == 0 }
     }
 
     /// Requires `ioLock`.
@@ -838,30 +851,6 @@ extension EventStore {
     }
 }
 
-/// A batch the filesystem would not take, kept where the SDK used to keep all of them.
-private struct HeldBatch {
-    let payloadId: String
-    let body: Data
-    let eventCount: Int
-    /// How many of `eventCount` are summaries.
-    let summaries: Int
-}
-
-/// Everything staged, taken out of the buffers in one step: the full events, then the summaries.
-private struct StagedFrames {
-    let frames: Data
-    /// Where in `frames` the summaries start.
-    let summariesFrom: Int
-    /// Every frame in `frames`, summaries included.
-    let events: Int
-    let summaries: Int
-
-    /// How many of the frames from `start` up to `end` are summaries.
-    func summaries(from start: Int, to end: Int) -> Int {
-        end <= summariesFrom ? 0 : EventLogFormat.frameCount(in: frames, from: max(start, summariesFrom), to: end)
-    }
-}
-
 /// What the store does once the filesystem has refused it.
 ///
 /// Losing the disk should cost durability and nothing else, so the store falls back to what the SDK did before it kept
@@ -875,6 +864,46 @@ private extension EventStore {
         ioLock.assertOwned()
         disk?.closeOpenLog()
         bufferLock.withLock { persistEvents = false }
+    }
+
+    /// Gives up on the disk for a log that will not close, taking the events in it back into memory to be delivered
+    /// from there, ahead of anything held since, as they are older. Where they cannot be taken back they are left in the
+    /// log for a later run to recover, and stop counting in this one, where nothing could deliver them.
+    ///
+    /// Requires `ioLock`.
+    ///
+    /// - Returns: the batch holding the log's events, or nil where they were left in the log.
+    func giveUpOnOpenLog(of disk: EventDirectory, holding closed: EventTally) -> EventBatch? {
+        ioLock.assertOwned()
+        os_log("%s giving up on persisting events: the event log could not be closed %d times in a row", log: logger, type: .info, typeName(and: #function), closeFailures)
+        let taken = disk.takeBackOpenLog()
+        disablePersistence()
+        if taken == nil {
+            os_log("%s left %d event(s) in the event log for the next launch", log: logger, type: .info, typeName(and: #function), closed.events)
+        }
+
+        // Only the events the log was counted holding, as a batch it was closed into would deliver: a failed write that
+        // could not be cut back can have left frames behind them, which memory holds as well. A log damaged since reads
+        // back fewer; the rest are lost, and as which of them were summaries is not known, the batch counts none as one.
+        var body = taken ?? Data()
+        let events = EventLogFormat.assembleBody(inPlace: &body, maxEvents: closed.events)
+        let summaries = events == closed.events ? closed.summaries : 0
+        let payloadId = UUID().uuidString
+        heldLock.withLock {
+            if events > 0 {
+                inMemoryBatches.insert(HeldBatch(payloadId: payloadId, body: body, eventCount: events, summaries: summaries), at: 0)
+            }
+            bufferLock.withLock {
+                vanishedLogEvents += taken == nil ? 0 : closed.events - events
+                committedEvents = 0
+                committedSummaries = 0
+                committedBytes = 0
+                closedEvents += events
+                closedSummaries += summaries
+                closedBytes += events > 0 ? body.count : 0
+            }
+        }
+        return events > 0 ? EventBatch(payloadId: payloadId, eventCount: events) : nil
     }
 
     /// Closes whatever is staged into batches that never reach a file, as many as it takes to keep each within

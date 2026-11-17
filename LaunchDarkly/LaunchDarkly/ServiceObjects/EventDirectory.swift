@@ -331,6 +331,12 @@ final class EventDirectory {
         return .closed(EventBatch(payloadId: payloadId, eventCount: events))
     }
 
+    /// As `DiskEventLog.takeBackAndClose(reading:)`, for a store giving up on a log it cannot close. Requires `ioLock`.
+    func takeBackOpenLog() -> Data? {
+        ioLock.assertOwned()
+        return located?.log.takeBackAndClose(reading: readFile)
+    }
+
     /// Closes the descriptor, leaving everything where it is, and stops counting the directory as open in this process.
     /// Requires `ioLock`.
     func closeOpenLog() {

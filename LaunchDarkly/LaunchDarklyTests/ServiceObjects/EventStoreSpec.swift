@@ -1173,6 +1173,71 @@ final class EventStoreSpec: QuickSpec {
                     .filter { $0.hasPrefix(EventDirectory.logPrefix) }
                 expect(logs).to(beEmpty())
             }
+
+            it("gives up on the disk once the log will not close three times in a row, and delivers what it held from memory") {
+                _ = store.stage(EventStoreSpec.payload("first"))
+                store.commit()
+                let directory = store.directory!
+                let log = store.openLogUrl!
+                let readOnly: [FileAttributeKey: Any] = [.posixPermissions: 0o555]
+                let writable: [FileAttributeKey: Any] = [.posixPermissions: 0o755]
+                try FileManager.default.setAttributes(readOnly, ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes(writable, ofItemAtPath: directory.path) }
+
+                for _ in 1..<EventStore.closeFailuresBeforeGivingUp {
+                    expect(store.closeBatch()).to(beNil())
+                    expect(store.isPersisting) == true
+                }
+                // Appends still land, as they take no permission on the directory.
+                _ = store.stage(EventStoreSpec.payload("second"))
+
+                let batch = store.closeBatch()!
+                expect(batch.eventCount) == 2
+                expect(EventStoreSpec.keys(ofBody: try? store.body(of: batch))) == ["first", "second"]
+                expect(store.isPersisting) == false
+                expect(store.holdsUnclosedEvents) == false
+                expect(store.pendingEventCount) == 2
+                // Cut back to its header, so a later run recovering it finds nothing to send again.
+                expect(try Data(contentsOf: log)) == EventLogFormat.fileHeader
+
+                // What comes after is held in memory, behind the log's events.
+                _ = store.stage(EventStoreSpec.payload("third"))
+                let next = store.closeBatch()!
+                expect(EventStoreSpec.keys(ofBody: try? store.body(of: next))) == ["third"]
+                expect(store.pendingBatches().map(\.payloadId)) == [batch.payloadId, next.payloadId]
+            }
+
+            it("leaves the events of a log it gives up on for the next launch where it cannot read them back") {
+                store = EventStore.temporary(readFile: { url in
+                    if url.lastPathComponent.hasPrefix(EventDirectory.logPrefix) {
+                        throw CocoaError(.fileReadNoPermission)
+                    }
+                    return try Data(contentsOf: url)
+                })
+                _ = store.stage(EventStoreSpec.payload("left"))
+                store.commit()
+                let directory = store.directory!
+                let readOnly: [FileAttributeKey: Any] = [.posixPermissions: 0o555]
+                let writable: [FileAttributeKey: Any] = [.posixPermissions: 0o755]
+                try FileManager.default.setAttributes(readOnly, ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes(writable, ofItemAtPath: directory.path) }
+
+                for _ in 0..<EventStore.closeFailuresBeforeGivingUp {
+                    expect(store.closeBatch()).to(beNil())
+                }
+
+                // Nothing this run could deliver them, so they no longer count, nor hold up a flush.
+                expect(store.isPersisting) == false
+                expect(store.holdsUnclosedEvents) == false
+                expect(store.pendingEventCount) == 0
+
+                try FileManager.default.setAttributes(writable, ofItemAtPath: directory.path)
+                let next = store.nextRun()
+                next.preparePayloadsFromInterruptedLogs()
+                let recovered = next.pendingBatches()
+                expect(recovered.count) == 1
+                expect(EventStoreSpec.keys(ofBody: try? next.body(of: recovered[0]))) == ["left"]
+            }
         }
     }
 

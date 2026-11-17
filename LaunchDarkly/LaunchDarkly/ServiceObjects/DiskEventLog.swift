@@ -133,6 +133,35 @@ final class DiskEventLog {
         closeDescriptor()
     }
 
+    /// Takes the events back out of a log that cannot be moved, for a store giving up on the disk to hold in memory, and
+    /// closes it where it is. The log is cut back to its header, which takes no permission on the directory where a move
+    /// does, so that a later run recovering it finds nothing in it to send a second time.
+    ///
+    /// - Returns: the log as it was, header included; nil where it could not be read or cut back, in which case it is
+    ///   left holding its events, closed, for a later run to recover.
+    ///
+    /// Requires `ioLock`.
+    func takeBackAndClose(reading readFile: (URL) throws -> Data) -> Data? {
+        ioLock.assertOwned()
+        defer { closeDescriptor() }
+        guard let file
+        else { return nil }
+
+        let contents: Data
+        do {
+            contents = try readFile(url)
+        } catch {
+            os_log("%s could not read back the event log: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
+            return nil
+        }
+        guard file.truncate(to: off_t(EventLogFormat.fileHeader.count))
+        else {
+            os_log("%s could not cut back the event log: errno %d", log: logger, type: .debug, typeName(and: #function), errno)
+            return nil
+        }
+        return contents
+    }
+
     /// Closes the descriptor, leaving the log where it is. Requires `ioLock`.
     ///
     /// No longer held, it is from here on a log like one a process that died left behind, which recovery may take at
