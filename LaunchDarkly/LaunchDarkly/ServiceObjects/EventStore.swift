@@ -725,6 +725,9 @@ final class EventStore: EventStoring {
                 guard held.lastWritten < cutoff, !sending.contains(held.payloadId)
                 else { return false }
                 dropped += EventTally(events: held.eventCount, bytes: held.body.count, summaries: held.summaries)
+                // As expiry on the disk does, so that a delivery that listed it finds it removed, not vanished, and does
+                // not report as lost what this reports as dropped.
+                EventDirectory.rememberRemoved(held.payloadId)
                 return true
             }
             // Under `heldLock` with the removal, so a capacity check never sees the batches both gone and counted.

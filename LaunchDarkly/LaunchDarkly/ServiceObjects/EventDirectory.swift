@@ -166,7 +166,7 @@ final class EventDirectory {
     private static let removedInThisProcessLimit = 1024
     private static let removedLock = UnfairLock()
 
-    private static func rememberRemoved(_ payloadId: String) {
+    static func rememberRemoved(_ payloadId: String) {
         removedLock.withLock {
             removedInThisProcess.append(payloadId)
             if removedInThisProcess.count > removedInThisProcessLimit {
