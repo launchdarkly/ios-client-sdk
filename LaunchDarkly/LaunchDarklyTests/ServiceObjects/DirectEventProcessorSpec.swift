@@ -4346,6 +4346,35 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedEventPayloads.last.map(customKeys)) == ["held"]
             }
 
+            it("posts once the launch gate opens what going online again before it opened owed, after an ordinary failure whose retry going offline ended") {
+                testContext = TestContext()
+                testContext.serviceMock.respondToEvents(with: 503)
+                let retryState = DeliveryRetryState(initialDelay: 1, normalCeiling: 60, extendedInitialDelay: 512, extendedCeiling: 3600)
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store, retryState: retryState,
+                                                    pacing: DirectEventProcessor.Pacing(launchDelay: 2.5, gap: 0)).started()
+                defer { reporter.isOnline = false }
+                reporter.record(CustomEvent(key: "held", context: testContext.context))
+                reporter.isOnline = true
+
+                // A flush is not gated. Its post fails, and its retry a second later finds the reporter offline.
+                reporter.flushReportingOutcome { _ in }
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+                reporter.isOnline = false
+                testContext.serviceMock.stubEventResponse(success: true)
+                testContext.serviceMock.eventStatusForPost = nil
+                waitLettingTimersFire(1.3)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+
+                // Back before the gate opens, which ends the failure's wait but has to leave the delivery to the gate.
+                reporter.isOnline = true
+                waitLettingTimersFire(0.3)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+
+                // Well before the report interval.
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(2), timeout: .seconds(3))
+                expect(testContext.serviceMock.publishedEventPayloads.last.map(customKeys)) == ["held"]
+            }
+
             for (refusal, response) in [("HTTP 401", (status: 401, retryAfter: String?.none)), ("a Retry-After", (status: 503, retryAfter: "30"))] {
                 it("keeps to the wait \(refusal) set on going online again") {
                     testContext = TestContext(retryState: DeliveryRetryState(initialDelay: 1, normalCeiling: 1, extendedInitialDelay: 512, extendedCeiling: 3600))

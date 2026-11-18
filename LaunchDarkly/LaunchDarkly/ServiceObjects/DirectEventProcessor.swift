@@ -119,6 +119,10 @@ class DirectEventProcessor: EventProcessor {
     private var wentOnlineAt: DispatchTime?
     /// What waits for the gate to open with the reporter online.
     private var launchGateWaiters: [() -> Void] = []
+    /// Whether going online again ended a failure's wait while the gate was still closed, which owes the delivery it
+    /// would have queued to the gate opening. Ending the wait is not undone, and nothing else would deliver before the
+    /// next report interval. Only to be used on `deliveryQueue`.
+    private var deliveryOwedAtGate = false
 
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
@@ -298,8 +302,12 @@ extension DirectEventProcessor {
                 }
             }
             self.releaseLaunchGateWaiters()
-            if self.deliverer.endOrdinaryWait() && self.launchGateOpen {
-                self.queueScheduledDelivery()
+            if self.deliverer.endOrdinaryWait() {
+                if self.launchGateOpen {
+                    self.queueScheduledDelivery()
+                } else {
+                    self.deliveryOwedAtGate = true
+                }
             }
             self.deliverWhatAPreviousRunLeft()
         }
@@ -356,7 +364,13 @@ extension DirectEventProcessor {
         launchGateOpen = true
         releaseLaunchGateWaiters()
 
-        deliverWhatAPreviousRunLeft()
+        // One delivery covers both: it sends what a previous run left first. Offline, going online again asks anew.
+        if deliveryOwedAtGate, isOnline {
+            deliveryOwedAtGate = false
+            queueScheduledDelivery()
+        } else {
+            deliverWhatAPreviousRunLeft()
+        }
     }
 
     /// Queues the delivery that sends what a previous run left, once the gate is open with the reporter online. Offline,
