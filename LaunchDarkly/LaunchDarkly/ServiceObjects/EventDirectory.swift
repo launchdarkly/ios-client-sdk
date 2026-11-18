@@ -307,8 +307,8 @@ final class EventDirectory {
             os_log("%s could not close the event log, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             guard disk.log.exists
             else {
-                // One no longer held -- persistence given up on closes it where it is -- may have been moved into a
-                // batch by recovery, which delivers it.
+                // One no longer held may have been moved into a batch by recovery, which delivers it. Giving up on
+                // persistence after a failed append keeps holding it, so that a log gone by the next close is counted.
                 let deletedUnsent = disk.log.isOpen && !otherProcessesCanTakeTheOpenLog
                 disk.log.closeDescriptor()
                 return .vanished(deletedUnsent: deletedUnsent)

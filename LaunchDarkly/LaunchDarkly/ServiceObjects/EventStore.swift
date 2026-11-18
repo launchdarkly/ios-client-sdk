@@ -944,10 +944,13 @@ extension EventStore {
 private extension EventStore {
     /// Gives up on the disk for the rest of the session, leaving the events themselves alone.
     ///
+    /// The open log stays held, for the next close to move into a batch as it would any other. Were it let go, a store's
+    /// recovery could take it meanwhile, and a close that then found it gone could not tell whether its events were
+    /// deleted unsent or are being delivered, so would count them nowhere.
+    ///
     /// Requires `ioLock`.
     func disablePersistence() {
         ioLock.assertOwned()
-        disk?.closeOpenLog()
         bufferLock.withLock { persistEvents = false }
     }
 
@@ -964,6 +967,9 @@ private extension EventStore {
         // Before taking it back, which cuts it down and so writes it.
         let lastWritten = disk.openLogLastWritten ?? .distantPast
         let taken = disk.takeBackOpenLog()
+        // Let go here, unlike after a failed append: this log will not be closed into a batch, and what it held is
+        // taken back or left to a later run.
+        disk.closeOpenLog()
         disablePersistence()
         if taken == nil {
             os_log("%s left %d event(s) in the event log for the next launch", log: logger, type: .info, typeName(and: #function), closed.events)

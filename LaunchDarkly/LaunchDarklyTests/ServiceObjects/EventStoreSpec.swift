@@ -1804,7 +1804,7 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.takeVanishedLogEvents()) == 0
             }
 
-            it("hands over nothing as vanished from a log persistence gave up on, which recovery may have taken") {
+            it("keeps holding a log persistence gave up on after a failed write, so recovery leaves it to the next close") {
                 var writes = 0
                 store = EventStore.temporary(writeLog: { file, bytes in
                     writes += 1
@@ -1818,13 +1818,36 @@ final class EventStoreSpec: QuickSpec {
                 store.commit()
                 expect(store.isPersisting) == false
 
-                // No longer held, the log is one recovery takes, as it would one a process that died left behind.
-                EventStoreSpec.reader(sharing: store).preparePayloadsFromInterruptedLogs()
+                let reader = EventStoreSpec.reader(sharing: store)
+                reader.preparePayloadsFromInterruptedLogs()
+                expect(reader.pendingBatches()).to(beEmpty())
 
                 _ = store.closeBatch()
                 expect(store.takeVanishedLogEvents()) == 0
-                expect(store.pendingBatches().flatMap { EventStoreSpec.keys(ofBody: try? store.body(of: $0)) }
-                    .sorted()) == ["held", "written"]
+                expect(store.pendingBatches().map { EventStoreSpec.keys(ofBody: try? store.body(of: $0)) }) == [["written"], ["held"]]
+            }
+
+            it("hands over the events of a log persistence gave up on after a failed write as vanished where it is gone by the next close") {
+                var writes = 0
+                store = EventStore.temporary(writeLog: { file, bytes in
+                    writes += 1
+                    return writes > 2 ? ENOSPC : file.writeAll(bytes)
+                })
+                store.sharesDirectoryWithOtherProcesses = false
+                _ = store.stage(EventStoreSpec.payload("written"))
+                store.commit()
+                let log = store.openLogUrl!
+                _ = store.stage(EventStoreSpec.payload("held"))
+                store.commit()
+                expect(store.isPersisting) == false
+
+                // Deleted unsent, as tvOS purging the cache would.
+                try FileManager.default.removeItem(at: log)
+                let batch = store.closeBatch()
+
+                expect(store.takeVanishedLogEvents()) == 1
+                expect(EventStoreSpec.keys(ofBody: batch.flatMap { try? store.body(of: $0) })) == ["held"]
+                expect(store.pendingEventCount) == 1
             }
 
             for persistEvents in [true, false] {
