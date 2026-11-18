@@ -494,6 +494,29 @@ final class EventStoreSpec: QuickSpec {
                 expect(try next.body(of: batches[0])) == EventStoreSpec.workedExampleBody
             }
 
+            it("closes off a log in a format this version does not read as one event, for the delivery to count the loss") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("unreadable"))
+                store.commit()
+                let log = store.openLogUrl!
+                var corrupted = try Data(contentsOf: log)
+                corrupted[4] = 0xFF
+                corrupted[5] = 0xFF
+                try corrupted.write(to: log)
+
+                let next = store.nextRun()
+                next.preparePayloadsFromInterruptedLogs()
+
+                let leftOpen = next.directory!.appendingPathComponent(log.lastPathComponent)
+                expect(FileManager.default.fileExists(atPath: leftOpen.path)) == false
+                let batches = next.pendingBatches()
+                expect(batches.map { $0.eventCount }) == [1]
+                expect(next.pendingEventCount) == 1
+                guard let batch = batches.first
+                else { return }
+                expect { try next.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
+            }
+
             it("leaves nothing behind when the log held no events") {
                 store = EventStore.temporary()
                 _ = store.stage(EventStoreSpec.payload("only"))
@@ -833,13 +856,15 @@ final class EventStoreSpec: QuickSpec {
                 store.deleteEverything()
             }
 
-            it("is deleted where a previous run left it as a log") {
+            it("is closed off as one event where a previous run left it as a log, and unreadable") {
                 let log = try EventStoreSpec.tooLargeFile(EventDirectory.logPrefix + UUID().uuidString, in: store)
 
                 store.preparePayloadsFromInterruptedLogs()
 
-                expect(store.pendingBatches()).to(beEmpty())
                 expect(FileManager.default.fileExists(atPath: log.path)) == false
+                let batches = store.pendingBatches()
+                expect(batches.map { $0.eventCount }) == [1]
+                expect { try store.body(of: batches[0]) }.to(throwError(errorType: UnreadableBatch.self))
             }
 
             it("is listed by the count in its name, and unreadable") {

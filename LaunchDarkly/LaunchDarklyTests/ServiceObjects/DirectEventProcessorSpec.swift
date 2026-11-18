@@ -2276,6 +2276,33 @@ extension DirectEventProcessorSpec {
                 nextRun.isOnline = false
             }
 
+            itPersisting("reports false where a log a previous run left open is in a format this version does not read") {
+                testContext = TestContext()
+                testContext.recordEvents(2)
+                testContext.eventProcessor.commitRecordedEvents()
+                let log = testContext.store.openLogUrl!
+                var corrupted = try Data(contentsOf: log)
+                corrupted[4] = 0xFF
+                corrupted[5] = 0xFF
+                try corrupted.write(to: log)
+
+                let recovered = testContext.store.nextRun()
+                let nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: recovered, pacing: .noWaits).started()
+                nextRun.isOnline = true
+                var delivered: Bool?
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    nextRun.flushReportingOutcome { result in
+                        delivered = result
+                        done()
+                    }
+                }
+
+                expect(delivered) == false
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+                expect(recovered.pendingEventCount) == 0
+                nextRun.isOnline = false
+            }
+
             itPersisting("leaves what a previous run left behind alone until it is started") {
                 testContext = TestContext()
                 testContext.recordEvents(2)

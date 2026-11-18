@@ -648,8 +648,6 @@ final class EventDirectory {
         fileprivate enum Contents {
             case missing
             case failed(Error)
-            /// Not a log this version reads.
-            case unreadable
             case events(EventTally)
         }
 
@@ -686,11 +684,16 @@ final class EventDirectory {
             return InterruptedLog(url: leftOpen, contents: .missing)
         case .failed(let error):
             return InterruptedLog(url: leftOpen, contents: .failed(error))
-        case .tooLarge:
-            return InterruptedLog(url: leftOpen, contents: .unreadable)
+        case .tooLarge(let size):
+            // Closed off as holding one event, the fewest it can, as a listing counts a batch too large to read, so
+            // that the delivery reaching it drops it and counts the loss.
+            return InterruptedLog(url: leftOpen, contents: .events(EventTally(events: 1, bytes: size)))
         case .bytes(let log):
             guard let events = EventLogFormat.eventCount(in: log)
-            else { return InterruptedLog(url: leftOpen, contents: .unreadable) }
+            else {
+                // Not a log this version reads, which a listing counts the same way.
+                return InterruptedLog(url: leftOpen, contents: .events(EventTally(events: 1, bytes: log.count)))
+            }
             return InterruptedLog(url: leftOpen, contents: .events(EventTally(events: events, bytes: log.count)))
         }
     }
@@ -720,10 +723,6 @@ final class EventDirectory {
                 // Left where it is, unlocked and appended to by no one, for the next launch to recover.
                 os_log("%s could not read events from a previous run, will try again at the next launch: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             }
-            return EventTally()
-        case .unreadable:
-            // A log that cannot be read cannot be appended to either.
-            try? FileManager.default.removeItem(at: leftOpen)
             return EventTally()
         case .events(let counted):
             events = counted.events
