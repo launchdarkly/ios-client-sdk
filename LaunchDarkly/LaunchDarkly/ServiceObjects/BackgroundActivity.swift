@@ -91,10 +91,11 @@ final class BackgroundActivity {
                 guard !expired
                 else {
                     // The system taking the assertion back, or declining to give one. Nothing should stay blocked on
-                    // it, and the work goes ahead either way.
+                    // it, and the work goes ahead either way. Released before logging, since reading the logger can
+                    // wait on `LDClient`'s `instancesQueue`.
+                    finished.signal()
                     os_log("%s unprotected by a background assertion: %s",
                            log: logger(), type: .debug, String(describing: BackgroundActivity.self), reason)
-                    finished.signal()
                     return
                 }
                 // The assertion lasts as long as this block, which runs on a system queue, not the caller's thread.
