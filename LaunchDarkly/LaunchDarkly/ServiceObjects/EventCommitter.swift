@@ -127,6 +127,9 @@ final class EventCommitter {
     /// one each. Only to be used while holding `recordLock`.
     private var isCommitScheduled = false
 
+    /// Set as the client starts closing, and never cleared. Only to be used while holding `recordLock`.
+    private var isClosing = false
+
     // MARK: Guarded by responseDateLock
 
     /// When LaunchDarkly last answered a post, by its own clock, which is how long debug events go on for.
@@ -197,7 +200,7 @@ final class EventCommitter {
         var dropped = 0
         let (counted, needsCommit) = recordLock.withLock { () -> (Bool, Bool) in
             recordedSequence += 1
-            let counted = eventBuffer.summarize(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
+            let counted = !isClosing && eventBuffer.summarize(flagKey: flagKey, reportedValue: value, featureFlag: featureFlag, defaultValue: defaultValue, context: context)
             if let featureEvent, !admitToPending(featureEvent) { dropped += 1 }
             if let debugEvent, !admitToPending(debugEvent) { dropped += 1 }
             return (counted, pending.count >= EventCommitter.pendingCommitThreshold)
@@ -241,7 +244,7 @@ final class EventCommitter {
     /// it is encoded; whether it fits is decided when it is staged.
     private func admitToPending(_ event: Event) -> Bool {
         recordLock.assertOwned()
-        guard store.admitsEvent(heldElsewhere: pending.count, capacity: eventCapacity)
+        guard !isClosing, store.admitsEvent(heldElsewhere: pending.count, capacity: eventCapacity)
         else { return false }
 
         pending.append(event)
@@ -266,6 +269,15 @@ final class EventCommitter {
         else { return }
         os_log("%s %d stored event(s) were deleted before they could be sent", log: logger, type: .error, typeName(and: #function), events)
         lostEvents.add(events)
+    }
+
+    /// Refuses every recording from now on, counting each as dropped, as a full store's are.
+    ///
+    /// Called as closing begins, before the last commit takes what is held, so that each recording is either taken by
+    /// that commit or refused. Accepted after it, an event would wait for a commit the closed store refuses, or for a
+    /// delivery that has already taken what it sends, and be lost.
+    func refuseRecordings() {
+        recordLock.withLock { isClosing = true }
     }
 
     // MARK: Committing

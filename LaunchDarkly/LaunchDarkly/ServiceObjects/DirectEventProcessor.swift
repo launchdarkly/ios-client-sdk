@@ -383,6 +383,7 @@ extension DirectEventProcessor {
     }
 
     func flushAtClose() {
+        committer.refuseRecordings()
         cancelReportTimer()
         committer.commitAndCloseWithinBudget(DirectEventProcessor.flushAtCloseCommitBudget)
         // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing: offline is the

@@ -2788,6 +2788,40 @@ extension DirectEventProcessorSpec {
                 expect(files.filter { $0.hasPrefix(EventDirectory.logPrefix) }).to(beEmpty())
                 expect(testContext.store.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).keyField }) == ["before-close"]
             }
+
+            itPersisting("refuses an evaluation recorded while its close is committing, rather than accepting what the closed store would refuse") {
+                var config = LDConfig.stub
+                config.eventPersistence = .immediate
+                let serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                let diagnosticCache = DiagnosticCachingMock()
+                serviceMock.diagnosticCache = diagnosticCache
+                let inner = EventStore.temporary(capacity: config.eventCapacity)
+                defer { inner.deleteEverything() }
+                let store = ClosingHookStore(inner)
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits).started()
+                let context = LDContext.stub()
+                reporter.record(CustomEvent(key: "before-close", context: context))
+
+                let flag = FeatureFlag(flagKey: "flag-key", value: nil, variation: 1, flagVersion: 2, trackEvents: true)
+                var heldAfterRecording: Int?
+                var countedAfterRecording: Bool?
+                // Once close's commit has taken what was held, and before it closes the store.
+                store.beforeCommitting = {
+                    store.beforeCommitting = nil
+                    reporter.recordFlagEvaluationEvents(flagKey: "flag-key", value: "a", defaultValue: "b",
+                                                        featureFlag: flag, context: context, includeReason: false)
+                    heldAfterRecording = reporter.pendingEventsForTesting.count
+                    countedAfterRecording = reporter.withContextSummarizer { $0.hasLoggedRequests }
+                }
+                reporter.flushAtClose()
+
+                expect(heldAfterRecording) == 0
+                expect(countedAfterRecording) == false
+                // The full event and its counter, each refused as a full store refuses.
+                expect(diagnosticCache.droppedEventCount) == 2
+                expect(inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).keyField }) == ["before-close"]
+            }
         }
     }
 
