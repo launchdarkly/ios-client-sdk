@@ -107,7 +107,7 @@ extension LDClient {
             os_log("%s called on a closed client", log: config.logger, type: .debug, self.typeName(and: #function))
             // Answered off the caller's thread even with nothing to wait for, so that the contract holds whether or
             // not the client turned out to be closed.
-            DispatchQueue.global().async { completion(.offline) }
+            DispatchQueue.global(qos: .userInitiated).async { completion(.offline) }
             return
         }
 
@@ -116,7 +116,7 @@ extension LDClient {
         else {
             // Started all the same: wherever events persist, each delivery queues their write.
             flush(clients, offline: offline, deadline: deadline, bypassingBackoff: false) { _ in }
-            DispatchQueue.global().async { completion(.timeout) }
+            DispatchQueue.global(qos: .userInitiated).async { completion(.timeout) }
             return
         }
         flush(clients, offline: offline, deadline: deadline, bypassingBackoff: false, completion: completion)

@@ -331,7 +331,7 @@ extension DirectEventProcessor {
         else { return }
         let waiters = launchGateWaiters
         launchGateWaiters = []
-        waiters.forEach { DispatchQueue.global().async(execute: $0) }
+        waiters.forEach { DispatchQueue.global(qos: .userInitiated).async(execute: $0) }
     }
 
     private func checkLaunchGate(after delay: TimeInterval) {
@@ -551,7 +551,7 @@ extension DirectEventProcessor {
         else { return }
 
         os_log("%s Will retry posting events in %.1fs after a failure", log: service.config.logger, type: .debug, typeName(and: #function), wait)
-        DispatchQueue.global().asyncAfter(deadline: .now() + wait) { [weak self] in
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + wait) { [weak self] in
             guard let self
             else { return }
             self.deliveryScheduler.retryDue()

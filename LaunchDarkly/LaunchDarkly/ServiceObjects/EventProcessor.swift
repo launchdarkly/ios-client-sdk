@@ -93,7 +93,7 @@ extension Array where Element == EventProcessor {
         /// Only to be used while holding `lock`.
         var pending: (([Bool?]) -> Void)? = completion
         if let deadline {
-            DispatchQueue.global().asyncAfter(deadline: deadline) {
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: deadline) {
                 let ended: (finish: ([Bool?]) -> Void, delivered: [Bool?])? = lock.withLock {
                     guard let finish = pending
                     else { return nil }
