@@ -3038,7 +3038,7 @@ extension DirectEventProcessorSpec {
                     _ = testContext.flushOutcome()
 
                     let delivered = testContext.serviceMock.publishedEventPayloads.flatMap { body -> [LDValue] in
-                        guard case .array(let events)? = try? JSONDecoder().decode(LDValue.self, from: body)
+                        guard case .array(let events)? = decodedValue(body)
                         else { return [] }
                         return events
                     }
@@ -4585,8 +4585,14 @@ extension DirectEventProcessorSpec {
 /// moments apart and differ only in when they were made.
 private func recordedEvents(_ store: EventStore) -> [LDValue] {
     store.pendingEventPayloads()
-        .compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) }
+        .compactMap(decodedValue)
         .map(withoutCreationDate)
+}
+
+/// Decodes one payload in a pool of its own. A decode leaves about 145 KB autoreleased until its pool drains, so a test
+/// decoding thousands in one loop would otherwise hold all of it at once: more memory than a watch allows an application.
+private func decodedValue(_ payload: Data) -> LDValue? {
+    autoreleasepool { try? JSONDecoder().decode(LDValue.self, from: payload) }
 }
 
 /// How many evaluations a summary event counts, across all of its flags and variations.
@@ -4691,7 +4697,7 @@ private final class StagingObservingStore: EventStoring {
 
     /// Each run of staging that ended in a commit or a close, decoded.
     var stagedRuns: [[LDValue]] {
-        lock.withLock { runs }.map { run in run.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0) } }
+        lock.withLock { runs }.map { run in run.compactMap(decodedValue) }
     }
 
     /// Every event staged, whether or not the store took it.
