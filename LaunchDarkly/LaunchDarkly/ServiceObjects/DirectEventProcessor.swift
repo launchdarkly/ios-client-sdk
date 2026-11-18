@@ -148,11 +148,12 @@ class DirectEventProcessor: EventProcessor {
         deliverer.owner = self
     }
 
-    /// Starts what the reporter does on its own: closing and listing what a previous run left.
+    /// Starts what the reporter does on its own: closing and listing what a previous run left, then discarding what has
+    /// expired.
     ///
     /// Called once, straight after init and before anything else uses the reporter, as `ClientServiceFactory` does.
-    /// `deliveryQueue` is suspended until the recovery is done, and suspending holds back only what has not started:
-    /// a delivery already running would list the store beside the recovery.
+    /// `deliveryQueue` is suspended until the logs are closed and listed, and suspending holds back only what has not
+    /// started: a delivery already running would list the store beside the recovery.
     func start() {
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
         // doing it on the caller's thread would put file I/O in the way of the client starting up. At utility, below
@@ -172,18 +173,25 @@ class DirectEventProcessor: EventProcessor {
         }
         // Enforced, since the caller is usually the main thread, whose QoS would otherwise be carried over.
         DispatchQueue.global(qos: .utility).async(qos: .utility, flags: .enforceQoS) { [weak self] in
-            // Resumed whatever happens: a dispatch queue released while suspended traps.
-            defer { queue.resume() }
-            store.preparePayloadsFromInterruptedLogs()
+            do {
+                // Resumed whatever happens: a dispatch queue released while suspended traps.
+                defer { queue.resume() }
+                store.preparePayloadsFromInterruptedLogs()
+                let listing = store.listPendingBatches()
+                recovered.vanishedEvents = listing.vanishedEvents
+                recovered.hasBatches = !listing.batches.isEmpty
+            }
+            // After the resume, since no delivery needs it first: each one discards what has expired before it lists,
+            // and a batch discarded here while a delivery reads it is found removed in this process, not lost. Still at
+            // launch rather than left to the first delivery, which never comes while offline, so that expired batches
+            // stop counting against capacity. The first call also empties the directories of abandoned environments,
+            // which is no reason to hold back a delivery.
             self?.reportDiscarded(store.discardExpired())
-            let listing = store.listPendingBatches()
-            recovered.vanishedEvents = listing.vanishedEvents
-            recovered.hasBatches = !listing.batches.isEmpty
         }
     }
 
     /// What the recovery found, handed to `deliveryQueue`. Written before the queue resumes and read after, so the
-    /// resume orders the two.
+    /// resume orders the two. Listed before expiry, so it can count batches the delivery it starts finds expired.
     private final class RecoveredListing {
         var vanishedEvents = 0
         var hasBatches = false

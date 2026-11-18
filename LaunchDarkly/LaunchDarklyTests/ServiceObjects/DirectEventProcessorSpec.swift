@@ -632,6 +632,42 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 1
             }
 
+            itPersisting("does not hold a delivery behind the expiry at launch") {
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                _ = testContext.store.closeBatch()
+                let store = RecoveryObservingStore(testContext.store.nextRun(), holdingExpiryAtLaunch: true)
+                defer { store.release.signal() }
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits).started()
+                nextRun = reporter
+                reporter.isOnline = true
+
+                var delivered: Bool?
+                reporter.flushReportingOutcome { delivered = $0 }
+
+                // Well inside the five seconds the expiry is held.
+                expect(delivered).toEventually(beTrue(), timeout: .seconds(2))
+                expect(testContext.serviceMock.publishEventDataCallCount) == 1
+            }
+
+            itPersisting("discards what a previous run left longer ago than the maximum age at launch, though offline") {
+                testContext.recordEvents(2)
+                testContext.eventProcessor.commitRecordedEvents()
+                expect(testContext.store.closeBatch()).toNot(beNil())
+                let directory = testContext.store.directory!
+                let longAgo = Date().addingTimeInterval(-8 * 24 * 60 * 60)
+                for file in try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) {
+                    try FileManager.default.setAttributes([.modificationDate: longAgo], ofItemAtPath: file.path)
+                }
+
+                let store = EventStore.sharing(directory)
+                nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits).started()
+
+                expect(testContext.diagnosticCache.droppedEventCount).toEventually(equal(2), timeout: Constants.deliveryTimeout)
+                expect(store.pendingEventCount) == 0
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+            }
+
             itPersisting("keeps the gap for the delivery a backoff's wait sets when it ends") {
                 // A refusal waits the extended ceiling, longer than a pass sits out, so the pass ends and the delivery
                 // is set for when the wait ends.
@@ -2362,7 +2398,9 @@ extension DirectEventProcessorSpec {
                 // The caller's own events all got out; the ones discarded were no one's to wait on.
                 expect(delivered) == true
                 expect(testContext.serviceMock.publishEventDataCallCount) == 0
-                expect(testContext.diagnosticCache.droppedEventCount) == 2
+                // Counted by whichever of the launch's expiry and the delivery's discards them, the first of which may
+                // still be on its way when the flush answers.
+                expect(testContext.diagnosticCache.droppedEventCount).toEventually(equal(2), timeout: Constants.deliveryTimeout)
                 expect(testContext.diagnosticCache.incrementDroppedEventCountCallCount) == 1
                 nextRun.isOnline = false
             }
@@ -4648,18 +4686,21 @@ private final class SlowListingStore: EventStoring {
     }
 }
 
-/// A store that notes the QoS the previous run's events are recovered at, and can hold the recovery open.
+/// A store that notes the QoS the previous run's events are recovered at, and can hold the recovery, or the expiry at
+/// launch, open.
 private final class RecoveryObservingStore: EventStoring {
     let inner: EventStoring
-    /// Signal to let a held recovery finish.
+    /// Signal to let a held recovery or expiry finish.
     let release = DispatchSemaphore(value: 0)
     private let holds: Bool
+    private let holdsExpiry: Bool
     private let lock = UnfairLock()
     private var observedQoS: qos_class_t?
 
-    init(_ inner: EventStoring, holdingRecovery holds: Bool = false) {
+    init(_ inner: EventStoring, holdingRecovery holds: Bool = false, holdingExpiryAtLaunch holdsExpiry: Bool = false) {
         self.inner = inner
         self.holds = holds
+        self.holdsExpiry = holdsExpiry
     }
 
     var recoveryQoS: qos_class_t? { lock.withLock { observedQoS } }
@@ -4680,8 +4721,15 @@ private final class RecoveryObservingStore: EventStoring {
     func remove(_ batch: EventBatch) { inner.remove(batch) }
     func startedSending(_ batch: EventBatch) { inner.startedSending(batch) }
     func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
-    func discardExpired() -> Int { inner.discardExpired() }
     func listPendingBatches() -> BatchListing { inner.listPendingBatches() }
+
+    func discardExpired() -> Int {
+        // The launch's call is the one at utility; a delivery's runs at userInitiated.
+        if holdsExpiry && qos_class_self() == QOS_CLASS_UTILITY {
+            _ = release.wait(timeout: .now() + 5)
+        }
+        return inner.discardExpired()
+    }
 
     func preparePayloadsFromInterruptedLogs() {
         lock.withLock { observedQoS = qos_class_self() }
