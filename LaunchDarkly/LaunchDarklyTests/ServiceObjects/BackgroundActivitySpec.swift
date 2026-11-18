@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import Quick
 import Nimble
 @testable import LaunchDarkly
@@ -138,6 +139,31 @@ final class BackgroundActivitySpec: QuickSpec {
                 expect(ended.wait(timeout: .now() + 3)) == .success
                 // Ended by the cap, rather than by the work or by never having been held.
                 expect(Date().timeIntervalSince(started)) > 0.2
+            }
+
+            it("gives up the assertion when the system expires it, though reading the logger waits") {
+                // As reading the current clients' logger does while identify holds `instancesQueue`.
+                let loggerMayReturn = DispatchSemaphore(value: 0)
+                func waitingLogger() -> OSLog {
+                    _ = loggerMayReturn.wait(timeout: .now() + 5)
+                    return .disabled
+                }
+                let ended = DispatchSemaphore(value: 0)
+                let expiring: BackgroundActivity.ExpiringActivity = { _, whileGranted in
+                    DispatchQueue.global().async {
+                        whileGranted(false)
+                        ended.signal()
+                    }
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) { whileGranted(true) }
+                }
+                let assertion = BackgroundActivity.processAssertion(logger: waitingLogger(),
+                                                                    perform: expiring,
+                                                                    maximumDuration: 30)
+
+                assertion("test") { _ in }
+
+                expect(ended.wait(timeout: .now() + 2)) == .success
+                loggerMayReturn.signal()
             }
 
             it("runs the work on the calling thread where the platform has no assertions") {

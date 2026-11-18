@@ -204,11 +204,29 @@ class DirectEventProcessor: EventProcessor {
         var hasBatches = false
     }
 
+    /// The least byte capacity an environment gets. Full events may take the store to four fifths of it, so this lets
+    /// them take one batch of the largest size; below it the largest events, and at the smallest settings every event,
+    /// would be refused.
+    static let minimumByteCapacity = EventLogFormat.maxBatchSize * 5 / 4
+
+    static func byteCapacity(config: LDConfig) -> Int {
+        let configured = config.eventCapacityBytes
+        guard configured > 0
+        else { return LDConfig.Defaults.eventCapacityBytes }
+        guard configured >= minimumByteCapacity
+        else {
+            os_log("%s eventCapacityBytes of %d is below the minimum of %d, which holds one batch of the largest size; using the minimum",
+                   log: config.logger, type: .info, typeName(and: #function), configured, minimumByteCapacity)
+            return minimumByteCapacity
+        }
+        return configured
+    }
+
     static func makeStore(config: LDConfig) -> EventStoring {
         let mobileKey = config.mobileKey
         return EventStore(locatingDirectory: { EventDirectory.defaultUrl(environmentName: Util.hashedStorageName(mobileKey: mobileKey)) },
                           capacity: config.eventCapacity,
-                          byteCapacity: config.eventCapacityBytes,
+                          byteCapacity: byteCapacity(config: config),
                           maxAge: config.eventMaxAge,
                           persistEvents: config.eventPersistence != .disabled,
                           logger: config.logger)

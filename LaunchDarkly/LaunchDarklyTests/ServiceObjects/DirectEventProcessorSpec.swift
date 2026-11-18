@@ -875,13 +875,27 @@ class DirectEventProcessorSpec: QuickSpec {
                 try? config.setSecondaryMobileKeys(Dictionary(uniqueKeysWithValues: (2...7).map { ("env-\($0)", "mob-\($0)") }))
             }
             it("is the whole of it for each environment, however many are configured") {
-                config.eventCapacityBytes = 2_400
+                config.eventCapacityBytes = 3_000_000
                 expect(config.getSecondaryMobileKeys().count) == 6
-                expect((DirectEventProcessor.makeStore(config: config) as? EventStore)?.byteCapacity) == 2_400
+                expect((DirectEventProcessor.makeStore(config: config) as? EventStore)?.byteCapacity) == 3_000_000
             }
             it("is the whole default for each environment where none is set") {
                 config.eventCapacityBytes = 0
                 expect((DirectEventProcessor.makeStore(config: config) as? EventStore)?.byteCapacity) == LDConfig.Defaults.eventCapacityBytes
+            }
+            it("is raised to the minimum where a smaller one is set, as one meant in megabytes would be") {
+                config.eventCapacityBytes = 20
+                expect((DirectEventProcessor.makeStore(config: config) as? EventStore)?.byteCapacity) == DirectEventProcessor.minimumByteCapacity
+            }
+            it("is the one set where that is exactly the minimum") {
+                config.eventCapacityBytes = DirectEventProcessor.minimumByteCapacity
+                expect((DirectEventProcessor.makeStore(config: config) as? EventStore)?.byteCapacity) == DirectEventProcessor.minimumByteCapacity
+            }
+            it("admits an event of the largest size at the minimum") {
+                config.eventCapacityBytes = 1
+                let store = DirectEventProcessor.makeStore(config: config) as! EventStore
+                let largest = Data(repeating: UInt8(ascii: "x"), count: EventLogFormat.maxFrameSize)
+                expect(store.stage(largest)) == true
             }
         }
         describe("the flush interval") {

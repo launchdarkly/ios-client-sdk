@@ -404,7 +404,8 @@ public struct LDConfig {
     /// `eventPersistence` is. Like `eventCapacity`, each environment in `secondaryMobileKeys` has it in full. When an environment reaches
     /// it, the SDK discards new events until it successfully reports the stored ones, as it does when `eventCapacity` is reached; it never
     /// deletes stored events to make room. A fifth of it is kept for the summaries of flag evaluations, so that evaluations are still
-    /// counted after full events start being discarded. A value of zero or less means the default. (Default: 20 MiB)
+    /// counted after full events start being discarded. A value of zero or less means the default, and a positive value below 2.5 MiB is
+    /// raised to 2.5 MiB, which holds one batch of the largest size. (Default: 20 MiB)
     ///
     /// Ordinary events reach `eventCapacity` long before this. It binds where events are unusually large, or where delivery keeps
     /// failing and summaries, which `eventCapacity` never refuses, accumulate.
