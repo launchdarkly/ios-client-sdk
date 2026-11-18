@@ -2094,6 +2094,8 @@ final class EventStoreSpec: QuickSpec {
 
             it("discards a batch it holds in memory once it has given up on the disk and the batch is past the maximum age, unless it is being sent") {
                 store = EventStore.temporary(maxAge: 0.5, writeLog: { _, _ in ENOSPC })
+                // Where no other process could have delivered a missing batch, so one not known to be removed vanished.
+                store.sharesDirectoryWithOtherProcesses = false
                 _ = store.stage(EventStoreSpec.payload("held"))
                 store.commit()
                 expect(store.isPersisting) == false
