@@ -449,7 +449,10 @@ final class EventStore: EventStoring {
 
     func commit() {
         // Where the application asked for no disk there is nothing for a commit to reach, and so nothing to serialize.
-        guard disk != nil
+        // Nor once the store has given up on it or closed, which it never takes back: checked before `ioLock`, which a
+        // batch read or a listing can hold for as long as the disk takes, so a caller recording at `.immediate` does
+        // not wait on it to write nothing.
+        guard disk != nil, bufferLock.withLock({ persistEvents && !isClosed })
         else { return }
         ioLock.withLock {
             guard !bufferLock.withLock({ isClosed })

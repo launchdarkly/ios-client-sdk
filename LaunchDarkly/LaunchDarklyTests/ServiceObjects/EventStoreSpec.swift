@@ -1591,6 +1591,42 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingEventCount) == 2
             }
 
+            it("commits without waiting on a batch read once it has given up on the disk, as there is nothing to write") {
+                let lock = UnfairLock()
+                var failing = false
+                var holdsReads = false
+                let reading = DispatchSemaphore(value: 0)
+                let release = DispatchSemaphore(value: 0)
+                store = EventStore.temporary(readFile: { url in
+                    if lock.withLock({ holdsReads }) {
+                        reading.signal()
+                        _ = release.wait(timeout: .now() + 5)
+                    }
+                    return try Data(contentsOf: url)
+                }, writeLog: { file, bytes in
+                    lock.withLock { failing } ? ENOSPC : file.writeAll(bytes)
+                })
+                _ = store.stage(EventStoreSpec.payload("on-disk"))
+                let onDisk = store.closeBatch()!
+                lock.withLock { failing = true }
+                _ = store.stage(EventStoreSpec.payload("held"))
+                store.commit()
+                expect(store.isPersisting) == false
+
+                // A delivery's read, holding the store's I/O lock for as long as the disk takes.
+                lock.withLock { holdsReads = true }
+                let reader = store!
+                DispatchQueue.global().async { _ = try? reader.payload(of: onDisk) }
+                expect(reading.wait(timeout: .now() + 5)) == .success
+
+                _ = store.stage(EventStoreSpec.payload("recorded-meanwhile"))
+                let started = Date()
+                store.commit()
+                let took = Date().timeIntervalSince(started)
+                release.signal()
+                expect(took) < 0.5
+            }
+
             for persistEvents in [true, false] {
                 it("stops counting a batch once when two deliveries both remove it (persisting: \(persistEvents))") {
                     store = EventStore.temporary(persistEvents: persistEvents)
