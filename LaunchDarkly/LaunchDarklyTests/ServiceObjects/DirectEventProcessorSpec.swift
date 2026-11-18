@@ -556,6 +556,28 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
             }
 
+            itPersisting("sends what a previous run left on going online again, where it went offline before going online was handled") {
+                testContext.recordEvents(1)
+                testContext.eventProcessor.commitRecordedEvents()
+                _ = testContext.store.closeBatch()
+                let store = RecoveryObservingStore(testContext.store.nextRun(), holdingRecovery: true)
+                defer { store.release.signal() }
+                let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits).started()
+                nextRun = reporter
+                // Going online is handled on the delivery queue, which the recovery holds, so by the time it is the
+                // reporter is offline again.
+                reporter.isOnline = true
+                reporter.isOnline = false
+                store.release.signal()
+
+                Thread.sleep(forTimeInterval: 0.3)
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
+
+                // Well inside the report interval: the previous run's events are still waiting to be brought forward.
+                reporter.isOnline = true
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: .seconds(2))
+            }
+
             itPersisting("sends what a previous run left on a flush, without waiting for the launch gate") {
                 let reporter = nextRunLeft(1, pacing: DirectEventProcessor.Pacing(launchDelay: 5, gap: 0))
                 reporter.isOnline = true
