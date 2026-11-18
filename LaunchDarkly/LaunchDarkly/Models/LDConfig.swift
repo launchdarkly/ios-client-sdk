@@ -408,13 +408,20 @@ public struct LDConfig {
     ///
     /// Ordinary events reach `eventCapacity` long before this. It binds where events are unusually large, or where delivery keeps
     /// failing and summaries, which `eventCapacity` never refuses, accumulate.
+    ///
+    /// - Warning: Experimental. This property is not stable, and not subject to any backwards compatibility guarantees
+    ///   or semantic versioning.
     public var eventCapacityBytes: Int = Defaults.eventCapacityBytes
 
     /// How long the SDK keeps events it has persisted but not yet reported, where `eventPersistence` keeps events across launches. Events
     /// older than this are discarded rather than reported, and so is everything the SDK stored for an environment whose mobile key the
-    /// application stopped using. A value of zero or less means the default. (Default: 7 days)
+    /// application stopped using. Events the SDK keeps in memory because it could not write them to disk are bound by it too. A value of
+    /// zero or less means the default. (Default: 7 days)
     ///
     /// It has no effect where `eventPersistence` is `.disabled`.
+    ///
+    /// - Warning: Experimental. This property is not stable, and not subject to any backwards compatibility guarantees
+    ///   or semantic versioning.
     public var eventMaxAge: TimeInterval = Defaults.eventMaxAge
 
     private var _eventDeliveryDelay: TimeInterval = Defaults.eventDeliveryDelay

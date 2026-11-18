@@ -225,6 +225,48 @@ final class RetryStateSpec: XCTestCase {
         XCTAssertEqual(retry.recordFailureDuringWait(unexpected: false, retryAfter: nil), 0.04, accuracy: 0.0001)
     }
 
+    func testDeliveryGoingOnlineEndsAnOrdinaryFailuresWaitButKeepsTheCount() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        XCTAssertFalse(retry.endOrdinaryWait())
+        retry.recordFailure(unexpected: false, retryAfter: nil)
+        retry.recordFailure(unexpected: false, retryAfter: nil)
+
+        XCTAssertTrue(retry.endOrdinaryWait())
+        XCTAssertEqual(retry.remainingWait, 0)
+        XCTAssertEqual(retry.recordFailure(unexpected: false, retryAfter: nil), 4)
+    }
+
+    func testDeliveryGoingOnlineKeepsTheServicesWait() {
+        let refused = DeliveryRetryState(flushInterval: 30)
+        refused.recordFailure(unexpected: true, retryAfter: nil)
+        XCTAssertFalse(refused.endOrdinaryWait())
+        XCTAssertGreaterThan(refused.remainingWait, 500)
+
+        let directed = DeliveryRetryState(flushInterval: 30)
+        directed.recordFailure(unexpected: false, retryAfter: 10)
+        XCTAssertFalse(directed.endOrdinaryWait())
+        XCTAssertGreaterThan(directed.remainingWait, 9)
+
+        let lengthened = DeliveryRetryState(flushInterval: 30)
+        lengthened.recordFailure(unexpected: false, retryAfter: nil)
+        lengthened.recordFailureDuringWait(unexpected: false, retryAfter: 10)
+        XCTAssertFalse(lengthened.endOrdinaryWait())
+    }
+
+    func testDeliveryGoingOnlineAfterTheServicesWaitRanOutLetsADeliveryGo() {
+        let retry = DeliveryRetryState(initialDelay: 0.02, normalCeiling: 0.02, extendedInitialDelay: 0.02, extendedCeiling: 0.02)
+        retry.recordFailure(unexpected: true, retryAfter: nil)
+        Thread.sleep(forTimeInterval: 0.04)
+        XCTAssertTrue(retry.endOrdinaryWait())
+    }
+
+    func testDeliveryGoingOnlineAfterAnAcceptedDeliveryHasNothingToSend() {
+        let retry = DeliveryRetryState(flushInterval: 30)
+        retry.recordFailure(unexpected: false, retryAfter: nil)
+        retry.recordSuccess()
+        XCTAssertFalse(retry.endOrdinaryWait())
+    }
+
     func testDeliveryWaitRunsOut() {
         let retry = DeliveryRetryState(initialDelay: 0.02, normalCeiling: 0.02, extendedInitialDelay: 0.02, extendedCeiling: 0.02)
         retry.recordFailure(unexpected: false, retryAfter: nil)

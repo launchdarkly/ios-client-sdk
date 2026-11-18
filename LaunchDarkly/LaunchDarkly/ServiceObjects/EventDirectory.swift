@@ -138,33 +138,24 @@ final class EventDirectory {
     private static var openInThisProcess: [String: Int] = [:]
     private static let openInThisProcessLock = UnfairLock()
 
-    #if os(macOS) || targetEnvironment(macCatalyst)
-    /// Whether the open log is locked while it is open. Only to be changed before the store first touches the disk.
+    /// Whether the open log is locked while it is open, which it is where another instance can share the directory.
+    /// Only to be changed before the store first touches the disk.
     ///
     /// Kept here rather than asked of the log, so that setting it does not build the log and with it work out where
     /// the directory is. Only to be used while holding `ioLock`.
-    var locksOpenLog = true {
+    var locksOpenLog = SystemCapabilities.sharesContainerWithOtherInstances {
         didSet { located?.log.isLocked = locksOpenLog }
     }
-    #endif
 
     /// Whether other processes of the application may use this directory, and so deliver its batches. Only a Mac runs
     /// a second instance of an application over the same directory; elsewhere a batch that is gone, and that no store
     /// in this process removed, was deleted unsent. Only to be used while holding `ioLock`.
-    #if os(macOS) || targetEnvironment(macCatalyst)
-    var sharesDirectoryWithOtherProcesses = true
-    #else
-    var sharesDirectoryWithOtherProcesses = false
-    #endif
+    var sharesDirectoryWithOtherProcesses = SystemCapabilities.sharesContainerWithOtherInstances
 
     /// Whether another process could recover the log this store holds open, and so deliver it: only one sharing the
-    /// directory, and on a Mac only where the log is not locked. Requires `ioLock`.
+    /// directory, and only where the log is not locked. Requires `ioLock`.
     private var otherProcessesCanTakeTheOpenLog: Bool {
-        #if os(macOS) || targetEnvironment(macCatalyst)
         sharesDirectoryWithOtherProcesses && !locksOpenLog
-        #else
-        sharesDirectoryWithOtherProcesses
-        #endif
     }
 
     /// The payload IDs of the batches stores in this process last removed, delivered or expired, oldest first, so that
@@ -212,9 +203,7 @@ final class EventDirectory {
                                ioLock: ioLock,
                                logger: logger,
                                writeLog: writeLog)
-        #if os(macOS) || targetEnvironment(macCatalyst)
         log.isLocked = locksOpenLog
-        #endif
         let disk = (directory: directory, log: log)
         located = disk
         let path = directory.resolvingSymlinksInPath().path
@@ -318,8 +307,8 @@ final class EventDirectory {
             os_log("%s could not close the event log, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             guard disk.log.exists
             else {
-                // One no longer held -- persistence given up on closes it where it is -- may have been moved into a
-                // batch by recovery, which delivers it.
+                // One no longer held may have been moved into a batch by recovery, which delivers it. Giving up on
+                // persistence after a failed append keeps holding it, so that a log gone by the next close is counted.
                 let deletedUnsent = disk.log.isOpen && !otherProcessesCanTakeTheOpenLog
                 disk.log.closeDescriptor()
                 return .vanished(deletedUnsent: deletedUnsent)
@@ -327,8 +316,29 @@ final class EventDirectory {
             return .failed
         }
 
-        stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes, modified: Date(), summaries: held.summaries)
+        stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes,
+                                   modified: EventDirectory.listed(file).modified ?? Date(), summaries: held.summaries)
         return .closed(EventBatch(payloadId: payloadId, eventCount: events))
+    }
+
+    /// When the open log was last written, as a batch closed from it would be dated, or nil where there is none or it
+    /// cannot be told. Requires `ioLock`.
+    var openLogLastWritten: Date? {
+        ioLock.assertOwned()
+        return located.flatMap { EventDirectory.listed($0.log.url).modified }
+    }
+
+    /// When a batch the last listing or close counted was last written, which is what orders a listing. Requires
+    /// `ioLock`.
+    func lastWritten(_ payloadId: String) -> Date? {
+        ioLock.assertOwned()
+        return stored[payloadId]?.modified
+    }
+
+    /// As `DiskEventLog.takeBackAndClose(reading:)`, for a store giving up on a log it cannot close. Requires `ioLock`.
+    func takeBackOpenLog() -> Data? {
+        ioLock.assertOwned()
+        return located?.log.takeBackAndClose(reading: readFile)
     }
 
     /// Closes the descriptor, leaving everything where it is, and stops counting the directory as open in this process.
@@ -357,6 +367,17 @@ final class EventDirectory {
         batch.senders += 1
         sending[payloadId] = batch
         BatchLocks.startedSending(batch.url)
+    }
+
+    // Nothing else holds the store by now, so `sending` needs no lock.
+    deinit {
+        // Ends what is still registered: a store gone with a request out would otherwise leave that batch locked
+        // against expiry, in this process and any other, for as long as the process runs.
+        for batch in sending.values {
+            for _ in 0..<batch.senders {
+                BatchLocks.stoppedSending(batch.url)
+            }
+        }
     }
 
     /// Ends one `startedSending(_:holding:)`. Requires `ioLock`.
@@ -638,8 +659,6 @@ final class EventDirectory {
         fileprivate enum Contents {
             case missing
             case failed(Error)
-            /// Not a log this version reads.
-            case unreadable
             case events(EventTally)
         }
 
@@ -676,11 +695,16 @@ final class EventDirectory {
             return InterruptedLog(url: leftOpen, contents: .missing)
         case .failed(let error):
             return InterruptedLog(url: leftOpen, contents: .failed(error))
-        case .tooLarge:
-            return InterruptedLog(url: leftOpen, contents: .unreadable)
+        case .tooLarge(let size):
+            // Closed off as holding one event, the fewest it can, as a listing counts a batch too large to read, so
+            // that the delivery reaching it drops it and counts the loss.
+            return InterruptedLog(url: leftOpen, contents: .events(EventTally(events: 1, bytes: size)))
         case .bytes(let log):
             guard let events = EventLogFormat.eventCount(in: log)
-            else { return InterruptedLog(url: leftOpen, contents: .unreadable) }
+            else {
+                // Not a log this version reads, which a listing counts the same way.
+                return InterruptedLog(url: leftOpen, contents: .events(EventTally(events: 1, bytes: log.count)))
+            }
             return InterruptedLog(url: leftOpen, contents: .events(EventTally(events: events, bytes: log.count)))
         }
     }
@@ -710,10 +734,6 @@ final class EventDirectory {
                 // Left where it is, unlocked and appended to by no one, for the next launch to recover.
                 os_log("%s could not read events from a previous run, will try again at the next launch: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             }
-            return EventTally()
-        case .unreadable:
-            // A log that cannot be read cannot be appended to either.
-            try? FileManager.default.removeItem(at: leftOpen)
             return EventTally()
         case .events(let counted):
             events = counted.events
@@ -944,18 +964,18 @@ enum BatchLocks {
             let held = directory.heldInThisProcess[name] ?? Held()
             directory.heldInThisProcess[name] = held
             held.senders += 1
-            #if os(macOS) || targetEnvironment(macCatalyst)
-            // Only fails to open where the batch is gone already, leaving nothing for expiry to take. Still remembered
-            // where it cannot be locked, which keeps expiry in this process away from it; only other processes cannot
-            // tell.
-            guard held.file == nil, let opened = EventLogFile.open(at: batch, flags: O_RDONLY)
+            // Locked only where another instance's expiry could take it. Only fails to open where the batch is gone
+            // already, leaving nothing for expiry to take. Still remembered where it cannot be locked, which keeps
+            // expiry in this process away from it; only other processes cannot tell.
+            guard SystemCapabilities.sharesContainerWithOtherInstances,
+                  held.file == nil,
+                  let opened = EventLogFile.open(at: batch, flags: O_RDONLY)
             else { return }
             if opened.tryLock(shared: true) {
                 held.file = opened
             } else {
                 opened.close()
             }
-            #endif
         }
     }
 
@@ -992,15 +1012,18 @@ enum BatchLocks {
         return directory.lock.withLock {
             guard directory.heldInThisProcess[name] == nil
             else { return false }
-            #if os(macOS) || targetEnvironment(macCatalyst)
-            // Opened without being created: a batch delivered since it was listed has to stay gone, since a delivery
-            // reading one brought back empty would report its events lost.
-            guard let probe = EventLogFile.open(at: batch, flags: O_RDONLY)
+            // Where another instance can be sending it, only taken under its lock. Opened without being created: a
+            // batch delivered since it was listed has to stay gone, since a delivery reading one brought back empty
+            // would report its events lost.
+            var probe: EventLogFile?
+            if SystemCapabilities.sharesContainerWithOtherInstances {
+                guard let opened = EventLogFile.open(at: batch, flags: O_RDONLY)
+                else { return false }
+                probe = opened
+            }
+            defer { probe?.close() }
+            guard probe?.tryLock(shared: false) ?? true
             else { return false }
-            defer { probe.close() }
-            guard probe.tryLock(shared: false)
-            else { return false }
-            #endif
             // Deleted while still locked, so no sender can take its lock between the look and the delete.
             return (try? FileManager.default.removeItem(at: batch)) != nil
         }

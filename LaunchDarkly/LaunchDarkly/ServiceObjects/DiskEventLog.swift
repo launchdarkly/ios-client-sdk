@@ -45,11 +45,9 @@ final class DiskEventLog {
     /// Nil until the first append opens it, and again once it is closed.
     private var file: EventLogFile?
 
-    #if os(macOS) || targetEnvironment(macCatalyst)
     /// Whether the log is locked while it is open, so that another live instance can tell it is taken. Only to be
     /// changed before the log is first opened.
-    var isLocked = true
-    #endif
+    var isLocked = SystemCapabilities.sharesContainerWithOtherInstances
 
     init(directory: URL,
          ioLock: UnfairLock,
@@ -71,11 +69,7 @@ final class DiskEventLog {
         if isOpenInThisProcess(log) {
             return true
         }
-        #if os(macOS) || targetEnvironment(macCatalyst)
-        return EventLogFile.isLockedByLiveProcess(log)
-        #else
-        return false
-        #endif
+        return SystemCapabilities.sharesContainerWithOtherInstances && EventLogFile.isLockedByLiveProcess(log)
     }
 
     /// Requires `ioLock`.
@@ -133,6 +127,35 @@ final class DiskEventLog {
         closeDescriptor()
     }
 
+    /// Takes the events back out of a log that cannot be moved, for a store giving up on the disk to hold in memory, and
+    /// closes it where it is. The log is cut back to its header, which takes no permission on the directory where a move
+    /// does, so that a later run recovering it finds nothing in it to send a second time.
+    ///
+    /// - Returns: the log as it was, header included; nil where it could not be read or cut back, in which case it is
+    ///   left holding its events, closed, for a later run to recover.
+    ///
+    /// Requires `ioLock`.
+    func takeBackAndClose(reading readFile: (URL) throws -> Data) -> Data? {
+        ioLock.assertOwned()
+        defer { closeDescriptor() }
+        guard let file
+        else { return nil }
+
+        let contents: Data
+        do {
+            contents = try readFile(url)
+        } catch {
+            os_log("%s could not read back the event log: %s", log: logger, type: .debug, typeName(and: #function), String(describing: error))
+            return nil
+        }
+        guard file.truncate(to: off_t(EventLogFormat.fileHeader.count))
+        else {
+            os_log("%s could not cut back the event log: errno %d", log: logger, type: .debug, typeName(and: #function), errno)
+            return nil
+        }
+        return contents
+    }
+
     /// Closes the descriptor, leaving the log where it is. Requires `ioLock`.
     ///
     /// No longer held, it is from here on a log like one a process that died left behind, which recovery may take at
@@ -152,27 +175,21 @@ final class DiskEventLog {
     /// On a Mac the claim is the log's lock, held until `release()`, so that another instance recovering at the same
     /// time leaves it be. Elsewhere every log not open in this process is its writer's no longer.
     static func claimForRecovery(_ log: URL) -> RecoveryClaim? {
-        #if os(macOS) || targetEnvironment(macCatalyst)
+        guard SystemCapabilities.sharesContainerWithOtherInstances
+        else { return RecoveryClaim(url: log, held: nil) }
         guard let held = EventLogFile.openLocked(log, flags: O_RDONLY)
         else { return nil }
         return RecoveryClaim(url: log, held: held)
-        #else
-        return RecoveryClaim(url: log)
-        #endif
     }
 
     /// A log recovery has claimed; see `claimForRecovery(_:)`.
     struct RecoveryClaim {
         let url: URL
-        #if os(macOS) || targetEnvironment(macCatalyst)
-        fileprivate let held: EventLogFile
-        #endif
+        fileprivate let held: EventLogFile?
 
         /// To be called once the log has been moved or removed, or left for a later run.
         func release() {
-            #if os(macOS) || targetEnvironment(macCatalyst)
-            held.close()
-            #endif
+            held?.close()
         }
     }
 
@@ -255,11 +272,9 @@ final class DiskEventLog {
 
     /// Opens a file for a new log, locked where logs are. Requires `ioLock`.
     private func openFile(at url: URL, flags: Int32) -> EventLogFile? {
-        #if os(macOS) || targetEnvironment(macCatalyst)
         if isLocked {
             return EventLogFile.openLocked(url, flags: flags)
         }
-        #endif
         return EventLogFile.open(at: url, flags: flags)
     }
 

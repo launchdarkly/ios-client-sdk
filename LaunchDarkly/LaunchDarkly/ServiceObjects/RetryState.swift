@@ -111,6 +111,7 @@ final class PollingRetryState {
 /// likely to last, such as a 401, waits about eight and a half minutes, doubling up to an hour, rather
 /// than deleting the batch: a valid key is sometimes refused for minutes during an incident, and every event the fleet
 /// recorded meanwhile would be lost. A `Retry-After` sets the wait instead. One accepted delivery puts everything back.
+/// Going online again ends an ordinary failure's wait, though not the service's.
 ///
 /// One per event processor, so each environment backs off on its own. Held only in memory, so a new run of the
 /// application posts at once. Thread safe, though the event processor only uses it on its delivery queue.
@@ -124,6 +125,8 @@ final class DeliveryRetryState {
     private var attempts = 0
     private var inExtendedRegime = false
     private var nextAttempt: DispatchTime?
+    // The wait is a refusal's or a `Retry-After`'s.
+    private var serviceSetWait = false
 
     /// - Parameter flushInterval: the normal ceiling; never below the initial delay, so a short interval does not make
     ///   a failing service be posted to more often than once a second.
@@ -155,6 +158,25 @@ final class DeliveryRetryState {
             attempts = 0
             inExtendedRegime = false
             nextAttempt = nil
+            serviceSetWait = false
+        }
+    }
+
+    /// Going online again, which ends the wait an ordinary failure set: such a failure is most often the network that
+    /// just came back. A refusal's wait and a `Retry-After` are the service's answer, which the network coming back does
+    /// not change, so they stand. The attempt count stays, as only an accepted delivery puts it back.
+    ///
+    /// - Returns: true when a post has failed since the last accepted one and nothing holds the next back any more, so
+    ///   a delivery may go now rather than at the next report interval.
+    func endOrdinaryWait() -> Bool {
+        lock.withLock {
+            guard attempts > 0
+            else { return false }
+            if let nextAttempt, DispatchTime.now() < nextAttempt, serviceSetWait || inExtendedRegime {
+                return false
+            }
+            nextAttempt = nil
+            return true
         }
     }
 
@@ -174,6 +196,7 @@ final class DeliveryRetryState {
                 attempts += 1
             }
             let wait: TimeInterval
+            serviceSetWait = retryAfter.map { $0 >= 0 } ?? false
             if let retryAfter, retryAfter >= 0 {
                 wait = directedWait(retryAfter)
             } else {
@@ -201,7 +224,11 @@ final class DeliveryRetryState {
             else { return nil }
             var until = waitingUntil
             if let retryAfter, retryAfter >= 0 {
-                until = max(until, now + directedWait(retryAfter))
+                let directed = now + directedWait(retryAfter)
+                if directed > until {
+                    until = directed
+                    serviceSetWait = true
+                }
             }
             nextAttempt = until
             return TimeInterval(until.uptimeNanoseconds - now.uptimeNanoseconds) / 1_000_000_000

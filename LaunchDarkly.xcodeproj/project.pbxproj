@@ -83,6 +83,7 @@
 		E7C0A11E2F00000000000002 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
 		E7C0A11E2F00000000000007 /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
 		E7C0A11E2F0000000000000C /* EventBatchDeliverer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F0000000000000B /* EventBatchDeliverer.swift */; };
+		E7C0A11E2F00000000000011 /* EventStoreBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000010 /* EventStoreBuffers.swift */; };
 		B66ECB2014E0FC95C23DA0A2 /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
 		629D5A9FE152DBC3E20D6DFC /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
 		014901E06BE1F2B0FAAD6AA6 /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
@@ -133,6 +134,7 @@
 		E7C0A11E2F00000000000003 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
 		E7C0A11E2F00000000000008 /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
 		E7C0A11E2F0000000000000D /* EventBatchDeliverer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F0000000000000B /* EventBatchDeliverer.swift */; };
+		E7C0A11E2F00000000000012 /* EventStoreBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000010 /* EventStoreBuffers.swift */; };
 		367D374B5CD1B2A8596C0738 /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
 		5A89648200D2566D3F8409BA /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
 		CFF357D68BBF2DC8395930F2 /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
@@ -223,6 +225,7 @@
 		E7C0A11E2F00000000000004 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
 		E7C0A11E2F00000000000009 /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
 		E7C0A11E2F0000000000000E /* EventBatchDeliverer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F0000000000000B /* EventBatchDeliverer.swift */; };
+		E7C0A11E2F00000000000013 /* EventStoreBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000010 /* EventStoreBuffers.swift */; };
 		321659EE1824B83BD0D0F22D /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
 		73E23C0FA009141BB4CBC24C /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
 		54745AEF1A43D165F5A6E08F /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
@@ -254,6 +257,7 @@
 		E7C0A11E2F00000000000005 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
 		E7C0A11E2F0000000000000A /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
 		E7C0A11E2F0000000000000F /* EventBatchDeliverer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F0000000000000B /* EventBatchDeliverer.swift */; };
+		E7C0A11E2F00000000000014 /* EventStoreBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000010 /* EventStoreBuffers.swift */; };
 		E91F5DCAEEE5FC4AC408BA67 /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
 		7D37AD3ECAA9D8E2927228C5 /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
 		9FA0EE3A87678F58F4406B24 /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
@@ -650,6 +654,7 @@
 		E7C0A11E2F00000000000001 /* EventCommitter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventCommitter.swift; sourceTree = "<group>"; };
 		E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventDeliveryScheduler.swift; sourceTree = "<group>"; };
 		E7C0A11E2F0000000000000B /* EventBatchDeliverer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventBatchDeliverer.swift; sourceTree = "<group>"; };
+		E7C0A11E2F00000000000010 /* EventStoreBuffers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventStoreBuffers.swift; sourceTree = "<group>"; };
 		508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnalyticsEventSender.swift; sourceTree = "<group>"; };
 		77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OutboundEventBuffer.swift; sourceTree = "<group>"; };
 		BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NullEventProcessor.swift; sourceTree = "<group>"; };
@@ -1105,6 +1110,7 @@
 				E7C0A11E2F00000000000001 /* EventCommitter.swift */,
 				E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */,
 				E7C0A11E2F0000000000000B /* EventBatchDeliverer.swift */,
+				E7C0A11E2F00000000000010 /* EventStoreBuffers.swift */,
 				508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */,
 				77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */,
 				BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */,
@@ -1591,6 +1597,7 @@
 				E7C0A11E2F00000000000002 /* EventCommitter.swift in Sources */,
 				E7C0A11E2F00000000000007 /* EventDeliveryScheduler.swift in Sources */,
 				E7C0A11E2F0000000000000C /* EventBatchDeliverer.swift in Sources */,
+				E7C0A11E2F00000000000011 /* EventStoreBuffers.swift in Sources */,
 				B66ECB2014E0FC95C23DA0A2 /* AnalyticsEventSender.swift in Sources */,
 				629D5A9FE152DBC3E20D6DFC /* OutboundEventBuffer.swift in Sources */,
 				014901E06BE1F2B0FAAD6AA6 /* NullEventProcessor.swift in Sources */,
@@ -1720,6 +1727,7 @@
 				E7C0A11E2F00000000000003 /* EventCommitter.swift in Sources */,
 				E7C0A11E2F00000000000008 /* EventDeliveryScheduler.swift in Sources */,
 				E7C0A11E2F0000000000000D /* EventBatchDeliverer.swift in Sources */,
+				E7C0A11E2F00000000000012 /* EventStoreBuffers.swift in Sources */,
 				367D374B5CD1B2A8596C0738 /* AnalyticsEventSender.swift in Sources */,
 				5A89648200D2566D3F8409BA /* OutboundEventBuffer.swift in Sources */,
 				CFF357D68BBF2DC8395930F2 /* NullEventProcessor.swift in Sources */,
@@ -1835,6 +1843,7 @@
 				E7C0A11E2F00000000000005 /* EventCommitter.swift in Sources */,
 				E7C0A11E2F0000000000000A /* EventDeliveryScheduler.swift in Sources */,
 				E7C0A11E2F0000000000000F /* EventBatchDeliverer.swift in Sources */,
+				E7C0A11E2F00000000000014 /* EventStoreBuffers.swift in Sources */,
 				E91F5DCAEEE5FC4AC408BA67 /* AnalyticsEventSender.swift in Sources */,
 				7D37AD3ECAA9D8E2927228C5 /* OutboundEventBuffer.swift in Sources */,
 				9FA0EE3A87678F58F4406B24 /* NullEventProcessor.swift in Sources */,
@@ -2008,6 +2017,7 @@
 				E7C0A11E2F00000000000004 /* EventCommitter.swift in Sources */,
 				E7C0A11E2F00000000000009 /* EventDeliveryScheduler.swift in Sources */,
 				E7C0A11E2F0000000000000E /* EventBatchDeliverer.swift in Sources */,
+				E7C0A11E2F00000000000013 /* EventStoreBuffers.swift in Sources */,
 				321659EE1824B83BD0D0F22D /* AnalyticsEventSender.swift in Sources */,
 				73E23C0FA009141BB4CBC24C /* OutboundEventBuffer.swift in Sources */,
 				54745AEF1A43D165F5A6E08F /* NullEventProcessor.swift in Sources */,
