@@ -35,12 +35,15 @@ class DirectEventProcessor: EventProcessor {
         let gap: TimeInterval
     }
 
-    /// How long `flushAtClose()` waits for its commit and the store's close, the last chance to get what was recorded
-    /// to disk, as a batch, before the client goes away. Only for that: no other commit is waited for within a limit,
-    /// and the closing delivery is not waited for at all. Waited for on a thread that for an application closing the
-    /// client is usually the main one, and once per environment, so well inside what the system tolerates from a main
-    /// thread that has stopped answering. Android spends the same two seconds per environment on its commit and a waited delivery together.
-    static let flushAtCloseCommitBudget: TimeInterval = 2
+    /// How long `flushAtClose()` waits in all: first for its commit and the store's close, the last chance to get what
+    /// was recorded to disk, as a batch, before the client goes away, then for the closing delivery with whatever is
+    /// left. Waited for on a thread that for an application closing the client is usually the main one, and once per
+    /// environment, so well inside what the system tolerates from a main thread that has stopped answering. Android's
+    /// `close()` spends the same two seconds per environment on the same two steps.
+    ///
+    /// A request that has to open a connection first pays a DNS lookup and the TCP and TLS handshakes, about three
+    /// round trips, which two seconds covers up to a round trip of about 600 ms. Whatever outlasts it is not cancelled.
+    static let flushAtCloseBudget: TimeInterval = 2
 
     // MARK: Set in init and never changed
 
@@ -385,11 +388,24 @@ extension DirectEventProcessor {
     func flushAtClose() {
         committer.refuseRecordings()
         cancelReportTimer()
-        committer.commitAndCloseWithinBudget(DirectEventProcessor.flushAtCloseCommitBudget)
-        // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing: offline is the
-        // application keeping the SDK off the network, and closing does not revoke that. Where events persist it only
-        // sends: the store is closed, so it writes and closes nothing.
-        queueDelivery(nil, closing: isOnline)
+        let budget = DirectEventProcessor.flushAtCloseBudget
+        let deadline = DispatchTime.now() + budget
+        committer.commitAndClose(by: deadline, budget: budget)
+        // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing, so there is nothing
+        // to wait for: offline is the application keeping the SDK off the network, and closing does not revoke that.
+        guard isOnline
+        else {
+            queueDelivery(nil)
+            return
+        }
+        // Waited for, as this run's last chance to send what it recorded, which where nothing persists is gone with
+        // the process. Where events persist it only sends: the store is closed, so it writes and closes nothing. It
+        // starts once a delivery already running ends, and waiting for that comes out of the same budget.
+        let answered = DispatchSemaphore(value: 0)
+        queueDelivery({ _ in answered.signal() }, closing: true)
+        if answered.wait(timeout: deadline) == .timedOut {
+            os_log("%s gave up waiting for the final event delivery after %dms; it continues in the background", log: service.config.logger, type: .info, typeName(and: #function), Int(budget * 1000))
+        }
     }
 
     /// Queues a delivery the way a caller asking for one expects, which is as a commit point.

@@ -43,11 +43,12 @@ protocol EventProcessor {
     func flushBypassingBackoff(completion: @escaping FlushOutcomeClosure)
 
     /// The last delivery before the client closes: `flush`, except that it posts whatever wait the backoff is in, which
-    /// closing cuts short. After a refusal that wait is minutes to an hour, and where nothing persists the events would
-    /// not outlive it.
+    /// closing cuts short, and waits for it, the commit before it included, no longer than
+    /// `DirectEventProcessor.flushAtCloseBudget`. After a refusal that wait is minutes to an hour, and where nothing
+    /// persists the events would not outlive it.
     ///
     /// Whether it posts is settled by whether the reporter is online when this is called, so the client going offline
-    /// as it closes, straight after, does not stop it.
+    /// as it closes, straight after, does not stop it. Offline it posts nothing, and does not wait.
     func flushAtClose()
 
     /// Makes everything recorded so far outlive the process, without waiting for a delivery.

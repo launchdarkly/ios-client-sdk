@@ -2173,7 +2173,8 @@ extension DirectEventProcessorSpec {
                 let started = Date()
                 testContext.eventProcessor.flushAtClose()
 
-                expect(Date().timeIntervalSince(started)) < DirectEventProcessor.flushAtCloseCommitBudget
+                // The delivery it then waits for never starts, so it waits out what is left of the budget.
+                expect(Date().timeIntervalSince(started)) < DirectEventProcessor.flushAtCloseBudget + 1
                 expect(eventsLeftOnDisk().compactMap { $0.keyField }) == ["an-event"]
             }
 
@@ -2715,7 +2716,7 @@ extension DirectEventProcessorSpec {
                 diskAnswers.leave()
 
                 expect(stalled.wait(timeout: .now())) == .success
-                expect(took) < DirectEventProcessor.flushAtCloseCommitBudget + 1
+                expect(took) < DirectEventProcessor.flushAtCloseBudget + 1
                 let keysOnDisk = { inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).keyField } }
                 expect(keysOnDisk()).toEventually(contain("before-close"), timeout: Constants.deliveryTimeout)
             }
@@ -4174,6 +4175,48 @@ extension DirectEventProcessorSpec {
 
                 expect(testContext.serviceMock.publishedEventPayloads.dropFirst().flatMap(customKeys))
                     .toEventually(equal(["refused", "at-close"]), timeout: Constants.deliveryTimeout)
+            }
+
+            it("returns from closing once the closing delivery has been answered") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "at-close", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+
+                testContext.eventProcessor.flushAtClose()
+
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["at-close"]]
+            }
+
+            it("returns from closing within its budget while the closing delivery waits behind another, which still posts") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "at-close", context: testContext.context))
+                testContext.eventProcessor.isOnline = true
+                let released = DispatchSemaphore(value: 0)
+                testContext.eventProcessor.occupyQueue(until: released)
+
+                let started = Date()
+                testContext.eventProcessor.flushAtClose()
+                let took = Date().timeIntervalSince(started)
+                released.signal()
+
+                expect(took) > DirectEventProcessor.flushAtCloseBudget - 0.1
+                expect(took) < DirectEventProcessor.flushAtCloseBudget + 1
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys))
+                    .toEventually(equal([["at-close"]]), timeout: Constants.deliveryTimeout)
+            }
+
+            it("does not wait at close while offline, where the closing delivery sends nothing") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "at-close", context: testContext.context))
+                let released = DispatchSemaphore(value: 0)
+                defer { released.signal() }
+                testContext.eventProcessor.occupyQueue(until: released)
+
+                let started = Date()
+                testContext.eventProcessor.flushAtClose()
+
+                expect(Date().timeIntervalSince(started)) < 0.5
+                expect(testContext.serviceMock.publishEventDataCallCount) == 0
             }
 
             it("posts through the backoff's wait for a flush bypassing it, and answers whether the events got out") {
