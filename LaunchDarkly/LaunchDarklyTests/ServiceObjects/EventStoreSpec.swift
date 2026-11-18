@@ -2033,6 +2033,36 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "past-capacity"))) == false
             }
 
+            it("discards a batch it holds in memory once it has given up on the disk and the batch is past the maximum age, unless it is being sent") {
+                store = EventStore.temporary(maxAge: 0.5, writeLog: { _, _ in ENOSPC })
+                _ = store.stage(EventStoreSpec.payload("held"))
+                store.commit()
+                expect(store.isPersisting) == false
+                let batch = store.closeBatch()!
+                expect(store.discardExpired()) == 0
+                expect(store.pendingEventCount) == 1
+
+                Thread.sleep(forTimeInterval: 0.6)
+                store.startedSending(batch)
+                expect(store.discardExpired()) == 0
+                store.stoppedSending(batch)
+                expect(store.discardExpired()) == 1
+
+                expect(store.pendingEventCount) == 0
+                expect(store.pendingBatches()).to(beEmpty())
+                expect(try store.payload(of: batch)).to(beNil())
+            }
+
+            it("keeps what it holds in memory however old where it keeps events off the disk, as the SDK always did") {
+                store = EventStore.temporary(maxAge: 0.5, persistEvents: false)
+                _ = store.stage(EventStoreSpec.payload("held"))
+                expect(store.closeBatch()).toNot(beNil())
+
+                Thread.sleep(forTimeInterval: 0.6)
+                expect(store.discardExpired()) == 0
+                expect(store.pendingEventCount) == 1
+            }
+
             it("bounds summaries by bytes even where it keeps events off the disk") {
                 // Nothing else bounds them: capacity never refuses a summary, and a delivery that keeps failing keeps
                 // every one it was given.

@@ -412,7 +412,8 @@ public struct LDConfig {
 
     /// How long the SDK keeps events it has persisted but not yet reported, where `eventPersistence` keeps events across launches. Events
     /// older than this are discarded rather than reported, and so is everything the SDK stored for an environment whose mobile key the
-    /// application stopped using. A value of zero or less means the default. (Default: 7 days)
+    /// application stopped using. Events the SDK keeps in memory because it could not write them to disk are bound by it too. A value of
+    /// zero or less means the default. (Default: 7 days)
     ///
     /// It has no effect where `eventPersistence` is `.disabled`.
     ///

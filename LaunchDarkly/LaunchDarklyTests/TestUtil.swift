@@ -57,14 +57,20 @@ extension EventStore {
     static func temporary(
         capacity: Int = 100,
         byteCapacity: Int = LDConfig.Defaults.eventCapacityBytes,
+        maxAge: TimeInterval = LDConfig.Defaults.eventMaxAge,
         persistEvents: Bool = true,
         readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
         writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }
     ) -> EventStore {
-        let directory = temporaryDirectory()
+        // A shorter maximum age goes in a directory of its own: the first expiry also empties sibling directories it
+        // finds that old, which would be other tests'.
+        let directory = maxAge < LDConfig.Defaults.eventMaxAge
+            ? temporaryDirectory().appendingPathComponent("environment", isDirectory: true)
+            : temporaryDirectory()
         return unlocked(EventStore(directory: directory,
                                    capacity: capacity,
                                    byteCapacity: byteCapacity,
+                                   maxAge: maxAge,
                                    persistEvents: persistEvents,
                                    logger: .disabled,
                                    readFile: readFile,

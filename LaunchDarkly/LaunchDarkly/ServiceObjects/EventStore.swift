@@ -129,7 +129,9 @@ protocol EventStoring {
     /// or another process that has since ended.
     func preparePayloadsFromInterruptedLogs()
 
-    /// Deletes what has been stored for longer than the maximum age, except a batch whose request is out.
+    /// Deletes what has been stored for longer than the maximum age, except a batch whose request is out. That includes
+    /// a batch held in memory because the disk would not take it; a store with no disk keeps everything until it is
+    /// sent, as the SDK always did.
     ///
     /// The first call also empties and removes the directories of other environments of this application that nothing
     /// has written to for as long, which is what becomes of a mobile key the application stopped using.
@@ -694,14 +696,42 @@ final class EventStore: EventStoring {
                 closedSummaries -= counted.summaries
                 closedBytes -= counted.bytes
             }
+            let held = discardHeld(lastWrittenBefore: cutoff, sparing: sending)
             defer { hasDiscardedAbandonedEnvironments = true }
-            return (events, hasDiscardedAbandonedEnvironments ? nil : disk.url)
+            return (events + held, hasDiscardedAbandonedEnvironments ? nil : disk.url)
         }
 
         // Outside `ioLock`: none of it is this store's directory, and a commit point should not wait on it.
         guard let directory
         else { return discarded }
         return discarded + EventDirectory.discardAbandonedEnvironments(besides: directory, lastWrittenBefore: cutoff)
+    }
+
+    /// Drops the batches held in memory that were last written before `cutoff`, as expiry deletes those on the disk:
+    /// held only because the disk stopped taking them, they are events the application asked to persist, and the
+    /// maximum age bounds them the same way. Otherwise one held a week would go on taking capacity, and be sent.
+    ///
+    /// Requires `ioLock`, which a send takes to register, so `sending` stays complete throughout.
+    ///
+    /// - Returns: how many events were dropped.
+    private func discardHeld(lastWrittenBefore cutoff: Date, sparing sending: Set<String>) -> Int {
+        ioLock.assertOwned()
+        return heldLock.withLock {
+            var dropped = EventTally()
+            inMemoryBatches.removeAll { held in
+                guard held.lastWritten < cutoff, !sending.contains(held.payloadId)
+                else { return false }
+                dropped += EventTally(events: held.eventCount, bytes: held.body.count, summaries: held.summaries)
+                return true
+            }
+            // Under `heldLock` with the removal, so a capacity check never sees the batches both gone and counted.
+            bufferLock.withLock {
+                closedEvents -= dropped.events
+                closedSummaries -= dropped.summaries
+                closedBytes -= dropped.bytes
+            }
+            return dropped.events
+        }
     }
 
     deinit {
