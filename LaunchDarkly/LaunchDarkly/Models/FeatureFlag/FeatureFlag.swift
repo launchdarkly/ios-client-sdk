@@ -21,6 +21,20 @@ struct FeatureFlag: Codable {
 
     var versionForEvents: Int? { flagVersion ?? version }
 
+    /// Returns a copy of this flag with a different variation and reason. The other properties are unchanged.
+    func withEvaluationResult(variation: Int?, reason: [String: LDValue]?) -> FeatureFlag {
+        FeatureFlag(flagKey: flagKey,
+                    value: value,
+                    variation: variation,
+                    version: version,
+                    flagVersion: flagVersion,
+                    trackEvents: trackEvents,
+                    debugEventsUntilDate: debugEventsUntilDate,
+                    reason: reason,
+                    trackReason: trackReason,
+                    prerequisites: prerequisites)
+    }
+
     init(flagKey: LDFlagKey,
          value: LDValue = .null,
          variation: Int? = nil,
