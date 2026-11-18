@@ -1437,10 +1437,10 @@ final class LDClientSpec: QuickSpec {
                                 expect(testContext.eventProcessorMock.isOnline) == true
                                 expect(testContext.flagSynchronizerMock.isOnline) == false
                             }
-                            it("tries to deliver what it has before the process is suspended, where it is suspended", onlyWhere: platformPostsLifecycleNotifications) {
+                            it("tries to deliver what it has before the process is suspended, where it is suspended") {
                                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
                                 testContext.start()
-                                NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
+                                NotificationCenter.default.post(name: SystemCapabilities.eventsBackgroundNotification, object: self)
 
                                 if SystemCapabilities.suspendsWhenBackgrounded {
                                     expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount).toEventually(equal(1))
@@ -1450,14 +1450,19 @@ final class LDClientSpec: QuickSpec {
                                     expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount) == 0
                                 }
                             }
-                            it("writes what it has before the notification returns, on every platform", onlyWhere: platformPostsLifecycleNotifications) {
+                            it("writes what it has before the notification returns, on every platform") {
                                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
                                 testContext.start()
-                                NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
+                                NotificationCenter.default.post(name: SystemCapabilities.eventsBackgroundNotification, object: self)
 
                                 // Checked without waiting: a write only queued is one a process killed in the
                                 // background may never get to, macOS included, where nothing is delivered here.
                                 expect(testContext.eventProcessorMock.commitWherePersistingCallCount) == 1
+                            }
+                            it("observes for its events the notification run mode does, where run mode has one") {
+                                if let backgroundNotification = SystemCapabilities.backgroundNotification {
+                                    expect(SystemCapabilities.eventsBackgroundNotification) == backgroundNotification
+                                }
                             }
                             it("background updates enabled", onlyWhere: platformPostsLifecycleNotifications) {
                                 let testContext = TestContext(startOnline: true)
@@ -2255,7 +2260,7 @@ private extension LDConfig {
     }
 }
 
-/// watchOS posts no lifecycle notifications, and does not stream.
+/// watchOS posts no lifecycle notifications the run mode follows, and does not stream.
 private let platformPostsLifecycleNotifications = SystemCapabilities.foregroundNotification != nil
     && SystemCapabilities.backgroundNotification != nil
 private let platformStreams = SystemCapabilities.operatingSystem.isStreamingEnabled

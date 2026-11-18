@@ -7,10 +7,10 @@ import OSLog
 /// however many environments there are, and reaches only the clients started now: a closed client the application
 /// still holds is not among them.
 ///
-/// On every platform that notifies the SDK, events are made durable before the notification returns: the OS may kill a
-/// backgrounded application without warning, and macOS, which suspends nothing, can still quit or kill it. Where a
-/// backgrounded process is suspended once idle, they are also delivered, under the assertion, which is released once
-/// every environment has answered. What does not get out is on disk for the next launch where events persist, and
+/// On every platform, events are made durable before the notification returns: the OS may kill a backgrounded
+/// application without warning, and macOS, which suspends nothing, can still quit or kill it. Where a backgrounded
+/// process is suspended once idle, they are also delivered, under the assertion, which is released once every
+/// environment has answered. What does not get out is on disk for the next launch where events persist, and
 /// otherwise only in memory.
 final class BackgroundEventDelivery {
     struct Environment {

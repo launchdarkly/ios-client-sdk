@@ -1108,12 +1108,10 @@ extension LDClient {
     }
 
     /// Observes the notification once for the events of every environment, however many clients are made.
-    private static let backgroundEvents: BackgroundEventDelivery? = {
-        guard let backgroundNotification = SystemCapabilities.backgroundNotification
-        else { return nil }
+    private static let backgroundEvents: BackgroundEventDelivery = {
         let delivery = BackgroundEventDelivery(environments: LDClient.currentEnvironments)
         // Run on the posting thread, so that every environment has committed by the time the notification returns.
-        NotificationCenter.default.addObserver(forName: backgroundNotification, object: nil, queue: nil) { _ in
+        NotificationCenter.default.addObserver(forName: SystemCapabilities.eventsBackgroundNotification, object: nil, queue: nil) { _ in
             delivery.applicationDidEnterBackground()
         }
         return delivery
