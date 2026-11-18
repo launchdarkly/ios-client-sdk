@@ -686,7 +686,9 @@ class DirectEventProcessorSpec: QuickSpec {
                 nextRun = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits).started()
 
                 expect(testContext.diagnosticCache.droppedEventCount).toEventually(equal(2), timeout: Constants.deliveryTimeout)
-                expect(store.pendingEventCount) == 0
+                // The first run's own launch expiry can be the one to delete it, where it runs late, after the files
+                // were dated. This store then stops counting the batch at its own expiry, which follows.
+                expect(store.pendingEventCount).toEventually(equal(0), timeout: Constants.deliveryTimeout)
                 expect(testContext.serviceMock.publishEventDataCallCount) == 0
             }
 
