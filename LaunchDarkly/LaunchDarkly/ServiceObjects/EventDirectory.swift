@@ -369,6 +369,17 @@ final class EventDirectory {
         BatchLocks.startedSending(batch.url)
     }
 
+    // Nothing else holds the store by now, so `sending` needs no lock.
+    deinit {
+        // Ends what is still registered: a store gone with a request out would otherwise leave that batch locked
+        // against expiry, in this process and any other, for as long as the process runs.
+        for batch in sending.values {
+            for _ in 0..<batch.senders {
+                BatchLocks.stoppedSending(batch.url)
+            }
+        }
+    }
+
     /// Ends one `startedSending(_:holding:)`. Requires `ioLock`.
     func stoppedSending(_ payloadId: String) {
         ioLock.assertOwned()

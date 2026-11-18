@@ -2206,6 +2206,19 @@ final class EventStoreSpec: QuickSpec {
                 expect(FileManager.default.fileExists(atPath: file.path)) == false
             }
 
+            it("takes a batch another store in this process was sending once that store has gone") {
+                var sender: EventStore? = EventStore.sharing(store.directory!)
+                _ = sender?.stage(EventStoreSpec.payload("sending"))
+                let batch = sender!.closeBatch()!
+                let file = try EventStoreSpec.onlyBatchFile(in: sender!)
+                try EventStoreSpec.age(file, byDays: 30)
+                sender?.startedSending(batch)
+                sender = nil
+
+                expect(store.discardExpired()) == 1
+                expect(FileManager.default.fileExists(atPath: file.path)) == false
+            }
+
             if SystemCapabilities.sharesContainerWithOtherInstances {
                 it("leaves a batch another process is sending until it stops") {
                     _ = store.stage(EventStoreSpec.payload("sending"))
