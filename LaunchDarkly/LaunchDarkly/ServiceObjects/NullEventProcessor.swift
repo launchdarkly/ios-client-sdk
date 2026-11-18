@@ -23,11 +23,11 @@ class NullEventProcessor: EventProcessor {
     func flush(completion: CompletionClosure?) {
         guard let completion
         else { return }
-        DispatchQueue.global().async { completion() }
+        DispatchQueue.global(qos: .userInitiated).async { completion() }
     }
 
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
-        DispatchQueue.global().async { completion(true) }
+        DispatchQueue.global(qos: .userInitiated).async { completion(true) }
     }
 
     func flushBypassingBackoff(completion: @escaping FlushOutcomeClosure) {

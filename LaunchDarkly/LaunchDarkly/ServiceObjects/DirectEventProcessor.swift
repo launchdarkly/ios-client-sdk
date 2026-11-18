@@ -35,11 +35,15 @@ class DirectEventProcessor: EventProcessor {
         let gap: TimeInterval
     }
 
-    /// How long `flushAtClose()` waits for its commit, the last chance to get what was recorded to disk before the
-    /// client goes away. Only for that: no other commit is waited for within a limit. Waited for on a thread that for
-    /// an application closing the client is usually the main one, so the same two seconds Android allows its whole
-    /// `close()`, well inside what the system tolerates from a main thread that has stopped answering.
-    static let flushAtCloseCommitBudget: TimeInterval = 2
+    /// How long `flushAtClose()` waits in all: first for its commit and the store's close, the last chance to get what
+    /// was recorded to disk, as a batch, before the client goes away, then for the closing delivery with whatever is
+    /// left. Waited for on a thread that for an application closing the client is usually the main one, and once per
+    /// environment, so well inside what the system tolerates from a main thread that has stopped answering. Android's
+    /// `close()` spends the same two seconds per environment on the same two steps.
+    ///
+    /// A request that has to open a connection first pays a DNS lookup and the TCP and TLS handshakes, about three
+    /// round trips, which two seconds covers up to a round trip of about 600 ms. Whatever outlasts it is not cancelled.
+    static let flushAtCloseBudget: TimeInterval = 2
 
     // MARK: Set in init and never changed
 
@@ -115,6 +119,10 @@ class DirectEventProcessor: EventProcessor {
     private var wentOnlineAt: DispatchTime?
     /// What waits for the gate to open with the reporter online.
     private var launchGateWaiters: [() -> Void] = []
+    /// Whether going online again ended a failure's wait while the gate was still closed, which owes the delivery it
+    /// would have queued to the gate opening. Ending the wait is not undone, and nothing else would deliver before the
+    /// next report interval. Only to be used on `deliveryQueue`.
+    private var deliveryOwedAtGate = false
 
     init(service: DarklyServiceProvider,
          onSyncComplete: EventSyncCompleteClosure?,
@@ -147,11 +155,12 @@ class DirectEventProcessor: EventProcessor {
         deliverer.owner = self
     }
 
-    /// Starts what the reporter does on its own: closing and listing what a previous run left.
+    /// Starts what the reporter does on its own: closing and listing what a previous run left, then discarding what has
+    /// expired.
     ///
     /// Called once, straight after init and before anything else uses the reporter, as `ClientServiceFactory` does.
-    /// `deliveryQueue` is suspended until the recovery is done, and suspending holds back only what has not started:
-    /// a delivery already running would list the store beside the recovery.
+    /// `deliveryQueue` is suspended until the logs are closed and listed, and suspending holds back only what has not
+    /// started: a delivery already running would list the store beside the recovery.
     func start() {
         // A log left open by a previous run has to be closed before it can be delivered, but nothing waits on that:
         // doing it on the caller's thread would put file I/O in the way of the client starting up. At utility, below
@@ -171,18 +180,25 @@ class DirectEventProcessor: EventProcessor {
         }
         // Enforced, since the caller is usually the main thread, whose QoS would otherwise be carried over.
         DispatchQueue.global(qos: .utility).async(qos: .utility, flags: .enforceQoS) { [weak self] in
-            // Resumed whatever happens: a dispatch queue released while suspended traps.
-            defer { queue.resume() }
-            store.preparePayloadsFromInterruptedLogs()
+            do {
+                // Resumed whatever happens: a dispatch queue released while suspended traps.
+                defer { queue.resume() }
+                store.preparePayloadsFromInterruptedLogs()
+                let listing = store.listPendingBatches()
+                recovered.vanishedEvents = listing.vanishedEvents
+                recovered.hasBatches = !listing.batches.isEmpty
+            }
+            // After the resume, since no delivery needs it first: each one discards what has expired before it lists,
+            // and a batch discarded here while a delivery reads it is found removed in this process, not lost. Still at
+            // launch rather than left to the first delivery, which never comes while offline, so that expired batches
+            // stop counting against capacity. The first call also empties the directories of abandoned environments,
+            // which is no reason to hold back a delivery.
             self?.reportDiscarded(store.discardExpired())
-            let listing = store.listPendingBatches()
-            recovered.vanishedEvents = listing.vanishedEvents
-            recovered.hasBatches = !listing.batches.isEmpty
         }
     }
 
     /// What the recovery found, handed to `deliveryQueue`. Written before the queue resumes and read after, so the
-    /// resume orders the two.
+    /// resume orders the two. Listed before expiry, so it can count batches the delivery it starts finds expired.
     private final class RecoveredListing {
         var vanishedEvents = 0
         var hasBatches = false
@@ -273,8 +289,9 @@ extension DirectEventProcessor {
 
         // Events a previous run left behind are already late by however long the application was gone, so they do not
         // wait out a report interval on top of that, only the launch gate: an application that crashed reports it as
-        // soon as it is next able to. Only the first time online brings a delivery forward, so going online again
-        // later, as a network comes and goes, keeps to the ordinary cadence.
+        // soon as it is next able to. Going online again later, as a network comes and goes, keeps to the ordinary
+        // cadence, unless a post failed in a way the network coming back may cure: that delivery goes now, rather than
+        // after the rest of a wait set while the network was gone, or at the next report interval.
         deliveryQueue.async { [weak self] in
             guard let self
             else { return }
@@ -285,6 +302,13 @@ extension DirectEventProcessor {
                 }
             }
             self.releaseLaunchGateWaiters()
+            if self.deliverer.endOrdinaryWait() {
+                if self.launchGateOpen {
+                    self.queueScheduledDelivery()
+                } else {
+                    self.deliveryOwedAtGate = true
+                }
+            }
             self.deliverWhatAPreviousRunLeft()
         }
     }
@@ -318,7 +342,7 @@ extension DirectEventProcessor {
         else { return }
         let waiters = launchGateWaiters
         launchGateWaiters = []
-        waiters.forEach { DispatchQueue.global().async(execute: $0) }
+        waiters.forEach { DispatchQueue.global(qos: .userInitiated).async(execute: $0) }
     }
 
     private func checkLaunchGate(after delay: TimeInterval) {
@@ -340,7 +364,13 @@ extension DirectEventProcessor {
         launchGateOpen = true
         releaseLaunchGateWaiters()
 
-        deliverWhatAPreviousRunLeft()
+        // One delivery covers both: it sends what a previous run left first. Offline, going online again asks anew.
+        if deliveryOwedAtGate, isOnline {
+            deliveryOwedAtGate = false
+            queueScheduledDelivery()
+        } else {
+            deliverWhatAPreviousRunLeft()
+        }
     }
 
     /// Queues the delivery that sends what a previous run left, once the gate is open with the reporter online. Offline,
@@ -370,11 +400,26 @@ extension DirectEventProcessor {
     }
 
     func flushAtClose() {
+        committer.refuseRecordings()
         cancelReportTimer()
-        committer.commitWithinBudget(DirectEventProcessor.flushAtCloseCommitBudget)
-        // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing: offline is the
-        // application keeping the SDK off the network, and closing does not revoke that.
-        queueDelivery(nil, closing: isOnline)
+        let budget = DirectEventProcessor.flushAtCloseBudget
+        let deadline = DispatchTime.now() + budget
+        committer.commitAndClose(by: deadline, budget: budget)
+        // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing, so there is nothing
+        // to wait for: offline is the application keeping the SDK off the network, and closing does not revoke that.
+        guard isOnline
+        else {
+            queueDelivery(nil)
+            return
+        }
+        // Waited for, as this run's last chance to send what it recorded, which where nothing persists is gone with
+        // the process. Where events persist it only sends: the store is closed, so it writes and closes nothing. It
+        // starts once a delivery already running ends, and waiting for that comes out of the same budget.
+        let answered = DispatchSemaphore(value: 0)
+        queueDelivery({ _ in answered.signal() }, closing: true)
+        if answered.wait(timeout: deadline) == .timedOut {
+            os_log("%s gave up waiting for the final event delivery after %dms; it continues in the background", log: service.config.logger, type: .info, typeName(and: #function), Int(budget * 1000))
+        }
     }
 
     /// Queues a delivery the way a caller asking for one expects, which is as a commit point.
@@ -537,7 +582,7 @@ extension DirectEventProcessor {
         else { return }
 
         os_log("%s Will retry posting events in %.1fs after a failure", log: service.config.logger, type: .debug, typeName(and: #function), wait)
-        DispatchQueue.global().asyncAfter(deadline: .now() + wait) { [weak self] in
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + wait) { [weak self] in
             guard let self
             else { return }
             self.deliveryScheduler.retryDue()

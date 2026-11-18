@@ -1437,10 +1437,10 @@ final class LDClientSpec: QuickSpec {
                                 expect(testContext.eventProcessorMock.isOnline) == true
                                 expect(testContext.flagSynchronizerMock.isOnline) == false
                             }
-                            it("tries to deliver what it has before the process is suspended, where it is suspended", onlyWhere: platformPostsLifecycleNotifications) {
+                            it("tries to deliver what it has before the process is suspended, where it is suspended") {
                                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
                                 testContext.start()
-                                NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
+                                NotificationCenter.default.post(name: SystemCapabilities.eventsBackgroundNotification, object: self)
 
                                 if SystemCapabilities.suspendsWhenBackgrounded {
                                     expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount).toEventually(equal(1))
@@ -1450,14 +1450,19 @@ final class LDClientSpec: QuickSpec {
                                     expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount) == 0
                                 }
                             }
-                            it("writes what it has before the notification returns, on every platform", onlyWhere: platformPostsLifecycleNotifications) {
+                            it("writes what it has before the notification returns, on every platform") {
                                 let testContext = TestContext(startOnline: true, enableBackgroundUpdates: false)
                                 testContext.start()
-                                NotificationCenter.default.post(name: SystemCapabilities.backgroundNotification!, object: self)
+                                NotificationCenter.default.post(name: SystemCapabilities.eventsBackgroundNotification, object: self)
 
                                 // Checked without waiting: a write only queued is one a process killed in the
                                 // background may never get to, macOS included, where nothing is delivered here.
                                 expect(testContext.eventProcessorMock.commitWherePersistingCallCount) == 1
+                            }
+                            it("observes for its events the notification run mode does, where run mode has one") {
+                                if let backgroundNotification = SystemCapabilities.backgroundNotification {
+                                    expect(SystemCapabilities.eventsBackgroundNotification) == backgroundNotification
+                                }
                             }
                             it("background updates enabled", onlyWhere: platformPostsLifecycleNotifications) {
                                 let testContext = TestContext(startOnline: true)
@@ -1732,7 +1737,7 @@ final class LDClientSpec: QuickSpec {
             }
         }
 
-        describe("flush with a completion") {
+        describe("flush with a timeout and a completion") {
             /// Answers from another thread, because this call does not block and must not be answered inside it.
             func answer(_ mock: EventProcessorMock, with delivered: Bool, after delay: TimeInterval = 0.05) {
                 mock.flushReportingOutcomeCallback = { [weak mock] in
@@ -1741,29 +1746,62 @@ final class LDClientSpec: QuickSpec {
                 }
             }
 
-            it("reports true when delivery succeeds") {
-                let testContext = TestContext()
+            it("reports complete when delivery succeeds") {
+                let testContext = TestContext(startOnline: true)
                 testContext.start()
                 answer(testContext.eventProcessorMock, with: true)
 
-                var delivered: Bool?
-                testContext.subject.flush { delivered = $0 }
+                var result: FlushResult?
+                testContext.subject.flush(timeout: 1) { result = $0 }
                 // Nothing has answered yet, so a call that reported now would be blocking or guessing.
-                expect(delivered).to(beNil())
-                expect(delivered).toEventually(beTrue())
+                expect(result).to(beNil())
+                expect(result).toEventually(equal(.complete))
+                expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount) == 1
+                expect(testContext.eventProcessorMock.flushBypassingBackoffCallCount) == 0
             }
 
-            it("reports false when delivery cannot finish") {
+            it("reports failed when delivery cannot finish") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                answer(testContext.eventProcessorMock, with: false)
+
+                var result: FlushResult?
+                testContext.subject.flush(timeout: 1) { result = $0 }
+                expect(result).toEventually(equal(.failed))
+            }
+
+            it("reports offline where an offline client's delivery did not get the events out") {
                 let testContext = TestContext()
                 testContext.start()
                 answer(testContext.eventProcessorMock, with: false)
 
-                var delivered: Bool?
-                testContext.subject.flush { delivered = $0 }
-                expect(delivered).toEventually(beFalse())
+                var result: FlushResult?
+                testContext.subject.flush(timeout: 1) { result = $0 }
+                expect(result).toEventually(equal(.offline))
             }
 
-            it("reports false for a client a later start replaced, without flushing the clients that replaced it") {
+            it("reports timeout when the timeout expires first") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                testContext.eventProcessorMock.flushReportingOutcomeCallback = nil
+
+                var result: FlushResult?
+                testContext.subject.flush(timeout: 0.05) { result = $0 }
+                expect(result).toEventually(equal(.timeout))
+            }
+
+            it("does not wait without a timeout, though it still starts the delivery") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+                answer(testContext.eventProcessorMock, with: true, after: 0)
+
+                var result: FlushResult?
+                testContext.subject.flush(timeout: 0) { result = $0 }
+                expect(result).toEventually(equal(.timeout))
+                expect(testContext.eventProcessorMock.flushReportingOutcomeCallCount) == 1
+            }
+
+            it("reports offline for a client a later start replaced, without flushing the clients that replaced it") {
                 let stale = TestContext()
                 stale.start()
                 stale.subject.close()
@@ -1771,9 +1809,9 @@ final class LDClientSpec: QuickSpec {
                 current.start()
                 answer(current.eventProcessorMock, with: true)
 
-                var delivered: Bool?
-                stale.subject.flush { delivered = $0 }
-                expect(delivered).toEventually(beFalse())
+                var result: FlushResult?
+                stale.subject.flush(timeout: 1) { result = $0 }
+                expect(result).toEventually(equal(.offline))
                 expect(current.eventProcessorMock.flushReportingOutcomeCallCount) == 0
             }
 
@@ -1787,7 +1825,7 @@ final class LDClientSpec: QuickSpec {
                 let caller = Thread.current
                 var answeredOnCaller: Bool?
                 waitUntil { done in
-                    testContext.subject.flush { _ in
+                    testContext.subject.flush(timeout: 1) { _ in
                         answeredOnCaller = Thread.current === caller
                         done()
                     }
@@ -1796,7 +1834,7 @@ final class LDClientSpec: QuickSpec {
             }
 
             it("reports once every environment has answered, and only once") {
-                let testContext = TestContext()
+                let testContext = TestContext(startOnline: true)
                 try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
                 testContext.start()
                 let answering = LDClient.get(environment: "alternate")?.eventProcessor as? EventProcessorMock
@@ -1805,15 +1843,15 @@ final class LDClientSpec: QuickSpec {
                 answer(testContext.eventProcessorMock, with: true, after: 0.05)
                 answer(answering!, with: false, after: 0.2)
 
-                var answers: [Bool] = []
-                testContext.subject.flush { answers.append($0) }
-                expect(answers).toEventually(equal([false]))
+                var answers: [FlushResult] = []
+                testContext.subject.flush(timeout: 1) { answers.append($0) }
+                expect(answers).toEventually(equal([.failed]))
                 Thread.sleep(forTimeInterval: 0.2)
-                expect(answers) == [false]
+                expect(answers) == [.failed]
             }
 
             it("waits for every environment where one answers twice") {
-                let testContext = TestContext()
+                let testContext = TestContext(startOnline: true)
                 try testContext.config.setSecondaryMobileKeys(["alternate": Constants.alternateMockMobileKey])
                 testContext.start()
                 testContext.eventProcessorMock.flushReportingOutcomeCallback = { [weak testContext] in
@@ -1827,12 +1865,52 @@ final class LDClientSpec: QuickSpec {
                 expect(answering).toNot(beNil())
                 answer(answering!, with: false, after: 0.2)
 
-                var answers: [Bool] = []
-                testContext.subject.flush { answers.append($0) }
-                // Two answers from the primary are not one from each, so a `true` here would be about events still unsent.
-                expect(answers).toEventually(equal([false]))
+                var answers: [FlushResult] = []
+                testContext.subject.flush(timeout: 1) { answers.append($0) }
+                // Two answers from the primary are not one from each, so `.complete` here would be about events still
+                // unsent.
+                expect(answers).toEventually(equal([.failed]))
                 Thread.sleep(forTimeInterval: 0.2)
-                expect(answers) == [false]
+                expect(answers) == [.failed]
+            }
+        }
+
+        describe("a flush's result") {
+            it("is complete only where every environment delivered, offline or not") {
+                expect(FlushResult(offline: false, delivered: [true, true])) == .complete
+                expect(FlushResult(offline: true, delivered: [true])) == .complete
+                expect(FlushResult(offline: false, delivered: [])) == .complete
+            }
+
+            it("is offline for anything short of that while offline") {
+                expect(FlushResult(offline: true, delivered: [false])) == .offline
+                expect(FlushResult(offline: true, delivered: [nil])) == .offline
+            }
+
+            it("is failed where an environment answered no, even with another yet to answer") {
+                expect(FlushResult(offline: false, delivered: [true, false])) == .failed
+                expect(FlushResult(offline: false, delivered: [nil, false])) == .failed
+            }
+
+            it("is timeout where an environment has yet to answer and none answered no") {
+                expect(FlushResult(offline: false, delivered: [true, nil])) == .timeout
+            }
+        }
+
+        describe("the time a flush waits") {
+            it("is the timeout given, up to 30 seconds") {
+                expect(LDClient.flushWait(for: 5)) == 5
+                expect(LDClient.flushWait(for: 30)) == 30
+                expect(LDClient.flushWait(for: 31)) == 30
+                expect(LDClient.flushWait(for: .infinity)) == 30
+                expect(LDClient.flushWait(for: .greatestFiniteMagnitude)) == 30
+            }
+
+            it("is nothing for a timeout of zero or less, or one that is not a number") {
+                expect(LDClient.flushWait(for: 0)) == 0
+                expect(LDClient.flushWait(for: -1)) == 0
+                expect(LDClient.flushWait(for: -.infinity)) == 0
+                expect(LDClient.flushWait(for: .nan)) == 0
             }
         }
 
@@ -1860,6 +1938,14 @@ final class LDClientSpec: QuickSpec {
                 answer(testContext.eventProcessorMock, with: false)
 
                 expect(testContext.subject.flushAndWait(timeout: 1.0)) == false
+            }
+
+            it("takes an infinite timeout, and reports as soon as the delivery answers") {
+                let testContext = TestContext()
+                testContext.start()
+                answer(testContext.eventProcessorMock, with: true)
+
+                expect(testContext.subject.flushAndWait(timeout: .infinity)) == true
             }
 
             it("reports false when the budget expires first") {
@@ -2174,7 +2260,7 @@ private extension LDConfig {
     }
 }
 
-/// watchOS posts no lifecycle notifications, and does not stream.
+/// watchOS posts no lifecycle notifications the run mode follows, and does not stream.
 private let platformPostsLifecycleNotifications = SystemCapabilities.foregroundNotification != nil
     && SystemCapabilities.backgroundNotification != nil
 private let platformStreams = SystemCapabilities.operatingSystem.isStreamingEnabled
