@@ -403,9 +403,10 @@ final class EventStore: EventStoring {
     }
 
     private func stage(_ encodedEvent: Data, bypassingCapacity: Bool, usingReservation: Bool) -> Bool {
-        guard encodedEvent.count <= EventLogFormat.maxFrameSize
+        // Empty too: the reader takes a frame of no bytes for damage and stops at it, losing every frame behind it.
+        guard (1...EventLogFormat.maxFrameSize).contains(encodedEvent.count)
         else {
-            os_log("%s dropping an event of %d bytes, larger than the %d a log frame allows", log: logger, type: .error, typeName(and: #function), encodedEvent.count, EventLogFormat.maxFrameSize)
+            os_log("%s dropping an event of %d bytes, outside the 1 to %d a log frame allows", log: logger, type: .error, typeName(and: #function), encodedEvent.count, EventLogFormat.maxFrameSize)
             if usingReservation {
                 bufferLock.withLock { reservedEvents = max(0, reservedEvents - 1) }
             }

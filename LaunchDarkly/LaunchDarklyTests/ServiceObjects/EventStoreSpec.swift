@@ -1922,6 +1922,25 @@ final class EventStoreSpec: QuickSpec {
                 expect(keysByBatch()) == [["event-1"], ["largest"]]
                 expect(try batchFileSizes().allSatisfy { $0 <= EventLogFormat.maxBatchSize }) == true
             }
+
+            it("refuses an empty event, which its reader would stop at, and keeps the events on either side of it") {
+                for persistEvents in [true, false] {
+                    store?.deleteEverything()
+                    store = EventStore.temporary(persistEvents: persistEvents)
+                    expect(store.stage(EventStoreSpec.payload("event-1"))) == true
+                    expect(store.stage(Data())) == false
+                    store.reserve(1)
+                    expect(store.stageReserved(Data())) == false
+                    store.releaseReservations()
+                    expect(store.stage(EventStoreSpec.payload("event-2"))) == true
+                    store.commit()
+                    let batch = store.closeBatch()
+
+                    expect(batch?.eventCount) == 2
+                    expect(keysByBatch()) == [["event-1", "event-2"]]
+                    expect(store.pendingEventCount) == 2
+                }
+            }
         }
     }
 
