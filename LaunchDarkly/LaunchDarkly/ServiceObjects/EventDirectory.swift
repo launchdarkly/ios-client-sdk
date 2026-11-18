@@ -198,7 +198,7 @@ final class EventDirectory {
         if let located {
             return located
         }
-        let directory = locateDirectory()
+        let directory = EventDirectory.resolved(locateDirectory())
         let log = DiskEventLog(directory: directory,
                                ioLock: ioLock,
                                logger: logger,
@@ -210,6 +210,24 @@ final class EventDirectory {
         countedAsOpen = path
         EventDirectory.openInThisProcessLock.withLock { EventDirectory.openInThisProcess[path, default: 0] += 1 }
         return disk
+    }
+
+    /// `directory` spelled as a listing's entries resolve to, whether or not it exists yet: resolved as far as it does
+    /// exist, with the rest appended as given.
+    ///
+    /// The logs and directories open in this process are remembered by path before they exist, and looked up from
+    /// listings once they do. Resolution drops a leading `/private`, as an iOS device spells its temporary directory,
+    /// only from a path that exists, so a path remembered as given would never be found open.
+    static func resolved(_ directory: URL) -> URL {
+        var existing = directory.standardizedFileURL
+        var missing: [String] = []
+        while !FileManager.default.fileExists(atPath: existing.path), existing.pathComponents.count > 1 {
+            missing.append(existing.lastPathComponent)
+            existing.deleteLastPathComponent()
+        }
+        return missing.reversed().reduce(existing.resolvingSymlinksInPath()) {
+            $0.appendingPathComponent($1, isDirectory: true)
+        }
     }
 
     private static func isOpenInThisProcess(_ directory: URL) -> Bool {
