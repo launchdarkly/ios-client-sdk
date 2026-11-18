@@ -136,6 +136,14 @@ protocol EventStoring {
     ///
     /// - Returns: how many events were discarded.
     func discardExpired() -> Int
+
+    /// The store's last write, for a client being closed: writes what is staged, closes the open log into a batch, and
+    /// lets go of it. From then on the store accepts, writes and closes nothing, while its batches can still be listed,
+    /// read, sent and removed.
+    ///
+    /// A batch rather than the log, so that a replacement store in this process finds it at its next listing: recovery
+    /// runs once, at start, and leaves alone a log a store in this process still has open.
+    func close()
 }
 
 extension EventStoring {
@@ -255,6 +263,8 @@ final class EventStore: EventStoring {
     /// Whether events are being written to disk, which is what the application asked for until a write fails, or the
     /// log will not close, and the store gives up on persistence for the rest of the session.
     private var persistEvents = true
+    /// Whether `close()` has run, after which nothing more is staged, written or closed.
+    private var isClosed = false
 
     /// How many closes of the open log in a row may fail before the store gives up on the disk. A move the directory
     /// refuses is mostly one it will go on refusing -- a permission taken away, a volume gone read-only -- while appends,
@@ -369,7 +379,7 @@ final class EventStore: EventStoring {
     }
 
     func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool {
-        bufferLock.withLock { heldElsewhere + countedEvents < capacity && countedBytes < eventByteCapacity }
+        bufferLock.withLock { !isClosed && heldElsewhere + countedEvents < capacity && countedBytes < eventByteCapacity }
     }
 
     var isPersisting: Bool {
@@ -414,7 +424,8 @@ final class EventStore: EventStoring {
             // Bytes bound events kept off the disk too: capacity counts events, so held in memory through an outage it
             // would allow it that many times whatever size they are, and a summary, which capacity never refuses,
             // would otherwise go on growing for the life of the process.
-            guard bypassingCapacity || countedEvents < capacity,
+            guard !isClosed,
+                  bypassingCapacity || countedEvents < capacity,
                   countedBytes + frame.count <= (isSummary ? byteCapacity : eventByteCapacity)
             else { return false }
 
@@ -428,7 +439,7 @@ final class EventStore: EventStoring {
             return true
         }
         if !staged {
-            os_log("%s dropping an event the store has no room for", log: logger, type: .debug, typeName(and: #function))
+            os_log("%s dropping an event the store has no room for, or that came after it closed", log: logger, type: .debug, typeName(and: #function))
         }
         return staged
     }
@@ -437,7 +448,11 @@ final class EventStore: EventStoring {
         // Where the application asked for no disk there is nothing for a commit to reach, and so nothing to serialize.
         guard disk != nil
         else { return }
-        ioLock.withLock { writeStagedBytes() }
+        ioLock.withLock {
+            guard !bufferLock.withLock({ isClosed })
+            else { return }
+            writeStagedBytes()
+        }
     }
 
     func closeBatch() -> EventBatch? {
@@ -446,7 +461,30 @@ final class EventStore: EventStoring {
 
         ioLock.lock()
         defer { ioLock.unlock() }
+        guard !bufferLock.withLock({ isClosed })
+        else { return nil }
+        return closeBatch(of: disk)
+    }
 
+    func close() {
+        guard let disk
+        else { return }
+        ioLock.withLock {
+            // First, so that nothing staged from here on is left behind the close.
+            let alreadyClosed = bufferLock.withLock { () -> Bool in
+                defer { isClosed = true }
+                return isClosed
+            }
+            guard !alreadyClosed
+            else { return }
+            _ = closeBatch(of: disk)
+            disk.closeOpenLog()
+        }
+    }
+
+    /// Requires `ioLock`.
+    private func closeBatch(of disk: EventDirectory) -> EventBatch? {
+        ioLock.assertOwned()
         writeStagedBytes()
 
         let (committed, stillBuffered) = bufferLock.withLock {
@@ -670,6 +708,9 @@ final class EventStore: EventStoring {
         else { return }
         // One acquisition: the lock is not recursive, and `commit()` would take it again.
         ioLock.withLock {
+            // A closed store's last write was its close: written now, the log could miss a replacement's recovery.
+            guard !bufferLock.withLock({ isClosed })
+            else { return }
             writeStagedBytes()
             disk?.closeOpenLog()
         }

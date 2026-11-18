@@ -35,11 +35,11 @@ class DirectEventProcessor: EventProcessor {
         let gap: TimeInterval
     }
 
-    /// How long `flushAtClose()` waits for its commit, the last chance to get what was recorded to disk before the
-    /// client goes away. Only for that: no other commit is waited for within a limit, and the closing delivery is not
-    /// waited for at all. Waited for on a thread that for an application closing the client is usually the main one,
-    /// and once per environment, so well inside what the system tolerates from a main thread that has stopped
-    /// answering. Android spends the same two seconds per environment on its commit and a waited delivery together.
+    /// How long `flushAtClose()` waits for its commit and the store's close, the last chance to get what was recorded
+    /// to disk, as a batch, before the client goes away. Only for that: no other commit is waited for within a limit,
+    /// and the closing delivery is not waited for at all. Waited for on a thread that for an application closing the
+    /// client is usually the main one, and once per environment, so well inside what the system tolerates from a main
+    /// thread that has stopped answering. Android spends the same two seconds per environment on its commit and a waited delivery together.
     static let flushAtCloseCommitBudget: TimeInterval = 2
 
     // MARK: Set in init and never changed
@@ -384,9 +384,10 @@ extension DirectEventProcessor {
 
     func flushAtClose() {
         cancelReportTimer()
-        committer.commitWithinBudget(DirectEventProcessor.flushAtCloseCommitBudget)
+        committer.commitAndCloseWithinBudget(DirectEventProcessor.flushAtCloseCommitBudget)
         // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing: offline is the
-        // application keeping the SDK off the network, and closing does not revoke that.
+        // application keeping the SDK off the network, and closing does not revoke that. Where events persist it only
+        // sends: the store is closed, so it writes and closes nothing.
         queueDelivery(nil, closing: isOnline)
     }
 

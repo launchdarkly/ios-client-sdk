@@ -2758,6 +2758,34 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedPayloadIds.last) == payloadId
                 expect(recovered.pendingEventCount).toEventually(equal(0), timeout: Constants.deliveryTimeout)
             }
+
+            itPersisting("leaves what it recorded before closing offline as a batch, which a client started in its place in the same run delivers") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "before-close", context: testContext.context))
+                testContext.eventProcessor.flushAtClose()
+
+                // Started while the closed client is still around, so its store is too: recovery runs only at start, and
+                // leaves alone a log a store in this process has open.
+                let replacement = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: EventStore.sharing(testContext.store.directory!), pacing: .noWaits).started()
+                replacement.isOnline = true
+                defer { replacement.isOnline = false }
+
+                // Well inside the report interval, so only going online can have delivered it.
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: .seconds(2))
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["before-close"]]
+            }
+
+            itPersisting("writes nothing it is given after closing") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "before-close", context: testContext.context))
+                testContext.eventProcessor.flushAtClose()
+                testContext.eventProcessor.record(CustomEvent(key: "after-close", context: testContext.context))
+                testContext.eventProcessor.commitRecordedEvents()
+
+                let files = try FileManager.default.contentsOfDirectory(atPath: testContext.store.directory!.path)
+                expect(files.filter { $0.hasPrefix(EventDirectory.logPrefix) }).to(beEmpty())
+                expect(testContext.store.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).keyField }) == ["before-close"]
+            }
         }
     }
 
@@ -4501,6 +4529,7 @@ private final class ClosingHookStore: EventStoring {
     func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
     func preparePayloadsFromInterruptedLogs() { inner.preparePayloadsFromInterruptedLogs() }
     func discardExpired() -> Int { inner.discardExpired() }
+    func close() { inner.close() }
 
     func closeBatch() -> EventBatch? {
         let before = beforeClosing
@@ -4593,6 +4622,7 @@ private final class StagingObservingStore: EventStoring {
     func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
     func preparePayloadsFromInterruptedLogs() { inner.preparePayloadsFromInterruptedLogs() }
     func discardExpired() -> Int { inner.discardExpired() }
+    func close() { inner.close() }
 }
 
 /// What a flush was told, written from whichever thread answered it and read from the test's.
@@ -4691,6 +4721,7 @@ private final class SlowListingStore: EventStoring {
     func stoppedSending(_ batch: EventBatch) { inner.stoppedSending(batch) }
     func preparePayloadsFromInterruptedLogs() { inner.preparePayloadsFromInterruptedLogs() }
     func discardExpired() -> Int { inner.discardExpired() }
+    func close() { inner.close() }
 
     /// Every listing but the first is held, the first being the one the reporter makes as it starts up.
     func listPendingBatches() -> BatchListing {
@@ -4752,6 +4783,8 @@ private final class RecoveryObservingStore: EventStoring {
         }
         return inner.discardExpired()
     }
+
+    func close() { inner.close() }
 
     func preparePayloadsFromInterruptedLogs() {
         lock.withLock { observedQoS = qos_class_self() }

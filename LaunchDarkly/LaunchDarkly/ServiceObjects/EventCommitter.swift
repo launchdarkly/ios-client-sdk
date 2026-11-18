@@ -313,20 +313,27 @@ final class EventCommitter {
         }
     }
 
-    /// Commits everything recorded so far for `flushAtClose()`, waiting for it no longer than `budget`.
+    /// Commits everything recorded so far for `flushAtClose()`, then closes the store, waiting for both no longer than
+    /// `budget`.
     ///
     /// On `commitQueue` rather than the caller's thread, which for an application closing the client is usually the
     /// main one. Each step of a commit can block for as long as the device takes: on `commitLock` behind a commit
     /// stalled on the disk, on the store's I/O lock, and on the write itself. A commit that outlasts the budget is left
     /// to finish, and the delivery queued after it waits for it on the delivery queue, not on the caller's thread.
     /// Where nothing persists there is nothing to write: the final delivery encodes what it sends.
-    func commitWithinBudget(_ budget: TimeInterval) {
+    ///
+    /// Closing the store is the client's last write: its log becomes a batch, and nothing is written after it, so
+    /// nothing it recorded is left in a log that a client started in its place would not recover.
+    func commitAndCloseWithinBudget(_ budget: TimeInterval) {
         guard store.isPersisting
         else { return }
-        let through = recordLock.withLock { recordedSequence }
         let committed = DispatchSemaphore(value: 0)
         commitQueue.async {
-            self.commitThrough(through)
+            self.commitLock.withLock {
+                self.encodeAndCommitPending()
+                self.store.close()
+                self.reportVanished(self.store.takeVanishedLogEvents())
+            }
             committed.signal()
         }
         if committed.wait(timeout: .now() + budget) == .timedOut {

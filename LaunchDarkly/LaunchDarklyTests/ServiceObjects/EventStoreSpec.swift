@@ -92,6 +92,25 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? next.body(of: $0) })) == ["from-the-ended-instance"]
             }
 
+            it("closes its log into a batch at close, and stages, writes and closes nothing afterwards, at its end included") {
+                var closing: EventStore? = instance()
+                _ = closing?.stage(EventStoreSpec.payload("before-close"))
+                closing?.close()
+
+                expect(closing?.admitsEvent(heldElsewhere: 0, capacity: 100)) == false
+                expect(closing?.stage(EventStoreSpec.payload("after-close"))) == false
+                closing?.commit()
+                expect(closing?.closeBatch()).to(beNil())
+                closing = nil
+
+                let files = try FileManager.default.contentsOfDirectory(atPath: first.directory!.path)
+                expect(files.filter { $0.hasPrefix(EventDirectory.logPrefix) }).to(beEmpty())
+                // Listed by a store in this process at once, with no recovery run.
+                let batches = first.pendingBatches()
+                expect(batches.count) == 1
+                expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? first.body(of: $0) })) == ["before-close"]
+            }
+
             it("recovers the log a previous run left open, once nothing holds it") {
                 _ = first.stage(EventStoreSpec.payload("left-open"))
                 first.commit()
