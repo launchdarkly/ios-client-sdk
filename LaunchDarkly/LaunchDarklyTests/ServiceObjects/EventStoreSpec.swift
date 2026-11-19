@@ -16,6 +16,7 @@ final class EventStoreSpec: QuickSpec {
         fallbackSpec()
         optOutSpec()
         multiProcessSpec()
+        spellingSpec()
         withoutPersistenceSpec()
         if SystemCapabilities.sharesContainerWithOtherInstances {
             lockedInstancesSpec()
@@ -208,6 +209,88 @@ final class EventStoreSpec: QuickSpec {
                     .filter { $0.hasPrefix(EventDirectory.openingLogPrefix) }).to(beEmpty())
             }
         }
+    }
+
+    /// A directory spelled otherwise than a listing spells what is in it. An iOS device's temporary directory is spelled
+    /// through `/private`, which path resolution drops only from a path that exists, and a listing keeps.
+    private func spellingSpec() {
+        if EventStoreSpec.spelledThroughPrivate(FileManager.default.temporaryDirectory) != nil {
+            spellingExamples("a directory spelled through /private") {
+                let root = EventStoreSpec.spelledThroughPrivate(EventStore.temporaryDirectory())!
+                return (root, [root])
+            }
+        }
+        spellingExamples("a directory reached through a symbolic link") {
+            let real = EventStore.temporaryDirectory()
+            try FileManager.default.createDirectory(at: real, withIntermediateDirectories: true)
+            let link = real.deletingLastPathComponent().appendingPathComponent(real.lastPathComponent + "-link", isDirectory: true)
+            try FileManager.default.createSymbolicLink(at: link, withDestinationURL: real)
+            return (link, [link, real])
+        }
+    }
+
+    /// - Parameter makeRoot: where the stores' directories go, and what to remove once the example is done.
+    private func spellingExamples(_ description: String, makeRoot: @escaping () throws -> (root: URL, removing: [URL])) {
+        describe(description) {
+            var removing: [URL] = []
+            afterEach {
+                removing.forEach { try? FileManager.default.removeItem(at: $0) }
+                removing = []
+            }
+            func root() throws -> URL {
+                let made = try makeRoot()
+                removing += made.removing
+                return made.root
+            }
+
+            it("keeps the log another store in this process has open out of recovery") {
+                let app = EventStore.sharing(try root().appendingPathComponent("app.current", isDirectory: true))
+                _ = app.stage(EventStoreSpec.payload("before"))
+                app.commit()
+
+                let widget = EventStore.sharing(app.directory!)
+                widget.preparePayloadsFromInterruptedLogs()
+                expect(widget.pendingBatches()).to(beEmpty())
+
+                _ = app.stage(EventStoreSpec.payload("after"))
+                app.commit()
+                let batch = app.closeBatch()
+                expect(EventStoreSpec.keys(ofBody: batch.flatMap { try? app.body(of: $0) })) == ["before", "after"]
+            }
+
+            it("keeps its own open log from expiry, however long since it was written") {
+                let store = EventStore.sharing(try root().appendingPathComponent("app.current", isDirectory: true))
+                _ = store.stage(EventStoreSpec.payload("own"))
+                store.commit()
+                try EventStoreSpec.age(store.openLogUrl!, byDays: 8)
+
+                expect(store.discardExpired()) == 0
+                expect(EventStoreSpec.keys(of: store)) == ["own"]
+            }
+
+            it("keeps the directory of another environment open in this process from expiry") {
+                let environments = try root()
+                let open = EventStore.sharing(environments.appendingPathComponent("app.open", isDirectory: true))
+                _ = open.stage(EventStoreSpec.payload("open"))
+                _ = open.closeBatch()
+                try EventStoreSpec.age(contentsOf: open.directory!, byDays: 30)
+
+                let store = EventStore.sharing(environments.appendingPathComponent("app.current", isDirectory: true))
+                expect(store.discardExpired()) == 0
+                expect(open.pendingBatches().count) == 1
+            }
+        }
+    }
+
+    /// `directory` spelled through `/private`; nil where it is not under `/var`, as in the iOS simulator.
+    private static func spelledThroughPrivate(_ directory: URL) -> URL? {
+        let path = directory.standardizedFileURL.path
+        if path.hasPrefix("/private/var/") {
+            return directory
+        }
+        guard path.hasPrefix("/var/")
+        else { return nil }
+        return URL(fileURLWithPath: "/private" + path, isDirectory: true)
     }
 
     private func optOutSpec() {

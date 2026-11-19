@@ -198,7 +198,7 @@ final class EventDirectory {
         if let located {
             return located
         }
-        let directory = locateDirectory()
+        let directory = EventDirectory.resolved(locateDirectory())
         let log = DiskEventLog(directory: directory,
                                ioLock: ioLock,
                                logger: logger,
@@ -210,6 +210,24 @@ final class EventDirectory {
         countedAsOpen = path
         EventDirectory.openInThisProcessLock.withLock { EventDirectory.openInThisProcess[path, default: 0] += 1 }
         return disk
+    }
+
+    /// `directory` spelled as a listing's entries resolve to, whether or not it exists yet: resolved as far as it does
+    /// exist, with the rest appended as given.
+    ///
+    /// The logs and directories open in this process are remembered by path before they exist, and looked up from
+    /// listings once they do. Resolution drops a leading `/private`, as an iOS device spells its temporary directory,
+    /// only from a path that exists, so a path remembered as given would never be found open.
+    static func resolved(_ directory: URL) -> URL {
+        var existing = directory.standardizedFileURL
+        var missing: [String] = []
+        while !FileManager.default.fileExists(atPath: existing.path), existing.pathComponents.count > 1 {
+            missing.append(existing.lastPathComponent)
+            existing.deleteLastPathComponent()
+        }
+        return missing.reversed().reduce(existing.resolvingSymlinksInPath()) {
+            $0.appendingPathComponent($1, isDirectory: true)
+        }
     }
 
     private static func isOpenInThisProcess(_ directory: URL) -> Bool {
@@ -549,8 +567,10 @@ final class EventDirectory {
     func remove(_ payloadId: String, holding events: Int) -> EventTally {
         ioLock.assertOwned()
         let file = url(of: payloadId, holding: events)
-        try? FileManager.default.removeItem(at: file)
+        // Remembered before the delete: another store in this process finding the file gone in between would otherwise
+        // take its events for lost.
         EventDirectory.rememberRemoved(payloadId)
+        try? FileManager.default.removeItem(at: file)
         if FileManager.default.fileExists(atPath: file.path) {
             // Its events stop counting all the same: LaunchDarkly has them, and holding capacity for a file this
             // process may never be allowed to delete would cost the session events it could still have recorded.
@@ -799,6 +819,9 @@ extension EventDirectory {
                       !BatchLocks.isSentInThisProcess(file)
                 else { continue }
                 let held = named ?? stored[payloadId]?.events ?? EventDirectory.eventsReading(file)
+                // Before the delete, as in `remove`. Where the delete is refused, mostly for a batch being sent, a store
+                // here that later finds it gone takes it for delivered, which a batch being sent most likely was.
+                EventDirectory.rememberRemoved(payloadId)
                 guard BatchLocks.deleteUnlessBeingSent(file)
                 else {
                     if !FileManager.default.fileExists(atPath: file.path) {
@@ -807,7 +830,6 @@ extension EventDirectory {
                     }
                     continue
                 }
-                EventDirectory.rememberRemoved(payloadId)
                 events += held
                 counted += stored.removeValue(forKey: payloadId)?.tally ?? EventTally()
             } else {

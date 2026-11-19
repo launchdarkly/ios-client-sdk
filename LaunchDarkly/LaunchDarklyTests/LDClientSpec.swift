@@ -1049,6 +1049,31 @@ final class LDClientSpec: QuickSpec {
                     }
                 }
             }
+            context("flag value has the wrong type") {
+                beforeEach {
+                    testContext.flagStoreMock.replaceStore(newStoredItems: FlagMaintainingMock.stubStoredItems())
+                }
+                it("returns the default value with a WRONG_TYPE reason") {
+                    let detail = testContext.subject.stringVariationDetail(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.string)
+                    expect(detail.value) == DefaultFlagValues.string
+                    expect(detail.variationIndex).to(beNil())
+                    expect(detail.reason) == ["kind": "ERROR", "errorKind": "WRONG_TYPE"]
+                }
+                it("records a flag evaluation event with no variation and a WRONG_TYPE reason") {
+                    let storedFlag = testContext.flagStoreMock.storedItems.featureFlags[DarklyServiceMock.FlagKeys.bool]!
+                    _ = testContext.subject.stringVariationDetail(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.string)
+                    expect(testContext.eventProcessorMock.recordFlagEvaluationEventsCallCount) == 1
+                    let args = testContext.eventProcessorMock.recordFlagEvaluationEventsReceivedArguments
+                    expect(args?.value) == .string(DefaultFlagValues.string)
+                    expect(args?.defaultValue) == .string(DefaultFlagValues.string)
+                    expect(args?.featureFlag?.flagKey) == storedFlag.flagKey
+                    expect(args?.featureFlag?.variation).to(beNil())
+                    expect(args?.featureFlag?.reason) == ["kind": "ERROR", "errorKind": "WRONG_TYPE"]
+                    expect(args?.featureFlag?.versionForEvents) == storedFlag.versionForEvents
+                    expect(args?.featureFlag?.trackEvents) == storedFlag.trackEvents
+                    expect(args?.includeReason) == true
+                }
+            }
             context("flag store contains flags with prerequisites") {
                 it("records evaluation events for the prerequisites that exist") {
                     let flagA = FeatureFlag(flagKey: "flagA", value: LDValue.bool(true), trackEvents: false, trackReason: false)
