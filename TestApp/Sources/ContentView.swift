@@ -46,6 +46,12 @@ private struct ClientSection: View {
             Text(controller.connectionStatus)
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
+            if !controller.mobileKey.isEmpty {
+                Text("key \(String(controller.mobileKey.prefix(8)))…")
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("mobile_key_prefix")
+            }
             if !controller.result.isEmpty {
                 Text(controller.result)
                     .font(.caption)
@@ -143,6 +149,18 @@ private struct FlagSection: View {
                 ActionButton("Eval", id: "eval_button") { evaluate() }
             }
             ActionButton("All flags", id: "all_flags_button") { readAllFlags() }
+                .overlay(alignment: .topTrailing) {
+                    if let count = controller.flagCount {
+                        Text("\(count)")
+                            .font(.caption2.monospacedDigit().bold())
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 5)
+                            .background(Capsule().fill(.red))
+                            .offset(x: 8, y: -8)
+                            .accessibilityIdentifier("flag_count")
+                    }
+                }
+                .padding(.top, 8)
         }
     }
 

@@ -32,6 +32,8 @@ final class ClientController: ObservableObject {
     @Published private(set) var isOffline = false
     @Published private(set) var isRestarting = false
     @Published private(set) var connectionStatus = "Not started"
+    /// How many flags the selected environment's client holds, nil while there is no client.
+    @Published private(set) var flagCount: Int?
     @Published private(set) var dedupeStatus = ""
     @Published var result = ""
 
@@ -170,7 +172,9 @@ final class ClientController: ObservableObject {
         }
     }
 
+    /// The flag count too, since it changes when flags arrive and when the client or the environment does.
     func refreshConnectionStatus() {
+        flagCount = client?.allFlags?.count
         guard let info = client?.getConnectionInformation()
         else {
             connectionStatus = isRestarting ? "Restarting" : "Not started"
@@ -188,6 +192,12 @@ final class ClientController: ObservableObject {
         refreshConnectionStatus()
         for environment in configuration.environments {
             client(for: environment)?.observeCurrentConnectionMode(owner: self) { [weak self] _ in
+                Task { @MainActor in self?.refreshConnectionStatus() }
+            }
+            client(for: environment)?.observeAll(owner: self) { [weak self] _ in
+                Task { @MainActor in self?.refreshConnectionStatus() }
+            }
+            client(for: environment)?.observeFlagsUnchanged(owner: self) { [weak self] in
                 Task { @MainActor in self?.refreshConnectionStatus() }
             }
         }
