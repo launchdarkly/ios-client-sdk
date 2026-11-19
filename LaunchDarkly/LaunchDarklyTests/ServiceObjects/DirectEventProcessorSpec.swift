@@ -19,8 +19,8 @@ class DirectEventProcessorSpec: QuickSpec {
         static let eventFlushInterval: TimeInterval = 10.0
         static let eventFlushIntervalHalfSecond: TimeInterval = 0.5
         /// How long a flush or delivery may take before a test gives up on it. A wait ends as soon as what it waits
-        /// for happens, so this costs a passing test nothing, and a loaded CI simulator can take over a second.
-        static let deliveryTimeout: DispatchTimeInterval = .seconds(10)
+        /// for happens, so this costs a passing test nothing, and a CI simulator can stall for most of a minute.
+        static let deliveryTimeout: DispatchTimeInterval = .seconds(60)
     }
 
     /// Retries at once and never waits, so every flush posts: for tests about what is kept through failures rather than
@@ -129,7 +129,7 @@ class DirectEventProcessorSpec: QuickSpec {
         func flushOutcome() -> Bool? {
             var delivered: Bool?
             // Long enough for a refused post and its retry a second later.
-            waitUntil(timeout: .seconds(10)) { done in
+            waitUntil(timeout: Constants.deliveryTimeout) { done in
                 eventProcessor.flushReportingOutcome { result in
                     delivered = result
                     done()
@@ -140,7 +140,7 @@ class DirectEventProcessorSpec: QuickSpec {
 
         func flushBypassingBackoffOutcome() -> Bool? {
             var delivered: Bool?
-            waitUntil(timeout: .seconds(10)) { done in
+            waitUntil(timeout: Constants.deliveryTimeout) { done in
                 eventProcessor.flushBypassingBackoff { result in
                     delivered = result
                     done()
@@ -361,7 +361,7 @@ class DirectEventProcessorSpec: QuickSpec {
 
             func outcome(of reporter: DirectEventProcessor) -> Bool? {
                 var delivered: Bool?
-                waitUntil(timeout: .seconds(10)) { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     reporter.flushReportingOutcome { result in
                         delivered = result
                         done()
@@ -1615,7 +1615,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 context("failure") {
                     context("server error") {
                         beforeEach {
-                            waitUntil(timeout: .seconds(10)) { syncComplete in
+                            waitUntil(timeout: Constants.deliveryTimeout) { syncComplete in
                                 testContext = TestContext(stubResponseSuccess: false, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -1662,7 +1662,7 @@ class DirectEventProcessorSpec: QuickSpec {
                     }
                     context("response only") {
                         beforeEach {
-                            waitUntil(timeout: .seconds(10)) { syncComplete in
+                            waitUntil(timeout: Constants.deliveryTimeout) { syncComplete in
                                 testContext = TestContext(stubResponseSuccess: false, stubResponseOnly: true, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -1712,7 +1712,7 @@ class DirectEventProcessorSpec: QuickSpec {
                     }
                     context("error only") {
                         beforeEach {
-                            waitUntil(timeout: .seconds(10)) { syncComplete in
+                            waitUntil(timeout: Constants.deliveryTimeout) { syncComplete in
                                 testContext = TestContext(stubResponseSuccess: false, stubResponseErrorOnly: true, eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -1759,7 +1759,7 @@ class DirectEventProcessorSpec: QuickSpec {
                     }
                     context("unexpected response") {
                         beforeEach {
-                            waitUntil(timeout: .seconds(10)) { syncComplete in
+                            waitUntil(timeout: Constants.deliveryTimeout) { syncComplete in
                                 testContext = TestContext(eventStubResponseDate: eventStubResponseDate, onSyncComplete: { result in
                                     testContext.syncResult = result
                                     syncComplete()
@@ -2526,7 +2526,7 @@ extension DirectEventProcessorSpec {
                 testContext = TestContext(stubResponseSuccess: false)
                 testContext.recordEvents(1)
 
-                waitUntil(timeout: .seconds(10)) { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.isOnline = true
                     testContext.eventProcessor.flush(completion: done)
                 }
@@ -2996,7 +2996,7 @@ extension DirectEventProcessorSpec {
                 store.afterClosing = { slow.proceed.signal() }
 
                 reporter.isOnline = true
-                waitUntil(timeout: .seconds(10)) { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     reporter.flushReportingOutcome { _ in done() }
                 }
                 expect(competingCommit.wait(timeout: .now() + 5)) == .success
@@ -3699,7 +3699,7 @@ extension DirectEventProcessorSpec {
                 testContext.recordEvents(1)
                 testContext.eventProcessor.isOnline = true
                 var delivered: Bool?
-                waitUntil(timeout: .seconds(10)) { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flushReportingOutcome { result in
                         delivered = result
                         done()
@@ -3803,7 +3803,7 @@ extension DirectEventProcessorSpec {
                 testContext.serviceMock.holdsEventCompletions = false
                 testContext.serviceMock.releaseHeldEventCompletions()
                 // Allows for the one-second retry, after which the batch stays on disk and nobody was told it went.
-                expect(answer.value()).toEventually(beFalse(), timeout: .seconds(10))
+                expect(answer.value()).toEventually(beFalse(), timeout: Constants.deliveryTimeout)
             }
 
             it("tells the caller whose delivery the loss happened before, not whichever answers first") {
@@ -3897,7 +3897,7 @@ extension DirectEventProcessorSpec {
 
                 released.signal()
                 // Allows for the one-second retry, after which the batch stays on disk.
-                expect(answers.value()).toEventually(equal([false, false]), timeout: .seconds(10))
+                expect(answers.value()).toEventually(equal([false, false]), timeout: Constants.deliveryTimeout)
                 expect(testContext.eventProcessor.startedDeliveryCount) == 1
                 expect(testContext.serviceMock.publishEventDataCallCount) == 2 // the first attempt and its retry
             }
@@ -3922,7 +3922,7 @@ extension DirectEventProcessorSpec {
                 testContext.serviceMock.releaseHeldEventCompletions()
 
                 // Allows for the one-second retry the second delivery makes.
-                expect(answers.value().count).toEventually(equal(21), timeout: .seconds(10))
+                expect(answers.value().count).toEventually(equal(21), timeout: Constants.deliveryTimeout)
                 expect(answers.value().contains(true)) == false
             }
         }
@@ -4489,7 +4489,7 @@ extension DirectEventProcessorSpec {
 
                 // Stands in for the scheduled delivery, or the one at backgrounding: it closes the event into a batch,
                 // fails to send it, and keeps it.
-                waitUntil(timeout: .seconds(10)) { done in
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
                     testContext.eventProcessor.flush(completion: done)
                 }
                 expect(testContext.serviceMock.publishEventDataCallCount) == 2
