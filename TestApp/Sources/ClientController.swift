@@ -212,6 +212,9 @@ final class ClientController: ObservableObject {
                 print("secondary environment not started: \(error)")
             }
         }
+        if !configuration.payloadFilter.isEmpty {
+            config.payloadFilter = configuration.payloadFilter
+        }
         config.startOnline = !isOffline
         config.eventPersistence = persistence
         // Same shape an application uses for any hook: wrap it at registration. Each wrapper has its own window, so

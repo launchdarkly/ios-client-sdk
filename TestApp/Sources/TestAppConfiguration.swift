@@ -5,7 +5,7 @@ import LaunchDarkly
 ///
 /// All come from `Config/Secrets.xcconfig` through the Info.plist. A launch argument overrides any of them, so a script
 /// starting several instances can point them somewhere else without a rebuild: `-LDMobileKey mob-...`,
-/// `-LDSecondaryMobileKey mob-...` or `-LDEnvironment staging`.
+/// `-LDSecondaryMobileKey mob-...`, `-LDPayloadFilter ios-flags` or `-LDEnvironment staging`.
 struct TestAppConfiguration {
     // The staging hosts mirror the production ones under the ld-stg domain.
     private static let stagingDomain = "ld-stg.launchdarkly.com"
@@ -13,11 +13,14 @@ struct TestAppConfiguration {
     let mobileKey: String
     /// Empty unless the build gives a second key, in which case the client starts both environments.
     let secondaryMobileKey: String
+    /// Empty for every flag. The SDK applies it to every environment, so each one needs a filter with this key.
+    let payloadFilter: String
     let isStaging: Bool
 
     static let current = TestAppConfiguration(
         mobileKey: value(for: "LDMobileKey"),
         secondaryMobileKey: value(for: "LDSecondaryMobileKey"),
+        payloadFilter: value(for: "LDPayloadFilter"),
         isStaging: value(for: "LDEnvironment").caseInsensitiveCompare("staging") == .orderedSame
     )
 
