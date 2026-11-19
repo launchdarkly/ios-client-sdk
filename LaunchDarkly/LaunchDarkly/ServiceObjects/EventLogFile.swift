@@ -28,8 +28,8 @@ struct EventLogFile {
         return opened >= 0 ? EventLogFile(descriptor: opened) : nil
     }
 
-    #if os(macOS) || targetEnvironment(macCatalyst)
-    /// Opens a file and takes its lock without waiting, or nil where another live process holds it.
+    /// Opens a file and takes its lock without waiting, or nil where another live process holds it. Only for where
+    /// `SystemCapabilities.sharesContainerWithOtherInstances`, as are the other locks here.
     ///
     /// The lock has to be on the file that is still at `url`: one renamed or removed between the open and the lock,
     /// by another process closing off or recovering it, is no longer a log anyone appends to.
@@ -66,7 +66,6 @@ struct EventLogFile {
     func tryLock(shared: Bool) -> Bool {
         flock(descriptor, (shared ? LOCK_SH : LOCK_EX) | LOCK_NB) == 0
     }
-    #endif
 
     /// Removes a directory only if it is empty, so that nothing put there since it was last looked at goes with it.
     @discardableResult
@@ -173,7 +172,6 @@ private func removeDirectory(_ path: UnsafePointer<CChar>) -> Int32 {
 }
 #endif
 
-#if os(macOS) || targetEnvironment(macCatalyst)
 /// Takes an exclusive lock without waiting. Released by the kernel when the descriptor closes, including when the
 /// process dies, so a crashed process never leaves one behind.
 private func lockFile(_ descriptor: Int32) -> Bool {
@@ -193,4 +191,3 @@ private func isFile(_ descriptor: Int32, at url: URL) -> Bool {
     }
     return found && opened.st_ino == named.st_ino && opened.st_dev == named.st_dev
 }
-#endif

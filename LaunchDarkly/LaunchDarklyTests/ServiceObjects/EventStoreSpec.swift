@@ -16,13 +16,13 @@ final class EventStoreSpec: QuickSpec {
         fallbackSpec()
         optOutSpec()
         multiProcessSpec()
+        spellingSpec()
         withoutPersistenceSpec()
-        #if os(macOS) || targetEnvironment(macCatalyst)
-        lockedInstancesSpec()
-        #endif
+        if SystemCapabilities.sharesContainerWithOtherInstances {
+            lockedInstancesSpec()
+        }
     }
 
-    #if os(macOS) || targetEnvironment(macCatalyst)
     private func lockedInstancesSpec() {
         // A Mac runs a second instance of an application over the same directory on request.
         describe("live instances holding their logs locked") {
@@ -93,6 +93,25 @@ final class EventStoreSpec: QuickSpec {
                 expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? next.body(of: $0) })) == ["from-the-ended-instance"]
             }
 
+            it("closes its log into a batch at close, and stages, writes and closes nothing afterwards, at its end included") {
+                var closing: EventStore? = instance()
+                _ = closing?.stage(EventStoreSpec.payload("before-close"))
+                closing?.close()
+
+                expect(closing?.admitsEvent(heldElsewhere: 0, capacity: 100)) == false
+                expect(closing?.stage(EventStoreSpec.payload("after-close"))) == false
+                closing?.commit()
+                expect(closing?.closeBatch()).to(beNil())
+                closing = nil
+
+                let files = try FileManager.default.contentsOfDirectory(atPath: first.directory!.path)
+                expect(files.filter { $0.hasPrefix(EventDirectory.logPrefix) }).to(beEmpty())
+                // Listed by a store in this process at once, with no recovery run.
+                let batches = first.pendingBatches()
+                expect(batches.count) == 1
+                expect(EventStoreSpec.keys(ofBody: batches.first.flatMap { try? first.body(of: $0) })) == ["before-close"]
+            }
+
             it("recovers the log a previous run left open, once nothing holds it") {
                 _ = first.stage(EventStoreSpec.payload("left-open"))
                 first.commit()
@@ -107,7 +126,6 @@ final class EventStoreSpec: QuickSpec {
             }
         }
     }
-    #endif
 
     private func multiProcessSpec() {
         describe("several processes sharing a directory") {
@@ -191,6 +209,88 @@ final class EventStoreSpec: QuickSpec {
                     .filter { $0.hasPrefix(EventDirectory.openingLogPrefix) }).to(beEmpty())
             }
         }
+    }
+
+    /// A directory spelled otherwise than a listing spells what is in it. An iOS device's temporary directory is spelled
+    /// through `/private`, which path resolution drops only from a path that exists, and a listing keeps.
+    private func spellingSpec() {
+        if EventStoreSpec.spelledThroughPrivate(FileManager.default.temporaryDirectory) != nil {
+            spellingExamples("a directory spelled through /private") {
+                let root = EventStoreSpec.spelledThroughPrivate(EventStore.temporaryDirectory())!
+                return (root, [root])
+            }
+        }
+        spellingExamples("a directory reached through a symbolic link") {
+            let real = EventStore.temporaryDirectory()
+            try FileManager.default.createDirectory(at: real, withIntermediateDirectories: true)
+            let link = real.deletingLastPathComponent().appendingPathComponent(real.lastPathComponent + "-link", isDirectory: true)
+            try FileManager.default.createSymbolicLink(at: link, withDestinationURL: real)
+            return (link, [link, real])
+        }
+    }
+
+    /// - Parameter makeRoot: where the stores' directories go, and what to remove once the example is done.
+    private func spellingExamples(_ description: String, makeRoot: @escaping () throws -> (root: URL, removing: [URL])) {
+        describe(description) {
+            var removing: [URL] = []
+            afterEach {
+                removing.forEach { try? FileManager.default.removeItem(at: $0) }
+                removing = []
+            }
+            func root() throws -> URL {
+                let made = try makeRoot()
+                removing += made.removing
+                return made.root
+            }
+
+            it("keeps the log another store in this process has open out of recovery") {
+                let app = EventStore.sharing(try root().appendingPathComponent("app.current", isDirectory: true))
+                _ = app.stage(EventStoreSpec.payload("before"))
+                app.commit()
+
+                let widget = EventStore.sharing(app.directory!)
+                widget.preparePayloadsFromInterruptedLogs()
+                expect(widget.pendingBatches()).to(beEmpty())
+
+                _ = app.stage(EventStoreSpec.payload("after"))
+                app.commit()
+                let batch = app.closeBatch()
+                expect(EventStoreSpec.keys(ofBody: batch.flatMap { try? app.body(of: $0) })) == ["before", "after"]
+            }
+
+            it("keeps its own open log from expiry, however long since it was written") {
+                let store = EventStore.sharing(try root().appendingPathComponent("app.current", isDirectory: true))
+                _ = store.stage(EventStoreSpec.payload("own"))
+                store.commit()
+                try EventStoreSpec.age(store.openLogUrl!, byDays: 8)
+
+                expect(store.discardExpired()) == 0
+                expect(EventStoreSpec.keys(of: store)) == ["own"]
+            }
+
+            it("keeps the directory of another environment open in this process from expiry") {
+                let environments = try root()
+                let open = EventStore.sharing(environments.appendingPathComponent("app.open", isDirectory: true))
+                _ = open.stage(EventStoreSpec.payload("open"))
+                _ = open.closeBatch()
+                try EventStoreSpec.age(contentsOf: open.directory!, byDays: 30)
+
+                let store = EventStore.sharing(environments.appendingPathComponent("app.current", isDirectory: true))
+                expect(store.discardExpired()) == 0
+                expect(open.pendingBatches().count) == 1
+            }
+        }
+    }
+
+    /// `directory` spelled through `/private`; nil where it is not under `/var`, as in the iOS simulator.
+    private static func spelledThroughPrivate(_ directory: URL) -> URL? {
+        let path = directory.standardizedFileURL.path
+        if path.hasPrefix("/private/var/") {
+            return directory
+        }
+        guard path.hasPrefix("/var/")
+        else { return nil }
+        return URL(fileURLWithPath: "/private" + path, isDirectory: true)
     }
 
     private func optOutSpec() {
@@ -358,6 +458,25 @@ final class EventStoreSpec: QuickSpec {
         Data("{\"kind\":\"custom\",\"key\":\"\(key)\"}".utf8)
     }
 
+    /// The events of the page-cache persistence spec's worked example (Appendix A).
+    private static let workedExampleEvents = [Data(#"{"kind":"custom","key":"checkout-opened"}"#.utf8),
+                                              Data(#"{"kind":"identify","context":{"key":"u"}}"#.utf8)]
+
+    /// The worked example's log, byte for byte: the file header, then a frame per event. The Android SDK's
+    /// `EventLogFormatTest` holds the same bytes, so a drift on either side fails one suite or the other.
+    private static let workedExample = bytes(hex: """
+        4C444556 0001
+        0001 00000029 7B226B696E64223A22637573746F6D222C226B6579223A22636865636B6F75742D6F70656E6564227D 194AD1F0
+        0001 00000029 7B226B696E64223A226964656E74696679222C22636F6E74657874223A7B226B6579223A2275227D7D C549D122
+        """)
+
+    private static let workedExampleBody = Data(#"[{"kind":"custom","key":"checkout-opened"},{"kind":"identify","context":{"key":"u"}}]"#.utf8)
+
+    private static func bytes(hex: String) -> Data {
+        let digits = Array(hex.filter { !$0.isWhitespace })
+        return Data(stride(from: 0, to: digits.count, by: 2).map { UInt8(String(digits[$0...$0 + 1]), radix: 16)! })
+    }
+
     /// Where each frame of a log written by this version starts.
     private static func frameOffsets(in log: Data) -> [Int] {
         var offsets: [Int] = []
@@ -461,6 +580,43 @@ final class EventStoreSpec: QuickSpec {
                 expect(batches.count) == 1
                 expect(batches.first?.eventCount) == 1
                 expect(try next.body(of: batches[0])) == Data("[{\"kind\":\"custom\",\"key\":\"survived\"}]".utf8)
+            }
+
+            it("delivers the worked example's log, as the Android SDK writes it") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("replaced"))
+                store.commit()
+                try EventStoreSpec.workedExample.write(to: store.openLogUrl!)
+
+                let next = store.nextRun()
+                next.preparePayloadsFromInterruptedLogs()
+
+                let batches = next.pendingBatches()
+                expect(batches.map { $0.eventCount }) == [2]
+                expect(try next.body(of: batches[0])) == EventStoreSpec.workedExampleBody
+            }
+
+            it("closes off a log in a format this version does not read as one event, for the delivery to count the loss") {
+                store = EventStore.temporary()
+                _ = store.stage(EventStoreSpec.payload("unreadable"))
+                store.commit()
+                let log = store.openLogUrl!
+                var corrupted = try Data(contentsOf: log)
+                corrupted[4] = 0xFF
+                corrupted[5] = 0xFF
+                try corrupted.write(to: log)
+
+                let next = store.nextRun()
+                next.preparePayloadsFromInterruptedLogs()
+
+                let leftOpen = next.directory!.appendingPathComponent(log.lastPathComponent)
+                expect(FileManager.default.fileExists(atPath: leftOpen.path)) == false
+                let batches = next.pendingBatches()
+                expect(batches.map { $0.eventCount }) == [1]
+                expect(next.pendingEventCount) == 1
+                guard let batch = batches.first
+                else { return }
+                expect { try next.body(of: batch) }.to(throwError(errorType: UnreadableBatch.self))
             }
 
             it("leaves nothing behind when the log held no events") {
@@ -618,6 +774,15 @@ final class EventStoreSpec: QuickSpec {
                     // and would have the reader start the next frame partway through this one's payload.
                     var damaged = try Data(contentsOf: log)
                     damaged[second + 5] -= 1
+                    try damaged.write(to: log)
+
+                    expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0"]
+                }
+
+                it("keeps every event before a size with its top bit set") {
+                    // Past Int32.max, so where Int is 32 bits it has to be rejected before it is converted.
+                    var damaged = try Data(contentsOf: log)
+                    damaged[second + 2] |= 0x80
                     try damaged.write(to: log)
 
                     expect(EventStoreSpec.keys(in: store.payloadsOnDisk)) == ["event-0"]
@@ -793,13 +958,15 @@ final class EventStoreSpec: QuickSpec {
                 store.deleteEverything()
             }
 
-            it("is deleted where a previous run left it as a log") {
+            it("is closed off as one event where a previous run left it as a log, and unreadable") {
                 let log = try EventStoreSpec.tooLargeFile(EventDirectory.logPrefix + UUID().uuidString, in: store)
 
                 store.preparePayloadsFromInterruptedLogs()
 
-                expect(store.pendingBatches()).to(beEmpty())
                 expect(FileManager.default.fileExists(atPath: log.path)) == false
+                let batches = store.pendingBatches()
+                expect(batches.map { $0.eventCount }) == [1]
+                expect { try store.body(of: batches[0]) }.to(throwError(errorType: UnreadableBatch.self))
             }
 
             it("is listed by the count in its name, and unreadable") {
@@ -880,6 +1047,23 @@ final class EventStoreSpec: QuickSpec {
                 let event = Data("{\"kind\":\"custom\",\"key\":\"k\"}".utf8)
                 let frame = EventLogFormat.frame(for: event)
                 expect(frame) == Data([0x00, 0x01, 0x00, 0x00, 0x00, 0x1B]) + event + Data([0xCB, 0x2B, 0x5E, 0x6F])
+            }
+
+            it("writes the worked example's log, byte for byte") {
+                expect(EventLogFormat.fileHeader) == EventStoreSpec.workedExample.prefix(EventLogFormat.fileHeaderSize)
+                for event in EventStoreSpec.workedExampleEvents {
+                    _ = store.stage(event)
+                }
+                store.commit()
+
+                expect(try Data(contentsOf: store.openLogUrl!)) == EventStoreSpec.workedExample
+            }
+
+            it("reads the worked example's log") {
+                let log = EventStoreSpec.workedExample
+                expect(EventLogFormat.eventCount(in: log)) == 2
+                expect(EventLogFormat.isDamaged(log)) == false
+                expect(EventLogFormat.assembleBody(from: log)) == EventStoreSpec.workedExampleBody
             }
 
             it("has nothing to close when nothing was recorded") {
@@ -973,6 +1157,30 @@ final class EventStoreSpec: QuickSpec {
                 try FileManager.default.moveItem(at: counted, to: unparseable)
 
                 expect(EventStoreSpec.reader(sharing: store).pendingBatches()) == [batch]
+            }
+
+            it("counts batches whose names claim more than a batch can hold by reading them") {
+                // Two such counts would overflow a 32-bit Int added together.
+                var batches: [EventBatch] = []
+                for key in ["first", "second"] {
+                    _ = store.stage(EventStoreSpec.payload(key))
+                    let batch = store.closeBatch()!
+                    let counted = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId).1")
+                    let claimed = store.directory!.appendingPathComponent("ready-v1-\(batch.payloadId).\(Int32.max)")
+                    try FileManager.default.moveItem(at: counted, to: claimed)
+                    batches.append(batch)
+                }
+
+                let reader = EventStoreSpec.reader(sharing: store)
+                let byPayloadId = { (lhs: EventBatch, rhs: EventBatch) in lhs.payloadId < rhs.payloadId }
+                expect(reader.pendingBatches().sorted(by: byPayloadId)) == batches.sorted(by: byPayloadId)
+                expect(reader.pendingEventCount) == 2
+            }
+
+            it("keeps an environment's events in a directory named as it is told, without hashing it again") {
+                let url = EventDirectory.defaultUrl(environmentName: "an-environment")
+                expect(url.lastPathComponent) == "an-environment"
+                expect(url.deletingLastPathComponent().lastPathComponent) == "com.launchdarkly.events"
             }
 
             it("names a batch with the version of how its name reads") {
@@ -1090,6 +1298,95 @@ final class EventStoreSpec: QuickSpec {
                     .filter { $0.hasPrefix(EventDirectory.logPrefix) }
                 expect(logs).to(beEmpty())
             }
+
+            it("lists what it held while a full log would not close after that log and before the logs after it") {
+                let largest = EventLogFormat.maxFrameSize + EventLogFormat.frameOverhead
+                _ = store.stage(EventStoreSpec.payload(framedIn: largest, key: "fills-the-log"))
+                store.commit()
+                let directory = store.directory!
+                let readOnly: [FileAttributeKey: Any] = [.posixPermissions: 0o555]
+                let writable: [FileAttributeKey: Any] = [.posixPermissions: 0o755]
+                try FileManager.default.setAttributes(readOnly, ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes(writable, ofItemAtPath: directory.path) }
+
+                // No room for it in the log, which will not close, so it is held.
+                _ = store.stage(EventStoreSpec.payload("held"))
+                let held = store.closeBatch()!
+                expect(EventStoreSpec.keys(ofBody: try? store.body(of: held))) == ["held"]
+                expect(store.isPersisting) == true
+
+                try FileManager.default.setAttributes(writable, ofItemAtPath: directory.path)
+                _ = store.stage(EventStoreSpec.payload("after"))
+                _ = store.closeBatch()
+
+                let keys = try store.pendingBatches().map { EventStoreSpec.keys(ofBody: try store.body(of: $0)) }
+                expect(keys) == [["fills-the-log"], ["held"], ["after"]]
+            }
+
+            it("gives up on the disk once the log will not close three times in a row, and delivers what it held from memory") {
+                _ = store.stage(EventStoreSpec.payload("first"))
+                store.commit()
+                let directory = store.directory!
+                let log = store.openLogUrl!
+                let readOnly: [FileAttributeKey: Any] = [.posixPermissions: 0o555]
+                let writable: [FileAttributeKey: Any] = [.posixPermissions: 0o755]
+                try FileManager.default.setAttributes(readOnly, ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes(writable, ofItemAtPath: directory.path) }
+
+                for _ in 1..<EventStore.closeFailuresBeforeGivingUp {
+                    expect(store.closeBatch()).to(beNil())
+                    expect(store.isPersisting) == true
+                }
+                // Appends still land, as they take no permission on the directory.
+                _ = store.stage(EventStoreSpec.payload("second"))
+
+                let batch = store.closeBatch()!
+                expect(batch.eventCount) == 2
+                expect(EventStoreSpec.keys(ofBody: try? store.body(of: batch))) == ["first", "second"]
+                expect(store.isPersisting) == false
+                expect(store.holdsUnclosedEvents) == false
+                expect(store.pendingEventCount) == 2
+                // Cut back to its header, so a later run recovering it finds nothing to send again.
+                expect(try Data(contentsOf: log)) == EventLogFormat.fileHeader
+
+                // What comes after is held in memory, behind the log's events.
+                _ = store.stage(EventStoreSpec.payload("third"))
+                let next = store.closeBatch()!
+                expect(EventStoreSpec.keys(ofBody: try? store.body(of: next))) == ["third"]
+                expect(store.pendingBatches().map(\.payloadId)) == [batch.payloadId, next.payloadId]
+            }
+
+            it("leaves the events of a log it gives up on for the next launch where it cannot read them back") {
+                store = EventStore.temporary(readFile: { url in
+                    if url.lastPathComponent.hasPrefix(EventDirectory.logPrefix) {
+                        throw CocoaError(.fileReadNoPermission)
+                    }
+                    return try Data(contentsOf: url)
+                })
+                _ = store.stage(EventStoreSpec.payload("left"))
+                store.commit()
+                let directory = store.directory!
+                let readOnly: [FileAttributeKey: Any] = [.posixPermissions: 0o555]
+                let writable: [FileAttributeKey: Any] = [.posixPermissions: 0o755]
+                try FileManager.default.setAttributes(readOnly, ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes(writable, ofItemAtPath: directory.path) }
+
+                for _ in 0..<EventStore.closeFailuresBeforeGivingUp {
+                    expect(store.closeBatch()).to(beNil())
+                }
+
+                // Nothing this run could deliver them, so they no longer count, nor hold up a flush.
+                expect(store.isPersisting) == false
+                expect(store.holdsUnclosedEvents) == false
+                expect(store.pendingEventCount) == 0
+
+                try FileManager.default.setAttributes(writable, ofItemAtPath: directory.path)
+                let next = store.nextRun()
+                next.preparePayloadsFromInterruptedLogs()
+                let recovered = next.pendingBatches()
+                expect(recovered.count) == 1
+                expect(EventStoreSpec.keys(ofBody: try? next.body(of: recovered[0]))) == ["left"]
+            }
         }
     }
 
@@ -1109,11 +1406,9 @@ final class EventStoreSpec: QuickSpec {
                                            logger: .disabled)
                     defer { try? FileManager.default.removeItem(at: directory) }
                     expect(lock.withLock { located }) == 0
-                    #if os(macOS) || targetEnvironment(macCatalyst)
                     if persistEvents {
                         store.locksOpenLog = false
                     }
-                    #endif
 
                     store.preparePayloadsFromInterruptedLogs()
                     _ = store.stage(EventStoreSpec.payload("first"))
@@ -1379,6 +1674,42 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingEventCount) == 2
             }
 
+            it("commits without waiting on a batch read once it has given up on the disk, as there is nothing to write") {
+                let lock = UnfairLock()
+                var failing = false
+                var holdsReads = false
+                let reading = DispatchSemaphore(value: 0)
+                let release = DispatchSemaphore(value: 0)
+                store = EventStore.temporary(readFile: { url in
+                    if lock.withLock({ holdsReads }) {
+                        reading.signal()
+                        _ = release.wait(timeout: .now() + 5)
+                    }
+                    return try Data(contentsOf: url)
+                }, writeLog: { file, bytes in
+                    lock.withLock { failing } ? ENOSPC : file.writeAll(bytes)
+                })
+                _ = store.stage(EventStoreSpec.payload("on-disk"))
+                let onDisk = store.closeBatch()!
+                lock.withLock { failing = true }
+                _ = store.stage(EventStoreSpec.payload("held"))
+                store.commit()
+                expect(store.isPersisting) == false
+
+                // A delivery's read, holding the store's I/O lock for as long as the disk takes.
+                lock.withLock { holdsReads = true }
+                let reader = store!
+                DispatchQueue.global().async { _ = try? reader.payload(of: onDisk) }
+                expect(reading.wait(timeout: .now() + 5)) == .success
+
+                _ = store.stage(EventStoreSpec.payload("recorded-meanwhile"))
+                let started = Date()
+                store.commit()
+                let took = Date().timeIntervalSince(started)
+                release.signal()
+                expect(took) < 0.5
+            }
+
             for persistEvents in [true, false] {
                 it("stops counting a batch once when two deliveries both remove it (persisting: \(persistEvents))") {
                     store = EventStore.temporary(persistEvents: persistEvents)
@@ -1530,7 +1861,6 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.takeVanishedLogEvents()) == 0
             }
 
-            #if os(macOS) || targetEnvironment(macCatalyst)
             it("hands over the events of a locked open log deleted unsent as vanished, though another process shares the directory") {
                 store = EventStore.temporary()
                 store.sharesDirectoryWithOtherProcesses = true
@@ -1556,9 +1886,8 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.pendingEventCount) == 0
                 expect(store.takeVanishedLogEvents()) == 0
             }
-            #endif
 
-            it("hands over nothing as vanished from a log persistence gave up on, which recovery may have taken") {
+            it("keeps holding a log persistence gave up on after a failed write, so recovery leaves it to the next close") {
                 var writes = 0
                 store = EventStore.temporary(writeLog: { file, bytes in
                     writes += 1
@@ -1572,13 +1901,36 @@ final class EventStoreSpec: QuickSpec {
                 store.commit()
                 expect(store.isPersisting) == false
 
-                // No longer held, the log is one recovery takes, as it would one a process that died left behind.
-                EventStoreSpec.reader(sharing: store).preparePayloadsFromInterruptedLogs()
+                let reader = EventStoreSpec.reader(sharing: store)
+                reader.preparePayloadsFromInterruptedLogs()
+                expect(reader.pendingBatches()).to(beEmpty())
 
                 _ = store.closeBatch()
                 expect(store.takeVanishedLogEvents()) == 0
-                expect(store.pendingBatches().flatMap { EventStoreSpec.keys(ofBody: try? store.body(of: $0)) }
-                    .sorted()) == ["held", "written"]
+                expect(store.pendingBatches().map { EventStoreSpec.keys(ofBody: try? store.body(of: $0)) }) == [["written"], ["held"]]
+            }
+
+            it("hands over the events of a log persistence gave up on after a failed write as vanished where it is gone by the next close") {
+                var writes = 0
+                store = EventStore.temporary(writeLog: { file, bytes in
+                    writes += 1
+                    return writes > 2 ? ENOSPC : file.writeAll(bytes)
+                })
+                store.sharesDirectoryWithOtherProcesses = false
+                _ = store.stage(EventStoreSpec.payload("written"))
+                store.commit()
+                let log = store.openLogUrl!
+                _ = store.stage(EventStoreSpec.payload("held"))
+                store.commit()
+                expect(store.isPersisting) == false
+
+                // Deleted unsent, as tvOS purging the cache would.
+                try FileManager.default.removeItem(at: log)
+                let batch = store.closeBatch()
+
+                expect(store.takeVanishedLogEvents()) == 1
+                expect(EventStoreSpec.keys(ofBody: batch.flatMap { try? store.body(of: $0) })) == ["held"]
+                expect(store.pendingEventCount) == 1
             }
 
             for persistEvents in [true, false] {
@@ -1712,6 +2064,25 @@ final class EventStoreSpec: QuickSpec {
                 expect(keysByBatch()) == [["event-1"], ["largest"]]
                 expect(try batchFileSizes().allSatisfy { $0 <= EventLogFormat.maxBatchSize }) == true
             }
+
+            it("refuses an empty event, which its reader would stop at, and keeps the events on either side of it") {
+                for persistEvents in [true, false] {
+                    store?.deleteEverything()
+                    store = EventStore.temporary(persistEvents: persistEvents)
+                    expect(store.stage(EventStoreSpec.payload("event-1"))) == true
+                    expect(store.stage(Data())) == false
+                    store.reserve(1)
+                    expect(store.stageReserved(Data())) == false
+                    store.releaseReservations()
+                    expect(store.stage(EventStoreSpec.payload("event-2"))) == true
+                    store.commit()
+                    let batch = store.closeBatch()
+
+                    expect(batch?.eventCount) == 2
+                    expect(keysByBatch()) == [["event-1", "event-2"]]
+                    expect(store.pendingEventCount) == 2
+                }
+            }
         }
     }
 
@@ -1802,6 +2173,38 @@ final class EventStoreSpec: QuickSpec {
                 expect(store.closeBatch()).toNot(beNil())
 
                 expect(store.stage(EventStoreSpec.payload(framedIn: 100, key: "past-capacity"))) == false
+            }
+
+            it("discards a batch it holds in memory once it has given up on the disk and the batch is past the maximum age, unless it is being sent") {
+                store = EventStore.temporary(maxAge: 0.5, writeLog: { _, _ in ENOSPC })
+                // Where no other process could have delivered a missing batch, so one not known to be removed vanished.
+                store.sharesDirectoryWithOtherProcesses = false
+                _ = store.stage(EventStoreSpec.payload("held"))
+                store.commit()
+                expect(store.isPersisting) == false
+                let batch = store.closeBatch()!
+                expect(store.discardExpired()) == 0
+                expect(store.pendingEventCount) == 1
+
+                Thread.sleep(forTimeInterval: 0.6)
+                store.startedSending(batch)
+                expect(store.discardExpired()) == 0
+                store.stoppedSending(batch)
+                expect(store.discardExpired()) == 1
+
+                expect(store.pendingEventCount) == 0
+                expect(store.pendingBatches()).to(beEmpty())
+                expect(try store.payload(of: batch)).to(beNil())
+            }
+
+            it("keeps what it holds in memory however old where it keeps events off the disk, as the SDK always did") {
+                store = EventStore.temporary(maxAge: 0.5, persistEvents: false)
+                _ = store.stage(EventStoreSpec.payload("held"))
+                expect(store.closeBatch()).toNot(beNil())
+
+                Thread.sleep(forTimeInterval: 0.6)
+                expect(store.discardExpired()) == 0
+                expect(store.pendingEventCount) == 1
             }
 
             it("bounds summaries by bytes even where it keeps events off the disk") {
@@ -1947,24 +2350,37 @@ final class EventStoreSpec: QuickSpec {
                 expect(FileManager.default.fileExists(atPath: file.path)) == false
             }
 
-            #if os(macOS) || targetEnvironment(macCatalyst)
-            it("leaves a batch another process is sending until it stops") {
-                _ = store.stage(EventStoreSpec.payload("sending"))
-                _ = store.closeBatch()
-                let file = try EventStoreSpec.onlyBatchFile(in: store)
+            it("takes a batch another store in this process was sending once that store has gone") {
+                var sender: EventStore? = EventStore.sharing(store.directory!)
+                _ = sender?.stage(EventStoreSpec.payload("sending"))
+                let batch = sender!.closeBatch()!
+                let file = try EventStoreSpec.onlyBatchFile(in: sender!)
                 try EventStoreSpec.age(file, byDays: 30)
-                // A lock taken through a descriptor of its own contends as another process's would.
-                let otherProcess = EventLogFile.open(at: file, flags: O_RDONLY)!
-                expect(otherProcess.tryLock(shared: true)) == true
+                sender?.startedSending(batch)
+                sender = nil
 
-                expect(store.discardExpired()) == 0
-                expect(FileManager.default.fileExists(atPath: file.path)) == true
-
-                otherProcess.close()
                 expect(store.discardExpired()) == 1
                 expect(FileManager.default.fileExists(atPath: file.path)) == false
             }
-            #endif
+
+            if SystemCapabilities.sharesContainerWithOtherInstances {
+                it("leaves a batch another process is sending until it stops") {
+                    _ = store.stage(EventStoreSpec.payload("sending"))
+                    _ = store.closeBatch()
+                    let file = try EventStoreSpec.onlyBatchFile(in: store)
+                    try EventStoreSpec.age(file, byDays: 30)
+                    // A lock taken through a descriptor of its own contends as another process's would.
+                    let otherProcess = EventLogFile.open(at: file, flags: O_RDONLY)!
+                    expect(otherProcess.tryLock(shared: true)) == true
+
+                    expect(store.discardExpired()) == 0
+                    expect(FileManager.default.fileExists(atPath: file.path)) == true
+
+                    otherProcess.close()
+                    expect(store.discardExpired()) == 1
+                    expect(FileManager.default.fileExists(atPath: file.path)) == false
+                }
+            }
 
             it("leaves the directory of another environment open in this process") {
                 let open = EventStore.sharing(root.appendingPathComponent("app.open", isDirectory: true))

@@ -145,6 +145,7 @@ final class DarklyServiceMock: DarklyServiceProvider {
     private var heldEventCompletions: [ServiceCompletionHandler] = []
     private var _eventStatusForPost: ((Int) -> Int)?
     private var _publishedEventStatuses: [Int?] = []
+    private var _publishedEventQoS: [qos_class_t] = []
 
     /// The status to answer the nth post with, counting from 1, in place of `stubbedEventResponse`; 0 for a network
     /// error with no response.
@@ -155,6 +156,10 @@ final class DarklyServiceMock: DarklyServiceProvider {
     /// The status each post was answered with, in the order of `publishedEventPayloads`; nil where it had none.
     var publishedEventStatuses: [Int?] {
         withEventLock { _publishedEventStatuses }
+    }
+    /// The QoS each post was made at, in the order of `publishedEventPayloads`.
+    var publishedEventQoS: [qos_class_t] {
+        withEventLock { _publishedEventQoS }
     }
 
     var stubbedEventResponse: ServiceResponse? {
@@ -185,8 +190,10 @@ final class DarklyServiceMock: DarklyServiceProvider {
 
     func publishEventData(_ eventData: Data, _ payloadId: String, completion: ServiceCompletionHandler?) {
         // Decided under the lock, answered outside it: the completion re-enters the reporter, which may publish again.
+        let qos = qos_class_self()
         let response: ServiceResponse? = withEventLock {
             _publishEventDataCallCount += 1
+            _publishedEventQoS.append(qos)
             _publishedEventData = eventData
             _publishedEventPayloads.append(eventData)
             _publishedPayloadIds.append(payloadId)

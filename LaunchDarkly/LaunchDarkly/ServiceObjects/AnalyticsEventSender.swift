@@ -1,11 +1,9 @@
 import Foundation
 import OSLog
 
-/// Posts a batch of events to LaunchDarkly once and says what the response means. Android's `AnalyticsEventSender`
-/// plays the same part.
+/// Sends a batch of events to LaunchDarkly and classifies the response.
 ///
-/// It keeps no state. What an outcome means for the SDK -- the server's time, when to post again, removing the batch --
-/// is left to `DirectEventProcessor`, which owns that state.
+/// Stateless. Retries, backoff, server time, and removing the batch are handled by `DirectEventProcessor`.
 final class AnalyticsEventSender {
     enum Outcome {
         /// LaunchDarkly took the events. Carries the time the response gave, if it gave one.
@@ -18,22 +16,12 @@ final class AnalyticsEventSender {
         let error: SynchronizingError
         /// The response's status, or nil where there was no response.
         let statusCode: Int?
-        /// Whether the failure is unlikely to pass soon: a 4xx other than a refusal of the payload
-        /// (`isEventPayloadRefused`), 408 and 429, or a TLS or certificate failure.
+        /// True when the failure calls for the extended backoff: a 4xx other than 400, 408, 429 or a payload refusal
+        /// (`isEventPayloadRefused`). Anything else retries on the normal backoff.
         let unexpected: Bool
         /// The wait the response asked for, or nil where it gave none.
         let retryAfter: TimeInterval?
     }
-
-    private static let tlsErrorCodes: Set<URLError.Code> = [
-        .secureConnectionFailed,
-        .serverCertificateHasBadDate,
-        .serverCertificateUntrusted,
-        .serverCertificateHasUnknownRoot,
-        .serverCertificateNotYetValid,
-        .clientCertificateRejected,
-        .clientCertificateRequired
-    ]
 
     private let service: DarklyServiceProvider
 
@@ -56,17 +44,11 @@ final class AnalyticsEventSender {
 
         os_log("%s Sending events failed with error: %s response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: response))
         let statusCode = response?.statusCode
-        let unexpected: Bool
-        if let statusCode, (400..<600).contains(statusCode) {
-            // A refusal of the payload waits like a 400: the processor drops the batch after a second in a row, and
-            // the batches behind it are not to be held back an extended wait meanwhile.
-            unexpected = HTTPURLResponse.StatusCodes.isTerminalStatusCode(statusCode)
-                && !HTTPURLResponse.StatusCodes.isEventPayloadRefused(statusCode)
-        } else if let urlError = error as? URLError {
-            unexpected = AnalyticsEventSender.tlsErrorCodes.contains(urlError.code)
-        } else {
-            unexpected = false
-        }
+        // A refusal of the payload waits like a 400: the processor drops the batch after a second in a row, and the
+        // batches behind it are not to be held back an extended wait meanwhile.
+        let unexpected = statusCode.map {
+            HTTPURLResponse.StatusCodes.isTerminalStatusCode($0) && !HTTPURLResponse.StatusCodes.isEventPayloadRefused($0)
+        } ?? false
         return .failed(Failure(error: error.map { .request($0) } ?? .response(response),
                                statusCode: statusCode,
                                unexpected: unexpected,

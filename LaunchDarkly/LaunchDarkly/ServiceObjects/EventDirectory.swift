@@ -138,33 +138,24 @@ final class EventDirectory {
     private static var openInThisProcess: [String: Int] = [:]
     private static let openInThisProcessLock = UnfairLock()
 
-    #if os(macOS) || targetEnvironment(macCatalyst)
-    /// Whether the open log is locked while it is open. Only to be changed before the store first touches the disk.
+    /// Whether the open log is locked while it is open, which it is where another instance can share the directory.
+    /// Only to be changed before the store first touches the disk.
     ///
     /// Kept here rather than asked of the log, so that setting it does not build the log and with it work out where
     /// the directory is. Only to be used while holding `ioLock`.
-    var locksOpenLog = true {
+    var locksOpenLog = SystemCapabilities.sharesContainerWithOtherInstances {
         didSet { located?.log.isLocked = locksOpenLog }
     }
-    #endif
 
     /// Whether other processes of the application may use this directory, and so deliver its batches. Only a Mac runs
     /// a second instance of an application over the same directory; elsewhere a batch that is gone, and that no store
     /// in this process removed, was deleted unsent. Only to be used while holding `ioLock`.
-    #if os(macOS) || targetEnvironment(macCatalyst)
-    var sharesDirectoryWithOtherProcesses = true
-    #else
-    var sharesDirectoryWithOtherProcesses = false
-    #endif
+    var sharesDirectoryWithOtherProcesses = SystemCapabilities.sharesContainerWithOtherInstances
 
     /// Whether another process could recover the log this store holds open, and so deliver it: only one sharing the
-    /// directory, and on a Mac only where the log is not locked. Requires `ioLock`.
+    /// directory, and only where the log is not locked. Requires `ioLock`.
     private var otherProcessesCanTakeTheOpenLog: Bool {
-        #if os(macOS) || targetEnvironment(macCatalyst)
         sharesDirectoryWithOtherProcesses && !locksOpenLog
-        #else
-        sharesDirectoryWithOtherProcesses
-        #endif
     }
 
     /// The payload IDs of the batches stores in this process last removed, delivered or expired, oldest first, so that
@@ -175,7 +166,7 @@ final class EventDirectory {
     private static let removedInThisProcessLimit = 1024
     private static let removedLock = UnfairLock()
 
-    private static func rememberRemoved(_ payloadId: String) {
+    static func rememberRemoved(_ payloadId: String) {
         removedLock.withLock {
             removedInThisProcess.append(payloadId)
             if removedInThisProcess.count > removedInThisProcessLimit {
@@ -207,20 +198,36 @@ final class EventDirectory {
         if let located {
             return located
         }
-        let directory = locateDirectory()
+        let directory = EventDirectory.resolved(locateDirectory())
         let log = DiskEventLog(directory: directory,
                                ioLock: ioLock,
                                logger: logger,
                                writeLog: writeLog)
-        #if os(macOS) || targetEnvironment(macCatalyst)
         log.isLocked = locksOpenLog
-        #endif
         let disk = (directory: directory, log: log)
         located = disk
         let path = directory.resolvingSymlinksInPath().path
         countedAsOpen = path
         EventDirectory.openInThisProcessLock.withLock { EventDirectory.openInThisProcess[path, default: 0] += 1 }
         return disk
+    }
+
+    /// `directory` spelled as a listing's entries resolve to, whether or not it exists yet: resolved as far as it does
+    /// exist, with the rest appended as given.
+    ///
+    /// The logs and directories open in this process are remembered by path before they exist, and looked up from
+    /// listings once they do. Resolution drops a leading `/private`, as an iOS device spells its temporary directory,
+    /// only from a path that exists, so a path remembered as given would never be found open.
+    static func resolved(_ directory: URL) -> URL {
+        var existing = directory.standardizedFileURL
+        var missing: [String] = []
+        while !FileManager.default.fileExists(atPath: existing.path), existing.pathComponents.count > 1 {
+            missing.append(existing.lastPathComponent)
+            existing.deleteLastPathComponent()
+        }
+        return missing.reversed().reduce(existing.resolvingSymlinksInPath()) {
+            $0.appendingPathComponent($1, isDirectory: true)
+        }
     }
 
     private static func isOpenInThisProcess(_ directory: URL) -> Bool {
@@ -269,16 +276,17 @@ final class EventDirectory {
     /// Fields are split at `nameFieldSeparator`, which a payload ID never contains, so nothing about the count's own
     /// characters is needed to tell it apart. Fields after it are ignored.
     ///
-    /// - Returns: the payload ID, and the count, which is nil where the name has none or it does not parse -- a batch a
-    ///   recovery could not read, which is read once to count it.
+    /// - Returns: the payload ID, and the count, which is nil where the name has none, it does not parse, or it is more
+    ///   than a batch can hold -- a batch a recovery could not read, or a name that was damaged, which is read once to
+    ///   count it. The bound keeps a damaged name from overflowing what a directory's counts add up to in a 32-bit Int.
     private static func parse(batchName name: String) -> (payloadId: String, events: Int?) {
         let fields = name.dropFirst(ownBatchPrefix.count)
             .split(separator: nameFieldSeparator, omittingEmptySubsequences: false)
         let payloadId = String(fields[0])
         guard fields.count > 1, !fields[1].isEmpty, fields[1].allSatisfy({ $0.isASCII && $0.isNumber }),
-              let events = Int32(fields[1])
+              let events = Int(fields[1]), events <= EventLogFormat.maxEventsPerBatch
         else { return (payloadId, nil) }
-        return (payloadId, Int(events))
+        return (payloadId, events)
     }
 
     // MARK: Writing
@@ -317,8 +325,8 @@ final class EventDirectory {
             os_log("%s could not close the event log, will try again at the next delivery: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             guard disk.log.exists
             else {
-                // One no longer held -- persistence given up on closes it where it is -- may have been moved into a
-                // batch by recovery, which delivers it.
+                // One no longer held may have been moved into a batch by recovery, which delivers it. Giving up on
+                // persistence after a failed append keeps holding it, so that a log gone by the next close is counted.
                 let deletedUnsent = disk.log.isOpen && !otherProcessesCanTakeTheOpenLog
                 disk.log.closeDescriptor()
                 return .vanished(deletedUnsent: deletedUnsent)
@@ -326,8 +334,29 @@ final class EventDirectory {
             return .failed
         }
 
-        stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes, modified: Date(), summaries: held.summaries)
+        stored[payloadId] = Stored(url: file, events: events, bytes: held.bytes,
+                                   modified: EventDirectory.listed(file).modified ?? Date(), summaries: held.summaries)
         return .closed(EventBatch(payloadId: payloadId, eventCount: events))
+    }
+
+    /// When the open log was last written, as a batch closed from it would be dated, or nil where there is none or it
+    /// cannot be told. Requires `ioLock`.
+    var openLogLastWritten: Date? {
+        ioLock.assertOwned()
+        return located.flatMap { EventDirectory.listed($0.log.url).modified }
+    }
+
+    /// When a batch the last listing or close counted was last written, which is what orders a listing. Requires
+    /// `ioLock`.
+    func lastWritten(_ payloadId: String) -> Date? {
+        ioLock.assertOwned()
+        return stored[payloadId]?.modified
+    }
+
+    /// As `DiskEventLog.takeBackAndClose(reading:)`, for a store giving up on a log it cannot close. Requires `ioLock`.
+    func takeBackOpenLog() -> Data? {
+        ioLock.assertOwned()
+        return located?.log.takeBackAndClose(reading: readFile)
     }
 
     /// Closes the descriptor, leaving everything where it is, and stops counting the directory as open in this process.
@@ -356,6 +385,17 @@ final class EventDirectory {
         batch.senders += 1
         sending[payloadId] = batch
         BatchLocks.startedSending(batch.url)
+    }
+
+    // Nothing else holds the store by now, so `sending` needs no lock.
+    deinit {
+        // Ends what is still registered: a store gone with a request out would otherwise leave that batch locked
+        // against expiry, in this process and any other, for as long as the process runs.
+        for batch in sending.values {
+            for _ in 0..<batch.senders {
+                BatchLocks.stoppedSending(batch.url)
+            }
+        }
     }
 
     /// Ends one `startedSending(_:holding:)`. Requires `ioLock`.
@@ -527,8 +567,10 @@ final class EventDirectory {
     func remove(_ payloadId: String, holding events: Int) -> EventTally {
         ioLock.assertOwned()
         let file = url(of: payloadId, holding: events)
-        try? FileManager.default.removeItem(at: file)
+        // Remembered before the delete: another store in this process finding the file gone in between would otherwise
+        // take its events for lost.
         EventDirectory.rememberRemoved(payloadId)
+        try? FileManager.default.removeItem(at: file)
         if FileManager.default.fileExists(atPath: file.path) {
             // Its events stop counting all the same: LaunchDarkly has them, and holding capacity for a file this
             // process may never be allowed to delete would cost the session events it could still have recorded.
@@ -637,8 +679,6 @@ final class EventDirectory {
         fileprivate enum Contents {
             case missing
             case failed(Error)
-            /// Not a log this version reads.
-            case unreadable
             case events(EventTally)
         }
 
@@ -675,11 +715,16 @@ final class EventDirectory {
             return InterruptedLog(url: leftOpen, contents: .missing)
         case .failed(let error):
             return InterruptedLog(url: leftOpen, contents: .failed(error))
-        case .tooLarge:
-            return InterruptedLog(url: leftOpen, contents: .unreadable)
+        case .tooLarge(let size):
+            // Closed off as holding one event, the fewest it can, as a listing counts a batch too large to read, so
+            // that the delivery reaching it drops it and counts the loss.
+            return InterruptedLog(url: leftOpen, contents: .events(EventTally(events: 1, bytes: size)))
         case .bytes(let log):
             guard let events = EventLogFormat.eventCount(in: log)
-            else { return InterruptedLog(url: leftOpen, contents: .unreadable) }
+            else {
+                // Not a log this version reads, which a listing counts the same way.
+                return InterruptedLog(url: leftOpen, contents: .events(EventTally(events: 1, bytes: log.count)))
+            }
             return InterruptedLog(url: leftOpen, contents: .events(EventTally(events: events, bytes: log.count)))
         }
     }
@@ -709,10 +754,6 @@ final class EventDirectory {
                 // Left where it is, unlocked and appended to by no one, for the next launch to recover.
                 os_log("%s could not read events from a previous run, will try again at the next launch: %s", log: logger, type: .info, typeName(and: #function), String(describing: error))
             }
-            return EventTally()
-        case .unreadable:
-            // A log that cannot be read cannot be appended to either.
-            try? FileManager.default.removeItem(at: leftOpen)
             return EventTally()
         case .events(let counted):
             events = counted.events
@@ -778,6 +819,9 @@ extension EventDirectory {
                       !BatchLocks.isSentInThisProcess(file)
                 else { continue }
                 let held = named ?? stored[payloadId]?.events ?? EventDirectory.eventsReading(file)
+                // Before the delete, as in `remove`. Where the delete is refused, mostly for a batch being sent, a store
+                // here that later finds it gone takes it for delivered, which a batch being sent most likely was.
+                EventDirectory.rememberRemoved(payloadId)
                 guard BatchLocks.deleteUnlessBeingSent(file)
                 else {
                     if !FileManager.default.fileExists(atPath: file.path) {
@@ -786,7 +830,6 @@ extension EventDirectory {
                     }
                     continue
                 }
-                EventDirectory.rememberRemoved(payloadId)
                 events += held
                 counted += stored.removeValue(forKey: payloadId)?.tally ?? EventTally()
             } else {
@@ -943,18 +986,18 @@ enum BatchLocks {
             let held = directory.heldInThisProcess[name] ?? Held()
             directory.heldInThisProcess[name] = held
             held.senders += 1
-            #if os(macOS) || targetEnvironment(macCatalyst)
-            // Only fails to open where the batch is gone already, leaving nothing for expiry to take. Still remembered
-            // where it cannot be locked, which keeps expiry in this process away from it; only other processes cannot
-            // tell.
-            guard held.file == nil, let opened = EventLogFile.open(at: batch, flags: O_RDONLY)
+            // Locked only where another instance's expiry could take it. Only fails to open where the batch is gone
+            // already, leaving nothing for expiry to take. Still remembered where it cannot be locked, which keeps
+            // expiry in this process away from it; only other processes cannot tell.
+            guard SystemCapabilities.sharesContainerWithOtherInstances,
+                  held.file == nil,
+                  let opened = EventLogFile.open(at: batch, flags: O_RDONLY)
             else { return }
             if opened.tryLock(shared: true) {
                 held.file = opened
             } else {
                 opened.close()
             }
-            #endif
         }
     }
 
@@ -991,15 +1034,18 @@ enum BatchLocks {
         return directory.lock.withLock {
             guard directory.heldInThisProcess[name] == nil
             else { return false }
-            #if os(macOS) || targetEnvironment(macCatalyst)
-            // Opened without being created: a batch delivered since it was listed has to stay gone, since a delivery
-            // reading one brought back empty would report its events lost.
-            guard let probe = EventLogFile.open(at: batch, flags: O_RDONLY)
+            // Where another instance can be sending it, only taken under its lock. Opened without being created: a
+            // batch delivered since it was listed has to stay gone, since a delivery reading one brought back empty
+            // would report its events lost.
+            var probe: EventLogFile?
+            if SystemCapabilities.sharesContainerWithOtherInstances {
+                guard let opened = EventLogFile.open(at: batch, flags: O_RDONLY)
+                else { return false }
+                probe = opened
+            }
+            defer { probe?.close() }
+            guard probe?.tryLock(shared: false) ?? true
             else { return false }
-            defer { probe.close() }
-            guard probe.tryLock(shared: false)
-            else { return false }
-            #endif
             // Deleted while still locked, so no sender can take its lock between the look and the delete.
             return (try? FileManager.default.removeItem(at: batch)) != nil
         }
@@ -1016,13 +1062,14 @@ extension BatchLocks {
 #endif
 
 extension EventDirectory {
-    /// The directory the store for a mobile key belongs in.
+    /// The directory the store for one environment belongs in. `environmentName` is used as it is, so it has to be safe
+    /// in a path and hold nothing secret.
     ///
     /// tvOS is the reason this is not simply Application Support: a tvOS application is only allowed to persist to
     /// purgeable caches, so there the events are kept somewhere the system may reclaim, which is the most durability
     /// the platform offers. A directory that turns out not to be writable is no different from a full device: the store
     /// gives up on the disk and holds events in memory.
-    static func defaultUrl(mobileKey: String) -> URL {
+    static func defaultUrl(environmentName: String) -> URL {
         #if os(tvOS)
         let searchPath = FileManager.SearchPathDirectory.cachesDirectory
         #else
@@ -1032,14 +1079,9 @@ extension EventDirectory {
         let root = FileManager.default.urls(for: searchPath, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
 
-        var keyComponent = Util.sha256(mobileKey).base64UrlEncodedString
-        if let bundleId = Bundle.main.bundleIdentifier {
-            keyComponent = "\(Util.sha256(bundleId).base64UrlEncodedString).\(keyComponent)"
-        }
-
         return root
             .appendingPathComponent("com.launchdarkly.events", isDirectory: true)
-            .appendingPathComponent(keyComponent, isDirectory: true)
+            .appendingPathComponent(environmentName, isDirectory: true)
     }
 }
 

@@ -1,16 +1,16 @@
 import Foundation
 import OSLog
 
-/// What the events of every environment do as the application goes to the background.
+/// Writes and delivers the events of every environment as the application goes to the background.
 ///
 /// One for all environments rather than one per client, so that backgrounding takes one background activity assertion
 /// however many environments there are, and reaches only the clients started now: a closed client the application
 /// still holds is not among them.
 ///
-/// On every platform that notifies the SDK, events are made durable before the notification returns: the OS may kill a
-/// backgrounded application without warning, and macOS, which suspends nothing, can still quit or kill it. Where a
-/// backgrounded process is suspended once idle, they are also delivered, under the assertion, which is released once
-/// every environment has answered. What does not get out is on disk for the next launch where events persist, and
+/// On every platform, events are made durable before the notification returns: the OS may kill a backgrounded
+/// application without warning, and macOS, which suspends nothing, can still quit or kill it. Where a backgrounded
+/// process is suspended once idle, they are also delivered, under the assertion, which is released once every
+/// environment has answered. What does not get out is on disk for the next launch where events persist, and
 /// otherwise only in memory.
 final class BackgroundEventDelivery {
     struct Environment {
@@ -58,8 +58,8 @@ final class BackgroundEventDelivery {
                 finished()
                 return
             }
-            environments.map(\.eventProcessor).flushReportingOutcomes(deadline: .now() + self.answerTimeout) { delivered in
-                self.logUndelivered(zip(environments, delivered).filter { !$0.1 }.map(\.0))
+            environments.map { $0.eventProcessor }.flushReportingOutcomes(deadline: .now() + self.answerTimeout) { delivered in
+                self.logUndelivered(zip(environments, delivered).filter { $0.1 != true }.map(\.0))
                 finished()
             }
         }

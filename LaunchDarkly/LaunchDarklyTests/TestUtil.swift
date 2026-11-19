@@ -57,14 +57,20 @@ extension EventStore {
     static func temporary(
         capacity: Int = 100,
         byteCapacity: Int = LDConfig.Defaults.eventCapacityBytes,
+        maxAge: TimeInterval = LDConfig.Defaults.eventMaxAge,
         persistEvents: Bool = true,
         readFile: @escaping (URL) throws -> Data = { try Data(contentsOf: $0) },
         writeLog: @escaping (EventLogFile, Data) -> Int32? = { $0.writeAll($1) }
     ) -> EventStore {
-        let directory = temporaryDirectory()
+        // A shorter maximum age goes in a directory of its own: the first expiry also empties sibling directories it
+        // finds that old, which would be other tests'.
+        let directory = maxAge < LDConfig.Defaults.eventMaxAge
+            ? temporaryDirectory().appendingPathComponent("environment", isDirectory: true)
+            : temporaryDirectory()
         return unlocked(EventStore(directory: directory,
                                    capacity: capacity,
                                    byteCapacity: byteCapacity,
+                                   maxAge: maxAge,
                                    persistEvents: persistEvents,
                                    logger: .disabled,
                                    readFile: readFile,
@@ -98,9 +104,7 @@ extension EventStore {
     }
 
     private static func unlocked(_ store: EventStore) -> EventStore {
-        #if os(macOS) || targetEnvironment(macCatalyst)
         store.locksOpenLog = false
-        #endif
         return store
     }
 
@@ -112,7 +116,20 @@ extension EventStore {
         let copy = original.deletingLastPathComponent()
             .appendingPathComponent("\(original.lastPathComponent)\(EventStore.nextRunSuffix)\(UUID().uuidString)",
                                     isDirectory: true)
-        try? FileManager.default.copyItem(at: original, to: copy)
+        // Copied aside and moved into place whole: a store's first expiry removes the empty directories of other
+        // environments beside its own, which a copy is until its files are in.
+        if FileManager.default.fileExists(atPath: original.path) {
+            let staging = FileManager.default.temporaryDirectory
+                .appendingPathComponent("com.launchdarkly.tests.staging", isDirectory: true)
+                .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            do {
+                try FileManager.default.createDirectory(at: staging.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try FileManager.default.copyItem(at: original, to: staging)
+                try FileManager.default.moveItem(at: staging, to: copy)
+            } catch {
+                XCTFail("could not copy \(original.path) for the next run: \(error)")
+            }
+        }
         return EventStore.sharing(copy, readFile: readFile)
     }
 

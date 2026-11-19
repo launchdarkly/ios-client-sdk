@@ -247,10 +247,12 @@ public class LDClient {
     /**
      Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning default values.
 
+     While online, closing waits for the final delivery of the events already recorded, no longer than two seconds for each environment, the write of those events included where they persist. A delivery still running then goes on in the background.
+
      There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.
     */
     public func close() {
-        // Closed outside `instancesQueue`: each close can wait on its final event commit, and every other call that
+        // Closed outside `instancesQueue`: each close can wait on its final event commit and delivery, and every other call that
         // reads `instances` would wait behind it. Only `start()` waits, so that a new client does not open the event
         // store of one still committing.
         let clients = LDClient.instancesQueue.sync(flags: .barrier) { () -> [LDClient] in
@@ -1103,17 +1105,15 @@ extension LDClient {
     /// or not events persist.
     fileprivate func giveFlagValuesTheNetworkFirst() {
         if let eventProcessor = eventProcessor as? DirectEventProcessor {
-            (diagnosticReporter as? DiagnosticReporter)?.sendsInitAfter = eventProcessor.whenLaunchGateOpens
+            (diagnosticReporter as? DiagnosticReporter)?.sendInitAfterLaunchGate(of: eventProcessor)
         }
     }
 
     /// Observes the notification once for the events of every environment, however many clients are made.
-    private static let backgroundEvents: BackgroundEventDelivery? = {
-        guard let backgroundNotification = SystemCapabilities.backgroundNotification
-        else { return nil }
+    private static let backgroundEvents: BackgroundEventDelivery = {
         let delivery = BackgroundEventDelivery(environments: LDClient.currentEnvironments)
         // Run on the posting thread, so that every environment has committed by the time the notification returns.
-        NotificationCenter.default.addObserver(forName: backgroundNotification, object: nil, queue: nil) { _ in
+        NotificationCenter.default.addObserver(forName: SystemCapabilities.eventsBackgroundNotification, object: nil, queue: nil) { _ in
             delivery.applicationDidEnterBackground()
         }
         return delivery

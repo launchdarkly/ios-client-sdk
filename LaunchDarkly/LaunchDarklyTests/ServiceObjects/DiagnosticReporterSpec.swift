@@ -117,14 +117,58 @@ final class DiagnosticReporterSpec: XCTestCase {
         tst.queueResponse(status: 202)
         let events = DirectEventProcessor(service: tst.service, onSyncComplete: nil,
                                           store: EventStore.temporary(capacity: 10, persistEvents: false),
-                                          pacing: DirectEventProcessor.Pacing(launchDelay: 0.5, gap: 0))
-        tst.subject.sendsInitAfter = events.whenLaunchGateOpens
+                                          pacing: DirectEventProcessor.Pacing(launchDelay: 0.5, gap: 0)).started()
+        tst.subject.sendInitAfterLaunchGate(of: events)
         events.isOnline = true
         tst.subject.setMode(.foreground, online: true)
 
         tst.expectNoEvent()
         XCTAssertEqual(tst.takeEvent().kind, .diagnosticInit)
         events.isOnline = false
+        tst.stop()
+    }
+
+    func testInitEventGoingOfflineBeforeTheLaunchGateOpensWaitsForOnline() {
+        let tst = TestContext()
+        tst.queueResponse(status: 202)
+        let events = DirectEventProcessor(service: tst.service, onSyncComplete: nil,
+                                          store: EventStore.temporary(capacity: 10, persistEvents: false),
+                                          pacing: DirectEventProcessor.Pacing(launchDelay: 0.3, gap: 0)).started()
+        tst.subject.sendInitAfterLaunchGate(of: events)
+        events.isOnline = true
+        tst.subject.setMode(.foreground, online: true)
+        events.isOnline = false
+
+        Thread.sleep(forTimeInterval: 0.5)
+        tst.expectNoEvent()
+
+        events.isOnline = true
+        XCTAssertEqual(tst.takeEvent().kind, .diagnosticInit)
+        events.isOnline = false
+        tst.stop()
+    }
+
+    func testInitEventHeldAtTheLaunchGateLetsAProcessorClosedMeanwhileGo() {
+        let tst = TestContext()
+        weak var closedProcessor: DirectEventProcessor?
+        autoreleasepool {
+            let events = DirectEventProcessor(service: tst.service, onSyncComplete: nil,
+                                              store: EventStore.temporary(capacity: 10, persistEvents: false),
+                                              pacing: DirectEventProcessor.Pacing(launchDelay: 60, gap: 0)).started()
+            closedProcessor = events
+            tst.subject.sendInitAfterLaunchGate(of: events)
+            events.isOnline = true
+            tst.subject.setMode(.foreground, online: true)
+            events.flushAtClose()
+            events.isOnline = false
+        }
+
+        let deadline = Date().addingTimeInterval(2)
+        while closedProcessor != nil && Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.01)
+        }
+        XCTAssertNil(closedProcessor)
+        tst.expectNoEvent()
         tst.stop()
     }
 

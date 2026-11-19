@@ -7,7 +7,39 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00DDA0FCC41E807B592458BC /* FlagSynchronizerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B761F72A4B400ED65E8 /* FlagSynchronizerSpec.swift */; };
+		00FCE1F896F69DE1E83A22D0 /* LDContextSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088242837DCA900184942 /* LDContextSpec.swift */; };
+		00FD83F1D82C03EDDE2FF0D4 /* HTTPURLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8392FFA22033565700320914 /* HTTPURLResponse.swift */; };
+		014901E06BE1F2B0FAAD6AA6 /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
+		015943975DD3C7407FF8D7F0 /* FlagMaintainingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */; };
+		017A1B5E64423692FCA9205B /* ApplicationInfoEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D622A606B6000F568E0 /* ApplicationInfoEnvironmentReporterSpec.swift */; };
+		01C67BBF07041935E9FB6848 /* Nimble in Frameworks */ = {isa = PBXBuildFile; productRef = 70BC582198EC15A6E7063AA2 /* Nimble */; };
+		04B478F3E34E3EF87D3F70C6 /* OHHTTPStubsSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 0E03F3645F129E1636A68A02 /* OHHTTPStubsSwift */; };
+		051BF088E9BDA17A3871A530 /* BackgroundEventDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */; };
+		0521E12707C2E349E82DB74B /* TimeoutExecutorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EE85C62EA0749C007CC662 /* TimeoutExecutorSpec.swift */; };
+		0B1952913E150A212DDE9F7D /* EventSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67921F9945E800403126 /* EventSpec.swift */; };
+		0BE31BAB919676627DDAE33B /* HTTPHeadersSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3AB22380A3E00D65D25 /* HTTPHeadersSpec.swift */; };
+		0D94238068434D4C64C14A7E /* BackgroundActivitySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */; };
+		0DAE51C06EFBB406EC82F0C0 /* LDValueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */; };
+		119360272B165CB0ADE88447 /* LDTimerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837406D321F760640087B22B /* LDTimerSpec.swift */; };
+		121B6A1A325C9A7D5EEA2EAB /* LDClientFlush.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86CB57159BC81898DE96A352 /* LDClientFlush.swift */; };
+		122BD4F1B744ECE51F6835E5 /* ApplicationInfoEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D622A606B6000F568E0 /* ApplicationInfoEnvironmentReporterSpec.swift */; };
+		15E99919F7CA980A35A9DD43 /* LDValueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */; };
+		1830F6435EE141699F106451 /* BackgroundEventDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */; };
+		1A921586C8C283306422BFA2 /* EventSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67921F9945E800403126 /* EventSpec.swift */; };
+		1AB40BE4C9CEB33E4070E455 /* HTTPURLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8392FFA22033565700320914 /* HTTPURLResponse.swift */; };
+		1B94C015E048B37CAA6E166D /* ContextSummarizerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */; };
+		1E3C807D9FC92EEA8DC442CD /* LDContextStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33A5F7928466D04000C29C7 /* LDContextStub.swift */; };
 		1E65A889B0528E5AB03C517A /* EventStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6BAECBB739A0F24DB5A944 /* EventStoreSpec.swift */; };
+		1F1300CE758891218CFD17B4 /* LDContextCodableSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */; };
+		2092BDB901060345A450AF93 /* LDClientTrackHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000D0 /* LDClientTrackHookSpec.swift */; };
+		21CCD7D38E54B9D0DE26A8A1 /* LDClientSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838F96731FB9F024009CFC45 /* LDClientSpec.swift */; };
+		24AB4ABFBAAAE5CF138F58C3 /* LaunchDarkly_tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 831188382113A16900D77CB5 /* LaunchDarkly_tvOS.framework */; };
+		24F81A26273952C2840836ED /* FlagCounterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB020D9C7B5003A7142 /* FlagCounterSpec.swift */; };
+		25A02814B84FD64FEB1D995D /* DiagnosticEventSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4F689132497B2FC004D3CE0 /* DiagnosticEventSpec.swift */; };
+		27F6240BC88BC577C67B75A4 /* DirectEventProcessorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7CD1F7AD81D0010544E /* DirectEventProcessorSpec.swift */; };
+		2872CAEB9BD4A369B8A1AED5 /* EventSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EF67921F9945E800403126 /* EventSpec.swift */; };
+		28E9360EE641BF3173D8DB0C /* ThreadSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B6E3F0222EFA3800FF2A6A /* ThreadSpec.swift */; };
 		29F9D19E2812E005008D12C0 /* ObjcLDValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */; };
 		29F9D19F2812E005008D12C0 /* ObjcLDValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */; };
 		29F9D1A02812E005008D12C0 /* ObjcLDValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */; };
@@ -16,12 +48,30 @@
 		29FE1299280413D4008CC918 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FE1297280413D4008CC918 /* Util.swift */; };
 		29FE129A280413D4008CC918 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FE1297280413D4008CC918 /* Util.swift */; };
 		29FE129B280413D4008CC918 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FE1297280413D4008CC918 /* Util.swift */; };
+		2A6E0ECE79B5EE3339DCF585 /* UtilSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9A12572A73236800698B8D /* UtilSpec.swift */; };
+		2A7763728A2A28063194547C /* FlagMaintainingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */; };
+		2A7E735C75FA230D75913AF3 /* LaunchDarkly_macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 831EF33B20655D700001C643 /* LaunchDarkly_macOS.framework */; };
+		2B18F68F75065AA9C85CCEF2 /* SheddingQueueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */; };
+		2C6162DFCC364C1E24753C4A /* LDContextCodableSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */; };
 		2CA9D36B3566D78850D6F0AF /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */; };
-		B8F228923BE11E444D1ECB8E /* DiskEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */; };
-		A1B2C3D4E5F60718293A4B01 /* EventDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* EventDirectory.swift */; };
+		2DA01DA7C21210BE443B5CF2 /* EventJSONWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367A9182439001C3EBD68477 /* EventJSONWriterTests.swift */; };
+		2DBE4FD9A6BACFFE07BE0612 /* LDClientEvaluationHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038822F4F96680032BA9F /* LDClientEvaluationHookSpec.swift */; };
+		2DD0477E5EA1D0563A1FEE6C /* ThreadSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B6E3F0222EFA3800FF2A6A /* ThreadSpec.swift */; };
+		2F81D3C77298539D575C91DF /* SDKEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5D2A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift */; };
+		307FF401C47FE6A4A834D7C7 /* FeatureFlagCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354AC76224316F800CDE602 /* FeatureFlagCacheSpec.swift */; };
+		321659EE1824B83BD0D0F22D /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
+		324264FE7826A1BF0E075175 /* TimeoutExecutorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EE85C62EA0749C007CC662 /* TimeoutExecutorSpec.swift */; };
+		32D78B4E99107C033E7021BC /* KindSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088262837DCA900184942 /* KindSpec.swift */; };
+		32DFF1A0C8F2D8E5DCB41AFE /* FlagMaintainingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */; };
+		35937FA3B2FA6DDFE309B376 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
+		367D374B5CD1B2A8596C0738 /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
+		376865CD5AF99BF7389E7F4E /* FlagChangeObserverSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B9A07F204F56F4000C3F17 /* FlagChangeObserverSpec.swift */; };
+		379F34CAB1EE19A0F85AA2C8 /* BackgroundEventDeliverySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */; };
+		3891AEB71DDBC652E0BB2C97 /* OHHTTPStubsSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 90D76CDA27B96887792A43F4 /* OHHTTPStubsSwift */; };
+		38CE3D8C65EC69132656F840 /* LDContextStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33A5F7928466D04000C29C7 /* LDContextStub.swift */; };
+		3978FB2651B622A0AB5B2917 /* TestContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7D032BD2BD620000DB28 /* TestContext.swift */; };
+		39A23A49E8A3C9066CAFC2D0 /* KindSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088262837DCA900184942 /* KindSpec.swift */; };
 		3C55384C9E3485B493E1F86A /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
-		C3F7E502BD916C40AE238F64 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
-		AB4827D11084D58661E24B05 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
 		3D2406142E0D90E000F91253 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406102E0D90E000F91253 /* Plugin.swift */; };
 		3D2406152E0D90E000F91253 /* PluginMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406112E0D90E000F91253 /* PluginMetadata.swift */; };
 		3D2406162E0D90E000F91253 /* EnvironmentMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D24060F2E0D90E000F91253 /* EnvironmentMetadata.swift */; };
@@ -40,28 +90,96 @@
 		3D2406232E0D90E000F91253 /* SdkMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406122E0D90E000F91253 /* SdkMetadata.swift */; };
 		3D2406252E0D90EA00F91253 /* LDClientPluginsSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406242E0D90EA00F91253 /* LDClientPluginsSpec.swift */; };
 		3D34EEEF37158657D49335BB /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */; };
-		051BF088E9BDA17A3871A530 /* BackgroundEventDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */; };
 		3D3AB9432A4F16FE003AECF1 /* ReportingConsts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3AB9422A4F16FE003AECF1 /* ReportingConsts.swift */; };
 		3D3AB9442A4F16FE003AECF1 /* ReportingConsts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3AB9422A4F16FE003AECF1 /* ReportingConsts.swift */; };
 		3D3AB9452A4F16FE003AECF1 /* ReportingConsts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3AB9422A4F16FE003AECF1 /* ReportingConsts.swift */; };
 		3D3AB9462A4F16FE003AECF1 /* ReportingConsts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3AB9422A4F16FE003AECF1 /* ReportingConsts.swift */; };
 		3D3AB9482A570F3A003AECF1 /* ModifierSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3AB9472A570F3A003AECF1 /* ModifierSpec.swift */; };
+		3D57EB249253B33D88B30018 /* LaunchDarkly_tvOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 831188382113A16900D77CB5 /* LaunchDarkly_tvOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3D9A12582A73236800698B8D /* UtilSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9A12572A73236800698B8D /* UtilSpec.swift */; };
+		3E62FB64FE5162078BD0A802 /* EnvironmentReporterChainBaseSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5F2A606B6000F568E0 /* EnvironmentReporterChainBaseSpec.swift */; };
+		3F9AC0D80849C86866E03807 /* BackgroundActivitySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */; };
 		40F4D07AD934AF976687011D /* ContextEncodingCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93B7F5F6CF5C3DE79FB4286 /* ContextEncodingCache.swift */; };
+		43DC6AA5DB0BE9A7B697C10F /* LDClientFlush.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86CB57159BC81898DE96A352 /* LDClientFlush.swift */; };
+		44E0BE449714952A68628CEB /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
+		457B0906D723C4AEDEDF7F9B /* TestHostApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD6BA994A56A12C29A8743A4 /* TestHostApp.swift */; };
 		4882B223C23B63F30BC60941 /* ContextEncodingCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93B7F5F6CF5C3DE79FB4286 /* ContextEncodingCache.swift */; };
+		48BBF03A27C178E392908C4C /* DiagnosticEventSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4F689132497B2FC004D3CE0 /* DiagnosticEventSpec.swift */; };
+		4B977D65C976EC72329A3E1E /* LDValueDecoderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */; };
+		4BBF0CFD8B241C1365DB1887 /* ThrottlerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */; };
+		4CF11DA737832B53F67C2B5F /* ThrottlerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */; };
+		4F7CF342E98590F28516F3F8 /* FlagSynchronizerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B761F72A4B400ED65E8 /* FlagSynchronizerSpec.swift */; };
+		50008B2F0A38AEB30593B21A /* KindSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088262837DCA900184942 /* KindSpec.swift */; };
+		506F63986B2614FE972C8C6C /* FlagChangeNotifierSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C2441FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift */; };
 		50EE85C22EA0487F007CC662 /* TimeoutExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EE85C12EA0487F007CC662 /* TimeoutExecutor.swift */; };
 		50EE85C32EA0487F007CC662 /* TimeoutExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EE85C12EA0487F007CC662 /* TimeoutExecutor.swift */; };
 		50EE85C42EA0487F007CC662 /* TimeoutExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EE85C12EA0487F007CC662 /* TimeoutExecutor.swift */; };
 		50EE85C52EA0487F007CC662 /* TimeoutExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EE85C12EA0487F007CC662 /* TimeoutExecutor.swift */; };
 		50EE85C72EA0749C007CC662 /* TimeoutExecutorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EE85C62EA0749C007CC662 /* TimeoutExecutorSpec.swift */; };
+		51125DC5292964A2A95E0BF2 /* FlagChangeNotifierSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C2441FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift */; };
+		529FEB1DE4D2D6C1F7640BCA /* mocks.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */; };
+		54745AEF1A43D165F5A6E08F /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
+		56DC314AC00B34FE4D2A5489 /* DarklyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */; };
+		5730878434A8487A3537213F /* OHHTTPStubsSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 545FF1E84D580A419747B24F /* OHHTTPStubsSwift */; };
+		5992975D3C50FC833E664CD0 /* TestContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7D032BD2BD620000DB28 /* TestContext.swift */; };
+		5A89648200D2566D3F8409BA /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
 		5AEA1F832DCA974314E07D21 /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */; };
-		D4225F1F05F2C55E9518941B /* DiskEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */; };
-		A1B2C3D4E5F60718293A4B02 /* EventDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* EventDirectory.swift */; };
-		DDA788E3056F8AC3CA203933 /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
-		D4080613CEA27D51BF349075 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
-		ECBE45806B470ACC5187B7D6 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
+		5C3FF7C2C9FB605ED43C733E /* ClientServiceMockFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838F96791FBA551A009CFC45 /* ClientServiceMockFactory.swift */; };
+		5CF4FFE60FD0CF74E245B1CD /* LDConfigSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F0A5631FB5F33800550A95 /* LDConfigSpec.swift */; };
+		5D2E4D08CBC191780871540B /* ModifierSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3AB9472A570F3A003AECF1 /* ModifierSpec.swift */; };
+		5D8D37E10853D72BB9F6C30D /* LDContextSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088242837DCA900184942 /* LDContextSpec.swift */; };
+		5DBA5CB136D9A0643708E1C4 /* WatchOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038842F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift */; };
+		5DEB59826807CD03E14932C2 /* LDConfigStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A91F7ECA630029815A /* LDConfigStub.swift */; };
+		5E7B74EE700604D4C192FA59 /* FlagCounterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB020D9C7B5003A7142 /* FlagCounterSpec.swift */; };
+		5E8A9525E2A515CE83A4D06D /* ContextSummarizerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */; };
+		5FCBDA9FCD8B8EB421E3B49F /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
+		5FF4A2BBE10AD1E689315873 /* DarklyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */; };
+		61C46EED3355945411EF6465 /* LDConfigSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F0A5631FB5F33800550A95 /* LDConfigSpec.swift */; };
+		6209080686DDDB93313B044F /* LDValueDecoderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */; };
+		623CB4652602FE4DBB87CDBB /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
+		625ADAC0CCFE3BE324C45752 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
+		625EDB3B1F6B5215B93B0E3F /* EvaluationExposureDeduperSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A52F4A1B000001FD9C /* EvaluationExposureDeduperSpec.swift */; };
+		629D5A9FE152DBC3E20D6DFC /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
+		636A390D01175DD3B3B5FF12 /* LDClientIdentifyHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift */; };
+		64E4EA4F5249C3AD65A86BC9 /* EventJSONWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367A9182439001C3EBD68477 /* EventJSONWriterTests.swift */; };
+		6513EBB395D9039A6E49D034 /* WatchOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038842F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift */; };
+		6524D122BB0274A1BB3296C3 /* RetryStateSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA903063090600C4C163 /* RetryStateSpec.swift */; };
+		65E3F9805038DBFED50C0E69 /* FlagCounterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB020D9C7B5003A7142 /* FlagCounterSpec.swift */; };
+		6706E6531E802A6289ACDDD9 /* TimeoutExecutorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EE85C62EA0749C007CC662 /* TimeoutExecutorSpec.swift */; };
+		67DEF4ADB6DD209932CDCE2F /* EventStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6BAECBB739A0F24DB5A944 /* EventStoreSpec.swift */; };
+		67FF3B6E8226D5CC8C7FC85D /* LDConfigSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F0A5631FB5F33800550A95 /* LDConfigSpec.swift */; };
+		680CD44ECB91F95C3678D008 /* DiagnosticReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */; };
+		68D0896978A772BFA508C3C7 /* FlagStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFF1FA2589900E428B6 /* FlagStoreSpec.swift */; };
+		699CC458DC808007E9B105D9 /* EnvironmentReporterChainBaseSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5F2A606B6000F568E0 /* EnvironmentReporterChainBaseSpec.swift */; };
+		69AD26A33F113D76EDDCDF71 /* LDEventSourceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A71F7DA61B0029815A /* LDEventSourceMock.swift */; };
+		69F2759371AAADE56C6F334F /* LDClientTrackHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000D0 /* LDClientTrackHookSpec.swift */; };
+		6C8B791BE44CB78FD7F82014 /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
+		6CC9692B23D8380383214DA0 /* TestContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3BA7D032BD2BD620000DB28 /* TestContext.swift */; };
+		6DD1C911146E35F9FADB8754 /* FlagChangeObserverSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B9A07F204F56F4000C3F17 /* FlagChangeObserverSpec.swift */; };
+		6E15E24B2EBED9AD369D8A10 /* EventProcessorOutcomesSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406B825B2AAD6C24F5467449 /* EventProcessorOutcomesSpec.swift */; };
+		70653FA17811503888A648D6 /* JSONWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BECAB38F41B30401D3CD7EA /* JSONWriterTests.swift */; };
+		7088F3B63D287CAC353EBD60 /* ClientServiceMockFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838F96791FBA551A009CFC45 /* ClientServiceMockFactory.swift */; };
+		71805B082AD7B9017F22BF6D /* LDValueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */; };
 		7185A3C30E7FFC4F725769F1 /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */; };
-		1830F6435EE141699F106451 /* BackgroundEventDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */; };
+		71B91CD9CE44EE4BFDB4F136 /* DiagnosticCachingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D1A6C02F0B000000C0FFEE /* DiagnosticCachingMock.swift */; };
+		725498F089CDF77D157ABED1 /* LaunchDarkly_watchOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 83D9EC6B2062DBB7004D7FA6 /* LaunchDarkly_watchOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		729C6B50B29301F83D23DA3E /* RetryStateSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA903063090600C4C163 /* RetryStateSpec.swift */; };
+		73D05FEF68F83B3A1E646184 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
+		73E23C0FA009141BB4CBC24C /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
+		765AC580C26F9D98D02E60A7 /* mocks.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */; };
+		76D7246CA5C3DD7ECF05BF7C /* ThrottlerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */; };
+		778710484D8FA2B6DB2B4BC0 /* Nimble in Frameworks */ = {isa = PBXBuildFile; productRef = 3B19613A8C55E8FA4C1FD320 /* Nimble */; };
+		778C3E41A10D171B31EBF478 /* DarklyServiceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7D01F7AD8DC0010544E /* DarklyServiceMock.swift */; };
+		779526E0FCF472A182D26D6F /* IOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5E2A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift */; };
+		787C894DCC8BF34D565AF19D /* EventProcessorOutcomesSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406B825B2AAD6C24F5467449 /* EventProcessorOutcomesSpec.swift */; };
+		7B38D33B59821BD9BCFFA731 /* EventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293A30078FEAA25BB4C3D26C /* EventProcessor.swift */; };
+		7D37AD3ECAA9D8E2927228C5 /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
+		7D7C17A6F6DD2D2F644246FE /* WatchOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038842F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift */; };
+		7DF221DCABE5FA1A357C645F /* DirectEventProcessorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7CD1F7AD81D0010544E /* DirectEventProcessorSpec.swift */; };
+		7EDFDBA2DDB8501B0D1B72CD /* IOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5E2A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift */; };
+		7F4004579B9094737F3C21D1 /* EventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293A30078FEAA25BB4C3D26C /* EventProcessor.swift */; };
+		7F99FEE3DF84FFED66A86437 /* LDContextSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088242837DCA900184942 /* LDContextSpec.swift */; };
+		82D14EC576D237700EFCFCC8 /* FeatureFlagCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354AC76224316F800CDE602 /* FeatureFlagCacheSpec.swift */; };
 		830BF933202D188E006DF9B1 /* HTTPURLRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */; };
 		830DB3AC22380A3E00D65D25 /* HTTPHeadersSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3AB22380A3E00D65D25 /* HTTPHeadersSpec.swift */; };
 		830DB3AE2239B54900D65D25 /* URLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3AD2239B54900D65D25 /* URLResponse.swift */; };
@@ -82,12 +200,6 @@
 		831188562113AE0800D77CB5 /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
 		831188572113AE0B00D77CB5 /* FlagChangeNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F25F1F476AD800ECE1AF /* FlagChangeNotifier.swift */; };
 		831188582113AE0F00D77CB5 /* DirectEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* DirectEventProcessor.swift */; };
-		E7C0A11E2F00000000000002 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
-		E7C0A11E2F00000000000007 /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
-		B66ECB2014E0FC95C23DA0A2 /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
-		629D5A9FE152DBC3E20D6DFC /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
-		014901E06BE1F2B0FAAD6AA6 /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
-		86B71C91DB78D0F17DBE0E69 /* EventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293A30078FEAA25BB4C3D26C /* EventProcessor.swift */; };
 		831188592113AE1200D77CB5 /* FlagStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B731F72994600ED65E8 /* FlagStore.swift */; };
 		8311885A2113AE1500D77CB5 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837EF3732059C237009D628A /* Log.swift */; };
 		8311885B2113AE1D00D77CB5 /* Throttler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2B20A9E4F600B46DBA /* Throttler.swift */; };
@@ -111,9 +223,6 @@
 		831AAE2D20A9E4F600B46DBA /* Throttler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2B20A9E4F600B46DBA /* Throttler.swift */; };
 		831AAE2E20A9E4F600B46DBA /* Throttler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2B20A9E4F600B46DBA /* Throttler.swift */; };
 		831AAE3020A9E75D00B46DBA /* ThrottlerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */; };
-		3F9AC0D80849C86866E03807 /* BackgroundActivitySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */; };
-		379F34CAB1EE19A0F85AA2C8 /* BackgroundEventDeliverySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */; };
-		C863C417AB6004C6EE2F600C /* EventProcessorOutcomesSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406B825B2AAD6C24F5467449 /* EventProcessorOutcomesSpec.swift */; };
 		831D2AAF2061AAA000B4AC3C /* Thread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D2AAE2061AAA000B4AC3C /* Thread.swift */; };
 		831D8B6F1F71532300ED65E8 /* HTTPHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */; };
 		831D8B721F71D3E700ED65E8 /* DarklyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B711F71D3E700ED65E8 /* DarklyService.swift */; };
@@ -131,12 +240,6 @@
 		831EF35520655E730001C643 /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
 		831EF35620655E730001C643 /* FlagChangeNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F25F1F476AD800ECE1AF /* FlagChangeNotifier.swift */; };
 		831EF35720655E730001C643 /* DirectEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* DirectEventProcessor.swift */; };
-		E7C0A11E2F00000000000003 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
-		E7C0A11E2F00000000000008 /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
-		367D374B5CD1B2A8596C0738 /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
-		5A89648200D2566D3F8409BA /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
-		CFF357D68BBF2DC8395930F2 /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
-		850C49C9054E642CC006E730 /* EventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293A30078FEAA25BB4C3D26C /* EventProcessor.swift */; };
 		831EF35820655E730001C643 /* FlagStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B731F72994600ED65E8 /* FlagStore.swift */; };
 		831EF35920655E730001C643 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837EF3732059C237009D628A /* Log.swift */; };
 		831EF35A20655E730001C643 /* HTTPHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */; };
@@ -158,6 +261,7 @@
 		832D68A5224A38FC005F052A /* CacheConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832D68A1224A38FC005F052A /* CacheConverter.swift */; };
 		832D68AC224B3321005F052A /* CacheConverterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832D68AB224B3321005F052A /* CacheConverterSpec.swift */; };
 		8335299E1FC37727001166F8 /* FlagMaintainingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8335299D1FC37727001166F8 /* FlagMaintainingMock.swift */; };
+		83353D3E848BA746A88A92AA /* ThreadSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B6E3F0222EFA3800FF2A6A /* ThreadSpec.swift */; };
 		83383A5120460DD30024D975 /* SynchronizingErrorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */; };
 		83396BC91F7C3711000E256E /* DarklyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */; };
 		83411A5F1FABDA8700E5CF39 /* mocks.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */; };
@@ -203,9 +307,9 @@
 		83B8C2471FE4071F0082B8A9 /* HTTPURLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C2461FE4071F0082B8A9 /* HTTPURLResponse.swift */; };
 		83B9A080204F56F4000C3F17 /* FlagChangeObserverSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B9A07F204F56F4000C3F17 /* FlagChangeObserverSpec.swift */; };
 		83B9A082204F6022000C3F17 /* FlagsUnchangedObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B9A081204F6022000C3F17 /* FlagsUnchangedObserver.swift */; };
+		83BE37D79A875BC33E4B3CD4 /* CacheConverterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832D68AB224B3321005F052A /* CacheConverterSpec.swift */; };
 		83CFE7CE1F7AD81D0010544E /* DirectEventProcessorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7CD1F7AD81D0010544E /* DirectEventProcessorSpec.swift */; };
 		83CFE7D11F7AD8DC0010544E /* DarklyServiceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7D01F7AD8DC0010544E /* DarklyServiceMock.swift */; };
-		A1D1A6C12F0B000000C0FFEE /* DiagnosticCachingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D1A6C02F0B000000C0FFEE /* DiagnosticCachingMock.swift */; };
 		83D559741FD87CC9002D10C8 /* KeyedValueCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D559731FD87CC9002D10C8 /* KeyedValueCache.swift */; };
 		83D9EC752062DEAB004D7FA6 /* LDCommon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B6C4B51F4DE7630055351C /* LDCommon.swift */; };
 		83D9EC762062DEAB004D7FA6 /* LDConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354EFDD1F26380700C05156 /* LDConfig.swift */; };
@@ -220,12 +324,6 @@
 		83D9EC872062DEAB004D7FA6 /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
 		83D9EC882062DEAB004D7FA6 /* FlagChangeNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358F25F1F476AD800ECE1AF /* FlagChangeNotifier.swift */; };
 		83D9EC892062DEAB004D7FA6 /* DirectEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* DirectEventProcessor.swift */; };
-		E7C0A11E2F00000000000004 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
-		E7C0A11E2F00000000000009 /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
-		321659EE1824B83BD0D0F22D /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
-		73E23C0FA009141BB4CBC24C /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
-		54745AEF1A43D165F5A6E08F /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
-		7F4004579B9094737F3C21D1 /* EventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293A30078FEAA25BB4C3D26C /* EventProcessor.swift */; };
 		83D9EC8A2062DEAB004D7FA6 /* FlagStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B731F72994600ED65E8 /* FlagStore.swift */; };
 		83D9EC8B2062DEAB004D7FA6 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837EF3732059C237009D628A /* Log.swift */; };
 		83D9EC8C2062DEAB004D7FA6 /* HTTPHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */; };
@@ -250,24 +348,47 @@
 		83F0A5641FB5F33800550A95 /* LDConfigSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F0A5631FB5F33800550A95 /* LDConfigSpec.swift */; };
 		83FEF8DD1F266742001CF12C /* FlagSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */; };
 		83FEF8DF1F2667E4001CF12C /* DirectEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83FEF8DE1F2667E4001CF12C /* DirectEventProcessor.swift */; };
-		E7C0A11E2F00000000000005 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
-		E7C0A11E2F0000000000000A /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
-		E91F5DCAEEE5FC4AC408BA67 /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
-		7D37AD3ECAA9D8E2927228C5 /* OutboundEventBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */; };
-		9FA0EE3A87678F58F4406B24 /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
-		7B38D33B59821BD9BCFFA731 /* EventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293A30078FEAA25BB4C3D26C /* EventProcessor.swift */; };
+		84836BC21890515BE64A381D /* LDClientTrackHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000D0 /* LDClientTrackHookSpec.swift */; };
+		850C49C9054E642CC006E730 /* EventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293A30078FEAA25BB4C3D26C /* EventProcessor.swift */; };
+		85841DD2AE60672BC9C1D874 /* DarklyServiceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7D01F7AD8DC0010544E /* DarklyServiceMock.swift */; };
+		86B71C91DB78D0F17DBE0E69 /* EventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293A30078FEAA25BB4C3D26C /* EventProcessor.swift */; };
+		8746C0EDC341A1726B2ED32F /* LDClientEvaluationHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038822F4F96680032BA9F /* LDClientEvaluationHookSpec.swift */; };
+		88C3F79DF9B1E84C0B69370B /* SynchronizingErrorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */; };
+		891ECBCE42BBC947F95BFCEE /* LaunchDarkly_watchOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83D9EC6B2062DBB7004D7FA6 /* LaunchDarkly_watchOS.framework */; };
+		8A321F75DC8B069B4E0163B1 /* EnvironmentReportingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */; };
 		8B3D9E2F5A6C1047B2D5E9F1 /* JSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */; };
+		8BC9985944D1EFE340A22455 /* ClientServiceMockFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838F96791FBA551A009CFC45 /* ClientServiceMockFactory.swift */; };
+		8C0234B99ACF46EC2A81A6A8 /* LDClientSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838F96731FB9F024009CFC45 /* LDClientSpec.swift */; };
+		8D6947A101E3A50E5C0A4A57 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		8E38AA8C306308E500C4C163 /* RetryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA8B306308E500C4C163 /* RetryState.swift */; };
 		8E38AA8D306308E500C4C163 /* RetryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA8B306308E500C4C163 /* RetryState.swift */; };
 		8E38AA8E306308E500C4C163 /* RetryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA8B306308E500C4C163 /* RetryState.swift */; };
 		8E38AA8F306308E500C4C163 /* RetryState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA8B306308E500C4C163 /* RetryState.swift */; };
 		8E38AA913063090600C4C163 /* RetryStateSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA903063090600C4C163 /* RetryStateSpec.swift */; };
+		8EE2D085C2BEAFDA49218BB8 /* LaunchDarkly_watchOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83D9EC6B2062DBB7004D7FA6 /* LaunchDarkly_watchOS.framework */; };
+		8F654B978A758FDFC94E4AF0 /* BackgroundEventDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */; };
+		901917A19F37E8E9522C309D /* Quick in Frameworks */ = {isa = PBXBuildFile; productRef = B6C147FA6A46ABB536ABDDE1 /* Quick */; };
+		9106EA13F6E2BF874541D689 /* LDClientIdentifyHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift */; };
+		916DAA8B14A71B7AAAFF4E8B /* JSONWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BECAB38F41B30401D3CD7EA /* JSONWriterTests.swift */; };
+		93E37DB8400494B0CBB60F80 /* EventProcessorOutcomesSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406B825B2AAD6C24F5467449 /* EventProcessorOutcomesSpec.swift */; };
+		94304BEA8263EA15593EF8D3 /* HTTPURLResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8392FFA22033565700320914 /* HTTPURLResponse.swift */; };
+		94346B5983712F22D596EB6D /* EventJSONWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367A9182439001C3EBD68477 /* EventJSONWriterTests.swift */; };
 		94C1C136BA8989F1B8AFE0A8 /* EventJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B430884DBF2E541B919C08FA /* EventJSONWriter.swift */; };
+		95EFE18AECD82BD9E1109F68 /* ApplicationInfoEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D622A606B6000F568E0 /* ApplicationInfoEnvironmentReporterSpec.swift */; };
+		960C96F00A0D2A9DD41FC8B3 /* EvaluationExposureDeduperSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A52F4A1B000001FD9C /* EvaluationExposureDeduperSpec.swift */; };
+		9626F274F8C6E5B488A4BF0B /* DiagnosticCachingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D1A6C02F0B000000C0FFEE /* DiagnosticCachingMock.swift */; };
+		96E278F1CF23419D8B87911A /* LDContextStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33A5F7928466D04000C29C7 /* LDContextStub.swift */; };
+		972DB47196AD0D0FF514E11E /* LDConfigStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A91F7ECA630029815A /* LDConfigStub.swift */; };
+		985A1459DF571FE6F7EB2EB8 /* HTTPHeadersSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3AB22380A3E00D65D25 /* HTTPHeadersSpec.swift */; };
+		9935B838F40E17AFD85E2EED /* LaunchDarkly_tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 831188382113A16900D77CB5 /* LaunchDarkly_tvOS.framework */; };
+		995A2FCF01F1248129834AB3 /* FlagRequestTrackerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB620DABE93003A7142 /* FlagRequestTrackerSpec.swift */; };
+		99686398CCB7515A18247662 /* LDClientFlush.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86CB57159BC81898DE96A352 /* LDClientFlush.swift */; };
 		9A47F74A2F3D4CBF0001FD9C /* ContextSummarizerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */; };
 		9A47F74C2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
 		9A47F74D2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
 		9A47F74E2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
 		9A47F74F2F3D4CCF0001FD9C /* ContextSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */; };
+		9AB039898A630223303FCE7A /* ModifierSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3AB9472A570F3A003AECF1 /* ModifierSpec.swift */; };
 		9AE1D0A12F4A1B000001FD9C /* EvaluationExposureDeduper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A02F4A1B000001FD9C /* EvaluationExposureDeduper.swift */; };
 		9AE1D0A22F4A1B000001FD9C /* EvaluationExposureDeduper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A02F4A1B000001FD9C /* EvaluationExposureDeduper.swift */; };
 		9AE1D0A32F4A1B000001FD9C /* EvaluationExposureDeduper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A02F4A1B000001FD9C /* EvaluationExposureDeduper.swift */; };
@@ -288,11 +409,16 @@
 		9AF0E1012F5A1C000001FD9C /* LDValueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */; };
 		9BE9637664F4E97681CFCD45 /* EventJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B430884DBF2E541B919C08FA /* EventJSONWriter.swift */; };
 		9C4E0F306B7D2158C3E6F0A2 /* JSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */; };
+		9C6E0AAEC25CA18A70FB2A4D /* HTTPHeadersSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830DB3AB22380A3E00D65D25 /* HTTPHeadersSpec.swift */; };
+		9FA0EE3A87678F58F4406B24 /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
 		A032A73E446055D14A546CA0 /* EventJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B430884DBF2E541B919C08FA /* EventJSONWriter.swift */; };
 		A0BAD9EE25943C43A5154E6F /* EventJSONWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367A9182439001C3EBD68477 /* EventJSONWriterTests.swift */; };
+		A1B2C3D4E5F60718293A4B01 /* EventDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* EventDirectory.swift */; };
+		A1B2C3D4E5F60718293A4B02 /* EventDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* EventDirectory.swift */; };
+		A1B2C3D4E5F60718293A4B03 /* EventDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* EventDirectory.swift */; };
+		A1B2C3D4E5F60718293A4B04 /* EventDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* EventDirectory.swift */; };
+		A1D1A6C12F0B000000C0FFEE /* DiagnosticCachingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D1A6C02F0B000000C0FFEE /* DiagnosticCachingMock.swift */; };
 		A20146E7AF098560627C614E /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */; };
-		BAB394DCCA3C189DD1B11C36 /* BackgroundEventDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */; };
-		B6168D5F889EFC4C19F59135 /* JSONWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BECAB38F41B30401D3CD7EA /* JSONWriterTests.swift */; };
 		A3047D642A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5D2A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift */; };
 		A3047D652A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5E2A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift */; };
 		A3047D662A606B6000F568E0 /* EnvironmentReporterChainBaseSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5F2A606B6000F568E0 /* EnvironmentReporterChainBaseSpec.swift */; };
@@ -317,7 +443,6 @@
 		A31088282837DCA900184942 /* ReferenceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088252837DCA900184942 /* ReferenceSpec.swift */; };
 		A31088292837DCA900184942 /* KindSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088262837DCA900184942 /* KindSpec.swift */; };
 		A32FCDB22D53263851DDB727 /* BackgroundActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */; };
-		8F654B978A758FDFC94E4AF0 /* BackgroundEventDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */; };
 		A33A5F7A28466D04000C29C7 /* LDContextStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33A5F7928466D04000C29C7 /* LDContextStub.swift */; };
 		A3470C372B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3470C362B7C1ACE00951CEE /* LDValueDecoder.swift */; };
 		A3470C382B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3470C362B7C1ACE00951CEE /* LDValueDecoder.swift */; };
@@ -328,23 +453,19 @@
 		A350386F2F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */; };
 		A35038702F4F4F610032BA9F /* IdentifySeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */; };
 		A35038772F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
-		99686398CCB7515A18247662 /* LDClientFlush.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86CB57159BC81898DE96A352 /* LDClientFlush.swift */; };
 		A35038782F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
-		B04B36074760CCA9F48E1851 /* LDClientFlush.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86CB57159BC81898DE96A352 /* LDClientFlush.swift */; };
 		A35038792F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
-		121B6A1A325C9A7D5EEA2EAB /* LDClientFlush.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86CB57159BC81898DE96A352 /* LDClientFlush.swift */; };
 		A350387A2F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */; };
-		43DC6AA5DB0BE9A7B697C10F /* LDClientFlush.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86CB57159BC81898DE96A352 /* LDClientFlush.swift */; };
 		A350387C2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
 		A350387D2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
 		A350387E2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
 		A350387F2F4F5A380032BA9F /* Data+Compression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350387B2F4F5A380032BA9F /* Data+Compression.swift */; };
-		A35038812F4F5A380032BA9F /* Data+CRC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F5A380032BA9F /* Data+CRC.swift */; };
-		A35038822F4F5A380032BA9F /* Data+CRC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F5A380032BA9F /* Data+CRC.swift */; };
-		A35038832F4F5A380032BA9F /* Data+CRC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F5A380032BA9F /* Data+CRC.swift */; };
-		A35038842F4F5A380032BA9F /* Data+CRC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F5A380032BA9F /* Data+CRC.swift */; };
+		A35038812F4F5A380032BA9F /* Crc32+Advance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F5A380032BA9F /* Crc32+Advance.swift */; };
 		A35038812F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift */; };
+		A35038822F4F5A380032BA9F /* Crc32+Advance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F5A380032BA9F /* Crc32+Advance.swift */; };
+		A35038832F4F5A380032BA9F /* Crc32+Advance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F5A380032BA9F /* Crc32+Advance.swift */; };
 		A35038832F4F96680032BA9F /* LDClientEvaluationHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038822F4F96680032BA9F /* LDClientEvaluationHookSpec.swift */; };
+		A35038842F4F5A380032BA9F /* Crc32+Advance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F5A380032BA9F /* Crc32+Advance.swift */; };
 		A35038852F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038842F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift */; };
 		A3570F5A28527B8200CF241A /* LDContextCodableSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */; };
 		A358D6D12A4DD48600270C60 /* EnvironmentReporterChainBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = A358D6D02A4DD48600270C60 /* EnvironmentReporterChainBase.swift */; };
@@ -418,16 +539,32 @@
 		A3C6F7652B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
 		A3C6F7662B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
 		A3C6F7672B84EF0C005B3B61 /* IdentifyTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */; };
+		A3E353C1CE69BBE1DB774391 /* FlagSynchronizerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831D8B761F72A4B400ED65E8 /* FlagSynchronizerSpec.swift */; };
 		A3FFE1132B7D4BA2009EF93F /* LDValueDecoderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */; };
+		A4DB722D719F301A8AADF0BE /* IOSEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5E2A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift */; };
+		A4EBE98D357DA2B3536AE70A /* LDClientEvaluationHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038822F4F96680032BA9F /* LDClientEvaluationHookSpec.swift */; };
+		A64FFF7A3FED255A49A8E52D /* SheddingQueueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */; };
+		A759288B1773C84063B13756 /* FlagRequestTrackerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB620DABE93003A7142 /* FlagRequestTrackerSpec.swift */; };
+		A7AD816474F5388D427D3CA5 /* BackgroundEventDeliverySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */; };
+		A7E6777D1391E33E06AA3704 /* EnvironmentReportingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */; };
+		A82AAFB1EEB1ABDF3CE95276 /* LDConfigStub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A91F7ECA630029815A /* LDConfigStub.swift */; };
 		A8449C0800DF492B8F0619E4 /* LDContextJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88DAB8D1864C14D9C7E06F11 /* LDContextJSONWriter.swift */; };
+		AB4827D11084D58661E24B05 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
+		AB6ED67B9C6BFDDF4F4DAF02 /* SynchronizingErrorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */; };
+		AC0CA08F62C2505671CEB0E5 /* Quick in Frameworks */ = {isa = PBXBuildFile; productRef = 4E55601FC529407C74B5D261 /* Quick */; };
 		AD5F10417C8E3269D4F701B3 /* JSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */; };
+		AF703F2A38E5F3603F5173D6 /* FlagStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFF1FA2589900E428B6 /* FlagStoreSpec.swift */; };
 		AFCE752CB1A75DEBABC23034 /* LDContextJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88DAB8D1864C14D9C7E06F11 /* LDContextJSONWriter.swift */; };
+		AFE1C6CE1B537EC17FCDDA44 /* Quick in Frameworks */ = {isa = PBXBuildFile; productRef = BD64E129895349E05DB633C4 /* Quick */; };
+		B04B36074760CCA9F48E1851 /* LDClientFlush.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86CB57159BC81898DE96A352 /* LDClientFlush.swift */; };
+		B06329F34725B00444CBBA21 /* DiagnosticCachingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D1A6C02F0B000000C0FFEE /* DiagnosticCachingMock.swift */; };
 		B0B1AD7CADE8DBB596C2DE9B /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */; };
-		DAA2C9B9C144F129217A7C55 /* DiskEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */; };
-		A1B2C3D4E5F60718293A4B03 /* EventDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* EventDirectory.swift */; };
-		44E0BE449714952A68628CEB /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
-		E5191724DFB38E62C0451086 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
-		CA2ADB3D20A229D70CA34F73 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
+		B0FB6D28348FD0304801A50B /* LDClientIdentifyHookSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35038802F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift */; };
+		B1279E1B18D19C03AD9430D3 /* SheddingQueueSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */; };
+		B174CCC75319972ACD3AA2B5 /* ReferenceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088252837DCA900184942 /* ReferenceSpec.swift */; };
+		B215C5F1716494B6493442B8 /* LDTimerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837406D321F760640087B22B /* LDTimerSpec.swift */; };
+		B2C2FA8F9A7A48B1C0C51DC5 /* JSONWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BECAB38F41B30401D3CD7EA /* JSONWriterTests.swift */; };
+		B3C0250481504D94899F869E /* DiagnosticReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */; };
 		B40B419C249ADA6B00CD0726 /* DiagnosticCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */; };
 		B4265EB124E7390C001CFD2C /* TestUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4265EB024E7390C001CFD2C /* TestUtil.swift */; };
 		B468E71024B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = B468E70F24B3C3AC00E0C883 /* ObjcLDEvaluationDetail.swift */; };
@@ -455,8 +592,26 @@
 		B4C9D43A2489E20A004A9B03 /* DiagnosticReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C9D4372489E20A004A9B03 /* DiagnosticReporter.swift */; };
 		B4C9D43B2489E20A004A9B03 /* DiagnosticReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4C9D4372489E20A004A9B03 /* DiagnosticReporter.swift */; };
 		B4F689142497B2FC004D3CE0 /* DiagnosticEventSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4F689132497B2FC004D3CE0 /* DiagnosticEventSpec.swift */; };
+		B6168D5F889EFC4C19F59135 /* JSONWriterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BECAB38F41B30401D3CD7EA /* JSONWriterTests.swift */; };
+		B66ECB2014E0FC95C23DA0A2 /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
+		B797635A32991D611CBFD690 /* FlagChangeObserverSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B9A07F204F56F4000C3F17 /* FlagChangeObserverSpec.swift */; };
+		B82941161624591C6BB0B2AE /* ContextSummarizerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */; };
+		B84429883603DB2327E1AFDE /* DarklyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83396BC81F7C3711000E256E /* DarklyServiceSpec.swift */; };
+		B852029665B91EF7818590E0 /* BackgroundEventDeliverySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */; };
+		B8F228923BE11E444D1ECB8E /* DiskEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */; };
+		B9130124A3A48914AE34D311 /* FlagChangeNotifierSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B8C2441FE360CF0082B8A9 /* FlagChangeNotifierSpec.swift */; };
+		BA6D66B0234A8B716C1D8CC1 /* FeatureFlagCacheSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8354AC76224316F800CDE602 /* FeatureFlagCacheSpec.swift */; };
+		BAB394DCCA3C189DD1B11C36 /* BackgroundEventDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */; };
 		BAE0B4F45562EBF4AC786B5D /* ContextEncodingCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93B7F5F6CF5C3DE79FB4286 /* ContextEncodingCache.swift */; };
+		BB1FF65AAFEF4BC3CAED2D83 /* Nimble in Frameworks */ = {isa = PBXBuildFile; productRef = 155FC0016F42924F71C3BD42 /* Nimble */; };
+		BBCF3BF53B92ADF8ED8C4FBB /* EnvironmentReportingMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831425AE206ABB5300F2EF36 /* EnvironmentReportingMock.swift */; };
+		BDD8E5E77317F1017D16C339 /* URLRequestSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A51F7D8D720029815A /* URLRequestSpec.swift */; };
+		BDDF3ED1415C3AC3D9CE6F10 /* SDKEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5D2A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift */; };
 		BE6011528D9F4370E50812C4 /* JSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */; };
+		BE913CD886917C41B1B4222F /* CacheConverterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832D68AB224B3321005F052A /* CacheConverterSpec.swift */; };
+		BF8CAC595CA8575A54EB7AE9 /* SynchronizingErrorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83383A5020460DD30024D975 /* SynchronizingErrorSpec.swift */; };
+		C347C2FBFD5A8610E3C50417 /* SDKEnvironmentReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5D2A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift */; };
+		C3BF1C21365DB6D50A6E16B0 /* TestHostApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD6BA994A56A12C29A8743A4 /* TestHostApp.swift */; };
 		C408884723033B3600420721 /* ConnectionInformationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884623033B3600420721 /* ConnectionInformationStore.swift */; };
 		C408884923033B7500420721 /* ConnectionInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C408884823033B7500420721 /* ConnectionInformation.swift */; };
 		C43C37E1236BA050003C1624 /* LDEvaluationDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = C43C37E0236BA050003C1624 /* LDEvaluationDetail.swift */; };
@@ -478,15 +633,71 @@
 		C443A41123186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
 		C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */; };
 		C4AF311E4DA8C3AB7040637D /* EventJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B430884DBF2E541B919C08FA /* EventJSONWriter.swift */; };
+		C863C417AB6004C6EE2F600C /* EventProcessorOutcomesSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406B825B2AAD6C24F5467449 /* EventProcessorOutcomesSpec.swift */; };
+		C9ED04701E87F3FFD364D060 /* FlagRequestTrackerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83EBCBB620DABE93003A7142 /* FlagRequestTrackerSpec.swift */; };
+		CA2ADB3D20A229D70CA34F73 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
+		CB9542028A6356C13F6F0A6E /* DarklyServiceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7D01F7AD8DC0010544E /* DarklyServiceMock.swift */; };
+		CCBC10264BCDAE181F91CB82 /* UtilSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9A12572A73236800698B8D /* UtilSpec.swift */; };
+		CCD7E8D6F37D43D28B04116E /* BackgroundActivitySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */; };
 		CF9A1EB116D8AA3B7B5535B2 /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */; };
-		E2F8080AB2B3CD6E9A9C1FCC /* DiskEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */; };
-		A1B2C3D4E5F60718293A4B04 /* EventDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* EventDirectory.swift */; };
-		F0F504E5EC32223905356098 /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
-		B2E6D4F1AC805B3F9D127E53 /* DeliveryClaims.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */; };
-		625ADAC0CCFE3BE324C45752 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
+		CFCFF89A5C2603F1D6A2DBD4 /* URLRequestSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A51F7D8D720029815A /* URLRequestSpec.swift */; };
+		CFF357D68BBF2DC8395930F2 /* NullEventProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */; };
+		D2486CCE7723ED0946D56416 /* ReferenceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088252837DCA900184942 /* ReferenceSpec.swift */; };
+		D4225F1F05F2C55E9518941B /* DiskEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */; };
+		D604022FD27059F86F97F37E /* EvaluationExposureDeduperSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE1D0A52F4A1B000001FD9C /* EvaluationExposureDeduperSpec.swift */; };
+		D69BEFBC67AB6AA19CAA6390 /* DiagnosticEventSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4F689132497B2FC004D3CE0 /* DiagnosticEventSpec.swift */; };
 		D7A500FCA04E3412F931003F /* ContextEncodingCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D93B7F5F6CF5C3DE79FB4286 /* ContextEncodingCache.swift */; };
+		D82B626E9CC8004CE1EC0CC1 /* FeatureFlagSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83A0E6B0203B557F00224298 /* FeatureFlagSpec.swift */; };
+		D854E01CBD44ED3976EE995F /* RetryStateSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E38AA903063090600C4C163 /* RetryStateSpec.swift */; };
+		D8C04DC5D9C3EA5DE15D3BC3 /* LDClientPluginsSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406242E0D90EA00F91253 /* LDClientPluginsSpec.swift */; };
+		D9B0F121E2FD1B0205CADA46 /* LDTimerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837406D321F760640087B22B /* LDTimerSpec.swift */; };
+		D9C1D46AF165565AD3077586 /* FlagStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83DDBEFF1FA2589900E428B6 /* FlagStoreSpec.swift */; };
+		DAA2C9B9C144F129217A7C55 /* DiskEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */; };
 		DAF5695D58E28B8CF9221213 /* LDContextJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88DAB8D1864C14D9C7E06F11 /* LDContextJSONWriter.swift */; };
+		DCA579DF6D5995C3DE83B6B5 /* LDContextCodableSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3570F5928527B8200CF241A /* LDContextCodableSpec.swift */; };
+		DDA788E3056F8AC3CA203933 /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
+		DDBD3D4A7A71908F3596ABFD /* FeatureFlagSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83A0E6B0203B557F00224298 /* FeatureFlagSpec.swift */; };
+		DDE6CDC3F489FB3CEC6CF7F0 /* URLRequestSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A51F7D8D720029815A /* URLRequestSpec.swift */; };
+		DEB53E89BB4ACC5E3813FDC1 /* mocks.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83411A5D1FABDA8700E5CF39 /* mocks.generated.swift */; };
+		DFF282B60F1E1450F70C727B /* LDClientSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838F96731FB9F024009CFC45 /* LDClientSpec.swift */; };
+		E07D965F0C960C5DBEBA7C79 /* LDClientPluginsSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406242E0D90EA00F91253 /* LDClientPluginsSpec.swift */; };
+		E0BFF81D9C6EE743CE9B3333 /* CacheConverterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832D68AB224B3321005F052A /* CacheConverterSpec.swift */; };
+		E0C8F7F715C2553189E586BF /* EnvironmentReporterChainBaseSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3047D5F2A606B6000F568E0 /* EnvironmentReporterChainBaseSpec.swift */; };
+		E2F8080AB2B3CD6E9A9C1FCC /* DiskEventLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */; };
+		E47B8B15D6FBEB025EFAAB64 /* FeatureFlagSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83A0E6B0203B557F00224298 /* FeatureFlagSpec.swift */; };
+		E499F0ADEA65CA22A6E33B45 /* ReferenceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A31088252837DCA900184942 /* ReferenceSpec.swift */; };
+		E7C0A11E2F00000000000002 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
+		E7C0A11E2F00000000000003 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
+		E7C0A11E2F00000000000004 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
+		E7C0A11E2F00000000000005 /* EventCommitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000001 /* EventCommitter.swift */; };
+		E7C0A11E2F00000000000007 /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
+		E7C0A11E2F00000000000008 /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
+		E7C0A11E2F00000000000009 /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
+		E7C0A11E2F0000000000000A /* EventDeliveryScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */; };
+		E7C0A11E2F0000000000000C /* EventBatchDeliverer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F0000000000000B /* EventBatchDeliverer.swift */; };
+		E7C0A11E2F0000000000000D /* EventBatchDeliverer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F0000000000000B /* EventBatchDeliverer.swift */; };
+		E7C0A11E2F0000000000000E /* EventBatchDeliverer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F0000000000000B /* EventBatchDeliverer.swift */; };
+		E7C0A11E2F0000000000000F /* EventBatchDeliverer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F0000000000000B /* EventBatchDeliverer.swift */; };
+		E7C0A11E2F00000000000011 /* EventStoreBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000010 /* EventStoreBuffers.swift */; };
+		E7C0A11E2F00000000000012 /* EventStoreBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000010 /* EventStoreBuffers.swift */; };
+		E7C0A11E2F00000000000013 /* EventStoreBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000010 /* EventStoreBuffers.swift */; };
+		E7C0A11E2F00000000000014 /* EventStoreBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0A11E2F00000000000010 /* EventStoreBuffers.swift */; };
+		E91F5DCAEEE5FC4AC408BA67 /* AnalyticsEventSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */; };
+		EA5F97FE8DB8377C01DC7FCA /* LDEventSourceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A71F7DA61B0029815A /* LDEventSourceMock.swift */; };
 		EBFA09F4DFC59FCB6C0AE209 /* LDContextJSONWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88DAB8D1864C14D9C7E06F11 /* LDContextJSONWriter.swift */; };
+		ECBE45806B470ACC5187B7D6 /* EventLogFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58551BB165F28784C785720 /* EventLogFormat.swift */; };
+		ED3D4B411137AA535C8600CA /* BackgroundActivitySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */; };
+		EDBCE3B30A3A82E07DCE4708 /* DiagnosticReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = B46F344025E6DB7D0078D45F /* DiagnosticReporterSpec.swift */; };
+		EE8109BF225B96B3F683F8CC /* LDValueDecoderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */; };
+		F0F504E5EC32223905356098 /* EventLogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F6C30CC57DF77870B421F9 /* EventLogFile.swift */; };
+		F1F49E90A68767F47DC1BACE /* LDClientPluginsSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2406242E0D90EA00F91253 /* LDClientPluginsSpec.swift */; };
+		F3CD05CD20603A7FEE887F07 /* DirectEventProcessorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CFE7CD1F7AD81D0010544E /* DirectEventProcessorSpec.swift */; };
+		F696CD16CE0407A5ACF294E1 /* BackgroundEventDeliverySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */; };
+		F6ABD5567E41CC57BB5B46F3 /* ModifierSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D3AB9472A570F3A003AECF1 /* ModifierSpec.swift */; };
+		FA041D51A9C51E719138590F /* LDEventSourceMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832307A71F7DA61B0029815A /* LDEventSourceMock.swift */; };
+		FB611FFD52018D3E8BFEA8AB /* UtilSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9A12572A73236800698B8D /* UtilSpec.swift */; };
+		FC780B31719B7CC765AB3673 /* EventStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6BAECBB739A0F24DB5A944 /* EventStoreSpec.swift */; };
+		FCF936CC5BEEF2EB8E46BE8C /* EventStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE6BAECBB739A0F24DB5A944 /* EventStoreSpec.swift */; };
 		FED0000000000000000000C1 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
 		FED0000000000000000000C2 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
 		FED0000000000000000000C3 /* TrackSeriesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED0000000000000000000C0 /* TrackSeriesContext.swift */; };
@@ -495,6 +706,48 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		1B505881582A55DD36CC70D9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8354EFB91F22491C00C05156 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 83D9EC6A2062DBB7004D7FA6;
+			remoteInfo = LaunchDarkly_watchOS;
+		};
+		2117784D631A3DC3A132FC38 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8354EFB91F22491C00C05156 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 235858858921C347E3D1314F;
+			remoteInfo = LaunchDarklyTestHost_tvOS;
+		};
+		26380445A910D93AA34ECEC4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8354EFB91F22491C00C05156 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7495671D6E68224D1133454B;
+			remoteInfo = LaunchDarklyTestHost_watchOS;
+		};
+		55F9BFDA6639E6D155D0E772 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8354EFB91F22491C00C05156 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 83D9EC6A2062DBB7004D7FA6;
+			remoteInfo = LaunchDarkly_watchOS;
+		};
+		66CCD13520FFBE316A250261 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8354EFB91F22491C00C05156 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 831188372113A16900D77CB5;
+			remoteInfo = LaunchDarkly_tvOS;
+		};
+		72AE92C859E67C1C7FCD8B9B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8354EFB91F22491C00C05156 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 831EF33A20655D700001C643;
+			remoteInfo = LaunchDarkly_macOS;
+		};
 		8354EFCD1F22491C00C05156 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 8354EFB91F22491C00C05156 /* Project object */;
@@ -502,9 +755,27 @@
 			remoteGlobalIDString = 8354EFC11F22491C00C05156;
 			remoteInfo = Darkly;
 		};
+		B20E7395A09402ACEDE1950E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8354EFB91F22491C00C05156 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 831188372113A16900D77CB5;
+			remoteInfo = LaunchDarkly_tvOS;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		77D93A8D2D3874B0624BE57B /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				3D57EB249253B33D88B30018 /* LaunchDarkly_tvOS.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B445A6E224C0D1CD000BAD6D /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -555,12 +826,25 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C475F796F1F0E2C98D208C99 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				725498F089CDF77D157ABED1 /* LaunchDarkly_watchOS.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		03F6C30CC57DF77870B421F9 /* EventLogFile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventLogFile.swift; sourceTree = "<group>"; };
+		1BECAB38F41B30401D3CD7EA /* JSONWriterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JSONWriterTests.swift; sourceTree = "<group>"; };
+		293A30078FEAA25BB4C3D26C /* EventProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventProcessor.swift; sourceTree = "<group>"; };
 		29F9D19D2812E005008D12C0 /* ObjcLDValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjcLDValue.swift; sourceTree = "<group>"; };
 		29FE1297280413D4008CC918 /* Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
-		1BECAB38F41B30401D3CD7EA /* JSONWriterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JSONWriterTests.swift; sourceTree = "<group>"; };
 		367A9182439001C3EBD68477 /* EventJSONWriterTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventJSONWriterTests.swift; sourceTree = "<group>"; };
 		3D24060F2E0D90E000F91253 /* EnvironmentMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentMetadata.swift; sourceTree = "<group>"; };
 		3D2406102E0D90E000F91253 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
@@ -570,9 +854,13 @@
 		3D3AB9422A4F16FE003AECF1 /* ReportingConsts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportingConsts.swift; sourceTree = "<group>"; };
 		3D3AB9472A570F3A003AECF1 /* ModifierSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModifierSpec.swift; sourceTree = "<group>"; };
 		3D9A12572A73236800698B8D /* UtilSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilSpec.swift; sourceTree = "<group>"; };
+		406B825B2AAD6C24F5467449 /* EventProcessorOutcomesSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventProcessorOutcomesSpec.swift; sourceTree = "<group>"; };
+		40D9B6581D1C40B783BF2E59 /* LaunchDarklyTests_tvOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LaunchDarklyTests_tvOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnalyticsEventSender.swift; sourceTree = "<group>"; };
 		50EE85C12EA0487F007CC662 /* TimeoutExecutor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimeoutExecutor.swift; sourceTree = "<group>"; };
 		50EE85C62EA0749C007CC662 /* TimeoutExecutorSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TimeoutExecutorSpec.swift; sourceTree = "<group>"; };
 		6F2A8C1D4E7B9053A1C4D8E6 /* JSONWriter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JSONWriter.swift; sourceTree = "<group>"; };
+		77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OutboundEventBuffer.swift; sourceTree = "<group>"; };
 		830BF932202D188E006DF9B1 /* HTTPURLRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPURLRequest.swift; sourceTree = "<group>"; };
 		830DB3AB22380A3E00D65D25 /* HTTPHeadersSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeadersSpec.swift; sourceTree = "<group>"; };
 		830DB3AD2239B54900D65D25 /* URLResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLResponse.swift; sourceTree = "<group>"; };
@@ -581,9 +869,6 @@
 		831425B0206B030100F2EF36 /* EnvironmentReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvironmentReporter.swift; sourceTree = "<group>"; };
 		831AAE2B20A9E4F600B46DBA /* Throttler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Throttler.swift; sourceTree = "<group>"; };
 		831AAE2F20A9E75D00B46DBA /* ThrottlerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThrottlerSpec.swift; sourceTree = "<group>"; };
-		C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundActivitySpec.swift; sourceTree = "<group>"; };
-		88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundEventDeliverySpec.swift; sourceTree = "<group>"; };
-		406B825B2AAD6C24F5467449 /* EventProcessorOutcomesSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventProcessorOutcomesSpec.swift; sourceTree = "<group>"; };
 		831D2AAE2061AAA000B4AC3C /* Thread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thread.swift; sourceTree = "<group>"; };
 		831D8B6E1F71532300ED65E8 /* HTTPHeaders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPHeaders.swift; sourceTree = "<group>"; };
 		831D8B711F71D3E700ED65E8 /* DarklyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyService.swift; sourceTree = "<group>"; };
@@ -634,7 +919,6 @@
 		83B9A081204F6022000C3F17 /* FlagsUnchangedObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagsUnchangedObserver.swift; sourceTree = "<group>"; };
 		83CFE7CD1F7AD81D0010544E /* DirectEventProcessorSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectEventProcessorSpec.swift; sourceTree = "<group>"; };
 		83CFE7D01F7AD8DC0010544E /* DarklyServiceMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarklyServiceMock.swift; sourceTree = "<group>"; };
-		A1D1A6C02F0B000000C0FFEE /* DiagnosticCachingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCachingMock.swift; sourceTree = "<group>"; };
 		83D559731FD87CC9002D10C8 /* KeyedValueCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyedValueCache.swift; sourceTree = "<group>"; };
 		83D9EC6B2062DBB7004D7FA6 /* LaunchDarkly_watchOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LaunchDarkly_watchOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		83DDBEF51FA24A7E00E428B6 /* Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
@@ -647,25 +931,23 @@
 		83F0A5631FB5F33800550A95 /* LDConfigSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDConfigSpec.swift; sourceTree = "<group>"; };
 		83FEF8DC1F266742001CF12C /* FlagSynchronizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlagSynchronizer.swift; sourceTree = "<group>"; };
 		83FEF8DE1F2667E4001CF12C /* DirectEventProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DirectEventProcessor.swift; sourceTree = "<group>"; };
-		E7C0A11E2F00000000000001 /* EventCommitter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventCommitter.swift; sourceTree = "<group>"; };
-		E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventDeliveryScheduler.swift; sourceTree = "<group>"; };
-		508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnalyticsEventSender.swift; sourceTree = "<group>"; };
-		77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OutboundEventBuffer.swift; sourceTree = "<group>"; };
-		BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NullEventProcessor.swift; sourceTree = "<group>"; };
-		293A30078FEAA25BB4C3D26C /* EventProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventProcessor.swift; sourceTree = "<group>"; };
+		86CB57159BC81898DE96A352 /* LDClientFlush.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientFlush.swift; sourceTree = "<group>"; };
+		88A4CE0E204CB660F54E8A4B /* BackgroundEventDeliverySpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundEventDeliverySpec.swift; sourceTree = "<group>"; };
 		88DAB8D1864C14D9C7E06F11 /* LDContextJSONWriter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LDContextJSONWriter.swift; sourceTree = "<group>"; };
 		8E38AA8B306308E500C4C163 /* RetryState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryState.swift; sourceTree = "<group>"; };
 		8E38AA903063090600C4C163 /* RetryStateSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryStateSpec.swift; sourceTree = "<group>"; };
+		8F867F099FF36DADC8BEE077 /* LaunchDarklyTestHost_watchOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LaunchDarklyTestHost_watchOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9A47F7492F3D4CBF0001FD9C /* ContextSummarizerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSummarizerSpec.swift; sourceTree = "<group>"; };
 		9A47F74B2F3D4CCF0001FD9C /* ContextSummarizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextSummarizer.swift; sourceTree = "<group>"; };
 		9A771B316E19ED598CD4FB0B /* BackgroundActivity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackgroundActivity.swift; sourceTree = "<group>"; };
-		EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackgroundEventDelivery.swift; sourceTree = "<group>"; };
 		9AE1D0A02F4A1B000001FD9C /* EvaluationExposureDeduper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluationExposureDeduper.swift; sourceTree = "<group>"; };
 		9AE1D0A52F4A1B000001FD9C /* EvaluationExposureDeduperSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluationExposureDeduperSpec.swift; sourceTree = "<group>"; };
 		9AE1D0B02F4A1B000001FD9C /* HookDecorator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookDecorator.swift; sourceTree = "<group>"; };
 		9AE1D0C02F4A1B000001FD9C /* DedupingHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DedupingHook.swift; sourceTree = "<group>"; };
 		9AE1D0D02F4A1B000001FD9C /* UnfairLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnfairLock.swift; sourceTree = "<group>"; };
 		9AF0E1002F5A1C000001FD9C /* LDValueSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueSpec.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5C /* EventDirectory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventDirectory.swift; sourceTree = "<group>"; };
+		A1D1A6C02F0B000000C0FFEE /* DiagnosticCachingMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCachingMock.swift; sourceTree = "<group>"; };
 		A3047D5D2A606B6000F568E0 /* SDKEnvironmentReporterSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SDKEnvironmentReporterSpec.swift; sourceTree = "<group>"; };
 		A3047D5E2A606B6000F568E0 /* IOSEnvironmentReporterSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IOSEnvironmentReporterSpec.swift; sourceTree = "<group>"; };
 		A3047D5F2A606B6000F568E0 /* EnvironmentReporterChainBaseSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnvironmentReporterChainBaseSpec.swift; sourceTree = "<group>"; };
@@ -680,9 +962,8 @@
 		A3470C362B7C1ACE00951CEE /* LDValueDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueDecoder.swift; sourceTree = "<group>"; };
 		A350386C2F4F4F610032BA9F /* IdentifySeriesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentifySeriesContext.swift; sourceTree = "<group>"; };
 		A35038762F4F58660032BA9F /* LDClientIdentifyHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientIdentifyHook.swift; sourceTree = "<group>"; };
-		86CB57159BC81898DE96A352 /* LDClientFlush.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientFlush.swift; sourceTree = "<group>"; };
 		A350387B2F4F5A380032BA9F /* Data+Compression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+Compression.swift"; sourceTree = "<group>"; };
-		A35038802F4F5A380032BA9F /* Data+CRC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+CRC.swift"; sourceTree = "<group>"; };
+		A35038802F4F5A380032BA9F /* Crc32+Advance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Crc32+Advance.swift"; sourceTree = "<group>"; };
 		A35038802F4F965E0032BA9F /* LDClientIdentifyHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientIdentifyHookSpec.swift; sourceTree = "<group>"; };
 		A35038822F4F96680032BA9F /* LDClientEvaluationHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientEvaluationHookSpec.swift; sourceTree = "<group>"; };
 		A35038842F4F96CA0032BA9F /* WatchOSEnvironmentReporterSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchOSEnvironmentReporterSpec.swift; sourceTree = "<group>"; };
@@ -709,6 +990,9 @@
 		A3C6F7612B7FA803005B3B61 /* SheddingQueueSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheddingQueueSpec.swift; sourceTree = "<group>"; };
 		A3C6F7632B84EF0C005B3B61 /* IdentifyTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentifyTypes.swift; sourceTree = "<group>"; };
 		A3FFE1122B7D4BA2009EF93F /* LDValueDecoderSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDValueDecoderSpec.swift; sourceTree = "<group>"; };
+		A5DAED54F002C20C27354D23 /* LaunchDarklyTests_macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LaunchDarklyTests_macOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AF273CB1930890F206F8EA48 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS14.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		B22F12229578C0BBA655F7ED /* LaunchDarklyTests_watchOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LaunchDarklyTests_watchOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B40B419B249ADA6B00CD0726 /* DiagnosticCacheSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCacheSpec.swift; sourceTree = "<group>"; };
 		B4265EB024E7390C001CFD2C /* TestUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtil.swift; sourceTree = "<group>"; };
 		B430884DBF2E541B919C08FA /* EventJSONWriter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventJSONWriter.swift; sourceTree = "<group>"; };
@@ -719,24 +1003,65 @@
 		B4C9D4322489C8FD004A9B03 /* DiagnosticCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCache.swift; sourceTree = "<group>"; };
 		B4C9D4372489E20A004A9B03 /* DiagnosticReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticReporter.swift; sourceTree = "<group>"; };
 		B4F689132497B2FC004D3CE0 /* DiagnosticEventSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticEventSpec.swift; sourceTree = "<group>"; };
-		C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventStore.swift; sourceTree = "<group>"; };
-		E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiskEventLog.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F60718293A4B5C /* EventDirectory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventDirectory.swift; sourceTree = "<group>"; };
-		03F6C30CC57DF77870B421F9 /* EventLogFile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventLogFile.swift; sourceTree = "<group>"; };
-		A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DeliveryClaims.swift; sourceTree = "<group>"; };
 		B58551BB165F28784C785720 /* EventLogFormat.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventLogFormat.swift; sourceTree = "<group>"; };
+		BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NullEventProcessor.swift; sourceTree = "<group>"; };
+		BD6BA994A56A12C29A8743A4 /* TestHostApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TestHostApp.swift; sourceTree = "<group>"; };
+		C0E8C6E9182F7333C4A4E5A7 /* EventStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventStore.swift; sourceTree = "<group>"; };
+		C3BDE2A66C982198D55602DA /* BackgroundActivitySpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundActivitySpec.swift; sourceTree = "<group>"; };
 		C408884623033B3600420721 /* ConnectionInformationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionInformationStore.swift; sourceTree = "<group>"; };
 		C408884823033B7500420721 /* ConnectionInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionInformation.swift; sourceTree = "<group>"; };
 		C43C37E0236BA050003C1624 /* LDEvaluationDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDEvaluationDetail.swift; sourceTree = "<group>"; };
 		C443A4092315AA4D00145710 /* NetworkReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkReporter.swift; sourceTree = "<group>"; };
 		C443A40E23186A4F00145710 /* ConnectionModeChangeObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionModeChangeObserver.swift; sourceTree = "<group>"; };
+		CB369B77405705020E22A38D /* LaunchDarklyTestHost_tvOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LaunchDarklyTestHost_tvOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D93B7F5F6CF5C3DE79FB4286 /* ContextEncodingCache.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContextEncodingCache.swift; sourceTree = "<group>"; };
+		E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiskEventLog.swift; sourceTree = "<group>"; };
+		E7C0A11E2F00000000000001 /* EventCommitter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventCommitter.swift; sourceTree = "<group>"; };
+		E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventDeliveryScheduler.swift; sourceTree = "<group>"; };
+		E7C0A11E2F0000000000000B /* EventBatchDeliverer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventBatchDeliverer.swift; sourceTree = "<group>"; };
+		E7C0A11E2F00000000000010 /* EventStoreBuffers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventStoreBuffers.swift; sourceTree = "<group>"; };
+		ED53EBE756A2480A812DA1CE /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS7.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		EE6BAECBB739A0F24DB5A944 /* EventStoreSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EventStoreSpec.swift; sourceTree = "<group>"; };
+		EF2483453F8EF6F6D01A83B5 /* BackgroundEventDelivery.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackgroundEventDelivery.swift; sourceTree = "<group>"; };
+		FDF121A9029C51CAD7D694ED /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		FED0000000000000000000C0 /* TrackSeriesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackSeriesContext.swift; sourceTree = "<group>"; };
 		FED0000000000000000000D0 /* LDClientTrackHookSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LDClientTrackHookSpec.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		17C295AF1E10C92EA7379021 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9935B838F40E17AFD85E2EED /* LaunchDarkly_tvOS.framework in Frameworks */,
+				AFE1C6CE1B537EC17FCDDA44 /* Quick in Frameworks */,
+				01C67BBF07041935E9FB6848 /* Nimble in Frameworks */,
+				3891AEB71DDBC652E0BB2C97 /* OHHTTPStubsSwift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		19C24E5B8957D38B890C32DD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2A7E735C75FA230D75913AF3 /* LaunchDarkly_macOS.framework in Frameworks */,
+				AC0CA08F62C2505671CEB0E5 /* Quick in Frameworks */,
+				778710484D8FA2B6DB2B4BC0 /* Nimble in Frameworks */,
+				04B478F3E34E3EF87D3F70C6 /* OHHTTPStubsSwift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5824783FD29AFFE01BD712F9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				891ECBCE42BBC947F95BFCEE /* LaunchDarkly_watchOS.framework in Frameworks */,
+				901917A19F37E8E9522C309D /* Quick in Frameworks */,
+				BB1FF65AAFEF4BC3CAED2D83 /* Nimble in Frameworks */,
+				5730878434A8487A3537213F /* OHHTTPStubsSwift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		831188342113A16900D77CB5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -785,9 +1110,42 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A2EF5D68CD6AD2FA3C1AA0BF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8EE2D085C2BEAFDA49218BB8 /* LaunchDarkly_watchOS.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C264B669B2976839692ECAE3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				24AB4ABFBAAAE5CF138F58C3 /* LaunchDarkly_tvOS.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		02B252BF83EF742341E0B81A /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				FDF121A9029C51CAD7D694ED /* Cocoa.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
+		0F199C43C7916C094A8C9CE2 /* LaunchDarklyTestHost */ = {
+			isa = PBXGroup;
+			children = (
+				BD6BA994A56A12C29A8743A4 /* TestHostApp.swift */,
+			);
+			name = LaunchDarklyTestHost;
+			path = LaunchDarkly/LaunchDarklyTestHost;
+			sourceTree = SOURCE_ROOT;
+		};
 		3D2406132E0D90E000F91253 /* Plugins */ = {
 			isa = PBXGroup;
 			children = (
@@ -797,6 +1155,14 @@
 				3D2406122E0D90E000F91253 /* SdkMetadata.swift */,
 			);
 			path = Plugins;
+			sourceTree = "<group>";
+		};
+		55661F126EE3E34DD184F833 /* watchOS */ = {
+			isa = PBXGroup;
+			children = (
+				ED53EBE756A2480A812DA1CE /* Foundation.framework */,
+			);
+			name = watchOS;
 			sourceTree = "<group>";
 		};
 		831D8B701F71D3A600ED65E8 /* Networking */ = {
@@ -898,6 +1264,11 @@
 				83D9EC6B2062DBB7004D7FA6 /* LaunchDarkly_watchOS.framework */,
 				831EF33B20655D700001C643 /* LaunchDarkly_macOS.framework */,
 				831188382113A16900D77CB5 /* LaunchDarkly_tvOS.framework */,
+				A5DAED54F002C20C27354D23 /* LaunchDarklyTests_macOS.xctest */,
+				CB369B77405705020E22A38D /* LaunchDarklyTestHost_tvOS.app */,
+				40D9B6581D1C40B783BF2E59 /* LaunchDarklyTests_tvOS.xctest */,
+				8F867F099FF36DADC8BEE077 /* LaunchDarklyTestHost_watchOS.app */,
+				B22F12229578C0BBA655F7ED /* LaunchDarklyTests_watchOS.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -920,6 +1291,7 @@
 				835E1D341F63332C00184DB4 /* ObjectiveC */,
 				83B6C4B71F4DE78B0055351C /* Support */,
 				A3470C362B7C1ACE00951CEE /* LDValueDecoder.swift */,
+				0F199C43C7916C094A8C9CE2 /* LaunchDarklyTestHost */,
 			);
 			name = LaunchDarkly;
 			path = LaunchDarkly/LaunchDarkly;
@@ -1018,7 +1390,7 @@
 			isa = PBXGroup;
 			children = (
 				A350387B2F4F5A380032BA9F /* Data+Compression.swift */,
-				A35038802F4F5A380032BA9F /* Data+CRC.swift */,
+				A35038802F4F5A380032BA9F /* Crc32+Advance.swift */,
 				83DDBEF51FA24A7E00E428B6 /* Data.swift */,
 				83DDBEFD1FA24F9600E428B6 /* Date.swift */,
 				831D2AAE2061AAA000B4AC3C /* Thread.swift */,
@@ -1104,6 +1476,8 @@
 				83FEF8DE1F2667E4001CF12C /* DirectEventProcessor.swift */,
 				E7C0A11E2F00000000000001 /* EventCommitter.swift */,
 				E7C0A11E2F00000000000006 /* EventDeliveryScheduler.swift */,
+				E7C0A11E2F0000000000000B /* EventBatchDeliverer.swift */,
+				E7C0A11E2F00000000000010 /* EventStoreBuffers.swift */,
 				508A41CF2AAB55147AF2045D /* AnalyticsEventSender.swift */,
 				77995B29BA49D033C433E799 /* OutboundEventBuffer.swift */,
 				BBC1B395A14BFACDE8798321 /* NullEventProcessor.swift */,
@@ -1124,10 +1498,17 @@
 				E21BC7A0E0F8D272785D7985 /* DiskEventLog.swift */,
 				A1B2C3D4E5F60718293A4B5C /* EventDirectory.swift */,
 				03F6C30CC57DF77870B421F9 /* EventLogFile.swift */,
-				A1D5C3E09B7F4A2E8C016D42 /* DeliveryClaims.swift */,
 				B58551BB165F28784C785720 /* EventLogFormat.swift */,
 			);
 			path = ServiceObjects;
+			sourceTree = "<group>";
+		};
+		943BAE88F043BDAEF1828340 /* tvOS */ = {
+			isa = PBXGroup;
+			children = (
+				AF273CB1930890F206F8EA48 /* Foundation.framework */,
+			);
+			name = tvOS;
 			sourceTree = "<group>";
 		};
 		A3047D5B2A606A0000F568E0 /* EnvironmentReporting */ = {
@@ -1201,6 +1582,9 @@
 		B467790E24D8AECA00897F00 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				02B252BF83EF742341E0B81A /* OS X */,
+				943BAE88F043BDAEF1828340 /* tvOS */,
+				55661F126EE3E34DD184F833 /* watchOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1243,6 +1627,68 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		235858858921C347E3D1314F /* LaunchDarklyTestHost_tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DA9247EDDFBFD0041F2658A6 /* Build configuration list for PBXNativeTarget "LaunchDarklyTestHost_tvOS" */;
+			buildPhases = (
+				202AC7CB1F252A5142824398 /* Sources */,
+				C264B669B2976839692ECAE3 /* Frameworks */,
+				B75FEDAD76DCFC2AE651E54A /* Resources */,
+				77D93A8D2D3874B0624BE57B /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				92F1D6395D9B97C891C994FE /* PBXTargetDependency */,
+			);
+			name = LaunchDarklyTestHost_tvOS;
+			productName = LaunchDarklyTestHost_tvOS;
+			productReference = CB369B77405705020E22A38D /* LaunchDarklyTestHost_tvOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		3493C9F99261137699E0F040 /* LaunchDarklyTests_tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 82E88D44D0E34BAC44D028C5 /* Build configuration list for PBXNativeTarget "LaunchDarklyTests_tvOS" */;
+			buildPhases = (
+				96826D46F0EBE0756D2B558F /* Sources */,
+				17C295AF1E10C92EA7379021 /* Frameworks */,
+				7EF8A99565538C8DFF691667 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				63C5CBBB63070628A514393E /* PBXTargetDependency */,
+				2F03346CF527669E0BD46B08 /* PBXTargetDependency */,
+			);
+			name = LaunchDarklyTests_tvOS;
+			packageProductDependencies = (
+				BD64E129895349E05DB633C4 /* Quick */,
+				70BC582198EC15A6E7063AA2 /* Nimble */,
+				90D76CDA27B96887792A43F4 /* OHHTTPStubsSwift */,
+			);
+			productName = LaunchDarklyTests_tvOS;
+			productReference = 40D9B6581D1C40B783BF2E59 /* LaunchDarklyTests_tvOS.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		7495671D6E68224D1133454B /* LaunchDarklyTestHost_watchOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0B3323BA1EFD0A3D83D3A409 /* Build configuration list for PBXNativeTarget "LaunchDarklyTestHost_watchOS" */;
+			buildPhases = (
+				66688079F8BD8A0B2DF600CC /* Sources */,
+				A2EF5D68CD6AD2FA3C1AA0BF /* Frameworks */,
+				46DC6F210F0769C907D22743 /* Resources */,
+				C475F796F1F0E2C98D208C99 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DCE13AD78B4B2CD83464ADE9 /* PBXTargetDependency */,
+			);
+			name = LaunchDarklyTestHost_watchOS;
+			productName = LaunchDarklyTestHost_watchOS;
+			productReference = 8F867F099FF36DADC8BEE077 /* LaunchDarklyTestHost_watchOS.app */;
+			productType = "com.apple.product-type.application";
+		};
 		831188372113A16900D77CB5 /* LaunchDarkly_tvOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8311883D2113A16900D77CB5 /* Build configuration list for PBXNativeTarget "LaunchDarkly_tvOS" */;
@@ -1373,6 +1819,53 @@
 			productReference = 83D9EC6B2062DBB7004D7FA6 /* LaunchDarkly_watchOS.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		AFF85CE2F37294616402AE69 /* LaunchDarklyTests_macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F800C4C579ED6417DB81FAB0 /* Build configuration list for PBXNativeTarget "LaunchDarklyTests_macOS" */;
+			buildPhases = (
+				ABB8635D80F4AB1F2BA9E68D /* Sources */,
+				19C24E5B8957D38B890C32DD /* Frameworks */,
+				1AD73E3CA4B1E35138F5F360 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				53F3571DDAF730F5C6FDBAB7 /* PBXTargetDependency */,
+			);
+			name = LaunchDarklyTests_macOS;
+			packageProductDependencies = (
+				4E55601FC529407C74B5D261 /* Quick */,
+				3B19613A8C55E8FA4C1FD320 /* Nimble */,
+				0E03F3645F129E1636A68A02 /* OHHTTPStubsSwift */,
+			);
+			productName = LaunchDarklyTests_macOS;
+			productReference = A5DAED54F002C20C27354D23 /* LaunchDarklyTests_macOS.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		E800763B06A1F63053829FAC /* LaunchDarklyTests_watchOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C69489D5BFCC1600551FF92A /* Build configuration list for PBXNativeTarget "LaunchDarklyTests_watchOS" */;
+			buildPhases = (
+				D74A93EA59F3CAB2B036F515 /* Sources */,
+				5824783FD29AFFE01BD712F9 /* Frameworks */,
+				9B1BCC6A084BE4FED8594A5A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5C562887F6E114EB6E43A9BA /* PBXTargetDependency */,
+				87256A6ADBF78D6025EB6176 /* PBXTargetDependency */,
+			);
+			name = LaunchDarklyTests_watchOS;
+			packageProductDependencies = (
+				B6C147FA6A46ABB536ABDDE1 /* Quick */,
+				155FC0016F42924F71C3BD42 /* Nimble */,
+				545FF1E84D580A419747B24F /* OHHTTPStubsSwift */,
+			);
+			productName = LaunchDarklyTests_watchOS;
+			productReference = B22F12229578C0BBA655F7ED /* LaunchDarklyTests_watchOS.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -1436,11 +1929,37 @@
 				831EF33A20655D700001C643 /* LaunchDarkly_macOS */,
 				831188372113A16900D77CB5 /* LaunchDarkly_tvOS */,
 				8354EFCA1F22491C00C05156 /* LaunchDarklyTests */,
+				AFF85CE2F37294616402AE69 /* LaunchDarklyTests_macOS */,
+				235858858921C347E3D1314F /* LaunchDarklyTestHost_tvOS */,
+				3493C9F99261137699E0F040 /* LaunchDarklyTests_tvOS */,
+				7495671D6E68224D1133454B /* LaunchDarklyTestHost_watchOS */,
+				E800763B06A1F63053829FAC /* LaunchDarklyTests_watchOS */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1AD73E3CA4B1E35138F5F360 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		46DC6F210F0769C907D22743 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7EF8A99565538C8DFF691667 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		831188362113A16900D77CB5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1477,6 +1996,20 @@
 			buildActionMask = 2147483647;
 			files = (
 				A380B09A2B60178D00AB64A6 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B1BCC6A084BE4FED8594A5A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B75FEDAD76DCFC2AE651E54A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1562,6 +2095,22 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		202AC7CB1F252A5142824398 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				457B0906D723C4AEDEDF7F9B /* TestHostApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		66688079F8BD8A0B2DF600CC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C3BF1C21365DB6D50A6E16B0 /* TestHostApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		831188332113A16900D77CB5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1590,6 +2139,8 @@
 				831188582113AE0F00D77CB5 /* DirectEventProcessor.swift in Sources */,
 				E7C0A11E2F00000000000002 /* EventCommitter.swift in Sources */,
 				E7C0A11E2F00000000000007 /* EventDeliveryScheduler.swift in Sources */,
+				E7C0A11E2F0000000000000C /* EventBatchDeliverer.swift in Sources */,
+				E7C0A11E2F00000000000011 /* EventStoreBuffers.swift in Sources */,
 				B66ECB2014E0FC95C23DA0A2 /* AnalyticsEventSender.swift in Sources */,
 				629D5A9FE152DBC3E20D6DFC /* OutboundEventBuffer.swift in Sources */,
 				014901E06BE1F2B0FAAD6AA6 /* NullEventProcessor.swift in Sources */,
@@ -1607,7 +2158,7 @@
 				A35038772F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */,
 				99686398CCB7515A18247662 /* LDClientFlush.swift in Sources */,
 				A350387C2F4F5A380032BA9F /* Data+Compression.swift in Sources */,
-				A35038812F4F5A380032BA9F /* Data+CRC.swift in Sources */,
+				A35038812F4F5A380032BA9F /* Crc32+Advance.swift in Sources */,
 				A3BA7CF62BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
 				A3470C3A2B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C443A41223186A4F00145710 /* ConnectionModeChangeObserver.swift in Sources */,
@@ -1664,7 +2215,6 @@
 				E2F8080AB2B3CD6E9A9C1FCC /* DiskEventLog.swift in Sources */,
 				A1B2C3D4E5F60718293A4B04 /* EventDirectory.swift in Sources */,
 				F0F504E5EC32223905356098 /* EventLogFile.swift in Sources */,
-				B2E6D4F1AC805B3F9D127E53 /* DeliveryClaims.swift in Sources */,
 				625ADAC0CCFE3BE324C45752 /* EventLogFormat.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1719,6 +2269,8 @@
 				831EF35720655E730001C643 /* DirectEventProcessor.swift in Sources */,
 				E7C0A11E2F00000000000003 /* EventCommitter.swift in Sources */,
 				E7C0A11E2F00000000000008 /* EventDeliveryScheduler.swift in Sources */,
+				E7C0A11E2F0000000000000D /* EventBatchDeliverer.swift in Sources */,
+				E7C0A11E2F00000000000012 /* EventStoreBuffers.swift in Sources */,
 				367D374B5CD1B2A8596C0738 /* AnalyticsEventSender.swift in Sources */,
 				5A89648200D2566D3F8409BA /* OutboundEventBuffer.swift in Sources */,
 				CFF357D68BBF2DC8395930F2 /* NullEventProcessor.swift in Sources */,
@@ -1731,7 +2283,7 @@
 				831EF35A20655E730001C643 /* HTTPHeaders.swift in Sources */,
 				831EF35B20655E730001C643 /* DarklyService.swift in Sources */,
 				A350387F2F4F5A380032BA9F /* Data+Compression.swift in Sources */,
-				A35038842F4F5A380032BA9F /* Data+CRC.swift in Sources */,
+				A35038842F4F5A380032BA9F /* Crc32+Advance.swift in Sources */,
 				831EF35C20655E730001C643 /* HTTPURLResponse.swift in Sources */,
 				C443A40723145FEE00145710 /* ConnectionInformationStore.swift in Sources */,
 				29FE129A280413D4008CC918 /* Util.swift in Sources */,
@@ -1772,7 +2324,6 @@
 				B8F228923BE11E444D1ECB8E /* DiskEventLog.swift in Sources */,
 				A1B2C3D4E5F60718293A4B01 /* EventDirectory.swift in Sources */,
 				3C55384C9E3485B493E1F86A /* EventLogFile.swift in Sources */,
-				C3F7E502BD916C40AE238F64 /* DeliveryClaims.swift in Sources */,
 				AB4827D11084D58661E24B05 /* EventLogFormat.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1816,7 +2367,7 @@
 				A35038782F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */,
 				B04B36074760CCA9F48E1851 /* LDClientFlush.swift in Sources */,
 				A350387D2F4F5A380032BA9F /* Data+Compression.swift in Sources */,
-				A35038822F4F5A380032BA9F /* Data+CRC.swift in Sources */,
+				A35038822F4F5A380032BA9F /* Crc32+Advance.swift in Sources */,
 				A3BA7CF32BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
 				A3470C372B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C43C37E1236BA050003C1624 /* LDEvaluationDetail.swift in Sources */,
@@ -1834,6 +2385,8 @@
 				83FEF8DF1F2667E4001CF12C /* DirectEventProcessor.swift in Sources */,
 				E7C0A11E2F00000000000005 /* EventCommitter.swift in Sources */,
 				E7C0A11E2F0000000000000A /* EventDeliveryScheduler.swift in Sources */,
+				E7C0A11E2F0000000000000F /* EventBatchDeliverer.swift in Sources */,
+				E7C0A11E2F00000000000014 /* EventStoreBuffers.swift in Sources */,
 				E91F5DCAEEE5FC4AC408BA67 /* AnalyticsEventSender.swift in Sources */,
 				7D37AD3ECAA9D8E2927228C5 /* OutboundEventBuffer.swift in Sources */,
 				9FA0EE3A87678F58F4406B24 /* NullEventProcessor.swift in Sources */,
@@ -1879,7 +2432,6 @@
 				D4225F1F05F2C55E9518941B /* DiskEventLog.swift in Sources */,
 				A1B2C3D4E5F60718293A4B02 /* EventDirectory.swift in Sources */,
 				DDA788E3056F8AC3CA203933 /* EventLogFile.swift in Sources */,
-				D4080613CEA27D51BF349075 /* DeliveryClaims.swift in Sources */,
 				ECBE45806B470ACC5187B7D6 /* EventLogFormat.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1993,7 +2545,7 @@
 				A350387A2F4F58660032BA9F /* LDClientIdentifyHook.swift in Sources */,
 				43DC6AA5DB0BE9A7B697C10F /* LDClientFlush.swift in Sources */,
 				A350387E2F4F5A380032BA9F /* Data+Compression.swift in Sources */,
-				A35038832F4F5A380032BA9F /* Data+CRC.swift in Sources */,
+				A35038832F4F5A380032BA9F /* Crc32+Advance.swift in Sources */,
 				A3BA7CF42BD05A280000DB28 /* EvaluationSeriesContext.swift in Sources */,
 				A3470C382B7C1ACE00951CEE /* LDValueDecoder.swift in Sources */,
 				C43C37E6238DF22B003C1624 /* LDEvaluationDetail.swift in Sources */,
@@ -2007,6 +2559,8 @@
 				83D9EC892062DEAB004D7FA6 /* DirectEventProcessor.swift in Sources */,
 				E7C0A11E2F00000000000004 /* EventCommitter.swift in Sources */,
 				E7C0A11E2F00000000000009 /* EventDeliveryScheduler.swift in Sources */,
+				E7C0A11E2F0000000000000E /* EventBatchDeliverer.swift in Sources */,
+				E7C0A11E2F00000000000013 /* EventStoreBuffers.swift in Sources */,
 				321659EE1824B83BD0D0F22D /* AnalyticsEventSender.swift in Sources */,
 				73E23C0FA009141BB4CBC24C /* OutboundEventBuffer.swift in Sources */,
 				54745AEF1A43D165F5A6E08F /* NullEventProcessor.swift in Sources */,
@@ -2056,18 +2610,263 @@
 				DAA2C9B9C144F129217A7C55 /* DiskEventLog.swift in Sources */,
 				A1B2C3D4E5F60718293A4B03 /* EventDirectory.swift in Sources */,
 				44E0BE449714952A68628CEB /* EventLogFile.swift in Sources */,
-				E5191724DFB38E62C0451086 /* DeliveryClaims.swift in Sources */,
 				CA2ADB3D20A229D70CA34F73 /* EventLogFormat.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		96826D46F0EBE0756D2B558F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E07D965F0C960C5DBEBA7C79 /* LDClientPluginsSpec.swift in Sources */,
+				E0C8F7F715C2553189E586BF /* EnvironmentReporterChainBaseSpec.swift in Sources */,
+				7F99FEE3DF84FFED66A86437 /* LDContextSpec.swift in Sources */,
+				7DF221DCABE5FA1A357C645F /* DirectEventProcessorSpec.swift in Sources */,
+				1AB40BE4C9CEB33E4070E455 /* HTTPURLResponse.swift in Sources */,
+				529FEB1DE4D2D6C1F7640BCA /* mocks.generated.swift in Sources */,
+				68D0896978A772BFA508C3C7 /* FlagStoreSpec.swift in Sources */,
+				7D7C17A6F6DD2D2F644246FE /* WatchOSEnvironmentReporterSpec.swift in Sources */,
+				48BBF03A27C178E392908C4C /* DiagnosticEventSpec.swift in Sources */,
+				56DC314AC00B34FE4D2A5489 /* DarklyServiceSpec.swift in Sources */,
+				2A6E0ECE79B5EE3339DCF585 /* UtilSpec.swift in Sources */,
+				2872CAEB9BD4A369B8A1AED5 /* EventSpec.swift in Sources */,
+				3978FB2651B622A0AB5B2917 /* TestContext.swift in Sources */,
+				2DD0477E5EA1D0563A1FEE6C /* ThreadSpec.swift in Sources */,
+				4BBF0CFD8B241C1365DB1887 /* ThrottlerSpec.swift in Sources */,
+				0D94238068434D4C64C14A7E /* BackgroundActivitySpec.swift in Sources */,
+				B852029665B91EF7818590E0 /* BackgroundEventDeliverySpec.swift in Sources */,
+				93E37DB8400494B0CBB60F80 /* EventProcessorOutcomesSpec.swift in Sources */,
+				E0BFF81D9C6EE743CE9B3333 /* CacheConverterSpec.swift in Sources */,
+				8C0234B99ACF46EC2A81A6A8 /* LDClientSpec.swift in Sources */,
+				D82B626E9CC8004CE1EC0CC1 /* FeatureFlagSpec.swift in Sources */,
+				D2486CCE7723ED0946D56416 /* ReferenceSpec.swift in Sources */,
+				2DBE4FD9A6BACFFE07BE0612 /* LDClientEvaluationHookSpec.swift in Sources */,
+				C9ED04701E87F3FFD364D060 /* FlagRequestTrackerSpec.swift in Sources */,
+				5FCBDA9FCD8B8EB421E3B49F /* TestUtil.swift in Sources */,
+				680CD44ECB91F95C3678D008 /* DiagnosticReporterSpec.swift in Sources */,
+				73D05FEF68F83B3A1E646184 /* DiagnosticCacheSpec.swift in Sources */,
+				5CF4FFE60FD0CF74E245B1CD /* LDConfigSpec.swift in Sources */,
+				85841DD2AE60672BC9C1D874 /* DarklyServiceMock.swift in Sources */,
+				71B91CD9CE44EE4BFDB4F136 /* DiagnosticCachingMock.swift in Sources */,
+				5DEB59826807CD03E14932C2 /* LDConfigStub.swift in Sources */,
+				2B18F68F75065AA9C85CCEF2 /* SheddingQueueSpec.swift in Sources */,
+				38CE3D8C65EC69132656F840 /* LDContextStub.swift in Sources */,
+				307FF401C47FE6A4A834D7C7 /* FeatureFlagCacheSpec.swift in Sources */,
+				779526E0FCF472A182D26D6F /* IOSEnvironmentReporterSpec.swift in Sources */,
+				5E7B74EE700604D4C192FA59 /* FlagCounterSpec.swift in Sources */,
+				C347C2FBFD5A8610E3C50417 /* SDKEnvironmentReporterSpec.swift in Sources */,
+				729C6B50B29301F83D23DA3E /* RetryStateSpec.swift in Sources */,
+				506F63986B2614FE972C8C6C /* FlagChangeNotifierSpec.swift in Sources */,
+				015943975DD3C7407FF8D7F0 /* FlagMaintainingMock.swift in Sources */,
+				95EFE18AECD82BD9E1109F68 /* ApplicationInfoEnvironmentReporterSpec.swift in Sources */,
+				9AB039898A630223303FCE7A /* ModifierSpec.swift in Sources */,
+				88C3F79DF9B1E84C0B69370B /* SynchronizingErrorSpec.swift in Sources */,
+				9106EA13F6E2BF874541D689 /* LDClientIdentifyHookSpec.swift in Sources */,
+				2092BDB901060345A450AF93 /* LDClientTrackHookSpec.swift in Sources */,
+				B797635A32991D611CBFD690 /* FlagChangeObserverSpec.swift in Sources */,
+				9C6E0AAEC25CA18A70FB2A4D /* HTTPHeadersSpec.swift in Sources */,
+				BBCF3BF53B92ADF8ED8C4FBB /* EnvironmentReportingMock.swift in Sources */,
+				A3E353C1CE69BBE1DB774391 /* FlagSynchronizerSpec.swift in Sources */,
+				5E8A9525E2A515CE83A4D06D /* ContextSummarizerSpec.swift in Sources */,
+				D604022FD27059F86F97F37E /* EvaluationExposureDeduperSpec.swift in Sources */,
+				EE8109BF225B96B3F683F8CC /* LDValueDecoderSpec.swift in Sources */,
+				15E99919F7CA980A35A9DD43 /* LDValueSpec.swift in Sources */,
+				DCA579DF6D5995C3DE83B6B5 /* LDContextCodableSpec.swift in Sources */,
+				0521E12707C2E349E82DB74B /* TimeoutExecutorSpec.swift in Sources */,
+				D9B0F121E2FD1B0205CADA46 /* LDTimerSpec.swift in Sources */,
+				DDE6CDC3F489FB3CEC6CF7F0 /* URLRequestSpec.swift in Sources */,
+				FA041D51A9C51E719138590F /* LDEventSourceMock.swift in Sources */,
+				5C3FF7C2C9FB605ED43C733E /* ClientServiceMockFactory.swift in Sources */,
+				39A23A49E8A3C9066CAFC2D0 /* KindSpec.swift in Sources */,
+				2DA01DA7C21210BE443B5CF2 /* EventJSONWriterTests.swift in Sources */,
+				FC780B31719B7CC765AB3673 /* EventStoreSpec.swift in Sources */,
+				916DAA8B14A71B7AAAFF4E8B /* JSONWriterTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ABB8635D80F4AB1F2BA9E68D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F1F49E90A68767F47DC1BACE /* LDClientPluginsSpec.swift in Sources */,
+				3E62FB64FE5162078BD0A802 /* EnvironmentReporterChainBaseSpec.swift in Sources */,
+				00FCE1F896F69DE1E83A22D0 /* LDContextSpec.swift in Sources */,
+				F3CD05CD20603A7FEE887F07 /* DirectEventProcessorSpec.swift in Sources */,
+				00FD83F1D82C03EDDE2FF0D4 /* HTTPURLResponse.swift in Sources */,
+				765AC580C26F9D98D02E60A7 /* mocks.generated.swift in Sources */,
+				D9C1D46AF165565AD3077586 /* FlagStoreSpec.swift in Sources */,
+				5DBA5CB136D9A0643708E1C4 /* WatchOSEnvironmentReporterSpec.swift in Sources */,
+				D69BEFBC67AB6AA19CAA6390 /* DiagnosticEventSpec.swift in Sources */,
+				B84429883603DB2327E1AFDE /* DarklyServiceSpec.swift in Sources */,
+				FB611FFD52018D3E8BFEA8AB /* UtilSpec.swift in Sources */,
+				1A921586C8C283306422BFA2 /* EventSpec.swift in Sources */,
+				6CC9692B23D8380383214DA0 /* TestContext.swift in Sources */,
+				28E9360EE641BF3173D8DB0C /* ThreadSpec.swift in Sources */,
+				4CF11DA737832B53F67C2B5F /* ThrottlerSpec.swift in Sources */,
+				CCD7E8D6F37D43D28B04116E /* BackgroundActivitySpec.swift in Sources */,
+				A7AD816474F5388D427D3CA5 /* BackgroundEventDeliverySpec.swift in Sources */,
+				787C894DCC8BF34D565AF19D /* EventProcessorOutcomesSpec.swift in Sources */,
+				BE913CD886917C41B1B4222F /* CacheConverterSpec.swift in Sources */,
+				DFF282B60F1E1450F70C727B /* LDClientSpec.swift in Sources */,
+				DDBD3D4A7A71908F3596ABFD /* FeatureFlagSpec.swift in Sources */,
+				B174CCC75319972ACD3AA2B5 /* ReferenceSpec.swift in Sources */,
+				A4EBE98D357DA2B3536AE70A /* LDClientEvaluationHookSpec.swift in Sources */,
+				A759288B1773C84063B13756 /* FlagRequestTrackerSpec.swift in Sources */,
+				623CB4652602FE4DBB87CDBB /* TestUtil.swift in Sources */,
+				B3C0250481504D94899F869E /* DiagnosticReporterSpec.swift in Sources */,
+				8D6947A101E3A50E5C0A4A57 /* DiagnosticCacheSpec.swift in Sources */,
+				61C46EED3355945411EF6465 /* LDConfigSpec.swift in Sources */,
+				778C3E41A10D171B31EBF478 /* DarklyServiceMock.swift in Sources */,
+				9626F274F8C6E5B488A4BF0B /* DiagnosticCachingMock.swift in Sources */,
+				A82AAFB1EEB1ABDF3CE95276 /* LDConfigStub.swift in Sources */,
+				A64FFF7A3FED255A49A8E52D /* SheddingQueueSpec.swift in Sources */,
+				1E3C807D9FC92EEA8DC442CD /* LDContextStub.swift in Sources */,
+				BA6D66B0234A8B716C1D8CC1 /* FeatureFlagCacheSpec.swift in Sources */,
+				7EDFDBA2DDB8501B0D1B72CD /* IOSEnvironmentReporterSpec.swift in Sources */,
+				24F81A26273952C2840836ED /* FlagCounterSpec.swift in Sources */,
+				2F81D3C77298539D575C91DF /* SDKEnvironmentReporterSpec.swift in Sources */,
+				D854E01CBD44ED3976EE995F /* RetryStateSpec.swift in Sources */,
+				51125DC5292964A2A95E0BF2 /* FlagChangeNotifierSpec.swift in Sources */,
+				2A7763728A2A28063194547C /* FlagMaintainingMock.swift in Sources */,
+				122BD4F1B744ECE51F6835E5 /* ApplicationInfoEnvironmentReporterSpec.swift in Sources */,
+				F6ABD5567E41CC57BB5B46F3 /* ModifierSpec.swift in Sources */,
+				BF8CAC595CA8575A54EB7AE9 /* SynchronizingErrorSpec.swift in Sources */,
+				636A390D01175DD3B3B5FF12 /* LDClientIdentifyHookSpec.swift in Sources */,
+				84836BC21890515BE64A381D /* LDClientTrackHookSpec.swift in Sources */,
+				376865CD5AF99BF7389E7F4E /* FlagChangeObserverSpec.swift in Sources */,
+				985A1459DF571FE6F7EB2EB8 /* HTTPHeadersSpec.swift in Sources */,
+				8A321F75DC8B069B4E0163B1 /* EnvironmentReportingMock.swift in Sources */,
+				00DDA0FCC41E807B592458BC /* FlagSynchronizerSpec.swift in Sources */,
+				1B94C015E048B37CAA6E166D /* ContextSummarizerSpec.swift in Sources */,
+				960C96F00A0D2A9DD41FC8B3 /* EvaluationExposureDeduperSpec.swift in Sources */,
+				4B977D65C976EC72329A3E1E /* LDValueDecoderSpec.swift in Sources */,
+				0DAE51C06EFBB406EC82F0C0 /* LDValueSpec.swift in Sources */,
+				2C6162DFCC364C1E24753C4A /* LDContextCodableSpec.swift in Sources */,
+				6706E6531E802A6289ACDDD9 /* TimeoutExecutorSpec.swift in Sources */,
+				B215C5F1716494B6493442B8 /* LDTimerSpec.swift in Sources */,
+				BDD8E5E77317F1017D16C339 /* URLRequestSpec.swift in Sources */,
+				69AD26A33F113D76EDDCDF71 /* LDEventSourceMock.swift in Sources */,
+				8BC9985944D1EFE340A22455 /* ClientServiceMockFactory.swift in Sources */,
+				50008B2F0A38AEB30593B21A /* KindSpec.swift in Sources */,
+				64E4EA4F5249C3AD65A86BC9 /* EventJSONWriterTests.swift in Sources */,
+				FCF936CC5BEEF2EB8E46BE8C /* EventStoreSpec.swift in Sources */,
+				B2C2FA8F9A7A48B1C0C51DC5 /* JSONWriterTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D74A93EA59F3CAB2B036F515 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D8C04DC5D9C3EA5DE15D3BC3 /* LDClientPluginsSpec.swift in Sources */,
+				699CC458DC808007E9B105D9 /* EnvironmentReporterChainBaseSpec.swift in Sources */,
+				5D8D37E10853D72BB9F6C30D /* LDContextSpec.swift in Sources */,
+				27F6240BC88BC577C67B75A4 /* DirectEventProcessorSpec.swift in Sources */,
+				94304BEA8263EA15593EF8D3 /* HTTPURLResponse.swift in Sources */,
+				DEB53E89BB4ACC5E3813FDC1 /* mocks.generated.swift in Sources */,
+				AF703F2A38E5F3603F5173D6 /* FlagStoreSpec.swift in Sources */,
+				6513EBB395D9039A6E49D034 /* WatchOSEnvironmentReporterSpec.swift in Sources */,
+				25A02814B84FD64FEB1D995D /* DiagnosticEventSpec.swift in Sources */,
+				5FF4A2BBE10AD1E689315873 /* DarklyServiceSpec.swift in Sources */,
+				CCBC10264BCDAE181F91CB82 /* UtilSpec.swift in Sources */,
+				0B1952913E150A212DDE9F7D /* EventSpec.swift in Sources */,
+				5992975D3C50FC833E664CD0 /* TestContext.swift in Sources */,
+				83353D3E848BA746A88A92AA /* ThreadSpec.swift in Sources */,
+				76D7246CA5C3DD7ECF05BF7C /* ThrottlerSpec.swift in Sources */,
+				ED3D4B411137AA535C8600CA /* BackgroundActivitySpec.swift in Sources */,
+				F696CD16CE0407A5ACF294E1 /* BackgroundEventDeliverySpec.swift in Sources */,
+				6E15E24B2EBED9AD369D8A10 /* EventProcessorOutcomesSpec.swift in Sources */,
+				83BE37D79A875BC33E4B3CD4 /* CacheConverterSpec.swift in Sources */,
+				21CCD7D38E54B9D0DE26A8A1 /* LDClientSpec.swift in Sources */,
+				E47B8B15D6FBEB025EFAAB64 /* FeatureFlagSpec.swift in Sources */,
+				E499F0ADEA65CA22A6E33B45 /* ReferenceSpec.swift in Sources */,
+				8746C0EDC341A1726B2ED32F /* LDClientEvaluationHookSpec.swift in Sources */,
+				995A2FCF01F1248129834AB3 /* FlagRequestTrackerSpec.swift in Sources */,
+				6C8B791BE44CB78FD7F82014 /* TestUtil.swift in Sources */,
+				EDBCE3B30A3A82E07DCE4708 /* DiagnosticReporterSpec.swift in Sources */,
+				35937FA3B2FA6DDFE309B376 /* DiagnosticCacheSpec.swift in Sources */,
+				67FF3B6E8226D5CC8C7FC85D /* LDConfigSpec.swift in Sources */,
+				CB9542028A6356C13F6F0A6E /* DarklyServiceMock.swift in Sources */,
+				B06329F34725B00444CBBA21 /* DiagnosticCachingMock.swift in Sources */,
+				972DB47196AD0D0FF514E11E /* LDConfigStub.swift in Sources */,
+				B1279E1B18D19C03AD9430D3 /* SheddingQueueSpec.swift in Sources */,
+				96E278F1CF23419D8B87911A /* LDContextStub.swift in Sources */,
+				82D14EC576D237700EFCFCC8 /* FeatureFlagCacheSpec.swift in Sources */,
+				A4DB722D719F301A8AADF0BE /* IOSEnvironmentReporterSpec.swift in Sources */,
+				65E3F9805038DBFED50C0E69 /* FlagCounterSpec.swift in Sources */,
+				BDDF3ED1415C3AC3D9CE6F10 /* SDKEnvironmentReporterSpec.swift in Sources */,
+				6524D122BB0274A1BB3296C3 /* RetryStateSpec.swift in Sources */,
+				B9130124A3A48914AE34D311 /* FlagChangeNotifierSpec.swift in Sources */,
+				32DFF1A0C8F2D8E5DCB41AFE /* FlagMaintainingMock.swift in Sources */,
+				017A1B5E64423692FCA9205B /* ApplicationInfoEnvironmentReporterSpec.swift in Sources */,
+				5D2E4D08CBC191780871540B /* ModifierSpec.swift in Sources */,
+				AB6ED67B9C6BFDDF4F4DAF02 /* SynchronizingErrorSpec.swift in Sources */,
+				B0FB6D28348FD0304801A50B /* LDClientIdentifyHookSpec.swift in Sources */,
+				69F2759371AAADE56C6F334F /* LDClientTrackHookSpec.swift in Sources */,
+				6DD1C911146E35F9FADB8754 /* FlagChangeObserverSpec.swift in Sources */,
+				0BE31BAB919676627DDAE33B /* HTTPHeadersSpec.swift in Sources */,
+				A7E6777D1391E33E06AA3704 /* EnvironmentReportingMock.swift in Sources */,
+				4F7CF342E98590F28516F3F8 /* FlagSynchronizerSpec.swift in Sources */,
+				B82941161624591C6BB0B2AE /* ContextSummarizerSpec.swift in Sources */,
+				625EDB3B1F6B5215B93B0E3F /* EvaluationExposureDeduperSpec.swift in Sources */,
+				6209080686DDDB93313B044F /* LDValueDecoderSpec.swift in Sources */,
+				71805B082AD7B9017F22BF6D /* LDValueSpec.swift in Sources */,
+				1F1300CE758891218CFD17B4 /* LDContextCodableSpec.swift in Sources */,
+				324264FE7826A1BF0E075175 /* TimeoutExecutorSpec.swift in Sources */,
+				119360272B165CB0ADE88447 /* LDTimerSpec.swift in Sources */,
+				CFCFF89A5C2603F1D6A2DBD4 /* URLRequestSpec.swift in Sources */,
+				EA5F97FE8DB8377C01DC7FCA /* LDEventSourceMock.swift in Sources */,
+				7088F3B63D287CAC353EBD60 /* ClientServiceMockFactory.swift in Sources */,
+				32D78B4E99107C033E7021BC /* KindSpec.swift in Sources */,
+				94346B5983712F22D596EB6D /* EventJSONWriterTests.swift in Sources */,
+				67DEF4ADB6DD209932CDCE2F /* EventStoreSpec.swift in Sources */,
+				70653FA17811503888A648D6 /* JSONWriterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		2F03346CF527669E0BD46B08 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = LaunchDarkly_tvOS;
+			target = 831188372113A16900D77CB5 /* LaunchDarkly_tvOS */;
+			targetProxy = B20E7395A09402ACEDE1950E /* PBXContainerItemProxy */;
+		};
+		53F3571DDAF730F5C6FDBAB7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = LaunchDarkly_macOS;
+			target = 831EF33A20655D700001C643 /* LaunchDarkly_macOS */;
+			targetProxy = 72AE92C859E67C1C7FCD8B9B /* PBXContainerItemProxy */;
+		};
+		5C562887F6E114EB6E43A9BA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = LaunchDarklyTestHost_watchOS;
+			target = 7495671D6E68224D1133454B /* LaunchDarklyTestHost_watchOS */;
+			targetProxy = 26380445A910D93AA34ECEC4 /* PBXContainerItemProxy */;
+		};
+		63C5CBBB63070628A514393E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = LaunchDarklyTestHost_tvOS;
+			target = 235858858921C347E3D1314F /* LaunchDarklyTestHost_tvOS */;
+			targetProxy = 2117784D631A3DC3A132FC38 /* PBXContainerItemProxy */;
+		};
 		8354EFCE1F22491C00C05156 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 8354EFC11F22491C00C05156 /* LaunchDarkly_iOS */;
 			targetProxy = 8354EFCD1F22491C00C05156 /* PBXContainerItemProxy */;
+		};
+		87256A6ADBF78D6025EB6176 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = LaunchDarkly_watchOS;
+			target = 83D9EC6A2062DBB7004D7FA6 /* LaunchDarkly_watchOS */;
+			targetProxy = 1B505881582A55DD36CC70D9 /* PBXContainerItemProxy */;
+		};
+		92F1D6395D9B97C891C994FE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = LaunchDarkly_tvOS;
+			target = 831188372113A16900D77CB5 /* LaunchDarkly_tvOS */;
+			targetProxy = 66CCD13520FFBE316A250261 /* PBXContainerItemProxy */;
 		};
 		A3647AA32C5BF6E700902D0C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2101,9 +2900,129 @@
 			isa = PBXTargetDependency;
 			productRef = B445A6FA24C0D237000BAD6D /* LDSwiftEventSource */;
 		};
+		DCE13AD78B4B2CD83464ADE9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = LaunchDarkly_watchOS;
+			target = 83D9EC6A2062DBB7004D7FA6 /* LaunchDarkly_watchOS */;
+			targetProxy = 55F9BFDA6639E6D155D0E772 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		10C614B86E79438BDE38A9A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 53D32B66PT;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -module-alias LaunchDarkly=LaunchDarkly_tvOS";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.DarklyTests-tvOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LaunchDarklyTestHost_tvOS.app/LaunchDarklyTestHost_tvOS";
+				TVOS_DEPLOYMENT_TARGET = 15.0;
+			};
+			name = Debug;
+		};
+		56A1BDD1D396B960C4599409 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 53D32B66PT;
+				ENABLE_DEBUG_DYLIB = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "LD Tests";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.TestHost-watchOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Debug;
+		};
+		5831B15738E973B7247B18CA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_SWIFT_FLAGS = "$(inherited) -module-alias LaunchDarkly=LaunchDarkly_macOS";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.DarklyTests-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		5C96E8C465E8D00CF3EB95A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_SWIFT_FLAGS = "$(inherited) -module-alias LaunchDarkly=LaunchDarkly_macOS";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.DarklyTests-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		61A2934A6989246482C41068 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 53D32B66PT;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -module-alias LaunchDarkly=LaunchDarkly_watchOS";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.DarklyTests-watchOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LaunchDarklyTestHost_watchOS.app/LaunchDarklyTestHost_watchOS";
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Debug;
+		};
 		8311883E2113A16900D77CB5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2459,9 +3378,143 @@
 			};
 			name = Release;
 		};
+		8DC5DA0F7BF8E4CF534B4E05 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 53D32B66PT;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -module-alias LaunchDarkly=LaunchDarkly_tvOS";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.DarklyTests-tvOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LaunchDarklyTestHost_tvOS.app/LaunchDarklyTestHost_tvOS";
+				TVOS_DEPLOYMENT_TARGET = 15.0;
+			};
+			name = Release;
+		};
+		A3F8548303136365B47EF3DD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 53D32B66PT;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -module-alias LaunchDarkly=LaunchDarkly_watchOS";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.DarklyTests-watchOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LaunchDarklyTestHost_watchOS.app/LaunchDarklyTestHost_watchOS";
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Release;
+		};
+		C8E9B853DE254E6287811540 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 53D32B66PT;
+				ENABLE_DEBUG_DYLIB = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "LD Tests";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.TestHost-tvOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 15.0;
+			};
+			name = Debug;
+		};
+		CD705D55D0E3D16F883C0A8E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 53D32B66PT;
+				ENABLE_DEBUG_DYLIB = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "LD Tests";
+				INFOPLIST_KEY_WKApplication = YES;
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.TestHost-watchOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
+			};
+			name = Release;
+		};
+		F49748857B7AA78E69601FEA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 53D32B66PT;
+				ENABLE_DEBUG_DYLIB = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "LD Tests";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.launchdarkly.TestHost-tvOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 15.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0B3323BA1EFD0A3D83D3A409 /* Build configuration list for PBXNativeTarget "LaunchDarklyTestHost_watchOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CD705D55D0E3D16F883C0A8E /* Release */,
+				56A1BDD1D396B960C4599409 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		82E88D44D0E34BAC44D028C5 /* Build configuration list for PBXNativeTarget "LaunchDarklyTests_tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8DC5DA0F7BF8E4CF534B4E05 /* Release */,
+				10C614B86E79438BDE38A9A8 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		8311883D2113A16900D77CB5 /* Build configuration list for PBXNativeTarget "LaunchDarkly_tvOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -2512,6 +3565,33 @@
 			buildConfigurations = (
 				83D9EC712062DBB7004D7FA6 /* Debug */,
 				83D9EC722062DBB7004D7FA6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C69489D5BFCC1600551FF92A /* Build configuration list for PBXNativeTarget "LaunchDarklyTests_watchOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A3F8548303136365B47EF3DD /* Release */,
+				61A2934A6989246482C41068 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DA9247EDDFBFD0041F2658A6 /* Build configuration list for PBXNativeTarget "LaunchDarklyTestHost_tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F49748857B7AA78E69601FEA /* Release */,
+				C8E9B853DE254E6287811540 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F800C4C579ED6417DB81FAB0 /* Build configuration list for PBXNativeTarget "LaunchDarklyTests_macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5831B15738E973B7247B18CA /* Release */,
+				5C96E8C465E8D00CF3EB95A8 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -2570,6 +3650,41 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		0E03F3645F129E1636A68A02 /* OHHTTPStubsSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4903D9624BD61B200F087C4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */;
+			productName = OHHTTPStubsSwift;
+		};
+		155FC0016F42924F71C3BD42 /* Nimble */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4903D9924BD61D000F087C4 /* XCRemoteSwiftPackageReference "Nimble" */;
+			productName = Nimble;
+		};
+		3B19613A8C55E8FA4C1FD320 /* Nimble */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4903D9924BD61D000F087C4 /* XCRemoteSwiftPackageReference "Nimble" */;
+			productName = Nimble;
+		};
+		4E55601FC529407C74B5D261 /* Quick */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4903D9C24BD61EF00F087C4 /* XCRemoteSwiftPackageReference "Quick" */;
+			productName = Quick;
+		};
+		545FF1E84D580A419747B24F /* OHHTTPStubsSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4903D9624BD61B200F087C4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */;
+			productName = OHHTTPStubsSwift;
+		};
+		70BC582198EC15A6E7063AA2 /* Nimble */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4903D9924BD61D000F087C4 /* XCRemoteSwiftPackageReference "Nimble" */;
+			productName = Nimble;
+		};
+		90D76CDA27B96887792A43F4 /* OHHTTPStubsSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4903D9624BD61B200F087C4 /* XCRemoteSwiftPackageReference "OHHTTPStubs" */;
+			productName = OHHTTPStubsSwift;
+		};
 		A30EF4EC28C24A9A00CD220E /* LDSwiftEventSource */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B445A6DE24C0D1CD000BAD6D /* XCRemoteSwiftPackageReference "swift-eventsource" */;
@@ -2666,6 +3781,16 @@
 			productName = Nimble;
 		};
 		B4903D9D24BD61EF00F087C4 /* Quick */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4903D9C24BD61EF00F087C4 /* XCRemoteSwiftPackageReference "Quick" */;
+			productName = Quick;
+		};
+		B6C147FA6A46ABB536ABDDE1 /* Quick */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B4903D9C24BD61EF00F087C4 /* XCRemoteSwiftPackageReference "Quick" */;
+			productName = Quick;
+		};
+		BD64E129895349E05DB633C4 /* Quick */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B4903D9C24BD61EF00F087C4 /* XCRemoteSwiftPackageReference "Quick" */;
 			productName = Quick;

@@ -234,7 +234,7 @@ public struct LDConfig {
         /// The default maximum number of events the LDClient can store
         static let eventCapacity = 2000
 
-        /// The default maximum number of bytes of events the SDK can persist, for all environments together. (20 MiB)
+        /// The default maximum number of bytes of events the SDK can persist, for each environment. (20 MiB)
         static let eventCapacityBytes = 20 * 1024 * 1024
 
         /// The default maximum age of persisted events. (24 hours)
@@ -376,7 +376,15 @@ public struct LDConfig {
     ///
     /// Events being sent stop counting once the request is out, so a flush makes room straight away. If the request fails they are kept
     /// to send again and count again, so after a failed send the SDK can hold up to this many plus the events that request carried.
-    public var eventCapacity: Int = Defaults.eventCapacity
+    ///
+    /// A capacity below one is treated as one; to stop sending events altogether, set `sendEvents` to false instead.
+    public var eventCapacity: Int = Defaults.eventCapacity {
+        didSet {
+            if eventCapacity < 1 {
+                eventCapacity = 1
+            }
+        }
+    }
 
     /// How far the SDK goes to make a recorded event outlive the process that recorded it.
     ///
@@ -389,22 +397,29 @@ public struct LDConfig {
     ///   compatibility guarantees or semantic versioning.
     public var eventPersistence: EventPersistence = Defaults.eventPersistence
 
-    /// The maximum number of bytes of events the SDK keeps, on disk and in memory together, whatever `eventPersistence` is. It is for
-    /// every environment the application configures together: with `secondaryMobileKeys`, each environment gets an equal share of it,
-    /// unlike `eventCapacity`, which each environment has in full. When an environment reaches its share, the SDK discards new events
-    /// until it successfully reports the stored ones, as it does when `eventCapacity` is reached; it never deletes stored events to make
-    /// room. A fifth of each share is kept for the summaries of flag evaluations, so that evaluations are still counted after full
-    /// events start being discarded. A value of zero or less means the default. (Default: 20 MiB)
+    /// The maximum number of bytes of events the SDK keeps for each environment, on disk and in memory together, whatever
+    /// `eventPersistence` is. Like `eventCapacity`, each environment in `secondaryMobileKeys` has it in full. When an environment reaches
+    /// it, the SDK discards new events until it successfully reports the stored ones, as it does when `eventCapacity` is reached; it never
+    /// deletes stored events to make room. A fifth of it is kept for the summaries of flag evaluations, so that evaluations are still
+    /// counted after full events start being discarded. A value of zero or less means the default, and a positive value below 2.5 MiB is
+    /// raised to 2.5 MiB, which holds one batch of the largest size. (Default: 20 MiB)
     ///
     /// Ordinary events reach `eventCapacity` long before this. It binds where events are unusually large, or where delivery keeps
     /// failing and summaries, which `eventCapacity` never refuses, accumulate.
+    ///
+    /// - Warning: Experimental. This property is not stable, and not subject to any backwards compatibility guarantees
+    ///   or semantic versioning.
     public var eventCapacityBytes: Int = Defaults.eventCapacityBytes
 
     /// How long the SDK keeps events it has persisted but not yet reported, where `eventPersistence` keeps events across launches. Events
     /// older than this are discarded rather than reported, and so is everything the SDK stored for an environment whose mobile key the
-    /// application stopped using. A value of zero or less means the default. (Default: 24 hours)
+    /// application stopped using. Events the SDK keeps in memory because it could not write them to disk are bound by it too. A value of
+    /// zero or less means the default. (Default: 24 hours)
     ///
     /// It has no effect where `eventPersistence` is `.disabled`.
+    ///
+    /// - Warning: Experimental. This property is not stable, and not subject to any backwards compatibility guarantees
+    ///   or semantic versioning.
     public var eventMaxAge: TimeInterval = Defaults.eventMaxAge
 
     private var _eventDeliveryDelay: TimeInterval = Defaults.eventDeliveryDelay
