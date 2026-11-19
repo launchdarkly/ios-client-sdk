@@ -567,8 +567,10 @@ final class EventDirectory {
     func remove(_ payloadId: String, holding events: Int) -> EventTally {
         ioLock.assertOwned()
         let file = url(of: payloadId, holding: events)
-        try? FileManager.default.removeItem(at: file)
+        // Remembered before the delete: another store in this process finding the file gone in between would otherwise
+        // take its events for lost.
         EventDirectory.rememberRemoved(payloadId)
+        try? FileManager.default.removeItem(at: file)
         if FileManager.default.fileExists(atPath: file.path) {
             // Its events stop counting all the same: LaunchDarkly has them, and holding capacity for a file this
             // process may never be allowed to delete would cost the session events it could still have recorded.
@@ -817,6 +819,9 @@ extension EventDirectory {
                       !BatchLocks.isSentInThisProcess(file)
                 else { continue }
                 let held = named ?? stored[payloadId]?.events ?? EventDirectory.eventsReading(file)
+                // Before the delete, as in `remove`. Where the delete is refused, mostly for a batch being sent, a store
+                // here that later finds it gone takes it for delivered, which a batch being sent most likely was.
+                EventDirectory.rememberRemoved(payloadId)
                 guard BatchLocks.deleteUnlessBeingSent(file)
                 else {
                     if !FileManager.default.fileExists(atPath: file.path) {
@@ -825,7 +830,6 @@ extension EventDirectory {
                     }
                     continue
                 }
-                EventDirectory.rememberRemoved(payloadId)
                 events += held
                 counted += stored.removeValue(forKey: payloadId)?.tally ?? EventTally()
             } else {
