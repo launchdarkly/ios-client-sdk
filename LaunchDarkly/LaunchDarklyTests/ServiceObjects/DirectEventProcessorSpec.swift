@@ -21,6 +21,10 @@ class DirectEventProcessorSpec: QuickSpec {
         /// How long a flush or delivery may take before a test gives up on it. A wait ends as soon as what it waits
         /// for happens, so this costs a passing test nothing, and a CI simulator can stall for most of a minute.
         static let deliveryTimeout: DispatchTimeInterval = .seconds(60)
+        /// How far past its budget closing may return before a test fails it. Wide, since a CI simulator stalls for
+        /// seconds at a time; what it tells apart is giving up at the budget from waiting on a delivery that the test
+        /// holds until it ends.
+        static let closingSlack: TimeInterval = 10
     }
 
     /// Retries at once and never waits, so every flush posts: for tests about what is kept through failures rather than
@@ -2188,7 +2192,7 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.flushAtClose()
 
                 // The delivery it then waits for never starts, so it waits out what is left of the budget.
-                expect(Date().timeIntervalSince(started)) < DirectEventProcessor.flushAtCloseBudget + 1
+                expect(Date().timeIntervalSince(started)) < DirectEventProcessor.flushAtCloseBudget + Constants.closingSlack
                 expect(eventsLeftOnDisk().compactMap { $0.keyField }) == ["an-event"]
             }
 
@@ -2719,7 +2723,8 @@ extension DirectEventProcessorSpec {
                 let stalled = DispatchSemaphore(value: 0)
                 store.beforeCommitting = {
                     stalled.signal()
-                    _ = diskAnswers.wait(timeout: .now() + 10)
+                    // Longer than the budget and its slack, so a close that waited for the commit fails.
+                    _ = diskAnswers.wait(timeout: .now() + 60)
                 }
                 let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, encoding: .codable, commitQueue: DispatchQueue(label: "com.launchdarkly.tests.commits"), pacing: .noWaits).started()
                 reporter.record(CustomEvent(key: "before-close", context: LDContext.stub()))
@@ -2730,7 +2735,7 @@ extension DirectEventProcessorSpec {
                 diskAnswers.leave()
 
                 expect(stalled.wait(timeout: .now())) == .success
-                expect(took) < DirectEventProcessor.flushAtCloseBudget + 1
+                expect(took) < DirectEventProcessor.flushAtCloseBudget + Constants.closingSlack
                 let keysOnDisk = { inner.payloadsOnDisk.compactMap { try? JSONDecoder().decode(LDValue.self, from: $0).keyField } }
                 expect(keysOnDisk()).toEventually(contain("before-close"), timeout: Constants.deliveryTimeout)
             }
@@ -4214,7 +4219,7 @@ extension DirectEventProcessorSpec {
                 released.signal()
 
                 expect(took) > DirectEventProcessor.flushAtCloseBudget - 0.1
-                expect(took) < DirectEventProcessor.flushAtCloseBudget + 1
+                expect(took) < DirectEventProcessor.flushAtCloseBudget + Constants.closingSlack
                 expect(testContext.serviceMock.publishedEventPayloads.map(customKeys))
                     .toEventually(equal([["at-close"]]), timeout: Constants.deliveryTimeout)
             }
