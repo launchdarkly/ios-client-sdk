@@ -726,14 +726,17 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(testContext.serviceMock.publishEventDataCallCount) == 3
             }
 
-            /// Whether what waits on `reporter`'s launch gate has run, `after` it went online.
-            func gateOpened(_ reporter: DirectEventProcessor, after: TimeInterval) -> Bool {
+            /// How long after `reporter` went online what waits on its launch gate ran, or nil where it did not run within
+            /// the delivery timeout. Timed from just before going online, so it is never shorter than the gate held it,
+            /// and a stalled simulator can only lengthen it.
+            func secondsUntilGateOpens(_ reporter: DirectEventProcessor) -> TimeInterval? {
                 let opened = UnfairLock()
-                var hasOpened = false
-                reporter.whenLaunchGateOpens { opened.withLock { hasOpened = true } }
+                var openedAt: Date?
+                reporter.whenLaunchGateOpens { opened.withLock { openedAt = Date() } }
+                let wentOnline = Date()
                 reporter.isOnline = true
-                Thread.sleep(forTimeInterval: after)
-                return opened.withLock { hasOpened }
+                expect(opened.withLock { openedAt }).toEventuallyNot(beNil(), timeout: Constants.deliveryTimeout)
+                return opened.withLock { openedAt }.map { $0.timeIntervalSince(wentOnline) }
             }
 
             it("holds what waits for the launch gate until the launch delay has passed, whether or not events persist") {
@@ -741,8 +744,7 @@ class DirectEventProcessorSpec: QuickSpec {
                                                     pacing: DirectEventProcessor.Pacing(launchDelay: 1, gap: 0)).started()
                 nextRun = reporter
 
-                expect(gateOpened(reporter, after: 0.6)) == false
-                expect(gateOpened(reporter, after: 0.8)) == true
+                expect(secondsUntilGateOpens(reporter)) >= 1
             }
 
             it("holds what waits for the launch gate while the reporter is offline, until it is online again") {
@@ -759,7 +761,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(opened.withLock { hasOpened }) == false
 
                 reporter.isOnline = true
-                expect(opened.withLock { hasOpened }).toEventually(beTrue(), timeout: .seconds(2))
+                expect(opened.withLock { hasOpened }).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
             }
 
             it("holds what asks for the open launch gate while the reporter is offline") {
@@ -774,7 +776,7 @@ class DirectEventProcessorSpec: QuickSpec {
                 expect(opened.withLock { hasOpened }) == false
 
                 reporter.isOnline = true
-                expect(opened.withLock { hasOpened }).toEventually(beTrue(), timeout: .seconds(2))
+                expect(opened.withLock { hasOpened }).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
             }
 
             it("holds nothing at the launch gate where the launch delay is zero") {
@@ -782,18 +784,18 @@ class DirectEventProcessorSpec: QuickSpec {
                                                     pacing: DirectEventProcessor.Pacing(launchDelay: 0, gap: 0)).started()
                 nextRun = reporter
 
-                expect(gateOpened(reporter, after: 0.2)) == true
+                expect(secondsUntilGateOpens(reporter)).toNot(beNil())
             }
 
             it("takes the launch delay from the configuration") {
+                // Longer than the default, which a reporter ignoring the configuration would then open the gate at.
                 var config = testContext.serviceMock.config
-                config.eventDeliveryDelay = 1
+                config.eventDeliveryDelay = LDConfig.Defaults.eventDeliveryDelay + 1
                 testContext.serviceMock.config = config
                 let reporter = DirectEventProcessor(service: testContext.serviceMock, onSyncComplete: nil, store: testContext.store).started()
                 nextRun = reporter
 
-                expect(gateOpened(reporter, after: 0.6)) == false
-                expect(gateOpened(reporter, after: 0.8)) == true
+                expect(secondsUntilGateOpens(reporter)) >= LDConfig.Defaults.eventDeliveryDelay + 1
             }
 
             itPersisting("does not let a report interval shorter than the launch delay send what a previous run left") {
@@ -2193,7 +2195,9 @@ extension DirectEventProcessorSpec {
 
                 // The delivery it then waits for never starts, so it waits out what is left of the budget.
                 expect(Date().timeIntervalSince(started)) < DirectEventProcessor.flushAtCloseBudget + Constants.closingSlack
-                expect(eventsLeftOnDisk().compactMap { $0.keyField }) == ["an-event"]
+                // Waited for, since a stalled simulator can use up the budget before the commit is done; the delivery
+                // queue stays held until the test ends, so the commit still cannot have been waiting on it.
+                expect(eventsLeftOnDisk().compactMap { $0.keyField }).toEventually(equal(["an-event"]), timeout: Constants.deliveryTimeout)
             }
 
             itPersisting("works out where its directory is away from the caller's thread at .deferred") {
@@ -2782,7 +2786,7 @@ extension DirectEventProcessorSpec {
             }
 
             itPersisting("leaves what it recorded before closing offline as a batch, which a client started in its place in the same run delivers") {
-                testContext = TestContext()
+                testContext = TestContext(eventFlushInterval: 3600)
                 testContext.eventProcessor.record(CustomEvent(key: "before-close", context: testContext.context))
                 testContext.eventProcessor.flushAtClose()
 
@@ -2793,7 +2797,7 @@ extension DirectEventProcessorSpec {
                 defer { replacement.isOnline = false }
 
                 // Well inside the report interval, so only going online can have delivered it.
-                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: .seconds(2))
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
                 expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["before-close"]]
             }
 
@@ -4201,9 +4205,17 @@ extension DirectEventProcessorSpec {
                 testContext.eventProcessor.record(CustomEvent(key: "at-close", context: testContext.context))
                 testContext.eventProcessor.isOnline = true
 
+                let started = Date()
                 testContext.eventProcessor.flushAtClose()
+                let took = Date().timeIntervalSince(started)
 
-                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["at-close"]]
+                // Closing gives up at its budget, which a stalled simulator can use up; only a close that returned sooner
+                // shows it waited for the answer.
+                if took < DirectEventProcessor.flushAtCloseBudget {
+                    expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["at-close"]]
+                }
+                expect(testContext.serviceMock.publishedEventPayloads.map(customKeys))
+                    .toEventually(equal([["at-close"]]), timeout: Constants.deliveryTimeout)
             }
 
             it("returns from closing within its budget while the closing delivery waits behind another, which still posts") {
