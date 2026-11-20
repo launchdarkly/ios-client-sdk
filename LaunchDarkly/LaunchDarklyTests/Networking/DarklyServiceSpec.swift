@@ -28,18 +28,18 @@ final class DarklyServiceSpec: QuickSpec {
         init(mobileKey: String = LDConfig.Constants.mockMobileKey,
              useReport: Bool = Constants.useGetMethod,
              diagnosticOptOut: Bool = false,
-             enableCompression: Bool? = nil,
              evaluationReasons: Bool = false,
-             payloadFilter: String? = nil) {
+             payloadFilter: String? = nil,
+             enableCompression: Bool? = nil) {
 
             config = LDConfig.stub(mobileKey: mobileKey, autoEnvAttributes: .disabled, isDebugBuild: true)
             config.useReport = useReport
             config.diagnosticOptOut = diagnosticOptOut
+            config.evaluationReasons = evaluationReasons
+            config.payloadFilter = payloadFilter
             if let enableCompression {
                 config.enableCompression = enableCompression
             }
-            config.evaluationReasons = evaluationReasons
-            config.payloadFilter = payloadFilter
             self.serviceFactoryMock = ClientServiceMockFactory(config: config)
             serviceMock = DarklyServiceMock(config: config)
             service = DarklyService(config: config, context: context, envReporter: envReporterMock, serviceFactory: serviceFactoryMock)

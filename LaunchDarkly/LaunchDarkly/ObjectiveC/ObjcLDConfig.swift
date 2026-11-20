@@ -209,6 +209,12 @@ public final class ObjcLDConfig: NSObject {
         set { config.diagnosticRecordingInterval = newValue }
     }
 
+    /// The key of a payload filter to apply to flag data requests. If the key is invalid, the SDK logs an error and requests the full environment instead. (Default: nil)
+    @objc public var payloadFilter: String? {
+        get { config.payloadFilter }
+        set { config.payloadFilter = newValue }
+    }
+
     /// Sends event payloads gzip-encoded, which reduces egress bandwidth cost. (Default: NO)
     ///
     /// Off by default because older versions of the relay proxy do not accept gzip-encoded event payloads. Customers not using
@@ -216,12 +222,6 @@ public final class ObjcLDConfig: NSObject {
     @objc public var enableCompression: Bool {
         get { config.enableCompression }
         set { config.enableCompression = newValue }
-    }
-
-    /// The key of a payload filter to apply to flag data requests. If the key is invalid, the SDK logs an error and requests the full environment instead. (Default: nil)
-    @objc public var payloadFilter: String? {
-        get { config.payloadFilter }
-        set { config.payloadFilter = newValue }
     }
 
     /// For use by wrapper libraries to set an identifying name for the wrapper being used. This will be sent in the "X-LaunchDarkly-Wrapper" header on requests to the LaunchDarkly servers to allow recording metrics on the usage of these wrapper libraries.
