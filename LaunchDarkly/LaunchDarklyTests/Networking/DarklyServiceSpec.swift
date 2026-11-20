@@ -29,13 +29,17 @@ final class DarklyServiceSpec: QuickSpec {
              useReport: Bool = Constants.useGetMethod,
              diagnosticOptOut: Bool = false,
              evaluationReasons: Bool = false,
-             payloadFilter: String? = nil) {
+             payloadFilter: String? = nil,
+             enableCompression: Bool? = nil) {
 
             config = LDConfig.stub(mobileKey: mobileKey, autoEnvAttributes: .disabled, isDebugBuild: true)
             config.useReport = useReport
             config.diagnosticOptOut = diagnosticOptOut
             config.evaluationReasons = evaluationReasons
             config.payloadFilter = payloadFilter
+            if let enableCompression {
+                config.enableCompression = enableCompression
+            }
             self.serviceFactoryMock = ClientServiceMockFactory(config: config)
             serviceMock = DarklyServiceMock(config: config)
             service = DarklyService(config: config, context: context, envReporter: envReporterMock, serviceFactory: serviceFactoryMock)
@@ -60,6 +64,7 @@ final class DarklyServiceSpec: QuickSpec {
         payloadFilterSpec()
         publishEventDataSpec()
         diagnosticCacheSpec()
+        sessionSpec()
         publishDiagnosticSpec()
 
         afterEach {
@@ -655,6 +660,26 @@ final class DarklyServiceSpec: QuickSpec {
                     expect(responses.urlResponse).toNot(beNil())
                     expect(responses.error).to(beNil())
                 }
+                it("sends the payload uncompressed by default") {
+                    expect(eventRequest?.allHTTPHeaderFields?["Content-Encoding"]).to(beNil())
+                    expect(eventRequest?.ohhttpStubs_httpBody) == testData
+                }
+            }
+            context("compression enabled") {
+                beforeEach {
+                    testContext = TestContext(mobileKey: LDConfig.Constants.mockMobileKey,
+                                              useReport: Constants.useGetMethod,
+                                              enableCompression: true)
+                    waitUntil(timeout: .seconds(5)) { done in
+                        testContext.serviceMock.stubEventRequest(success: true) { eventRequest = $0 }
+                        testContext.service.publishEventData(testData, UUID().uuidString) { _ in done() }
+                    }
+                }
+                it("gzips the payload") {
+                    expect(eventRequest).toNot(beNil())
+                    expect(eventRequest?.allHTTPHeaderFields?["Content-Encoding"]) == "gzip"
+                    expect(eventRequest?.ohhttpStubs_httpBody?.gunzip()) == testData
+                }
             }
             context("failure") {
                 var responses: ServiceResponses!
@@ -710,6 +735,16 @@ final class DarklyServiceSpec: QuickSpec {
                 expect(testContext.service.diagnosticCache).toNot(beNil())
                 expect(testContext.serviceFactoryMock.makeDiagnosticCacheCallCount) == 1
                 expect(testContext.serviceFactoryMock.makeDiagnosticCacheReceivedSdkKey) == LDConfig.Constants.mockMobileKey
+            }
+        }
+    }
+
+    private func sessionSpec() {
+        describe("session") {
+            it("is shared by every environment") {
+                let primary = TestContext(mobileKey: LDConfig.Constants.mockMobileKey)
+                let secondary = TestContext(mobileKey: "secondary-mobile-key")
+                expect(primary.service.session) === secondary.service.session
             }
         }
     }
