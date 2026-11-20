@@ -27,7 +27,7 @@ jobs:
             run-contract-tests: false
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # If you only need the current version keep this.
 

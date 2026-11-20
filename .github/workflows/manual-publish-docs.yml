@@ -11,7 +11,7 @@ jobs:
       contents: write # Needed in this case to write github pages.
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build and Test
         uses: ./.github/actions/ci
