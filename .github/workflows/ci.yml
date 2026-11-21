@@ -14,9 +14,9 @@ jobs:
     runs-on: macos-15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: 16.4.0
 
@@ -32,14 +32,14 @@ jobs:
           - xcode-version: 16.4.0
             ios-sim: "platform=iOS Simulator,name=iPhone 16"
             os: macos-15
-          - xcode-version: 15.4.0
-            ios-sim: "platform=iOS Simulator,name=iPhone 15"
-            os: macos-14
+          - xcode-version: 26.5.0
+            ios-sim: "platform=iOS Simulator,name=iPhone 17"
+            os: macos-26
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: ${{ matrix.xcode-version }}
 
@@ -56,13 +56,13 @@ jobs:
         include:
           - xcode-version: 16.4.0
             os: macos-15
-          - xcode-version: 15.4.0
-            os: macos-14
+          - xcode-version: 26.5.0
+            os: macos-26
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: ${{ matrix.xcode-version }}
 
@@ -77,13 +77,13 @@ jobs:
         include:
           - xcode-version: 16.4.0
             os: macos-15
-          - xcode-version: 15.4.0
-            os: macos-14
+          - xcode-version: 26.5.0
+            os: macos-26
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: ${{ matrix.xcode-version }}
 
@@ -98,13 +98,13 @@ jobs:
         include:
           - xcode-version: 16.4.0
             os: macos-15
-          - xcode-version: 15.4.0
-            os: macos-14
+          - xcode-version: 26.5.0
+            os: macos-26
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: ${{ matrix.xcode-version }}
 
@@ -119,13 +119,13 @@ jobs:
         include:
           - xcode-version: 16.4.0
             os: macos-15
-          - xcode-version: 15.4.0
-            os: macos-14
+          - xcode-version: 26.5.0
+            os: macos-26
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: ${{ matrix.xcode-version }}
 
@@ -135,9 +135,9 @@ jobs:
     runs-on: macos-15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: 16.4.0
 
@@ -149,9 +149,9 @@ jobs:
     runs-on: macos-15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: 16.4.0
 

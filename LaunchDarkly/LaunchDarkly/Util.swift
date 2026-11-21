@@ -17,6 +17,15 @@ class Util {
         }
         return Data(digest)
     }
+
+    /// A name for what is stored for a mobile key, safe in a path and holding neither the key nor the bundle identifier:
+    /// the SHA-256 of each, base64url encoded, the bundle's first where there is one.
+    class func hashedStorageName(mobileKey: String, bundleId: String? = Bundle.main.bundleIdentifier) -> String {
+        let key = sha256(mobileKey).base64UrlEncodedString
+        guard let bundleId
+        else { return key }
+        return "\(sha256(bundleId).base64UrlEncodedString).\(key)"
+    }
 }
 
 extension String {

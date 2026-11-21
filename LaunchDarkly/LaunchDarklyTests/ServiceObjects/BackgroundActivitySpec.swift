@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import Quick
 import Nimble
 @testable import LaunchDarkly
@@ -77,7 +78,6 @@ final class BackgroundActivitySpec: QuickSpec {
             }
         }
 
-        #if os(iOS) || os(tvOS) || os(watchOS)
         describe("an assertion from the process") {
             /// Stands in for `performExpiringActivity`, which answers on a system queue rather than the caller's.
             ///
@@ -140,14 +140,34 @@ final class BackgroundActivitySpec: QuickSpec {
                 // Ended by the cap, rather than by the work or by never having been held.
                 expect(Date().timeIntervalSince(started)) > 0.2
             }
-        }
-        #else
-        describe("an assertion from the process") {
-            it("runs the work on the calling thread without asking the system, which has no assertions here") {
-                var asked = false
-                let assertion = BackgroundActivity.processAssertion(logger: .disabled,
-                                                                    perform: { _, _ in asked = true },
+
+            it("gives up the assertion when the system expires it, though reading the logger waits") {
+                // As reading the current clients' logger does while identify holds `instancesQueue`.
+                let loggerMayReturn = DispatchSemaphore(value: 0)
+                func waitingLogger() -> OSLog {
+                    _ = loggerMayReturn.wait(timeout: .now() + 5)
+                    return .disabled
+                }
+                let ended = DispatchSemaphore(value: 0)
+                let expiring: BackgroundActivity.ExpiringActivity = { _, whileGranted in
+                    DispatchQueue.global().async {
+                        whileGranted(false)
+                        ended.signal()
+                    }
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) { whileGranted(true) }
+                }
+                let assertion = BackgroundActivity.processAssertion(logger: waitingLogger(),
+                                                                    perform: expiring,
                                                                     maximumDuration: 30)
+
+                assertion("test") { _ in }
+
+                expect(ended.wait(timeout: .now() + 2)) == .success
+                loggerMayReturn.signal()
+            }
+
+            it("runs the work on the calling thread where the platform has no assertions") {
+                let assertion = BackgroundActivity.processAssertion(logger: .disabled, perform: nil, maximumDuration: 30)
 
                 var ran = false
                 assertion("test") { finished in
@@ -156,9 +176,11 @@ final class BackgroundActivitySpec: QuickSpec {
                 }
 
                 expect(ran) == true
-                expect(asked) == false
+            }
+
+            it("asks the system for one only where the platform has them") {
+                expect(SystemCapabilities.expiringActivity != nil) == SystemCapabilities.suspendsWhenBackgrounded
             }
         }
-        #endif
     }
 }

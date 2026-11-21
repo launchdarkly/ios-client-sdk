@@ -535,28 +535,34 @@ public final class ObjcLDClient: NSObject {
      on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
      sent, it only triggers a background task to send events immediately.
 
-     Because it does not wait, it cannot report how the delivery went. Use `flushWithCompletion:` where that matters
-     but blocking does not suit, or `flushAndWait` where blocking is acceptable.
+     Because it does not wait, it cannot report how the delivery went. Use `flushWithTimeout:completion:` where that
+     matters but blocking does not suit, or `flushAndWait` where blocking is acceptable.
      */
     @objc public func flush() {
         ldClient.flush()
     }
 
     /**
-     Sends any currently queued events to LaunchDarkly and reports how the delivery went.
+     Sends any currently queued events to LaunchDarkly and reports how the delivery went, within `timeout` seconds.
 
-     Like `flushAndWait`, but without blocking: the completion runs once every environment has answered. There is no
-     timeout, because a delivery always ends, by its own request timeouts if nothing else.
+     Like `flushAndWait`, but without blocking: the completion runs once every environment has answered, or once the
+     timeout expires, whichever comes first. The timeout bounds the wait, not the delivery: an in-flight request is
+     left to finish.
+
+     Unlike `flushAndWait`, it does not post while delivery is backing off after a failure. It sits out a wait of a
+     second or so, and reports `LDFlushResultFailed` without posting through a longer one, such as the minutes that
+     follow a refusal.
 
      - Warning: Experimental. This method is not stable, and not subject to any backwards compatibility guarantees or
        semantic versioning.
 
-     - parameter completion: Given `YES` if LaunchDarkly accepted the events, or there were none to send, and `NO` if
-       the client is offline or closed, or any of the events were lost. See `flushAndWait` for what being lost
-       covers. Runs once, on a background queue that is not the caller's thread.
+     - parameter timeout: How long to wait for the answer, in seconds, up to 30. Zero or less gives the deliveries no
+       time, so it reports `LDFlushResultTimeout` unless the client is offline or closed.
+     - parameter completion: Given how the flush went; see `LDFlushResult`. Runs once, on a background queue that is
+       not the caller's thread.
      */
-    @objc public func flush(completion: @escaping (Bool) -> Void) {
-        ldClient.flush(completion: completion)
+    @objc public func flush(timeout: TimeInterval, completion: @escaping (FlushResult) -> Void) {
+        ldClient.flush(timeout: timeout, completion: completion)
     }
 
     /**
@@ -575,17 +581,23 @@ public final class ObjcLDClient: NSObject {
      This is not a crash-time mechanism. It is safe to call from the main thread, but keep the budget well below
      15 seconds there.
 
+     It posts even while delivery is backing off after a failure, as closing the client does, since it is for a moment
+     after which the SDK may not get to send. After a refusal such as a 401 or 403 the SDK waits about eight and a half
+     minutes before posting again, doubling up to an hour, and a call that sat that out would make no attempt at all.
+     A post that fails then leaves the wait as it was, so `flush` and the periodic delivery go on waiting out the same
+     one rather than a longer one. That also means nothing slows these posts down: a call made routinely, rather than
+     just before the process is suspended or ends, posts once per call for as long as LaunchDarkly keeps refusing.
+     Keep it for those last moments; the SDK already flushes on every move to the      background.
+
      - Warning: Experimental. This method is not stable, and not subject to any backwards compatibility guarantees or
        semantic versioning.
 
-     - parameter timeout: How long to wait, in seconds. Zero or less does not wait, and so reports `NO`. There is
-       no upper limit: a delivery always ends, by its own request timeouts if nothing else, so a very long timeout
-       waits for that.
+     - parameter timeout: How long to wait, in seconds, up to 30. Zero or less does not wait, and so reports `NO`.
      - returns: `YES` if LaunchDarkly accepted the events, or there were none to send. `NO` if the timeout expired
-       first, the client is offline or closed, or any of the events were lost: refused by LaunchDarkly, still failing
-       after one retry, or unable to be serialized. Lost events are not kept for a later flush, so calling this again
-       does not resend them. A refusal also stops event delivery until the client is next set online, and until then
-       this returns `NO` even with nothing to send. A `NO` because the timeout expired does not mean the events were
+       first, the client is offline or closed, or the events did not get out. Events the service refused or that
+       failed to post are kept, and posted again once the backoff allows, or by the next call to this method. Events
+       that could not be serialized, or whose payload LaunchDarkly refused twice in a row, are lost, and calling this
+       again does not resend them. A `NO` because the timeout expired does not mean the events were
        not sent: the delivery is left running, and may still arrive.
      */
     @objc public func flushAndWait(timeout: TimeInterval) -> Bool {

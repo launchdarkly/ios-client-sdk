@@ -170,7 +170,7 @@ extension LDClient {
     }
 
     private func variationDetailInternal<T>(_ flagKey: LDFlagKey, _ defaultValue: T, needsReason: Bool, methodName: String) -> LDEvaluationDetail<T> where T: Decodable, T: LDValueConvertible {
-        var visited: Set<String>? = nil
+        var visited: Set<String>?
         return variationDetailInternal(flagKey, defaultValue, needsReason: needsReason, methodName: methodName, visited: &visited)
     }
 
@@ -180,6 +180,8 @@ extension LDClient {
         let featureFlag = flagStore.featureFlag(for: flagKey)
         return evaluateWithHooks(flagKey: flagKey, defaultValue: defaultValue, methodName: methodName, featureFlag: featureFlag) {
             var result: LDEvaluationDetail<T>
+            // The events describe the result that the application receives.
+            var eventFeatureFlag = featureFlag
             if let featureFlag = featureFlag {
                 if let prerequisites = featureFlag.prerequisites, !prerequisites.isEmpty {
                     // Recurse on prerequisites to emulate prereq evaluations occurring with desirable side effects
@@ -213,6 +215,8 @@ extension LDClient {
                     } catch let error {
                         os_log("%s type conversion error %s: failed converting %s to type %s", log: config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: featureFlag.value), String(describing: T.self))
                         result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "WRONG_TYPE"])
+                        // A wrong-type result has no variation and has the WRONG_TYPE reason.
+                        eventFeatureFlag = featureFlag.withEvaluationResult(variation: nil, reason: result.reason)
                     }
                 }
             } else {
@@ -220,10 +224,10 @@ extension LDClient {
                 result = LDEvaluationDetail(value: defaultValue, variationIndex: nil, reason: ["kind": "ERROR", "errorKind": "FLAG_NOT_FOUND"])
             }
 
-            eventReporter.recordFlagEvaluationEvents(flagKey: flagKey,
+            eventProcessor.recordFlagEvaluationEvents(flagKey: flagKey,
                                                      value: result.value.toLDValue(),
                                                      defaultValue: defaultValue.toLDValue(),
-                                                     featureFlag: featureFlag,
+                                                     featureFlag: eventFeatureFlag,
                                                      context: context,
                                                      includeReason: needsReason)
             return result
