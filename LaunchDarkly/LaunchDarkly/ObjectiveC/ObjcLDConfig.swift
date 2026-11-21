@@ -209,6 +209,12 @@ public final class ObjcLDConfig: NSObject {
         set { config.diagnosticRecordingInterval = newValue }
     }
 
+    /// The key of a payload filter to apply to flag data requests. If the key is invalid, the SDK logs an error and requests the full environment instead. (Default: nil)
+    @objc public var payloadFilter: String? {
+        get { config.payloadFilter }
+        set { config.payloadFilter = newValue }
+    }
+
     /// Sends event payloads gzip-encoded, which reduces egress bandwidth cost. (Default: NO)
     ///
     /// Off by default because older versions of the relay proxy do not accept gzip-encoded event payloads. Customers not using

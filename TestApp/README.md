@@ -24,8 +24,24 @@ LAUNCHDARKLY_MOBILE_KEY = mob-...
 LAUNCHDARKLY_ENVIRONMENT = production
 ```
 
-Set `LAUNCHDARKLY_ENVIRONMENT = staging` to use LaunchDarkly's staging endpoints. Either value can also be overridden at
-launch, without a rebuild, with `-LDMobileKey mob-...` or `-LDEnvironment staging`.
+Set `LAUNCHDARKLY_ENVIRONMENT = staging` to use LaunchDarkly's staging endpoints. Any value can also be overridden at
+launch, without a rebuild, with `-LDMobileKey mob-...`, `-LDSecondaryMobileKey mob-...` or `-LDEnvironment staging`.
+
+### Two environments
+
+Add a second key to start a second environment alongside the first, from the same `LDConfig`:
+
+```
+LAUNCHDARKLY_SECONDARY_MOBILE_KEY = mob-...
+```
+
+An **Environment** picker then appears at the top of **Client**, and chooses which environment's client the buttons use:
+the flag evaluations, Track, the event-loss and stress scenarios, Post 20 MB, the connection status and **Event
+storage**, which shows that environment's own directory. The choice is saved, so the launch that answers a kill scenario
+shows the same environment.
+
+Restart, the persistence picker, Flush, Flush+Wait, Offline and Identify reach both environments whichever is selected,
+because the SDK applies `close`, `flush`, `flushAndWait`, `setOnline` and `identify` to every environment it started.
 
 Running on a device needs a development team, set in the target's Signing & Capabilities. The simulators and the Mac
 need none.

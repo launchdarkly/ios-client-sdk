@@ -23,8 +23,9 @@ enum OversizedPostProbe {
     private static let systemName = "iOS"
     #endif
 
-    static func run(configuration: TestAppConfiguration) async -> String {
-        var config = LDConfig(mobileKey: configuration.mobileKey, autoEnvAttributes: .disabled)
+    static func run(configuration: TestAppConfiguration, environment: TestEnvironment) async -> String {
+        let mobileKey = configuration.mobileKey(for: environment)
+        var config = LDConfig(mobileKey: mobileKey, autoEnvAttributes: .disabled)
         configuration.applyEndpoints(to: &config)
         let url = config.eventsUrl.appendingPathComponent(path)
         let payloadId = UUID().uuidString
@@ -40,7 +41,7 @@ enum OversizedPostProbe {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("api_key \(configuration.mobileKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("api_key \(mobileKey)", forHTTPHeaderField: "Authorization")
         request.setValue("\(systemName)/oversized-post-probe", forHTTPHeaderField: "User-Agent")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
