@@ -12,3 +12,6 @@ xcuserdata
 **/Package.resolved
 /LaunchDarkly.xcworkspace/xcshareddata/swiftpm/Package.resolved
 /LaunchDarkly.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+
+# The test app's mobile key; see TestApp/Config/Secrets.xcconfig.example.
+/TestApp/Config/Secrets.xcconfig
