@@ -20,8 +20,8 @@ class TestContext {
     var flagSynchronizerMock: LDFlagSynchronizingMock! {
         subject.flagSynchronizer as? LDFlagSynchronizingMock
     }
-    var eventReporterMock: EventReportingMock! {
-        subject.eventReporter as? EventReportingMock
+    var eventProcessorMock: EventProcessorMock! {
+        subject.eventProcessor as? EventProcessorMock
     }
     var changeNotifierMock: FlagChangeNotifyingMock! {
         subject.flagChangeNotifier as? FlagChangeNotifyingMock
@@ -42,7 +42,7 @@ class TestContext {
         serviceFactoryMock.onFlagSyncComplete
     }
     var recordedEvent: LaunchDarkly.Event? {
-        eventReporterMock.recordReceivedEvent
+        eventProcessorMock.recordReceivedEvent
     }
     var throttlerMock: ThrottlingMock? {
         subject.throttler as? ThrottlingMock

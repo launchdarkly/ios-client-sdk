@@ -40,11 +40,14 @@ public class LDClient {
 
     // MARK: - State Controls and Indicators
 
-    private static var instances: [String: LDClient]?
-    private static let instancesQueue = DispatchQueue(label: "com.launchdarkly.LDClient.instancesQueue")
+    static var instances: [String: LDClient]?
+    static let instancesQueue = DispatchQueue(label: "com.launchdarkly.LDClient.instancesQueue")
+    /// The `close()` calls still closing the clients they took from `instances`. Entered on `instancesQueue`, in the
+    /// same step that takes them, so that a `start()` checking it there cannot miss one.
+    private static let closingClients = DispatchGroup()
 
     // If the SDK is provided a timeout value that exceeds this value, a warning will be logged.
-    private static let longTimeoutInterval: TimeInterval = 15
+    static let longTimeoutInterval: TimeInterval = 15
 
     /**
      Reports the online/offline state of the LDClient.
@@ -66,7 +69,7 @@ public class LDClient {
                 let oldValue = _isOnline
                 _isOnline = newValue
                 flagSynchronizer.isOnline = _isOnline
-                eventReporter.isOnline = _isOnline
+                eventProcessor.isOnline = _isOnline
                 diagnosticReporter.setMode(runMode, online: _isOnline)
                 if _isOnline != oldValue {
                     connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: connectionInformation, ldClient: self, config: config, online: _isOnline)
@@ -244,18 +247,26 @@ public class LDClient {
     /**
      Stops the LDClient. Stopping the client means the LDClient goes offline and stops recording events. LDClient will no longer provide feature flag values, only returning default values.
 
+     While online, closing waits for the final delivery of the events already recorded, no longer than two seconds for each environment, the write of those events included where they persist. A delivery still running then goes on in the background.
+
      There is almost no reason to stop the LDClient. Normally, set the LDClient offline to stop communication with the LaunchDarkly servers. Stop the LDClient to stop recording events. There is no need to stop the LDClient prior to suspending, moving to the background, or terminating the app. The SDK will respond to these events as the system requires and as configured in LDConfig.
     */
     public func close() {
-        LDClient.instancesQueue.sync(flags: .barrier) {
-            LDClient.instances?.forEach { $1.internalClose() }
-            LDClient.instances = nil
+        // Closed outside `instancesQueue`: each close can wait on its final event commit and delivery, and every other call that
+        // reads `instances` would wait behind it. Only `start()` waits, so that a new client does not open the event
+        // store of one still committing.
+        let clients = LDClient.instancesQueue.sync(flags: .barrier) { () -> [LDClient] in
+            defer { LDClient.instances = nil }
+            LDClient.closingClients.enter()
+            return LDClient.instances.map { Array($0.values) } ?? []
         }
+        defer { LDClient.closingClients.leave() }
+        clients.forEach { $0.internalClose() }
     }
 
     private func internalClose() {
         os_log("%s stopping", log: config.logger, type: .debug, typeName(and: #function))
-        internalFlush()
+        eventProcessor.flushAtClose()
         internalSetOnline(false)
         hasStarted = false
         os_log("%s stopped", log: config.logger, type: .debug, typeName(and: #function))
@@ -455,7 +466,7 @@ public class LDClient {
 
         internalIdentifyQueue.sync {
             if self.context == updatedContext {
-                self.eventReporter.record(IdentifyEvent(context: self.context))
+                self.eventProcessor.record(IdentifyEvent(context: self.context))
                 completion?()
                 return
             }
@@ -505,7 +516,7 @@ public class LDClient {
                                                                    onSyncComplete: self.onFlagSyncComplete)
 
             if self.hasStarted {
-                self.eventReporter.record(IdentifyEvent(context: self.context))
+                self.eventProcessor.record(IdentifyEvent(context: self.context))
             }
 
             if self.isOnline && self.isInSupportedRunMode {
@@ -749,7 +760,7 @@ public class LDClient {
             key,
             String(describing: data),
             String(describing: metricValue))
-        eventReporter.record(event)
+        eventProcessor.record(event)
 
         executeAfterTrackHooks(key: key, data: data, metricValue: metricValue)
     }
@@ -784,23 +795,6 @@ public class LDClient {
     public func registerPlugin(_ plugin: Plugin) {
         addHooks(plugin.getHooks(metadata: environmentMetadata))
         plugin.register(client: self, metadata: environmentMetadata)
-    }
-
-    /**
-     Tells the SDK to immediately send any currently queued events to LaunchDarkly.
-
-     There should not normally be a need to call this function. While online, the LDClient automatically reports events
-     on an interval defined by `LDConfig.eventFlushInterval`. Note that this function does not block until events are
-     sent, it only triggers a background task to send events immediately.
-     */
-    public func flush() {
-        LDClient.instancesQueue.sync(flags: .barrier) {
-            LDClient.instances?.forEach { $1.internalFlush() }
-        }
-    }
-
-    private func internalFlush() {
-        eventReporter.flush(completion: nil)
     }
 
     /// Static, and over a logger rather than a client, so that the event reporter can be given it while the client
@@ -846,26 +840,36 @@ public class LDClient {
         }
     }
 
+    /// Marks a start in progress, once any close in progress has closed its clients. False where there are clients, or
+    /// another start has claimed them already.
+    private static func claimInstances() -> Bool {
+        while true {
+            closingClients.wait()
+            let claimed = instancesQueue.sync(flags: .barrier) { () -> Bool? in
+                guard closingClients.wait(timeout: .now()) == .success
+                else { return nil }
+                guard instances == nil
+                else { return false }
+                // initializing instances to empty list acts as a initialization in progress flag to avoid other threads
+                // entering this function again
+                instances = [:]
+                return true
+            }
+            if let claimed {
+                return claimed
+            }
+        }
+    }
+
     static func start(serviceFactory: ClientServiceCreating?, config: LDConfig, context: LDContext? = nil, completion: (() -> Void)? = nil) {
 
         if serviceFactory != nil {
             get()?.close()
         }
 
-        var shouldCreateInstances = false
-        instancesQueue.sync(flags: .barrier) {
-            if instances != nil {
-                os_log("%s LDClient.start() was called more than once!", log: config.logger, type: .debug, typeName(and: #function))
-                shouldCreateInstances = false
-            } else {
-                // initializing instances to empty list acts as a initialization in progress flag to avoid other threads
-                // entering this function again
-                LDClient.instances = [:]
-                shouldCreateInstances = true
-            }
-        }
-
-        if !shouldCreateInstances {
+        guard claimInstances()
+        else {
+            os_log("%s LDClient.start() was called more than once!", log: config.logger, type: .debug, typeName(and: #function))
             return
         }
 
@@ -976,7 +980,7 @@ public class LDClient {
     private(set) var flagCache: FeatureFlagCaching
     private(set) var flagSynchronizer: LDFlagSynchronizing
     var flagChangeNotifier: FlagChangeNotifying
-    private(set) var eventReporter: EventReporting
+    private(set) var eventProcessor: EventProcessor
     private(set) var environmentReporter: EnvironmentReporting
     private(set) var throttler: Throttling
     private(set) var diagnosticReporter: DiagnosticReporting
@@ -1038,7 +1042,7 @@ public class LDClient {
             context = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(context)
         }
 
-        var hookState: IdentifyHookState? = nil
+        var hookState: IdentifyHookState?
         if !hooks.isEmpty {
             let seriesContext = IdentifySeriesContext(context: context, methodName: "init")
             let seriesData = hooks.map { hook in hook.beforeIdentify(seriesContext: seriesContext, seriesData: EvaluationSeriesData()) }
@@ -1050,7 +1054,7 @@ public class LDClient {
         // Reports over the logger rather than over this client, which is not usable until every stored property
         // below has a value, so that the reporter can be built once rather than built and replaced.
         let logger = configuration.logger
-        eventReporter = self.serviceFactory.makeEventReporter(config: config, service: service) { result in
+        eventProcessor = self.serviceFactory.makeEventProcessor(config: config, service: service) { result in
             LDClient.logEventSyncComplete(result, logger)
         }
         connectionInformation = self.serviceFactory.makeConnectionInformation()
@@ -1065,6 +1069,7 @@ public class LDClient {
         if let backgroundNotification = SystemCapabilities.backgroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: backgroundNotification, object: nil)
         }
+        LDClient.observeBackgroundingForEvents()
         if let foregroundNotification = SystemCapabilities.foregroundNotification {
             NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: foregroundNotification, object: nil)
         }
@@ -1074,12 +1079,13 @@ public class LDClient {
         service.resetFlagResponseCache(etag: cachedData.etag)
         // Reports to this client, so it could not be given at construction: `self` is only usable from here.
         flagSynchronizer.onSyncComplete = onFlagSyncComplete
+        giveFlagValuesTheNetworkFirst()
 
         if let cachedFlags = cachedData.items, !cachedFlags.isEmpty {
             flagStore.replaceStore(newStoredItems: cachedFlags)
         }
 
-        eventReporter.record(IdentifyEvent(context: context))
+        eventProcessor.record(IdentifyEvent(context: context))
         self.connectionInformation = ConnectionInformation.uncacheConnectionInformation(config: config, ldClient: self, clientServiceFactory: self.serviceFactory)
 
         internalSetOnline(configuration.startOnline) {
@@ -1093,6 +1099,37 @@ public class LDClient {
 }
 
 extension LDClient: TypeIdentifying { }
+
+extension LDClient {
+    /// Has the diagnostic init event wait for the event processor's launch gate, as a previous run's events do, whether
+    /// or not events persist.
+    fileprivate func giveFlagValuesTheNetworkFirst() {
+        if let eventProcessor = eventProcessor as? DirectEventProcessor {
+            (diagnosticReporter as? DiagnosticReporter)?.sendInitAfterLaunchGate(of: eventProcessor)
+        }
+    }
+
+    /// Observes the notification once for the events of every environment, however many clients are made.
+    private static let backgroundEvents: BackgroundEventDelivery = {
+        let delivery = BackgroundEventDelivery(environments: LDClient.currentEnvironments)
+        // Run on the posting thread, so that every environment has committed by the time the notification returns.
+        NotificationCenter.default.addObserver(forName: SystemCapabilities.eventsBackgroundNotification, object: nil, queue: nil) { _ in
+            delivery.applicationDidEnterBackground()
+        }
+        return delivery
+    }()
+
+    fileprivate static func observeBackgroundingForEvents() {
+        _ = backgroundEvents
+    }
+
+    private static func currentEnvironments() -> [BackgroundEventDelivery.Environment] {
+        let clients = instancesQueue.sync { instances } ?? [:]
+        return clients.map { name, client in
+            BackgroundEventDelivery.Environment(name: name, eventProcessor: client.eventProcessor, logger: client.config.logger)
+        }
+    }
+}
 
 #if DEBUG
 extension LDClient {

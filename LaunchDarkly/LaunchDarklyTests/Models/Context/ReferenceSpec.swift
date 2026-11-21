@@ -88,6 +88,28 @@ final class ReferenceSpec: XCTestCase {
         }
     }
 
+    /// The raw form is what `redactedAttributes` reports and what private attributes are stored as, so it has to parse
+    /// back to the same name. These are the forms java-core's `AttributeRef.fromLiteral` produces.
+    func testLiteralRawFormsParseBackToTheSameName() {
+        let tests: [(String, String)] = [
+            ("name", "name"),
+            ("name/with/slashes", "name/with/slashes"),
+            ("name~with~tildes", "name~with~tildes"),
+            ("/name", "/~1name"),
+            ("/a~b/c", "/~1a~0b~1c")
+        ]
+
+        for (name, expectedRaw) in tests {
+            let literal = Reference(literal: name)
+            XCTAssertEqual(literal.raw(), expectedRaw, name)
+            XCTAssertEqual(literal.component(0), name, name)
+
+            let reparsed = Reference(literal.raw())
+            XCTAssertEqual(reparsed.depth(), 1, name)
+            XCTAssertEqual(reparsed.component(0), name, name)
+        }
+    }
+
     func testCanHandleInvalidIndexRequests() {
         let reference = Reference("/a/b/c")
 

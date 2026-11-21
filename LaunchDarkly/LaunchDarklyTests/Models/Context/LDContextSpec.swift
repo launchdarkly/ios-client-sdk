@@ -311,6 +311,19 @@ final class LDContextSpec: XCTestCase {
         }
     }
 
+    func testTrySetValueRejectsMeta() throws {
+        for value: LDValue in [["redactedAttributes": ["email"]], "string", .null] {
+            var builder = LDContextBuilder(key: "key")
+            builder.trySetValue("email", "a@example.com")
+
+            XCTAssertFalse(builder.trySetValue("_meta", value))
+
+            let context = try builder.build().get()
+            XCTAssertEqual(context.getOptionalAttributeNames(), ["email"])
+            XCTAssertNil(context.getValue(Reference("_meta")))
+        }
+    }
+
     func testContextCanGetValue() throws {
         let tests: [(String, LDValue?)] = [
             // Basic simple attribute retrievals
