@@ -16,7 +16,7 @@ runs:
       shell: bash
       run: make start-contract-test-service-bg
 
-    - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests/v1.3.0
+    - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests/v1
       with:
         test_service_port: 8080
         token: ${{ inputs.token }}
