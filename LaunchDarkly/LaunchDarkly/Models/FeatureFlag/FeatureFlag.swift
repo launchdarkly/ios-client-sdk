@@ -100,7 +100,13 @@ struct FeatureFlag: Codable {
     }
 
     func shouldCreateDebugEvents(lastEventReportResponseTime: Date?) -> Bool {
-        (lastEventReportResponseTime ?? Date()) <= (debugEventsUntilDate ?? Date.distantPast)
+        // Workaround for an Apple platform defect, not an SDK bug. The Xcode 27.2 SDKs declare
+        // Foundation's `Date <=` and `Date >=` as back-deployed, and early iOS 27.2 beta builds
+        // shipped a Foundation that did not export those symbols. Any app built with that SDK
+        // then crashes on a null call whenever two Dates are compared with `<=` or `>=`.
+        let comparisonDate = lastEventReportResponseTime ?? Date()
+        let debugUntilDate = debugEventsUntilDate ?? Date.distantPast
+        return comparisonDate.timeIntervalSinceReferenceDate <= debugUntilDate.timeIntervalSinceReferenceDate
     }
 }
 

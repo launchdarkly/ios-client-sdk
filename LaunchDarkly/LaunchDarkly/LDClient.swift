@@ -879,18 +879,20 @@ public class LDClient {
         var keys = [config.mobileKey]
         keys.append(contentsOf: config.getSecondaryMobileKeys().values)
         serviceFactory.makeCacheConverter().convertCacheData(serviceFactory: serviceFactory, keysToConvert: keys, maxCachedContexts: config.maxCachedContexts)
-        var mobileKeys = config.getSecondaryMobileKeys()
+        // The primary environment first, then the secondaries by name, so that the clients are created, and plugins
+        // registered with them, in the same order on every launch rather than in a dictionary's, which varies by launch.
+        let environments = [(name: LDConfig.Constants.primaryEnvironmentName, mobileKey: config.mobileKey)]
+            + config.getSecondaryMobileKeys().sorted { $0.key < $1.key }.map { (name: $0.key, mobileKey: $0.value) }
         var internalCount = 0
         let completionCheck = {
             internalCount += 1
-            if internalCount > mobileKeys.count {
+            if internalCount > environments.count {
                 os_log("%s All LDClients finished starting", log: config.logger, type: .debug, typeName(and: #function))
                 completion?()
             }
         }
 
-        mobileKeys[LDConfig.Constants.primaryEnvironmentName] = config.mobileKey
-        for (name, mobileKey) in mobileKeys {
+        for (name, mobileKey) in environments {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
             let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context, completion: completionCheck)
