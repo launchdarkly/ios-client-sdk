@@ -21,9 +21,9 @@ jobs:
             ios-sim: 'platform=iOS Simulator,name=iPhone 16'
             os: macos-15
             run-contract-tests: true
-          - xcode-version: 15.4.0
-            ios-sim: 'platform=iOS Simulator,name=iPhone 15'
-            os: macos-14
+          - xcode-version: 26.5.0
+            ios-sim: 'platform=iOS Simulator,name=iPhone 17'
+            os: macos-26
             run-contract-tests: false
 
     steps:
