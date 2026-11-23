@@ -83,6 +83,42 @@ final class LDClientPluginsSpec: XCTestCase {
         XCTAssertEqual(mockPlugin.getCallRecord()[3], "first after")
     }
 
+    func testEnvironmentsAreStartedPrimaryFirstThenSecondariesByName() {
+        var callRecord: [String] = []
+        var firstRegisteredClientIsPrimary: Bool?
+        let plugin = StubPlugin(
+            hooks: [],
+            onGetHooks: { metadata in callRecord.append("getHooks \(metadata.credential)") },
+            onRegister: { client, metadata in
+                if firstRegisteredClientIsPrimary == nil {
+                    firstRegisteredClientIsPrimary = LDClient.get() === client
+                }
+                callRecord.append("register \(metadata.credential)")
+            })
+
+        var config = LDConfig(mobileKey: "primary-mobile-key", autoEnvAttributes: .disabled)
+        // Enough secondaries that a dictionary's iteration order would rarely match the expected one by chance.
+        try! config.setSecondaryMobileKeys([
+            "echo": "secondary-key-e",
+            "bravo": "secondary-key-b",
+            "delta": "secondary-key-d",
+            "alpha": "secondary-key-a",
+            "charlie": "secondary-key-c"
+        ])
+        config.plugins = [plugin]
+
+        var testContext: TestContext!
+        waitUntil { done in
+            testContext = TestContext(newConfig: config)
+            testContext.start(completion: done)
+        }
+
+        // Each client collects its hooks while it is created, and is registered with the plugins right after.
+        XCTAssertEqual(callRecord, ["primary-mobile-key", "secondary-key-a", "secondary-key-b", "secondary-key-c",
+                                    "secondary-key-d", "secondary-key-e"].flatMap { ["getHooks \($0)", "register \($0)"] })
+        XCTAssertEqual(firstRegisteredClientIsPrimary, true)
+    }
+
     func testRegisterPluginPassesClientAndEnvironmentMetadata() {
         var registerCallCount = 0
         var receivedClient: LDClient?
@@ -208,13 +244,17 @@ final class LDClientPluginsSpec: XCTestCase {
             after: { _, data, _ in record("\(name) after"); return data })
     }
 
-    /// Contributes a fixed set of hooks, and optionally runs a closure when registered.
+    /// Contributes a fixed set of hooks, and optionally runs a closure when asked for them and when registered.
     class StubPlugin: Plugin {
         private let hooksToReturn: [Hook]
+        private let onGetHooks: (EnvironmentMetadata) -> Void
         private let onRegister: (LDClient, EnvironmentMetadata) -> Void
 
-        init(hooks: [Hook], onRegister: @escaping (LDClient, EnvironmentMetadata) -> Void = { _, _ in }) {
+        init(hooks: [Hook],
+             onGetHooks: @escaping (EnvironmentMetadata) -> Void = { _ in },
+             onRegister: @escaping (LDClient, EnvironmentMetadata) -> Void = { _, _ in }) {
             self.hooksToReturn = hooks
+            self.onGetHooks = onGetHooks
             self.onRegister = onRegister
         }
 
@@ -227,6 +267,7 @@ final class LDClientPluginsSpec: XCTestCase {
         }
 
         func getHooks(metadata: EnvironmentMetadata) -> [Hook] {
+            onGetHooks(metadata)
             return hooksToReturn
         }
     }
