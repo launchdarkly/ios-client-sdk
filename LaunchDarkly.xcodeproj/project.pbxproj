@@ -2205,8 +2205,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/mw99/DataCompression";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.8.0;
+				kind = exactVersion;
+				version = 3.8.0;
 			};
 		};
 		A3F4A47F2CC2F625006EF480 /* XCRemoteSwiftPackageReference "CwlPreconditionTesting" */ = {
