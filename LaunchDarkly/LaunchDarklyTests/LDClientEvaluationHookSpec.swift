@@ -550,8 +550,9 @@ final class LDClientEvaluationHookSpec: XCTestCase {
         /// The stages recorded since this was last called, so a test can ignore the identify the client makes as it
         /// starts.
         func takeStages() -> [String] {
-            defer { stages = [] }
-            return stages
+            let recorded = stages
+            stages = []
+            return recorded
         }
 
         func metadata() -> Metadata {
