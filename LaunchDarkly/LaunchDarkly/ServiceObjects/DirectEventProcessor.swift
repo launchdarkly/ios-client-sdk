@@ -119,9 +119,9 @@ class DirectEventProcessor: EventProcessor {
     private var wentOnlineAt: DispatchTime?
     /// What waits for the gate to open with the reporter online.
     private var launchGateWaiters: [() -> Void] = []
-    /// Whether going online again ended a failure's wait while the gate was still closed, which owes the delivery it
-    /// would have queued to the gate opening. Ending the wait is not undone, and nothing else would deliver before the
-    /// next report interval. Only to be used on `deliveryQueue`.
+    /// Whether going online again ended an ordinary failure's wait while the gate was still closed, which owes the
+    /// delivery it would have queued to the gate opening. Ending the wait is not undone, and nothing else would deliver
+    /// before the next report interval. Only to be used on `deliveryQueue`.
     private var deliveryOwedAtGate = false
 
     init(service: DarklyServiceProvider,
@@ -307,9 +307,9 @@ extension DirectEventProcessor {
 
         // Events a previous run left behind are already late by however long the application was gone, so they do not
         // wait out a report interval on top of that, only the launch gate: an application that crashed reports it as
-        // soon as it is next able to. Going online again later, as a network comes and goes, keeps to the ordinary
-        // cadence, unless a post failed in a way the network coming back may cure: that delivery goes now, rather than
-        // after the rest of a wait set while the network was gone, or at the next report interval.
+        // soon as it is next able to. Going online again later keeps to the report interval, with one exception: when
+        // the last post had an ordinary failure, such as no network, its wait ends and a delivery goes now. A wait the
+        // service set, with a `Retry-After` or a refusal, stands.
         deliveryQueue.async { [weak self] in
             guard let self
             else { return }
@@ -423,8 +423,9 @@ extension DirectEventProcessor {
         let budget = DirectEventProcessor.flushAtCloseBudget
         let deadline = DispatchTime.now() + budget
         committer.commitAndClose(by: deadline, budget: budget)
-        // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing, so there is nothing
-        // to wait for: offline is the application keeping the SDK off the network, and closing does not revoke that.
+        // Offline, it is a delivery like any other, which finds the reporter offline and sends nothing, so there is
+        // nothing to wait for: offline is the application keeping the SDK off the network, and closing does not revoke
+        // that.
         guard isOnline
         else {
             queueDelivery(nil)

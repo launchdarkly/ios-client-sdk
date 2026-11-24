@@ -106,12 +106,15 @@ final class PollingRetryState {
 /// When event delivery may post again after a failure, following the SDK Retry Behavior specification as event
 /// durability §9 binds it.
 ///
-/// A failure never stops delivery, it only makes the next post wait. An ordinary one, such as a 503 or no network,
-/// waits from a second up to the flush interval, so it is never later than the schedule already would be. A refusal
-/// likely to last, such as a 401, waits about eight and a half minutes, doubling up to an hour, rather
-/// than deleting the batch: a valid key is sometimes refused for minutes during an incident, and every event the fleet
-/// recorded meanwhile would be lost. A `Retry-After` sets the wait instead. One accepted delivery puts everything back.
-/// Going online again ends an ordinary failure's wait, though not the service's.
+/// A failure never stops delivery, it only makes the next post wait. There are two kinds of wait:
+/// - After an ordinary failure, such as no network or a 5xx without `Retry-After`, the wait grows from a second up to
+///   the flush interval, so it is never later than the schedule already would be. Going online again ends it.
+/// - The service sets the wait with a `Retry-After`, or with a refusal likely to last, such as a 401 or 403, which
+///   waits about eight and a half minutes, doubling up to an hour, rather than deleting the batch: a valid key is
+///   sometimes refused for minutes during an incident, and every event the fleet recorded meanwhile would be lost.
+///   Once refused, every wait until a delivery is accepted is of this kind. Going online again keeps it.
+///
+/// One accepted delivery puts everything back.
 ///
 /// One per event processor, so each environment backs off on its own. Held only in memory, so a new run of the
 /// application posts at once. Thread safe, though the event processor only uses it on its delivery queue.
@@ -125,7 +128,7 @@ final class DeliveryRetryState {
     private var attempts = 0
     private var inExtendedRegime = false
     private var nextAttempt: DispatchTime?
-    // The wait is a refusal's or a `Retry-After`'s.
+    // The wait is a `Retry-After`'s. A refusal's is marked by inExtendedRegime.
     private var serviceSetWait = false
 
     /// - Parameter flushInterval: the normal ceiling; never below the initial delay, so a short interval does not make
@@ -162,11 +165,14 @@ final class DeliveryRetryState {
         }
     }
 
-    /// Going online again, which ends the wait an ordinary failure set: such a failure is most often the network that
-    /// just came back. A refusal's wait and a `Retry-After` are the service's answer, which the network coming back does
-    /// not change, so they stand. The attempt count stays, as only an accepted delivery puts it back.
+    /// Going online again:
+    /// - ends the wait after an ordinary failure, which is most often the network that just came back.
+    /// - keeps a wait the service set, either a `Retry-After` or the longer backoff after a refusal, as the network
+    ///   coming back does not change the service's answer.
     ///
-    /// - Returns: true when a post has failed since the last accepted one and nothing holds the next back any more, so
+    /// The attempt count stays either way, as only an accepted delivery puts it back.
+    ///
+    /// - Returns: true when a post has failed since the last accepted one and no wait holds the next back any more, so
     ///   a delivery may go now rather than at the next report interval.
     func endOrdinaryWait() -> Bool {
         lock.withLock {
@@ -212,7 +218,8 @@ final class DeliveryRetryState {
     /// A failure of a post that went through a wait, as `flushAtClose()` and the blocking `flushAndWait` may: an extra
     /// try, not a step of the backoff. It leaves the attempt count and the ceiling as they were, so a caller flushing
     /// through a refusal several times does not push flush, the periodic delivery and the retry out to the hour. A
-    /// `Retry-After` can still make the wait longer, never shorter. Once the wait has run out it is an ordinary failure.
+    /// `Retry-After` can still make the wait longer, never shorter. Once the wait has run out it is the next step of
+    /// the backoff.
     ///
     /// - Parameters: as `recordFailure(unexpected:retryAfter:)`.
     /// - Returns: how long nothing may be posted.
