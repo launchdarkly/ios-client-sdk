@@ -1841,6 +1841,17 @@ class DirectEventProcessorSpec: QuickSpec {
         }
     }
 
+    func testFlushIntervalFallsBackToTheDefaultWhereNotAPositiveFiniteNumber() {
+        var config = LDConfig.stub
+        for invalid in [TimeInterval.nan, .infinity, -.infinity, 0, -1] {
+            config.eventFlushInterval = invalid
+            expect(DirectEventProcessor.flushInterval(config: config))
+                .to(equal(LDConfig.Defaults.eventFlushInterval), description: "eventFlushInterval \(invalid)")
+        }
+        config.eventFlushInterval = 5
+        expect(DirectEventProcessor.flushInterval(config: config)) == 5
+    }
+
     func testRecordFlagEvaluationEvents() {
         let persistence = type(of: self).persistence
         let context = LDContext.stub()
