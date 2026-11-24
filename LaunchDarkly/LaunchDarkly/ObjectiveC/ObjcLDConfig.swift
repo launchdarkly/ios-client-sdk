@@ -50,10 +50,6 @@ public final class ObjcLDConfig: NSObject {
     /// `.immediate` additionally puts the write on the thread that called `track` or `identify`, so there is no window
     /// in which the event exists only in memory. (Default: `.disabled`)
     ///
-    /// Persistence also covers the wait after a failed delivery, which a `Retry-After` or a refusal such as a 401 can make
-    /// up to an hour, going online again included (see `-[LDClient setOnline:]`). At `.disabled`, a process that ends
-    /// during that wait loses the events it held.
-    ///
     /// - Warning: Experimental. Both levels other than `.disabled` are not stable, and not subject to any backwards
     ///   compatibility guarantees or semantic versioning.
     @objc public var eventPersistence: EventPersistence {
