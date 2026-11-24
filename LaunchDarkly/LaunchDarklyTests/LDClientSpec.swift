@@ -15,6 +15,7 @@ final class LDClientSpec: QuickSpec {
 
     override func spec() {
         startSpec()
+        flagsAvailableAfterStartSpec()
         moveToBackgroundSpec()
         identifySpec()
         identifyRunModeSpec()
@@ -1661,6 +1662,88 @@ final class LDClientSpec: QuickSpec {
                 testContext.start()
                 testContext.subject.flush()
                 expect(testContext.eventReporterMock.flushCallCount) == 1
+            }
+        }
+    }
+
+    private func flagsAvailableAfterStartSpec() {
+        let reasonedFlagKey = "reasoned-flag"
+        let cachedReason: [String: LDValue] = ["kind": "FALLTHROUGH"]
+        var cachedFlags = DarklyServiceMock.Constants.stubFeatureFlags()
+        cachedFlags[reasonedFlagKey] = FeatureFlag(flagKey: reasonedFlagKey, value: true, variation: 1, reason: cachedReason)
+
+        describe("flag reads right after start") {
+            for withTimeout in [false, true] {
+                context(withTimeout ? "with a start timeout" : "without a start timeout") {
+                    var testContext: TestContext!
+                    var completed = false
+
+                    beforeEach {
+                        completed = false
+                        testContext = TestContext(startOnline: true).withCached(flags: cachedFlags)
+                        if withTimeout {
+                            testContext.start(timeOut: 10.0) { _ in completed = true }
+                        } else {
+                            testContext.start { completed = true }
+                        }
+                    }
+
+                    it("serves cached values before the network has answered") {
+                        expect(completed) == false
+                        expect(testContext.subject.isInitialized) == false
+
+                        expect(.bool(testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool))) == DarklyServiceMock.FlagValues.bool
+                        expect(.number(Double(testContext.subject.intVariation(forKey: DarklyServiceMock.FlagKeys.int, defaultValue: DefaultFlagValues.int)))) == DarklyServiceMock.FlagValues.int
+                        expect(.number(testContext.subject.doubleVariation(forKey: DarklyServiceMock.FlagKeys.double, defaultValue: DefaultFlagValues.double))) == DarklyServiceMock.FlagValues.double
+                        expect(.string(testContext.subject.stringVariation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultFlagValues.string))) == DarklyServiceMock.FlagValues.string
+                        expect(testContext.subject.jsonVariation(forKey: DarklyServiceMock.FlagKeys.array, defaultValue: DefaultFlagValues.array)) == DarklyServiceMock.FlagValues.array
+                        expect(testContext.subject.jsonVariation(forKey: DarklyServiceMock.FlagKeys.dictionary, defaultValue: DefaultFlagValues.dictionary)) == DarklyServiceMock.FlagValues.dictionary
+                    }
+                    it("reports the cached evaluation rather than a missing flag") {
+                        let detail = testContext.subject.boolVariationDetail(forKey: reasonedFlagKey, defaultValue: false)
+
+                        expect(detail.value) == true
+                        expect(detail.variationIndex) == 1
+                        expect(detail.reason) == cachedReason
+                    }
+                    it("lists the cached values in allFlags") {
+                        expect(testContext.subject.allFlags) == cachedFlags.compactMapValues { $0.value }
+                    }
+                    it("replaces cached values with live ones as they arrive") {
+                        let liveFlag = FeatureFlag(flagKey: DarklyServiceMock.FlagKeys.bool, value: false, variation: 0)
+                        testContext.onSyncComplete?(.flagCollection((FeatureFlagCollection([DarklyServiceMock.FlagKeys.bool: liveFlag]), nil)))
+
+                        expect(testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: true)) == false
+                        expect(testContext.subject.stringVariation(forKey: DarklyServiceMock.FlagKeys.string, defaultValue: DefaultFlagValues.string)) == DefaultFlagValues.string
+                    }
+                }
+            }
+
+            it("serves defaults when nothing is cached for the context") {
+                let testContext = TestContext(startOnline: true)
+                testContext.start()
+
+                let detail = testContext.subject.boolVariationDetail(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)
+                expect(detail.value) == DefaultFlagValues.bool
+                expect(detail.reason?["errorKind"]) == "FLAG_NOT_FOUND"
+                expect(testContext.subject.allFlags) == [:]
+            }
+            it("does not serve values cached for another context") {
+                let testContext = TestContext(startOnline: true)
+                    .withCached(contextKey: LDContext.stub().fullyQualifiedHashedKey(), flags: cachedFlags)
+                testContext.start()
+
+                expect(testContext.subject.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: DefaultFlagValues.bool)) == DefaultFlagValues.bool
+                expect(testContext.subject.allFlags) == [:]
+            }
+            it("does not notify flag observers of the cached values") {
+                let testContext = TestContext(startOnline: true).withCached(flags: cachedFlags)
+                let changeNotifier = FlagChangeNotifyingMock()
+                testContext.serviceFactoryMock.makeFlagChangeNotifierReturnValue = changeNotifier
+                testContext.start()
+
+                expect(testContext.subject.allFlags) == cachedFlags.compactMapValues { $0.value }
+                expect(changeNotifier.notifyObserversCallCount) == 0
             }
         }
     }
