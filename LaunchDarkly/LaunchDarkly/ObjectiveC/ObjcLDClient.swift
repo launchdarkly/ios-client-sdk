@@ -63,6 +63,9 @@ public final class ObjcLDClient: NSObject {
 
      When online, the SDK communicates with LaunchDarkly servers for feature flag values and event reporting.
      When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.
+     If a delivery of events failed, going online again:
+     - ends the wait after an ordinary failure, such as no network or a 5xx response without `Retry-After`, and delivers the events right away.
+     - keeps a wait the service set, either a `Retry-After` or the longer backoff after a refusal such as a 401 or 403, which can last up to an hour. This holds even when a captive portal or proxy sent the response rather than LaunchDarkly. Where `eventPersistence` is `.disabled`, events held during this wait are lost if the process ends.
      The SDK protects itself from multiple rapid calls to `setOnline:YES` by enforcing an increasing delay (called *throttling*) each time `setOnline:YES` is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the `setOnline:YES` will proceed, assuming that the client app has not called `setOnline:NO` during the delay. Therefore a call to `setOnline:YES` may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid `setOnline:YES` calls. Calls to `setOnline:NO` are not throttled. After the delay, the SDK resets and the client app can make a susequent call to `setOnline:YES` without being throttled.
      Use `isOnline` to get the online/offline state.
 
@@ -78,6 +81,10 @@ public final class ObjcLDClient: NSObject {
      When online, the SDK communicates with LaunchDarkly servers for feature flag values and event reporting.
 
      When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.
+
+     If a delivery of events failed, going online again:
+     - ends the wait after an ordinary failure, such as no network or a 5xx response without `Retry-After`, and delivers the events right away.
+     - keeps a wait the service set, either a `Retry-After` or the longer backoff after a refusal such as a 401 or 403, which can last up to an hour. This holds even when a captive portal or proxy sent the response rather than LaunchDarkly. Where `eventPersistence` is `.disabled`, events held during this wait are lost if the process ends.
 
      The SDK protects itself from multiple rapid calls to `setOnline:YES` by enforcing an increasing delay (called *throttling*) each time `setOnline:YES` is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the `setOnline:YES` will proceed, assuming that the client app has not called `setOnline:NO` during the delay. Therefore a call to `setOnline:YES` may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid `setOnline:YES` calls. Calls to `setOnline:NO` are not throttled. Note that calls to `start(config: context: completion:)`, and setting the `config` or `context` can also call `setOnline:YES` under certain conditions. After the delay, the SDK resets and the client app can make a susequent call to `setOnline:YES` without being throttled.
 

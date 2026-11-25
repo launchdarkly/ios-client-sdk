@@ -99,6 +99,10 @@ public class LDClient {
 
      When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.
 
+     If a delivery of events failed, going online again:
+     - ends the wait after an ordinary failure, such as no network or a 5xx response without `Retry-After`, and delivers the events right away.
+     - keeps a wait the service set, either a `Retry-After` or the longer backoff after a refusal such as a 401 or 403, which can last up to an hour. This holds even when a captive portal or proxy sent the response rather than LaunchDarkly. Where `LDConfig.eventPersistence` is `.disabled`, events held during this wait are lost if the process ends.
+
      The SDK protects itself from multiple rapid calls to setOnline(true) by enforcing an increasing delay (called *throttling*) each time setOnline(true) is called within a short time. The first time, the call proceeds normally. For each subsequent call the delay is enforced, and if waiting, increased to a maximum delay. When the delay has elapsed, the `setOnline(true)` will proceed, assuming that the client app has not called `setOnline(false)` during the delay. Therefore a call to setOnline(true) may not immediately result in the LDClient going online. Client app developers should consider this situation abnormal, and take steps to prevent the client app from making multiple rapid setOnline(true) calls. Calls to setOnline(false) are not throttled. Note that calls to `start(config: context: completion:)` can also call `setOnline(true)` under certain conditions. After the delay, the SDK resets and the client app can make a susequent call to setOnline(true) without being throttled.
 
      Client apps can set a completion closure called when the setOnline call completes. For unthrottled `setOnline(true)` and all `setOnline(false)` calls, the SDK will call the closure immediately on completion of this method. For throttled `setOnline(true)` calls, the SDK will call the closure after the throttling delay at the completion of the setOnline method.
@@ -398,11 +402,13 @@ public class LDClient {
         let work: TaskHandler = { taskCompletion in
             let dispatch = DispatchGroup()
 
-            LDClient.instancesQueue.sync(flags: .barrier) {
-                LDClient.instances?.forEach { _, instance in
-                    dispatch.enter()
-                    instance.internalIdentify(newContext: context, useCache: useCache, completion: dispatch.leave)
-                }
+            // Identified outside `instancesQueue`, as `close()` closes: at `.immediate` each environment's identify event
+            // is written to disk before `internalIdentify` returns, and every call that reads `instances`, the backgrounding
+            // observer on the main thread among them, would wait behind those writes.
+            let clients = LDClient.instancesQueue.sync { LDClient.instances.map { Array($0.values) } ?? [] }
+            clients.forEach { instance in
+                dispatch.enter()
+                instance.internalIdentify(newContext: context, useCache: useCache, completion: dispatch.leave)
             }
 
             dispatch.notify(queue: DispatchQueue.global(), execute: taskCompletion)
@@ -465,64 +471,69 @@ public class LDClient {
         }
 
         internalIdentifyQueue.sync {
-            if self.context == updatedContext {
-                self.eventProcessor.record(IdentifyEvent(context: self.context))
-                completion?()
-                return
-            }
-
-            self.context = updatedContext
-            os_log("%s new context set with key: %s", log: config.logger, type: .debug, typeName(and: #function), self.context.fullyQualifiedKey())
-            // Only the data source needs to come down for the swap: take the old synchronizer
-            // offline directly, as the run-mode transition does, leaving isOnline, the event
-            // reporter, and the diagnostic reporter untouched.
-            self.flagSynchronizer.isOnline = false
-
-            let cachedData = self.flagCache.getCachedData(cacheKey: self.context.fullyQualifiedHashedKey(), contextHash: self.context.contextHash())
-
-            if useCache != .no {
-                let oldItems = flagStore.storedItems
-                let fallback = useCache == .yes ? [:] : oldItems
-                let cachedContextFlags = cachedData.items ?? fallback
-
-                // Here we prime the store with the last known values from the
-                // cache.
-                //
-                // Once the flag sync. process finishes, the new payload is
-                // compared to this, and if they are different, change listeners
-                // will be notified; otherwise, they aren't.
-                //
-                // This is problematic since the flag values really did change. So
-                // we should trigger the change listener when we set these cache
-                // values.
-                //
-                // However, if there are no cached values, we don't want to inform
-                // customers that we set their store to nothing. In that case, we
-                // will not trigger the change listener and instead relay on the
-                // payload comparsion to do that when the request has completed.
-                flagStore.replaceStore(newStoredItems: cachedContextFlags)
-                if !cachedContextFlags.featureFlags.isEmpty {
-                    flagChangeNotifier.notifyObservers(oldFlags: oldItems.featureFlags, newFlags: flagStore.storedItems.featureFlags)
+            // On `internalSetOnlineQueue` too, so that a `setOnline` or `close` on this client lands wholly before or
+            // after: identify runs outside `instancesQueue`, and could otherwise take the client online after either
+            // took it offline, or leave the synchronizer it replaces online.
+            internalSetOnlineQueue.sync {
+                if self.context == updatedContext {
+                    self.eventProcessor.record(IdentifyEvent(context: self.context))
+                    completion?()
+                    return
                 }
-            }
 
-            self.service.context = self.context
-            self.service.resetFlagResponseCache(etag: cachedData.etag)
-            flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
-                                                                   pollingInterval: config.flagPollingInterval(runMode: runMode),
-                                                                   useReport: config.useReport,
-                                                                   lastUpdated: cachedData.lastUpdated,
-                                                                   service: self.service,
-                                                                   onSyncComplete: self.onFlagSyncComplete)
+                self.context = updatedContext
+                os_log("%s new context set with key: %s", log: config.logger, type: .debug, typeName(and: #function), self.context.fullyQualifiedKey())
+                // Only the data source needs to come down for the swap: take the old synchronizer
+                // offline directly, as the run-mode transition does, leaving isOnline, the event
+                // reporter, and the diagnostic reporter untouched.
+                self.flagSynchronizer.isOnline = false
 
-            if self.hasStarted {
-                self.eventProcessor.record(IdentifyEvent(context: self.context))
-            }
+                let cachedData = self.flagCache.getCachedData(cacheKey: self.context.fullyQualifiedHashedKey(), contextHash: self.context.contextHash())
 
-            if self.isOnline && self.isInSupportedRunMode {
-                self.go(online: true, reasonOnlineUnavailable: "", completion: completion)
-            } else {
-                completion?()
+                if useCache != .no {
+                    let oldItems = flagStore.storedItems
+                    let fallback = useCache == .yes ? [:] : oldItems
+                    let cachedContextFlags = cachedData.items ?? fallback
+
+                    // Here we prime the store with the last known values from the
+                    // cache.
+                    //
+                    // Once the flag sync. process finishes, the new payload is
+                    // compared to this, and if they are different, change listeners
+                    // will be notified; otherwise, they aren't.
+                    //
+                    // This is problematic since the flag values really did change. So
+                    // we should trigger the change listener when we set these cache
+                    // values.
+                    //
+                    // However, if there are no cached values, we don't want to inform
+                    // customers that we set their store to nothing. In that case, we
+                    // will not trigger the change listener and instead relay on the
+                    // payload comparsion to do that when the request has completed.
+                    flagStore.replaceStore(newStoredItems: cachedContextFlags)
+                    if !cachedContextFlags.featureFlags.isEmpty {
+                        flagChangeNotifier.notifyObservers(oldFlags: oldItems.featureFlags, newFlags: flagStore.storedItems.featureFlags)
+                    }
+                }
+
+                self.service.context = self.context
+                self.service.resetFlagResponseCache(etag: cachedData.etag)
+                flagSynchronizer = serviceFactory.makeFlagSynchronizer(streamingMode: ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self),
+                                                                       pollingInterval: config.flagPollingInterval(runMode: runMode),
+                                                                       useReport: config.useReport,
+                                                                       lastUpdated: cachedData.lastUpdated,
+                                                                       service: self.service,
+                                                                       onSyncComplete: self.onFlagSyncComplete)
+
+                if self.hasStarted {
+                    self.eventProcessor.record(IdentifyEvent(context: self.context))
+                }
+
+                if self.isOnline && self.isInSupportedRunMode {
+                    self.go(online: true, reasonOnlineUnavailable: "", completion: completion)
+                } else {
+                    completion?()
+                }
             }
         }
     }

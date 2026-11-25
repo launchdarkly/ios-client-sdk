@@ -260,6 +260,15 @@ final class DiagnosticEventSpec: QuickSpec {
                     expect(diagnosticConfig.pollingIntervalMillis) == Int.max
                 }
             }
+            context("init with a flush interval the SDK does not use") {
+                it("reports the interval the SDK flushes at") {
+                    for invalid in [TimeInterval.nan, .infinity, 0, -1] {
+                        var config = customConfig
+                        config.eventFlushInterval = invalid
+                        expect(DiagnosticConfig(config: config).eventsFlushIntervalMillis) == 30_000
+                    }
+                }
+            }
             var diagnosticConfig: DiagnosticConfig!
             for (name, config) in [("default", defaultConfig), ("custom", customConfig)] {
                 context("with \(name) config") {

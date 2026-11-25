@@ -121,7 +121,7 @@ final class EventDeliveryScheduler {
     /// A delivery queued that has not taken its batches yet.
     private struct Queued {
         /// The callers waiting on it.
-        var waiters: [FlushOutcomeClosure]
+        var waiters: [FlushOutcomeReceiver]
         /// Whether it is `flushAtClose()`'s, or has been joined by it.
         var isClosing: Bool
         /// Whether a caller bypassing the backoff asked for it, or joined it.
@@ -178,7 +178,7 @@ final class EventDeliveryScheduler {
     ///   - paced: whether nobody asked for it, so that it gives way to flag requests. One that is not ends the pacing of
     ///     the delivery running, so that it is not held behind it.
     /// - Returns: whether the caller is to start it, which is where no delivery is running.
-    func queue(_ completion: FlushOutcomeClosure?, closing: Bool, bypassingBackoff: Bool, paced: Bool) -> Bool {
+    func queue(_ completion: FlushOutcomeReceiver?, closing: Bool, bypassingBackoff: Bool, paced: Bool) -> Bool {
         let (starts, unpaced) = lock.withLock { () -> (Bool, EventDeliveryRun?) in
             let unpaced = paced ? nil : running
             if var joined = queued {
@@ -205,7 +205,7 @@ final class EventDeliveryScheduler {
     /// close and take its batches, and what it takes is all it can speak for.
     ///
     /// - Returns: the delivery, and the callers waiting on it.
-    func begin() -> (run: EventDeliveryRun, waiters: [FlushOutcomeClosure]) {
+    func begin() -> (run: EventDeliveryRun, waiters: [FlushOutcomeReceiver]) {
         lock.withLock {
             let next = queued ?? Queued(waiters: [], isClosing: false, bypassesBackoff: false, isPaced: false)
             queued = nil

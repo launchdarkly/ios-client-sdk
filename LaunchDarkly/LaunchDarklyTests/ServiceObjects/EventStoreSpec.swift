@@ -1387,6 +1387,31 @@ final class EventStoreSpec: QuickSpec {
                 expect(recovered.count) == 1
                 expect(EventStoreSpec.keys(ofBody: try? next.body(of: recovered[0]))) == ["left"]
             }
+
+            it("leaves a log that will not close for the next launch where the last failure is the store closing") {
+                _ = store.stage(EventStoreSpec.payload("first"))
+                store.commit()
+                let directory = store.directory!
+                let log = store.openLogUrl!
+                let readOnly: [FileAttributeKey: Any] = [.posixPermissions: 0o555]
+                let writable: [FileAttributeKey: Any] = [.posixPermissions: 0o755]
+                try FileManager.default.setAttributes(readOnly, ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes(writable, ofItemAtPath: directory.path) }
+
+                for _ in 1..<EventStore.closeFailuresBeforeGivingUp {
+                    expect(store.closeBatch()).to(beNil())
+                }
+                _ = store.stage(EventStoreSpec.payload("second"))
+                store.close()
+
+                expect(try Data(contentsOf: log)) != EventLogFormat.fileHeader
+                try FileManager.default.setAttributes(writable, ofItemAtPath: directory.path)
+                let next = store.nextRun()
+                next.preparePayloadsFromInterruptedLogs()
+                let recovered = next.pendingBatches()
+                expect(recovered.count) == 1
+                expect(EventStoreSpec.keys(ofBody: try? next.body(of: recovered[0]))) == ["first", "second"]
+            }
         }
     }
 
