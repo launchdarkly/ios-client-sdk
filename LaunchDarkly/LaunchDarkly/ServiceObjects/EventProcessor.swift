@@ -3,8 +3,10 @@ import Foundation
 typealias EventSyncCompleteClosure = ((SynchronizingError?) -> Void)
 /// Reports whether LaunchDarkly accepted every event a flush covered.
 typealias FlushOutcomeClosure = (Bool) -> Void
-/// A `FlushOutcomeClosure` that returns whether the outcome reached whoever asked for it.
-typealias FlushOutcomeReceiver = (_ delivered: Bool) -> Bool
+/// A `FlushOutcomeClosure` in two parts: taking the outcome returns whether it reached whoever asked for it, and what
+/// passes it on. Taking is quick and runs where the delivery ends, so that whether a loss was heard is settled before
+/// the next delivery starts; passing it on runs the application's code, and runs elsewhere.
+typealias FlushOutcomeReceiver = (_ delivered: Bool) -> (heard: Bool, passOn: () -> Void)
 
 /// A processor that holds a loss of events until a caller has been told about it, and so needs to know whether the
 /// outcome it gave reached anyone: a caller that gave up at its deadline, or one that tells nobody, leaves the loss for
@@ -132,15 +134,14 @@ extension Array where Element == EventProcessor {
                     pending = nil
                     return (true, (finish, outcomes))
                 }
-                ended.map { $0.finish($0.delivered) }
-                return taken && reportsLoss
+                return (taken && reportsLoss, { ended.map { $0.finish($0.delivered) } })
             }
             if let hearing = processor as? FlushOutcomeHearing {
                 hearing.flushReportingOutcome(bypassingBackoff: bypassingBackoff, receiver: answer)
             } else if bypassingBackoff {
-                processor.flushBypassingBackoff { _ = answer($0) }
+                processor.flushBypassingBackoff { answer($0).passOn() }
             } else {
-                processor.flushReportingOutcome { _ = answer($0) }
+                processor.flushReportingOutcome { answer($0).passOn() }
             }
         }
     }

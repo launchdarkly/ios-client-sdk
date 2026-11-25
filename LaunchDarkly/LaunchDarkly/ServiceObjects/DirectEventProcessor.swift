@@ -80,9 +80,12 @@ class DirectEventProcessor: EventProcessor {
     /// Guards which losses have been told to a caller.
     private let stateLock = UnfairLock()
 
-    /// The mark up to which losses have reached a caller, so that none is told to one caller after another. Only to be
-    /// used while holding `stateLock`.
+    /// The mark up to which losses have been claimed for a caller, so that none is told twice. Only to be used while
+    /// holding `stateLock`.
     private var reportedLostEvents: UInt64 = 0
+    /// Whether a loss was claimed for callers none of whom heard it, and so is owed to the next. Only to be used while
+    /// holding `stateLock`.
+    private var lossOwed = false
 
     // MARK: Confined to timerQueue
 
@@ -276,16 +279,26 @@ class DirectEventProcessor: EventProcessor {
         lostEvents.add(events)
     }
 
-    /// Whether anything was lost up to `mark` that has not reached a caller yet.
-    private func hasEventsLostUnheard(upTo mark: UInt64) -> Bool {
-        stateLock.withLock { mark > reportedLostEvents }
+    /// Whether anything was lost up to `mark` that no caller has been told about, or a loss is owed from a delivery
+    /// whose callers did not hear it, which this delivery's callers are now the ones to hear about.
+    ///
+    /// Marks it reported, so the next delivery does not tell the same loss. A delivery that nobody is waiting on never
+    /// asks, so a scheduled delivery does not consume the answer a later caller is owed.
+    private func claimEventsLost(upTo mark: UInt64) -> Bool {
+        stateLock.withLock {
+            let owed = lossOwed
+            lossOwed = false
+            guard mark > reportedLostEvents
+            else { return owed }
+            reportedLostEvents = mark
+            return true
+        }
     }
 
-    /// Marks what was lost up to `mark` as having reached a caller, so the next one is not told about it. Only once a
-    /// caller has had the answer: one that gave up at its deadline, or a backgrounding, which tells nobody, leaves the
-    /// loss for the next caller.
-    private func markEventsLostHeard(upTo mark: UInt64) {
-        stateLock.withLock { reportedLostEvents = max(reportedLostEvents, mark) }
+    /// Gives back a loss claimed for callers none of whom heard it -- one that gave up at its deadline, or a
+    /// backgrounding, which tells nobody -- for the next caller to hear about.
+    private func oweEventsLost() {
+        stateLock.withLock { lossOwed = true }
     }
 
 }
@@ -403,15 +416,15 @@ extension DirectEventProcessor {
     func flush(completion: CompletionClosure?) {
         // Nil stays nil, so a flush nobody waits on joins a queued delivery without adding to its waiters. `done` is not
         // given the outcome, so a loss is not heard by it.
-        commitThenQueueDelivery(completion.map { done in { _ in done(); return false } })
+        commitThenQueueDelivery(completion.map { done in { _ in (false, done) } })
     }
 
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
-        flushReportingOutcome(bypassingBackoff: false) { completion($0); return true }
+        flushReportingOutcome(bypassingBackoff: false) { delivered in (true, { completion(delivered) }) }
     }
 
     func flushBypassingBackoff(completion: @escaping FlushOutcomeClosure) {
-        flushReportingOutcome(bypassingBackoff: true) { completion($0); return true }
+        flushReportingOutcome(bypassingBackoff: true) { delivered in (true, { completion(delivered) }) }
     }
 
     func flushReportingOutcome(bypassingBackoff: Bool, receiver: @escaping FlushOutcomeReceiver) {
@@ -437,7 +450,7 @@ extension DirectEventProcessor {
         // the process. Where events persist it only sends: the store is closed, so it writes and closes nothing. It
         // starts once a delivery already running ends, and waiting for that comes out of the same budget.
         let answered = DispatchSemaphore(value: 0)
-        queueDelivery({ _ in answered.signal(); return false }, closing: true)
+        queueDelivery({ _ in (false, { answered.signal() }) }, closing: true)
         if answered.wait(timeout: deadline) == .timedOut {
             os_log("%s gave up waiting for the final event delivery after %dms; it continues in the background", log: service.config.logger, type: .info, typeName(and: #function), Int(budget * 1000))
         }
@@ -487,22 +500,24 @@ extension DirectEventProcessor {
     private func runDelivery() {
         let (run, waiters) = deliveryScheduler.begin()
         reportEvents(run) { delivered, lossMark in
-            // Looked at once for the delivery rather than once per waiter, so that every caller joined to it hears about
-            // a loss instead of only whichever happened to be answered first. Looked at before the next delivery starts,
-            // which could otherwise mark this one's loss heard with its own before this one's callers had it.
-            let lost = self.hasEventsLostUnheard(upTo: lossMark)
+            // Claimed once for the delivery rather than once per waiter, so that every caller joined to it hears about a
+            // loss instead of only whichever happened to be answered first. Claimed, and given back where none of them
+            // heard it, before the next delivery starts, which would otherwise tell the same loss again, or claim before
+            // it was given back and leave it untold.
+            let lost = !waiters.isEmpty && self.claimEventsLost(upTo: lossMark)
+            // Every waiter takes the outcome, not only those up to the first that hears.
+            let taken = waiters.map { $0(delivered && !lost) }
+            if lost && !taken.contains(where: \.heard) {
+                self.oweEventsLost()
+            }
             // Before the waiters are answered, so a completion that flushes again finds this delivery over.
             self.startQueuedDeliveryOrStop()
-            guard !waiters.isEmpty
+            guard !taken.isEmpty
             else { return }
             // Answered away from `deliveryQueue`, where every delivery ends. A completion is free to flush again: it is
             // never running on the queue the delivery it asks for would be queued on.
             DispatchQueue.global(qos: .userInitiated).async {
-                // Every waiter is answered, not only those up to the first that hears.
-                let heard = waiters.map { $0(delivered && !lost) }.contains(true)
-                if lost && heard {
-                    self.markEventsLostHeard(upTo: lossMark)
-                }
+                taken.forEach { $0.passOn() }
             }
         }
     }
