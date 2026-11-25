@@ -25,14 +25,17 @@ LAUNCHDARKLY_ENVIRONMENT = production
 ```
 
 Set `LAUNCHDARKLY_ENVIRONMENT = staging` to use LaunchDarkly's staging endpoints. Any value can also be overridden at
-launch, without a rebuild, with `-LDMobileKey mob-...`, `-LDSecondaryMobileKey mob-...` or `-LDEnvironment staging`.
+launch, without a rebuild, with `-LDMobileKey mob-...`, `-LDSecondaryMobileKey mob-...`, `-LDDeferredMobileKey mob-...`
+or `-LDEnvironment staging`.
 
-### Two environments
+### Several environments
 
-Add a second key to start a second environment alongside the first, from the same `LDConfig`:
+Add a second key to start a second environment alongside the first, from the same `LDConfig`, and a third key for an
+environment started deferred:
 
 ```
 LAUNCHDARKLY_SECONDARY_MOBILE_KEY = mob-...
+LAUNCHDARKLY_DEFERRED_MOBILE_KEY = mob-...
 ```
 
 An **Environment** picker then appears at the top of **Client**, and chooses which environment's client the buttons use:
@@ -40,8 +43,23 @@ the flag evaluations, Track, the event-loss and stress scenarios, Post 20 MB, th
 storage**, which shows that environment's own directory. The choice is saved, so the launch that answers a kill scenario
 shows the same environment.
 
-Restart, the persistence picker, Flush, Flush+Wait, Offline and Identify reach both environments whichever is selected,
+Restart, the persistence picker, Flush, Flush+Wait, Offline and Identify reach every environment whichever is selected,
 because the SDK applies `close`, `flush`, `flushAndWait`, `setOnline` and `identify` to every environment it started.
+
+A payload filter set with `LAUNCHDARKLY_PAYLOAD_FILTER` is given to every environment, so each one needs a filter with
+that key.
+
+### A deferred environment
+
+The third environment is added with `addSecondaryEnvironment(_:mobileKey:payloadFilter:deferred: true)`, so starting
+the client waits for the other environments' flags only, and requests none for it. Until it is started, its client
+serves the flags cached on the device for the current context, or default values, and still records and delivers
+events; the connection status reads `deferred`. Identify gives it the new context and that context's cached flags,
+without a request.
+
+Select **Deferred** and tap **Start environment** to call `LDClient.start(environment:)`. The result line shows how long
+its flags took. Offline, it reports that they did not arrive, and requests them when Offline is turned off. Restart
+defers it again.
 
 Running on a device needs a development team, set in the target's Signing & Capabilities. The simulators and the Mac
 need none.

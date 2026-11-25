@@ -35,7 +35,7 @@ private struct ClientSection: View {
 
     var body: some View {
         Section {
-            if controller.configuration.hasSecondaryEnvironment {
+            if controller.configuration.hasSeveralEnvironments {
                 Picker("Environment", selection: Binding(get: { controller.environment },
                                                          set: { controller.select($0) })) {
                     ForEach(controller.configuration.environments) { Text($0.title).tag($0) }
@@ -46,6 +46,13 @@ private struct ClientSection: View {
             Text(controller.connectionStatus)
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
+                .accessibilityIdentifier("connection_status")
+            if controller.environment == .deferred {
+                ButtonRow {
+                    ActionButton("Start environment", id: "start_environment_button") { controller.startDeferredEnvironment() }
+                        .disabled(!controller.isDeferred)
+                }
+            }
             if !controller.mobileKey.isEmpty {
                 Text("key \(String(controller.mobileKey.prefix(8)))…")
                     .font(.caption.monospaced())
@@ -90,9 +97,11 @@ private struct ClientSection: View {
                 #endif
             }
         } footer: {
-            if controller.configuration.hasSecondaryEnvironment {
-                Text("Restart, Flush, Flush+Wait, Offline and Identify reach both environments, as the SDK does. "
-                    + "The other buttons and Event storage use the selected one.")
+            if controller.configuration.hasSeveralEnvironments {
+                Text("Restart, Flush, Flush+Wait, Offline and Identify reach every environment, as the SDK does. "
+                    + "The other buttons and Event storage use the selected one."
+                    + (controller.configuration.hasDeferredEnvironment
+                        ? " Deferred requests no flags until started, and Restart defers it again." : ""))
             }
         }
     }
@@ -300,7 +309,7 @@ private struct StorageSection: View {
             }
         } header: {
             HStack {
-                Text(controller.configuration.hasSecondaryEnvironment
+                Text(controller.configuration.hasSeveralEnvironments
                     ? "Event storage · \(controller.environment.title)" : "Event storage")
                 if InstanceLauncher.isAvailable {
                     Spacer()

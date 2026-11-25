@@ -1,11 +1,13 @@
 import Foundation
 @preconcurrency import LaunchDarkly
 
-/// Starts, restarts and reports on the `LDClient` the app uses, with a second environment where the build gives a key.
+/// Starts, restarts and reports on the `LDClient` the app uses, with a secondary and a deferred environment where the
+/// build gives their keys.
 ///
 /// Every button acts on the selected environment's client, which is nil while a restart is under way, so a tap
 /// meanwhile does nothing rather than reaching a client that is closing. Some calls reach every environment whichever
-/// client they are made on: `flush`, `flushAndWait`, `setOnline`, `identify` and `close`.
+/// client they are made on: `flush`, `flushAndWait`, `setOnline`, `identify` and `close`. A deferred environment takes
+/// `setOnline` for its events and `identify` for its context and cached flags, but requests flags only once started.
 @MainActor
 final class ClientController: ObservableObject {
     static let defaultUserKey = "user key"
@@ -32,6 +34,8 @@ final class ClientController: ObservableObject {
     @Published private(set) var isOffline = false
     @Published private(set) var isRestarting = false
     @Published private(set) var connectionStatus = "Not started"
+    /// Whether the selected environment's client is deferred and not started yet.
+    @Published private(set) var isDeferred = false
     /// How many flags the selected environment's client holds, nil while there is no client.
     @Published private(set) var flagCount: Int?
     @Published private(set) var dedupeStatus = ""
@@ -172,9 +176,35 @@ final class ClientController: ObservableObject {
         }
     }
 
+    /// Starts the flag connection of the deferred environment, which until now served only the flags cached on the device.
+    func startDeferredEnvironment() {
+        guard let client = client(for: .deferred), client.isDeferred
+        else { return }
+        let started = Date()
+        result = "Starting \(TestEnvironment.deferred.title)…"
+        LDClient.start(environment: TestEnvironment.deferred.sdkName, startWaitSeconds: Self.startWaitSeconds) { [weak self] timedOut in
+            let elapsed = Date().timeIntervalSince(started)
+            Task { @MainActor in
+                guard let self
+                else { return }
+                // Offline, it reports a timeout at once, and requests the flags when the app next goes online.
+                self.result = timedOut
+                    ? "\(TestEnvironment.deferred.title) started; flags did not arrive"
+                    : String(format: "%@ started; flags in %.2f s", TestEnvironment.deferred.title, elapsed)
+                self.refreshConnectionStatus()
+            }
+        }
+        refreshConnectionStatus()
+    }
+
     /// The flag count too, since it changes when flags arrive and when the client or the environment does.
     func refreshConnectionStatus() {
         flagCount = client?.allFlags?.count
+        isDeferred = client?.isDeferred ?? false
+        if isDeferred {
+            connectionStatus = "deferred · cached flags only, until started"
+            return
+        }
         guard let info = client?.getConnectionInformation()
         else {
             connectionStatus = isRestarting ? "Restarting" : "Not started"
@@ -205,15 +235,17 @@ final class ClientController: ObservableObject {
 
     private func makeConfig() -> LDConfig {
         var config = LDConfig(mobileKey: configuration.mobileKey, autoEnvAttributes: .enabled)
-        if configuration.hasSecondaryEnvironment {
+        let filter = configuration.payloadFilter.isEmpty ? nil : configuration.payloadFilter
+        config.payloadFilter = filter
+        for environment in configuration.environments where environment != .primary {
             do {
-                try config.setSecondaryMobileKeys([TestEnvironment.secondary.sdkName: configuration.secondaryMobileKey])
+                try config.addSecondaryEnvironment(environment.sdkName,
+                                                   mobileKey: configuration.mobileKey(for: environment),
+                                                   payloadFilter: filter,
+                                                   deferred: environment == .deferred)
             } catch {
-                print("secondary environment not started: \(error)")
+                print("\(environment.sdkName) environment not started: \(error)")
             }
-        }
-        if !configuration.payloadFilter.isEmpty {
-            config.payloadFilter = configuration.payloadFilter
         }
         config.startOnline = !isOffline
         config.eventPersistence = persistence
