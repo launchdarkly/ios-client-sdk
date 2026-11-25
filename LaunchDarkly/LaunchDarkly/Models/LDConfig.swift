@@ -520,6 +520,12 @@ public struct LDConfig {
      Payload filters are defined per project in LaunchDarkly. When a filter key is set, the SDK adds it as the `filter` query
      parameter to its streaming and polling requests, and LaunchDarkly limits the flags it sends to the ones selected by that filter.
 
+     Payload filters are an FDv1 feature, and this SDK uses FDv1. LaunchDarkly also filters flag data by the views linked to a
+     mobile key with a custom payload, but only for FDv2: it rejects this SDK's requests made with such a key with a 422 status.
+
+     This key applies only to the primary environment. To filter a secondary environment, add it with
+     `addSecondaryEnvironment(_:mobileKey:payloadFilter:)`.
+
      The key must contain only alphanumeric characters, periods, underscores, and hyphens, and must start with an alphanumeric
      character. If the key is invalid, the SDK logs an error and requests the full environment instead.
      */
@@ -612,6 +618,36 @@ public struct LDConfig {
         }
 
         _secondaryMobileKeys = newSecondaryMobileKeys
+        _secondaryPayloadFilters = [:]
+    }
+
+    /**
+     Adds a secondary environment, optionally with a payload filter. Throws `LDInvalidArgumentError` if the name is the primary
+     environment name or is already used, or if the mobile key is the primary key or is already used.
+
+     The payload filter must be defined in the mobile key's project, and works as `payloadFilter` does for the primary environment.
+     The mobile key must not have a custom payload, as `payloadFilter` explains. Calling `setSecondaryMobileKeys(_:)` afterwards replaces every secondary environment, including the ones added here.
+
+     - parameter name: The name that identifies the environment, as passed to `LDClient.get(environment:)`.
+     - parameter mobileKey: The environment's mobile key.
+     - parameter payloadFilter: The key of a payload filter to apply to the environment's flag data requests, or nil for no filter.
+     */
+    public mutating func addSecondaryEnvironment(_ name: String, mobileKey: String, payloadFilter: String? = nil) throws {
+        if name == LDConfig.Constants.primaryEnvironmentName {
+            throw(LDInvalidArgumentError("The primary environment name is not a valid key."))
+        }
+        if _secondaryMobileKeys[name] != nil {
+            throw(LDInvalidArgumentError("A secondary environment with this name already exists."))
+        }
+        if mobileKey == self.mobileKey {
+            throw(LDInvalidArgumentError("The primary environment key cannot be in the secondary mobile keys."))
+        }
+        if _secondaryMobileKeys.values.contains(mobileKey) {
+            throw(LDInvalidArgumentError("A key can only be used once."))
+        }
+
+        _secondaryMobileKeys[name] = mobileKey
+        _secondaryPayloadFilters[name] = payloadFilter
     }
 
     /**
@@ -623,8 +659,22 @@ public struct LDConfig {
         return _secondaryMobileKeys
     }
 
+    /**
+     Returns the payload filter key configured for an environment: `payloadFilter` for the primary environment, or the key given to
+     `addSecondaryEnvironment(_:mobileKey:payloadFilter:)` for a secondary one.
+
+     - parameter name: The environment name.
+     - returns: The payload filter key, or nil if the environment has none or is not one of this configuration's environments.
+     */
+    public func payloadFilter(forEnvironment name: String) -> String? {
+        return name == LDConfig.Constants.primaryEnvironmentName ? payloadFilter : _secondaryPayloadFilters[name]
+    }
+
     /// Internal variable for secondaryMobileKeys computed property
     private var _secondaryMobileKeys: [String: String]
+
+    /// Payload filter keys of secondary environments added with one, by environment name
+    private var _secondaryPayloadFilters: [String: String] = [:]
 
     // Internal constructor to enable automated testing
     init(mobileKey: String, autoEnvAttributes: AutoEnvAttributes, isDebugBuild: Bool) {

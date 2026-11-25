@@ -906,6 +906,7 @@ public class LDClient {
         for (name, mobileKey) in environments {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
+            internalConfig.payloadFilter = config.payloadFilter(forEnvironment: name)
             let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context, completion: completionCheck)
             instancesQueue.sync(flags: .barrier) {
                 LDClient.instances?[name] = instance

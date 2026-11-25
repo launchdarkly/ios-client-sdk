@@ -263,6 +263,50 @@ final class LDConfigSpec: XCTestCase {
         }
     }
 
+    func testAddSecondaryEnvironment() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        config.payloadFilter = "mobile-flags"
+        try config.addSecondaryEnvironment("filtered", mobileKey: "filtered-key", payloadFilter: "other-flags")
+        try config.addSecondaryEnvironment("unfiltered", mobileKey: "unfiltered-key")
+
+        XCTAssertEqual(config.getSecondaryMobileKeys(), ["filtered": "filtered-key", "unfiltered": "unfiltered-key"])
+        XCTAssertEqual(config.payloadFilter(forEnvironment: LDConfig.Constants.primaryEnvironmentName), "mobile-flags")
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "filtered"), "other-flags")
+        XCTAssertNil(config.payloadFilter(forEnvironment: "unfiltered"))
+        XCTAssertNil(config.payloadFilter(forEnvironment: "not-an-environment"))
+    }
+
+    func testAddSecondaryEnvironmentRejectsInvalidArguments() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
+
+        XCTAssertThrowsError(try config.addSecondaryEnvironment(LDConfig.Constants.primaryEnvironmentName, mobileKey: "new-key"))
+        XCTAssertThrowsError(try config.addSecondaryEnvironment("other", mobileKey: "new-key"))
+        XCTAssertThrowsError(try config.addSecondaryEnvironment("new", mobileKey: LDConfig.Constants.mockMobileKey))
+        XCTAssertThrowsError(try config.addSecondaryEnvironment("new", mobileKey: "other-key"))
+
+        XCTAssertEqual(config.getSecondaryMobileKeys(), ["other": "other-key"])
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "other"), "other-flags")
+    }
+
+    func testSetSecondaryMobileKeysReplacesAddedEnvironments() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
+        try config.setSecondaryMobileKeys(["other": "other-key"])
+
+        XCTAssertEqual(config.getSecondaryMobileKeys(), ["other": "other-key"])
+        XCTAssertNil(config.payloadFilter(forEnvironment: "other"))
+    }
+
+    func testObjcAddSecondaryEnvironment() throws {
+        let objcConfig = ObjcLDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try objcConfig.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
+
+        XCTAssertEqual(objcConfig.getSecondaryMobileKeys(), ["other": "other-key"])
+        XCTAssertEqual(objcConfig.payloadFilter(forEnvironment: "other"), "other-flags")
+        XCTAssertThrowsError(try objcConfig.addSecondaryEnvironment("other", mobileKey: "new-key", payloadFilter: nil))
+    }
+
     func testIsReportRetryStatusCode() {
         HTTPURLResponse.StatusCodes.all.forEach { statusCode in
             XCTAssertEqual(LDConfig.isReportRetryStatusCode(statusCode),
