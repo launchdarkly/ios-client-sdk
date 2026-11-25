@@ -3877,6 +3877,53 @@ extension DirectEventProcessorSpec {
                 expect(second.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
             }
 
+            it("leaves a loss for the next caller where the only one waiting gave up at its deadline") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
+                testContext.recordEvents(1)
+                testContext.eventProcessor.isOnline = true
+                testContext.serviceMock.holdsEventCompletions = true
+
+                // The delivery drops the event the store will never take, and answers only once the caller has given up.
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    [testContext.eventProcessor as EventProcessor].flushReportingOutcomes(deadline: .now() + 0.2) { outcome in
+                        expect(outcome) == [nil]
+                        done()
+                    }
+                }
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+
+                let next = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: next.record)
+                expect(next.value()).toEventually(beFalse(), timeout: Constants.deliveryTimeout)
+            }
+
+            it("leaves a loss for the next caller where the only one told passes the outcome on to nobody") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
+                testContext.recordEvents(1)
+                testContext.eventProcessor.isOnline = true
+
+                // As a backgrounding does, which only logs the outcome.
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    [testContext.eventProcessor as EventProcessor].flushReportingOutcomes(reportsLoss: false) { outcome in
+                        expect(outcome) == [false]
+                        done()
+                    }
+                }
+
+                let next = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: next.record)
+                expect(next.value()).toEventually(beFalse(), timeout: Constants.deliveryTimeout)
+
+                // Heard by the application now, it is not told again.
+                let after = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: after.record)
+                expect(after.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
+            }
+
             it("answers away from the queue a delivery runs on, after a delivery") {
                 testContext = TestContext()
                 testContext.recordEvents(1)

@@ -80,7 +80,7 @@ class DirectEventProcessor: EventProcessor {
     /// Guards which losses have been told to a caller.
     private let stateLock = UnfairLock()
 
-    /// The mark up to which losses have already been reported to a caller, so that none is told twice. Only to be
+    /// The mark up to which losses have reached a caller, so that none is told to one caller after another. Only to be
     /// used while holding `stateLock`.
     private var reportedLostEvents: UInt64 = 0
 
@@ -276,18 +276,16 @@ class DirectEventProcessor: EventProcessor {
         lostEvents.add(events)
     }
 
-    /// Whether anything was lost up to `mark` that no caller has been told about, which this caller is now the one to
-    /// hear about.
-    ///
-    /// Marks it reported, so the next caller is not told about the same loss. A delivery that nobody is waiting on
-    /// never asks, so a scheduled delivery does not consume the answer a later caller is owed.
-    private func takeEventsLost(upTo mark: UInt64) -> Bool {
-        stateLock.withLock {
-            guard mark > reportedLostEvents
-            else { return false }
-            reportedLostEvents = mark
-            return true
-        }
+    /// Whether anything was lost up to `mark` that has not reached a caller yet.
+    private func hasEventsLostUnheard(upTo mark: UInt64) -> Bool {
+        stateLock.withLock { mark > reportedLostEvents }
+    }
+
+    /// Marks what was lost up to `mark` as having reached a caller, so the next one is not told about it. Only once a
+    /// caller has had the answer: one that gave up at its deadline, or a backgrounding, which tells nobody, leaves the
+    /// loss for the next caller.
+    private func markEventsLostHeard(upTo mark: UInt64) {
+        stateLock.withLock { reportedLostEvents = max(reportedLostEvents, mark) }
     }
 
 }
@@ -403,18 +401,22 @@ extension DirectEventProcessor {
     }
 
     func flush(completion: CompletionClosure?) {
-        // Nil stays nil, so a flush nobody waits on joins a queued delivery without adding to its waiters.
-        commitThenQueueDelivery(completion.map { done in { _ in done() } })
+        // Nil stays nil, so a flush nobody waits on joins a queued delivery without adding to its waiters. `done` is not
+        // given the outcome, so a loss is not heard by it.
+        commitThenQueueDelivery(completion.map { done in { _ in done(); return false } })
     }
 
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
-        committer.queueCommitWherePersisting()
-        queueDelivery(completion)
+        flushReportingOutcome(bypassingBackoff: false) { completion($0); return true }
     }
 
     func flushBypassingBackoff(completion: @escaping FlushOutcomeClosure) {
+        flushReportingOutcome(bypassingBackoff: true) { completion($0); return true }
+    }
+
+    func flushReportingOutcome(bypassingBackoff: Bool, receiver: @escaping FlushOutcomeReceiver) {
         committer.queueCommitWherePersisting()
-        queueDelivery(completion, bypassingBackoff: true)
+        queueDelivery(receiver, bypassingBackoff: bypassingBackoff)
     }
 
     func flushAtClose() {
@@ -435,7 +437,7 @@ extension DirectEventProcessor {
         // the process. Where events persist it only sends: the store is closed, so it writes and closes nothing. It
         // starts once a delivery already running ends, and waiting for that comes out of the same budget.
         let answered = DispatchSemaphore(value: 0)
-        queueDelivery({ _ in answered.signal() }, closing: true)
+        queueDelivery({ _ in answered.signal(); return false }, closing: true)
         if answered.wait(timeout: deadline) == .timedOut {
             os_log("%s gave up waiting for the final event delivery after %dms; it continues in the background", log: service.config.logger, type: .info, typeName(and: #function), Int(budget * 1000))
         }
@@ -447,7 +449,7 @@ extension DirectEventProcessor {
     /// delivery itself cannot run because the client is offline. What it does not do is close those events into a
     /// batch: only a delivery does that, and the one this queues, or the queued one it joins, is the next to start and
     /// so the one that will.
-    private func commitThenQueueDelivery(_ completion: FlushOutcomeClosure?) {
+    private func commitThenQueueDelivery(_ completion: FlushOutcomeReceiver?) {
         commitWherePersisting()
         queueDelivery(completion)
     }
@@ -473,7 +475,7 @@ extension DirectEventProcessor {
 
     /// As `EventDeliveryScheduler.queue(_:closing:bypassingBackoff:paced:)`, starting the delivery where nothing is
     /// running.
-    private func queueDelivery(_ completion: FlushOutcomeClosure?,
+    private func queueDelivery(_ completion: FlushOutcomeReceiver?,
                                closing: Bool = false,
                                bypassingBackoff: Bool = false,
                                paced: Bool = false) {
@@ -485,10 +487,10 @@ extension DirectEventProcessor {
     private func runDelivery() {
         let (run, waiters) = deliveryScheduler.begin()
         reportEvents(run) { delivered, lossMark in
-            // Taken once for the delivery rather than once per waiter, so that every caller joined to it hears about
-            // a loss instead of only whichever happened to be answered first. Taken before the next delivery starts,
-            // which could otherwise answer first and take this one's loss with its own.
-            let kept = waiters.isEmpty || !self.takeEventsLost(upTo: lossMark)
+            // Looked at once for the delivery rather than once per waiter, so that every caller joined to it hears about
+            // a loss instead of only whichever happened to be answered first. Looked at before the next delivery starts,
+            // which could otherwise mark this one's loss heard with its own before this one's callers had it.
+            let lost = self.hasEventsLostUnheard(upTo: lossMark)
             // Before the waiters are answered, so a completion that flushes again finds this delivery over.
             self.startQueuedDeliveryOrStop()
             guard !waiters.isEmpty
@@ -496,8 +498,10 @@ extension DirectEventProcessor {
             // Answered away from `deliveryQueue`, where every delivery ends. A completion is free to flush again: it is
             // never running on the queue the delivery it asks for would be queued on.
             DispatchQueue.global(qos: .userInitiated).async {
-                for waiter in waiters {
-                    waiter(delivered && kept)
+                // Every waiter is answered, not only those up to the first that hears.
+                let heard = waiters.map { $0(delivered && !lost) }.contains(true)
+                if lost && heard {
+                    self.markEventsLostHeard(upTo: lossMark)
                 }
             }
         }
@@ -622,6 +626,8 @@ extension DirectEventProcessor {
 extension DirectEventProcessor: TypeIdentifying { }
 
 extension DirectEventProcessor: EventBatchDelivererOwner { }
+
+extension DirectEventProcessor: FlushOutcomeHearing { }
 
 #if DEBUG
 extension DirectEventProcessor {
