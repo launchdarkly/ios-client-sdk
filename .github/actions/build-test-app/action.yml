@@ -1,0 +1,37 @@
+name: Build test app
+description: 'Build the test app for every platform it runs on.'
+
+runs:
+  using: composite
+  steps:
+    # Workaround for intermittent macos-15 runner issue where simulator
+    # runtimes aren't loaded. Listing devices forces the simulator service
+    # to initialize. See https://github.com/actions/runner-images/issues/12948
+    - name: Prepare simulator runtimes
+      shell: bash
+      run: xcrun simctl list devices available
+
+    - name: Build for iOS simulator
+      shell: bash
+      working-directory: TestApp
+      run: xcodebuild build -project TestApp.xcodeproj -scheme 'TestApp_iOS' -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO | xcpretty
+
+    - name: Build for Mac Catalyst
+      shell: bash
+      working-directory: TestApp
+      run: xcodebuild build -project TestApp.xcodeproj -scheme 'TestApp_iOS' -destination 'generic/platform=macOS,variant=Mac Catalyst' CODE_SIGNING_ALLOWED=NO | xcpretty
+
+    - name: Build for macOS
+      shell: bash
+      working-directory: TestApp
+      run: xcodebuild build -project TestApp.xcodeproj -scheme 'TestApp_macOS' -destination 'generic/platform=macOS' CODE_SIGNING_ALLOWED=NO | xcpretty
+
+    - name: Build for tvOS simulator
+      shell: bash
+      working-directory: TestApp
+      run: xcodebuild build -project TestApp.xcodeproj -scheme 'TestApp_tvOS' -destination 'generic/platform=tvOS Simulator' CODE_SIGNING_ALLOWED=NO | xcpretty
+
+    - name: Build for watchOS simulator
+      shell: bash
+      working-directory: TestApp
+      run: xcodebuild build -project TestApp.xcodeproj -scheme 'TestApp_watchOS' -destination 'generic/platform=watchOS Simulator' CODE_SIGNING_ALLOWED=NO | xcpretty
