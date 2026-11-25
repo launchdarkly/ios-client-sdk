@@ -256,6 +256,8 @@ public final class ObjcLDConfig: NSObject {
     /**
      Sets a Dictionary of identifying names to unique mobile keys to access secondary environments in the LDConfig. Throws if you try to add duplicate keys or put the primary key or name in secondaryMobileKeys.
 
+     This replaces every secondary environment, including the ones added with `addSecondaryEnvironment:mobileKey:payloadFilter:error:`. An environment listed again under the same name and mobile key keeps its payload filter; a new name, or a name given a different mobile key, has none.
+
      - parameter keys: A Dictionary of String to String.
      */
     @objc public func setSecondaryMobileKeys(_ keys: [String: String]) throws {
@@ -263,7 +265,7 @@ public final class ObjcLDConfig: NSObject {
     }
 
     /**
-     Adds a secondary environment, optionally with a payload filter. Throws if the name is the primary environment name or is already used, or if the mobile key is the primary key or is already used. Calling `setSecondaryMobileKeys:error:` afterwards replaces every secondary environment, including the ones added here.
+     Adds a secondary environment, optionally with a payload filter. Throws if the name is the primary environment name or is already used, or if the mobile key is the primary key or is already used. Calling `setSecondaryMobileKeys:error:` afterwards replaces every secondary environment, including the ones added here; one it lists again under the same name and mobile key keeps its payload filter.
 
      - parameter name: The name that identifies the environment.
      - parameter mobileKey: The environment's mobile key.

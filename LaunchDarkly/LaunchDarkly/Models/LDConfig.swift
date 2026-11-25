@@ -601,6 +601,11 @@ public struct LDConfig {
     /**
      Sets a Dictionary of identifying names to unique mobile keys to access secondary environments in the LDConfig. Throws `LDInvalidArgumentError` if you try to add duplicate keys or put the primary key or name in secondaryMobileKeys.
 
+     This replaces every secondary environment, including the ones added with `addSecondaryEnvironment(_:mobileKey:payloadFilter:)`.
+     An environment listed again under the same name and mobile key keeps its payload filter, so that reading the keys with
+     `getSecondaryMobileKeys()`, adding one and setting them back drops no filters. A new name, or a name given a different mobile
+     key, has none.
+
      - parameter newSecondaryMobileKeys: A Dictionary of String to String.
      */
     public mutating func setSecondaryMobileKeys(_ newSecondaryMobileKeys: [String: String]) throws {
@@ -617,8 +622,8 @@ public struct LDConfig {
             throw(LDInvalidArgumentError("A key can only be used once."))
         }
 
+        _secondaryPayloadFilters = _secondaryPayloadFilters.filter { name, _ in newSecondaryMobileKeys[name] == _secondaryMobileKeys[name] }
         _secondaryMobileKeys = newSecondaryMobileKeys
-        _secondaryPayloadFilters = [:]
     }
 
     /**
@@ -626,7 +631,7 @@ public struct LDConfig {
      environment name or is already used, or if the mobile key is the primary key or is already used.
 
      The payload filter must be defined in the mobile key's project, and works as `payloadFilter` does for the primary environment.
-     The mobile key must not have a custom payload, as `payloadFilter` explains. Calling `setSecondaryMobileKeys(_:)` afterwards replaces every secondary environment, including the ones added here.
+     The mobile key must not have a custom payload, as `payloadFilter` explains. Calling `setSecondaryMobileKeys(_:)` afterwards replaces every secondary environment, including the ones added here; one it lists again under the same name and mobile key keeps its payload filter.
 
      - parameter name: The name that identifies the environment, as passed to `LDClient.get(environment:)`.
      - parameter mobileKey: The environment's mobile key.
@@ -761,6 +766,8 @@ extension LDConfig: Equatable {
             && lhs.isDebugMode == rhs.isDebugMode
             && lhs.evaluationReasons == rhs.evaluationReasons
             && lhs.payloadFilter == rhs.payloadFilter
+            && lhs._secondaryMobileKeys == rhs._secondaryMobileKeys
+            && lhs._secondaryPayloadFilters == rhs._secondaryPayloadFilters
             && lhs.maxCachedContexts == rhs.maxCachedContexts
             && lhs.diagnosticOptOut == rhs.diagnosticOptOut
             && lhs.diagnosticRecordingInterval == rhs.diagnosticRecordingInterval
