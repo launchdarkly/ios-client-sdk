@@ -91,10 +91,11 @@ class TestContext {
         withCached(contextKey: context.fullyQualifiedHashedKey(), flags: flags)
     }
 
-    func withCached(contextKey: String, flags: [LDFlagKey: FeatureFlag]?) -> TestContext {
-        var forEnv = cachedFlags[config.mobileKey] ?? [:]
+    func withCached(contextKey: String, flags: [LDFlagKey: FeatureFlag]?, mobileKey: String? = nil) -> TestContext {
+        let mobileKey = mobileKey ?? config.mobileKey
+        var forEnv = cachedFlags[mobileKey] ?? [:]
         forEnv[contextKey] = flags
-        cachedFlags[config.mobileKey] = forEnv
+        cachedFlags[mobileKey] = forEnv
         return self
     }
 

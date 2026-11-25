@@ -256,7 +256,7 @@ public final class ObjcLDConfig: NSObject {
     /**
      Sets a Dictionary of identifying names to unique mobile keys to access secondary environments in the LDConfig. Throws if you try to add duplicate keys or put the primary key or name in secondaryMobileKeys.
 
-     This replaces every secondary environment, including the ones added with `addSecondaryEnvironment:mobileKey:payloadFilter:error:`. An environment listed again under the same name and mobile key keeps its payload filter; a new name, or a name given a different mobile key, has none.
+     This replaces every secondary environment, including the ones added with `addSecondaryEnvironment:mobileKey:payloadFilter:deferred:error:`. An environment listed again under the same name and mobile key keeps its payload filter and whether it is deferred; a new name, or a name given a different mobile key, has no filter and is not deferred.
 
      - parameter keys: A Dictionary of String to String.
      */
@@ -273,6 +273,30 @@ public final class ObjcLDConfig: NSObject {
      */
     @objc public func addSecondaryEnvironment(_ name: String, mobileKey: String, payloadFilter: String?) throws {
         try config.addSecondaryEnvironment(name, mobileKey: mobileKey, payloadFilter: payloadFilter)
+    }
+
+    /**
+     Adds a secondary environment, optionally with a payload filter, optionally deferred. Throws if the name is the primary environment name or is already used, or if the mobile key is the primary key or is already used.
+
+     A deferred environment starts without a connection for flags: its client serves the flags cached on the device, or default values, and records and delivers events, until `startWithEnvironment:startWaitSeconds:completion:` starts its flag requests. See `LDConfig.addSecondaryEnvironment(_:mobileKey:payloadFilter:deferred:)`.
+
+     - parameter name: The name that identifies the environment.
+     - parameter mobileKey: The environment's mobile key.
+     - parameter payloadFilter: The key of a payload filter defined in the mobile key's project, or nil for no filter.
+     - parameter deferred: Whether the environment waits for `startWithEnvironment:startWaitSeconds:completion:` to request flags.
+     */
+    @objc public func addSecondaryEnvironment(_ name: String, mobileKey: String, payloadFilter: String?, deferred: Bool) throws {
+        try config.addSecondaryEnvironment(name, mobileKey: mobileKey, payloadFilter: payloadFilter, deferred: deferred)
+    }
+
+    /**
+     Returns whether an environment was added as deferred.
+
+     - parameter name: The environment name.
+     - returns: True for a deferred secondary environment; false otherwise.
+     */
+    @objc(isDeferredForEnvironment:) public func isDeferred(forEnvironment name: String) -> Bool {
+        return config.isDeferred(forEnvironment: name)
     }
 
     /**

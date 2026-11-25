@@ -110,6 +110,11 @@ public final class ObjcLDClient: NSObject {
         ldClient.isInitialized
     }
 
+    /// Reports whether this client's environment was added as deferred and `startWithEnvironment:startWaitSeconds:completion:` has not been called for it yet. See `LDClient.isDeferred`.
+    @objc public var isDeferred: Bool {
+        ldClient.isDeferred
+    }
+
     /**
         The LDContext set into the LDClient may affect the set of feature flags returned by the LaunchDarkly server, and ties event tracking to the context. See `LDContext` for details about what information can be retained.
 
@@ -637,6 +642,17 @@ public final class ObjcLDClient: NSObject {
    @objc public static func start(configuration: ObjcLDConfig, context: ObjcLDContext, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
        LDClient.start(config: configuration.config, context: context.context, startWaitSeconds: startWaitSeconds, completion: completion)
    }
+
+    /**
+     Starts the flag connection of an environment added as deferred, with `-[LDConfig addSecondaryEnvironment:mobileKey:payloadFilter:deferred:error:]`. See `LDClient.start(environment:startWaitSeconds:completion:)`.
+
+     - parameter environment: The name the environment was added under.
+     - parameter startWaitSeconds: The longest to wait for the environment's flags before calling `completion` with YES.
+     - parameter completion: Closure called once the environment's flags arrive, with NO, or after `startWaitSeconds`, with YES. (Optional)
+     */
+    @objc public static func start(environment: String, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        LDClient.start(environment: environment, startWaitSeconds: startWaitSeconds, completion: completion)
+    }
 
     private init(client: LDClient) {
         ldClient = client

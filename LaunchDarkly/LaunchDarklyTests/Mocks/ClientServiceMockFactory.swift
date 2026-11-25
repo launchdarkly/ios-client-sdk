@@ -68,8 +68,10 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     var makeFlagChangeNotifierReturnValue: FlagChangeNotifying = FlagChangeNotifyingMock()
+    /// Where set, makes each client's notifier, as the SDK gives each environment its own, rather than sharing the return value.
+    var makeFlagChangeNotifierCallback: (() -> FlagChangeNotifying)?
     func makeFlagChangeNotifier() -> FlagChangeNotifying {
-        return makeFlagChangeNotifierReturnValue
+        return makeFlagChangeNotifierCallback?() ?? makeFlagChangeNotifierReturnValue
     }
 
     var makeEventProcessorCallCount = 0
@@ -158,7 +160,9 @@ final class ClientServiceMockFactory: ClientServiceCreating {
     }
 
     var makeFlagStoreReturnValue = FlagMaintainingMock()
+    /// Where set, makes each client's flag store, as the SDK gives each environment its own, rather than sharing the return value.
+    var makeFlagStoreCallback: (() -> FlagMaintaining)?
     func makeFlagStore() -> FlagMaintaining {
-        return makeFlagStoreReturnValue
+        return makeFlagStoreCallback?() ?? makeFlagStoreReturnValue
     }
 }
