@@ -242,13 +242,74 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.payloadFilter(forEnvironment: "other"), "other-flags")
     }
 
-    func testSetSecondaryMobileKeysReplacesAddedEnvironments() throws {
+    func testSetSecondaryMobileKeysKeepsFilterOfEnvironmentWithSameKey() throws {
         var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
         try config.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
         try config.setSecondaryMobileKeys(["other": "other-key"])
 
         XCTAssertEqual(config.getSecondaryMobileKeys(), ["other": "other-key"])
-        XCTAssertNil(config.payloadFilter(forEnvironment: "other"))
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "other"), "other-flags")
+    }
+
+    func testSetSecondaryMobileKeysFromReadKeysKeepsEveryFilter() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("filtered", mobileKey: "filtered-key", payloadFilter: "filtered-flags")
+        try config.addSecondaryEnvironment("unfiltered", mobileKey: "unfiltered-key")
+
+        var keys = config.getSecondaryMobileKeys()
+        keys["new"] = "new-key"
+        try config.setSecondaryMobileKeys(keys)
+
+        XCTAssertEqual(config.getSecondaryMobileKeys(), ["filtered": "filtered-key", "unfiltered": "unfiltered-key", "new": "new-key"])
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "filtered"), "filtered-flags")
+        XCTAssertNil(config.payloadFilter(forEnvironment: "unfiltered"))
+        XCTAssertNil(config.payloadFilter(forEnvironment: "new"))
+    }
+
+    func testSetSecondaryMobileKeysDropsFilterOfEnvironmentRemovedOrGivenNewKey() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("rekeyed", mobileKey: "old-key", payloadFilter: "rekeyed-flags")
+        try config.addSecondaryEnvironment("removed", mobileKey: "removed-key", payloadFilter: "removed-flags")
+
+        try config.setSecondaryMobileKeys(["rekeyed": "new-key"])
+        XCTAssertNil(config.payloadFilter(forEnvironment: "rekeyed"))
+        XCTAssertNil(config.payloadFilter(forEnvironment: "removed"))
+
+        // Listed again later, a removed environment does not get its old filter back.
+        try config.setSecondaryMobileKeys(["rekeyed": "new-key", "removed": "removed-key"])
+        XCTAssertNil(config.payloadFilter(forEnvironment: "removed"))
+    }
+
+    func testSetSecondaryMobileKeysThatThrowsKeepsEnvironmentsAndFilters() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
+
+        XCTAssertThrowsError(try config.setSecondaryMobileKeys(["other": "other-key", "duplicate": "other-key"]))
+
+        XCTAssertEqual(config.getSecondaryMobileKeys(), ["other": "other-key"])
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "other"), "other-flags")
+    }
+
+    func testEqualsComparesSecondaryEnvironments() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
+
+        var sameConfig = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try sameConfig.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
+        symmetricAssertEqual(config, sameConfig)
+
+        var noSecondary = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        symmetricAssertNotEqual(config, noSecondary, "secondary environment is the same")
+
+        try noSecondary.setSecondaryMobileKeys(["other": "other-key"])
+        symmetricAssertNotEqual(config, noSecondary, "secondary payload filter is the same")
+
+        var otherKey = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try otherKey.addSecondaryEnvironment("other", mobileKey: "different-key", payloadFilter: "other-flags")
+        symmetricAssertNotEqual(config, otherKey, "secondary mobile key is the same")
+
+        XCTAssertTrue(ObjcLDConfig(config).isEqual(object: ObjcLDConfig(sameConfig)))
+        XCTAssertFalse(ObjcLDConfig(config).isEqual(object: ObjcLDConfig(otherKey)))
     }
 
     func testObjcAddSecondaryEnvironment() throws {
