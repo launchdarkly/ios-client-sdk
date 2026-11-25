@@ -166,7 +166,7 @@ public final class ObjcLDConfig: NSObject {
         set { config.diagnosticRecordingInterval = newValue }
     }
 
-    /// The key of a payload filter to apply to the primary environment's flag data requests. To filter a secondary environment, add it with `addSecondaryEnvironment:mobileKey:payloadFilter:error:`. If the key is invalid, the SDK logs an error and requests the full environment instead. (Default: nil)
+    /// The key of a payload filter to apply to the primary environment's flag data requests. To filter a secondary environment, add it with `addSecondaryEnvironment:mobileKey:payloadFilter:error:`. If the key is invalid, the SDK logs an error and requests the full environment instead. Payload filters are an FDv1 feature; mobile keys with a custom payload of views work only with FDv2, which this SDK does not use. (Default: nil)
     @objc public var payloadFilter: String? {
         get { config.payloadFilter }
         set { config.payloadFilter = newValue }

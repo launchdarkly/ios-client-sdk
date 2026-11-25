@@ -401,6 +401,9 @@ public struct LDConfig {
      Payload filters are defined per project in LaunchDarkly. When a filter key is set, the SDK adds it as the `filter` query
      parameter to its streaming and polling requests, and LaunchDarkly limits the flags it sends to the ones selected by that filter.
 
+     Payload filters are an FDv1 feature, and this SDK uses FDv1. LaunchDarkly also filters flag data by the views linked to a
+     mobile key with a custom payload, but only for FDv2: it rejects this SDK's requests made with such a key with a 422 status.
+
      This key applies only to the primary environment. To filter a secondary environment, add it with
      `addSecondaryEnvironment(_:mobileKey:payloadFilter:)`.
 
@@ -504,7 +507,7 @@ public struct LDConfig {
      environment name or is already used, or if the mobile key is the primary key or is already used.
 
      The payload filter must be defined in the mobile key's project, and works as `payloadFilter` does for the primary environment.
-     Calling `setSecondaryMobileKeys(_:)` afterwards replaces every secondary environment, including the ones added here.
+     The mobile key must not have a custom payload, as `payloadFilter` explains. Calling `setSecondaryMobileKeys(_:)` afterwards replaces every secondary environment, including the ones added here.
 
      - parameter name: The name that identifies the environment, as passed to `LDClient.get(environment:)`.
      - parameter mobileKey: The environment's mobile key.
