@@ -333,12 +333,13 @@ final class EventCommitter {
     /// stalled on the disk, on the store's I/O lock, and on the write itself. A commit that outlasts the deadline is left
     /// to finish, and the delivery queued after it waits for it on the delivery queue, so the caller, which waits for
     /// that delivery against the same deadline, is not held past it.
-    /// Where nothing persists there is nothing to write: the final delivery encodes what it sends.
+    /// Where events are kept off the disk there is nothing to write or close: the final delivery encodes what it sends.
     ///
     /// Closing the store is the client's last write: its log becomes a batch, and nothing is written after it, so
-    /// nothing it recorded is left in a log that a client started in its place would not recover.
+    /// nothing it recorded is left in a log that a client started in its place would not recover. That includes a
+    /// store that gave up on persistence after a failed write, which still holds the log the write failed on.
     func commitAndClose(by deadline: DispatchTime, budget: TimeInterval) {
-        guard store.isPersisting
+        guard store.hasDirectory
         else { return }
         let committed = DispatchSemaphore(value: 0)
         commitQueue.async {

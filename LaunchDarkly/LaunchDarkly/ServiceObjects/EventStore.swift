@@ -59,6 +59,9 @@ protocol EventStoring {
     /// store has given up on it.
     var isPersisting: Bool { get }
 
+    /// Whether the store has a directory, which it keeps when it gives up on persistence, along with the log it holds.
+    var hasDirectory: Bool { get }
+
     /// Stages an already encoded event, returning false if it was dropped because `capacity` or the byte capacity is
     /// reached.
     ///
@@ -386,6 +389,10 @@ final class EventStore: EventStoring {
 
     var isPersisting: Bool {
         bufferLock.withLock { persistEvents }
+    }
+
+    var hasDirectory: Bool {
+        disk != nil
     }
 
     func reserve(_ events: Int) {

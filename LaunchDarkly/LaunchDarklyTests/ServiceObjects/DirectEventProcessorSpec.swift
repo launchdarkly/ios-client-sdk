@@ -2812,6 +2812,35 @@ extension DirectEventProcessorSpec {
                 expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["before-close"]]
             }
 
+            itPersisting("leaves what reached the disk before a failed write as a batch when it closes offline, which a client started in its place in the same run delivers") {
+                var config = LDConfig.stub
+                config.eventPersistence = .deferred
+                let serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                var writes = 0
+                let store = EventStore.temporary(capacity: config.eventCapacity, writeLog: { file, bytes in
+                    writes += 1
+                    // The file header and the first event land; the device is full from then on.
+                    return writes > 2 ? ENOSPC : file.writeAll(bytes)
+                })
+                defer { store.deleteEverything() }
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits).started()
+                reporter.record(CustomEvent(key: "written", context: LDContext.stub()))
+                reporter.commitRecordedEvents()
+                reporter.record(CustomEvent(key: "held", context: LDContext.stub()))
+                reporter.commitRecordedEvents()
+                expect(store.isPersisting) == false
+
+                reporter.flushAtClose()
+
+                let replacement = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: EventStore.sharing(store.directory!), pacing: .noWaits).started()
+                replacement.isOnline = true
+                defer { replacement.isOnline = false }
+
+                expect(serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+                expect(serviceMock.publishedEventPayloads.map(customKeys)) == [["written"]]
+            }
+
             itPersisting("writes nothing it is given after closing") {
                 testContext = TestContext()
                 testContext.eventProcessor.record(CustomEvent(key: "before-close", context: testContext.context))
@@ -4715,6 +4744,7 @@ private final class ClosingHookStore: EventStoring {
     var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
     func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
     var isPersisting: Bool { inner.isPersisting }
+    var hasDirectory: Bool { inner.hasDirectory }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }
     func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
@@ -4798,6 +4828,7 @@ private final class StagingObservingStore: EventStoring {
     var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
     func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
     var isPersisting: Bool { inner.isPersisting }
+    var hasDirectory: Bool { inner.hasDirectory }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool {
         note(encodedEvent)
         return inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity)
@@ -4910,6 +4941,7 @@ private final class SlowListingStore: EventStoring {
     var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
     func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
     var isPersisting: Bool { inner.isPersisting }
+    var hasDirectory: Bool { inner.hasDirectory }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }
     func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
@@ -4965,6 +4997,7 @@ private final class RecoveryObservingStore: EventStoring {
     var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
     func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
     var isPersisting: Bool { inner.isPersisting }
+    var hasDirectory: Bool { inner.hasDirectory }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }
     func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
