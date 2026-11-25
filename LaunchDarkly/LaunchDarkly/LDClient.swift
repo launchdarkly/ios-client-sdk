@@ -879,7 +879,6 @@ public class LDClient {
         // registered with them, in the same order on every launch rather than in a dictionary's, which varies by launch.
         let environments = [(name: LDConfig.Constants.primaryEnvironmentName, mobileKey: config.mobileKey)]
             + config.getSecondaryMobileKeys().sorted { $0.key < $1.key }.map { (name: $0.key, mobileKey: $0.value) }
-        logIgnoredSecondaryPayloadFilters(config)
         var internalCount = 0
         let completionCheck = {
             internalCount += 1
@@ -909,13 +908,6 @@ public class LDClient {
         }
 
         completionCheck()
-    }
-
-    private static func logIgnoredSecondaryPayloadFilters(_ config: LDConfig) {
-        let ignoredNames = Set(config.secondaryPayloadFilters.keys).subtracting(config.getSecondaryMobileKeys().keys)
-        guard !ignoredNames.isEmpty
-        else { return }
-        os_log("%s secondaryPayloadFilters names environments that are not secondary environments, so their filters are ignored: %s", log: config.logger, type: .error, typeName(and: #function), ignoredNames.sorted().joined(separator: ", "))
     }
 
     /**

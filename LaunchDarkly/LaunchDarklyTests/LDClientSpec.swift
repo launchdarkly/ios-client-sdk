@@ -82,15 +82,14 @@ final class LDClientSpec: QuickSpec {
         context("when there are secondary environments with payload filters") {
             it("gives each environment its own payload filter") {
                 var config = LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: false)
-                try! config.setSecondaryMobileKeys(["inherits": "inherits-key", "overrides": "overrides-key", "unfiltered": "unfiltered-key"])
                 config.payloadFilter = "mobile-flags"
-                config.secondaryPayloadFilters = ["overrides": "other-flags", "unfiltered": "", "unknown": "ignored"]
+                try! config.addSecondaryEnvironment("filtered", mobileKey: "filtered-key", payloadFilter: "other-flags")
+                try! config.addSecondaryEnvironment("unfiltered", mobileKey: "unfiltered-key")
                 let testContext = TestContext(newConfig: config)
                 testContext.start()
 
                 let expected: [(String, String?)] = [(LDConfig.Constants.primaryEnvironmentName, "mobile-flags"),
-                                                     ("inherits", "mobile-flags"),
-                                                     ("overrides", "other-flags"),
+                                                     ("filtered", "other-flags"),
                                                      ("unfiltered", nil)]
                 for (environment, filter) in expected {
                     let client = LDClient.get(environment: environment)

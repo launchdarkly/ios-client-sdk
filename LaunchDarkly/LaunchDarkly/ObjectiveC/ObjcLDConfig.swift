@@ -166,16 +166,10 @@ public final class ObjcLDConfig: NSObject {
         set { config.diagnosticRecordingInterval = newValue }
     }
 
-    /// The key of a payload filter to apply to flag data requests, for the primary environment and every secondary environment that `secondaryPayloadFilters` does not name. If the key is invalid, the SDK logs an error and requests the full environment instead. (Default: nil)
+    /// The key of a payload filter to apply to the primary environment's flag data requests. To filter a secondary environment, add it with `addSecondaryEnvironment:mobileKey:payloadFilter:error:`. If the key is invalid, the SDK logs an error and requests the full environment instead. (Default: nil)
     @objc public var payloadFilter: String? {
         get { config.payloadFilter }
         set { config.payloadFilter = newValue }
-    }
-
-    /// Payload filter keys for secondary environments, by the names given to `setSecondaryMobileKeys`. A secondary environment named here uses its own key instead of `payloadFilter`, or requests the full environment if its key is empty. (Default: empty)
-    @objc public var secondaryPayloadFilters: [String: String] {
-        get { config.secondaryPayloadFilters }
-        set { config.secondaryPayloadFilters = newValue }
     }
 
     /// Sends event payloads gzip-encoded, which reduces egress bandwidth cost. (Default: NO)
@@ -223,6 +217,27 @@ public final class ObjcLDConfig: NSObject {
      */
     @objc public func setSecondaryMobileKeys(_ keys: [String: String]) throws {
         try config.setSecondaryMobileKeys(keys)
+    }
+
+    /**
+     Adds a secondary environment, optionally with a payload filter. Throws if the name is the primary environment name or is already used, or if the mobile key is the primary key or is already used. Calling `setSecondaryMobileKeys:error:` afterwards replaces every secondary environment, including the ones added here.
+
+     - parameter name: The name that identifies the environment.
+     - parameter mobileKey: The environment's mobile key.
+     - parameter payloadFilter: The key of a payload filter defined in the mobile key's project, or nil for no filter.
+     */
+    @objc public func addSecondaryEnvironment(_ name: String, mobileKey: String, payloadFilter: String?) throws {
+        try config.addSecondaryEnvironment(name, mobileKey: mobileKey, payloadFilter: payloadFilter)
+    }
+
+    /**
+     Returns the payload filter key configured for an environment.
+
+     - parameter name: The environment name.
+     - returns: The payload filter key, or nil if the environment has none or is not one of this configuration's environments.
+     */
+    @objc(payloadFilterForEnvironment:) public func payloadFilter(forEnvironment name: String) -> String? {
+        return config.payloadFilter(forEnvironment: name)
     }
 
     /// LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` (`ObjcLDClient.config`) in order to retain previously set values.
