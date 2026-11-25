@@ -18,6 +18,15 @@ class DiagnosticReporter: DiagnosticReporting {
     private var sentInit: Bool
     private let stateQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.state", qos: .utility)
     private let workQueue = DispatchQueue(label: "com.launchdarkly.diagnosticReporter.work", qos: .utility)
+    /// Where set, what the init event waits for: the event processor's launch gate, so that it does not compete with the
+    /// first flag request. Set once the client has both; unset only where events are not sent, and so neither is this.
+    var sendsInitAfter: ((@escaping () -> Void) -> Void)?
+
+    /// Has the init event wait for `events`' launch gate. Holds `events` weakly: the init it holds keeps this reporter
+    /// alive, and a client closed before the gate opens leaves it held for good.
+    func sendInitAfterLaunchGate(of events: DirectEventProcessor) {
+        sendsInitAfter = { [weak events] send in events?.whenLaunchGateOpens(send) }
+    }
 
     init(service: DarklyServiceProvider, environmentReporting: EnvironmentReporting) {
         self.service = service
@@ -43,7 +52,12 @@ class DiagnosticReporter: DiagnosticReporting {
                                                    environmentReporting: environmentReporting,
                                                    diagnosticId: cache.getDiagnosticId(),
                                                    creationDate: Date().millisSince1970)
-                    sendDiagnosticEventAsync(diagnosticEvent: initEvent)
+                    let send = { self.sendDiagnosticEventAsync(diagnosticEvent: initEvent) }
+                    if let sendsInitAfter {
+                        sendsInitAfter(send)
+                    } else {
+                        send()
+                    }
                 }
 
                 timer = LDTimer(withTimeInterval: service.config.diagnosticRecordingInterval, fireQueue: workQueue) {

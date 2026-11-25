@@ -21,6 +21,20 @@ struct FeatureFlag: Codable {
 
     var versionForEvents: Int? { flagVersion ?? version }
 
+    /// Returns a copy of this flag with a different variation and reason. The other properties are unchanged.
+    func withEvaluationResult(variation: Int?, reason: [String: LDValue]?) -> FeatureFlag {
+        FeatureFlag(flagKey: flagKey,
+                    value: value,
+                    variation: variation,
+                    version: version,
+                    flagVersion: flagVersion,
+                    trackEvents: trackEvents,
+                    debugEventsUntilDate: debugEventsUntilDate,
+                    reason: reason,
+                    trackReason: trackReason,
+                    prerequisites: prerequisites)
+    }
+
     init(flagKey: LDFlagKey,
          value: LDValue = .null,
          variation: Int? = nil,
@@ -86,7 +100,13 @@ struct FeatureFlag: Codable {
     }
 
     func shouldCreateDebugEvents(lastEventReportResponseTime: Date?) -> Bool {
-        (lastEventReportResponseTime ?? Date()) <= (debugEventsUntilDate ?? Date.distantPast)
+        // Workaround for an Apple platform defect, not an SDK bug. The Xcode 27.2 SDKs declare
+        // Foundation's `Date <=` and `Date >=` as back-deployed, and early iOS 27.2 beta builds
+        // shipped a Foundation that did not export those symbols. Any app built with that SDK
+        // then crashes on a null call whenever two Dates are compared with `<=` or `>=`.
+        let comparisonDate = lastEventReportResponseTime ?? Date()
+        let debugUntilDate = debugEventsUntilDate ?? Date.distantPast
+        return comparisonDate.timeIntervalSinceReferenceDate <= debugUntilDate.timeIntervalSinceReferenceDate
     }
 }
 

@@ -1,0 +1,1 @@
+events/delivery retry/payload is discarded if the retry also fails

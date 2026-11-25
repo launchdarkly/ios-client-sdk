@@ -6,6 +6,15 @@ All notable changes to the LaunchDarkly iOS SDK will be documented in this file.
 * bumping swift-tools-version:5.5 and macosx to be compatible with otel
 - masOS "10.13" -> "12.00"
 
+## [11.8.1](https://github.com/launchdarkly/ios-client-sdk/compare/11.8.0...11.8.1) (2026-11-23)
+
+
+### Bug Fixes
+
+* avoid Foundation's back-deployed Date comparison operators ([#575](https://github.com/launchdarkly/ios-client-sdk/issues/575)) ([1e18137](https://github.com/launchdarkly/ios-client-sdk/commit/1e18137b45874544d62177bc0c3a5dd002755ea9))
+* Record no variation and a WRONG_TYPE reason in events when a typed evaluation has the wrong type ([#554](https://github.com/launchdarkly/ios-client-sdk/issues/554)) ([d76e12e](https://github.com/launchdarkly/ios-client-sdk/commit/d76e12e7f8ec85135035c037386ac96f5d0ece87))
+* Start the primary environment first, then secondary environments by name ([#572](https://github.com/launchdarkly/ios-client-sdk/issues/572)) ([30856c4](https://github.com/launchdarkly/ios-client-sdk/commit/30856c4db2efd14519bff3b4b2f1a496a42a4f29))
+
 ## [11.8.0](https://github.com/launchdarkly/ios-client-sdk/compare/11.7.0...11.8.0) (2026-11-05)
 
 

@@ -2,12 +2,13 @@ import Foundation
 import OSLog
 
 struct FlagRequestTracker {
-    let startDate = Date()
+    let startDate: Date
     var flagCounters: [LDFlagKey: FlagCounter] = [:]
     let logger: OSLog
 
-    init(logger: OSLog) {
+    init(logger: OSLog, startDate: Date = Date()) {
         self.logger = logger
+        self.startDate = startDate
     }
 
     mutating func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue, context: LDContext) {

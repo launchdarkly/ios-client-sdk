@@ -115,7 +115,7 @@ struct DiagnosticConfig: Codable {
         customStreamURI = config.streamUrl != LDConfig.Defaults.streamUrl
         eventsCapacity = config.eventCapacity
         connectTimeoutMillis = Int(exactly: round(config.connectionTimeout * 1_000)) ?? .max
-        eventsFlushIntervalMillis = Int(exactly: round(config.eventFlushInterval * 1_000)) ?? .max
+        eventsFlushIntervalMillis = Int(exactly: round(DirectEventProcessor.flushInterval(config: config) * 1_000)) ?? .max
         streamingDisabled = config.streamingMode == .polling
         allAttributesPrivate = config.allContextAttributesPrivate
         pollingIntervalMillis = Int(exactly: round(config.flagPollingInterval * 1_000)) ?? .max
