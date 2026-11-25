@@ -516,9 +516,11 @@ final class EventStore: EventStoring {
         switch disk.closeLog(holding: closed) {
         case .failed:
             // A log that is still there is still the open one, and its events go on counting as committed until a
-            // later close manages it, or until so many have failed that the store gives up on it.
+            // later close manages it, or until so many have failed that the store gives up on it. Not while the store
+            // closes: what it took back would have only the closing delivery left to send it, and none at all offline,
+            // where left in the log it is recovered at the next launch.
             closeFailures += 1
-            guard closeFailures >= EventStore.closeFailuresBeforeGivingUp
+            guard closeFailures >= EventStore.closeFailuresBeforeGivingUp, !bufferLock.withLock({ isClosed })
             else { return nil }
             return giveUpOnOpenLog(of: disk, holding: closed)
         case .vanished(let deletedUnsent):
