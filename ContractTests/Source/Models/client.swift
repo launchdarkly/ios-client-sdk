@@ -23,10 +23,12 @@ struct Configuration: Content {
 struct StreamingParameters: Content {
     var baseUri: String?
     var initialRetryDelayMs: Int?
+    var filter: String?
 }
 
 struct PollingParameters: Content {
     var baseUri: String?
+    var filter: String?
     // TODO(mmk) Add pollIntervalMs
 }
 
