@@ -227,6 +227,9 @@ public struct LDConfig {
         /// The default payload filter key. (nil, the full environment is requested)
         static let payloadFilter: String? = nil
 
+        /// The default payload filter keys for secondary environments. (none, each uses `payloadFilter`)
+        static let secondaryPayloadFilters: [String: String] = [:]
+
         /// The default setting for the maximum number of locally cached contexts. (5)
         static let maxCachedContexts = 5
 
@@ -401,10 +404,22 @@ public struct LDConfig {
      Payload filters are defined per project in LaunchDarkly. When a filter key is set, the SDK adds it as the `filter` query
      parameter to its streaming and polling requests, and LaunchDarkly limits the flags it sends to the ones selected by that filter.
 
+     This key applies to the primary environment, and to every secondary environment that `secondaryPayloadFilters` does not
+     name. Each of those environments' projects needs a filter with this key.
+
      The key must contain only alphanumeric characters, periods, underscores, and hyphens, and must start with an alphanumeric
      character. If the key is invalid, the SDK logs an error and requests the full environment instead.
      */
     public var payloadFilter: String? = Defaults.payloadFilter
+
+    /**
+     Payload filter keys for secondary environments, by the names given to `setSecondaryMobileKeys(_:)`. (Default: empty)
+
+     A secondary environment named here uses its own key instead of `payloadFilter`, or requests the full environment if its key
+     is empty. Keys are validated as `payloadFilter` is. Names that are not secondary environments are ignored, and the SDK logs
+     them when it starts.
+     */
+    public var secondaryPayloadFilters: [String: String] = Defaults.secondaryPayloadFilters
 
     /// An Integer that tells ContextEnvironmentFlagCache the maximum number of contexts to locally cache. Can be set to -1 for unlimited cached contexts.
     public var maxCachedContexts: Int = Defaults.maxCachedContexts
@@ -546,6 +561,13 @@ public struct LDConfig {
         return runMode == .foreground ? max(flagPollingInterval, minima.flagPollingInterval) : max(backgroundFlagPollingInterval, minima.backgroundFlagPollingInterval)
     }
 
+    // Returns the payload filter key configured for the named environment, before validation.
+    func payloadFilter(forEnvironment name: String) -> String? {
+        guard name != LDConfig.Constants.primaryEnvironmentName, let filter = secondaryPayloadFilters[name]
+        else { return payloadFilter }
+        return filter
+    }
+
     // Returns the payload filter key to send with flag requests, or nil if none is set or the configured key is invalid.
     func validatedPayloadFilter() -> String? {
         guard let payloadFilter = payloadFilter, !payloadFilter.isEmpty
@@ -588,6 +610,7 @@ extension LDConfig: Equatable {
             && lhs.isDebugMode == rhs.isDebugMode
             && lhs.evaluationReasons == rhs.evaluationReasons
             && lhs.payloadFilter == rhs.payloadFilter
+            && lhs.secondaryPayloadFilters == rhs.secondaryPayloadFilters
             && lhs.maxCachedContexts == rhs.maxCachedContexts
             && lhs.diagnosticOptOut == rhs.diagnosticOptOut
             && lhs.diagnosticRecordingInterval == rhs.diagnosticRecordingInterval

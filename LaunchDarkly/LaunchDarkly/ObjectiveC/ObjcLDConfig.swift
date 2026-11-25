@@ -166,10 +166,16 @@ public final class ObjcLDConfig: NSObject {
         set { config.diagnosticRecordingInterval = newValue }
     }
 
-    /// The key of a payload filter to apply to flag data requests. If the key is invalid, the SDK logs an error and requests the full environment instead. (Default: nil)
+    /// The key of a payload filter to apply to flag data requests, for the primary environment and every secondary environment that `secondaryPayloadFilters` does not name. If the key is invalid, the SDK logs an error and requests the full environment instead. (Default: nil)
     @objc public var payloadFilter: String? {
         get { config.payloadFilter }
         set { config.payloadFilter = newValue }
+    }
+
+    /// Payload filter keys for secondary environments, by the names given to `setSecondaryMobileKeys`. A secondary environment named here uses its own key instead of `payloadFilter`, or requests the full environment if its key is empty. (Default: empty)
+    @objc public var secondaryPayloadFilters: [String: String] {
+        get { config.secondaryPayloadFilters }
+        set { config.secondaryPayloadFilters = newValue }
     }
 
     /// Sends event payloads gzip-encoded, which reduces egress bandwidth cost. (Default: NO)

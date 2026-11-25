@@ -78,6 +78,29 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.serviceFactoryMock.madeFlagSynchronizer?.onSyncComplete).toNot(beNil())
             }
         }
+
+        context("when there are secondary environments with payload filters") {
+            it("gives each environment its own payload filter") {
+                var config = LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: false)
+                try! config.setSecondaryMobileKeys(["inherits": "inherits-key", "overrides": "overrides-key", "unfiltered": "unfiltered-key"])
+                config.payloadFilter = "mobile-flags"
+                config.secondaryPayloadFilters = ["overrides": "other-flags", "unfiltered": "", "unknown": "ignored"]
+                let testContext = TestContext(newConfig: config)
+                testContext.start()
+
+                let expected: [(String, String?)] = [(LDConfig.Constants.primaryEnvironmentName, "mobile-flags"),
+                                                     ("inherits", "mobile-flags"),
+                                                     ("overrides", "other-flags"),
+                                                     ("unfiltered", nil)]
+                for (environment, filter) in expected {
+                    let client = LDClient.get(environment: environment)
+                    expect(client).toNot(beNil(), description: environment)
+                    let matcher: Nimble.Predicate<String> = filter.map { equal($0) } ?? beNil()
+                    expect(client?.config.validatedPayloadFilter()).to(matcher, description: environment)
+                    expect(client?.service.config.validatedPayloadFilter()).to(matcher, description: environment)
+                }
+            }
+        }
     }
 
     private func startSpec(withTimeout: Bool) {

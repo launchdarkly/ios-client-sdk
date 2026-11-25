@@ -24,6 +24,7 @@ final class LDConfigSpec: XCTestCase {
         fileprivate static let debugMode = true
         fileprivate static let evaluationReasons = true
         fileprivate static let payloadFilter = "mobile-flags"
+        fileprivate static let secondaryPayloadFilters = ["other": "other-flags", "unfiltered": ""]
         fileprivate static let maxCachedContexts = -1
         fileprivate static let diagnosticOptOut = true
         fileprivate static let diagnosticRecordingInterval: TimeInterval = 600.0
@@ -50,6 +51,7 @@ final class LDConfigSpec: XCTestCase {
          ("use report", Constants.useReport, { c, v in c.useReport = v as! Bool }),
          ("evaluation reasons", Constants.evaluationReasons, { c, v in c.evaluationReasons = v as! Bool }),
          ("payload filter", Constants.payloadFilter, { c, v in c.payloadFilter = v as! String? }),
+         ("secondary payload filters", Constants.secondaryPayloadFilters, { c, v in c.secondaryPayloadFilters = v as! [String: String] }),
          ("max cached contexts", Constants.maxCachedContexts, { c, v in c.maxCachedContexts = v as! Int }),
          ("diagnostic opt out", Constants.diagnosticOptOut, { c, v in c.diagnosticOptOut = v as! Bool }),
          ("diagnostic recording interval", Constants.diagnosticRecordingInterval, { c, v in c.diagnosticRecordingInterval = v as! TimeInterval }),
@@ -77,6 +79,7 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.isDebugMode, LDConfig.Defaults.debugMode)
         XCTAssertEqual(config.evaluationReasons, LDConfig.Defaults.evaluationReasons)
         XCTAssertEqual(config.payloadFilter, LDConfig.Defaults.payloadFilter)
+        XCTAssertEqual(config.secondaryPayloadFilters, LDConfig.Defaults.secondaryPayloadFilters)
         XCTAssertEqual(config.maxCachedContexts, LDConfig.Defaults.maxCachedContexts)
         XCTAssertEqual(config.diagnosticOptOut, LDConfig.Defaults.diagnosticOptOut)
         XCTAssertEqual(config.diagnosticRecordingInterval, LDConfig.Defaults.diagnosticRecordingInterval)
@@ -122,6 +125,7 @@ final class LDConfigSpec: XCTestCase {
             XCTAssertEqual(config.isDebugMode, Constants.debugMode, "\(os)")
             XCTAssertEqual(config.evaluationReasons, Constants.evaluationReasons, "\(os)")
             XCTAssertEqual(config.payloadFilter, Constants.payloadFilter, "\(os)")
+            XCTAssertEqual(config.secondaryPayloadFilters, Constants.secondaryPayloadFilters, "\(os)")
             XCTAssertEqual(config.maxCachedContexts, Constants.maxCachedContexts, "\(os)")
             XCTAssertEqual(config.diagnosticOptOut, Constants.diagnosticOptOut, "\(os)")
             XCTAssertEqual(config.diagnosticRecordingInterval, Constants.diagnosticRecordingInterval, "\(os)")
@@ -214,6 +218,31 @@ final class LDConfigSpec: XCTestCase {
             config.payloadFilter = key
             XCTAssertNil(config.validatedPayloadFilter(), "\(key) should be rejected")
         }
+    }
+
+    func testPayloadFilterForEnvironment() {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        XCTAssertNil(config.payloadFilter(forEnvironment: LDConfig.Constants.primaryEnvironmentName))
+        XCTAssertNil(config.payloadFilter(forEnvironment: "other"))
+
+        config.payloadFilter = "mobile-flags"
+        config.secondaryPayloadFilters = ["other": "other-flags", "unfiltered": "", LDConfig.Constants.primaryEnvironmentName: "ignored"]
+        XCTAssertEqual(config.payloadFilter(forEnvironment: LDConfig.Constants.primaryEnvironmentName), "mobile-flags")
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "not-named"), "mobile-flags")
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "other"), "other-flags")
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "unfiltered"), "")
+
+        config.payloadFilter = nil
+        XCTAssertNil(config.payloadFilter(forEnvironment: "not-named"))
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "other"), "other-flags")
+    }
+
+    func testObjcSecondaryPayloadFilters() {
+        let objcConfig = ObjcLDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        XCTAssertEqual(objcConfig.secondaryPayloadFilters, [:])
+
+        objcConfig.secondaryPayloadFilters = ["other": "other-flags"]
+        XCTAssertEqual(objcConfig.config.secondaryPayloadFilters, ["other": "other-flags"])
     }
 
     func testIsReportRetryStatusCode() {
