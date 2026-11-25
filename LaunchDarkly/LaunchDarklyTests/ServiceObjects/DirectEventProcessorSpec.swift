@@ -1841,6 +1841,17 @@ class DirectEventProcessorSpec: QuickSpec {
         }
     }
 
+    func testFlushIntervalFallsBackToTheDefaultWhereNotAPositiveFiniteNumber() {
+        var config = LDConfig.stub
+        for invalid in [TimeInterval.nan, .infinity, -.infinity, 0, -1] {
+            config.eventFlushInterval = invalid
+            expect(DirectEventProcessor.flushInterval(config: config))
+                .to(equal(LDConfig.Defaults.eventFlushInterval), description: "eventFlushInterval \(invalid)")
+        }
+        config.eventFlushInterval = 5
+        expect(DirectEventProcessor.flushInterval(config: config)) == 5
+    }
+
     func testRecordFlagEvaluationEvents() {
         let persistence = type(of: self).persistence
         let context = LDContext.stub()
@@ -2799,6 +2810,35 @@ extension DirectEventProcessorSpec {
                 // Well inside the report interval, so only going online can have delivered it.
                 expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
                 expect(testContext.serviceMock.publishedEventPayloads.map(customKeys)) == [["before-close"]]
+            }
+
+            itPersisting("leaves what reached the disk before a failed write as a batch when it closes offline, which a client started in its place in the same run delivers") {
+                var config = LDConfig.stub
+                config.eventPersistence = .deferred
+                let serviceMock = DarklyServiceMock()
+                serviceMock.config = config
+                var writes = 0
+                let store = EventStore.temporary(capacity: config.eventCapacity, writeLog: { file, bytes in
+                    writes += 1
+                    // The file header and the first event land; the device is full from then on.
+                    return writes > 2 ? ENOSPC : file.writeAll(bytes)
+                })
+                defer { store.deleteEverything() }
+                let reporter = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: store, pacing: .noWaits).started()
+                reporter.record(CustomEvent(key: "written", context: LDContext.stub()))
+                reporter.commitRecordedEvents()
+                reporter.record(CustomEvent(key: "held", context: LDContext.stub()))
+                reporter.commitRecordedEvents()
+                expect(store.isPersisting) == false
+
+                reporter.flushAtClose()
+
+                let replacement = DirectEventProcessor(service: serviceMock, onSyncComplete: nil, store: EventStore.sharing(store.directory!), pacing: .noWaits).started()
+                replacement.isOnline = true
+                defer { replacement.isOnline = false }
+
+                expect(serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+                expect(serviceMock.publishedEventPayloads.map(customKeys)) == [["written"]]
             }
 
             itPersisting("writes nothing it is given after closing") {
@@ -3866,6 +3906,53 @@ extension DirectEventProcessorSpec {
                 expect(second.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
             }
 
+            it("leaves a loss for the next caller where the only one waiting gave up at its deadline") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
+                testContext.recordEvents(1)
+                testContext.eventProcessor.isOnline = true
+                testContext.serviceMock.holdsEventCompletions = true
+
+                // The delivery drops the event the store will never take, and answers only once the caller has given up.
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    [testContext.eventProcessor as EventProcessor].flushReportingOutcomes(deadline: .now() + 0.2) { outcome in
+                        expect(outcome) == [nil]
+                        done()
+                    }
+                }
+                expect(testContext.serviceMock.publishEventDataCallCount).toEventually(equal(1), timeout: Constants.deliveryTimeout)
+                testContext.serviceMock.holdsEventCompletions = false
+                testContext.serviceMock.releaseHeldEventCompletions()
+
+                let next = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: next.record)
+                expect(next.value()).toEventually(beFalse(), timeout: Constants.deliveryTimeout)
+            }
+
+            it("leaves a loss for the next caller where the only one told passes the outcome on to nobody") {
+                testContext = TestContext()
+                testContext.eventProcessor.record(CustomEvent(key: "poison", context: LDContext.stub(), metricValue: .nan))
+                testContext.recordEvents(1)
+                testContext.eventProcessor.isOnline = true
+
+                // As a backgrounding does, which only logs the outcome.
+                waitUntil(timeout: Constants.deliveryTimeout) { done in
+                    [testContext.eventProcessor as EventProcessor].flushReportingOutcomes(reportsLoss: false) { outcome in
+                        expect(outcome) == [false]
+                        done()
+                    }
+                }
+
+                let next = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: next.record)
+                expect(next.value()).toEventually(beFalse(), timeout: Constants.deliveryTimeout)
+
+                // Heard by the application now, it is not told again.
+                let after = Answer()
+                testContext.eventProcessor.flushReportingOutcome(completion: after.record)
+                expect(after.value()).toEventually(beTrue(), timeout: Constants.deliveryTimeout)
+            }
+
             it("answers away from the queue a delivery runs on, after a delivery") {
                 testContext = TestContext()
                 testContext.recordEvents(1)
@@ -4657,6 +4744,7 @@ private final class ClosingHookStore: EventStoring {
     var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
     func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
     var isPersisting: Bool { inner.isPersisting }
+    var hasDirectory: Bool { inner.hasDirectory }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }
     func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
@@ -4740,6 +4828,7 @@ private final class StagingObservingStore: EventStoring {
     var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
     func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
     var isPersisting: Bool { inner.isPersisting }
+    var hasDirectory: Bool { inner.hasDirectory }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool {
         note(encodedEvent)
         return inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity)
@@ -4852,6 +4941,7 @@ private final class SlowListingStore: EventStoring {
     var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
     func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
     var isPersisting: Bool { inner.isPersisting }
+    var hasDirectory: Bool { inner.hasDirectory }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }
     func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }
@@ -4907,6 +4997,7 @@ private final class RecoveryObservingStore: EventStoring {
     var hasRoomForEventBytes: Bool { inner.hasRoomForEventBytes }
     func admitsEvent(heldElsewhere: Int, capacity: Int) -> Bool { inner.admitsEvent(heldElsewhere: heldElsewhere, capacity: capacity) }
     var isPersisting: Bool { inner.isPersisting }
+    var hasDirectory: Bool { inner.hasDirectory }
     func stage(_ encodedEvent: Data, bypassingCapacity: Bool) -> Bool { inner.stage(encodedEvent, bypassingCapacity: bypassingCapacity) }
     func reserve(_ events: Int) { inner.reserve(events) }
     func stageReserved(_ encodedEvent: Data) -> Bool { inner.stageReserved(encodedEvent) }

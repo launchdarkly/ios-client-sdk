@@ -80,9 +80,12 @@ class DirectEventProcessor: EventProcessor {
     /// Guards which losses have been told to a caller.
     private let stateLock = UnfairLock()
 
-    /// The mark up to which losses have already been reported to a caller, so that none is told twice. Only to be
-    /// used while holding `stateLock`.
+    /// The mark up to which losses have been claimed for a caller, so that none is told twice. Only to be used while
+    /// holding `stateLock`.
     private var reportedLostEvents: UInt64 = 0
+    /// Whether a loss was claimed for callers none of whom heard it, and so is owed to the next. Only to be used while
+    /// holding `stateLock`.
+    private var lossOwed = false
 
     // MARK: Confined to timerQueue
 
@@ -119,9 +122,9 @@ class DirectEventProcessor: EventProcessor {
     private var wentOnlineAt: DispatchTime?
     /// What waits for the gate to open with the reporter online.
     private var launchGateWaiters: [() -> Void] = []
-    /// Whether going online again ended a failure's wait while the gate was still closed, which owes the delivery it
-    /// would have queued to the gate opening. Ending the wait is not undone, and nothing else would deliver before the
-    /// next report interval. Only to be used on `deliveryQueue`.
+    /// Whether going online again ended an ordinary failure's wait while the gate was still closed, which owes the
+    /// delivery it would have queued to the gate opening. Ending the wait is not undone, and nothing else would deliver
+    /// before the next report interval. Only to be used on `deliveryQueue`.
     private var deliveryOwedAtGate = false
 
     init(service: DarklyServiceProvider,
@@ -276,18 +279,26 @@ class DirectEventProcessor: EventProcessor {
         lostEvents.add(events)
     }
 
-    /// Whether anything was lost up to `mark` that no caller has been told about, which this caller is now the one to
-    /// hear about.
+    /// Whether anything was lost up to `mark` that no caller has been told about, or a loss is owed from a delivery
+    /// whose callers did not hear it, which this delivery's callers are now the ones to hear about.
     ///
-    /// Marks it reported, so the next caller is not told about the same loss. A delivery that nobody is waiting on
-    /// never asks, so a scheduled delivery does not consume the answer a later caller is owed.
-    private func takeEventsLost(upTo mark: UInt64) -> Bool {
+    /// Marks it reported, so the next delivery does not tell the same loss. A delivery that nobody is waiting on never
+    /// asks, so a scheduled delivery does not consume the answer a later caller is owed.
+    private func claimEventsLost(upTo mark: UInt64) -> Bool {
         stateLock.withLock {
+            let owed = lossOwed
+            lossOwed = false
             guard mark > reportedLostEvents
-            else { return false }
+            else { return owed }
             reportedLostEvents = mark
             return true
         }
+    }
+
+    /// Gives back a loss claimed for callers none of whom heard it -- one that gave up at its deadline, or a
+    /// backgrounding, which tells nobody -- for the next caller to hear about.
+    private func oweEventsLost() {
+        stateLock.withLock { lossOwed = true }
     }
 
 }
@@ -307,9 +318,9 @@ extension DirectEventProcessor {
 
         // Events a previous run left behind are already late by however long the application was gone, so they do not
         // wait out a report interval on top of that, only the launch gate: an application that crashed reports it as
-        // soon as it is next able to. Going online again later, as a network comes and goes, keeps to the ordinary
-        // cadence, unless a post failed in a way the network coming back may cure: that delivery goes now, rather than
-        // after the rest of a wait set while the network was gone, or at the next report interval.
+        // soon as it is next able to. Going online again later keeps to the report interval, with one exception: when
+        // the last post had an ordinary failure, such as no network, its wait ends and a delivery goes now. A wait the
+        // service set, with a `Retry-After` or a refusal, stands.
         deliveryQueue.async { [weak self] in
             guard let self
             else { return }
@@ -403,18 +414,22 @@ extension DirectEventProcessor {
     }
 
     func flush(completion: CompletionClosure?) {
-        // Nil stays nil, so a flush nobody waits on joins a queued delivery without adding to its waiters.
-        commitThenQueueDelivery(completion.map { done in { _ in done() } })
+        // Nil stays nil, so a flush nobody waits on joins a queued delivery without adding to its waiters. `done` is not
+        // given the outcome, so a loss is not heard by it.
+        commitThenQueueDelivery(completion.map { done in { _ in (false, done) } })
     }
 
     func flushReportingOutcome(completion: @escaping FlushOutcomeClosure) {
-        committer.queueCommitWherePersisting()
-        queueDelivery(completion)
+        flushReportingOutcome(bypassingBackoff: false) { delivered in (true, { completion(delivered) }) }
     }
 
     func flushBypassingBackoff(completion: @escaping FlushOutcomeClosure) {
+        flushReportingOutcome(bypassingBackoff: true) { delivered in (true, { completion(delivered) }) }
+    }
+
+    func flushReportingOutcome(bypassingBackoff: Bool, receiver: @escaping FlushOutcomeReceiver) {
         committer.queueCommitWherePersisting()
-        queueDelivery(completion, bypassingBackoff: true)
+        queueDelivery(receiver, bypassingBackoff: bypassingBackoff)
     }
 
     func flushAtClose() {
@@ -423,8 +438,9 @@ extension DirectEventProcessor {
         let budget = DirectEventProcessor.flushAtCloseBudget
         let deadline = DispatchTime.now() + budget
         committer.commitAndClose(by: deadline, budget: budget)
-        // Offline, it is an ordinary delivery, which finds the reporter offline and sends nothing, so there is nothing
-        // to wait for: offline is the application keeping the SDK off the network, and closing does not revoke that.
+        // Offline, it is a delivery like any other, which finds the reporter offline and sends nothing, so there is
+        // nothing to wait for: offline is the application keeping the SDK off the network, and closing does not revoke
+        // that.
         guard isOnline
         else {
             queueDelivery(nil)
@@ -434,7 +450,7 @@ extension DirectEventProcessor {
         // the process. Where events persist it only sends: the store is closed, so it writes and closes nothing. It
         // starts once a delivery already running ends, and waiting for that comes out of the same budget.
         let answered = DispatchSemaphore(value: 0)
-        queueDelivery({ _ in answered.signal() }, closing: true)
+        queueDelivery({ _ in (false, { answered.signal() }) }, closing: true)
         if answered.wait(timeout: deadline) == .timedOut {
             os_log("%s gave up waiting for the final event delivery after %dms; it continues in the background", log: service.config.logger, type: .info, typeName(and: #function), Int(budget * 1000))
         }
@@ -446,7 +462,7 @@ extension DirectEventProcessor {
     /// delivery itself cannot run because the client is offline. What it does not do is close those events into a
     /// batch: only a delivery does that, and the one this queues, or the queued one it joins, is the next to start and
     /// so the one that will.
-    private func commitThenQueueDelivery(_ completion: FlushOutcomeClosure?) {
+    private func commitThenQueueDelivery(_ completion: FlushOutcomeReceiver?) {
         commitWherePersisting()
         queueDelivery(completion)
     }
@@ -472,7 +488,7 @@ extension DirectEventProcessor {
 
     /// As `EventDeliveryScheduler.queue(_:closing:bypassingBackoff:paced:)`, starting the delivery where nothing is
     /// running.
-    private func queueDelivery(_ completion: FlushOutcomeClosure?,
+    private func queueDelivery(_ completion: FlushOutcomeReceiver?,
                                closing: Bool = false,
                                bypassingBackoff: Bool = false,
                                paced: Bool = false) {
@@ -484,20 +500,24 @@ extension DirectEventProcessor {
     private func runDelivery() {
         let (run, waiters) = deliveryScheduler.begin()
         reportEvents(run) { delivered, lossMark in
-            // Taken once for the delivery rather than once per waiter, so that every caller joined to it hears about
-            // a loss instead of only whichever happened to be answered first. Taken before the next delivery starts,
-            // which could otherwise answer first and take this one's loss with its own.
-            let kept = waiters.isEmpty || !self.takeEventsLost(upTo: lossMark)
+            // Claimed once for the delivery rather than once per waiter, so that every caller joined to it hears about a
+            // loss instead of only whichever happened to be answered first. Claimed, and given back where none of them
+            // heard it, before the next delivery starts, which would otherwise tell the same loss again, or claim before
+            // it was given back and leave it untold.
+            let lost = !waiters.isEmpty && self.claimEventsLost(upTo: lossMark)
+            // Every waiter takes the outcome, not only those up to the first that hears.
+            let taken = waiters.map { $0(delivered && !lost) }
+            if lost && !taken.contains(where: \.heard) {
+                self.oweEventsLost()
+            }
             // Before the waiters are answered, so a completion that flushes again finds this delivery over.
             self.startQueuedDeliveryOrStop()
-            guard !waiters.isEmpty
+            guard !taken.isEmpty
             else { return }
             // Answered away from `deliveryQueue`, where every delivery ends. A completion is free to flush again: it is
             // never running on the queue the delivery it asks for would be queued on.
             DispatchQueue.global(qos: .userInitiated).async {
-                for waiter in waiters {
-                    waiter(delivered && kept)
-                }
+                taken.forEach { $0.passOn() }
             }
         }
     }
@@ -621,6 +641,8 @@ extension DirectEventProcessor {
 extension DirectEventProcessor: TypeIdentifying { }
 
 extension DirectEventProcessor: EventBatchDelivererOwner { }
+
+extension DirectEventProcessor: FlushOutcomeHearing { }
 
 #if DEBUG
 extension DirectEventProcessor {

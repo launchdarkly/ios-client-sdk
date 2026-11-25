@@ -11,7 +11,8 @@ import OSLog
 /// application without warning, and macOS, which suspends nothing, can still quit or kill it. Where a backgrounded
 /// process is suspended once idle, they are also delivered, under the assertion, which is released once every
 /// environment has answered. What does not get out is on disk for the next launch where events persist, and
-/// otherwise only in memory.
+/// otherwise only in memory. The answers go only to the log, so events lost for good are left for the application's
+/// next flush to report.
 final class BackgroundEventDelivery {
     struct Environment {
         let name: String
@@ -58,7 +59,7 @@ final class BackgroundEventDelivery {
                 finished()
                 return
             }
-            environments.map { $0.eventProcessor }.flushReportingOutcomes(deadline: .now() + self.answerTimeout) { delivered in
+            environments.map { $0.eventProcessor }.flushReportingOutcomes(deadline: .now() + self.answerTimeout, reportsLoss: false) { delivered in
                 self.logUndelivered(zip(environments, delivered).filter { $0.1 != true }.map(\.0))
                 finished()
             }
@@ -74,7 +75,7 @@ final class BackgroundEventDelivery {
         let onDisk = environments.filter { ($0.eventProcessor as? DirectEventProcessor)?.store.isPersisting == true }
         let inMemory = environments.filter { ($0.eventProcessor as? DirectEventProcessor)?.store.isPersisting != true }
         if !onDisk.isEmpty {
-            os_log("%s events of %s did not reach LaunchDarkly before suspension; they remain on disk for the next launch",
+            os_log("%s events of %s did not all reach LaunchDarkly before suspension; those it did not refuse remain on disk for the next launch",
                    log: logger, type: .debug, typeName(and: #function), BackgroundEventDelivery.names(onDisk))
         }
         if !inMemory.isEmpty {

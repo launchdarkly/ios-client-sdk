@@ -3,6 +3,20 @@ import Foundation
 typealias EventSyncCompleteClosure = ((SynchronizingError?) -> Void)
 /// Reports whether LaunchDarkly accepted every event a flush covered.
 typealias FlushOutcomeClosure = (Bool) -> Void
+/// A `FlushOutcomeClosure` in two parts: taking the outcome returns whether it reached whoever asked for it, and what
+/// passes it on. Taking is quick and runs where the delivery ends, so that whether a loss was heard is settled before
+/// the next delivery starts; passing it on runs the application's code, and runs elsewhere.
+typealias FlushOutcomeReceiver = (_ delivered: Bool) -> (heard: Bool, passOn: () -> Void)
+
+/// A processor that holds a loss of events until a caller has been told about it, and so needs to know whether the
+/// outcome it gave reached anyone: a caller that gave up at its deadline, or one that tells nobody, leaves the loss for
+/// the next caller to hear about.
+protocol FlushOutcomeHearing {
+    /// `flushReportingOutcome`, or `flushBypassingBackoff` where `bypassingBackoff` is true, with a completion that
+    /// returns whether its outcome reached whoever asked for it.
+    func flushReportingOutcome(bypassingBackoff: Bool, receiver: @escaping FlushOutcomeReceiver)
+}
+
 // sourcery: autoMockable
 protocol EventProcessor {
     // sourcery: defaultMockValue = false
@@ -77,8 +91,12 @@ extension Array where Element == EventProcessor {
     ///
     /// - parameter deadline: where a caller cannot wait on a reporter that never answers. Without one, the completion
     ///   waits for every answer.
+    /// - parameter reportsLoss: whether the caller passes the outcome on to the application. One that does not, such as
+    ///   a backgrounding, leaves a loss of events for the next caller to hear about, as does an answer after the
+    ///   deadline.
     func flushReportingOutcomes(bypassingBackoff: Bool = false,
                                 deadline: DispatchTime? = nil,
+                                reportsLoss: Bool = true,
                                 completion: @escaping (_ delivered: [Bool?]) -> Void) {
         guard !isEmpty
         else {
@@ -105,23 +123,25 @@ extension Array where Element == EventProcessor {
             }
         }
         for (index, processor) in enumerated() {
-            let answer: FlushOutcomeClosure = { delivered in
-                let ended: (finish: ([Bool?]) -> Void, delivered: [Bool?])? = lock.withLock {
+            let answer: FlushOutcomeReceiver = { delivered in
+                let (taken, ended) = lock.withLock { () -> (Bool, (finish: ([Bool?]) -> Void, delivered: [Bool?])?) in
                     guard pending != nil, outcomes[index] == nil
-                    else { return nil }
+                    else { return (false, nil) }
                     outcomes[index] = delivered
                     outstanding -= 1
                     guard outstanding == 0, let finish = pending
-                    else { return nil }
+                    else { return (true, nil) }
                     pending = nil
-                    return (finish, outcomes)
+                    return (true, (finish, outcomes))
                 }
-                ended.map { $0.finish($0.delivered) }
+                return (taken && reportsLoss, { ended.map { $0.finish($0.delivered) } })
             }
-            if bypassingBackoff {
-                processor.flushBypassingBackoff(completion: answer)
+            if let hearing = processor as? FlushOutcomeHearing {
+                hearing.flushReportingOutcome(bypassingBackoff: bypassingBackoff, receiver: answer)
+            } else if bypassingBackoff {
+                processor.flushBypassingBackoff { answer($0).passOn() }
             } else {
-                processor.flushReportingOutcome(completion: answer)
+                processor.flushReportingOutcome { answer($0).passOn() }
             }
         }
     }
