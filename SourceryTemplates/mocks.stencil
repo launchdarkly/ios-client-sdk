@@ -25,7 +25,7 @@ final class {{ type.name }}Mock: {{ type.name }} {
     var {{ method.callName }}CallCount = 0
     var {{ method.callName }}Callback: (() throws -> Void)?
 {% if method.throws %}    var {{ method.callName }}ShouldThrow: Error?{% endif %}
-{% if method.parameters.count == 1 %}    var {{ method.callName }}Received{% for param in method.parameters %}{{ param.name|upperFirstLetter }}: {{ param.typeName.unwrappedTypeName }}?{% endfor %}
+{% if method.parameters.count == 1 %}    var {{ method.callName }}Received{% for param in method.parameters %}{{ param.name|upperFirstLetter }}: {% if param.typeAttributes.escaping %}({{ param.unwrappedTypeName }})?{% else %}{{ param.typeName.unwrappedTypeName }}?{% endif %}{% endfor %}
 {% else %}{% if not method.parameters.count == 0 %}    var {{ method.callName }}ReceivedArguments: ({% for param in method.parameters %}{{ param.name }}: {% if param.typeAttributes.escaping %}{{ param.unwrappedTypeName }}{% else %}{{ param.typeName }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %})?{% endif %}
 {% endif %}
 {% if not method.returnTypeName.isVoid %}    var {{ method.callName }}ReturnValue: {{ method.returnTypeName }}{% if method.annotations.DefaultReturnValue %} = {{ method.annotations.DefaultReturnValue }}{% else %}{% if not method.isOptionalReturnType %}!{% endif %}{% endif %}{% endif %}

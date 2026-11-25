@@ -1,0 +1,59 @@
+import Foundation
+import OSLog
+
+/// Sends a batch of events to LaunchDarkly and classifies the response.
+///
+/// Stateless. Retries, backoff, server time, and removing the batch are handled by `DirectEventProcessor`.
+final class AnalyticsEventSender {
+    enum Outcome {
+        /// LaunchDarkly took the events. Carries the time the response gave, if it gave one.
+        case accepted(serverTime: Date?)
+        /// The post failed. The events are kept whatever the failure; it decides only how long to wait.
+        case failed(Failure)
+    }
+
+    struct Failure {
+        let error: SynchronizingError
+        /// The response's status, or nil where there was no response.
+        let statusCode: Int?
+        /// True when the failure calls for the extended backoff: a 4xx other than 400, 408, 429 or a payload refusal
+        /// (`isEventPayloadRefused`). Anything else retries on the normal backoff.
+        let unexpected: Bool
+        /// The wait the response asked for, or nil where it gave none.
+        let retryAfter: TimeInterval?
+    }
+
+    private let service: DarklyServiceProvider
+
+    init(service: DarklyServiceProvider) {
+        self.service = service
+    }
+
+    /// Posts `body` under `payloadId`. The completion runs once, with the outcome.
+    func send(_ body: Data, payloadId: String, eventCount: Int, completion: @escaping (Outcome) -> Void) {
+        service.publishEventData(body, payloadId) { response in
+            completion(self.outcome(sentEvents: eventCount, response: response.urlResponse as? HTTPURLResponse, error: response.error))
+        }
+    }
+
+    private func outcome(sentEvents: Int, response: HTTPURLResponse?, error: Error?) -> Outcome {
+        if error == nil && (200..<300).contains(response?.statusCode ?? 0) {
+            os_log("%s Completed sending %d event(s)", log: service.config.logger, type: .debug, typeName(and: #function), sentEvents)
+            return .accepted(serverTime: response?.headerDate)
+        }
+
+        os_log("%s Sending events failed with error: %s response: %s", log: service.config.logger, type: .debug, typeName(and: #function), String(describing: error), String(describing: response))
+        let statusCode = response?.statusCode
+        // A refusal of the payload waits like a 400: the processor drops the batch after a second in a row, and the
+        // batches behind it are not to be held back an extended wait meanwhile.
+        let unexpected = statusCode.map {
+            HTTPURLResponse.StatusCodes.isTerminalStatusCode($0) && !HTTPURLResponse.StatusCodes.isEventPayloadRefused($0)
+        } ?? false
+        return .failed(Failure(error: error.map { .request($0) } ?? .response(response),
+                               statusCode: statusCode,
+                               unexpected: unexpected,
+                               retryAfter: response?.headerRetryAfter))
+    }
+}
+
+extension AnalyticsEventSender: TypeIdentifying { }

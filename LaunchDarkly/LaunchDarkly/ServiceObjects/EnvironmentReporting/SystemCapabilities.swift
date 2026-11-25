@@ -8,26 +8,60 @@ import AppKit
 import WatchKit
 #endif
 
+/// What differs between the platforms the SDK runs on, in one place, so that the code using it carries no platform
+/// conditions of its own.
 class SystemCapabilities {
     #if os(iOS)
     static var backgroundNotification: Notification.Name? { UIApplication.didEnterBackgroundNotification }
     static var foregroundNotification: Notification.Name? { UIApplication.willEnterForegroundNotification }
+    /// The one events are committed on, and delivered on where the process is then suspended. Every platform has one,
+    /// including those whose run mode never changes.
+    static var eventsBackgroundNotification: Notification.Name { UIApplication.didEnterBackgroundNotification }
+    static var suspendsWhenBackgrounded: Bool { true }
+    static var expiringActivity: BackgroundActivity.ExpiringActivity? { performExpiringActivity }
     static var systemName: String { UIDevice.current.systemName }
     static var operatingSystem: OperatingSystem { .iOS }
     #elseif os(watchOS)
+    /// None, so a watchOS client does not change run mode on its way to the background or back.
     static var backgroundNotification: Notification.Name? { nil }
     static var foregroundNotification: Notification.Name? { nil }
+    static var eventsBackgroundNotification: Notification.Name { WKApplication.didEnterBackgroundNotification }
+    static var suspendsWhenBackgrounded: Bool { true }
+    static var expiringActivity: BackgroundActivity.ExpiringActivity? { performExpiringActivity }
     static var systemName: String { WKInterfaceDevice.current().systemName }
     static var operatingSystem: OperatingSystem { .watchOS }
     #elseif os(OSX)
+    /// Posted on every loss of focus, which suspends nothing.
     static var backgroundNotification: Notification.Name? { NSApplication.willResignActiveNotification }
     static var foregroundNotification: Notification.Name? { NSApplication.didBecomeActiveNotification }
+    static var eventsBackgroundNotification: Notification.Name { NSApplication.willResignActiveNotification }
+    static var suspendsWhenBackgrounded: Bool { false }
+    static var expiringActivity: BackgroundActivity.ExpiringActivity? { nil }
     static var systemName: String { "macOS" }
     static var operatingSystem: OperatingSystem { .macOS }
     #elseif os(tvOS)
     static var backgroundNotification: Notification.Name? { UIApplication.didEnterBackgroundNotification }
     static var foregroundNotification: Notification.Name? { UIApplication.willEnterForegroundNotification }
+    static var eventsBackgroundNotification: Notification.Name { UIApplication.didEnterBackgroundNotification }
+    static var suspendsWhenBackgrounded: Bool { true }
+    static var expiringActivity: BackgroundActivity.ExpiringActivity? { performExpiringActivity }
     static var systemName: String { UIDevice.current.systemName }
     static var operatingSystem: OperatingSystem { .tvOS }
+    #endif
+
+    /// Whether another instance of the application can run over the same container at the same time, which only a Mac
+    /// does. Where it can, a store locks the event log it has open, and leaves alone the logs and batches another
+    /// instance holds. Elsewhere no file lock may be taken: iOS terminates a suspended application holding one in a
+    /// shared container (`0xdead10cc`).
+    #if os(macOS) || targetEnvironment(macCatalyst)
+    static var sharesContainerWithOtherInstances: Bool { true }
+    #else
+    static var sharesContainerWithOtherInstances: Bool { false }
+    #endif
+
+    #if os(iOS) || os(tvOS) || os(watchOS)
+    private static func performExpiringActivity(_ reason: String, _ whileGranted: @escaping (Bool) -> Void) {
+        ProcessInfo.processInfo.performExpiringActivity(withReason: reason, using: whileGranted)
+    }
     #endif
 }

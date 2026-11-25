@@ -2,12 +2,13 @@ import Foundation
 import OSLog
 
 struct FlagRequestTracker {
-    let startDate = Date()
+    let startDate: Date
     var flagCounters: [LDFlagKey: FlagCounter] = [:]
     let logger: OSLog
 
-    init(logger: OSLog) {
+    init(logger: OSLog, startDate: Date = Date()) {
         self.logger = logger
+        self.startDate = startDate
     }
 
     mutating func trackRequest(flagKey: LDFlagKey, reportedValue: LDValue, featureFlag: FeatureFlag?, defaultValue: LDValue, context: LDContext) {
@@ -18,6 +19,9 @@ struct FlagRequestTracker {
         else { return }
         flagCounter.trackRequest(reportedValue: reportedValue, featureFlag: featureFlag, context: context)
 
+        // `os_log` evaluates its arguments even when debug messages are discarded, and this runs on every evaluation.
+        guard logger.isEnabled(type: .debug)
+        else { return }
         os_log("%s \n\tflagKey: %s\n\tvariation: %s\n\tversion: %s", log: logger, type: .debug,
             typeName(and: #function),
             flagKey,
