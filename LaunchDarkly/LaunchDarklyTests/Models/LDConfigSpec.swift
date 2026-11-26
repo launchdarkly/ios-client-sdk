@@ -379,6 +379,21 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertFalse(config.isDeferred(forEnvironment: "eager"))
         XCTAssertFalse(config.isDeferred(forEnvironment: LDConfig.Constants.primaryEnvironmentName))
         XCTAssertFalse(config.isDeferred(forEnvironment: "not-an-environment"))
+        XCTAssertEqual(config.deferredEnvironments, ["deferred"])
+    }
+
+    func testDeferredEnvironmentsKeepTheOrderTheyWereAdded() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("racing", mobileKey: "racing-key", deferred: true)
+        try config.addSecondaryEnvironment("eager", mobileKey: "eager-key")
+        try config.addSecondaryEnvironment("casino", mobileKey: "casino-key", deferred: true)
+        try config.addSecondaryEnvironment("poker", mobileKey: "poker-key", deferred: true)
+        XCTAssertEqual(config.deferredEnvironments, ["racing", "casino", "poker"])
+
+        var keys = config.getSecondaryMobileKeys()
+        keys["casino"] = nil
+        try config.setSecondaryMobileKeys(keys)
+        XCTAssertEqual(config.deferredEnvironments, ["racing", "poker"])
     }
 
     func testAddDeferredSecondaryEnvironmentThatThrowsIsNotDeferred() throws {
