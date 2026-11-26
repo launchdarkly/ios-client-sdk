@@ -36,6 +36,10 @@ final class ClientController: ObservableObject {
     @Published private(set) var connectionStatus = "Not started"
     /// Whether the selected environment's client is deferred and not started yet.
     @Published private(set) var isDeferred = false
+    @Published private(set) var loadStates: [TestEnvironment: LoadState] = [:]
+    /// The environments that have their flags, in the order they got them, with how long each took from its request.
+    @Published private(set) var loadOrder: [(environment: TestEnvironment, seconds: TimeInterval)] = []
+    private var loadStartedAt: [TestEnvironment: Date] = [:]
     /// How many flags the selected environment's client holds, nil while there is no client.
     @Published private(set) var flagCount: Int?
     @Published private(set) var dedupeStatus = ""
@@ -106,9 +110,24 @@ final class ClientController: ObservableObject {
 
     func setOffline(_ offline: Bool) {
         isOffline = offline
+        // The completion waits for every environment's flags but the deferred one's, which then follows.
         client?.setOnline(!offline) { [weak self] in
-            Task { @MainActor in self?.refreshConnectionStatus() }
+            Task { @MainActor in
+                guard let self
+                else { return }
+                self.refreshConnectionStatus()
+                if !self.isOffline {
+                    self.startDeferredEnvironments()
+                }
+            }
         }
+        if client != nil {
+            beginLoading(configuration.environments, online: !offline)
+        }
+    }
+
+    func loadState(of environment: TestEnvironment) -> LoadState {
+        loadStates[environment] ?? .inactive
     }
 
     /// Closes the client and starts another, which is also what recovers the logs another instance left when it was
@@ -123,6 +142,8 @@ final class ClientController: ObservableObject {
         let config = makeConfig()
         let context = Self.context(key: Self.defaultUserKey)
         let environments = configuration.environments
+        loadStates.removeAll()
+        loadOrder.removeAll()
         lifecycleQueue.async {
             if let previous = LDClient.get() {
                 for environment in environments {
@@ -136,14 +157,23 @@ final class ClientController: ObservableObject {
                     self.config = config
                     self.observedFlags.removeAll()
                     self.isRestarting = false
-                    self.observeConnection()
+                    self.refreshConnectionStatus()
                     // Starting offline also reports a timeout, without waiting for anything.
                     if !config.startOnline {
                         self.result = "\(reason) offline"
                     } else {
                         self.result = timedOut ? "\(reason); flags did not arrive in time" : reason
+                        // As an app would: the less important environments once the others have their flags. Started
+                        // offline, they wait for the toggle instead, so that they still load after them.
+                        self.startDeferredEnvironments(after: self.result)
                     }
                 }
+            }
+            // The clients exist once start returns, and their first flags are a request away, so observing now
+            // catches every environment's first load rather than only those after the primary one's.
+            Task { @MainActor in
+                self.observeEnvironments()
+                self.beginLoading(environments, online: config.startOnline)
             }
         }
     }
@@ -176,12 +206,35 @@ final class ClientController: ObservableObject {
         }
     }
 
-    /// Starts the flag connection of the deferred environment, which until now served only the flags cached on the device.
+    /// Starts every deferred environment, in the order they were added, each once the one before it has its flags, as
+    /// an app would once the others have theirs. Does nothing once they are started. `earlier` heads the result line.
+    private func startDeferredEnvironments(after earlier: String? = nil) {
+        guard configuration.environments.contains(where: { LDClient.get(environment: $0.sdkName)?.isDeferred == true })
+        else { return }
+        let started = Date()
+        let prefix = earlier.map { "\($0)\n" } ?? ""
+        result = "\(prefix)Starting deferred environments…"
+        LDClient.startDeferredEnvironments(startWaitSeconds: Self.startWaitSeconds) { [weak self] timedOut in
+            let elapsed = Date().timeIntervalSince(started)
+            Task { @MainActor in
+                guard let self
+                else { return }
+                self.result = prefix + (timedOut
+                    ? "Deferred environments started; not every one got its flags"
+                    : String(format: "Deferred environments started; flags in %.2f s", elapsed))
+                self.refreshConnectionStatus()
+            }
+        }
+    }
+
+    /// Starts the flag connection of the deferred environment by hand, which until now served only the flags cached on
+    /// the device. Does nothing once it is started.
     func startDeferredEnvironment() {
         guard let client = client(for: .deferred), client.isDeferred
         else { return }
         let started = Date()
         result = "Starting \(TestEnvironment.deferred.title)…"
+        defer { beginLoading([.deferred], online: !isOffline) }
         LDClient.start(environment: TestEnvironment.deferred.sdkName, startWaitSeconds: Self.startWaitSeconds) { [weak self] timedOut in
             let elapsed = Date().timeIntervalSince(started)
             Task { @MainActor in
@@ -218,19 +271,53 @@ final class ClientController: ObservableObject {
     }
 
     /// Every environment, not only the selected one, so switching shows the other's status without observing it again.
-    private func observeConnection() {
-        refreshConnectionStatus()
+    /// From `LDClient.get` rather than `client(for:)`, which is nil until the restart completes.
+    private func observeEnvironments() {
         for environment in configuration.environments {
-            client(for: environment)?.observeCurrentConnectionMode(owner: self) { [weak self] _ in
-                Task { @MainActor in self?.refreshConnectionStatus() }
+            guard let client = LDClient.get(environment: environment.sdkName)
+            else { continue }
+            client.observeCurrentConnectionMode(owner: self) { [weak self] _ in
+                Task { @MainActor in self?.connectionModeChanged(in: environment) }
             }
-            client(for: environment)?.observeAll(owner: self) { [weak self] _ in
-                Task { @MainActor in self?.refreshConnectionStatus() }
+            client.observeAll(owner: self) { [weak self] _ in
+                Task { @MainActor in self?.flagsArrived(in: environment) }
             }
-            client(for: environment)?.observeFlagsUnchanged(owner: self) { [weak self] in
-                Task { @MainActor in self?.refreshConnectionStatus() }
+            client.observeFlagsUnchanged(owner: self) { [weak self] in
+                Task { @MainActor in self?.flagsArrived(in: environment) }
             }
         }
+    }
+
+    /// Marks the environments that now request flags as loading, and the others, offline or deferred, as inactive.
+    /// Takes the online state rather than reading it, since `setOnline` may apply it later.
+    private func beginLoading(_ environments: [TestEnvironment], online: Bool) {
+        for environment in environments {
+            loadOrder.removeAll { $0.environment == environment }
+            guard online, let client = LDClient.get(environment: environment.sdkName), !client.isDeferred
+            else {
+                loadStates[environment] = .inactive
+                continue
+            }
+            loadStates[environment] = .loading
+            loadStartedAt[environment] = Date()
+        }
+    }
+
+    /// Catches a deferred environment starting its flag connection, whoever starts it, `startDeferredEnvironments` among them.
+    private func connectionModeChanged(in environment: TestEnvironment) {
+        refreshConnectionStatus()
+        guard loadState(of: environment) == .inactive, !isOffline,
+              let client = LDClient.get(environment: environment.sdkName), !client.isDeferred
+        else { return }
+        beginLoading([environment], online: true)
+    }
+
+    private func flagsArrived(in environment: TestEnvironment) {
+        refreshConnectionStatus()
+        guard loadStates[environment] == .loading
+        else { return }
+        loadStates[environment] = .loaded
+        loadOrder.append((environment, loadStartedAt[environment].map { Date().timeIntervalSince($0) } ?? 0))
     }
 
     private func makeConfig() -> LDConfig {
@@ -284,6 +371,24 @@ final class ClientController: ObservableObject {
 
     private static func format(_ date: Date) -> String {
         date.formatted(date: .omitted, time: .standard)
+    }
+}
+
+/// Whether an environment has its flags, as the dot beside its name in the environment picker shows.
+enum LoadState {
+    /// No client, offline, or deferred and not started, so no flags requested.
+    case inactive
+    /// Flags requested, and none arrived yet.
+    case loading
+    /// Flags arrived, or the server confirmed the cached ones, since the last request.
+    case loaded
+
+    var dot: String {
+        switch self {
+        case .inactive: return "⚪️"
+        case .loading: return "🟡"
+        case .loaded: return "🟢"
+        }
     }
 }
 

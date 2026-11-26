@@ -38,10 +38,20 @@ private struct ClientSection: View {
             if controller.configuration.hasSeveralEnvironments {
                 Picker("Environment", selection: Binding(get: { controller.environment },
                                                          set: { controller.select($0) })) {
-                    ForEach(controller.configuration.environments) { Text($0.title).tag($0) }
+                    ForEach(controller.configuration.environments) { environment in
+                        Text("\(controller.loadState(of: environment).dot) \(environment.title)").tag(environment)
+                    }
                 }
                 .segmentedWherePossible()
                 .accessibilityIdentifier("environment_picker")
+                if !controller.loadOrder.isEmpty {
+                    Text("loaded " + controller.loadOrder
+                        .map { String(format: "%@ %.2f s", $0.environment.title, $0.seconds) }
+                        .joined(separator: " → "))
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("load_order")
+                }
             }
             Text(controller.connectionStatus)
                 .font(.caption.monospaced())
@@ -101,7 +111,7 @@ private struct ClientSection: View {
                 Text("Restart, Flush, Flush+Wait, Offline and Identify reach every environment, as the SDK does. "
                     + "The other buttons and Event storage use the selected one."
                     + (controller.configuration.hasDeferredEnvironment
-                        ? " Deferred requests no flags until started, and Restart defers it again." : ""))
+                        ? " Deferred starts once the others have their flags, after Restart or going online." : ""))
             }
         }
     }

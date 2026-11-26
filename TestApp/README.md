@@ -57,9 +57,15 @@ serves the flags cached on the device for the current context, or default values
 events; the connection status reads `deferred`. Identify gives it the new context and that context's cached flags,
 without a request.
 
-Select **Deferred** and tap **Start environment** to call `LDClient.start(environment:)`. The result line shows how long
-its flags took. Offline, it reports that they did not arrive, and requests them when Offline is turned off. Restart
-defers it again.
+The app starts it as an application would, calling `LDClient.startDeferredEnvironments(startWaitSeconds:)` from the
+completion of `LDClient.start`, once the other environments have their flags. That starts every deferred environment
+in the order they were added, each once the one before it has its flags. Started offline, they stay deferred until
+Offline is turned off, and start from the completion of `setOnline`, so they still load after the others. **Start
+environment**, under **Deferred**, starts it by hand with `LDClient.start(environment:)` while it is deferred.
+
+The dot beside each environment's name shows whether it has its flags: green once they arrive, yellow while they are
+requested, gray offline or deferred. The line under the picker lists the environments in the order their flags arrived,
+each with how long its request took.
 
 Running on a device needs a development team, set in the target's Signing & Capabilities. The simulators and the Mac
 need none.
