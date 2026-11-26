@@ -1171,6 +1171,61 @@ extension LDClient {
         )
     }
 
+    /**
+     Starts deferred environments one after another, each once the one before it has its flags or has waited `startWaitSeconds` for
+     them, so that the more important ones are not slowed by the rest. Each is started as `start(environment:startWaitSeconds:completion:)`
+     starts it; one already started is waited for rather than started again.
+
+     Offline, or backgrounded where background updates are not enabled, it starts none of those left and calls `completion` with true:
+     they stay deferred, so call it again once the client is online to start them in order. A `close()`, or another `start`, before the
+     last one ends it in the same way. An unknown environment name logs an error and is skipped.
+
+     Note: The `completion` closure is invoked on the main thread.
+
+     - parameter environments: The names the environments were added under, most important first. Every deferred environment, in the
+       order `LDConfig.addSecondaryEnvironment(_:mobileKey:payloadFilter:deferred:)` added them, when nil. (Optional)
+     - parameter startWaitSeconds: The longest to wait for each environment's flags before starting the next.
+     - parameter completion: Closure called once the last has its flags or has waited for them: with false when every one got its flags
+       in time, and with true otherwise. (Optional)
+     */
+    public static func startDeferredEnvironments(inOrder environments: [String]? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        guard let primary = get()
+        else {
+            os_log("%s called before start or after close", log: LDConfig.Defaults.logger, type: .error, typeName(and: #function))
+            DispatchQueue.main.async { completion?(true) }
+            return
+        }
+        startInOrder(ArraySlice(environments ?? primary.config.deferredEnvironments), of: primary, startWaitSeconds: startWaitSeconds,
+                     timedOut: false, completion: completion)
+    }
+
+    private static func startInOrder(_ environments: ArraySlice<String>, of primary: LDClient, startWaitSeconds: TimeInterval,
+                                     timedOut: Bool, completion: ((_ timedOut: Bool) -> Void)?) {
+        let finish = { (timedOut: Bool) in DispatchQueue.main.async { completion?(timedOut) } }
+        guard let name = environments.first
+        else {
+            finish(timedOut)
+            return
+        }
+        guard get() === primary, primary.isOnline && primary.isInSupportedRunMode
+        else {
+            os_log("%s left %d environments deferred: offline, closed, or restarted", log: primary.config.logger, type: .info,
+                   typeName(and: #function), environments.count)
+            finish(true)
+            return
+        }
+        guard get(environment: name) != nil
+        else {
+            os_log("%s no started environment is named \"%s\"", log: primary.config.logger, type: .error, typeName(and: #function), name)
+            startInOrder(environments.dropFirst(), of: primary, startWaitSeconds: startWaitSeconds, timedOut: true, completion: completion)
+            return
+        }
+        start(environment: name, startWaitSeconds: startWaitSeconds) { environmentTimedOut in
+            startInOrder(environments.dropFirst(), of: primary, startWaitSeconds: startWaitSeconds,
+                         timedOut: timedOut || environmentTimedOut, completion: completion)
+        }
+    }
+
     /// Brings the flag synchronizer, the event reporter, and the diagnostic reporter into line with the online state, keeping the
     /// first and last offline while the environment is deferred. On `isOnlineQueue`.
     private func applyOnlineState(onlineChanged: Bool) {

@@ -547,7 +547,7 @@ public struct LDConfig {
         _secondaryMobileKeys[name] = mobileKey
         _secondaryPayloadFilters[name] = payloadFilter
         if deferred {
-            _deferredEnvironments.insert(name)
+            _deferredEnvironments.append(name)
         }
     }
 
@@ -582,14 +582,17 @@ public struct LDConfig {
         return _deferredEnvironments.contains(name)
     }
 
+    /// The deferred secondary environments, in the order they were added: the order `LDClient.startDeferredEnvironments` starts them in by default.
+    var deferredEnvironments: [String] { _deferredEnvironments }
+
     /// Internal variable for secondaryMobileKeys computed property
     private var _secondaryMobileKeys: [String: String]
 
     /// Payload filter keys of secondary environments added with one, by environment name
     private var _secondaryPayloadFilters: [String: String] = [:]
 
-    /// Names of secondary environments added as deferred
-    private var _deferredEnvironments: Set<String> = []
+    /// Names of secondary environments added as deferred, in the order they were added
+    private var _deferredEnvironments: [String] = []
 
     // Internal constructor to enable automated testing
     init(mobileKey: String, autoEnvAttributes: AutoEnvAttributes, isDebugBuild: Bool) {

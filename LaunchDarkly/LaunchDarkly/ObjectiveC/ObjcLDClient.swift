@@ -582,6 +582,20 @@ public final class ObjcLDClient: NSObject {
         LDClient.start(environment: environment, startWaitSeconds: startWaitSeconds, completion: completion)
     }
 
+    /**
+     Starts deferred environments one after another, each once the one before it has its flags or has waited `startWaitSeconds` for
+     them. See `LDClient.startDeferredEnvironments(inOrder:startWaitSeconds:completion:)`.
+
+     - parameter environments: The names the environments were added under, most important first. Every deferred environment, in the
+       order they were added, when nil.
+     - parameter startWaitSeconds: The longest to wait for each environment's flags before starting the next.
+     - parameter completion: Closure called once the last has its flags or has waited for them: with NO when every one got its flags
+       in time, and with YES otherwise. (Optional)
+     */
+    @objc public static func startDeferredEnvironments(inOrder environments: [String]?, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        LDClient.startDeferredEnvironments(inOrder: environments, startWaitSeconds: startWaitSeconds, completion: completion)
+    }
+
     private init(client: LDClient) {
         ldClient = client
     }

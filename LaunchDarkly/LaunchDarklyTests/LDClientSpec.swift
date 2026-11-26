@@ -1887,12 +1887,91 @@ private extension LDClientSpec {
             deferredEnvironmentStartEnvironmentSpec()
             deferredEnvironmentOnlineSpec()
             deferredEnvironmentIdentifySpec()
+            startDeferredEnvironmentsSpec()
         }
     }
 
-    func deferredTestContext(startOnline: Bool = true, enableBackgroundUpdates: Bool = true, hooks: [Hook] = []) -> TestContext {
+    func startDeferredEnvironmentsSpec() {
+        context("startDeferredEnvironments") {
+            it("starts each environment once the one before it has its flags") {
+                let testContext = self.deferredTestContext(deferred: ["casino", "racing"])
+                testContext.start()
+                let casino = LDClient.get(environment: "casino")!
+                let racing = LDClient.get(environment: "racing")!
+                var timedOut: Bool?
+                LDClient.startDeferredEnvironments(inOrder: ["racing", "casino"], startWaitSeconds: 5) { timedOut = $0 }
+
+                expect(racing.synchronizerMock.isOnline) == true
+                expect(casino.isDeferred) == true
+                racing.completeFlagSync()
+                expect(casino.isDeferred).toEventually(beFalse())
+                expect(casino.synchronizerMock.isOnline) == true
+                expect(timedOut).to(beNil())
+                casino.completeFlagSync()
+                expect(timedOut).toEventually(equal(false))
+            }
+            it("starts every deferred environment in the order they were added, by default") {
+                let testContext = self.deferredTestContext(deferred: ["casino", "racing"])
+                testContext.start()
+                LDClient.startDeferredEnvironments(startWaitSeconds: 5)
+
+                expect(LDClient.get(environment: "casino")!.isDeferred) == false
+                expect(LDClient.get(environment: "racing")!.isDeferred) == true
+            }
+            it("moves on after an environment times out, and reports the timeout") {
+                let testContext = self.deferredTestContext(deferred: ["casino", "racing"])
+                testContext.start()
+                let racing = LDClient.get(environment: "racing")!
+                var timedOut: Bool?
+                LDClient.startDeferredEnvironments(startWaitSeconds: 0.1) { timedOut = $0 }
+
+                expect(racing.isDeferred).toEventually(beFalse())
+                racing.completeFlagSync()
+                expect(timedOut).toEventually(equal(true))
+            }
+            it("skips an unknown environment, and reports it") {
+                let testContext = self.deferredTestContext(deferred: ["casino"])
+                testContext.start()
+                let casino = LDClient.get(environment: "casino")!
+                var timedOut: Bool?
+                LDClient.startDeferredEnvironments(inOrder: ["unknown", "casino"], startWaitSeconds: 5) { timedOut = $0 }
+
+                expect(casino.synchronizerMock.isOnline) == true
+                casino.completeFlagSync()
+                expect(timedOut).toEventually(equal(true))
+            }
+            it("leaves every environment deferred while offline") {
+                let testContext = self.deferredTestContext(deferred: ["casino", "racing"], startOnline: false)
+                testContext.start()
+                var timedOut: Bool?
+                LDClient.startDeferredEnvironments(startWaitSeconds: 5) { timedOut = $0 }
+
+                expect(timedOut).toEventually(equal(true))
+                expect(LDClient.get(environment: "casino")!.isDeferred) == true
+                expect(LDClient.get(environment: "racing")!.isDeferred) == true
+            }
+            it("starts no more after the client closes") {
+                let testContext = self.deferredTestContext(deferred: ["casino", "racing"])
+                testContext.start()
+                let casino = LDClient.get(environment: "casino")!
+                let racing = LDClient.get(environment: "racing")!
+                var timedOut: Bool?
+                LDClient.startDeferredEnvironments(startWaitSeconds: 0.2) { timedOut = $0 }
+                testContext.subject.close()
+                casino.completeFlagSync()
+
+                expect(timedOut).toEventually(equal(true))
+                expect(racing.isDeferred) == true
+            }
+        }
+    }
+
+    func deferredTestContext(deferred names: [String] = [deferredName], startOnline: Bool = true, enableBackgroundUpdates: Bool = true,
+                             hooks: [Hook] = []) -> TestContext {
         var config = LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: false)
-        try! config.addSecondaryEnvironment(deferredName, mobileKey: deferredMobileKey, deferred: true)
+        for name in names {
+            try! config.addSecondaryEnvironment(name, mobileKey: name == deferredName ? deferredMobileKey : "\(name)-mobile-key", deferred: true)
+        }
         config.hooks = hooks
         let testContext = TestContext(newConfig: config, startOnline: startOnline, enableBackgroundUpdates: enableBackgroundUpdates)
         let logger = OSLog(subsystem: "com.launchdarkly", category: "tests")
