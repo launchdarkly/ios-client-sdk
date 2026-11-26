@@ -53,6 +53,8 @@ public class LDClient {
 
      When offline, the SDK does not attempt to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers while offline. The SDK will collect events while offline.
 
+     A client whose environment is deferred (see `isDeferred`) reports the online state as any other does, and delivers events while online, but requests no flags until `LDClient.start(environment:startWaitSeconds:completion:)` is called.
+
      Use `setOnline(_: completion:)` to change the online/offline state.
     */
     public private(set) var isOnline: Bool {
@@ -65,12 +67,7 @@ public class LDClient {
             isOnlineQueue.sync {
                 let oldValue = _isOnline
                 _isOnline = newValue
-                flagSynchronizer.isOnline = _isOnline
-                eventReporter.isOnline = _isOnline
-                diagnosticReporter.setMode(runMode, online: _isOnline)
-                if _isOnline != oldValue {
-                    connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: connectionInformation, ldClient: self, config: config, online: _isOnline)
-                }
+                applyOnlineState(onlineChanged: _isOnline != oldValue)
             }
         }
     }
@@ -78,16 +75,8 @@ public class LDClient {
     private var _isOnline = false
     private var isOnlineQueue = DispatchQueue(label: "com.launchdarkly.LDClient.isOnlineQueue")
 
-    /**
-     Reports the initialization state of the LDClient.
-
-     When true, the SDK has either communicated with LaunchDarkly servers for feature flag values or the SDK has been set offline.
-
-     When false, the SDK has not been able to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers but flags might not exist or be stale.
-    */
-    public var isInitialized: Bool {
-        hasStarted && (!isOnline || initialized)
-    }
+    /// On `isOnlineQueue`, so that a client cannot be seen starting its flag connection half way.
+    private var _isDeferred = false
 
     /**
      Set the LDClient online/offline.
@@ -101,6 +90,8 @@ public class LDClient {
      Client apps can set a completion closure called when the setOnline call completes. For unthrottled `setOnline(true)` and all `setOnline(false)` calls, the SDK will call the closure immediately on completion of this method. For throttled `setOnline(true)` calls, the SDK will call the closure after the throttling delay at the completion of the setOnline method.
 
     The SDK will not go online if the client has not been started, or the `mobileKey` is empty. For macOS, the SDK will not go online in the background unless `enableBackgroundUpdates` is true.
+
+    This sets every environment online or offline, whichever environment's client it is called on. A deferred environment (see `isDeferred`) goes online for events only, and the completion does not wait for its flags; `LDClient.start(environment:startWaitSeconds:completion:)` starts its flag connection.
 
     Note: The `completion` closure is invoked on the main thread.
 
@@ -159,7 +150,8 @@ public class LDClient {
             }
         }
 
-        if completion != nil && !goOnline {
+        // A deferred environment requests no flags, so there are none to wait for.
+        if completion != nil && (!goOnline || isDeferred) {
             completion?()
         } else if completion != nil {
             observeAll(owner: owner) { _ in
@@ -178,6 +170,9 @@ public class LDClient {
             typeName(and: "setOnline"),
             reasonOnlineUnavailable.isEmpty ? self.isOnline.description : "true aborted",
             reasonOnlineUnavailable)
+        if goOnline && isDeferred {
+            os_log("%s environment is deferred: online for events only, until LDClient.start(environment:) starts its flag requests", log: config.logger, type: .debug, typeName(and: "setOnline"))
+        }
     }
 
     private var canGoOnline: Bool {
@@ -212,7 +207,8 @@ public class LDClient {
                 return
             }
             let lastUpdated = self.flagCache.getCachedDataLastUpdatedDate(cacheKey: self.context.fullyQualifiedHashedKey(), contextHash: self.context.contextHash())
-            let willSetSynchronizerOnline = isOnline && isInSupportedRunMode
+            let flagsDeferred = isDeferred
+            let willSetSynchronizerOnline = isOnline && isInSupportedRunMode && !flagsDeferred
             flagSynchronizer.isOnline = false
             let streamingModeVar = ConnectionInformation.effectiveStreamingMode(config: config, ldClient: self)
             connectionInformation = ConnectionInformation.backgroundBehavior(connectionInformation: connectionInformation, streamingMode: streamingModeVar, goOnline: willSetSynchronizerOnline)
@@ -223,7 +219,7 @@ public class LDClient {
                                                                    service: service,
                                                                    onSyncComplete: onFlagSyncComplete)
             flagSynchronizer.isOnline = willSetSynchronizerOnline
-            diagnosticReporter.setMode(runMode, online: _isOnline)
+            diagnosticReporter.setMode(runMode, online: _isOnline && !flagsDeferred)
         }
     }
 
@@ -461,6 +457,7 @@ public class LDClient {
             }
 
             self.context = updatedContext
+            self.hasFlagsForContext = false
             os_log("%s new context set with key: %s", log: config.logger, type: .debug, typeName(and: #function), self.context.fullyQualifiedKey())
             // Only the data source needs to come down for the swap: take the old synchronizer
             // offline directly, as the run-mode transition does, leaving isOnline, the event
@@ -508,7 +505,8 @@ public class LDClient {
                 self.eventReporter.record(IdentifyEvent(context: self.context))
             }
 
-            if self.isOnline && self.isInSupportedRunMode {
+            // A deferred environment takes the new context, and its cached flags, without requesting any.
+            if self.isOnline && self.isInSupportedRunMode && !self.isDeferred {
                 self.go(online: true, reasonOnlineUnavailable: "", completion: completion)
             } else {
                 completion?()
@@ -678,6 +676,7 @@ public class LDClient {
             let oldStoredItems = flagStore.storedItems
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.replaceStore(newStoredItems: StoredItems(items: flagCollection.flags))
+            hasFlagsForContext = true
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: etag)
         case let .patch(featureFlag):
             let oldStoredItems = flagStore.storedItems
@@ -691,6 +690,7 @@ public class LDClient {
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: nil)
         case .upToDate:
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
+            hasFlagsForContext = true
             flagChangeNotifier.notifyUnchanged()
             // If a polling request receives a 304 not modified, we still need
             // to update the "last updated" field of the cache so subsequent
@@ -892,7 +892,8 @@ public class LDClient {
             var internalConfig = config
             internalConfig.mobileKey = mobileKey
             internalConfig.payloadFilter = config.payloadFilter(forEnvironment: name)
-            let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context, completion: completionCheck)
+            let instance: LDClient = LDClient(serviceFactory: serviceFactory, configuration: internalConfig, startContext: context,
+                                              deferred: config.isDeferred(forEnvironment: name), completion: completionCheck)
             instancesQueue.sync(flags: .barrier) {
                 LDClient.instances?[name] = instance
             }
@@ -957,6 +958,8 @@ public class LDClient {
     /**
      Returns the LDClient instance for a given environment.
 
+     A deferred environment's client is returned from `start` on, before `start(environment:startWaitSeconds:completion:)` is called for it.
+
      - parameter environment: The name of an environment provided in LDConfig.secondaryMobileKeys, defaults to `LDConfig.Constants.primaryEnvironmentName` which is always associated with the `LDConfig.mobileKey` environment.
      - returns: The requested LDClient instance.
      */
@@ -991,12 +994,10 @@ public class LDClient {
     }
     private var _hasStarted = true
     private var hasStartedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.hasStartedQueue")
-    private(set) var initialized: Bool {
-        get { initializedQueue.sync { _initialized } }
-        set { initializedQueue.sync { _initialized = newValue } }
-    }
     private var _initialized = false
     private var initializedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.initializedQueue")
+    /// On `initializedQueue`. Whether LaunchDarkly has sent flags for the current context: unlike `initialized`, identify resets it.
+    private var _hasFlagsForContext = false
     private var identifyQueue = SheddingQueue()
 
     /// The hooks the configuration registers, followed by the hooks the plugins contribute. Collected before the init
@@ -1013,7 +1014,7 @@ public class LDClient {
         return hooks
     }
 
-    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, completion: (() -> Void)? = nil) {
+    private init(serviceFactory: ClientServiceCreating, configuration: LDConfig, startContext: LDContext?, deferred: Bool = false, completion: (() -> Void)? = nil) {
         // Set before the hooks below run, so that the environment a hook is told about is this client's rather than the
         // primary one's.
         self.mobileKeyHash = Util.sha256base64(configuration.mobileKey)
@@ -1036,13 +1037,15 @@ public class LDClient {
 
         config = configuration
         context = startContext ?? LDContext()
+        _isDeferred = deferred
 
         if config.autoEnvAttributes {
             context = AutoEnvContextModifier(environmentReporter: environmentReporter, logger: config.logger).modifyContext(context)
         }
 
+        // A deferred environment opens this series when its flags are requested, in `startFlagConnection`.
         var hookState: IdentifyHookState? = nil
-        if !hooks.isEmpty {
+        if !hooks.isEmpty && !deferred {
             let seriesContext = IdentifySeriesContext(context: context, methodName: "init")
             let seriesData = hooks.map { hook in hook.beforeIdentify(seriesContext: seriesContext, seriesData: EvaluationSeriesData()) }
             hookState = IdentifyHookState(seriesContext: seriesContext, seriesData: seriesData, hooksSnapshot: hooks)
@@ -1091,6 +1094,241 @@ public class LDClient {
             if let state = hookState {
                 self.executeAfterIdentifyHooks(state: state, result: .complete)
             }
+        }
+    }
+}
+
+// MARK: - Initialization State
+
+extension LDClient {
+    /**
+     Reports the initialization state of the LDClient.
+
+     When true, the SDK has either communicated with LaunchDarkly servers for feature flag values or the SDK has been set offline.
+
+     When false, the SDK has not been able to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers but flags might not exist or be stale.
+
+     A deferred client (see `isDeferred`) reports false, online or offline, until it is started.
+    */
+    public var isInitialized: Bool {
+        hasStarted && !isDeferred && (!isOnline || initialized)
+    }
+
+    private(set) var initialized: Bool {
+        get { initializedQueue.sync { _initialized } }
+        set { initializedQueue.sync { _initialized = newValue } }
+    }
+}
+
+// MARK: - Deferred Environments
+
+// In this file, rather than in the class body or another file, for the private state of the online and start paths they share.
+extension LDClient {
+    /**
+     Reports whether this client's environment was added as deferred, with `LDConfig.addSecondaryEnvironment(_:mobileKey:payloadFilter:deferred:)`,
+     and `LDClient.start(environment:startWaitSeconds:completion:)` has not been called for it yet.
+
+     While deferred, the client serves the flags cached on the device for the current context, or default values where there are none,
+     records events, and delivers them while online, but requests no flags. `isInitialized` is false until it is started and has flags.
+     */
+    public var isDeferred: Bool {
+        isOnlineQueue.sync { _isDeferred }
+    }
+
+    /**
+     Starts the flag connection of an environment added as deferred, with `LDConfig.addSecondaryEnvironment(_:mobileKey:payloadFilter:deferred:)`.
+
+     Until this is called, the environment's client serves the flags cached on the device, or default values, and requests none. Once
+     it is, the client requests flags for its current context, while online and in a run mode that allows it, as any other environment's
+     client does. Calling it again, or for an environment that is not deferred, starts nothing new: it waits for that environment's
+     flags, or calls `completion` at once where it already has them. Flags are those LaunchDarkly sent for the current context, so
+     after `identify` it waits for the new context's, whether or not the environment was deferred; cached flags do not count.
+
+     `completion` takes whether it timed out: false once the environment's flags arrive, true after `startWaitSeconds` without them.
+     It is also true at once where the client is offline, or backgrounded where background updates are not enabled, as `start` is
+     where `LDConfig.startOnline` is false; the flag connection then starts when the client next goes online. An unknown environment
+     name, or a call before `start` or after `close()`, logs an error and calls `completion` with true.
+
+     Note: The `completion` closure is invoked on the main thread.
+
+     - parameter environment: The name the environment was added under.
+     - parameter startWaitSeconds: The longest to wait for the environment's flags before calling `completion` with true.
+     - parameter completion: Closure called once the environment's flags arrive, or after `startWaitSeconds`. (Optional)
+     */
+    public static func start(environment: String, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        let completeOnMain: (Bool) -> Void = { timedOut in
+            if let completion {
+                DispatchQueue.main.async {
+                    completion(timedOut)
+                }
+            }
+        }
+        guard let client = get(environment: environment)
+        else {
+            os_log("%s no started environment is named \"%s\"", log: get()?.config.logger ?? LDConfig.Defaults.logger, type: .error, typeName(and: #function), environment)
+            completeOnMain(true)
+            return
+        }
+        if startWaitSeconds > LDClient.longTimeoutInterval {
+            os_log("%s LDClient.start(environment:) was called with a timeout greater than %f seconds. We recommend a timeout of less than %f seconds.", log: client.config.logger, type: .info, typeName(and: #function), LDClient.longTimeoutInterval, LDClient.longTimeoutInterval)
+        }
+
+        TimeoutExecutor.run(
+            timeout: startWaitSeconds,
+            queue: DispatchQueue(label: "com.launchdarkly.LDClient.startEnvironment"),
+            operation: { done in client.startFlagConnection(completion: done) },
+            timeoutValue: true,
+            completion: completeOnMain
+        )
+    }
+
+    /**
+     Starts deferred environments one after another, each once the one before it has its flags or has waited `startWaitSeconds` for
+     them, so that the more important ones are not slowed by the rest. Each is started as `start(environment:startWaitSeconds:completion:)`
+     starts it; one already started is waited for rather than started again.
+
+     Offline, or backgrounded where background updates are not enabled, it starts none of those left and calls `completion` with true:
+     they stay deferred, so call it again once the client is online to start them in order. A `close()`, or another `start`, before the
+     last one ends it in the same way. An unknown environment name logs an error and is skipped.
+
+     Note: The `completion` closure is invoked on the main thread.
+
+     - parameter environments: The names the environments were added under, most important first. Every deferred environment, in the
+       order `LDConfig.addSecondaryEnvironment(_:mobileKey:payloadFilter:deferred:)` added them, when nil. (Optional)
+     - parameter startWaitSeconds: The longest to wait for each environment's flags before starting the next.
+     - parameter completion: Closure called once the last has its flags or has waited for them: with false when every one got its flags
+       in time, and with true otherwise. (Optional)
+     */
+    public static func startDeferredEnvironments(inOrder environments: [String]? = nil, startWaitSeconds: TimeInterval, completion: ((_ timedOut: Bool) -> Void)? = nil) {
+        guard let primary = get()
+        else {
+            os_log("%s called before start or after close", log: LDConfig.Defaults.logger, type: .error, typeName(and: #function))
+            DispatchQueue.main.async { completion?(true) }
+            return
+        }
+        startInOrder(ArraySlice(environments ?? primary.config.deferredEnvironments), of: primary, startWaitSeconds: startWaitSeconds,
+                     timedOut: false, completion: completion)
+    }
+
+    private static func startInOrder(_ environments: ArraySlice<String>, of primary: LDClient, startWaitSeconds: TimeInterval,
+                                     timedOut: Bool, completion: ((_ timedOut: Bool) -> Void)?) {
+        let finish = { (timedOut: Bool) in DispatchQueue.main.async { completion?(timedOut) } }
+        guard let name = environments.first
+        else {
+            finish(timedOut)
+            return
+        }
+        guard get() === primary, primary.isOnline && primary.isInSupportedRunMode
+        else {
+            os_log("%s left %d environments deferred: offline, closed, or restarted", log: primary.config.logger, type: .info,
+                   typeName(and: #function), environments.count)
+            finish(true)
+            return
+        }
+        guard get(environment: name) != nil
+        else {
+            os_log("%s no started environment is named \"%s\"", log: primary.config.logger, type: .error, typeName(and: #function), name)
+            startInOrder(environments.dropFirst(), of: primary, startWaitSeconds: startWaitSeconds, timedOut: true, completion: completion)
+            return
+        }
+        start(environment: name, startWaitSeconds: startWaitSeconds) { environmentTimedOut in
+            startInOrder(environments.dropFirst(), of: primary, startWaitSeconds: startWaitSeconds,
+                         timedOut: timedOut || environmentTimedOut, completion: completion)
+        }
+    }
+
+    /// Brings the flag synchronizer, the event reporter, and the diagnostic reporter into line with the online state, keeping the
+    /// first and last offline while the environment is deferred. On `isOnlineQueue`.
+    private func applyOnlineState(onlineChanged: Bool) {
+        let flagsOnline = _isOnline && !_isDeferred
+        flagSynchronizer.isOnline = flagsOnline
+        eventReporter.isOnline = _isOnline
+        diagnosticReporter.setMode(runMode, online: flagsOnline)
+        if onlineChanged && !_isDeferred {
+            connectionInformation = ConnectionInformation.onlineSetCheck(connectionInformation: connectionInformation, ldClient: self, config: config, online: _isOnline)
+        }
+    }
+
+    /// Starts the flag connection of a deferred environment, and waits for the environment's flags: `completion` takes true where the
+    /// client cannot request them now, being closed, offline, or in a run mode that keeps flags off, and false once they arrive.
+    private func startFlagConnection(completion: @escaping (_ notConnected: Bool) -> Void) {
+        internalSetOnlineQueue.sync {
+            guard hasStarted
+            else {
+                completion(true)
+                return
+            }
+            let wasDeferred = isDeferred
+            // The series a client opens at `start` with the context it starts with, held for a deferred one until its flags are requested.
+            let hookState = wasDeferred ? executeBeforeIdentifyHooks(context: context, methodName: "init") : nil
+            let finish = { (notConnected: Bool) in
+                completion(notConnected)
+                if let hookState {
+                    self.executeAfterIdentifyHooks(state: hookState, result: .complete)
+                }
+            }
+
+            guard isOnline && isInSupportedRunMode
+            else {
+                if wasDeferred {
+                    isOnlineQueue.sync { _isDeferred = false }
+                }
+                finish(true)
+                return
+            }
+            if !wasDeferred && hasFlagsForContext {
+                finish(false)
+                return
+            }
+
+            if wasDeferred {
+                initialized = false
+            }
+            whenFlagsArrive {
+                self.initialized = true
+                finish(false)
+            }
+            if wasDeferred {
+                isOnlineQueue.sync {
+                    _isDeferred = false
+                    applyOnlineState(onlineChanged: true)
+                }
+            }
+        }
+    }
+
+    /// Whether LaunchDarkly has sent flags for the current context, rather than only the cache having them.
+    private var hasFlagsForContext: Bool {
+        get { initializedQueue.sync { _hasFlagsForContext } }
+        set { initializedQueue.sync { _hasFlagsForContext = newValue } }
+    }
+
+    /// Runs `block` once, on the first flag update or confirmation that the flags are unchanged that LaunchDarkly sent for the
+    /// current context, skipping the ones identify makes from the cache.
+    private func whenFlagsArrive(_ block: @escaping () -> Void) {
+        // Held by the handlers rather than by this method, as the notifier holds an owner weakly, so that it lasts until they run.
+        let owner = NSObject()
+        let ranQueue = DispatchQueue(label: "com.launchdarkly.LDClient.whenFlagsArriveQueue")
+        var ran = false
+        let runOnce = {
+            guard self.hasFlagsForContext
+            else { return }
+            let shouldRun = ranQueue.sync { () -> Bool in
+                defer { ran = true }
+                return !ran
+            }
+            if shouldRun {
+                self.stopObserving(owner: owner)
+                block()
+            }
+        }
+        observeAll(owner: owner) { _ in
+            _ = owner
+            runOnce()
+        }
+        observeFlagsUnchanged(owner: owner) {
+            _ = owner
+            runOnce()
         }
     }
 }

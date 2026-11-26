@@ -321,6 +321,89 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertThrowsError(try objcConfig.addSecondaryEnvironment("other", mobileKey: "new-key", payloadFilter: nil))
     }
 
+    func testAddDeferredSecondaryEnvironment() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("deferred", mobileKey: "deferred-key", payloadFilter: "deferred-flags", deferred: true)
+        try config.addSecondaryEnvironment("eager", mobileKey: "eager-key")
+
+        XCTAssertEqual(config.getSecondaryMobileKeys(), ["deferred": "deferred-key", "eager": "eager-key"])
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "deferred"), "deferred-flags")
+        XCTAssertTrue(config.isDeferred(forEnvironment: "deferred"))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "eager"))
+        XCTAssertFalse(config.isDeferred(forEnvironment: LDConfig.Constants.primaryEnvironmentName))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "not-an-environment"))
+        XCTAssertEqual(config.deferredEnvironments, ["deferred"])
+    }
+
+    func testDeferredEnvironmentsKeepTheOrderTheyWereAdded() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("racing", mobileKey: "racing-key", deferred: true)
+        try config.addSecondaryEnvironment("eager", mobileKey: "eager-key")
+        try config.addSecondaryEnvironment("casino", mobileKey: "casino-key", deferred: true)
+        try config.addSecondaryEnvironment("poker", mobileKey: "poker-key", deferred: true)
+        XCTAssertEqual(config.deferredEnvironments, ["racing", "casino", "poker"])
+
+        var keys = config.getSecondaryMobileKeys()
+        keys["casino"] = nil
+        try config.setSecondaryMobileKeys(keys)
+        XCTAssertEqual(config.deferredEnvironments, ["racing", "poker"])
+    }
+
+    func testAddDeferredSecondaryEnvironmentThatThrowsIsNotDeferred() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("other", mobileKey: "other-key")
+
+        XCTAssertThrowsError(try config.addSecondaryEnvironment("other", mobileKey: "new-key", deferred: true))
+        XCTAssertThrowsError(try config.addSecondaryEnvironment("new", mobileKey: "other-key", deferred: true))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "other"))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "new"))
+    }
+
+    func testSetSecondaryMobileKeysKeepsDeferralOfEnvironmentWithSameKey() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("kept", mobileKey: "kept-key", deferred: true)
+        try config.addSecondaryEnvironment("rekeyed", mobileKey: "old-key", deferred: true)
+        try config.addSecondaryEnvironment("removed", mobileKey: "removed-key", deferred: true)
+
+        var keys = config.getSecondaryMobileKeys()
+        keys["rekeyed"] = "new-key"
+        keys["removed"] = nil
+        keys["added"] = "added-key"
+        try config.setSecondaryMobileKeys(keys)
+
+        XCTAssertTrue(config.isDeferred(forEnvironment: "kept"))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "rekeyed"))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "removed"))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "added"))
+
+        // Listed again later, a removed environment is not deferred again.
+        try config.setSecondaryMobileKeys(["kept": "kept-key", "removed": "removed-key"])
+        XCTAssertFalse(config.isDeferred(forEnvironment: "removed"))
+    }
+
+    func testEqualsComparesDeferral() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("other", mobileKey: "other-key", deferred: true)
+
+        var sameConfig = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try sameConfig.addSecondaryEnvironment("other", mobileKey: "other-key", deferred: true)
+        symmetricAssertEqual(config, sameConfig)
+
+        var eager = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try eager.addSecondaryEnvironment("other", mobileKey: "other-key")
+        symmetricAssertNotEqual(config, eager, "deferral is the same")
+    }
+
+    func testObjcAddDeferredSecondaryEnvironment() throws {
+        let objcConfig = ObjcLDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try objcConfig.addSecondaryEnvironment("deferred", mobileKey: "deferred-key", payloadFilter: nil, deferred: true)
+        try objcConfig.addSecondaryEnvironment("eager", mobileKey: "eager-key", payloadFilter: nil)
+
+        XCTAssertTrue(objcConfig.isDeferred(forEnvironment: "deferred"))
+        XCTAssertFalse(objcConfig.isDeferred(forEnvironment: "eager"))
+        XCTAssertTrue(objcConfig.config.isDeferred(forEnvironment: "deferred"))
+    }
+
     func testIsReportRetryStatusCode() {
         HTTPURLResponse.StatusCodes.all.forEach { statusCode in
             XCTAssertEqual(LDConfig.isReportRetryStatusCode(statusCode),
