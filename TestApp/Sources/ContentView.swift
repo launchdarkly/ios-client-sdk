@@ -12,7 +12,9 @@ struct ContentView: View {
                 EventsSection()
                 EventLossSection()
                 StressSection()
-                StorageSection(mobileKey: controller.configuration.mobileKey)
+                // A new identity per environment, so the inspector is made again for the other directory.
+                StorageSection(mobileKey: controller.mobileKey)
+                    .id(controller.environment)
                 DedupeSection()
             }
             .compactForm()
@@ -33,9 +35,40 @@ private struct ClientSection: View {
 
     var body: some View {
         Section {
+            if controller.configuration.hasSeveralEnvironments {
+                Picker("Environment", selection: Binding(get: { controller.environment },
+                                                         set: { controller.select($0) })) {
+                    ForEach(controller.configuration.environments) { environment in
+                        Text("\(controller.loadState(of: environment).dot) \(environment.title)").tag(environment)
+                    }
+                }
+                .segmentedWherePossible()
+                .accessibilityIdentifier("environment_picker")
+                if !controller.loadOrder.isEmpty {
+                    Text("loaded " + controller.loadOrder
+                        .map { String(format: "%@ %.2f s", $0.environment.title, $0.seconds) }
+                        .joined(separator: " → "))
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("load_order")
+                }
+            }
             Text(controller.connectionStatus)
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
+                .accessibilityIdentifier("connection_status")
+            if controller.environment == .deferred {
+                ButtonRow {
+                    ActionButton("Start environment", id: "start_environment_button") { controller.startDeferredEnvironment() }
+                        .disabled(!controller.isDeferred)
+                }
+            }
+            if !controller.mobileKey.isEmpty {
+                Text("key \(String(controller.mobileKey.prefix(8)))…")
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("mobile_key_prefix")
+            }
             if !controller.result.isEmpty {
                 Text(controller.result)
                     .font(.caption)
@@ -72,6 +105,13 @@ private struct ClientSection: View {
                 offlineToggle
                     .textCase(nil)
                 #endif
+            }
+        } footer: {
+            if controller.configuration.hasSeveralEnvironments {
+                Text("Restart, Flush, Flush+Wait, Offline and Identify reach every environment, as the SDK does. "
+                    + "The other buttons and Event storage use the selected one."
+                    + (controller.configuration.hasDeferredEnvironment
+                        ? " Deferred starts once the others have their flags, after Restart or going online." : ""))
             }
         }
     }
@@ -128,6 +168,18 @@ private struct FlagSection: View {
                 ActionButton("Eval", id: "eval_button") { evaluate() }
             }
             ActionButton("All flags", id: "all_flags_button") { readAllFlags() }
+                .overlay(alignment: .topTrailing) {
+                    if let count = controller.flagCount {
+                        Text("\(count)")
+                            .font(.caption2.monospacedDigit().bold())
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 5)
+                            .background(Capsule().fill(.red))
+                            .offset(x: 8, y: -8)
+                            .accessibilityIdentifier("flag_count")
+                    }
+                }
+                .padding(.top, 8)
         }
     }
 
@@ -146,8 +198,10 @@ private struct FlagSection: View {
         let controller = self.controller
         controller.countEvaluation()
         controller.result = "\(key) = \(describe(client, key))"
-        controller.observeFlag(key) { [weak controller] changed in
-            guard let controller, let client = controller.client
+        controller.observeFlag(key) { [weak controller] changed, environment in
+            // Stays observed in this environment after a switch, when the result line is the other one's.
+            guard let controller, environment == controller.environment,
+                  let client = controller.client(for: environment)
             else { return }
             controller.countEvaluation()
             controller.result = "\(changed) changed to \(describe(client, changed))"
@@ -265,7 +319,8 @@ private struct StorageSection: View {
             }
         } header: {
             HStack {
-                Text("Event storage")
+                Text(controller.configuration.hasSeveralEnvironments
+                    ? "Event storage · \(controller.environment.title)" : "Event storage")
                 if InstanceLauncher.isAvailable {
                     Spacer()
                     Button("New instance") { controller.result = InstanceLauncher.launchAnother() }
@@ -396,9 +451,10 @@ private struct OversizedPostButton: View {
         isRunning = true
         let controller = self.controller
         let configuration = controller.configuration
+        let environment = controller.environment
         controller.result = "Posting 20 MB…"
         Task {
-            let report = await OversizedPostProbe.run(configuration: configuration)
+            let report = await OversizedPostProbe.run(configuration: configuration, environment: environment)
             print("oversized post\n\(report)")
             controller.result = "Oversized post finished"
             results = BenchmarkButton.Results(title: "Oversized post", text: report)

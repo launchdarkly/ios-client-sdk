@@ -22,6 +22,7 @@
 		64176E0FC83BAF50A72204A2 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		BB359E2DE3D9F1D31B4CD0B5 /* Secrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text; path = Secrets.xcconfig.example; sourceTree = "<group>"; };
 		1F0192090B5F433A01497652 /* TestApp.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = TestApp.xcconfig; sourceTree = "<group>"; };
+		A7C3E91D5B2F4E6081D9C4A2 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -82,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				1F0192090B5F433A01497652 /* TestApp.xcconfig */,
+				A7C3E91D5B2F4E6081D9C4A2 /* Secrets.xcconfig */,
 				BB359E2DE3D9F1D31B4CD0B5 /* Secrets.xcconfig.example */,
 				F9FB9D3AAC4422B64C7754B5 /* Info.plist */,
 			);

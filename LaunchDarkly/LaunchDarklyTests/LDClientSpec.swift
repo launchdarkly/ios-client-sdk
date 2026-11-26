@@ -31,6 +31,7 @@ final class LDClientSpec: QuickSpec {
         connectionInformationSpec()
         variationDetailSpec()
         isInitializedSpec()
+        deferredEnvironmentSpec()
     }
 
     private func startSpec() {
@@ -76,6 +77,28 @@ final class LDClientSpec: QuickSpec {
                 testContext.start()
 
                 expect(testContext.serviceFactoryMock.madeFlagSynchronizer?.onSyncComplete).toNot(beNil())
+            }
+        }
+
+        context("when there are secondary environments with payload filters") {
+            it("gives each environment its own payload filter") {
+                var config = LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: false)
+                config.payloadFilter = "mobile-flags"
+                try! config.addSecondaryEnvironment("filtered", mobileKey: "filtered-key", payloadFilter: "other-flags")
+                try! config.addSecondaryEnvironment("unfiltered", mobileKey: "unfiltered-key")
+                let testContext = TestContext(newConfig: config)
+                testContext.start()
+
+                let expected: [(String, String?)] = [(LDConfig.Constants.primaryEnvironmentName, "mobile-flags"),
+                                                     ("filtered", "other-flags"),
+                                                     ("unfiltered", nil)]
+                for (environment, filter) in expected {
+                    let client = LDClient.get(environment: environment)
+                    expect(client).toNot(beNil(), description: environment)
+                    let matcher: Nimble.Predicate<String> = filter.map { equal($0) } ?? beNil()
+                    expect(client?.config.validatedPayloadFilter()).to(matcher, description: environment)
+                    expect(client?.service.config.validatedPayloadFilter()).to(matcher, description: environment)
+                }
             }
         }
     }
@@ -2259,6 +2282,383 @@ final class LDClientSpec: QuickSpec {
                 expect(testContext.subject.isInitialized) == true
             }
         }
+    }
+}
+
+private let deferredName = "deferred"
+private let deferredMobileKey = "deferred-mobile-key"
+
+private extension LDClientSpec {
+    func deferredEnvironmentSpec() {
+        describe("deferred environment") {
+            deferredEnvironmentStartSpec()
+            deferredEnvironmentStartEnvironmentSpec()
+            deferredEnvironmentOnlineSpec()
+            deferredEnvironmentIdentifySpec()
+            startDeferredEnvironmentsSpec()
+        }
+    }
+
+    func startDeferredEnvironmentsSpec() {
+        context("startDeferredEnvironments") {
+            it("starts each environment once the one before it has its flags") {
+                let testContext = self.deferredTestContext(deferred: ["casino", "racing"])
+                testContext.start()
+                let casino = LDClient.get(environment: "casino")!
+                let racing = LDClient.get(environment: "racing")!
+                var timedOut: Bool?
+                LDClient.startDeferredEnvironments(inOrder: ["racing", "casino"], startWaitSeconds: 5) { timedOut = $0 }
+
+                expect(racing.synchronizerMock.isOnline) == true
+                expect(casino.isDeferred) == true
+                racing.completeFlagSync()
+                expect(casino.isDeferred).toEventually(beFalse())
+                expect(casino.synchronizerMock.isOnline) == true
+                expect(timedOut).to(beNil())
+                casino.completeFlagSync()
+                expect(timedOut).toEventually(equal(false))
+            }
+            it("starts every deferred environment in the order they were added, by default") {
+                let testContext = self.deferredTestContext(deferred: ["casino", "racing"])
+                testContext.start()
+                LDClient.startDeferredEnvironments(startWaitSeconds: 5)
+
+                expect(LDClient.get(environment: "casino")!.isDeferred) == false
+                expect(LDClient.get(environment: "racing")!.isDeferred) == true
+            }
+            it("moves on after an environment times out, and reports the timeout") {
+                let testContext = self.deferredTestContext(deferred: ["casino", "racing"])
+                testContext.start()
+                let racing = LDClient.get(environment: "racing")!
+                var timedOut: Bool?
+                LDClient.startDeferredEnvironments(startWaitSeconds: 0.1) { timedOut = $0 }
+
+                expect(racing.isDeferred).toEventually(beFalse())
+                racing.completeFlagSync()
+                expect(timedOut).toEventually(equal(true))
+            }
+            it("skips an unknown environment, and reports it") {
+                let testContext = self.deferredTestContext(deferred: ["casino"])
+                testContext.start()
+                let casino = LDClient.get(environment: "casino")!
+                var timedOut: Bool?
+                LDClient.startDeferredEnvironments(inOrder: ["unknown", "casino"], startWaitSeconds: 5) { timedOut = $0 }
+
+                expect(casino.synchronizerMock.isOnline) == true
+                casino.completeFlagSync()
+                expect(timedOut).toEventually(equal(true))
+            }
+            it("leaves every environment deferred while offline") {
+                let testContext = self.deferredTestContext(deferred: ["casino", "racing"], startOnline: false)
+                testContext.start()
+                var timedOut: Bool?
+                LDClient.startDeferredEnvironments(startWaitSeconds: 5) { timedOut = $0 }
+
+                expect(timedOut).toEventually(equal(true))
+                expect(LDClient.get(environment: "casino")!.isDeferred) == true
+                expect(LDClient.get(environment: "racing")!.isDeferred) == true
+            }
+            it("starts no more after the client closes") {
+                let testContext = self.deferredTestContext(deferred: ["casino", "racing"])
+                testContext.start()
+                let casino = LDClient.get(environment: "casino")!
+                let racing = LDClient.get(environment: "racing")!
+                var timedOut: Bool?
+                LDClient.startDeferredEnvironments(startWaitSeconds: 0.2) { timedOut = $0 }
+                testContext.subject.close()
+                casino.completeFlagSync()
+
+                expect(timedOut).toEventually(equal(true))
+                expect(racing.isDeferred) == true
+            }
+        }
+    }
+
+    func deferredTestContext(deferred names: [String] = [deferredName], startOnline: Bool = true, enableBackgroundUpdates: Bool = true,
+                             hooks: [Hook] = []) -> TestContext {
+        var config = LDConfig.stub(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled, isDebugBuild: false)
+        for name in names {
+            try! config.addSecondaryEnvironment(name, mobileKey: name == deferredName ? deferredMobileKey : "\(name)-mobile-key", deferred: true)
+        }
+        config.hooks = hooks
+        let testContext = TestContext(newConfig: config, startOnline: startOnline, enableBackgroundUpdates: enableBackgroundUpdates)
+        let logger = OSLog(subsystem: "com.launchdarkly", category: "tests")
+        testContext.serviceFactoryMock.makeFlagChangeNotifierCallback = { FlagChangeNotifier(logger: logger) }
+        testContext.serviceFactoryMock.makeFlagStoreCallback = { FlagStore(logger: logger) }
+        return testContext
+    }
+
+    func withDeferredCachedFlags(_ testContext: TestContext, context: LDContext) {
+        _ = testContext.withCached(contextKey: context.fullyQualifiedHashedKey(),
+                                   flags: FlagMaintainingMock.stubStoredItems().featureFlags,
+                                   mobileKey: deferredMobileKey)
+    }
+
+    func deferredEnvironmentStartSpec() {
+        context("when the client starts") {
+            it("connects only the other environments for flags") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                let primary = LDClient.get()!
+                let deferred = LDClient.get(environment: deferredName)!
+
+                expect(primary.isDeferred) == false
+                expect(primary.synchronizerMock.isOnline) == true
+                expect(deferred.isDeferred) == true
+                expect(deferred.isOnline) == true
+                expect(deferred.isInitialized) == false
+                expect(deferred.synchronizerMock.isOnline) == false
+                expect(deferred.diagnosticReporterMock.setModeReceivedArguments?.online) == false
+            }
+            it("keeps events online and records the identify event") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                let deferred = LDClient.get(environment: deferredName)!
+
+                expect(deferred.eventProcessorMock.isOnline) == true
+                expect(deferred.eventProcessorMock.recordReceivedEvent?.kind) == .identify
+            }
+            it("completes once the other environments have flags") {
+                let testContext = self.deferredTestContext()
+                var completed = false
+                testContext.start { completed = true }
+                LDClient.get()!.completeFlagSync()
+
+                expect(completed).toEventually(beTrue())
+            }
+            it("serves the flags cached on the device") {
+                let testContext = self.deferredTestContext()
+                self.withDeferredCachedFlags(testContext, context: testContext.context)
+                testContext.start()
+                let deferred = LDClient.get(environment: deferredName)!
+
+                expect(deferred.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: false)) == true
+                expect(deferred.allFlags?[DarklyServiceMock.FlagKeys.bool]) == DarklyServiceMock.FlagValues.bool
+            }
+            it("defers the init identify series until the environment starts") {
+                var befores: [String] = []
+                var afterCount = 0
+                let hook = LDClientIdentifyHookSpec.MockHook(before: { seriesContext, data in befores.append(seriesContext.methodName); return data },
+                                                             after: { _, data, _ in afterCount += 1; return data })
+                let testContext = self.deferredTestContext(hooks: [hook])
+                testContext.start()
+                expect(befores) == ["init"]
+
+                LDClient.start(environment: deferredName, startWaitSeconds: 5)
+                expect(befores) == ["init", "init"]
+                LDClient.get()!.completeFlagSync()
+                LDClient.get(environment: deferredName)!.completeFlagSync()
+                expect(afterCount).toEventually(equal(2))
+            }
+        }
+    }
+
+    func deferredEnvironmentStartEnvironmentSpec() {
+        context("start(environment:)") {
+            it("connects the environment and completes once its flags arrive") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                let deferred = LDClient.get(environment: deferredName)!
+                var timedOut: Bool?
+                LDClient.start(environment: deferredName, startWaitSeconds: 5) { timedOut = $0 }
+
+                expect(deferred.isDeferred) == false
+                expect(deferred.synchronizerMock.isOnline) == true
+                expect(deferred.diagnosticReporterMock.setModeReceivedArguments?.online) == true
+                expect(deferred.isInitialized) == false
+                deferred.completeFlagSync()
+                expect(timedOut).toEventually(equal(false))
+                expect(deferred.isInitialized) == true
+            }
+            it("times out when its flags do not arrive") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                var timedOut: Bool?
+                LDClient.start(environment: deferredName, startWaitSeconds: 0.1) { timedOut = $0 }
+
+                expect(timedOut).toEventually(equal(true))
+                expect(LDClient.get(environment: deferredName)!.synchronizerMock.isOnline) == true
+            }
+            it("completes every call without connecting again") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                let deferred = LDClient.get(environment: deferredName)!
+                var results: [Bool] = []
+                LDClient.start(environment: deferredName, startWaitSeconds: 5) { results.append($0) }
+                let onlineSetCount = deferred.synchronizerMock.isOnlineSetCount
+                LDClient.start(environment: deferredName, startWaitSeconds: 5) { results.append($0) }
+
+                expect(deferred.synchronizerMock.isOnlineSetCount) == onlineSetCount
+                deferred.completeFlagSync()
+                expect(results).toEventually(equal([false, false]))
+            }
+            it("completes at once for an environment that already has flags") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                LDClient.get()!.completeFlagSync()
+                expect(LDClient.get()!.isInitialized).toEventually(beTrue())
+                var timedOut: Bool?
+                LDClient.start(environment: LDConfig.Constants.primaryEnvironmentName, startWaitSeconds: 5) { timedOut = $0 }
+
+                expect(timedOut).toEventually(equal(false))
+            }
+            it("completes timed out for an unknown environment") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                var timedOut: Bool?
+                LDClient.start(environment: "unknown", startWaitSeconds: 5) { timedOut = $0 }
+
+                expect(timedOut).toEventually(equal(true))
+            }
+            it("completes timed out after the client closes") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                testContext.subject.close()
+                var timedOut: Bool?
+                LDClient.start(environment: deferredName, startWaitSeconds: 5) { timedOut = $0 }
+
+                expect(timedOut).toEventually(equal(true))
+            }
+        }
+    }
+
+    func deferredEnvironmentOnlineSpec() {
+        context("online state") {
+            it("goes online for events only when the client is set online") {
+                let testContext = self.deferredTestContext(startOnline: false)
+                testContext.start()
+                let deferred = LDClient.get(environment: deferredName)!
+                expect(deferred.eventProcessorMock.isOnline) == false
+
+                var completed = false
+                testContext.subject.setOnline(true) { completed = true }
+                LDClient.get()!.completeFlagSync()
+                expect(completed).toEventually(beTrue())
+                expect(deferred.isOnline) == true
+                expect(deferred.eventProcessorMock.isOnline) == true
+                expect(deferred.synchronizerMock.isOnline) == false
+                expect(deferred.isDeferred) == true
+            }
+            it("starts offline when the client is offline, and connects once set online") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                let deferred = LDClient.get(environment: deferredName)!
+                testContext.subject.setOnline(false)
+                var timedOut: Bool?
+                LDClient.start(environment: deferredName, startWaitSeconds: 5) { timedOut = $0 }
+
+                expect(timedOut).toEventually(equal(true))
+                expect(deferred.isDeferred) == false
+                expect(deferred.synchronizerMock.isOnline) == false
+                testContext.subject.setOnline(true)
+                expect(deferred.synchronizerMock.isOnline).toEventually(beTrue())
+            }
+            it("keeps flags offline across run mode changes") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                let deferred = LDClient.get(environment: deferredName)!
+                deferred.setRunMode(.background)
+                deferred.setRunMode(.foreground)
+
+                expect(deferred.synchronizerMock.isOnline) == false
+                expect(deferred.diagnosticReporterMock.setModeReceivedArguments?.online) == false
+            }
+            it("waits for the foreground where background updates are disabled") {
+                let testContext = self.deferredTestContext(enableBackgroundUpdates: false)
+                testContext.start()
+                let deferred = LDClient.get(environment: deferredName)!
+                deferred.setRunMode(.background)
+                var timedOut: Bool?
+                LDClient.start(environment: deferredName, startWaitSeconds: 5) { timedOut = $0 }
+
+                expect(timedOut).toEventually(equal(true))
+                expect(deferred.synchronizerMock.isOnline) == false
+                deferred.setRunMode(.foreground)
+                expect(deferred.synchronizerMock.isOnline) == true
+            }
+        }
+    }
+
+    func deferredEnvironmentIdentifySpec() {
+        context("identify") {
+            it("does not wait for the deferred environment and serves its cached flags for the new context") {
+                let testContext = self.deferredTestContext()
+                let newContext = LDContext.stub()
+                self.withDeferredCachedFlags(testContext, context: newContext)
+                testContext.start()
+                LDClient.get()!.completeFlagSync()
+                let deferred = LDClient.get(environment: deferredName)!
+
+                var identified = false
+                testContext.subject.identify(context: newContext) { _ in identified = true }
+                expect(LDClient.get()!.service.context).toEventually(equal(newContext))
+                LDClient.get()!.completeFlagSync()
+                expect(identified).toEventually(beTrue())
+                expect(deferred.service.context) == newContext
+                expect(deferred.synchronizerMock.isOnline) == false
+                expect(deferred.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: false)) == true
+            }
+            it("has start(environment:) wait for the new context's flags in an environment that had flags") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                let primary = LDClient.get()!
+                primary.completeFlagSync()
+                expect(primary.isInitialized).toEventually(beTrue())
+
+                let newContext = LDContext.stub()
+                testContext.subject.identify(context: newContext) { _ in }
+                expect(primary.service.context).toEventually(equal(newContext))
+                var timedOut: Bool?
+                LDClient.start(environment: LDConfig.Constants.primaryEnvironmentName, startWaitSeconds: 5) { timedOut = $0 }
+                RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+                expect(timedOut).to(beNil())
+
+                primary.completeFlagSync()
+                expect(timedOut).toEventually(equal(false))
+            }
+            it("has start(environment:) wait for the new context's flags in a deferred environment already started") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                let deferred = LDClient.get(environment: deferredName)!
+                var timedOut: Bool?
+                LDClient.start(environment: deferredName, startWaitSeconds: 5) { timedOut = $0 }
+                deferred.completeFlagSync()
+                expect(timedOut).toEventually(equal(false))
+
+                let newContext = LDContext.stub()
+                testContext.subject.identify(context: newContext) { _ in }
+                expect(deferred.service.context).toEventually(equal(newContext))
+                timedOut = nil
+                LDClient.start(environment: deferredName, startWaitSeconds: 5) { timedOut = $0 }
+                RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+                expect(timedOut).to(beNil())
+
+                deferred.completeFlagSync()
+                expect(timedOut).toEventually(equal(false))
+            }
+            it("starts the deferred environment with the identified context") {
+                let testContext = self.deferredTestContext()
+                let newContext = LDContext.stub()
+                testContext.start()
+                let deferred = LDClient.get(environment: deferredName)!
+                testContext.subject.identify(context: newContext) { _ in }
+                expect(deferred.service.context).toEventually(equal(newContext))
+
+                LDClient.start(environment: deferredName, startWaitSeconds: 5)
+                expect(deferred.synchronizerMock.isOnline) == true
+                expect(deferred.service.context) == newContext
+            }
+        }
+    }
+}
+
+private extension LDClient {
+    var synchronizerMock: LDFlagSynchronizingMock { flagSynchronizer as! LDFlagSynchronizingMock }
+    var eventProcessorMock: EventProcessorMock { eventProcessor as! EventProcessorMock }
+    var diagnosticReporterMock: DiagnosticReportingMock { diagnosticReporter as! DiagnosticReportingMock }
+
+    func completeFlagSync() {
+        synchronizerMock.onSyncComplete?(.flagCollection((FeatureFlagCollection([:]), nil)))
     }
 }
 

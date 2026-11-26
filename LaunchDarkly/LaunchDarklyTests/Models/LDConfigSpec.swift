@@ -26,6 +26,7 @@ final class LDConfigSpec: XCTestCase {
 
         fileprivate static let debugMode = true
         fileprivate static let evaluationReasons = true
+        fileprivate static let payloadFilter = "mobile-flags"
         fileprivate static let maxCachedContexts = -1
         fileprivate static let diagnosticOptOut = true
         fileprivate static let diagnosticRecordingInterval: TimeInterval = 600.0
@@ -56,6 +57,7 @@ final class LDConfigSpec: XCTestCase {
          ("private context attributes", Constants.privateContextAttributes, { c, v in c.privateContextAttributes = (v as! [Reference])}),
          ("use report", Constants.useReport, { c, v in c.useReport = v as! Bool }),
          ("evaluation reasons", Constants.evaluationReasons, { c, v in c.evaluationReasons = v as! Bool }),
+         ("payload filter", Constants.payloadFilter, { c, v in c.payloadFilter = v as! String? }),
          ("max cached contexts", Constants.maxCachedContexts, { c, v in c.maxCachedContexts = v as! Int }),
          ("diagnostic opt out", Constants.diagnosticOptOut, { c, v in c.diagnosticOptOut = v as! Bool }),
          ("diagnostic recording interval", Constants.diagnosticRecordingInterval, { c, v in c.diagnosticRecordingInterval = v as! TimeInterval }),
@@ -90,6 +92,7 @@ final class LDConfigSpec: XCTestCase {
         XCTAssertEqual(config.useReport, LDConfig.Defaults.useReport)
         XCTAssertEqual(config.isDebugMode, LDConfig.Defaults.debugMode)
         XCTAssertEqual(config.evaluationReasons, LDConfig.Defaults.evaluationReasons)
+        XCTAssertEqual(config.payloadFilter, LDConfig.Defaults.payloadFilter)
         XCTAssertEqual(config.maxCachedContexts, LDConfig.Defaults.maxCachedContexts)
         XCTAssertEqual(config.diagnosticOptOut, LDConfig.Defaults.diagnosticOptOut)
         XCTAssertEqual(config.diagnosticRecordingInterval, LDConfig.Defaults.diagnosticRecordingInterval)
@@ -151,6 +154,7 @@ final class LDConfigSpec: XCTestCase {
             XCTAssertEqual(config.useReport, Constants.useReport, "\(os)")
             XCTAssertEqual(config.isDebugMode, Constants.debugMode, "\(os)")
             XCTAssertEqual(config.evaluationReasons, Constants.evaluationReasons, "\(os)")
+            XCTAssertEqual(config.payloadFilter, Constants.payloadFilter, "\(os)")
             XCTAssertEqual(config.maxCachedContexts, Constants.maxCachedContexts, "\(os)")
             XCTAssertEqual(config.diagnosticOptOut, Constants.diagnosticOptOut, "\(os)")
             XCTAssertEqual(config.diagnosticRecordingInterval, Constants.diagnosticRecordingInterval, "\(os)")
@@ -242,6 +246,209 @@ final class LDConfigSpec: XCTestCase {
             setter(&otherConfig, otherVal)
             symmetricAssertNotEqual(defaultConfig, otherConfig, "\(name) is the same")
         }
+    }
+
+    func testValidatedPayloadFilter() {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        XCTAssertNil(config.validatedPayloadFilter())
+
+        ["mobile-flags", "a", "0.filter_key-1"].forEach { key in
+            config.payloadFilter = key
+            XCTAssertEqual(config.validatedPayloadFilter(), key)
+        }
+
+        ["", "-starts-with-hyphen", ".starts-with-period", "has space", "encoding necessary +! %& ( )", "trailing-newline\n", "ключ"].forEach { key in
+            config.payloadFilter = key
+            XCTAssertNil(config.validatedPayloadFilter(), "\(key) should be rejected")
+        }
+    }
+
+    func testAddSecondaryEnvironment() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        config.payloadFilter = "mobile-flags"
+        try config.addSecondaryEnvironment("filtered", mobileKey: "filtered-key", payloadFilter: "other-flags")
+        try config.addSecondaryEnvironment("unfiltered", mobileKey: "unfiltered-key")
+
+        XCTAssertEqual(config.getSecondaryMobileKeys(), ["filtered": "filtered-key", "unfiltered": "unfiltered-key"])
+        XCTAssertEqual(config.payloadFilter(forEnvironment: LDConfig.Constants.primaryEnvironmentName), "mobile-flags")
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "filtered"), "other-flags")
+        XCTAssertNil(config.payloadFilter(forEnvironment: "unfiltered"))
+        XCTAssertNil(config.payloadFilter(forEnvironment: "not-an-environment"))
+    }
+
+    func testAddSecondaryEnvironmentRejectsInvalidArguments() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
+
+        XCTAssertThrowsError(try config.addSecondaryEnvironment(LDConfig.Constants.primaryEnvironmentName, mobileKey: "new-key"))
+        XCTAssertThrowsError(try config.addSecondaryEnvironment("other", mobileKey: "new-key"))
+        XCTAssertThrowsError(try config.addSecondaryEnvironment("new", mobileKey: LDConfig.Constants.mockMobileKey))
+        XCTAssertThrowsError(try config.addSecondaryEnvironment("new", mobileKey: "other-key"))
+
+        XCTAssertEqual(config.getSecondaryMobileKeys(), ["other": "other-key"])
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "other"), "other-flags")
+    }
+
+    func testSetSecondaryMobileKeysKeepsFilterOfEnvironmentWithSameKey() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
+        try config.setSecondaryMobileKeys(["other": "other-key"])
+
+        XCTAssertEqual(config.getSecondaryMobileKeys(), ["other": "other-key"])
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "other"), "other-flags")
+    }
+
+    func testSetSecondaryMobileKeysFromReadKeysKeepsEveryFilter() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("filtered", mobileKey: "filtered-key", payloadFilter: "filtered-flags")
+        try config.addSecondaryEnvironment("unfiltered", mobileKey: "unfiltered-key")
+
+        var keys = config.getSecondaryMobileKeys()
+        keys["new"] = "new-key"
+        try config.setSecondaryMobileKeys(keys)
+
+        XCTAssertEqual(config.getSecondaryMobileKeys(), ["filtered": "filtered-key", "unfiltered": "unfiltered-key", "new": "new-key"])
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "filtered"), "filtered-flags")
+        XCTAssertNil(config.payloadFilter(forEnvironment: "unfiltered"))
+        XCTAssertNil(config.payloadFilter(forEnvironment: "new"))
+    }
+
+    func testSetSecondaryMobileKeysDropsFilterOfEnvironmentRemovedOrGivenNewKey() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("rekeyed", mobileKey: "old-key", payloadFilter: "rekeyed-flags")
+        try config.addSecondaryEnvironment("removed", mobileKey: "removed-key", payloadFilter: "removed-flags")
+
+        try config.setSecondaryMobileKeys(["rekeyed": "new-key"])
+        XCTAssertNil(config.payloadFilter(forEnvironment: "rekeyed"))
+        XCTAssertNil(config.payloadFilter(forEnvironment: "removed"))
+
+        // Listed again later, a removed environment does not get its old filter back.
+        try config.setSecondaryMobileKeys(["rekeyed": "new-key", "removed": "removed-key"])
+        XCTAssertNil(config.payloadFilter(forEnvironment: "removed"))
+    }
+
+    func testSetSecondaryMobileKeysThatThrowsKeepsEnvironmentsAndFilters() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
+
+        XCTAssertThrowsError(try config.setSecondaryMobileKeys(["other": "other-key", "duplicate": "other-key"]))
+
+        XCTAssertEqual(config.getSecondaryMobileKeys(), ["other": "other-key"])
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "other"), "other-flags")
+    }
+
+    func testEqualsComparesSecondaryEnvironments() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
+
+        var sameConfig = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try sameConfig.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
+        symmetricAssertEqual(config, sameConfig)
+
+        var noSecondary = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        symmetricAssertNotEqual(config, noSecondary, "secondary environment is the same")
+
+        try noSecondary.setSecondaryMobileKeys(["other": "other-key"])
+        symmetricAssertNotEqual(config, noSecondary, "secondary payload filter is the same")
+
+        var otherKey = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try otherKey.addSecondaryEnvironment("other", mobileKey: "different-key", payloadFilter: "other-flags")
+        symmetricAssertNotEqual(config, otherKey, "secondary mobile key is the same")
+
+        XCTAssertTrue(ObjcLDConfig(config).isEqual(object: ObjcLDConfig(sameConfig)))
+        XCTAssertFalse(ObjcLDConfig(config).isEqual(object: ObjcLDConfig(otherKey)))
+    }
+
+    func testObjcAddSecondaryEnvironment() throws {
+        let objcConfig = ObjcLDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try objcConfig.addSecondaryEnvironment("other", mobileKey: "other-key", payloadFilter: "other-flags")
+
+        XCTAssertEqual(objcConfig.getSecondaryMobileKeys(), ["other": "other-key"])
+        XCTAssertEqual(objcConfig.payloadFilter(forEnvironment: "other"), "other-flags")
+        XCTAssertThrowsError(try objcConfig.addSecondaryEnvironment("other", mobileKey: "new-key", payloadFilter: nil))
+    }
+
+    func testAddDeferredSecondaryEnvironment() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("deferred", mobileKey: "deferred-key", payloadFilter: "deferred-flags", deferred: true)
+        try config.addSecondaryEnvironment("eager", mobileKey: "eager-key")
+
+        XCTAssertEqual(config.getSecondaryMobileKeys(), ["deferred": "deferred-key", "eager": "eager-key"])
+        XCTAssertEqual(config.payloadFilter(forEnvironment: "deferred"), "deferred-flags")
+        XCTAssertTrue(config.isDeferred(forEnvironment: "deferred"))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "eager"))
+        XCTAssertFalse(config.isDeferred(forEnvironment: LDConfig.Constants.primaryEnvironmentName))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "not-an-environment"))
+        XCTAssertEqual(config.deferredEnvironments, ["deferred"])
+    }
+
+    func testDeferredEnvironmentsKeepTheOrderTheyWereAdded() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("racing", mobileKey: "racing-key", deferred: true)
+        try config.addSecondaryEnvironment("eager", mobileKey: "eager-key")
+        try config.addSecondaryEnvironment("casino", mobileKey: "casino-key", deferred: true)
+        try config.addSecondaryEnvironment("poker", mobileKey: "poker-key", deferred: true)
+        XCTAssertEqual(config.deferredEnvironments, ["racing", "casino", "poker"])
+
+        var keys = config.getSecondaryMobileKeys()
+        keys["casino"] = nil
+        try config.setSecondaryMobileKeys(keys)
+        XCTAssertEqual(config.deferredEnvironments, ["racing", "poker"])
+    }
+
+    func testAddDeferredSecondaryEnvironmentThatThrowsIsNotDeferred() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("other", mobileKey: "other-key")
+
+        XCTAssertThrowsError(try config.addSecondaryEnvironment("other", mobileKey: "new-key", deferred: true))
+        XCTAssertThrowsError(try config.addSecondaryEnvironment("new", mobileKey: "other-key", deferred: true))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "other"))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "new"))
+    }
+
+    func testSetSecondaryMobileKeysKeepsDeferralOfEnvironmentWithSameKey() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("kept", mobileKey: "kept-key", deferred: true)
+        try config.addSecondaryEnvironment("rekeyed", mobileKey: "old-key", deferred: true)
+        try config.addSecondaryEnvironment("removed", mobileKey: "removed-key", deferred: true)
+
+        var keys = config.getSecondaryMobileKeys()
+        keys["rekeyed"] = "new-key"
+        keys["removed"] = nil
+        keys["added"] = "added-key"
+        try config.setSecondaryMobileKeys(keys)
+
+        XCTAssertTrue(config.isDeferred(forEnvironment: "kept"))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "rekeyed"))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "removed"))
+        XCTAssertFalse(config.isDeferred(forEnvironment: "added"))
+
+        // Listed again later, a removed environment is not deferred again.
+        try config.setSecondaryMobileKeys(["kept": "kept-key", "removed": "removed-key"])
+        XCTAssertFalse(config.isDeferred(forEnvironment: "removed"))
+    }
+
+    func testEqualsComparesDeferral() throws {
+        var config = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try config.addSecondaryEnvironment("other", mobileKey: "other-key", deferred: true)
+
+        var sameConfig = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try sameConfig.addSecondaryEnvironment("other", mobileKey: "other-key", deferred: true)
+        symmetricAssertEqual(config, sameConfig)
+
+        var eager = LDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try eager.addSecondaryEnvironment("other", mobileKey: "other-key")
+        symmetricAssertNotEqual(config, eager, "deferral is the same")
+    }
+
+    func testObjcAddDeferredSecondaryEnvironment() throws {
+        let objcConfig = ObjcLDConfig(mobileKey: LDConfig.Constants.mockMobileKey, autoEnvAttributes: .disabled)
+        try objcConfig.addSecondaryEnvironment("deferred", mobileKey: "deferred-key", payloadFilter: nil, deferred: true)
+        try objcConfig.addSecondaryEnvironment("eager", mobileKey: "eager-key", payloadFilter: nil)
+
+        XCTAssertTrue(objcConfig.isDeferred(forEnvironment: "deferred"))
+        XCTAssertFalse(objcConfig.isDeferred(forEnvironment: "eager"))
+        XCTAssertTrue(objcConfig.config.isDeferred(forEnvironment: "deferred"))
     }
 
     func testIsReportRetryStatusCode() {

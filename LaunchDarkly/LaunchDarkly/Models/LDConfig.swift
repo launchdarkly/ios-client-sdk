@@ -278,6 +278,9 @@ public struct LDConfig {
         /// The default setting for whether we request evaluation reasons for all flags. (false)
         static let evaluationReasons = false
 
+        /// The default payload filter key. (nil, the full environment is requested)
+        static let payloadFilter: String? = nil
+
         /// The default setting for the maximum number of locally cached contexts. (5)
         static let maxCachedContexts = 5
 
@@ -511,6 +514,23 @@ public struct LDConfig {
     /// Enables requesting evaluation reasons for all flags. (Default: false)
     public var evaluationReasons: Bool = Defaults.evaluationReasons
 
+    /**
+     The key of a payload filter to apply to flag data requests. (Default: nil)
+
+     Payload filters are defined per project in LaunchDarkly. When a filter key is set, the SDK adds it as the `filter` query
+     parameter to its streaming and polling requests, and LaunchDarkly limits the flags it sends to the ones selected by that filter.
+
+     Payload filters are an FDv1 feature, and this SDK uses FDv1. LaunchDarkly also filters flag data by the views linked to a
+     mobile key with a custom payload, but only for FDv2: it rejects this SDK's requests made with such a key with a 422 status.
+
+     This key applies only to the primary environment. To filter a secondary environment, add it with
+     `addSecondaryEnvironment(_:mobileKey:payloadFilter:deferred:)`.
+
+     The key must contain only alphanumeric characters, periods, underscores, and hyphens, and must start with an alphanumeric
+     character. If the key is invalid, the SDK logs an error and requests the full environment instead.
+     */
+    public var payloadFilter: String? = Defaults.payloadFilter
+
     /// An Integer that tells ContextEnvironmentFlagCache the maximum number of contexts to locally cache. Can be set to -1 for unlimited cached contexts.
     public var maxCachedContexts: Int = Defaults.maxCachedContexts
 
@@ -581,6 +601,11 @@ public struct LDConfig {
     /**
      Sets a Dictionary of identifying names to unique mobile keys to access secondary environments in the LDConfig. Throws `LDInvalidArgumentError` if you try to add duplicate keys or put the primary key or name in secondaryMobileKeys.
 
+     This replaces every secondary environment, including the ones added with `addSecondaryEnvironment(_:mobileKey:payloadFilter:deferred:)`.
+     An environment listed again under the same name and mobile key keeps its payload filter and whether it is deferred, so that
+     reading the keys with `getSecondaryMobileKeys()`, adding one and setting them back drops neither. A new name, or a name given a
+     different mobile key, has no filter and is not deferred.
+
      - parameter newSecondaryMobileKeys: A Dictionary of String to String.
      */
     public mutating func setSecondaryMobileKeys(_ newSecondaryMobileKeys: [String: String]) throws {
@@ -597,7 +622,52 @@ public struct LDConfig {
             throw(LDInvalidArgumentError("A key can only be used once."))
         }
 
+        _secondaryPayloadFilters = _secondaryPayloadFilters.filter { name, _ in newSecondaryMobileKeys[name] == _secondaryMobileKeys[name] }
+        _deferredEnvironments = _deferredEnvironments.filter { name in newSecondaryMobileKeys[name] == _secondaryMobileKeys[name] }
         _secondaryMobileKeys = newSecondaryMobileKeys
+    }
+
+    /**
+     Adds a secondary environment, optionally with a payload filter, optionally deferred. Throws `LDInvalidArgumentError` if the name
+     is the primary environment name or is already used, or if the mobile key is the primary key or is already used.
+
+     The payload filter must be defined in the mobile key's project, and works as `payloadFilter` does for the primary environment.
+     The mobile key must not have a custom payload, as `payloadFilter` explains.
+
+     A deferred environment starts without a connection for flags. Its client is created at `LDClient.start`, so
+     `LDClient.get(environment:)`, observers, `identify` and evaluations work from then on, serving the flags cached on the device
+     for the current context, or default values where there are none. It records events, and delivers them while the client is
+     online. It requests flags only once `LDClient.start(environment:startWaitSeconds:completion:)` is called, and the start
+     completion and `identify` do not wait for it before then.
+
+     Calling `setSecondaryMobileKeys(_:)` afterwards replaces every secondary environment, including the ones added here; one it lists
+     again under the same name and mobile key keeps its payload filter and whether it is deferred.
+
+     - parameter name: The name that identifies the environment, as passed to `LDClient.get(environment:)`.
+     - parameter mobileKey: The environment's mobile key.
+     - parameter payloadFilter: The key of a payload filter to apply to the environment's flag data requests, or nil for no filter.
+     - parameter deferred: Whether the environment waits for `LDClient.start(environment:startWaitSeconds:completion:)` to request
+       flags. (Default: false)
+     */
+    public mutating func addSecondaryEnvironment(_ name: String, mobileKey: String, payloadFilter: String? = nil, deferred: Bool = false) throws {
+        if name == LDConfig.Constants.primaryEnvironmentName {
+            throw(LDInvalidArgumentError("The primary environment name is not a valid key."))
+        }
+        if _secondaryMobileKeys[name] != nil {
+            throw(LDInvalidArgumentError("A secondary environment with this name already exists."))
+        }
+        if mobileKey == self.mobileKey {
+            throw(LDInvalidArgumentError("The primary environment key cannot be in the secondary mobile keys."))
+        }
+        if _secondaryMobileKeys.values.contains(mobileKey) {
+            throw(LDInvalidArgumentError("A key can only be used once."))
+        }
+
+        _secondaryMobileKeys[name] = mobileKey
+        _secondaryPayloadFilters[name] = payloadFilter
+        if deferred {
+            _deferredEnvironments.append(name)
+        }
     }
 
     /**
@@ -609,8 +679,39 @@ public struct LDConfig {
         return _secondaryMobileKeys
     }
 
+    /**
+     Returns the payload filter key configured for an environment: `payloadFilter` for the primary environment, or the key given to
+     `addSecondaryEnvironment(_:mobileKey:payloadFilter:deferred:)` for a secondary one.
+
+     - parameter name: The environment name.
+     - returns: The payload filter key, or nil if the environment has none or is not one of this configuration's environments.
+     */
+    public func payloadFilter(forEnvironment name: String) -> String? {
+        return name == LDConfig.Constants.primaryEnvironmentName ? payloadFilter : _secondaryPayloadFilters[name]
+    }
+
+    /**
+     Returns whether an environment was added with `addSecondaryEnvironment(_:mobileKey:payloadFilter:deferred:)` as deferred.
+
+     - parameter name: The environment name.
+     - returns: True for a deferred secondary environment; false for the primary environment, any other secondary one, and a name
+       that is not one of this configuration's environments.
+     */
+    public func isDeferred(forEnvironment name: String) -> Bool {
+        return _deferredEnvironments.contains(name)
+    }
+
+    /// The deferred secondary environments, in the order they were added: the order `LDClient.startDeferredEnvironments` starts them in by default.
+    var deferredEnvironments: [String] { _deferredEnvironments }
+
     /// Internal variable for secondaryMobileKeys computed property
     private var _secondaryMobileKeys: [String: String]
+
+    /// Payload filter keys of secondary environments added with one, by environment name
+    private var _secondaryPayloadFilters: [String: String] = [:]
+
+    /// Names of secondary environments added as deferred, in the order they were added
+    private var _deferredEnvironments: [String] = []
 
     // Internal constructor to enable automated testing
     init(mobileKey: String, autoEnvAttributes: AutoEnvAttributes, isDebugBuild: Bool) {
@@ -651,6 +752,19 @@ public struct LDConfig {
         return runMode == .foreground ? max(flagPollingInterval, minima.flagPollingInterval) : max(backgroundFlagPollingInterval, minima.backgroundFlagPollingInterval)
     }
 
+    // Returns the payload filter key to send with flag requests, or nil if none is set or the configured key is invalid.
+    func validatedPayloadFilter() -> String? {
+        guard let payloadFilter = payloadFilter, !payloadFilter.isEmpty
+        else { return nil }
+
+        guard payloadFilter.range(of: "\\A[a-zA-Z0-9][._\\-a-zA-Z0-9]*\\z", options: .regularExpression) != nil
+        else {
+            os_log("%s Payload filter \"%s\" is invalid; the full environment will be requested instead", log: logger, type: .error, typeName(and: #function), payloadFilter)
+            return nil
+        }
+        return payloadFilter
+    }
+
     // Determines if the status code is a code that should cause the SDK to retry a failed HTTP Request that used the REPORT method. Retried requests will use the GET method.
     static func isReportRetryStatusCode(_ statusCode: Int) -> Bool {
         return LDConfig.flagRetryStatusCodes.contains(statusCode)
@@ -683,6 +797,10 @@ extension LDConfig: Equatable {
             && lhs.useReport == rhs.useReport
             && lhs.isDebugMode == rhs.isDebugMode
             && lhs.evaluationReasons == rhs.evaluationReasons
+            && lhs.payloadFilter == rhs.payloadFilter
+            && lhs._secondaryMobileKeys == rhs._secondaryMobileKeys
+            && lhs._secondaryPayloadFilters == rhs._secondaryPayloadFilters
+            && lhs._deferredEnvironments == rhs._deferredEnvironments
             && lhs.maxCachedContexts == rhs.maxCachedContexts
             && lhs.diagnosticOptOut == rhs.diagnosticOptOut
             && lhs.diagnosticRecordingInterval == rhs.diagnosticRecordingInterval

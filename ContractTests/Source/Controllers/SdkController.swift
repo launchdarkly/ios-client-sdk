@@ -43,6 +43,8 @@ final class SdkController: RouteCollection {
             "retry-conformance-fdv1-streaming",
             "retry-conformance-fdv1-polling",
             "client-event-source-http-errors",
+            "filtering",
+            "filtering-strict",
             "tls:verify-peer"
         ]
 
@@ -74,6 +76,8 @@ final class SdkController: RouteCollection {
                 config.baseUrl = URL(string: baseUri)!
             }
         }
+
+        config.payloadFilter = createInstance.configuration.streaming?.filter ?? createInstance.configuration.polling?.filter
 
         if let events = createInstance.configuration.events {
             if let baseUri = events.baseUri {

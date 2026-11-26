@@ -17,13 +17,13 @@ extension LDClient {
         }
     }
 
-    internal func executeBeforeIdentifyHooks(context: LDContext) -> IdentifyHookState? {
+    internal func executeBeforeIdentifyHooks(context: LDContext, methodName: String = "identify") -> IdentifyHookState? {
         let hooksSnapshot = self.hooks
         guard !hooksSnapshot.isEmpty else {
             return nil
         }
 
-        let seriesContext = IdentifySeriesContext(context: context, methodName: "identify")
+        let seriesContext = IdentifySeriesContext(context: context, methodName: methodName)
         let seriesData = hooksSnapshot.map { hook in
             hook.beforeIdentify(seriesContext: seriesContext, seriesData: EvaluationSeriesData())
         }

@@ -209,6 +209,12 @@ public final class ObjcLDConfig: NSObject {
         set { config.diagnosticRecordingInterval = newValue }
     }
 
+    /// The key of a payload filter to apply to the primary environment's flag data requests. To filter a secondary environment, add it with `addSecondaryEnvironment:mobileKey:payloadFilter:error:`. If the key is invalid, the SDK logs an error and requests the full environment instead. Payload filters are an FDv1 feature; mobile keys with a custom payload of views work only with FDv2, which this SDK does not use. (Default: nil)
+    @objc public var payloadFilter: String? {
+        get { config.payloadFilter }
+        set { config.payloadFilter = newValue }
+    }
+
     /// Sends event payloads gzip-encoded, which reduces egress bandwidth cost. (Default: NO)
     ///
     /// Off by default because older versions of the relay proxy do not accept gzip-encoded event payloads. Customers not using
@@ -250,10 +256,57 @@ public final class ObjcLDConfig: NSObject {
     /**
      Sets a Dictionary of identifying names to unique mobile keys to access secondary environments in the LDConfig. Throws if you try to add duplicate keys or put the primary key or name in secondaryMobileKeys.
 
+     This replaces every secondary environment, including the ones added with `addSecondaryEnvironment:mobileKey:payloadFilter:deferred:error:`. An environment listed again under the same name and mobile key keeps its payload filter and whether it is deferred; a new name, or a name given a different mobile key, has no filter and is not deferred.
+
      - parameter keys: A Dictionary of String to String.
      */
     @objc public func setSecondaryMobileKeys(_ keys: [String: String]) throws {
         try config.setSecondaryMobileKeys(keys)
+    }
+
+    /**
+     Adds a secondary environment, optionally with a payload filter. Throws if the name is the primary environment name or is already used, or if the mobile key is the primary key or is already used. Calling `setSecondaryMobileKeys:error:` afterwards replaces every secondary environment, including the ones added here; one it lists again under the same name and mobile key keeps its payload filter.
+
+     - parameter name: The name that identifies the environment.
+     - parameter mobileKey: The environment's mobile key.
+     - parameter payloadFilter: The key of a payload filter defined in the mobile key's project, or nil for no filter.
+     */
+    @objc public func addSecondaryEnvironment(_ name: String, mobileKey: String, payloadFilter: String?) throws {
+        try config.addSecondaryEnvironment(name, mobileKey: mobileKey, payloadFilter: payloadFilter)
+    }
+
+    /**
+     Adds a secondary environment, optionally with a payload filter, optionally deferred. Throws if the name is the primary environment name or is already used, or if the mobile key is the primary key or is already used.
+
+     A deferred environment starts without a connection for flags: its client serves the flags cached on the device, or default values, and records and delivers events, until `startWithEnvironment:startWaitSeconds:completion:` starts its flag requests. See `LDConfig.addSecondaryEnvironment(_:mobileKey:payloadFilter:deferred:)`.
+
+     - parameter name: The name that identifies the environment.
+     - parameter mobileKey: The environment's mobile key.
+     - parameter payloadFilter: The key of a payload filter defined in the mobile key's project, or nil for no filter.
+     - parameter deferred: Whether the environment waits for `startWithEnvironment:startWaitSeconds:completion:` to request flags.
+     */
+    @objc public func addSecondaryEnvironment(_ name: String, mobileKey: String, payloadFilter: String?, deferred: Bool) throws {
+        try config.addSecondaryEnvironment(name, mobileKey: mobileKey, payloadFilter: payloadFilter, deferred: deferred)
+    }
+
+    /**
+     Returns whether an environment was added as deferred.
+
+     - parameter name: The environment name.
+     - returns: True for a deferred secondary environment; false otherwise.
+     */
+    @objc(isDeferredForEnvironment:) public func isDeferred(forEnvironment name: String) -> Bool {
+        return config.isDeferred(forEnvironment: name)
+    }
+
+    /**
+     Returns the payload filter key configured for an environment.
+
+     - parameter name: The environment name.
+     - returns: The payload filter key, or nil if the environment has none or is not one of this configuration's environments.
+     */
+    @objc(payloadFilterForEnvironment:) public func payloadFilter(forEnvironment name: String) -> String? {
+        return config.payloadFilter(forEnvironment: name)
     }
 
     /// LDConfig constructor. Configurable values are all set to their default values. The client app can modify these values as desired. Note that client app developers may prefer to get the LDConfig from `LDClient.config` (`ObjcLDClient.config`) in order to retain previously set values.
