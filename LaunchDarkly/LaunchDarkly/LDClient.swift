@@ -79,19 +79,6 @@ public class LDClient {
     private var _isDeferred = false
 
     /**
-     Reports the initialization state of the LDClient.
-
-     When true, the SDK has either communicated with LaunchDarkly servers for feature flag values or the SDK has been set offline.
-
-     When false, the SDK has not been able to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers but flags might not exist or be stale.
-
-     A deferred client (see `isDeferred`) reports false, online or offline, until it is started.
-    */
-    public var isInitialized: Bool {
-        hasStarted && !isDeferred && (!isOnline || initialized)
-    }
-
-    /**
      Set the LDClient online/offline.
 
      When online, the SDK communicates with LaunchDarkly servers for feature flag values and event reporting.
@@ -1007,10 +994,6 @@ public class LDClient {
     }
     private var _hasStarted = true
     private var hasStartedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.hasStartedQueue")
-    private(set) var initialized: Bool {
-        get { initializedQueue.sync { _initialized } }
-        set { initializedQueue.sync { _initialized = newValue } }
-    }
     private var _initialized = false
     private var initializedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.initializedQueue")
     /// On `initializedQueue`. Whether LaunchDarkly has sent flags for the current context: unlike `initialized`, identify resets it.
@@ -1112,6 +1095,28 @@ public class LDClient {
                 self.executeAfterIdentifyHooks(state: state, result: .complete)
             }
         }
+    }
+}
+
+// MARK: - Initialization State
+
+extension LDClient {
+    /**
+     Reports the initialization state of the LDClient.
+
+     When true, the SDK has either communicated with LaunchDarkly servers for feature flag values or the SDK has been set offline.
+
+     When false, the SDK has not been able to communicate with LaunchDarkly servers. Client apps can request feature flag values and set/change feature flag observers but flags might not exist or be stale.
+
+     A deferred client (see `isDeferred`) reports false, online or offline, until it is started.
+    */
+    public var isInitialized: Bool {
+        hasStarted && !isDeferred && (!isOnline || initialized)
+    }
+
+    private(set) var initialized: Bool {
+        get { initializedQueue.sync { _initialized } }
+        set { initializedQueue.sync { _initialized = newValue } }
     }
 }
 
