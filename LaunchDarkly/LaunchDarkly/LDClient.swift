@@ -470,6 +470,7 @@ public class LDClient {
             }
 
             self.context = updatedContext
+            self.hasFlagsForContext = false
             os_log("%s new context set with key: %s", log: config.logger, type: .debug, typeName(and: #function), self.context.fullyQualifiedKey())
             // Only the data source needs to come down for the swap: take the old synchronizer
             // offline directly, as the run-mode transition does, leaving isOnline, the event
@@ -688,6 +689,7 @@ public class LDClient {
             let oldStoredItems = flagStore.storedItems
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
             flagStore.replaceStore(newStoredItems: StoredItems(items: flagCollection.flags))
+            hasFlagsForContext = true
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: etag)
         case let .patch(featureFlag):
             let oldStoredItems = flagStore.storedItems
@@ -701,6 +703,7 @@ public class LDClient {
             self.updateCacheAndReportChanges(context: self.context, oldStoredItems: oldStoredItems, etag: nil)
         case .upToDate:
             connectionInformation = ConnectionInformation.checkEstablishingStreaming(connectionInformation: connectionInformation)
+            hasFlagsForContext = true
             flagChangeNotifier.notifyUnchanged()
             // If a polling request receives a 304 not modified, we still need
             // to update the "last updated" field of the cache so subsequent
@@ -1010,6 +1013,8 @@ public class LDClient {
     }
     private var _initialized = false
     private var initializedQueue = DispatchQueue(label: "com.launchdarkly.LDClient.initializedQueue")
+    /// On `initializedQueue`. Whether LaunchDarkly has sent flags for the current context: unlike `initialized`, identify resets it.
+    private var _hasFlagsForContext = false
     private var identifyQueue = SheddingQueue()
 
     /// The hooks the configuration registers, followed by the hooks the plugins contribute. Collected before the init
@@ -1131,7 +1136,8 @@ extension LDClient {
      Until this is called, the environment's client serves the flags cached on the device, or default values, and requests none. Once
      it is, the client requests flags for its current context, while online and in a run mode that allows it, as any other environment's
      client does. Calling it again, or for an environment that is not deferred, starts nothing new: it waits for that environment's
-     flags, or calls `completion` at once where it already has them.
+     flags, or calls `completion` at once where it already has them. Flags are those LaunchDarkly sent for the current context, so
+     after `identify` it waits for the new context's, whether or not the environment was deferred; cached flags do not count.
 
      `completion` takes whether it timed out: false once the environment's flags arrive, true after `startWaitSeconds` without them.
      It is also true at once where the client is offline, or backgrounded where background updates are not enabled, as `start` is
@@ -1265,7 +1271,7 @@ extension LDClient {
                 finish(true)
                 return
             }
-            if !wasDeferred && initialized {
+            if !wasDeferred && hasFlagsForContext {
                 finish(false)
                 return
             }
@@ -1286,13 +1292,22 @@ extension LDClient {
         }
     }
 
-    /// Runs `block` once, on the first flag update or confirmation that the flags are unchanged.
+    /// Whether LaunchDarkly has sent flags for the current context, rather than only the cache having them.
+    private var hasFlagsForContext: Bool {
+        get { initializedQueue.sync { _hasFlagsForContext } }
+        set { initializedQueue.sync { _hasFlagsForContext = newValue } }
+    }
+
+    /// Runs `block` once, on the first flag update or confirmation that the flags are unchanged that LaunchDarkly sent for the
+    /// current context, skipping the ones identify makes from the cache.
     private func whenFlagsArrive(_ block: @escaping () -> Void) {
         // Held by the handlers rather than by this method, as the notifier holds an owner weakly, so that it lasts until they run.
         let owner = NSObject()
         let ranQueue = DispatchQueue(label: "com.launchdarkly.LDClient.whenFlagsArriveQueue")
         var ran = false
         let runOnce = {
+            guard self.hasFlagsForContext
+            else { return }
             let shouldRun = ranQueue.sync { () -> Bool in
                 defer { ran = true }
                 return !ran

@@ -2190,6 +2190,44 @@ private extension LDClientSpec {
                 expect(deferred.synchronizerMock.isOnline) == false
                 expect(deferred.boolVariation(forKey: DarklyServiceMock.FlagKeys.bool, defaultValue: false)) == true
             }
+            it("has start(environment:) wait for the new context's flags in an environment that had flags") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                let primary = LDClient.get()!
+                primary.completeFlagSync()
+                expect(primary.isInitialized).toEventually(beTrue())
+
+                let newContext = LDContext.stub()
+                testContext.subject.identify(context: newContext) { _ in }
+                expect(primary.service.context).toEventually(equal(newContext))
+                var timedOut: Bool?
+                LDClient.start(environment: LDConfig.Constants.primaryEnvironmentName, startWaitSeconds: 5) { timedOut = $0 }
+                RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+                expect(timedOut).to(beNil())
+
+                primary.completeFlagSync()
+                expect(timedOut).toEventually(equal(false))
+            }
+            it("has start(environment:) wait for the new context's flags in a deferred environment already started") {
+                let testContext = self.deferredTestContext()
+                testContext.start()
+                let deferred = LDClient.get(environment: deferredName)!
+                var timedOut: Bool?
+                LDClient.start(environment: deferredName, startWaitSeconds: 5) { timedOut = $0 }
+                deferred.completeFlagSync()
+                expect(timedOut).toEventually(equal(false))
+
+                let newContext = LDContext.stub()
+                testContext.subject.identify(context: newContext) { _ in }
+                expect(deferred.service.context).toEventually(equal(newContext))
+                timedOut = nil
+                LDClient.start(environment: deferredName, startWaitSeconds: 5) { timedOut = $0 }
+                RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+                expect(timedOut).to(beNil())
+
+                deferred.completeFlagSync()
+                expect(timedOut).toEventually(equal(false))
+            }
             it("starts the deferred environment with the identified context") {
                 let testContext = self.deferredTestContext()
                 let newContext = LDContext.stub()
